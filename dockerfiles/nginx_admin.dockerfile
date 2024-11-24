@@ -19,7 +19,7 @@ RUN adduser -G ${USER}  -D -s /bin/sh -u ${UID} ${USER}
 RUN sed -i "s/user nginx/user '${USER}'/g" /etc/nginx/nginx.conf
 
 # Copies nginx configurations to override the default.
-ADD ./nginx/*.conf /etc/nginx/conf.d/
+ADD ./nginx/admin.conf /etc/nginx/conf.d/default.conf
 
 # Make html directory
 RUN mkdir -p /var/www/html
