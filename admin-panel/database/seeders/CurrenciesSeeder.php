@@ -40,7 +40,7 @@ class CurrenciesSeeder extends Seeder
             [
                 'type' => 'erc20', // Ethereum token (ERC20)
                 'name' => 'Tether',
-                'symbol' => '₮',
+                'symbol' => '₮ (ERC20)',
                 'code' => 'USDT',
                 'logo' => 'usdt.svg',
                 'is_active' => '1',
