@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Exchange;
 
+use App\Enums\CurrenciesTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Currency;
 use Illuminate\Http\Request;
@@ -23,7 +24,10 @@ class CurrencyController extends Controller
      */
     public function create()
     {
-        //
+        $currencies_type = CurrenciesTypeEnum::cases();
+        return view('dashboard.exchange.currency.create',
+            ['currencies_type' => $currencies_type]
+        );
     }
 
     /**
