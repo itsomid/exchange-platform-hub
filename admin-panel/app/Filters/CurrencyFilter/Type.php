@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filters\UserFilter;
+namespace App\Filters\CurrencyFilter;
 
 use App\Filters\FilterContract;
 

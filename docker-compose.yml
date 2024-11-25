@@ -183,11 +183,16 @@ services:
         - USER=${USER:-laraveluser}
     container_name: composer
     volumes:
-      - ./admin-panel:/var/www/html:delegated
-      - ./env/admin_panel.env:/var/www/html/.env
+#      - ./admin-panel:/var/www/html:delegated
+#      - ./env/admin_panel.env:/var/www/html/.env
+      - ./admin-panel:/var/www/html/admin-panel:delegated
+      - ./api-service:/var/www/html/api-service:delegated
+      - ./env/admin_panel.env:/var/www/html/admin-panel/.env
+      - ./env/api_service.env:/var/www/html/api-service/.env
     working_dir: /var/www/html
     depends_on:
       - php-admin
+      - php-api
 
     profiles: [ "composer" ]
     entrypoint: [ 'composer', '--ignore-platform-reqs' ]
@@ -204,8 +209,10 @@ services:
         - USER=${USER:-laraveluser}
     container_name: artisan
     volumes:
-      - ./admin-panel:/var/www/html:delegated
-      - ./env/admin_panel.env:/var/www/html/.env
+      - ./admin-panel:/var/www/html/admin-panel:delegated
+      - ./api-service:/var/www/html/api-service:delegated
+      - ./env/admin_panel.env:/var/www/html/admin-panel/.env
+      - ./env/api_service.env:/var/www/html/api-service/.env
     depends_on:
       - database
     working_dir: /var/www/html
@@ -218,7 +225,7 @@ services:
     image: node:alpine
     container_name: npm
     volumes:
-      - ./src:/var/www/html
+      - ./admin-panel:/var/www/html
     #      - .env:/var/www/html/.env
     ports:
       - 3000:3000
