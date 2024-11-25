@@ -199,7 +199,7 @@ services:
     networks:
       - laravel
 
-  artisan:
+  artisan-admin:
     build:
       context: ./dockerfiles
       dockerfile: php.dockerfile
@@ -207,19 +207,35 @@ services:
         - UID=${UID:-1000}
         - GID=${GID:-1000}
         - USER=${USER:-laraveluser}
-    container_name: artisan
+    container_name: artisan-admin
     volumes:
       - ./admin-panel:/var/www/html/admin-panel:delegated
-      - ./api-service:/var/www/html/api-service:delegated
       - ./env/admin_panel.env:/var/www/html/admin-panel/.env
-      - ./env/api_service.env:/var/www/html/api-service/.env
-    depends_on:
-      - database
-    working_dir: /var/www/html
-    profiles: [ "artisan" ]
-    entrypoint: [ 'php', '/var/www/html/artisan' ]
+    working_dir: /var/www/html/admin-panel
+    entrypoint: [ 'php', '/var/www/html/admin-panel/artisan' ]
     networks:
       - laravel
+    depends_on:
+      - database
+
+  artisan-api:
+    build:
+      context: ./dockerfiles
+      dockerfile: php.dockerfile
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - USER=${USER:-laraveluser}
+    container_name: artisan-api
+    volumes:
+      - ./api-service:/var/www/html/api-service:delegated
+      - ./env/api_service.env:/var/www/html/api-service/.env
+    working_dir: /var/www/html/api-service
+    entrypoint: [ 'php', '/var/www/html/api-service/artisan' ]
+    networks:
+      - laravel
+    depends_on:
+      - database
 
   npm:
     image: node:alpine
