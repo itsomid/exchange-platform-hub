@@ -1,6 +1,6 @@
 #FROM composer:latest as build
 
-FROM php:8.3-fpm-alpine
+FROM php:8.4.1-fpm-alpine
 
 # environment arguments
 ARG UID
