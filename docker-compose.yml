@@ -11,7 +11,7 @@ services:
   nginx-admin:
     build:
       context: ./dockerfiles
-      dockerfile: nginx_admin.dockerfile
+      dockerfile: nginx.dockerfile
       args:
         - UID=${UID:-1000}
         - GID=${GID:-1000}
@@ -21,7 +21,7 @@ services:
     ports:
       - 8000:80
     volumes:
-      - ./admin-panel:/var/www/html:delegated,ro
+      - ./admin-panel:/var/www/html:delegated
       - ./env/admin_panel.env:/var/www/html/.env
       - ./admin-panel/storage:/var/www/html/storage
     depends_on:
@@ -44,7 +44,7 @@ services:
         - USER=${USER:-laraveluser}
     container_name: php-admin
     volumes:
-      - ./admin-panel:/var/www/html:delegated,ro
+      - ./admin-panel:/var/www/html:delegated
       - ./env/admin_panel.env:/var/www/html/.env
       - ./admin-panel/storage:/var/www/html/storage
     networks:
@@ -54,7 +54,7 @@ services:
   nginx-api:
     build:
       context: ./dockerfiles
-      dockerfile: nginx_api.dockerfile
+      dockerfile: nginx.dockerfile
       args:
         - UID=${UID:-1000}
         - GID=${GID:-1000}
@@ -64,7 +64,7 @@ services:
     ports:
       - 8001:80
     volumes:
-      - ./api-service:/var/www/html:delegated,ro
+      - ./api-service:/var/www/html:delegated
       - ./env/api_service.env:/var/www/html/.env
       - ./api-service/storage:/var/www/html/storage
     depends_on:
@@ -86,7 +86,7 @@ services:
         - USER=${USER:-laraveluser}
     container_name: php-api
     volumes:
-      - ./api-service:/var/www/html:delegated,ro
+      - ./api-service:/var/www/html:delegated
       - ./env/api_service.env:/var/www/html/.env
       - ./api-service/storage:/var/www/html/storage
     networks:
@@ -120,7 +120,7 @@ services:
         - USER=${USER:-laraveluser}
     container_name: laravel-cron
     volumes:
-      - ./admin-panel:/var/www/html:delegated,ro
+      - ./admin-panel:/var/www/html:delegated
       - ./env/admin_panel.env:/var/www/html/.env
     depends_on:
       - database
@@ -140,7 +140,7 @@ services:
         - USER=${USER:-laraveluser}
     container_name: laravel-queue
     volumes:
-      - ./admin-panel:/var/www/html:delegated,ro
+      - ./admin-panel:/var/www/html:delegated
       - ./env/admin_panel.env:/var/www/html/.env
     depends_on:
       - database
@@ -159,7 +159,7 @@ services:
         - USER=${USER:-laraveluser}
     container_name: laravel-migrate-seed
     volumes:
-      - ./admin-panel:/var/www/html:delegated,ro
+      - ./admin-panel:/var/www/html:delegated
       - ./env/admin_panel.env:/var/www/html/.env
     depends_on:
       - database
@@ -183,12 +183,12 @@ services:
         - USER=${USER:-laraveluser}
     container_name: composer
     volumes:
-      - ./admin-panel:/var/www/html:delegated,ro
+      - ./admin-panel:/var/www/html:delegated
       - ./env/admin_panel.env:/var/www/html/.env
     working_dir: /var/www/html
     depends_on:
-      - php
-    user: ${USER:-laravel} #system user
+      - php-admin
+
     profiles: [ "composer" ]
     entrypoint: [ 'composer', '--ignore-platform-reqs' ]
     networks:
@@ -204,7 +204,7 @@ services:
         - USER=${USER:-laraveluser}
     container_name: artisan
     volumes:
-      - ./admin-panel:/var/www/html:delegated,ro
+      - ./admin-panel:/var/www/html:delegated
       - ./env/admin_panel.env:/var/www/html/.env
     depends_on:
       - database
