@@ -41,3 +41,7 @@ api-service/.fleet
 api-service/composer.lock
 api-service/package-lock.json
 api-service/.env
+
+env/mysql.env
+env/mysql.env
+env/mysql.env
