@@ -1,5 +1,3 @@
-#FROM composer:latest as build
-
 FROM php:8.4.1-fpm-alpine
 
 # environment arguments
@@ -24,27 +22,27 @@ RUN echo "php_admin_flag[log_errors] = on" >> /usr/local/etc/php-fpm.d/www.conf
 RUN apk update && apk upgrade
 RUN docker-php-ext-install pdo pdo_mysql bcmath
 
-#WORKDIR /var/www/html
+# Installing php extensions
 
-#COPY ./src .
-#COPY --from=build /usr/bin/composer /usr/bin/composer
-#RUN composer install --ignore-platform-reqs --optimize-autoloader --no-interaction --no-progress --prefer-dist
-# Installing redis extension
-#RUN mkdir -p /usr/src/php/ext/redis \
-#    && curl -fsSL https://github.com/phpredis/phpredis/archive/5.3.4.tar.gz | tar xvz -C /usr/src/php/ext/redis --strip 1 \
-#    && echo 'redis' >> /usr/src/php-available-exts \
-#    && docker-php-ext-install redis \
+RUN apk update \
+    && apk add --no-cache \
+        freetype \
+                libjpeg-turbo \
+                libpng \
+                libwebp \
+                libxpm \
+                freetype-dev \
+                libjpeg-turbo-dev \
+                libpng-dev \
+                libwebp-dev \
+                libxpm-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp --with-xpm \
+    && docker-php-ext-install gd pdo pdo_mysql bcmath \
+    && apk del freetype-dev libjpeg-turbo-dev libpng-dev libwebp-dev libxpm-dev
 
-# Copy application code to the container
-#RUN apk add --update nodejs npm
-#RUN npm install
-#RUN npm run build
-
-#WORKDIR /var/www/html
-#COPY ./src .
-#RUN chown -R ${USER}:${USER} /var/www/html/storage \ && chmod -R 775 /var/www/html/storage
-# Change ownership of the application code
-#RUN chown -R ${USER}:${USER} /var/www/html
-
+# Set permissions for Laravel storage and cache directories
+RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache && \
+    chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache && \
+    chown -R ${USER}:${USER} /var/www/html/storage /var/www/html/bootstrap/cache
 
 CMD ["php-fpm", "-y", "/usr/local/etc/php-fpm.conf", "-R"]

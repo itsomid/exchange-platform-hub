@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('type')->default('ERC20'); //ERC20
             $table->string('name'); //Tether
-            $table->string('symbol')->unique(); //₮
-            $table->string('code')->unique(); //USDT
+            $table->string('symbol'); //₮
+            $table->string('code'); //USDT
             $table->string('logo');
             $table->boolean('is_active');
             $table->timestamps();
