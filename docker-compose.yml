@@ -21,7 +21,7 @@ services:
     ports:
       - 8000:80
     volumes:
-      - ./admin-panel:/var/www/html:delegated
+      - ./admin-panel:/var/www/html
       - ./env/admin_panel.env:/var/www/html/.env
       - ./admin-panel/storage:/var/www/html/storage
     depends_on:
@@ -44,7 +44,7 @@ services:
         - USER=${USER:-laraveluser}
     container_name: php-admin
     volumes:
-      - ./admin-panel:/var/www/html:delegated
+      - ./admin-panel:/var/www/html
       - ./env/admin_panel.env:/var/www/html/.env
       - ./admin-panel/storage:/var/www/html/storage
     networks:
@@ -173,7 +173,8 @@ services:
     networks:
       - laravel
 
-  composer:
+  # Composer service for Admin Panel
+  composer-admin:
     build:
       context: ./dockerfiles
       dockerfile: composer.dockerfile
@@ -181,23 +182,36 @@ services:
         - UID=${UID:-1000}
         - GID=${GID:-1000}
         - USER=${USER:-laraveluser}
-    container_name: composer
+    container_name: composer-admin
     volumes:
-#      - ./admin-panel:/var/www/html:delegated
-#      - ./env/admin_panel.env:/var/www/html/.env
-      - ./admin-panel:/var/www/html/admin-panel:delegated
-      - ./api-service:/var/www/html/api-service:delegated
-      - ./env/admin_panel.env:/var/www/html/admin-panel/.env
-      - ./env/api_service.env:/var/www/html/api-service/.env
+      - ./admin-panel:/var/www/html:delegated
+      - ./env/admin_panel.env:/var/www/html/.env
     working_dir: /var/www/html
     depends_on:
       - php-admin
-      - php-api
-
     profiles: [ "composer" ]
     entrypoint: [ 'composer', '--ignore-platform-reqs' ]
     networks:
       - laravel
+
+  # Composer service for API Service
+  composer-api:
+    build:
+      context: ./dockerfiles
+      dockerfile: composer.dockerfile
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - USER=${USER:-laraveluser}
+    container_name: composer-api
+    volumes:
+      - ./api-service:/var/www/html:delegated
+      - ./env/api_service.env:/var/www/html/.env
+    working_dir: /var/www/html
+    depends_on:
+      - php-api
+    profiles: [ "composer" ]
+    entrypoint: [ 'composer', '--ignore-platform-reqs' ]
 
   artisan-admin:
     build:
@@ -209,10 +223,10 @@ services:
         - USER=${USER:-laraveluser}
     container_name: artisan-admin
     volumes:
-      - ./admin-panel:/var/www/html/admin-panel:delegated
-      - ./env/admin_panel.env:/var/www/html/admin-panel/.env
-    working_dir: /var/www/html/admin-panel
-    entrypoint: [ 'php', '/var/www/html/admin-panel/artisan' ]
+      - ./admin-panel:/var/www/html:delegated
+      - ./env/admin_panel.env:/var/www/html/.env
+    working_dir: /var/www/html
+    entrypoint: [ 'php', '/var/www/html/artisan' ]
     networks:
       - laravel
     depends_on:
@@ -228,10 +242,10 @@ services:
         - USER=${USER:-laraveluser}
     container_name: artisan-api
     volumes:
-      - ./api-service:/var/www/html/api-service:delegated
-      - ./env/api_service.env:/var/www/html/api-service/.env
-    working_dir: /var/www/html/api-service
-    entrypoint: [ 'php', '/var/www/html/api-service/artisan' ]
+      - ./api-service:/var/www/html:delegated
+      - ./env/api_service.env:/var/www/html/.env
+    working_dir: /var/www/html
+    entrypoint: [ 'php', '/var/www/html/artisan' ]
     networks:
       - laravel
     depends_on:
@@ -272,4 +286,4 @@ services:
     #    ports:
     #      - 8888:80
     #    networks:
-    #      - laravel
+    #      - laravelnetworks:

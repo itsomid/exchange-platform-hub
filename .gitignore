@@ -21,6 +21,7 @@ admin-panel/.fleet
 admin-panel/composer.lock
 admin-panel/package-lock.json
 admin-panel/.env
+admin-panel/.phpstorm.meta.php
 
 api-service/.phpunit.cache
 api-service/node_modules
@@ -41,6 +42,7 @@ api-service/.fleet
 api-service/composer.lock
 api-service/package-lock.json
 api-service/.env
+api-service/.phpstorm.meta.php
 
 env/mysql.env
 env/admin_panel.env
