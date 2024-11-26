@@ -1,5 +1,5 @@
 @extends('dashboard.profile.layout.master')
-@section('body')
+@section('profile-body')
     <div class="container">
         <div class="card">
             <div class="row justify-content-center">
@@ -25,5 +25,6 @@
         </div>
     </div>
 @endsection
+
 
 

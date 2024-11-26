@@ -4,7 +4,7 @@
         <div class="card">
             <div class="row">
                 <div class="col-md-12 text-center">
-                    <form action="/user/two-factor-authentication" method="post">
+                    <form action="{{ route('two-factor.enable') }}" method="post">
                         @csrf
                         @if(auth()->user()->two_factor_secret)
                             @method('DELETE')
