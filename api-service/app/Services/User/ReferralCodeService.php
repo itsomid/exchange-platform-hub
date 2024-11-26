@@ -7,7 +7,7 @@ use App\Repositories\DTO\ReferralCode\ReferralCodeCreateDTO;
 use App\Repositories\Interfaces\ReferralCodeRepositoryInterface;
 use App\Services\User\DTO\ReferralCode\ReferralCodeCreateRequestDTO;
 use App\Services\User\DTO\ReferralCode\ReferralCodeCreateResponseDTO;
-use Illuminate\Database\Eloquent\Collection;
+use App\Services\User\DTO\ReferralCode\ReferralCodeGetListsResponseDTO;
 
 readonly class ReferralCodeService
 {
@@ -29,8 +29,19 @@ readonly class ReferralCodeService
             ->setReferralModel($createdModel);
     }
 
-    public function lists(int $userId): Collection
+    public function lists(int $userId): array
     {
-        return $this->repository->getByUserId($userId);
+        $codes = $this->repository->getByUserId($userId);
+
+        return $codes->map(fn (ReferralCode $code) => resolve(ReferralCodeGetListsResponseDTO::class)
+            ->setId($code->id)
+            ->setCreatedAt($code->created_at)
+            ->setIntroducerFee($code->introducer_fee)
+            ->setFriendFee($code->friend_fee)
+            ->setTotalAmountReceived((int) $code->transactions_sum_amount)
+            ->setTotalCountTransaction($code->referral_code_usage_count)
+            ->setTotalFriendUsage($code->registered_users_count)
+            ->setCode($code->code)
+        )->toArray();
     }
 }

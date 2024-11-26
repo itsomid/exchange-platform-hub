@@ -2,13 +2,14 @@
 
 namespace App\Http\Resources\V1\User;
 
-use App\Models\ReferralCode;
+use App\Services\User\DTO\ReferralCode\ReferralCodeGetListsResponseDTO;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
 /**
  * @OA\Schema(
  *     schema="ReferralCodeListCollection",
+ *
  *     @OA\Property(property="id", type="integer", example=1, description="Unique identifier for the referral code"),
  *     @OA\Property(property="code", type="string", example="ABC12345", description="Referral code string"),
  *     @OA\Property(property="introducer_fee", type="integer", example=15, description="Fee for the introducer"),
@@ -29,15 +30,15 @@ class ReferralCodeListCollection extends ResourceCollection
      */
     public function toArray(Request $request): array
     {
-        return $this->collection->map(fn (ReferralCode $item) => [
-            'id' => $item->id,
-            'code' => $item->code,
-            'introducer_fee' => $item->introducer_fee,
-            'friend_fee' => $item->friend_fee,
-            'total_friends_usage' => $item->registered_users_count,
-            'total_count_transaction' => $item->referral_code_usage_count,
-            'total_amount_received' => (int) $item->transactions_sum_amount,
-            'created_at' => $item->created_at,
-        ])->toArray();
+        return array_map(fn (ReferralCodeGetListsResponseDTO $item) => [
+            'id' => $item->getId(),
+            'code' => $item->getCode(),
+            'introducer_fee' => $item->getIntroducerFee(),
+            'friend_fee' => $item->getFriendFee(),
+            'total_friends_usage' => $item->getTotalFriendUsage(),
+            'total_count_transaction' => $item->getTotalCountTransaction(),
+            'total_amount_received' => (int) $item->getTotalAmountReceived(),
+            'created_at' => $item->getCreatedAt(),
+        ], $this->collection->toArray());
     }
 }

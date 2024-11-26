@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Faker\Factory as Faker;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,6 +11,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int    $id
+ * @property Carbon $created_at
+ * @property int    $introducer_fee
+ * @property int    $friend_fee
+ * @property int    $transactions_sum_amount
+ * @property int    $referral_code_usage_count
+ * @property int    $registered_users_count
+ * @property string $code
+ */
 class ReferralCode extends Model
 {
     use HasFactory, SoftDeletes;
