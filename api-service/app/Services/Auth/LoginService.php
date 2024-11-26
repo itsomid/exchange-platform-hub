@@ -2,13 +2,13 @@
 
 namespace App\Services\Auth;
 
-use App\Exceptions\Auth\Google2faSecretInvalidException;
 use App\Exceptions\Auth\InvalidUsernameOrPasswordException;
-use App\Repositories\Auth\UpdateLastLoginRequestDTO;
-use App\Repositories\Auth\UserRepositoryInterface;
-use App\Services\Auth\DTO\CheckTwoFactorRequestDTO;
+use App\Repositories\DTO\User\UpdateLastLoginRequestDTO;
+use App\Repositories\Interfaces\UserRepositoryInterface;
 use App\Services\Auth\DTO\LoginRequestDTO;
 use App\Services\Auth\DTO\LoginResponseDTO;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 
 readonly class LoginService
@@ -16,7 +16,6 @@ readonly class LoginService
     public function __construct(private UserRepositoryInterface $userRepository) {}
 
     /**
-     * @throws Google2faSecretInvalidException
      * @throws InvalidUsernameOrPasswordException
      */
     public function login(LoginRequestDTO $loginRequestDTO): LoginResponseDTO
@@ -35,20 +34,35 @@ readonly class LoginService
                 ->setId($user->id)
         );
 
-        return resolve(LoginResponseDTO::class)
+        $response = resolve(LoginResponseDTO::class)
             ->setUser($user)
-            ->setHasGoogle2fa(! is_null($user->google2fa_secret));
+            ->setHasGoogle2fa(false);
+        if (! empty($user->two_factor_secret)) {
+            $response->setEncryptedToken($this->generateEncryptedToken($user->id))
+                ->setHasGoogle2fa(true);
+        }
+
+        return $response;
     }
 
-    public function checkTwoFactor(CheckTwoFactorRequestDTO $checkTwoFactorRequestDTO): void
+    public function generateEncryptedToken(int $userId): string
     {
-        $user = $this->userRepository->getUserById($checkTwoFactorRequestDTO->getUserId());
-        // check 2fa
-        $google2fa = app('pragmarx.google2fa');
-        $isValid = $google2fa->verifyKey($user->google2fa_secret, $checkTwoFactorRequestDTO->getGoogle2fa());
+        $token = Crypt::encryptString((string) $userId);
+        Cache::put($token,
+            true,
+            now()->addMinutes(10));
 
-        if (! $isValid) {
-            throw new Google2faSecretInvalidException;
+        return $token;
+    }
+
+    public function getDecryptedToken(string $token): ?int
+    {
+        if (! Cache::has($token)) {
+            return null;
         }
+
+        Cache::delete($token);
+
+        return (int) Crypt::decryptString($token);
     }
 }

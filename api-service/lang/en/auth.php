@@ -20,6 +20,7 @@ return [
         'success' => 'You have successfully registered',
     ],
     'login' => [
+        'encrypted_token_invalid' => 'The token you entered is invalid.',
         'success' => 'You have successfully logged in',
         '2fa-required' => 'Entering the two-factor authentication code is mandatory.',
     ],
@@ -27,7 +28,10 @@ return [
         'success' => 'Your account has been successfully activated.',
     ],
     'forget-password' => [
-        'send' => 'اگر ایمیل شما در سیستم ما ثبت شده باشد، لینک تغییر رمز عبور به آن ارسال شده است. لطفاً ایمیل خود را بررسی کنید.',
+        'send' => 'If your email is registered in our system, a password reset link has been sent. Please check your inbox.',
+    ],
+    'two-factor' => [
+        'save-secret' => '2FA setup completed successfully.',
     ],
     'too_many_attempts' => 'Too many attempts. Please try again later.',
 ];
