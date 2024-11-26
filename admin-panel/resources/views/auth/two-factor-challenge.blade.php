@@ -85,17 +85,9 @@
     </div>
 
 @endsection
-@section('vendor-style')
-    @vite([
-      'resources/assets/vendor/libs/@form-validation/form-validation.scss'
-    ])
-@endsection
 @section('vendor-script')
-    @vite(['resources/assets/vendor/libs/cleavejs/cleave.js',
-//  'resources/assets/js/pages-auth.js',
-  'resources/assets/vendor/libs/@form-validation/popular.js',
-  'resources/assets/vendor/libs/@form-validation/bootstrap5.js',
-  'resources/assets/vendor/libs/@form-validation/auto-focus.js',
-  'resources/assets/js/pages-auth-two-steps.js'
+    @vite([
+    'resources/assets/vendor/libs/cleavejs/cleave.js',
+    'resources/assets/js/pages-auth-two-steps.js'
 ])
 @endsection
