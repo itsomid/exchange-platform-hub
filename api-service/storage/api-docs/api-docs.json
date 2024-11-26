@@ -741,6 +741,126 @@
                     }
                 ]
             }
+        },
+        "/api/v1/referral-codes": {
+            "get": {
+                "tags": [
+                    "Referral Code"
+                ],
+                "summary": "List Referral Codes",
+                "description": "Retrieve a list of referral codes created by the authenticated user.",
+                "operationId": "listReferralCodes",
+                "responses": {
+                    "200": {
+                        "description": "List of referral codes retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ReferralCodeListCollection"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Referral Code"
+                ],
+                "summary": "Create Referral Code",
+                "description": "Allows a user to create a referral code with specific friend fee and usage limits.",
+                "operationId": "createReferralCode",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ReferralCodeCreateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Referral code created successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Created successfully."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/ReferralCodeResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -883,6 +1003,37 @@
                 },
                 "type": "object"
             },
+            "ValidateTwoFactorRequest": {
+                "required": [
+                    "google2fa"
+                ],
+                "properties": {
+                    "google2fa": {
+                        "description": "The user's two-factor authentication code.",
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "ChangePasswordRequest": {
+                "required": [
+                    "old_password",
+                    "new_password"
+                ],
+                "properties": {
+                    "old_password": {
+                        "description": "The current password of the user.",
+                        "type": "string",
+                        "example": "oldPassword123"
+                    },
+                    "new_password": {
+                        "description": "The new password for the user.",
+                        "type": "string",
+                        "example": "newPassword123"
+                    }
+                },
+                "type": "object"
+            },
             "UpdateProfileRequest": {
                 "required": [
                     "first_name",
@@ -908,33 +1059,17 @@
                 },
                 "type": "object"
             },
-            "ChangePasswordRequest": {
+            "ReferralCodeCreateRequest": {
                 "required": [
-                    "old_password",
-                    "new_password"
+                    "friend_fee"
                 ],
                 "properties": {
-                    "old_password": {
-                        "description": "The current password of the user.",
-                        "type": "string",
-                        "example": "oldPassword123"
-                    },
-                    "new_password": {
-                        "description": "The new password for the user.",
-                        "type": "string",
-                        "example": "newPassword123"
-                    }
-                },
-                "type": "object"
-            },
-            "ValidateTwoFactorRequest": {
-                "required": [
-                    "google2fa"
-                ],
-                "properties": {
-                    "google2fa": {
-                        "description": "The user's two-factor authentication code.",
-                        "type": "string"
+                    "friend_fee": {
+                        "description": "The fee the friend will pay.",
+                        "type": "integer",
+                        "maximum": 100,
+                        "minimum": 1,
+                        "example": 10
                     }
                 },
                 "type": "object"
@@ -981,6 +1116,72 @@
                     }
                 },
                 "type": "object"
+            },
+            "ReferralCodeListCollection": {
+                "properties": {
+                    "id": {
+                        "description": "Unique identifier for the referral code",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "code": {
+                        "description": "Referral code string",
+                        "type": "string",
+                        "example": "ABC12345"
+                    },
+                    "introducer_fee": {
+                        "description": "Fee for the introducer",
+                        "type": "integer",
+                        "example": 15
+                    },
+                    "friend_fee": {
+                        "description": "Fee for the friend",
+                        "type": "integer",
+                        "example": 10
+                    },
+                    "total_friends_usage": {
+                        "description": "Total number of friends who used the referral code",
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "total_count_transaction": {
+                        "description": "Total count of transactions using the referral code",
+                        "type": "integer",
+                        "example": 20
+                    },
+                    "total_amount_received": {
+                        "description": "Total amount received through the referral code",
+                        "type": "integer",
+                        "example": 500
+                    },
+                    "created_at": {
+                        "description": "Timestamp when the referral code was created",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-11-25T12:34:56Z"
+                    }
+                },
+                "type": "object"
+            },
+            "ReferralCodeResource": {
+                "properties": {
+                    "code": {
+                        "description": "The generated referral code.",
+                        "type": "string",
+                        "example": "XYZ123"
+                    },
+                    "introducer_fee": {
+                        "description": "The fee received by the introducer.",
+                        "type": "integer",
+                        "example": 15
+                    },
+                    "friend_fee": {
+                        "description": "The fee the friend will pay.",
+                        "type": "integer",
+                        "example": 10
+                    }
+                },
+                "type": "object"
             }
         }
     },
@@ -996,6 +1197,10 @@
         {
             "name": "Profile",
             "description": "Profile"
+        },
+        {
+            "name": "Referral Code",
+            "description": "Referral Code"
         }
     ]
 }

@@ -91,7 +91,7 @@ class ReferralCodeController extends Controller
      *                 property="data",
      *                 type="array",
      *
-     *                 @OA\Items(ref="#/components/schemas/ReferralCodeListResource")
+     *                 @OA\Items(ref="#/components/schemas/ReferralCodeListCollection")
      *             )
      *         )
      *     ),
