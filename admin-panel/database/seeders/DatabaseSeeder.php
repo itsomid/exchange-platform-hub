@@ -33,8 +33,8 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             AdminTableSeeder::class,
-            ReferralCodeSeeder::class,
             UserTableSeeder::class,
+            ReferralCodeSeeder::class,
             CurrenciesSeeder::class,
             TransactionSeeder::class,
             SettingTableSeeder::class,
