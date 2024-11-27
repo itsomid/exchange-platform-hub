@@ -15,7 +15,7 @@ class AdminController extends Controller
 {
     public function index()
     {
-        $user_ids =  User::query()->whereNull('introducer_code')->get()->pluck('id')->toArray();
+
         $admins = Admin::query()
             ->orderBy('id')
             ->search(request()->input('key'))
