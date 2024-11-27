@@ -34,7 +34,7 @@
                                 type="text"
                                 class="form-control"
                                 id="username"
-                                name="username"
+                                name="email"
                                 placeholder="شناسه کاربری"
                                 autocomplete="username"
                                 value="{{ $defaultUsername}}"
