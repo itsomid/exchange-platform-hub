@@ -40,6 +40,9 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::confirmPasswordView(function () {
             return view('dashboard.profile.confirm-password.index');
         });
+        Fortify::confirmPasswordsUsing(function (Admin $admin, $password) {
+            return Hash::check($password, $admin->password);
+        });
 
         Fortify::createUsersUsing(CreateNewUser::class);
         Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);

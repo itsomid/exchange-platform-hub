@@ -9,12 +9,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Str;
 use Jenssegers\Agent\Agent;
+use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Morilog\Jalali\Jalalian;
 
 class User extends Authenticatable
 {
-    use Filterable, HasApiTokens, HasFactory;
+    use Filterable, HasApiTokens, HasFactory, TwoFactorAuthenticatable;
 
     const NEW_TOKEN_INTERVAL = 20;
 
