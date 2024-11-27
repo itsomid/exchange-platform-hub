@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Fortify\Actions\EnableTwoFactorAuthentication;
 use Laravel\Fortify\Fortify;
 
 class FortifyServiceProvider extends ServiceProvider
@@ -41,7 +42,13 @@ class FortifyServiceProvider extends ServiceProvider
             return view('dashboard.profile.confirm-password.index');
         });
         Fortify::confirmPasswordsUsing(function (Admin $admin, $password) {
-            return Hash::check($password, $admin->password);
+            if(Hash::check($password, $admin->password)){
+                $enable = resolve(EnableTwoFactorAuthentication::class);
+                $enable($admin, true);
+                return true;
+            }else{
+                return false;
+            }
         });
 
         Fortify::createUsersUsing(CreateNewUser::class);
