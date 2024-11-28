@@ -16,6 +16,7 @@ services:
         - UID=${UID:-1000}
         - GID=${GID:-1000}
         - USER=${USER:-laraveluser}
+        - NGINX_CONF=admin.default.conf
     restart: unless-stopped
     container_name: nginx-admin
     ports:
@@ -59,6 +60,7 @@ services:
         - UID=${UID:-1000}
         - GID=${GID:-1000}
         - USER=${USER:-laraveluser}
+        - NGINX_CONF=api.default.conf
     restart: unless-stopped
     container_name: nginx-api
     ports:
