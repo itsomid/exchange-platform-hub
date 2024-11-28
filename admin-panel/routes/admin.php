@@ -19,6 +19,7 @@ use App\Http\Controllers\User\InquiryController;
 use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\User\UserSecurityController;
 use App\Http\Controllers\Exchange\CurrencyController;
+use App\Http\Controllers\User\UserFinancialBlockController;
 
 
 Route::get('/users_select', [SelectsApiController::class, 'users'])->name('users.select.index');
@@ -63,6 +64,8 @@ Route::get('/users/{user}/update-password', [UserSecurityController::class, 'pas
 Route::patch('/users/{user}/update-password', [UserSecurityController::class, 'passwordUpdate'])->name('user.password.update');
 Route::get('/users/{user}/security', [UserSecurityController::class, 'index'])->name('user.security');
 Route::get('/users/{user}/reset-password', [UserSecurityController::class, 'sendResetLinkEmail'])->name('user.reset-password-email');
+Route::get('/users/{user}/financial-status', [UserFinancialBlockController::class, 'getBlocks'])->name('user.financial-block.getBlocks');
+Route::post('/users/{user}/financial-status', [UserFinancialBlockController::class, 'addBlock'])->name('user.financial-block.addBlock');
 
 
 //Route::get('/users/2fa', [UserSecurityController::class, ''])->name('profile.2fa.edit');

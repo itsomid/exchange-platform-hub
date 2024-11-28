@@ -15,7 +15,7 @@ class DateFormatter
     }
     public static function convertUnixTimeToPersianDate($timestamp, $addMinutes = 0, $format = '%A, %d %B %Y  H:i:s')
     {
-        return $date = Carbon::createFromTimestamp($timestamp, 'UTC') // Start in UTC
+         $date = Carbon::createFromTimestamp($timestamp, 'UTC') // Start in UTC
         ->addMinutes($addMinutes) // Adjust time if needed
         ->setTimezone('Asia/Tehran'); // Convert to Iran Standard Time
 

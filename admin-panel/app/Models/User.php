@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Filters\Filterable;
 use App\Notifications\ResetPasswordNotification;
+use Carbon\Carbon;
 use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,9 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Jenssegers\Agent\Agent;
-use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
-use Morilog\Jalali\Jalalian;
 
 class User extends Authenticatable implements CanResetPassword
 {
@@ -64,6 +63,14 @@ class User extends Authenticatable implements CanResetPassword
     }
 
 
+    public function financialBlocks(): HasMany
+    {
+        return $this->hasMany(UserFinancialBlock::class,'user_id')->orderBy('restricted_until', 'desc');
+    }
+    public function activeFinancialBlocks() : HasMany
+    {
+        return $this->hasMany(UserFinancialBlock::class,'user_id')->where('restricted_until', '>', Carbon::now())->orderBy('restricted_until', 'desc');
+    }
     public function twoFAStatus()
     {
         return (bool)$this->two_factore_secret;
@@ -129,4 +136,6 @@ class User extends Authenticatable implements CanResetPassword
         $url = sprintf(config('frontend.reset-password-link'), $token);
         $this->notify(new ResetPasswordNotification($this, $url));
     }
+
+
 }

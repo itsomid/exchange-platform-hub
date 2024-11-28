@@ -196,14 +196,13 @@
 
                                 </td>
                                 <td>
-                                    @if($user->status === 'active')
-                                        <span class="badge bg-label-success">فعال</span>
-                                    @elseif($user->status === 'suspended')
-                                        <span class="badge bg-label-danger">تعلیق شده</span>
+                                    @if($user->activeFinancialBlocks->isEmpty())
+                                        <span class="badge bg-label-success">بدون محدودیت</span>
                                     @else
-                                        <span class="badge bg-label-secondary">غیرفعال</span>
+                                        @foreach($user->activeFinancialBlocks as $block)
+                                            <span class="badge bg-label-danger me-2">     {{\App\Enums\UserFinancialBlockAction::TYPE_LABEL[$block->action] }}</span>
+                                        @endforeach
                                     @endif
-
                                 </td>
                                 <td>
                                     فعالیتی نداشته است
@@ -237,10 +236,13 @@
                                                     <i class="fa-light fa-pen"></i>
                                                     ویرایش کاربر
                                                 </a>
-                                                <a class="dropdown-item"
-                                                   href="">
+                                                <a class="dropdown-item" href="{{route('admin.user.password.edit', ['user'=>$user->id])}}">
                                                     <i class="fa-regular fa-unlock"></i>
                                                     تغییر رمز عبور
+                                                </a>
+                                                <a class="dropdown-item" href="{{route('admin.user.financial-block.getBlocks', ['user'=>$user->id])}}">
+                                                    <i class="fa-regular fa-unlock"></i>
+                                                    محدودیت های مالی
                                                 </a>
                                                 @can('user.login-as-customer')
                                                     <a class="dropdown-item" href="#">
