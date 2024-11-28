@@ -10,9 +10,9 @@ ENV UID=${UID}
 ENV GID=${GID}
 ENV USER=${USER}
 
-# Creating user and group
-RUN addgroup -g ${GID} ${USER}
-RUN adduser -G ${USER} -D -s /bin/sh -u ${UID} ${USER}
+# Create a user group with a unique name
+RUN addgroup -g ${GID} ${USER} || true \
+    && adduser -G ${USER} -D -s /bin/sh -u ${UID} ${USER} || true
 
 # Modify nginx configuration to use the new user's privileges
 RUN sed -i "s/user nginx/user '${USER}'/g" /etc/nginx/nginx.conf
