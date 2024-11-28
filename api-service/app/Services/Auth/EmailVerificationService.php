@@ -3,8 +3,8 @@
 namespace App\Services\Auth;
 
 use App\Exceptions\Auth\InvalidVerificationTokenException;
-use App\Repositories\Auth\UserEmailVerificationInterface;
-use App\Repositories\Auth\UserRepositoryInterface;
+use App\Repositories\Interfaces\UserEmailVerificationInterface;
+use App\Repositories\Interfaces\UserRepositoryInterface;
 use App\Services\Auth\DTO\EmailVerifyRequestDTO;
 
 readonly class EmailVerificationService

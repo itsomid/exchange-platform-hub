@@ -42,7 +42,7 @@
                                 <div class="form-group mt-3">
                                     <label for="Code">Code</label>
                                     <input name="code" id="Code" class="form-control"
-                                           placeholder="کد کوین را وارد کنید."
+                                           placeholder="کد کوپن را وارد کنید."
                                            value="{{$currencies->code}}">
                                     @error('code')
                                     <small class="text-danger">{{$message}}</small>

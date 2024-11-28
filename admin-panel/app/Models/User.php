@@ -3,18 +3,22 @@
 namespace App\Models;
 
 use App\Filters\Filterable;
+use App\Notifications\ResetPasswordNotification;
+use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Jenssegers\Agent\Agent;
+use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Morilog\Jalali\Jalalian;
 
-class User extends Authenticatable
+class User extends Authenticatable implements CanResetPassword
 {
-    use Filterable, HasApiTokens, HasFactory;
+    use Filterable, HasApiTokens, HasFactory, Notifiable;
 
     const NEW_TOKEN_INTERVAL = 20;
 
@@ -113,5 +117,16 @@ class User extends Authenticatable
         }
 
         return $username;
+    }
+
+    /**
+     * Send a password reset notification to the user.
+     *
+     * @param string $token
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $url = sprintf(config('frontend.reset-password-link'), $token);
+        $this->notify(new ResetPasswordNotification($this, $url));
     }
 }

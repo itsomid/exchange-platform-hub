@@ -124,11 +124,11 @@
                                 {{$referralCode->introducer_fee}}%/{{$referralCode->friend_fee}}%
                             </td>
                             <td>
-                                <span class="me-2">{{count($referralCode->registeredUsers)}}</span>
+                                <span class="me-2">{{$referralCode->registered_users_count}}</span>
                                 <a href="">(مشاهده)</a>
                             </td>
                             <td>
-                                {{count($referralCode->referralCodeUsage)}}
+                                {{$referralCode->referral_code_usage_count}}
                             </td>
                             <td>
                                 ${{formatNumber($referralCode->transactions_sum_amount,2)}}

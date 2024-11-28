@@ -13,9 +13,10 @@ class ReferralCodeController extends Controller
 {
     public function index()
     {
-        $referralCodes = ReferralCode::filterBy(request()->all())
+         $referralCodes = ReferralCode::filterBy(request()->all())
             ->with('user')
             ->withCount('registeredUsers')
+            ->withCount('referralCodeUsage')
             ->withSum('transactions', 'amount')
             ->get();
         $totalTransactionSum = $referralCodes->sum('transactions_sum_amount');

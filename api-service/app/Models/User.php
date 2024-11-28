@@ -19,6 +19,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string $password
  * @property string $google2fa_secret
  * @property int    $id
+ * @property string $two_factor_secret
  */
 class User extends Authenticatable implements CanResetPassword, MustVerifyEmail
 {

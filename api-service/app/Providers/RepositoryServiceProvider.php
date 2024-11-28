@@ -2,12 +2,12 @@
 
 namespace App\Providers;
 
-use App\Repositories\Auth\ReferralCodeRepository;
-use App\Repositories\Auth\ReferralCodeRepositoryInterface;
-use App\Repositories\Auth\UserEmailVerificationInterface;
-use App\Repositories\Auth\UserEmailVerificationRepository;
-use App\Repositories\Auth\UserRepository;
-use App\Repositories\Auth\UserRepositoryInterface;
+use App\Repositories\ReferralCodeRepository;
+use App\Repositories\Interfaces\ReferralCodeRepositoryInterface;
+use App\Repositories\Interfaces\UserEmailVerificationInterface;
+use App\Repositories\UserEmailVerificationRepository;
+use App\Repositories\UserRepository;
+use App\Repositories\Interfaces\UserRepositoryInterface;
 use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider

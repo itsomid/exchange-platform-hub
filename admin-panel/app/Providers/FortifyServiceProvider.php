@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Fortify\Actions\EnableTwoFactorAuthentication;
 use Laravel\Fortify\Fortify;
 
 class FortifyServiceProvider extends ServiceProvider
@@ -40,6 +41,15 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::confirmPasswordView(function () {
             return view('dashboard.profile.confirm-password.index');
         });
+        Fortify::confirmPasswordsUsing(function (Admin $admin, $password) {
+            if(Hash::check($password, $admin->password)){
+                $enable = resolve(EnableTwoFactorAuthentication::class);
+                $enable($admin, true);
+                return true;
+            }else{
+                return false;
+            }
+        });
 
         Fortify::createUsersUsing(CreateNewUser::class);
         Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
@@ -47,7 +57,7 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
 
         Fortify::authenticateUsing(function (Request $request) {
-            $user = Admin::query()->where('mobile', $request->username)->orWhere('email', $request->username)->first();
+            $user = Admin::query()->where('mobile', $request->email)->orWhere('email', $request->email)->first();
 
             if ($user && Hash::check($request->password, $user->password)) {
                 return $user;
@@ -61,7 +71,7 @@ class FortifyServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('login', function (Request $request) {
-            $username = (string) $request->username;
+            $username = (string) $request->email;
 
             return Limit::perMinute(50)->by($username.$request->ip());
         });

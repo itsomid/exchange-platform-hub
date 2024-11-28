@@ -82,14 +82,12 @@
         <div class="card-body">
             <div class="card-title header-elements">
                 <h5 class="m-0 me-2">لیست کوین ها</h5>
-
                     <div class="card-title-elements ms-auto">
-                        <a href="{{route('admin.admin.create')}}" class="btn btn-primary">
+                        <a href="{{route('admin.currency.create')}}" class="btn btn-primary">
                             <i class="fa fa-plus mx-2"></i>
                             افزودن کوین جدید
                         </a>
                     </div>
-
             </div>
             <div class="table-responsive text-nowrap">
                 <table class="table">

@@ -11,6 +11,12 @@ use Illuminate\Http\Resources\Json\JsonResource;
  */
 class UserResource extends JsonResource
 {
+    public function __construct($resource, private readonly ?string $encryptedToken)
+    {
+        $this->resource = $resource;
+        parent::__construct($this->resource);
+    }
+
     /**
      * @OA\Schema(
      *      schema="UserResource",
@@ -28,7 +34,8 @@ class UserResource extends JsonResource
         return [
             'name' => $this->name,
             'email' => $this->email,
-            'has_two_factor' => ! empty($this->google2fa_secret),
+            'has_two_factor' => ! empty($this->two_factor_secret),
+            'encrypted_token' => $this->when(! empty($this->two_factor_secret), $this->encryptedToken),
         ];
     }
 }

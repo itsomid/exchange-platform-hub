@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 
 class UserSecurityController extends Controller
 {
@@ -15,10 +16,17 @@ class UserSecurityController extends Controller
         return view('dashboard.user.security',['user'=>$user]);
     }
 
-    public function sendResetLinkEmail()
+    public function sendResetLinkEmail(User $user)
     {
-        //TODO: reset password email
-        Toast::message('لینک بازیابی رمز عبور با موفقیت به کاربر ارسال شد')->success()->notify();
+        $status = Password::sendResetLink(
+            ['email' => $user->email]
+        );
+        if($status === Password::RESET_LINK_SENT){
+            Toast::message('لینک بازیابی رمز عبور با موفقیت به کاربر ارسال شد')->success()->notify();
+        }else{
+            report("Panel can not send reset link {$user->id}");
+            Toast::message('مشکل فنی رخ داده است لطفا دقایق دیگری تلاش کنید.')->danger()->notify();
+        }
 
         return redirect()->back();
     }
