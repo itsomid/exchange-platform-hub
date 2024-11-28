@@ -20,5 +20,14 @@ RUN sed -i "s/user nginx/user '${USER}'/g" /etc/nginx/nginx.conf
 # Make html directory
 RUN mkdir -p /var/www/html
 
+# Set permissions for Laravel directories
+#RUN chown -R ${USER}:${USER} /var/www/html/storage /var/www/html/bootstrap/cache \
+#    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
+RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache && \
+    chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache && \
+    chown -R ${USER}:${USER} /var/www/html/storage /var/www/html/bootstrap/cache
+
+
 # Copy the correct NGINX configuration based on the build argument
 COPY ./nginx/${NGINX_CONF} /etc/nginx/conf.d/default.conf
