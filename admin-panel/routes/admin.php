@@ -20,6 +20,7 @@ use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\User\UserSecurityController;
 use App\Http\Controllers\Exchange\CurrencyController;
 use App\Http\Controllers\User\UserFinancialBlockController;
+use App\Http\Controllers\Exchange\CurrencyChainController;
 
 
 Route::get('/users_select', [SelectsApiController::class, 'users'])->name('users.select.index');
@@ -106,3 +107,6 @@ Route::get('/exchange/currencies/{currency}', [CurrencyController::class, 'show'
 Route::get('/exchange/currencies/{currency}/edit', [CurrencyController::class, 'edit'])->name('currency.edit')->can('currency');
 Route::patch('/exchange/currencies/{currency}', [CurrencyController::class, 'update'])->name('currency.update')->can('currency');
 Route::delete('/exchange/currencies/{currency}', [CurrencyController::class, 'destroy'])->name('currency.destroy')->can('currency');
+
+Route::get('/exchange/currencies/{currency}/chains', [CurrencyChainController::class, 'getChains'])->name('currency.chains.edit')->can('currency');
+

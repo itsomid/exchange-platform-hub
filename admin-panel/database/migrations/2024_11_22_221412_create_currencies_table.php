@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('currencies', function (Blueprint $table) {
             $table->id();
-            $table->string('type')->default('ERC20'); //ERC20
             $table->string('name'); //Tether
-            $table->string('symbol'); //₮
-            $table->string('code'); //USDT
+            $table->string('symbol'); //USDT
             $table->string('logo');
-            $table->boolean('is_active');
+//            $table->boolean('deposit_enabled')->default(true); // Is deposit enabled for this currency
+//            $table->boolean('withdraw_enabled')->default(true); // Is withdrawal enabled for this currency
+            $table->boolean('inter_transfer_enabled')->default(true); // Is internal transfer enabled
             $table->timestamps();
         });
     }
