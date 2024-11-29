@@ -60,21 +60,21 @@
                 <li class="nav-item">
                     <a class="nav-link @if(request()->route()->getName() == 'admin.profile.edit') active @endif"
                        href="{{route('admin.profile.edit')}}">
-                        <i class="ti ti-user-check ti-xs me-1"></i>
+                        <i class="fa-light fa-user-alt me-2"></i>
                         اطلاعات کاربری
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link @if(request()->route()->getName() == 'admin.profile.password.edit') active @endif"
                        href="{{route('admin.profile.password.edit')}}">
-                        <i class="ti ti-lock ti-xs me-1"></i>
+                        <i class="fa-regular fa-lock-alt me-2"></i>
                         ویرایش گذرواژه
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link @if(request()->route()->getName() == 'admin.profile.2fa.edit') active @endif"
                        href="{{route('admin.profile.2fa.edit')}}">
-                        <i class="ti ti-currency-dollar ti-xs me-1"></i>
+                        <i class="fa-brands fa-google me-2"></i>
                         احراز هویت دو مرحله ای
                     </a>
                 </li>

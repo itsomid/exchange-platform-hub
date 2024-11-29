@@ -2,7 +2,7 @@
 @section('title', 'مدیریت کاربران')
 @section('content')
     <div class="row g-4 mb-4">
-        <div class="col-sm-12 col-xl-4">
+        <div class="col-sm-12 col-xl-3">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
@@ -21,7 +21,26 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-12 col-xl-4">
+        <div class="col-sm-12 col-xl-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                            <span>سشن های فعال</span>
+                            <div class="d-flex align-items-center my-1">
+                                <h4 class="mb-0 me-2">{{$users->total()}}</h4>
+                                <p class="text-success mb-0">(+6%)</p>
+                            </div>
+                        </div>
+                        <span class="badge bg-label-primary rounded p-2">
+                            <i class="fa-light fa-user-alt fa-xl"></i>
+
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 col-xl-3">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
@@ -39,7 +58,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-12 col-xl-4">
+        <div class="col-sm-12 col-xl-3">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
