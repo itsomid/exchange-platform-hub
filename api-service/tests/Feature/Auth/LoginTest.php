@@ -355,7 +355,7 @@ it('generates a token with correct expiration after successful 2FA validation', 
 });
 
 it('returns an error if the user is not authenticated', function () {
-    $this->withoutExceptionHandling();
+
 
     $response = $this->postJson(route('2fa.verify-login'), [
         'google2fa' => 'valid-2fa-code',
@@ -363,7 +363,7 @@ it('returns an error if the user is not authenticated', function () {
 
     $response->assertStatus(401)
         ->assertJson([
-            'message' => __('auth.unauthenticated'),
+            'message' => __('auth.login.encrypted_token_invalid'),
         ]);
 });
 
