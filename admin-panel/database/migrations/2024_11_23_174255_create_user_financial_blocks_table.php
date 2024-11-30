@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('user_financial_statuses', function (Blueprint $table) {
+        Schema::create('user_financial_blocks', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id'); // Reference to the user
-            $table->string('status'); // Financial status (active or restricted)
+            $table->string('action'); // Financial status (active or restricted)
             $table->text('reason')->nullable(); // Timestamp until withdrawal is restricted
             $table->timestamp('restricted_until')->nullable(); // Timestamp until withdrawal is restricted
 
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('user_financial_statuses');
+        Schema::dropIfExists('user_financial_blocks');
     }
 };

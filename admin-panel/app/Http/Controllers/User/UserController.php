@@ -26,7 +26,7 @@ class UserController extends Controller
     public function index()
     {
 
-        $users = User::with(['introducerReferral.user'])->orderBy('id')->filterBy(request()->all())->paginate(50);
+        $users = User::with('introducerReferral.user','activeFinancialBlocks')->orderBy('id')->filterBy(request()->all())->paginate(50);
         $referral_codes = ReferralCode::all();
 
         $supportDescriptions = User::select('support_description')

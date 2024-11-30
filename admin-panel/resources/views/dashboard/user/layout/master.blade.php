@@ -27,7 +27,7 @@
 
                             <li class="mt-2 d-flex justify-content-between">
                                 <span class="h6">ایمیل:</span>
-                                <span>vafgot@vultukir.org</span>
+                                <span>{{$user->email}}</span>
                             </li>
                             <li class="mt-2 d-flex justify-content-between">
                                 <span class="h6">وضعیت حساب:</span>
@@ -39,6 +39,19 @@
                             </li>     <li class="mt-2 d-flex justify-content-between">
                                 <span class="h6">معرف:</span>
                                 <span>{{$user->introducerReferral?->user->username}}</span>
+                            </li>
+                            <li class="mt-2 d-flex justify-content-between">
+                                <span class="h6">وضعیت حساب</span>
+
+                                @if($user->activeFinancialBlocks->isEmpty())
+                                    <span class="badge bg-label-success align-self-baseline">بدون محدودیت</span>
+                                @else
+                                    <div class="text-end">
+                                    @foreach($user->activeFinancialBlocks as $block)
+                                        <span class="badge bg-label-danger ms-1 align-self-baseline">    {{\App\Enums\UserFinancialBlockAction::TYPE_LABEL[$block->action] }}</span>
+                                    @endforeach
+                                    </div>
+                                @endif
                             </li>
                             <li class="mt-2 d-flex justify-content-between">
                                 <span class="h6">احراز هویت دو مرحله ای:</span>
@@ -81,6 +94,14 @@
                         امنیت
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link @if(request()->route()->getName() == 'admin.user.financial-block.getBlocks') active @endif"
+                       href="{{route('admin.user.financial-block.getBlocks',['user' => $user->id])}}">
+                        <i class="fa-regular fa-file-chart-column me-2"></i>
+                        دسترسی مالی
+                    </a>
+                </li>
+
                 <li class="nav-item">
                     <a class="nav-link @if(request()->route()->getName() == 'admin.user.password.edit') active @endif"
                        href="{{route('admin.user.password.edit',['user' => $user->id])}}">

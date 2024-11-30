@@ -35,9 +35,11 @@ class DatabaseSeeder extends Seeder
             AdminTableSeeder::class,
             ReferralCodeSeeder::class,
             UserTableSeeder::class,
-            CurrenciesSeeder::class,
+            CurrencySeeder::class,
+            CurrencyChainSeeder::class,
             TransactionSeeder::class,
             SettingTableSeeder::class,
+            ExternalApiConfigSeeder::class,
         ]);
     }
 }

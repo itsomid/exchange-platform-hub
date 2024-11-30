@@ -15,8 +15,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('base_currency_id')->constrained('currencies')->onDelete('cascade'); // e.g., BTC
             $table->foreignId('quote_currency_id')->constrained('currencies')->onDelete('cascade'); // e.g., USD
+
+            $table->decimal('min_trade_amount', 18, 8)->default(0);
+            $table->decimal('max_trade_amount', 18, 8)->default(0);
+
             $table->string('symbol'); // Market symbol (e.g., USDT_BTC)
-            $table->enum('status', ['active', 'inactive']); // Market status
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
 
         });

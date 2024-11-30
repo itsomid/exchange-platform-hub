@@ -2,21 +2,20 @@
 
 namespace App\Http\Controllers\Exchange;
 
-use App\Enums\CurrencyChainEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Currency;
 use Illuminate\Http\Request;
 
-class CurrencyController extends Controller
+class CurrencyChainController extends Controller
 {
-
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function getChains(Currency $currency)
     {
-        $currencies = Currency::query()->with('chains')->filterBy(request()->all())->get();
-        return view('dashboard.exchange.currency.index', ['currencies' => $currencies]);
+        $currency->load('chains');
+
+        return view('dashboard.exchange.currency.edit-chains',['currency' => $currency]);
     }
 
     /**
@@ -24,10 +23,7 @@ class CurrencyController extends Controller
      */
     public function create()
     {
-        $currencies_type = CurrencyChainEnum::cases();
-        return view('dashboard.exchange.currency.create',
-            ['currencies_type' => $currencies_type]
-        );
+        //
     }
 
     /**
@@ -49,16 +45,9 @@ class CurrencyController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Currency $currency)
+    public function edit(string $id)
     {
-
-        $currencies_type = CurrencyChainEnum::cases();
-
-        $currency->load('chains');
-        return view('dashboard.exchange.currency.edit',
-            ['currencies_type' => $currencies_type],
-            ['currency' => $currency]
-        );
+        //
     }
 
     /**

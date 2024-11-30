@@ -2,7 +2,7 @@
 @section('title', 'مدیریت کاربران')
 @section('content')
     <div class="row g-4 mb-4">
-        <div class="col-sm-12 col-xl-4">
+        <div class="col-sm-12 col-xl-3">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
@@ -21,7 +21,26 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-12 col-xl-4">
+        <div class="col-sm-12 col-xl-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                            <span>سشن های فعال</span>
+                            <div class="d-flex align-items-center my-1">
+                                <h4 class="mb-0 me-2">{{$users->total()}}</h4>
+                                <p class="text-success mb-0">(+6%)</p>
+                            </div>
+                        </div>
+                        <span class="badge bg-label-primary rounded p-2">
+                            <i class="fa-light fa-user-alt fa-xl"></i>
+
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 col-xl-3">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
@@ -39,7 +58,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-12 col-xl-4">
+        <div class="col-sm-12 col-xl-3">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
@@ -196,14 +215,13 @@
 
                                 </td>
                                 <td>
-                                    @if($user->status === 'active')
-                                        <span class="badge bg-label-success">فعال</span>
-                                    @elseif($user->status === 'suspended')
-                                        <span class="badge bg-label-danger">تعلیق شده</span>
+                                    @if($user->activeFinancialBlocks->isEmpty())
+                                        <span class="badge bg-label-success">بدون محدودیت</span>
                                     @else
-                                        <span class="badge bg-label-secondary">غیرفعال</span>
+                                        @foreach($user->activeFinancialBlocks as $block)
+                                            <span class="badge bg-label-danger me-2">     {{\App\Enums\UserFinancialBlockAction::TYPE_LABEL[$block->action] }}</span>
+                                        @endforeach
                                     @endif
-
                                 </td>
                                 <td>
                                     فعالیتی نداشته است
@@ -237,10 +255,13 @@
                                                     <i class="fa-light fa-pen"></i>
                                                     ویرایش کاربر
                                                 </a>
-                                                <a class="dropdown-item"
-                                                   href="">
+                                                <a class="dropdown-item" href="{{route('admin.user.password.edit', ['user'=>$user->id])}}">
                                                     <i class="fa-regular fa-unlock"></i>
                                                     تغییر رمز عبور
+                                                </a>
+                                                <a class="dropdown-item" href="{{route('admin.user.financial-block.getBlocks', ['user'=>$user->id])}}">
+                                                    <i class="fa-regular fa-unlock"></i>
+                                                    محدودیت های مالی
                                                 </a>
                                                 @can('user.login-as-customer')
                                                     <a class="dropdown-item" href="#">

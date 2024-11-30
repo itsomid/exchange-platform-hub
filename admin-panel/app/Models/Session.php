@@ -22,7 +22,7 @@ class Session extends Model
 
     public function expires_at()
     {
-        return DateFormatter::convertUnixTimeToPersianDate($this->last_activity, 120,'%Y-%m-%d H:i:s');
+        return DateFormatter::convertUnixTimeToPersianDate($this->last_activity, 120,'H:i:s %Y-%m-%d');
     }
 
     public function is_desktop()

@@ -1,0 +1,127 @@
+@extends('dashboard.exchange.currency.layout.master')
+@section('title', 'ساخت کوپون')
+@section('currency-body')
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <h5 class="card-header">{{$currency->name}}</h5>
+                <div class="card-body">
+                    <form action="{{route('admin.currency.update',['currency'=>$currency])}}" method="post">
+                        @csrf
+                        @foreach($currency->chains as $chain)
+                            <h6> اطلاعات شبکه {{$chain->chain}}</h6>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label class="form-label" for="name">نام شبکه</label>
+                                        <input name="name"
+                                               id="name"
+                                               class="form-control"
+                                               placeholder="نام را وارد کنید."
+                                               value="{{$chain->chain}}"
+                                               disabled
+                                               >
+                                        @error('name')
+                                        <small class="text-danger">{{$message}}</small>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mt-5">
+                                <div class="col-md-3 ">
+                                    <div class="form-group">
+                                        <label class="form-label" for="min_deposit_amount">حداقل مقدار واریز</label>
+                                        <input  name="min_deposit_amount" id="min_deposit_amount" class="form-control"
+                                               placeholder="Symbol را وارد کنید." value="{{$chain->min_deposit_amount}}" required>
+                                        @error('min_deposit_amount')
+                                        <small class="text-danger">{{$message}}</small>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label class="form-label" for="min_deposit_amount">حداقل مقدار برداشت</label>
+                                        <input  name="min_deposit_amount" id="min_deposit_amount" class="form-control"
+                                                placeholder="Symbol را وارد کنید." value="{{$chain->min_withdraw_amount}}" required>
+                                        @error('min_deposit_amount')
+                                        <small class="text-danger">{{$message}}</small>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-5">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label class="form-label" for="deposit_delay_minutes">تاخیر در واریز به دقیقه</label>
+                                        <input  name="deposit_delay_minutes" id="deposit_delay_minutes" class="form-control"
+                                                placeholder="زمان را وارد کنید." value="{{$chain->deposit_delay_minutes}}" required>
+                                        <div id="defaultFormControlHelp" class="form-text">بعد از اینکه یک واریز شناسایی شد، سیستم برای انجام برخی اقدامات امنیتی یا بررسی‌های اضافی (مانند تأیید تعداد تاییدیه‌های بلاک‌چین) یک تاخیر زمانی را اعمال می‌کند.</div>
+                                        @error('deposit_delay_minutes')
+                                        <small class="text-danger">{{$message}}</small>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label class="form-label" for="safe_confirmations">حدافل تعداد تایید شبکه برای واریز</label>
+                                        <input  name="safe_confirmations" id="safe_confirmations" class="form-control"
+                                                placeholder="زمان را وارد کنید." value="{{$chain->safe_confirmations}}" required>
+                                        @error('safe_confirmations')
+                                        <small class="text-danger">{{$message}}</small>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mt-5">
+                                <div class="col-md-3 ">
+                                    <div class="form-group">
+                                        <label class="form-label" for="exchange_fee">فی صرافی (واحد)</label>
+                                        <input  name="exchange_fee" id="exchange_fee" class="form-control"
+                                                placeholder="فی صرافیی را وارد کنید." value="{{$chain->exchange_fee}}" required>
+                                        @error('exchange_fee')
+                                        <small class="text-danger">{{$message}}</small>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label class="form-label" for="network_fee">فی شبکه</label>
+                                        <input  name="network_fee" id="network_fee" class="form-control"
+                                                placeholder="فی شبکه." value="{{$chain->network_fee}}" required>
+                                        @error('network_fee')
+                                        <small class="text-danger">{{$message}}</small>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="w-100"></div>
+                                <div class="col-md-6 mt-5">
+                                    <label class="switch  switch-lg">
+                                        <input type="checkbox" class="switch-input" value="1" {{ $currency->is_internal_transfer_active ? 'checked' : '' }} />
+                                        <span class="switch-toggle-slider"></span>
+                                        <span class="switch-label">وضعیت انتقال داخلی کوین</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <hr class="my-6 mx-n4">
+                        @endforeach
+                        <div class=" d-flex justify-content-start mt-5">
+                            <div class="col-md-1">
+                                <button class="btn btn-primary ">
+                                    <i class="fa fa-save mx-2"></i>
+                                    ذخیره
+                                </button>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+@endsection
+
+
