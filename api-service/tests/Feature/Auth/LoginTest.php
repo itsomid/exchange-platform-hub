@@ -1,8 +1,11 @@
 <?php
 
+use App\Exceptions\Auth\GoogleInvalidUserSecretKeyException;
 use App\Models\User;
+use App\Services\Auth\TwoFactorService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
 
@@ -235,4 +238,152 @@ it('creates a new token on every successful login without 2FA', function () {
     $this->assertDatabaseCount('personal_access_tokens', 2);
 });
 
+it('validates a correct 2FA code and returns an access token', function () {
+    $user = User::factory()->create([
+        'two_factor_secret' => encrypt('secret-key'),
+    ]);
+    $this->withoutMiddleware(\App\Http\Middleware\DecryptTokenLoginMiddleware::class);
+    Sanctum::actingAs($user);
+
+    // Mock Two-Factor Service
+    $this->mock(TwoFactorService::class)
+        ->shouldReceive('checkTwoFactor')
+        ->once()
+        ->andReturnTrue();
+
+    $response = $this->postJson(route('2fa.verify-login'), [
+        'google2fa' => 'valid-2fa-code',
+    ]);
+
+    $response->assertStatus(200)
+        ->assertJsonStructure([
+            'message',
+            'data' => [
+                'token',
+            ],
+        ]);
+
+    $this->assertDatabaseHas('personal_access_tokens', [
+        'tokenable_id' => $user->id,
+        'tokenable_type' => User::class,
+        'name' => 'desktop',
+    ]);
+});
+it('returns an error if 2FA code is missing', function () {
+    $this->withoutMiddleware(\App\Http\Middleware\DecryptTokenLoginMiddleware::class);
+
+    $user = User::factory()->create([
+        'two_factor_secret' => encrypt('secret-key'),
+    ]);
+
+    Sanctum::actingAs($user);
+
+    $response = $this->postJson(route('2fa.verify-login'), []);
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['google2fa']);
+});
+it('rejects an invalid 2FA code', function () {
+    $this->withoutMiddleware(\App\Http\Middleware\DecryptTokenLoginMiddleware::class);
+
+//    $this->withoutExceptionHandling();
+    $user = User::factory()->create([
+        'two_factor_secret' => encrypt('secret-key'),
+    ]);
+
+    Sanctum::actingAs($user);
+
+    // Mock Two-Factor Service
+    $this->mock(TwoFactorService::class)
+        ->shouldReceive('checkTwoFactor')
+        ->once()
+        ->andThrow(new GoogleInvalidUserSecretKeyException);
+
+    $response = $this->postJson(route('2fa.verify-login'), [
+        'google2fa' => 'invalid-2fa-code',
+    ]);
+
+    $response->assertStatus(400)
+        ->assertJson([
+            'error' => __('exceptions.'.GoogleInvalidUserSecretKeyException::class),
+        ]);
+});
+
+it('rejects the request if the user has no 2FA setup', function () {
+    $this->withoutMiddleware(\App\Http\Middleware\DecryptTokenLoginMiddleware::class);
+
+    $user = User::factory()->create([
+        'two_factor_secret' => null,
+    ]);
+
+    Sanctum::actingAs($user);
+
+    $response = $this->postJson(route('2fa.verify-login'), [
+        'google2fa' => 'any-code',
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['google2fa']);
+});
+
+it('generates a token with correct expiration after successful 2FA validation', function () {
+    $this->withoutMiddleware(\App\Http\Middleware\DecryptTokenLoginMiddleware::class);
+
+    $user = User::factory()->create([
+        'two_factor_secret' => encrypt('secret-key'),
+    ]);
+
+    Sanctum::actingAs($user);
+
+    // Mock Two-Factor Service
+    $this->mock(TwoFactorService::class)
+        ->shouldReceive('checkTwoFactor')
+        ->once()
+        ->andReturnTrue();
+
+    $response = $this->postJson(route('2fa.verify-login'), [
+        'google2fa' => 'valid-2fa-code',
+    ]);
+
+    $response->assertStatus(200);
+
+    $token = DB::table('personal_access_tokens')
+        ->where('tokenable_id', $user->id)
+        ->first();
+
+    expect($token)->not->toBeNull()
+        ->and((string)$token->expires_at)->toBe((string)now()->addMinutes(60));
+});
+
+it('returns an error if the user is not authenticated', function () {
+    $this->withoutExceptionHandling();
+
+    $response = $this->postJson(route('2fa.verify-login'), [
+        'google2fa' => 'valid-2fa-code',
+    ]);
+
+    $response->assertStatus(401)
+        ->assertJson([
+            'message' => __('auth.unauthenticated'),
+        ]);
+});
+
+it('enforces rate limiting on 2FA verification attempts', function () {
+    $user = User::factory()->create([
+        'two_factor_secret' => encrypt('secret-key'),
+    ]);
+
+    Sanctum::actingAs($user);
+
+    for ($i = 0; $i < 10; $i++) {
+        $this->postJson(route('2fa.verify-login'), [
+            'google2fa' => 'invalid-2fa-code',
+        ]);
+    }
+
+    $response = $this->postJson(route('2fa.verify-login'), [
+        'google2fa' => 'invalid-2fa-code',
+    ]);
+
+    $response->assertStatus(429);
+});
 

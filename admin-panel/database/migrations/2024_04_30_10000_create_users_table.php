@@ -29,7 +29,7 @@ return new class extends Migration
 
             $table->timestamp('email_verified_at')->nullable();
             $table->timestamp('registration_date')->useCurrent(); // Registration date
-            $table->string('two_factor_secret')->default(false); // 2FA status
+            $table->string('two_factor_secret')->nullable(); // 2FA status
             $table->timestamp('last_login')->nullable(); // Last login
             $table->string('last_ip_address')->nullable(); // Last login IP address
             $table->string('device_info')->nullable(); // Device information

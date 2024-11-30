@@ -14,7 +14,7 @@ use PragmaRX\Google2FA\Exceptions\InvalidCharactersException;
 use PragmaRX\Google2FA\Exceptions\SecretKeyTooShortException;
 use PragmaRX\Google2FAQRCode\Google2FA;
 
-readonly class TwoFactorService
+class TwoFactorService
 {
     public function __construct(private UserRepositoryInterface $userRepository, private readonly Google2FA $google2faService) {}
 
