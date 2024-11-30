@@ -15,6 +15,62 @@
         }
     ],
     "paths": {
+        "/api/v1/captcha": {
+            "get": {
+                "tags": [
+                    "Captcha"
+                ],
+                "summary": "Get CAPTCHA",
+                "description": "Retrieve a CAPTCHA image and its associated key for user verification.",
+                "operationId": "getCaptcha",
+                "responses": {
+                    "200": {
+                        "description": "CAPTCHA retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "is_fishy": {
+                                            "description": "Indicates if the CAPTCHA generation triggered anti-fraud logic.",
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "image": {
+                                            "description": "The CAPTCHA image in SVG format.",
+                                            "type": "string",
+                                            "format": "binary",
+                                            "example": "<svg xmlns='http://www.w3.org/2000/svg' ...>"
+                                        },
+                                        "captcha_key": {
+                                            "description": "The unique key associated with the CAPTCHA.",
+                                            "type": "string",
+                                            "example": "k39d8flc"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unable to generate CAPTCHA."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/auth/email-verification": {
             "post": {
                 "tags": [
@@ -1189,6 +1245,10 @@
         {
             "name": "Two-Factor Authentication",
             "description": "APIs related to two-factor authentication (2FA)."
+        },
+        {
+            "name": "Captcha",
+            "description": "Captcha"
         },
         {
             "name": "Authentication",
