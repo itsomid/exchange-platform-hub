@@ -7,7 +7,7 @@
             <div class="card">
                 <h5 class="card-header">{{$currency->name}}</h5>
                 <div class="card-body">
-                    <form action="{{route('admin.currency.update',['currency'=>$currency])}}" method="post">
+                    <form action="{{route('admin.currency.chains.update',['currency'=>$currency])}}" method="post">
                         @csrf
                         @foreach($currency->chains as $chain)
                             <h6> اطلاعات شبکه {{$chain->chain}}</h6>
@@ -32,8 +32,8 @@
                             <div class="row mt-5">
                                 <div class="col-md-3 ">
                                     <div class="form-group">
-                                        <label class="form-label" for="min_deposit_amount">حداقل مقدار واریز</label>
-                                        <input  name="min_deposit_amount" id="min_deposit_amount" class="form-control"
+                                        <label class="form-label" for="min_deposit_amount_{{$chain->id}}">حداقل مقدار واریز</label>
+                                        <input  name="chains[{{$chain->id}}][min_deposit_amount]" id="min_deposit_amount_{{$chain->id}}" class="form-control"
                                                placeholder="Symbol را وارد کنید." value="{{$chain->min_deposit_amount}}" required>
                                         @error('min_deposit_amount')
                                         <small class="text-danger">{{$message}}</small>
@@ -42,10 +42,10 @@
                                 </div>
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <label class="form-label" for="min_deposit_amount">حداقل مقدار برداشت</label>
-                                        <input  name="min_deposit_amount" id="min_deposit_amount" class="form-control"
-                                                placeholder="Symbol را وارد کنید." value="{{$chain->min_withdraw_amount}}" required>
-                                        @error('min_deposit_amount')
+                                        <label class="form-label" for="min_withdraw_amount_{{$chain->id}}">حداقل مقدار برداشت</label>
+                                        <input  name="chains[{{$chain->id}}][min_withdraw_amount]" id="min_withdraw_amount_{{$chain->id}}" class="form-control"
+                                                placeholder="حداقل مقدار را وارد کنید." value="{{$chain->min_withdraw_amount}}" required>
+                                        @error('min_withdraw_amount')
                                         <small class="text-danger">{{$message}}</small>
                                         @enderror
                                     </div>
@@ -54,8 +54,8 @@
                             <div class="row mt-5">
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <label class="form-label" for="deposit_delay_minutes">تاخیر در واریز به دقیقه</label>
-                                        <input  name="deposit_delay_minutes" id="deposit_delay_minutes" class="form-control"
+                                        <label class="form-label" for="deposit_delay_minutes_{{$chain->id}}">تاخیر در واریز به دقیقه</label>
+                                        <input  name="chains[{{$chain->id}}][deposit_delay_minutes]" id="deposit_delay_minutes_{{$chain->id}}" class="form-control"
                                                 placeholder="زمان را وارد کنید." value="{{$chain->deposit_delay_minutes}}" required>
                                         <div id="defaultFormControlHelp" class="form-text">بعد از اینکه یک واریز شناسایی شد، سیستم برای انجام برخی اقدامات امنیتی یا بررسی‌های اضافی (مانند تأیید تعداد تاییدیه‌های بلاک‌چین) یک تاخیر زمانی را اعمال می‌کند.</div>
                                         @error('deposit_delay_minutes')
@@ -65,8 +65,8 @@
                                 </div>
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <label class="form-label" for="safe_confirmations">حدافل تعداد تایید شبکه برای واریز</label>
-                                        <input  name="safe_confirmations" id="safe_confirmations" class="form-control"
+                                        <label class="form-label" for="safe_confirmations_{{$chain->id}}">حدافل تعداد تایید شبکه برای واریز</label>
+                                        <input  name="chains[{{$chain->id}}][safe_confirmations]" id="safe_confirmations_{{$chain->id}}" class="form-control"
                                                 placeholder="زمان را وارد کنید." value="{{$chain->safe_confirmations}}" required>
                                         @error('safe_confirmations')
                                         <small class="text-danger">{{$message}}</small>
@@ -78,8 +78,8 @@
                             <div class="row mt-5">
                                 <div class="col-md-3 ">
                                     <div class="form-group">
-                                        <label class="form-label" for="exchange_fee">فی صرافی (واحد)</label>
-                                        <input  name="exchange_fee" id="exchange_fee" class="form-control"
+                                        <label class="form-label" for="exchange_fee_{{$chain->id}}">فی صرافی (واحد)</label>
+                                        <input  name="chains[{{$chain->id}}][exchange_fee]" id="exchange_fee_{{$chain->id}}" class="form-control"
                                                 placeholder="فی صرافیی را وارد کنید." value="{{$chain->exchange_fee}}" required>
                                         @error('exchange_fee')
                                         <small class="text-danger">{{$message}}</small>
@@ -88,8 +88,8 @@
                                 </div>
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <label class="form-label" for="network_fee">فی شبکه</label>
-                                        <input  name="network_fee" id="network_fee" class="form-control"
+                                        <label class="form-label" for="network_fee_{{$chain->id}}">فی شبکه</label>
+                                        <input  name="chains[{{$chain->id}}][network_fee]" id="network_fee_{{$chain->id}}" class="form-control"
                                                 placeholder="فی شبکه." value="{{$chain->network_fee}}" required>
                                         @error('network_fee')
                                         <small class="text-danger">{{$message}}</small>
@@ -99,9 +99,17 @@
                                 <div class="w-100"></div>
                                 <div class="col-md-6 mt-5">
                                     <label class="switch  switch-lg">
-                                        <input type="checkbox" class="switch-input" value="1" {{ $currency->is_internal_transfer_active ? 'checked' : '' }} />
+                                        <input type="checkbox" class="switch-input" name="deposit_enabled" value="1" {{ $chain->deposit_enabled ? 'checked' : '' }} />
                                         <span class="switch-toggle-slider"></span>
-                                        <span class="switch-label">وضعیت انتقال داخلی کوین</span>
+                                        <span class="switch-label">وضعیت واریز</span>
+                                    </label>
+                                </div>
+                                <div class="w-100"></div>
+                                <div class="col-md-6 mt-5">
+                                    <label class="switch  switch-lg">
+                                        <input type="checkbox" class="switch-input" name="withdraw_enabled" value="1" {{ $chain->withdraw_enabled ? 'checked' : '' }} />
+                                        <span class="switch-toggle-slider"></span>
+                                        <span class="switch-label">وضعیت برداشت</span>
                                     </label>
                                 </div>
                             </div>

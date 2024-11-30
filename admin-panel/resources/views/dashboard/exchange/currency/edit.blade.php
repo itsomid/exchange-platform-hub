@@ -8,6 +8,7 @@
                 <h5 class="card-header">{{$currency->name}}</h5>
                 <div class="card-body">
                     <form action="{{route('admin.currency.update',['currency'=>$currency])}}" method="post">
+                        @method('PATCH')
                         @csrf
                         <h6>1. اطلاعات کوین</h6>
                         <div class="row">
@@ -48,7 +49,7 @@
                             <div class="w-100"></div>
                             <div class="col-md-6 mt-5">
                                 <label class="switch  switch-lg">
-                                    <input type="checkbox" class="switch-input" value="1" {{ $currency->is_internal_transfer_active ? 'checked' : '' }} />
+                                    <input type="checkbox" class="switch-input" name="is_internal_transfer_active" value="1" {{ $currency->is_internal_transfer_active ? 'checked' : '' }} />
                                     <span class="switch-toggle-slider"></span>
                                     <span class="switch-label">وضعیت انتقال داخلی کوین</span>
                                 </label>

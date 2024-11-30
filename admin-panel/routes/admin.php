@@ -109,4 +109,6 @@ Route::patch('/exchange/currencies/{currency}', [CurrencyController::class, 'upd
 Route::delete('/exchange/currencies/{currency}', [CurrencyController::class, 'destroy'])->name('currency.destroy')->can('currency');
 
 Route::get('/exchange/currencies/{currency}/chains', [CurrencyChainController::class, 'getChains'])->name('currency.chains.edit')->can('currency');
+Route::get('/exchange/currencies/{currency}/chains/create', [CurrencyChainController::class, 'createChain'])->name('currency.chains.create')->can('currency');
+Route::patch('/exchange/currencies/{currency}/chains', [CurrencyChainController::class, 'updateChains'])->name('currency.chains.update')->can('currency');
 
