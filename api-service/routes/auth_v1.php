@@ -17,7 +17,7 @@ Route::post('/2fa/verify-login', [\App\Http\Controllers\V1\Auth\TwoFactorControl
 Route::post('/forgot-password', [\App\Http\Controllers\V1\Auth\ForgetPasswordController::class, 'sendEmail'])->name('password.email')->middleware(['guest', 'throttle:3,1']);
 Route::post('/reset-password', [\App\Http\Controllers\V1\Auth\ForgetPasswordController::class, 'resetPassword'])->name('password.update')->middleware(['guest', 'throttle:3,1']);
 
-Route::prefix('/2fa')->middleware('auth:sanctum')->group(function () {
+Route::prefix('/2fa')->middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('setup', [\App\Http\Controllers\V1\Auth\TwoFactorController::class, 'setup'])->name('2fa.setup');
     Route::post('save-secret', [\App\Http\Controllers\V1\Auth\TwoFactorController::class, 'saveSecret'])->name('2fa.save');
 });
