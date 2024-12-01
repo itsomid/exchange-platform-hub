@@ -18,7 +18,11 @@ class DecryptTokenLoginMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $encryptedToken = $request->input('encrypted_token');
-
+        if (empty($encryptedToken)) {
+            return response([
+                'message' => __('auth.login.encrypted_token_invalid'),
+            ], 401);
+        }
         $userId = resolve(LoginService::class)
             ->getDecryptedToken($encryptedToken);
         if (is_null($userId)) {
