@@ -16,7 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->prefix('api/v1/auth')
                 ->group(base_path('routes/auth_v1.php'));
 
-            Route::middleware(['api', 'auth:sanctum'])
+            Route::middleware(['api', 'auth:sanctum', 'verified'])
                 ->prefix('api/v1')
                 ->group(base_path('routes/api_v1.php'));
         }
