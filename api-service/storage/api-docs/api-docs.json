@@ -646,6 +646,93 @@
                 ]
             }
         },
+        "/api/v1/deposit-withdraw/config": {
+            "post": {
+                "tags": [
+                    "Currency"
+                ],
+                "summary": "Get Deposit and Withdrawal Configuration",
+                "description": "Retrieve deposit and withdrawal configuration for a specific currency.",
+                "operationId": "depositWithdrawConfig",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CurrencyConfigRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Configuration retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Registration successful."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/ConfigResponse"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/profile/change-password": {
             "patch": {
                 "tags": [
@@ -1071,6 +1158,19 @@
                 },
                 "type": "object"
             },
+            "CurrencyConfigRequest": {
+                "required": [
+                    "ccy"
+                ],
+                "properties": {
+                    "ccy": {
+                        "description": "The symbol of the currency (e.g., BTC, ETH). Must exist in the currencies table.",
+                        "type": "string",
+                        "example": "BTC"
+                    }
+                },
+                "type": "object"
+            },
             "ChangePasswordRequest": {
                 "required": [
                     "old_password",
@@ -1173,6 +1273,93 @@
                 },
                 "type": "object"
             },
+            "ConfigResponse": {
+                "properties": {
+                    "asset": {
+                        "properties": {
+                            "ccy": {
+                                "description": "Currency symbol.",
+                                "type": "string",
+                                "example": "BTC"
+                            },
+                            "inter_transfer_enabled": {
+                                "description": "Whether inter-transfer is enabled for this currency.",
+                                "type": "boolean",
+                                "example": true
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "chains": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "chain": {
+                                    "description": "Chain name.",
+                                    "type": "string",
+                                    "example": "BTC"
+                                },
+                                "min_deposit_amount": {
+                                    "description": "Minimum deposit amount.",
+                                    "type": "number",
+                                    "format": "float",
+                                    "example": 0.0001
+                                },
+                                "min_withdraw_amount": {
+                                    "description": "Minimum withdrawal amount.",
+                                    "type": "number",
+                                    "format": "float",
+                                    "example": 0.001
+                                },
+                                "deposit_enabled": {
+                                    "description": "Whether deposits are enabled.",
+                                    "type": "boolean",
+                                    "example": true
+                                },
+                                "withdraw_enabled": {
+                                    "description": "Whether withdrawals are enabled.",
+                                    "type": "boolean",
+                                    "example": true
+                                },
+                                "deposit_delay_minutes": {
+                                    "description": "Delay in minutes for deposits.",
+                                    "type": "integer",
+                                    "example": 10
+                                },
+                                "safe_confirmations": {
+                                    "description": "Number of safe confirmations.",
+                                    "type": "integer",
+                                    "example": 6
+                                },
+                                "irreversible_confirmations": {
+                                    "description": "Number of irreversible confirmations.",
+                                    "type": "integer",
+                                    "example": 10
+                                },
+                                "withdrawal_fee": {
+                                    "description": "Withdrawal fee.",
+                                    "type": "number",
+                                    "format": "float",
+                                    "example": 0.0005
+                                },
+                                "withdrawal_precision": {
+                                    "description": "Precision for withdrawal amounts.",
+                                    "type": "integer",
+                                    "example": 8
+                                },
+                                "memo": {
+                                    "description": "Additional memo information for the chain.",
+                                    "type": "string",
+                                    "example": "Required for some transactions.",
+                                    "nullable": true
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
+            },
             "ReferralCodeListCollection": {
                 "properties": {
                     "id": {
@@ -1253,6 +1440,10 @@
         {
             "name": "Authentication",
             "description": "Authentication"
+        },
+        {
+            "name": "Currency",
+            "description": "Currency"
         },
         {
             "name": "Profile",
