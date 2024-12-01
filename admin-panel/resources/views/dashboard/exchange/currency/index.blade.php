@@ -129,15 +129,15 @@
                                 @foreach($currency->chains as $chain)
                                     <div class="d-flex align-items-center mb-2">
                                         @if($chain->deposit_enabled)
-                                            <span class="badge bg-label-success ms-2">{{$chain->chain}} -> Deposit Active</span>
+                                            <span class="badge bg-label-success ms-2">{{$chain->chain}} -> واریز فعال</span>
                                         @else
                                             <span
-                                                class="badge bg-label-danger ms-2">{{$chain->chain}} -> Deposit Inactive</span>
+                                                class="badge bg-label-danger ms-2">{{$chain->chain}} -> واریز غیرفعال</span>
                                         @endif
                                         @if($chain->withdraw_enabled)
-                                            <span class="badge bg-label-success ms-2">{{$chain->chain}} -> Withdraw Active</span>
+                                            <span class="badge bg-label-success ms-2">{{$chain->chain}} -> برداشت فعال</span>
                                         @else
-                                            <span class="badge bg-label-danger ms-2">{{$chain->chain}} -> Withdraw Inactive</span>
+                                            <span class="badge bg-label-danger ms-2">{{$chain->chain}} -> برداشت غیرفعال</span>
                                         @endif
                                     </div>
                                 @endforeach

@@ -39,6 +39,7 @@ class DatabaseSeeder extends Seeder
             CurrencyChainSeeder::class,
             TransactionSeeder::class,
             SettingTableSeeder::class,
+            MarketSeeder::class,
             ExternalApiConfigSeeder::class,
         ]);
     }

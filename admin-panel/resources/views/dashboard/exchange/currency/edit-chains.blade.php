@@ -8,15 +8,16 @@
                 <h5 class="card-header">{{$currency->name}}</h5>
                 <div class="card-body">
                     <form action="{{route('admin.currency.chains.update',['currency'=>$currency])}}" method="post">
+                        @method('PATCH')
                         @csrf
                         @foreach($currency->chains as $chain)
                             <h6> اطلاعات شبکه {{$chain->chain}}</h6>
                             <div class="row">
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <label class="form-label" for="name">نام شبکه</label>
-                                        <input name="name"
-                                               id="name"
+                                        <label class="form-label" for="chain">نام شبکه</label>
+                                        <input name="chain"
+                                               id="chain"
                                                class="form-control"
                                                placeholder="نام را وارد کنید."
                                                value="{{$chain->chain}}"
@@ -78,7 +79,7 @@
                             <div class="row mt-5">
                                 <div class="col-md-3 ">
                                     <div class="form-group">
-                                        <label class="form-label" for="exchange_fee_{{$chain->id}}">فی صرافی (واحد)</label>
+                                        <label class="form-label" for="exchange_fee_{{$chain->id}}">فی صرافی برای برداشت (واحد)</label>
                                         <input  name="chains[{{$chain->id}}][exchange_fee]" id="exchange_fee_{{$chain->id}}" class="form-control"
                                                 placeholder="فی صرافیی را وارد کنید." value="{{$chain->exchange_fee}}" required>
                                         @error('exchange_fee')
@@ -88,7 +89,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <label class="form-label" for="network_fee_{{$chain->id}}">فی شبکه</label>
+                                        <label class="form-label" for="network_fee_{{$chain->id}}">فی شبکه برای برداشت (واحد)</label>
                                         <input  name="chains[{{$chain->id}}][network_fee]" id="network_fee_{{$chain->id}}" class="form-control"
                                                 placeholder="فی شبکه." value="{{$chain->network_fee}}" required>
                                         @error('network_fee')
@@ -99,7 +100,7 @@
                                 <div class="w-100"></div>
                                 <div class="col-md-6 mt-5">
                                     <label class="switch  switch-lg">
-                                        <input type="checkbox" class="switch-input" name="deposit_enabled" value="1" {{ $chain->deposit_enabled ? 'checked' : '' }} />
+                                        <input type="checkbox" class="switch-input" name="chains[{{$chain->id}}][deposit_enabled]" value="1" {{ $chain->deposit_enabled ? 'checked' : '' }} />
                                         <span class="switch-toggle-slider"></span>
                                         <span class="switch-label">وضعیت واریز</span>
                                     </label>
@@ -107,7 +108,7 @@
                                 <div class="w-100"></div>
                                 <div class="col-md-6 mt-5">
                                     <label class="switch  switch-lg">
-                                        <input type="checkbox" class="switch-input" name="withdraw_enabled" value="1" {{ $chain->withdraw_enabled ? 'checked' : '' }} />
+                                        <input type="checkbox" class="switch-input" name="chains[{{$chain->id}}][withdraw_enabled]" value="1" {{ $chain->withdraw_enabled ? 'checked' : '' }} />
                                         <span class="switch-toggle-slider"></span>
                                         <span class="switch-label">وضعیت برداشت</span>
                                     </label>
