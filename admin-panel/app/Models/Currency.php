@@ -13,11 +13,26 @@ class Currency extends Model
 
     public $filterNameSpace = 'App\Filters\CurrencyFilter';
 
-    public $fillable = ['type','name','symbol','code','logo','status'];
+    protected $fillable = [
+        'name',
+        'symbol',
+        'logo',
+        'inter_transfer_enabled'
+    ];
 
     public function chains() : HasMany
     {
         return $this->hasMany(CurrencyChain::class,'currency_id');
+    }
+    public function baseMarkets(): HasMany
+    {
+        return $this->hasMany(Market::class, 'base_currency', 'symbol');
+    }
+
+    // Relationship: A currency can have many markets where it is the quote currency
+    public function quoteMarkets(): HasMany
+    {
+        return $this->hasMany(Market::class, 'quote_currency', 'symbol');
     }
     public function coinLogo(): string
     {

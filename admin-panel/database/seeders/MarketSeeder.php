@@ -24,17 +24,17 @@ class MarketSeeder extends Seeder
 
         // Insert markets for each pair
         $markets = [
-            ['base_currency_name' => $btc->id, 'quote_currency_name' => $usdt->id, 'min_trade_amount' => 0.001, 'max_trade_amount' => 1000, 'price' => 45000.00, 'exchange_price' => 45000.00],
-            ['base_currency_name' => $eth->id, 'quote_currency_name' => $usdt->id, 'min_trade_amount' => 0.01, 'max_trade_amount' => 1000, 'price' => 3000.00, 'exchange_price' => 3000.00],
-            ['base_currency_name' => $doge->id, 'quote_currency_name' => $usdt->id, 'min_trade_amount' => 10, 'max_trade_amount' => 100000, 'price' => 0.25, 'exchange_price' => 0.25],
-            ['base_currency_name' => $tron->id, 'quote_currency_name' => $usdt->id, 'min_trade_amount' => 10, 'max_trade_amount' => 1000000, 'price' => 0.08, 'exchange_price' => 0.08],
-            ['base_currency_name' => $bnb->id, 'quote_currency_name' => $usdt->id, 'min_trade_amount' => 0.01, 'max_trade_amount' => 1000, 'price' => 400.00, 'exchange_price' => 400.00],
+            ['base_currency' => $btc->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 0.001, 'max_trade_amount' => 1000, 'price' => 45000.00, 'exchange_price' => 45000.00],
+            ['base_currency' => $eth->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 0.01, 'max_trade_amount' => 1000, 'price' => 3000.00, 'exchange_price' => 3000.00],
+            ['base_currency' => $doge->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 10, 'max_trade_amount' => 100000, 'price' => 0.25, 'exchange_price' => 0.25],
+            ['base_currency' => $tron->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 10, 'max_trade_amount' => 1000000, 'price' => 0.08, 'exchange_price' => 0.08],
+            ['base_currency' => $bnb->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 0.01, 'max_trade_amount' => 1000, 'price' => 400.00, 'exchange_price' => 400.00],
         ];
 
         foreach ($markets as $market) {
             Market::create([
-                'base_currency_name' => $market['base_currency_name'],
-                'quote_currency_name' => $market['quote_currency_name'],
+                'base_currency' => $market['base_currency'],
+                'quote_currency' => $market['quote_currency'],
                 'min_trade_amount' => $market['min_trade_amount'],
                 'max_trade_amount' => $market['max_trade_amount'],
                 'price' => $market['price'],

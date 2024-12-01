@@ -39,20 +39,20 @@ if (! function_exists('formatNumberWithSlashes')) {
     /**
      * Format the number with slashes.
      *
-     * @param  float  $number
+     * @param float $number
      * @return string
      */
-    function formatNumberWithSlashes($number)
+    function formatNumber( $number , $decimal = 2, $char =',')
     {
-        $number = number_format($number, 0, '', ','); // Format the number with commas
+        $number = number_format($number, $decimal, '.', $char); // Format the number with commas
 
-        return str_replace(',', '/', $number); // Replace commas with slashes
+        return str_replace(',', $char, $number); // Replace commas with slashes
     }
 }
-if (!function_exists('formatNumber')) {
-    function formatNumber($number, $decimals = 2)
-    {
-        return number_format($number, $decimals);
-    }
-}
+//if (!function_exists('formatNumber')) {
+//    function formatNumber($number, $decimals = 2)
+//    {
+//        return number_format($number, $decimals);
+//    }
+//}
 

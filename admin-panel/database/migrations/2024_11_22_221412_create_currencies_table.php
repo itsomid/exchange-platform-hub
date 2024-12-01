@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('currencies', function (Blueprint $table) {
             $table->id();
             $table->string('name'); //Tether
-            $table->string('symbol'); //USDT
+            $table->string('symbol')->unique(); //USDT
             $table->string('logo');
 //            $table->boolean('deposit_enabled')->default(true); // Is deposit enabled for this currency
 //            $table->boolean('withdraw_enabled')->default(true); // Is withdrawal enabled for this currency
