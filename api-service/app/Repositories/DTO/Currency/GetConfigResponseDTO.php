@@ -1,0 +1,56 @@
+<?php
+
+namespace App\Repositories\DTO\Currency;
+
+class GetConfigResponseDTO
+{
+    private string $name;
+    private string $symbol;
+    private bool $interTransferEnabled;
+
+    private array $chains;
+
+    public function setName(string $name): self
+    {
+        $this->name = $name;
+        return $this;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function setSymbol(string $symbol): self
+    {
+        $this->symbol = $symbol;
+        return $this;
+    }
+
+    public function getSymbol(): string
+    {
+        return $this->symbol;
+    }
+
+    public function setInterTransferEnabled(bool $interTransferEnabled): self
+    {
+        $this->interTransferEnabled = $interTransferEnabled;
+        return $this;
+    }
+
+    public function getInterTransferEnabled(): bool
+    {
+        return $this->interTransferEnabled;
+    }
+
+    public function setChains(array $chains): self
+    {
+        $this->chains = $chains;
+        return $this;
+    }
+
+    public function getChains(): array
+    {
+        return $this->chains;
+    }
+}

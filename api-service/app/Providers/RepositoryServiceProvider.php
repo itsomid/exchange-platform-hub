@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Repositories\CurrencyRepository;
+use App\Repositories\Interfaces\CurrencyRepositoryInterface;
 use App\Repositories\ReferralCodeRepository;
 use App\Repositories\Interfaces\ReferralCodeRepositoryInterface;
 use App\Repositories\Interfaces\UserEmailVerificationInterface;
@@ -20,6 +22,7 @@ class RepositoryServiceProvider extends ServiceProvider
         app()->bind(UserRepositoryInterface::class, UserRepository::class);
         app()->bind(UserEmailVerificationInterface::class, UserEmailVerificationRepository::class);
         app()->bind(ReferralCodeRepositoryInterface::class, ReferralCodeRepository::class);
+        app()->bind(CurrencyRepositoryInterface::class, CurrencyRepository::class);
     }
 
     /**

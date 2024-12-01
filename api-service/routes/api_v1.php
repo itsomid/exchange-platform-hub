@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\V1\Currency\ConfigController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/captcha', [\App\Http\Controllers\CaptchaController::class, '__invoke'])->withoutMiddleware('auth:sanctum');
@@ -12,4 +13,9 @@ Route::prefix('/profile')->group(function () {
 Route::prefix('/referral-codes')->group(function () {
     Route::post('/', [App\Http\Controllers\V1\User\ReferralCodeController::class, 'store'])->name('referral-codes.store');
     Route::get('/', [App\Http\Controllers\V1\User\ReferralCodeController::class, 'lists'])->name('referral-codes.lists');
+});
+
+//Currency
+Route::prefix('/currencies')->group(function () {
+    Route::get('/deposit-withdraw-config', [ConfigController::class, 'depositWithdrawConfig'])->name('currencies.deposit-withdraw-config');
 });
