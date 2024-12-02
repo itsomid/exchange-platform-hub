@@ -5,13 +5,17 @@ namespace App\Services\Wallet\DTO\Deposit;
 class AddPendingDepositRequestDTO
 {
     private int $userId;
+
     private string $currencySymbol;
+
     private string $currencyChain;
+
     private string $publicKey;
 
     public function setUserId(int $userId): self
     {
         $this->userId = $userId;
+
         return $this;
     }
 
@@ -23,6 +27,7 @@ class AddPendingDepositRequestDTO
     public function setCurrencySymbol(string $currencySymbol): self
     {
         $this->currencySymbol = $currencySymbol;
+
         return $this;
     }
 
@@ -34,6 +39,7 @@ class AddPendingDepositRequestDTO
     public function setCurrencyChain(string $chainCurrency): self
     {
         $this->currencyChain = $chainCurrency;
+
         return $this;
     }
 
@@ -45,6 +51,7 @@ class AddPendingDepositRequestDTO
     public function setPublicKey(string $publicKey): self
     {
         $this->publicKey = $publicKey;
+
         return $this;
     }
 

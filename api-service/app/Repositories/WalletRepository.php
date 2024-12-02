@@ -8,7 +8,6 @@ use App\Repositories\Interfaces\WalletRepositoryInterface;
 
 class WalletRepository implements WalletRepositoryInterface
 {
-
     public function getOne(string $symbol): WalletChain
     {
         return WalletChain::query()

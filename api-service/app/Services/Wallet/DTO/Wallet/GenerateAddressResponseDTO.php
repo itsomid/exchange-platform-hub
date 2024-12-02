@@ -9,6 +9,7 @@ class GenerateAddressResponseDTO
     public function setAddress(string $address): self
     {
         $this->address = $address;
+
         return $this;
     }
 

@@ -285,7 +285,7 @@ it('returns an error if 2FA code is missing', function () {
 it('rejects an invalid 2FA code', function () {
     $this->withoutMiddleware(\App\Http\Middleware\DecryptTokenLoginMiddleware::class);
 
-//    $this->withoutExceptionHandling();
+    //    $this->withoutExceptionHandling();
     $user = User::factory()->create([
         'two_factor_secret' => encrypt('secret-key'),
     ]);
@@ -351,11 +351,10 @@ it('generates a token with correct expiration after successful 2FA validation', 
         ->first();
 
     expect($token)->not->toBeNull()
-        ->and((string)$token->expires_at)->toBe((string)now()->addMinutes(60));
+        ->and((string) $token->expires_at)->toBe((string) now()->addMinutes(60));
 });
 
 it('returns an error if the user is not authenticated', function () {
-
 
     $response = $this->postJson(route('2fa.verify-login'), [
         'google2fa' => 'valid-2fa-code',
@@ -386,4 +385,3 @@ it('enforces rate limiting on 2FA verification attempts', function () {
 
     $response->assertStatus(429);
 });
-

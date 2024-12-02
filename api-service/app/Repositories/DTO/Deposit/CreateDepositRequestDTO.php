@@ -7,15 +7,21 @@ use App\Enums\DepositStatusEnum;
 class CreateDepositRequestDTO
 {
     private int $userId;
+
     private string $currencySymbol;
+
     private string $currencyChain;
+
     private ?string $amount = null;
+
     private string $publicKey;
+
     private DepositStatusEnum $status;
 
     public function setUserId(int $userId): self
     {
         $this->userId = $userId;
+
         return $this;
     }
 
@@ -27,6 +33,7 @@ class CreateDepositRequestDTO
     public function setCurrencySymbol(string $currencySymbol): self
     {
         $this->currencySymbol = $currencySymbol;
+
         return $this;
     }
 
@@ -38,6 +45,7 @@ class CreateDepositRequestDTO
     public function setAmount(?string $amount): self
     {
         $this->amount = $amount;
+
         return $this;
     }
 
@@ -49,6 +57,7 @@ class CreateDepositRequestDTO
     public function setStatus(DepositStatusEnum $status): self
     {
         $this->status = $status;
+
         return $this;
     }
 
@@ -60,6 +69,7 @@ class CreateDepositRequestDTO
     public function setCurrencyChain(string $currencyChain): self
     {
         $this->currencyChain = $currencyChain;
+
         return $this;
     }
 
@@ -71,6 +81,7 @@ class CreateDepositRequestDTO
     public function setPublicKey(string $publicKey): self
     {
         $this->publicKey = $publicKey;
+
         return $this;
     }
 

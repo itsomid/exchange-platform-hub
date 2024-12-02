@@ -18,8 +18,10 @@ class CaptchaController extends Controller
      *     @OA\Response(
      *         response=200,
      *         description="CAPTCHA retrieved successfully.",
+     *
      *         @OA\JsonContent(
      *             type="object",
+     *
      *             @OA\Property(
      *                 property="is_fishy",
      *                 type="boolean",
@@ -41,10 +43,13 @@ class CaptchaController extends Controller
      *             )
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=500,
      *         description="Internal Server Error.",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="message", type="string", example="Unable to generate CAPTCHA.")
      *         )
      *     )

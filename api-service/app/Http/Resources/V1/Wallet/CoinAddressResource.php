@@ -28,7 +28,7 @@ class CoinAddressResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'address' => $this->getAddress()
+            'address' => $this->getAddress(),
         ];
     }
 }

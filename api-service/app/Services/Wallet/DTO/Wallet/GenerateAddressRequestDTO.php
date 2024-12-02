@@ -5,12 +5,15 @@ namespace App\Services\Wallet\DTO\Wallet;
 class GenerateAddressRequestDTO
 {
     private int $userId;
+
     private string $currency;
+
     private string $chainSymbol;
 
     public function setUserId(int $userId): GenerateAddressRequestDTO
     {
         $this->userId = $userId;
+
         return $this;
     }
 
@@ -22,6 +25,7 @@ class GenerateAddressRequestDTO
     public function setCurrency(string $currency): GenerateAddressRequestDTO
     {
         $this->currency = $currency;
+
         return $this;
     }
 
@@ -33,6 +37,7 @@ class GenerateAddressRequestDTO
     public function setChainSymbol(string $chainSymbol): GenerateAddressRequestDTO
     {
         $this->chainSymbol = $chainSymbol;
+
         return $this;
     }
 }

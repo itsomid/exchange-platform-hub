@@ -149,6 +149,7 @@ class ChainResponseDTO
     public function setWithdrawalFee(string $withdrawalFee): self
     {
         $this->withdrawalFee = $withdrawalFee;
+
         return $this;
     }
 

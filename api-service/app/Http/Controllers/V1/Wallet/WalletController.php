@@ -29,14 +29,17 @@ class WalletController extends Controller
      *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(ref="#/components/schemas/GenerateAddressRequest")
      *     ),
      *
      *     @OA\Response(
      *         response=200,
      *         description="Wallet address generated successfully.",
+     *
      *         @OA\JsonContent(
      *             type="object",
+     *
      *             @OA\Property(property="data", ref="#/components/schemas/CoinAddressResponse")
      *         )
      *     ),
@@ -44,7 +47,9 @@ class WalletController extends Controller
      *     @OA\Response(
      *         response=500,
      *         description="Server error.",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="message", type="string", example="An error occurred.")
      *         )
      *     )
@@ -77,6 +82,7 @@ class WalletController extends Controller
         } catch (Throwable $exception) {
             DB::rollBack();
             report($exception);
+
             return response([
                 'message' => __('messages.server_error'),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);

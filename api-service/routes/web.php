@@ -19,6 +19,7 @@ Route::get('/mehdi', function () {
                 ->setRestrictedUntil(now()->addDay())
                 ->setReason('Change Password')
         );
+
     return view('welcome');
 });
 

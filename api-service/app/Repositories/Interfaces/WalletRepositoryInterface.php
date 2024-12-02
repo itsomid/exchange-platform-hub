@@ -3,7 +3,6 @@
 namespace App\Repositories\Interfaces;
 
 use App\Models\Wallet;
-use App\Models\WalletChain;
 
 interface WalletRepositoryInterface
 {
