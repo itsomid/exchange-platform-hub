@@ -90,7 +90,7 @@
     transition: all 0.25s ease;
     img,
     .avatar-initial {
-      border: 2px solid $avatar-group-border;
+      //border: 2px solid $avatar-group-border;
       // box-shadow: 0 0 0 2px $avatar-group-border, inset 0 0 0 1px rgba($black, 0.07); //0 2px 10px 0 rgba($secondary,.3);
     }
     .avatar-initial {
@@ -141,7 +141,7 @@
       margin-right: -0.75rem;
     }
     .avatar-md {
-      margin-right: -0.9rem;
+      margin-right: -1.8rem;
     }
     .avatar-lg {
       margin-right: -1.5rem;

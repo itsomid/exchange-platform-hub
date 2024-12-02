@@ -43,8 +43,8 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link @if(request()->route()->getName() == 'admin.profile.password.edit') active @endif"
-                           href="{{route('admin.profile.password.edit')}}">
+                        <a class="nav-link @if(request()->route()->getName() == 'admin.currency.chains.create') active @endif"
+                           href="{{route('admin.currency.chains.create',['currency'=>$currency])}}">
                             <i class="fa-regular fa-chart-network fa-lg me-2"></i>
                             افزودن شبکه جدید برای کوین
                         </a>

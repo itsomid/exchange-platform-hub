@@ -21,7 +21,7 @@ use App\Http\Controllers\User\UserSecurityController;
 use App\Http\Controllers\Exchange\CurrencyController;
 use App\Http\Controllers\User\UserFinancialBlockController;
 use App\Http\Controllers\Exchange\CurrencyChainController;
-
+use App\Http\Controllers\Exchange\MarketController;
 
 Route::get('/users_select', [SelectsApiController::class, 'users'])->name('users.select.index');
 Route::get('/admins_select', [SelectsApiController::class, 'admins'])->name('admins.select.index');
@@ -110,5 +110,8 @@ Route::delete('/exchange/currencies/{currency}', [CurrencyController::class, 'de
 
 Route::get('/exchange/currencies/{currency}/chains', [CurrencyChainController::class, 'getChains'])->name('currency.chains.edit')->can('currency');
 Route::get('/exchange/currencies/{currency}/chains/create', [CurrencyChainController::class, 'createChain'])->name('currency.chains.create')->can('currency');
+Route::post('/exchange/currencies/{currency}/chains', [CurrencyChainController::class, 'storeChain'])->name('currency.chains.store')->can('currency');
 Route::patch('/exchange/currencies/{currency}/chains', [CurrencyChainController::class, 'updateChains'])->name('currency.chains.update')->can('currency');
 
+Route::get('/exchange/markets',[MarketController::class,'index'])->name('market.index')->can('market');
+Route::get('/exchange/markets/{market}/edit',[MarketController::class,'edit'])->name('market.edit')->can('market');

@@ -53,7 +53,9 @@ class PermissionList
             ['setting.int.view-logs', 'مشاهده لاگ ها و خطاهای سیستم'],
             ['setting.ext.index', 'مشاهده تنظیمات خارجی'],
 
-            ['currency','مدیریت کوین ها']
+            ['currency','مدیریت کوین ها'],
+            ['market','مدیریت بازار'],
+
         ];
 
         return array_map(fn($permission) => [$permission[0], $permission[1]], $permissions);

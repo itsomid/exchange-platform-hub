@@ -10,7 +10,7 @@
                         <div class="content-left">
                             <span>تعداد کوین</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{$currencies->count()}}</h4>
+                                <h4 class="mb-0 me-2">{{$markets->count()}}</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-primary rounded p-2">
@@ -27,7 +27,7 @@
                         <div class="content-left">
                             <span>کوین های فعال</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{$currencies->where('is_active')->count()}}</h4>
+                                <h4 class="mb-0 me-2">{{$markets->where('is_active')->count()}}</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-success rounded p-2">
@@ -44,7 +44,7 @@
                         <div class="content-left">
                             <span>کوین های غیر فعال</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{$currencies->where('is_active', false)->count()}}</h4>
+                                <h4 class="mb-0 me-2">{{$markets->where('is_active', false)->count()}}</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-warning rounded p-2">
@@ -65,13 +65,12 @@
                   action="{{route('admin.currency.index')}}" method="get">
 
                 <div class="col-md-4 user_status ">
-                    <label class="form-label" for="status">شبکه :</label>
+                    <label class="form-label" for="status">وضعیت بازار :</label>
                     <select id="status" name="type" class="form-select text-capitalize mb-md-0 ">
-                        <option value="" {{ request('type') == '' ? 'selected' : '' }}>همه</option>
-                        @foreach(\App\Enums\CurrencyChainEnum::cases() as $chain)
-                            <option
-                                value="ERC20" {{ request('type') == 'ERC20' ? 'selected' : '' }}>{{$chain->value}}</option>
-                        @endforeach
+                        <option value="" {{ request('is_active') == '' ? 'selected' : '' }}>همه</option>
+                        <option value="1" {{ request('is_active') == '1' ? 'selected' : '' }}>فعال</option>
+                        <option value="0" {{ request('is_active') == '0' ? 'selected' : '' }}>غیرفعال</option>
+
 
                     </select>
                 </div>
@@ -84,7 +83,7 @@
     <div class="card">
         <div class="card-body">
             <div class="card-title header-elements">
-                <h5 class="m-0 me-2">لیست کوین ها</h5>
+                <h5 class="m-0 me-2">لیست بازارها</h5>
                 <div class="card-title-elements ms-auto">
                     <a href="{{route('admin.currency.create')}}" class="btn btn-primary">
                         <i class="fa fa-plus mx-2"></i>
@@ -97,56 +96,56 @@
                     <thead>
                     <tr>
                         <th>#</th>
-                        <th>آواتار</th>
-                        <th>نام</th>
-                        <th>شبکه های موجود</th>
-                        <th>سیمبول</th>
-                        <th>وضعیت</th>
+                        <th>کوین</th>
+                        <th>آخرین قیمت</th>
+                        <th>قیمت صرافی</th>
+                        <th>حداقل مقدار معامله</th>
+                        <th>جداکثر مقدار معامله</th>
+
                         <th>عملیات</th>
                     </tr>
                     </thead>
                     <tbody class="table-border-bottom-0">
-                    @foreach($currencies as $currency)
+                    @foreach($markets as $market)
 
                         <tr>
-                            <td>{{$currency->id}}</td>
-                            <td>
-                                <img src="{{asset($currency->coinLogo())}}" class="img-fluid" width="50px">
+                            <td class="">{{$market->id}}</td>
+                            <td class="text-heading fw-medium">
+                                <div class="d-flex justify-content-start align-items-center">
+                                    <div class="avatar-group d-flex align-items-center assigned-avatar">
+
+                                        <div class="avatar avatar-md">
+                                            <img src="{{asset($market->quoteCurrency->coinLogo())}}" class="rounded-circle ">
+                                        </div>
+                                        <div class="avatar avatar-md " >
+                                            <img src="{{asset($market->baseCurrency->coinLogo())}}" class="rounded-circle  ">
+                                        </div>
+                                    </div>
+{{--                                    <img src="{{asset($market->baseCurrency->coinLogo())}}" class="img-fluid me-3"--}}
+{{--                                         width="50px">--}}
+                                    <div class="ms-3">{{$market->base_currency}}/{{$market->quote_currency}}</div>
+                                </div>
+
                             </td>
 
-                            <td>
-                                {{$currency->name}}
+                            <td class="">
+                                <span class="font-number text-heading h5">{{formatNumber($market->price)}}</span>
                             </td>
-                            <td>
-                                @foreach($currency->chains as $chain)
-                                    <span class="badge bg-label-primary ms-2">{{$chain->chain}}</span>
-                                @endforeach
+                            <td class="font-number text-heading fw-medium">
+                                <span>{{$market->exchange_price}}</span>
                             </td>
-                            <td>
-                                {{$currency->symbol}}
+                            <td class="font-number">
+                                {{$market->min_trade_amount}}
                             </td>
-                            <td>
-                                @foreach($currency->chains as $chain)
-                                    <div class="d-flex align-items-center mb-2">
-                                        @if($chain->deposit_enabled)
-                                            <span class="badge bg-label-success ms-2">{{$chain->chain}} -> واریز فعال</span>
-                                        @else
-                                            <span
-                                                class="badge bg-label-danger ms-2">{{$chain->chain}} -> واریز غیرفعال</span>
-                                        @endif
-                                        @if($chain->withdraw_enabled)
-                                            <span class="badge bg-label-success ms-2">{{$chain->chain}} -> برداشت فعال</span>
-                                        @else
-                                            <span class="badge bg-label-danger ms-2">{{$chain->chain}} -> برداشت غیرفعال</span>
-                                        @endif
-                                    </div>
-                                @endforeach
+                            <td class="font-number">
+                                {{$market->max_trade_amount}}
                             </td>
+
                             <td>
                                 <div class="d-flex align-items-center">
 
                                     <a class="text-secondary me-3"
-                                       href="{{ route('admin.currency.edit', ['currency' => $currency->id]) }}">
+                                       href="{{ route('admin.market.edit', ['market' => $market->id]) }}">
                                         <i class="fa-light fa-pen-to-square fa-lg"></i>
                                     </a>
                                     <a class="text-secondary me-3" href="">

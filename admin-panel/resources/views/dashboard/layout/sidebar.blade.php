@@ -94,8 +94,8 @@
                     <div data-i18n="Page 1">Currency</div>
                 </a>
             </li>
-            <li class="menu-item @if(request()->is('admin/transaction*')) active @endif">
-                <a href="" class="menu-link">
+            <li class="menu-item @if(request()->is('admin/exchange/market*')) active @endif">
+                <a href="{{route('admin.market.index')}}" class="menu-link">
                     <i class="menu-icon fa-regular fa-display-chart-up-circle-dollar"></i>
                     <div data-i18n="Page 1">Market</div>
                 </a>
