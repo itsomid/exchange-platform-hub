@@ -13,7 +13,8 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
         "mews/captcha": "^3.4",
-        "pragmarx/google2fa-laravel": "^2.2"
+        "pragmarx/google2fa-laravel": "^2.2",
+        "ext-bcmath": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
