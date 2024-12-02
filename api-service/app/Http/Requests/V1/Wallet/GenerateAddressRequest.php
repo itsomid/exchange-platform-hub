@@ -7,6 +7,26 @@ use App\Models\CurrencyChain;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * @OA\Schema(
+ *     schema="GenerateAddressRequest",
+ *     type="object",
+ *     required={"currency", "chain"},
+ *
+ *     @OA\Property(
+ *         property="currency",
+ *         type="string",
+ *         example="USDT",
+ *         description="The symbol of the currency (e.g., BTC, ETH). Must exist in the currencies table."
+ *     ),
+ *     @OA\Property(
+ *         property="chain",
+ *         type="string",
+ *         example="TRC20",
+ *         description="The chain symbol for the currency. Must exist in the currency chains table with 'deposit_enabled' set to true."
+ *     )
+ * )
+ */
 class GenerateAddressRequest extends FormRequest
 {
     /**

@@ -1004,6 +1004,64 @@
                     }
                 ]
             }
+        },
+        "/api/v1/wallets/generate-address": {
+            "post": {
+                "tags": [
+                    "Wallet"
+                ],
+                "summary": "Generate Wallet Address",
+                "description": "Generates a wallet address for a specific currency and chain.",
+                "operationId": "generateAddress",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GenerateAddressRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Wallet address generated successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CoinAddressResponse"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "An error occurred."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -1230,6 +1288,25 @@
                 },
                 "type": "object"
             },
+            "GenerateAddressRequest": {
+                "required": [
+                    "currency",
+                    "chain"
+                ],
+                "properties": {
+                    "currency": {
+                        "description": "The symbol of the currency (e.g., BTC, ETH). Must exist in the currencies table.",
+                        "type": "string",
+                        "example": "BTC"
+                    },
+                    "chain": {
+                        "description": "The chain symbol for the currency. Must exist in the currency chains table with 'deposit_enabled' set to true.",
+                        "type": "string",
+                        "example": "BTC"
+                    }
+                },
+                "type": "object"
+            },
             "AccessTokenResource": {
                 "properties": {
                     "access_token": {
@@ -1425,6 +1502,16 @@
                     }
                 },
                 "type": "object"
+            },
+            "CoinAddressResponse": {
+                "properties": {
+                    "address": {
+                        "description": "The generated wallet address for the user.",
+                        "type": "string",
+                        "example": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+                    }
+                },
+                "type": "object"
             }
         }
     },
@@ -1452,6 +1539,10 @@
         {
             "name": "Referral Code",
             "description": "Referral Code"
+        },
+        {
+            "name": "Wallet",
+            "description": "Wallet"
         }
     ]
 }

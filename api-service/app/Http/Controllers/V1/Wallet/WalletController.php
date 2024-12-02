@@ -18,6 +18,38 @@ class WalletController extends Controller
 {
     public function __construct(private readonly WalletService $service, private readonly DepositService $depositService) {}
 
+    /**
+     * @OA\Post(
+     *     path="/api/v1/wallets/generate-address",
+     *     summary="Generate Wallet Address",
+     *     description="Generates a wallet address for a specific currency and chain.",
+     *     operationId="generateAddress",
+     *     tags={"Wallet"},
+     *     security={{"sanctum": {}}},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(ref="#/components/schemas/GenerateAddressRequest")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Wallet address generated successfully.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="data", ref="#/components/schemas/CoinAddressResponse")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error.",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="An error occurred.")
+     *         )
+     *     )
+     * )
+     */
     public function generateAddress(GenerateAddressRequest $request)
     {
         $validated = $request->validated();
