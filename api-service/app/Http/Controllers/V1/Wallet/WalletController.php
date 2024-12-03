@@ -76,7 +76,7 @@ class WalletController extends Controller
                     ->setCurrencySymbol($validated['currency'])
                     ->setCurrencyChain($validated['chain'])
                     ->setPublicKey($res->getAddress())
-                    ->setExpirationDate(now()->addMinutes(config('bitexroom.deposit_watching_per_minutes')))
+                    ->setExpirationDate($expirationDate = now()->addMinutes(config('bitexroom.deposit_watching_per_minutes')))
             );
 
             DB::commit();
@@ -90,7 +90,7 @@ class WalletController extends Controller
         }
 
         return response([
-            'data' => new CoinAddressResource($res),
+            'data' => new CoinAddressResource($res, $expirationDate),
         ]);
     }
 }
