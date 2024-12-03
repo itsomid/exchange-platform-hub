@@ -2,6 +2,8 @@
 
 namespace App\Services\Wallet\DTO\Deposit;
 
+use Carbon\Carbon;
+
 class AddPendingDepositRequestDTO
 {
     private int $userId;
@@ -11,6 +13,7 @@ class AddPendingDepositRequestDTO
     private string $currencyChain;
 
     private string $publicKey;
+    private Carbon $expirationDate;
 
     public function setUserId(int $userId): self
     {
@@ -58,5 +61,16 @@ class AddPendingDepositRequestDTO
     public function getPublicKey(): string
     {
         return $this->publicKey;
+    }
+
+    public function setExpirationDate(Carbon $expirationDate): self
+    {
+        $this->expirationDate = $expirationDate;
+        return $this;
+    }
+
+    public function getExpirationDate(): Carbon
+    {
+        return $this->expirationDate;
     }
 }

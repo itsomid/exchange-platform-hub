@@ -19,6 +19,7 @@ return new class extends Migration
             $table->decimal('amount', 8, 2)->nullable();
             $table->string('public_key');
             $table->string('status');
+            $table->dateTime('expiration_date')->nullable()->default(null);
 
             $table->index(['user_id', 'currency_symbol']);
             $table->index(['user_id', 'currency_symbol', 'status']);

@@ -21,6 +21,7 @@ class DepositService
                 ->setCurrencySymbol($requestDTO->getCurrencySymbol())
                 ->setCurrencyChain($requestDTO->getCurrencyChain())
                 ->setPublicKey($requestDTO->getPublicKey())
+                ->setExpirationDate($requestDTO->getExpirationDate())
         );
     }
 }

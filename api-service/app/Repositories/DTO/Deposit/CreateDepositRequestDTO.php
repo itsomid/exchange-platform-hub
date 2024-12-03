@@ -3,6 +3,7 @@
 namespace App\Repositories\DTO\Deposit;
 
 use App\Enums\DepositStatusEnum;
+use Carbon\Carbon;
 
 class CreateDepositRequestDTO
 {
@@ -15,6 +16,8 @@ class CreateDepositRequestDTO
     private ?string $amount = null;
 
     private string $publicKey;
+
+    private Carbon $expirationDate;
 
     private DepositStatusEnum $status;
 
@@ -88,5 +91,17 @@ class CreateDepositRequestDTO
     public function getPublicKey(): string
     {
         return $this->publicKey;
+    }
+
+    public function setExpirationDate(Carbon $expirationDate): self
+    {
+        $this->expirationDate = $expirationDate;
+
+        return $this;
+    }
+
+    public function getExpirationDate(): Carbon
+    {
+        return $this->expirationDate;
     }
 }
