@@ -25,6 +25,7 @@ const LibsJsFiles = GetFilesArray('resources/assets/vendor/libs/**/*.js');
 
 // Processing Libs Scss & Css Files
 const LibsScssFiles = GetFilesArray('resources/assets/vendor/libs/**/!(_)*.scss');
+const LibsScssNFiles = GetFilesArray('resources/assets/vendor/libs/**/*.scss');
 const LibsCssFiles = GetFilesArray('resources/assets/vendor/libs/**/*.css');
 
 
@@ -43,7 +44,8 @@ export default defineConfig({
                 'resources/assets/scss/admin/auth.scss',
                 'resources/js/app.js',
                 ...LibsScssFiles,
-                ...LibsCssFiles
+                ...LibsCssFiles,
+                ...LibsScssNFiles
                 // ...CoreScssFiles
             ],
             refresh: true,

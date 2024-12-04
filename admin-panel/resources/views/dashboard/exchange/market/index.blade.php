@@ -85,9 +85,9 @@
             <div class="card-title header-elements">
                 <h5 class="m-0 me-2">لیست بازارها</h5>
                 <div class="card-title-elements ms-auto">
-                    <a href="{{route('admin.currency.create')}}" class="btn btn-primary">
+                    <a href="{{route('admin.market.create')}}" class="btn btn-primary">
                         <i class="fa fa-plus mx-2"></i>
-                        افزودن کوین جدید
+                        افزودن  بازار جدید
                     </a>
                 </div>
             </div>
@@ -101,7 +101,7 @@
                         <th>قیمت صرافی</th>
                         <th>حداقل مقدار معامله</th>
                         <th>جداکثر مقدار معامله</th>
-
+                        <th>وضعیت</th>
                         <th>عملیات</th>
                     </tr>
                     </thead>
@@ -132,18 +132,21 @@
                                 <span class="font-number text-heading h5">{{formatNumber($market->price)}}</span>
                             </td>
                             <td class="font-number text-heading fw-medium">
-                                <span>{{$market->exchange_price}}</span>
+                                <span>{{formatNumber($market->exchange_price)}}</span>
                             </td>
                             <td class="font-number">
-                                {{$market->min_trade_amount}}
+                                {{formatNumber($market->min_trade_amount,8)}}
                             </td>
                             <td class="font-number">
-                                {{$market->max_trade_amount}}
+                                {{formatNumber($market->max_trade_amount,2)}}
                             </td>
-
+                            <td>
+                                <span class="badge bg-label-{{$market->is_active?'success':'danger'}} me-1">
+                                    {{$market->is_active?'فعال':'غیرفعال'}}
+                                </span>
+                            </td>
                             <td>
                                 <div class="d-flex align-items-center">
-
                                     <a class="text-secondary me-3"
                                        href="{{ route('admin.market.edit', ['market' => $market->id]) }}">
                                         <i class="fa-light fa-pen-to-square fa-lg"></i>
@@ -151,7 +154,6 @@
                                     <a class="text-secondary me-3" href="">
                                         <i class="fa-light fa-eye fa-lg"></i>
                                     </a>
-
                                 </div>
                             </td>
                         </tr>

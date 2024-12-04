@@ -1,5 +1,5 @@
 @extends('dashboard.exchange.currency.layout.master')
-@section('title', 'ساخت کوپون')
+@section('title', 'ویرایش کوپون')
 @section('currency-body')
 
     <div class="row">

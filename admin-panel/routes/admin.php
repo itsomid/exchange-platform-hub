@@ -114,4 +114,7 @@ Route::post('/exchange/currencies/{currency}/chains', [CurrencyChainController::
 Route::patch('/exchange/currencies/{currency}/chains', [CurrencyChainController::class, 'updateChains'])->name('currency.chains.update')->can('currency');
 
 Route::get('/exchange/markets',[MarketController::class,'index'])->name('market.index')->can('market');
+Route::get('/exchange/markets/create',[MarketController::class,'create'])->name('market.create')->can('market');
+Route::post('/exchange/markets',[MarketController::class,'store'])->name('market.store')->can('market');
 Route::get('/exchange/markets/{market}/edit',[MarketController::class,'edit'])->name('market.edit')->can('market');
+Route::patch('/exchange/markets/{market}',[MarketController::class,'update'])->name('market.update')->can('market');

@@ -143,9 +143,9 @@
                                 </div>
                             </td>
                             <td>
-                                    <span class="badge bg-label-{{$admin->status()?'success':'danger'}} me-1">
-                                        {{$admin->status()?'فعال':'غیرفعال'}}
-                                    </span>
+                                <span class="badge bg-label-{{$admin->status()?'success':'danger'}} me-1">
+                                    {{$admin->status()?'فعال':'غیرفعال'}}
+                                </span>
                             </td>
 
                             <td>
