@@ -4,36 +4,46 @@ namespace App\Services\Socket;
 
 use App\Models\Market;
 use WebSocket\Client;
+use WebSocket\ConnectionException;
 
 class CoinExSocketService
 {
     private string $socketUrl = 'wss://socket.coinex.com/';
 
-    public function startListener()
-    {
-        $client = new Client($this->socketUrl);
+    private int $reconnectDelay = 1; // Delay in seconds before retrying
 
-        // Subscribe to a channel (replace with your actual subscription message)
+    public function startListener(): void
+    {
+        while (true) {
+            try {
+                $this->listenToSocket();
+            } catch (\Exception $e) {
+                report($e);
+                // Log unexpected errors
+                echo $e->getMessage();
+                break; // Exit loop on critical errors
+            }
+        }
+    }
+
+    private function listenToSocket(): void
+    {
+        $client = new Client($this->socketUrl, ['timeout' => 60]); // Set a timeout
+
+        // Subscribe to a channel
         $subscribeMessage = [
             'method' => 'state.subscribe',
-            'params' => ['BTCUSDT'],
+            'params' => ['BTCUSDT', 'ETHUSDT', 'DOGEUSDT', 'TRXUSDT', 'BNBUSDT'],
             'id' => 1,
         ];
         $client->send(json_encode($subscribeMessage));
 
         while (true) {
-            try {
-                $message = $client->receive();
-                $data = json_decode($message, true);
+            $message = $client->receive();
+            $data = json_decode($message, true);
 
-                // Process the WebSocket message
-                $this->processMessage($data);
-            } catch (\Exception $e) {
-                dd($e->getMessage());
-                // Log the error and attempt reconnection
-                logger()->error('WebSocket error: '.$e->getMessage());
-                break;
-            }
+            // Process the WebSocket message
+            $this->processMessage($data);
         }
     }
 
@@ -55,7 +65,6 @@ class CoinExSocketService
             Market::query()
                 ->where('base_currency', $baseCurrent)
                 ->where('quote_currency', 'USDT')
-                ->where('symbol', $symbol)
                 ->update(['price' => $lastPrice]);
         }
     }
