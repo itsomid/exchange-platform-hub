@@ -10,6 +10,8 @@ class CoinExSocketService
 {
     private string $socketUrl = 'wss://socket.coinex.com/';
 
+    private array $coinsPrice = [];
+
     public function startListener(): void
     {
         while (true) {
@@ -57,8 +59,11 @@ class CoinExSocketService
 
     private function updateCurrencyPrice(string $symbol, ?string $lastPrice): void
     {
-        if ($lastPrice) {
-            $baseCurrent = str_replace('USDT', '', $symbol);
+        $baseCurrent = str_replace('USDT', '', $symbol);
+
+        if (! in_array($baseCurrent, $this->coinsPrice) || $this->coinsPrice[$baseCurrent] !== $lastPrice) {
+            echo $baseCurrent.': '.$lastPrice.PHP_EOL;
+            $this->coinsPrice[$baseCurrent] = $lastPrice;
             Market::query()
                 ->where('base_currency', $baseCurrent)
                 ->where('quote_currency', 'USDT')
