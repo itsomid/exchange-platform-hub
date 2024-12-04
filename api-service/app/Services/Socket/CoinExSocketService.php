@@ -3,25 +3,22 @@
 namespace App\Services\Socket;
 
 use App\Models\Market;
+use Throwable;
 use WebSocket\Client;
-use WebSocket\ConnectionException;
 
 class CoinExSocketService
 {
     private string $socketUrl = 'wss://socket.coinex.com/';
-
-    private int $reconnectDelay = 1; // Delay in seconds before retrying
 
     public function startListener(): void
     {
         while (true) {
             try {
                 $this->listenToSocket();
-            } catch (\Exception $e) {
+            } catch (Throwable $e) {
                 report($e);
                 // Log unexpected errors
                 echo $e->getMessage();
-                break; // Exit loop on critical errors
             }
         }
     }
@@ -47,7 +44,7 @@ class CoinExSocketService
         }
     }
 
-    private function processMessage(array $data)
+    private function processMessage(array $data): void
     {
         // Check for the "state.update" method
         if (isset($data['method']) && $data['method'] === 'state.update') {
