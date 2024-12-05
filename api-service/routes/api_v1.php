@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\V1\Currency\ConfigController;
+use App\Http\Controllers\V1\Wallet\WalletController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/captcha', [\App\Http\Controllers\CaptchaController::class, '__invoke'])->withoutMiddleware('auth:sanctum');
@@ -18,4 +19,9 @@ Route::prefix('/referral-codes')->group(function () {
 //Currency
 Route::prefix('/currencies')->group(function () {
     Route::get('/deposit-withdraw-config', [ConfigController::class, 'depositWithdrawConfig'])->name('currencies.deposit-withdraw-config');
+});
+
+//Wallet
+Route::prefix('/wallets')->group(function () {
+    Route::post('/generate-address', [WalletController::class, 'generateAddress'])->name('wallets.generate-address');
 });

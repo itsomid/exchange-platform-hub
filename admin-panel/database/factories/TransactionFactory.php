@@ -45,7 +45,7 @@ class TransactionFactory extends Factory
                 ->where('user_id', $user_id)
                 ->first();
             $used_by = User::query()->where('introducer_code', $referralCode->id)->first();
-            if ($referralCode) {
+            if ($referralCode && $used_by) {
                 ReferralCodeUsage::create([
                     'referral_code_id' => $referralCode->id,
                     'used_by' => $used_by->id,

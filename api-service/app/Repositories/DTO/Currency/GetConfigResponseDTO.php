@@ -5,7 +5,9 @@ namespace App\Repositories\DTO\Currency;
 class GetConfigResponseDTO
 {
     private string $name;
+
     private string $symbol;
+
     private bool $interTransferEnabled;
 
     private array $chains;
@@ -13,6 +15,7 @@ class GetConfigResponseDTO
     public function setName(string $name): self
     {
         $this->name = $name;
+
         return $this;
     }
 
@@ -24,6 +27,7 @@ class GetConfigResponseDTO
     public function setSymbol(string $symbol): self
     {
         $this->symbol = $symbol;
+
         return $this;
     }
 
@@ -35,6 +39,7 @@ class GetConfigResponseDTO
     public function setInterTransferEnabled(bool $interTransferEnabled): self
     {
         $this->interTransferEnabled = $interTransferEnabled;
+
         return $this;
     }
 
@@ -46,6 +51,7 @@ class GetConfigResponseDTO
     public function setChains(array $chains): self
     {
         $this->chains = $chains;
+
         return $this;
     }
 

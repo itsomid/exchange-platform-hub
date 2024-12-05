@@ -27,9 +27,11 @@ class ConfigController extends Controller
      *
      *        @OA\JsonContent(ref="#/components/schemas/CurrencyConfigRequest")
      *    ),*
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Configuration retrieved successfully.",
+     *
      *              @OA\JsonContent(
      *
      *              @OA\Property(property="message", type="string", example="Registration successful."),
@@ -44,7 +46,9 @@ class ConfigController extends Controller
      *     @OA\Response(
      *         response=422,
      *         description="Validation error.",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="message", type="string", example="The given data was invalid."),
      *             @OA\Property(property="errors", type="object", additionalProperties={"type": "array", "items": {"type": "string"}})
      *         )
@@ -53,7 +57,9 @@ class ConfigController extends Controller
      *     @OA\Response(
      *         response=401,
      *         description="Unauthorized.",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="message", type="string", example="Unauthenticated.")
      *         )
      *     )

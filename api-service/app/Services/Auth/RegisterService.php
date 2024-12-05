@@ -2,11 +2,11 @@
 
 namespace App\Services\Auth;
 
-use App\Repositories\DTO\UserEmailVerification\EmailVerificationSaveTokenRequestDTO;
-use App\Repositories\ReferralCodeRepository;
-use App\Repositories\Interfaces\UserEmailVerificationInterface;
 use App\Repositories\DTO\User\UserRegisterRequestDTO;
+use App\Repositories\DTO\UserEmailVerification\EmailVerificationSaveTokenRequestDTO;
+use App\Repositories\Interfaces\UserEmailVerificationInterface;
 use App\Repositories\Interfaces\UserRepositoryInterface;
+use App\Repositories\ReferralCodeRepository;
 use App\Services\Auth\DTO\RegisterRequestDTO;
 use App\Services\Auth\DTO\RegisterResponseDTO;
 use App\Utils\RandomToken;
