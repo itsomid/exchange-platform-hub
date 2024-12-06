@@ -7,15 +7,31 @@ use Illuminate\Database\Seeder;
 
 class SettingTableSeeder extends Seeder
 {
-    public function run(): void
+
+    public function run()
     {
-        foreach ($this->items as $item) {
-            Setting::query()->create($item);
-        }
+        \DB::table('settings')->insert([
+            [
+                'key' => 'otc_buy_fee',
+                'name' => 'کارمزد خرید از مشتری',
+                'value' => '0.03',
+            ],
+            [
+                'key' => 'otc_sell_fee',
+                'name' => 'کارمزد فروش به مشتری',
+                'value' => '0.002',
+            ],
+            [
+                'key' => 'referral_profit_status',
+                'name' => 'وضعیت سیستم رفرال',
+                'value' => true,
+            ],
+            [
+                'key' => 'referral_profit_percentage',
+                'name' => ' نرخ کارمزد اهدایی به کاربر از طریق کد دعوت',
+                'value' => '30',
+            ],
+        ]);
     }
 
-    private array $items = [
-        ['key' => 'ref_base_address', 'value' => 'http://127.0.0.1:8002/api'],
-        ['key' => 'service_address', 'value' => 'http://localhost:3005/v1/api/admin/'],
-    ];
 }

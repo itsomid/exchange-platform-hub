@@ -45,8 +45,9 @@ Route::prefix('admins')->group(function () {
     Route::get('/back_to_admin_panel', [AdminController::class, 'back_to_admin_panel'])->name('admin.back_to_admin_panel');
 
     Route::get('/{admin}/session', [SessionController::class, 'index'])->name('session.index')->can('session.index');
-    Route::delete('/{admin}/session/{session}', [SessionController::class, 'destroy'])->name('session.destroy')->can('session.destroy');
-    Route::delete('/{admin}/session/purge', [SessionController::class, 'purge'])->name('session.purge')->can('session.destroy');
+
+    Route::delete('/{admin}/sessions/{session}', [SessionController::class, 'destroy'])->name('session.destroy')->can('session.destroy');
+    Route::delete('/{admin}/sessions/purge/all', [SessionController::class, 'purge'])->name('session.purge')->can('session.destroy');
 });
 
 
@@ -86,6 +87,8 @@ Route::get('/permissions/{permission}/edit', [PermissionController::class, 'edit
 Route::patch('/permissions/{permission}', [PermissionController::class, 'update'])->name('permission.update')->can('permission.edit');
 
 Route::get('/referral-codes', [ReferralCodeController::class, 'index'])->name('referral_code.index')->can('referral_code.index');
+Route::get('/referral-codes/{referral_code}', [ReferralCodeController::class, 'showUsage'])->name('referral_code.show')->can('referral_code.index');
+Route::get('/referral-codes/referred-user/{user}/transactions', [ReferralCodeController::class, 'showTransactionsForReferredUser'])->name('referral_code.showTransactionsForReferredUser')->can('referral_code.index');
 Route::get('/referral-codes/create', [ReferralCodeController::class, 'create'])->name('referral_code.create')->can('referral_code.create');
 Route::post('/referral-codes', [ReferralCodeController::class, 'store'])->name('referral_code.store')->can('referral_code.create');
 Route::get('/referral-codes/{referral_code}/edit', [ReferralCodeController::class, 'edit'])->name('referral_code.edit')->can('referral_code.edit');
@@ -93,12 +96,6 @@ Route::patch('/referral-codes/{referral_code}', [ReferralCodeController::class, 
 
 Route::get('/inquiry', [InquiryController::class, 'index'])->name('inquiry.index')->can('admin.inquiry');
 Route::post('/inquiry', [InquiryController::class, 'submit'])->name('inquiry.submit')->can('admin.inquiry');
-
-Route::get('/internal-settings', [InternalSettingController::class, 'index'])->name('internal.setting.index')->can('setting.int.index');
-Route::post('/internal-settings/update-permissions', [InternalSettingController::class, 'updatePermissions'])->name('setting.int.update-permissions')->can('setting.int.index');
-
-Route::get('/external-settings', [ExternalSettingController::class, 'index'])->name('external-setting.index')->can('setting.ext.index');
-Route::post('/external-settings/update-ref-address', [ExternalSettingController::class, 'updateRefAddress'])->name('setting.ext.update-ref-address')->can('setting.ext.index');
 
 Route::get('/exchange/currencies', [CurrencyController::class, 'index'])->name('currency.index')->can('currency');
 Route::get('/exchange/currencies/create', [CurrencyController::class, 'create'])->name('currency.create')->can('currency');
@@ -118,3 +115,13 @@ Route::get('/exchange/markets/create',[MarketController::class,'create'])->name(
 Route::post('/exchange/markets',[MarketController::class,'store'])->name('market.store')->can('market');
 Route::get('/exchange/markets/{market}/edit',[MarketController::class,'edit'])->name('market.edit')->can('market');
 Route::patch('/exchange/markets/{market}',[MarketController::class,'update'])->name('market.update')->can('market');
+
+
+Route::get('/internal-settings', [InternalSettingController::class, 'index'])->name('internal.setting.index')->can('setting.int.index');
+Route::post('/internal-settings/update-permissions', [InternalSettingController::class, 'updatePermissions'])->name('setting.int.update-permissions')->can('setting.int.index');
+Route::post('/internal-settings/update-otc-setting', [InternalSettingController::class, 'updateOTCSetting'])->name('setting.int.update-otc-setting')->can('setting.int.index');
+Route::post('/internal-settings/update-referral-setting', [InternalSettingController::class, 'updateReferralSetting'])->name('setting.int.update-referral-setting')->can('setting.int.index');
+
+Route::get('/external-settings', [ExternalSettingController::class, 'index'])->name('external-setting.index')->can('setting.ext.index');
+Route::post('/external-settings/update-ref-address', [ExternalSettingController::class, 'updateRefAddress'])->name('setting.ext.update-ref-address')->can('setting.ext.index');
+

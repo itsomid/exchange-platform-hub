@@ -206,12 +206,11 @@ class UserController extends Controller
             ->payload(JWT::getPayload($user->id))
             ->encode();
 
-        return redirect(config('hadaf.user_panel_destination')
+        return redirect(config('bitexroom.user_panel_destination')
             .'?token='.$token
             .'&user_id='.$user->id
             .'&name='.$user->name
             .'&mobile='.$user->mobile
-            .'&credit='.$user->balance
             .'&support='.optional($user->saleSupport)->fullname()
             .'&route=dashboard');
     }

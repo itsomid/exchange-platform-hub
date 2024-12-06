@@ -14,7 +14,7 @@
                             </div>
                         </div>
                         <span class="badge bg-label-primary rounded p-2">
-                            <i class="fa-light fa-users fa-xl"></i>
+                            <i class="fa-light fa-users fa-lg"></i>
 
                         </span>
                     </div>
@@ -28,12 +28,11 @@
                         <div class="content-left">
                             <span>سشن های فعال</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{$users->total()}}</h4>
-                                <p class="text-success mb-0">(+6%)</p>
+                                <h4 class="mb-0 me-2">1</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-primary rounded p-2">
-                            <i class="fa-light fa-user-alt fa-xl"></i>
+                            <i class="fa-light fa-user-alt fa-lg"></i>
 
                         </span>
                     </div>
@@ -65,12 +64,12 @@
                         <div class="content-left">
                             <span>در انتظار تایید</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{$users->total()}}</h4>
+                                <h4 class="mb-0 me-2">12</h4>
                                 <p class="text-danger mb-0">(+6%)</p>
                             </div>
                         </div>
                         <span class="badge bg-label-warning rounded p-2">
-                           <i class="fa-regular fa-user-clock fa-xl"></i>
+                           <i class="fa-regular fa-user-clock fa-lg"></i>
                         </span>
                     </div>
                 </div>
@@ -158,8 +157,7 @@
                             <th>ID</th>
                             <th>نام کاربری</th>
                             <th>نام</th>
-                            <th>کد معرف</th>
-
+                            <th>کد معرف ثبت نامی</th>
                             <th>وضعیت اکانت</th>
                             <th>وضعیت حساب</th>
                             <th>آخرین فعالیت</th>
@@ -190,7 +188,7 @@
                                 <td>
 
                                     @if($user->introducerReferral)
-                                        <a class="btn btn-primary font-monospace p-1" data-bs-html='true'
+                                        <a class="btn btn-primary font-number p-1" data-bs-html='true'
                                            data-bs-toggle="tooltip" data-bs-placement="top"
                                            data-bs-custom-class="tooltip-dark"
                                            title="<span class='fw-medium'>نام:</span>

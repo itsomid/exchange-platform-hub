@@ -9,10 +9,14 @@
                     <h5 class="m-0 me-2">لیست نشست های فعال</h5>
                     @can('session.destroy')
                         <div class="card-title-elements ms-auto">
-                            <a href="{{route('admin.session.purge', ['admin' => $admin])}}" class="btn btn-danger">
-                                <i class="fa fa-skull mx-2"></i>
-                                حذف همه ی نشست ها
-                            </a>
+                            <form action="{{ route('admin.session.purge', ['admin' => $admin]) }}" method="POST" style="display: inline;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fa fa-skull mx-2"></i>
+                                    حذف همه ی نشست ها
+                                </button>
+                            </form>
                         </div>
                     @endcan
                 </div>
