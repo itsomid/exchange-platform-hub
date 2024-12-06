@@ -12,7 +12,7 @@ class ReferralCodeSeeder extends Seeder
      */
     public function run(): void
     {
-        ReferralCode::factory(10)->create();
+        ReferralCode::factory(5)->create();
     }
 
     public function withReferralCode()

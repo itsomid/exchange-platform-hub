@@ -30,12 +30,23 @@ class UserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'password' => Hash::make('password'),
             'mobile' => $this->generatePhone(),
-            'balance' => 0,
         ];
 
     }
-
     public function withReferralCode()
+    {
+        return $this->afterCreating(function ($user) {
+            // Create a referral code for the user
+            ReferralCode::factory()->create([
+                'user_id' => $user->id,  // Associate the referral code with the created user
+                'code' => ReferralCode::generateReferralCode(),  // Generate a unique referral code
+                'friend_fee' => $this->faker->randomFloat(0, 0, 30),  // Random friend fee
+                'introducer_fee' => 30 - $this->faker->randomFloat(0, 0, 30),  // Introducer fee
+                'usage_limit' => $this->faker->optional()->numberBetween(1, 100),  // Optional usage limit
+            ]);
+        });
+    }
+    public function withIntroducer()
     {
         return $this->state(function (array $attributes) {
             return [
@@ -50,14 +61,6 @@ class UserFactory extends Factory
             return [
                 'email_verified_at' => null,
             ];
-        });
-    }
-
-    public function withCustomRole(array $states, $roleName): UserFactory|Factory
-    {
-        return $this->state($states)->afterCreating(function (Admin $admin) use ($roleName) {
-            $role = Role::findByName($roleName);
-            $admin->assignRole($role);
         });
     }
 

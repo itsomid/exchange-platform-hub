@@ -16,4 +16,10 @@ class ReferralCodeUsage extends Model
     {
         return $this->belongsTo(Transaction::class,'transaction_id');
     }
+
+
+    public function usedBy()
+    {
+        return $this->belongsTo(User::class,'used_by');
+    }
 }

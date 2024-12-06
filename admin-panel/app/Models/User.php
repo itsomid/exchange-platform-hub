@@ -40,7 +40,7 @@ class User extends Authenticatable implements CanResetPassword
         'support_description',
     ];
 
-    protected $guarded = ['id', 'balance'];
+    protected $guarded = ['id'];
 
     /**
      * The attributes that should be cast.
@@ -60,6 +60,11 @@ class User extends Authenticatable implements CanResetPassword
     public function introducerReferral(): BelongsTo
     {
         return $this->belongsTo(ReferralCode::class, 'introducer_code', 'id');
+    }
+
+    public function referralCodeUsage(): HasMany
+    {
+        return $this->hasMany(ReferralCodeUsage::class,'used_by');
     }
 
 

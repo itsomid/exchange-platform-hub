@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class UserTableSeeder extends Seeder
 {
@@ -12,7 +13,16 @@ class UserTableSeeder extends Seeder
      */
     public function run(): void
     {
-        User::factory(10)->withReferralCode()->create();
+        User::create([
+            'first_name' => 'بیتکس روم',
+            'last_name' => 'bitexroom',
+            'username' => 'bitexroom',
+            'email' => 'bitexroom@gmail.com',
+            'password' => Hash::make('password'),
+            'mobile' => '09121110111',
+        ]);
+        User::factory(5)->withReferralCode()->create();
+        User::factory(10)->withIntroducer()->create();
         //        User::factory(10)->create();
         //        User::factory(10)->unverifiedWithIncompleteRegistration()->create();
         //        User::factory(10)->unverified()->create();

@@ -115,9 +115,9 @@
 
                                 <div class="d-flex flex-column">
                                     <a href="" class="text-heading text-truncate">
-                                        <span class="fw-medium">{{ $referralCode->user->email}}</span>
+                                        <span class="fw-medium"> {{ $referralCode->user->email}}</span>
                                     </a>
-                                    <small>{{ $referralCode->user->fullname()}}</small>
+                                    <small>(#{{$referralCode->user->id}}) {{ $referralCode->user->fullname()}}</small>
                                 </div>
                             </td>
                             <td>
@@ -141,8 +141,7 @@
                                        href="{{ route('admin.referral_code.edit', ['referral_code' => $referralCode->id]) }}">
                                         <i class="fa-light fa-pen-to-square fa-lg"></i>
                                     </a>
-                                    <a class="text-secondary me-3" href="">
-
+                                    <a class="text-secondary me-3" href="{{route('admin.referral_code.show',['referral_code' => $referralCode->id])}}">
                                         <i class="fa-light fa-eye fa-lg"></i>
                                     </a>
                                     <a class="text-secondary me-3" href="">

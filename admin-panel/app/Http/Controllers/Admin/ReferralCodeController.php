@@ -8,12 +8,16 @@ use App\Http\Requests\referralCode\StoreReferralCodeRequest;
 use App\Http\Requests\referralCode\UpdateReferralCodeRequest;
 use App\Models\Admin;
 use App\Models\ReferralCode;
+use App\Models\ReferralCodeUsage;
+use App\Models\Transaction;
+use App\Models\User;
+
 
 class ReferralCodeController extends Controller
 {
     public function index()
     {
-         $referralCodes = ReferralCode::filterBy(request()->all())
+        $referralCodes = ReferralCode::filterBy(request()->all())
             ->with('user')
             ->withCount('registeredUsers')
             ->withCount('referralCodeUsage')
@@ -24,23 +28,23 @@ class ReferralCodeController extends Controller
 
         return view('dashboard.referral_code.index', [
             'referralCodes' => $referralCodes,
-            'totalTransactionSum'=>$totalTransactionSum,
-            'totalRegisteredUsers'=>$totalRegisteredUsers
+            'totalTransactionSum' => $totalTransactionSum,
+            'totalRegisteredUsers' => $totalRegisteredUsers
         ]);
     }
 
     public function create()
     {
-        $admins = Admin::select('id','mobile', 'first_name', 'last_name')->get();
+        $admins = Admin::select('id', 'mobile', 'first_name', 'last_name')->get();
         $sampleReferralCode = ReferralCode::generateReferralCode();
         return view('dashboard.referral_code.create')
-            ->with(['admins' => $admins,'sampleReferralCode'=>$sampleReferralCode]);
+            ->with(['admins' => $admins, 'sampleReferralCode' => $sampleReferralCode]);
     }
 
     public function store(StoreReferralCodeRequest $request)
     {
 
-         ReferralCode::create([
+        ReferralCode::create([
             'code' => $request->input('code'),
             'user_id' => $request->user_id, // Assuming the authenticated user is the introducer
             'introducer_fee' => $request->input('introducer_fee'),
@@ -64,10 +68,38 @@ class ReferralCodeController extends Controller
         //TODO: create Request
 
 
-
         $referralCode->update($request->validated());
 
         Toast::message('کد معرف با موفقیت ویرایش شد')->success()->notify();
         return redirect()->route('admin.referral_code.index');
+    }
+
+    public function showUsage(ReferralCode $referralCode)
+    {
+
+//        return $referralCodeUsage = ReferralCodeUsage::where('referral_code_id',$referralCode->id)->with('transaction')->get();
+        $referralCode
+            ->load('registeredUsers')
+            ->loadCount('registeredUsers')
+            ->load('transactions')
+            ->loadSum('transactions', 'amount');
+
+
+        $countOfUserHasUsedReferralCode = $referralCode->referralCodeUsage->groupBy('used_by')->count();
+        $conversationRate = ($countOfUserHasUsedReferralCode / $referralCode->registered_users_count) * 100;
+        return view('dashboard.referral_code.referred-users', [
+            'referralCode' => $referralCode,
+            'conversationRate' => $conversationRate
+        ]);
+    }
+
+    public function showTransactionsForReferredUser(User $user)
+    {
+
+        $referralUsages = ReferralCodeUsage::whereUsedBy($user->id)->with(['transaction','usedBy'])->withSum('transaction','amount')->get();
+
+        return view('dashboard.referral_code.referred-users-transaction', [
+            'referralUsages' => $referralUsages
+        ]);
     }
 }

@@ -21,8 +21,6 @@ return new class extends Migration
             $table->string('mobile')->unique()->nullable();
             $table->string('national_id')->unique()->nullable();
 
-            $table->decimal('balance', 18, 8)->default(0);
-
             $table->enum('status', ['active', 'suspended', 'inactive'])->default('active');
 
             $table->decimal('transaction_limit', 18, 2)->default(0); // Transaction limit
