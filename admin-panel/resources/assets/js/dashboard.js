@@ -5,7 +5,7 @@
 'use strict';
 
 (function () {
-    let cardColor,borderColor, headingColor, labelColor,  barBgColor;
+    let cardColor,borderColor, headingColor, labelColor,shadeColor,  barBgColor;
     if (isDarkStyle) {
         cardColor = config.colors_dark.cardColor;
         labelColor = config.colors_dark.textMuted;
@@ -19,6 +19,7 @@
         labelColor = config.colors.textMuted;
         borderColor = config.colors.borderColor;
         headingColor = config.colors.headingColor;
+        shadeColor = '';
         barBgColor = '#efeef0';
     }
 
@@ -334,12 +335,12 @@
         });
     }
 
-    // Orders last week Bar Chart
+    // OTC BUY LAst week Bar Chart
     // --------------------------------------------------------------------
-    const ordersLastWeekEl = document.querySelector('#ordersLastWeek'),
-        ordersLastWeekConfig = {
+    const OTCBuyLastWeekEl = document.querySelector('#OTCBuyLastWeek'),
+        OTCBuyLastWeekConfig = {
             chart: {
-                height: 75,
+                height: 200,
                 parentHeightOffset: 0,
                 type: 'bar',
                 toolbar: {
@@ -387,7 +388,7 @@
                 show: false
             },
             xaxis: {
-                categories: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
+                categories: ['شنبه', 'یک‌شنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه'],
                 axisBorder: {
                     show: false
                 },
@@ -395,7 +396,206 @@
                     show: false
                 },
                 labels: {
-                    show: true
+                    show: true,
+                    style: {
+                        colors: labelColor,
+                        fontSize: '13px',
+                        fontFamily: 'FarsiNumeral',
+                        fontWeight: 400
+                    },
+                },
+
+            },
+            yaxis: {
+                labels: {
+                    show: false
+                }
+            },
+            responsive: [
+                {
+                    breakpoint: 1441,
+                    options: {
+                        plotOptions: {
+                            bar: {
+                                columnWidth: '40%',
+                                borderRadius: 4
+                            }
+                        }
+                    }
+                },
+                {
+                    breakpoint: 1368,
+                    options: {
+                        plotOptions: {
+                            bar: {
+                                columnWidth: '48%'
+                            }
+                        }
+                    }
+                },
+                {
+                    breakpoint: 1200,
+                    options: {
+                        plotOptions: {
+                            bar: {
+                                borderRadius: 6,
+                                columnWidth: '30%',
+                                colors: {
+                                    backgroundBarRadius: 6
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    breakpoint: 991,
+                    options: {
+                        plotOptions: {
+                            bar: {
+                                columnWidth: '35%',
+                                borderRadius: 6
+                            }
+                        }
+                    }
+                },
+                {
+                    breakpoint: 883,
+                    options: {
+                        plotOptions: {
+                            bar: {
+                                columnWidth: '40%'
+                            }
+                        }
+                    }
+                },
+                {
+                    breakpoint: 768,
+                    options: {
+                        plotOptions: {
+                            bar: {
+                                columnWidth: '25%'
+                            }
+                        }
+                    }
+                },
+                {
+                    breakpoint: 576,
+                    options: {
+                        plotOptions: {
+                            bar: {
+                                borderRadius: 9
+                            },
+                            colors: {
+                                backgroundBarRadius: 9
+                            }
+                        }
+                    }
+                },
+                {
+                    breakpoint: 479,
+                    options: {
+                        plotOptions: {
+                            bar: {
+                                borderRadius: 4,
+                                columnWidth: '35%'
+                            },
+                            colors: {
+                                backgroundBarRadius: 4
+                            }
+                        },
+                        grid: {
+                            padding: {
+                                right: -15,
+                                left: -15
+                            }
+                        }
+                    }
+                },
+                {
+                    breakpoint: 376,
+                    options: {
+                        plotOptions: {
+                            bar: {
+                                borderRadius: 3
+                            }
+                        }
+                    }
+                }
+            ]
+        };
+    if (typeof OTCBuyLastWeekEl !== undefined && OTCBuyLastWeekEl !== null) {
+        const OTCBuyLastWeek = new ApexCharts(OTCBuyLastWeekEl, OTCBuyLastWeekConfig);
+        OTCBuyLastWeek.render();
+    }
+
+    // OTC BUY LAst week Bar Chart
+    // --------------------------------------------------------------------
+    const OTCSellLastWeekEl = document.querySelector('#OTCSellLastWeek'),
+        OTCSellLastWeekConfig = {
+            chart: {
+                height: 200,
+                parentHeightOffset: 0,
+                type: 'bar',
+                toolbar: {
+                    show: false
+                }
+            },
+            tooltip: {
+                enabled: true
+            },
+            plotOptions: {
+                bar: {
+                    barHeight: '100%',
+                    columnWidth: '30px',
+                    startingShape: 'rounded',
+                    endingShape: 'rounded',
+                    borderRadius: 4,
+                    colors: {
+                        backgroundBarColors: [barBgColor, barBgColor, barBgColor, barBgColor, barBgColor, barBgColor, barBgColor],
+                        backgroundBarRadius: 4
+                    }
+                }
+            },
+            colors: [config.colors.primary],
+            grid: {
+                show: false,
+                padding: {
+                    top: -30,
+                    left: -16,
+                    bottom: 0,
+                    right: -6
+                }
+            },
+            dataLabels: {
+                enabled: false
+            },
+
+            series: [
+                {
+                    name: 'ثبت نام',
+                    type: 'column',
+                    data: [60, 50, 20, 45, 50, 30, 70]
+                }
+            ],
+            legend: {
+                show: false
+            },
+            xaxis: {
+                categories: ['شنبه', 'یک‌شنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه'],
+                axisBorder: {
+                    show: false
+                },
+                axisTicks: {
+                    show: false
+                },
+                labels: {
+                    show: true,
+                    style: {
+                        colors: labelColor,
+                        fontSize: '13px',
+                        fontFamily: 'FarsiNumeral',
+                        fontWeight: 400
+                    },
                 }
             },
             yaxis: {
@@ -515,9 +715,10 @@
                 }
             ]
         };
-    if (typeof ordersLastWeekEl !== undefined && ordersLastWeekEl !== null) {
-        const ordersLastWeek = new ApexCharts(ordersLastWeekEl, ordersLastWeekConfig);
-        ordersLastWeek.render();
+    if (typeof OTCSellLastWeekEl !== undefined && OTCSellLastWeekEl !== null) {
+        const OTCSellLastWeek = new ApexCharts(OTCSellLastWeekEl, OTCSellLastWeekConfig);
+        OTCSellLastWeek.render();
     }
-
 })();
+
+

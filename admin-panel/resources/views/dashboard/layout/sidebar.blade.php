@@ -18,7 +18,7 @@
             <a href="{{route('admin.dashboard')}}" class="menu-link">
                 {{--                    <i class=" tf-icons ti ti-users"></i>--}}
                 <i class="menu-icon  fa-regular fa-chart-pie-simple fa-sm"></i>
-                <div data-i18n="Page 1">داشبورد</div>
+                <div >داشبورد</div>
             </a>
         </li>
 
@@ -47,7 +47,7 @@
         @can('user.index')
             <li class="menu-item @if(request()->is('admin/inquiry*')) active @endif">
                 <a disabled="" href="{{route('admin.inquiry.index')}}" class="menu-link">
-                    <i class="menu-icon fa-light fa-screen-users fa-lg"></i>
+                    <i class="menu-icon fa-light fa-user-alt fa-lg"></i>
                     <div >استعلام کاربر</div>
                 </a>
             </li>
@@ -61,7 +61,7 @@
             <li class="menu-item @if(request()->is('admin/referral-codes*')) active @endif">
                 <a href="{{route('admin.referral_code.index')}}" class="menu-link">
                     <i class="menu-icon fa-regular fa-user-tag fa-sm"></i>
-                    <div data-i18n="Page 1">کدهای معرف</div>
+                    <div >کدهای معرف</div>
                 </a>
             </li>
         @endcan
@@ -72,7 +72,7 @@
             <li class="menu-item @if(request()->is('admin/orders*')) active @endif">
                 <a href="" class="menu-link">
                     <i class="menu-icon fa-regular fa-chart-candlestick"></i>
-                    <div data-i18n="Page 1">لیست سفارشها</div>
+                    <div >لیست تراکنش ها</div>
                 </a>
             </li>
         @endcan
@@ -80,7 +80,30 @@
             <li class="menu-item @if(request()->is('admin/transaction*')) active @endif">
                 <a href="" class="menu-link">
                     <i class="menu-icon fa-regular fa-money-from-bracket"></i>
-                    <div data-i18n="Page 1">لیست تراکنش ها</div>
+                    <div >لیست واریزی ها</div>
+                </a>
+            </li>
+        @endcan
+        @can('transaction.index')
+            <li class="menu-item @if(request()->is('admin/transaction*')) active @endif">
+                <a href="" class="menu-link">
+                    <i class="menu-icon fa-regular fa-money-bill-wave"></i>
+                    <div >لیست برداشت ها</div>
+                </a>
+            </li>
+        @endcan
+        @can('transaction.index')
+            <li class="menu-item @if(request()->is('admin/transaction*')) active @endif">
+                <a href="" class="menu-link">
+                    <i class="menu-icon  fa-regular fa-swap"></i>
+
+                    <div >معاملات OTC</div>
+                </a>
+            </li>
+            <li class="menu-item @if(request()->is('admin/exchange/market*')) active @endif">
+                <a href="{{route('admin.market.index')}}" class="menu-link">
+                    <i class="menu-icon fa-regular fa-wallet"></i>
+                    <div >مدیریت کیف پول ها</div>
                 </a>
             </li>
         @endcan
@@ -91,15 +114,16 @@
             <li class="menu-item @if(request()->is('admin/exchange/currencies*')) active @endif">
                 <a href="{{route('admin.currency.index')}}" class="menu-link">
                     <i class="menu-icon fa-regular fa-circle-dollar"></i>
-                    <div data-i18n="Page 1">Currency</div>
+                    <div >Currency</div>
                 </a>
             </li>
             <li class="menu-item @if(request()->is('admin/exchange/market*')) active @endif">
                 <a href="{{route('admin.market.index')}}" class="menu-link">
                     <i class="menu-icon fa-regular fa-display-chart-up-circle-dollar"></i>
-                    <div data-i18n="Page 1">Market</div>
+                    <div >Market</div>
                 </a>
             </li>
+
         @endcanany
         @canany(['setting.int.index', 'setting.ext.index'])
             <li class="menu-header small text-uppercase">
@@ -116,34 +140,34 @@
                         <li class="menu-item @if(request()->is('admin/roles*')) active @endif">
                             <a href="{{route('admin.role.index')}}" class="menu-link">
                                 <i class="menu-icon fa-light fa-user fa-sm"></i>
-                                <div data-i18n="Page 1"> نقش ها</div>
+                                <div > نقش ها</div>
                             </a>
                         </li>
                         <li class="menu-item @if(request()->is('admin/permissions*')) active @endif">
                             <a href="{{route('admin.permission.index')}}" class="menu-link">
                                 <i class="menu-icon fa-light fa-key fa-sm"></i>
-                                <div data-i18n="Page 1"> مجوزها</div>
+                                <div > مجوزها</div>
                             </a>
                         </li>
                     </ul>
 
                 </li>
             @endcan
-            <li class="menu-item @if(request()->is('admin/setting*')) active @endif">
+            <li class="menu-item @if(request()->is('admin/internal-settings*')) active open @endif">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">
                     <i class="menu-icon fa-regular fa-cog fa-sm"></i>
                     <div> پیکربندی سیستم</div>
                 </a>
                 <ul class="menu-sub">
                     @can('setting.int.index')
-                        <li class="menu-item">
+                        <li class="menu-item  @if(request()->is('admin/internal-settings*')) active @endif" >
                             <a href="{{route('admin.internal.setting.index')}}" class="menu-link">
                                 <div>تنظیمات داخلی</div>
                             </a>
                         </li>
                     @endcan
                     @can('setting.ext.index')
-                        <li class="menu-item">
+                        <li class="menu-item  @if(request()->is('admin/external-settings*')) active @endif">
                             <a href="{{route('admin.external-setting.index')}}" class="menu-link">
                                 <div>تنظیمات خارجی</div>
                             </a>
@@ -154,21 +178,21 @@
             <li class="menu-item @if(request()->route()->getName() == 'telescope') active @endif">
                 <a href="{{route('telescope')}}" class="menu-link">
                     <i class="menu-icon fa-light fa-telescope fa-sm"></i>
-                    <div data-i18n="Page 1"> تلسکوپ</div>
+                    <div > تلسکوپ</div>
                 </a>
             </li>
 
             <li class="menu-item @if(request()->is('/pulse*')) active @endif">
                 <a href="{{url('./pulse')}}" class="menu-link">
                     <i class="menu-icon fa-regular  fa-monitor-heart-rate fa-sm"></i>
-                    <div data-i18n="Page 1"> Pulse</div>
+                    <div > Pulse</div>
                 </a>
             </li>
 
             <li class="menu-item @if(request()->is('/log-viewer*')) active @endif">
                 <a href="{{url('./log-viewer')}}" class="menu-link">
                     <i class="menu-icon  fa-regular  fa-circle-exclamation fa-sm"></i>
-                    <div data-i18n="Page 1"> Logs and Errors</div>
+                    <div > Logs and Errors</div>
                 </a>
             </li>
         @endcan

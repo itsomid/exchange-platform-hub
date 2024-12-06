@@ -9,7 +9,7 @@
         "@majidh1/jalalidatepicker": "^0.9.3",
         "@popperjs/core": "^2.11.8",
         "@vitejs/plugin-vue": "^5.2.0",
-        "apexcharts": "^4.0.0",
+        "apexcharts": "^4.1.0",
         "apexcharts-clevision": "^3.28.5",
         "bootstrap": "^5.3.3",
         "bootstrap-select": "^1.13.18",

@@ -3,8 +3,123 @@
 @section('content')
 
     <div class="row g-6">
+        <div class="col-xl-3 col-12">
+            <div class="card h-100">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between">
+                        <h6 class="mb-0 text-body">واریز (هفته اخیر)</h6>
+                        <div class="badge bg-label-success">+15%</div>
+                    </div>
+                    <h4 class="card-title mb-1">${{number_format(23234,2)}}</h4>
+                </div>
+                <div class="card-body px-0">
+                    <div id="deposit"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-12">
+            <div class="card h-100">
+
+
+                <div class="card-header">
+                    <div class="d-flex justify-content-between">
+                        <h6 class="mb-0 text-body">برداشت (هفته اخیر)</h6>
+                        <div class="badge bg-label-danger">+15%</div>
+                    </div>
+                    <h4 class="card-title mb-1">${{number_format(23234,2)}}</h4>
+                </div>
+
+
+                <div class="card-body px-0">
+                    <div id="withdraw"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-12">
+            <div class="card h-100">
+
+
+                <div class="card-header">
+                    <div class="d-flex justify-content-between">
+                        <h6 class="mb-0 text-body">درآمد از سود صرافی برحسب تتر (هفته اخیر)</h6>
+                        <div class="badge bg-label-success">+15%</div>
+                    </div>
+                    <h4 class="card-title mb-1">${{number_format(23234,2)}}</h4>
+                </div>
+
+
+                <div class="card-body px-0">
+                    <div id="exchangeProfitIncome"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-12">
+            <div class="card h-100">
+
+
+                <div class="card-header">
+                    <div class="d-flex justify-content-between">
+                        <h6 class="mb-0 text-body">درآمد از کارمزد معاملات بر حسب تتر  (هفته اخیر)</h6>
+                        <div class="badge bg-label-success">+15%</div>
+                    </div>
+                    <h4 class="card-title mb-1">${{number_format(23234,2)}}</h4>
+                </div>
+
+
+                <div class="card-body px-0">
+                    <div id="exchangeFeeIncome"></div>
+                </div>
+            </div>
+        </div>
+        <!-- Project Status -->
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between">
+                    <h5 class="mb-0 card-title">نمودار واریزی ها (یک ماه اخیر)</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-text-secondary rounded-pill text-muted border-0 p-2 me-n1" type="button"
+                                id="projectStatusId" data-bs-toggle="dropdown" aria-haspopup="true"
+                                aria-expanded="false">
+                            <i class="fa-regular fa-grip-dots-vertical text-muted"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="projectStatusId">
+                            <a class="dropdown-item" href="javascript:void(0);">مشاهده با تفکیک تاریخ</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        <div class="badge rounded bg-label-primary p-2 me-3 rounded">
+                            <i class="fa-solid fa-money-from-bracket"></i>
+                        </div>
+                        <div class="d-flex justify-content-between w-100 gap-2 align-items-center">
+                            <div class="me-2">
+                                <h6 class="mb-0">$4,3742</h6>
+                                <small class="text-body">مجموع واریزی های یک ماه اخیر</small>
+                            </div>
+                            <h6 class="mb-0 text-success">+10.2%</h6>
+                        </div>
+                    </div>
+                    <div id="projectStatusChart"></div>
+                    <div class="d-flex justify-content-between mb-4">
+                        <h6 class="mb-0">تعداد واریزی ها</h6>
+                        <div class="d-flex">
+                            <p class="mb-0 me-4">$756.26</p>
+                            <p class="mb-0 text-danger">-139.34</p>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <h6 class="mb-0">مجموع واریزی ها</h6>
+                        <div class="d-flex">
+                            <p class="mb-0 me-4">$2,207.03</p>
+                            <p class="mb-0 text-success">+576.24</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <!-- Support Tracker -->
-        <div class="col-sm-12 col-xl-3">
+        <div class="col-sm-12 col-xl-4">
             <div class="card h-100">
                 <div class="card-header d-flex justify-content-between pb-0">
                     <div class="card-title mb-0">
@@ -75,12 +190,15 @@
                     <div class="btn-group">
                         <button type="button" class="btn btn-label-primary" id="selectedMonth">
                             {{\App\Helpers\DateFormatter::convertToPersianDate(now(),'%B')}}</button>
-                        <button type="button" class="btn btn-label-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                        <button type="button" class="btn btn-label-primary dropdown-toggle dropdown-toggle-split"
+                                data-bs-toggle="dropdown" aria-expanded="false">
                             <span class="visually-hidden">Toggle Dropdown</span>
                         </button>
                         <ul class="dropdown-menu" id="monthDropdown">
-                            <li><a class="dropdown-item" href="javascript:void(0);" data-month="فروردین">فروردین</a></li>
-                            <li><a class="dropdown-item" href="javascript:void(0);" data-month="اردیبهشت">اردیبهشت</a></li>
+                            <li><a class="dropdown-item" href="javascript:void(0);" data-month="فروردین">فروردین</a>
+                            </li>
+                            <li><a class="dropdown-item" href="javascript:void(0);" data-month="اردیبهشت">اردیبهشت</a>
+                            </li>
                             <li><a class="dropdown-item" href="javascript:void(0);" data-month="خرداد">خرداد</a></li>
                             <li><a class="dropdown-item" href="javascript:void(0);" data-month="تیر">تیر</a></li>
                             <li><a class="dropdown-item" href="javascript:void(0);" data-month="مرداد">مرداد</a></li>
@@ -101,41 +219,54 @@
         </div>
         <!--/ Shipment statistics -->
         <!-- Orders last week -->
-        <div class="col-xl-2 col-md-4 col-6">
+        <div class="col-xl-4 col-md-4 col-6">
             <div class="card h-100">
                 <div class="card-header pb-3">
-                    <h5 class="card-title mb-1">تعداد سفارش OCT</h5>
+                    <h5 class="card-title mb-1">نمودار خرید OTC</h5>
                     <p class="card-subtitle">هفته گذشته</p>
                 </div>
                 <div class="card-body">
-                    <div id="ordersLastWeek"></div>
+                    <div id="OTCBuyLastWeek"></div>
                     <div class="d-flex justify-content-between align-items-center gap-3">
-                        <h4 class="mb-0">124k</h4>
+                        <h4 class="mb-0">1,245</h4>
                         <small class="text-success">+12.6%</small>
                     </div>
                 </div>
             </div>
         </div>
-
+        <div class="col-xl-4 col-md-4 col-6">
+            <div class="card h-100">
+                <div class="card-header pb-3">
+                    <h5 class="card-title mb-1">نمودار فروش OTC</h5>
+                    <p class="card-subtitle">هفته گذشته</p>
+                </div>
+                <div class="card-body">
+                    <div id="OTCSellLastWeek"></div>
+                    <div class="d-flex justify-content-between align-items-center gap-3">
+                        <h4 class="mb-0">1,230</h4>
+                        <small class="text-success">+12.6%</small>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
 @endsection
 @section('vendor-script')
-    @vite(['resources/assets/vendor/libs/apex-charts/apex-charts.scss',
+    @vite([
             'resources/assets/vendor/libs/apex-charts/apexcharts.js',
             'resources/assets/js/config.js',
-            'resources/assets/js/dashboard.js'
+            'resources/assets/js/dashboard.js',
+            'resources/assets/js/dashboard-simple-deposit.js',
+            'resources/assets/js/dashboard-simple-withdraw.js',
+            'resources/assets/js/dashboard-simple-fee-income.js',
+            'resources/assets/js/dashboard-simple-profit-income.js',
+            'resources/assets/js/deposit.js',
          ])
-
 @endsection
 
-@section('scripts')
-    <script type="module">
-
-    </script>
-@endsection
 @section('vendor-style')
-    <style type="text/css">
-
-    </style>
+    @vite([
+    'resources/assets/vendor/libs/apex-charts/apex-charts.scss',
+])
 @endsection
