@@ -52,22 +52,37 @@ class CoinExSocketService
         if (isset($data['method']) && $data['method'] === 'state.update') {
             $prices = $data['params'][0] ?? [];
             foreach ($prices as $symbol => $details) {
-                $this->updateCurrencyPrice($symbol, $details['last'] ?? null);
+                $this->updateCurrencyPrice($symbol, $details['last'] ?? null, $details['open'] ?? null);
             }
         }
     }
 
-    private function updateCurrencyPrice(string $symbol, ?string $lastPrice): void
+    private function updateCurrencyPrice(string $symbol, ?string $lastPrice, ?string $openPrice): void
     {
         $baseCurrent = str_replace('USDT', '', $symbol);
 
-        if (! in_array($baseCurrent, $this->coinsPrice) || $this->coinsPrice[$baseCurrent] !== $lastPrice) {
-            echo $baseCurrent.': '.$lastPrice.PHP_EOL;
-            $this->coinsPrice[$baseCurrent] = $lastPrice;
+        if (
+            !isset($this->coinsPrice[$baseCurrent]) ||
+            $this->coinsPrice[$baseCurrent]['last'] !== $lastPrice ||
+            $this->coinsPrice[$baseCurrent]['open'] !== $openPrice
+        ) {
+            echo $baseCurrent . ': last->' . $lastPrice . PHP_EOL;
+            echo $baseCurrent . ': open->' . $openPrice . PHP_EOL;
+
+            // Update cached prices
+            $this->coinsPrice[$baseCurrent] = [
+                'last' => $lastPrice,
+                'open' => $openPrice,
+            ];
+
+            // Update the database
             Market::query()
                 ->where('base_currency', $baseCurrent)
                 ->where('quote_currency', 'USDT')
-                ->update(['price' => $lastPrice]);
+                ->update([
+                    'price' => $lastPrice,
+                    'open_price' => $openPrice,
+                ]);
         }
     }
 }
