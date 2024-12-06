@@ -7,7 +7,9 @@
             <div class="card">
                 <h5 class="card-header">{{$currency->name}}</h5>
                 <div class="card-body">
-                    <form action="{{route('admin.currency.update',['currency'=>$currency])}}" method="post">
+
+                    <form action="{{route('admin.currency.update',['currency'=>$currency])}}" method="post"
+                          enctype="multipart/form-data">
                         @method('PATCH')
                         @csrf
                         <h6>1. اطلاعات کوین</h6>
@@ -40,16 +42,17 @@
 
                             <div class="col-md-6 mb-1">
                                 <div class="form-group mt-3">
-                                    <label class="form-label" for="img_filename">تصویر کوین:</label>
-                                    <input class="form-control-file form-control" type="file" id="img_filename"
-                                           name="img_filename">
+                                    <label class="form-label" for="logo">تصویر کوین:</label>
+                                    <input class="form-control-file form-control" type="file" id="logo"
+                                           name="logo">
                                     @error('img_filename')<small class="text-danger">{{$message}}</small>@enderror
                                 </div>
                             </div>
                             <div class="w-100"></div>
                             <div class="col-md-6 mt-5">
                                 <label class="switch  switch-lg">
-                                    <input type="checkbox" class="switch-input" name="is_internal_transfer_active" value="1" {{ $currency->is_internal_transfer_active ? 'checked' : '' }} />
+                                    <input type="checkbox" class="switch-input" name="is_internal_transfer_active"
+                                           value="1" {{ $currency->is_internal_transfer_active ? 'checked' : '' }} />
                                     <span class="switch-toggle-slider"></span>
                                     <span class="switch-label">وضعیت انتقال داخلی کوین</span>
                                 </label>

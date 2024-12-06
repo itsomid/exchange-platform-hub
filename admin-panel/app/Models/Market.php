@@ -14,7 +14,7 @@ class Market extends Model
         'min_trade_amount',
         'max_trade_amount',
         'price',
-        'exchange_price',
+        'exchange_profit',
         'is_active'
     ];
 
@@ -27,5 +27,18 @@ class Market extends Model
     public function quoteCurrency(): BelongsTo
     {
         return $this->belongsTo(Currency::class, 'quote_currency', 'symbol');
+    }
+
+    public function getPriceChangePercentageAttribute(): ?float
+    {
+        if ($this->open_price > 0) {
+            return (($this->price - $this->open_price) / $this->open_price) * 100;
+        }
+        return null;
+    }
+
+    public function getExchangePriceAttribute()
+    {
+        return ($this->price * $this->exchange_profit) + $this->price;
     }
 }

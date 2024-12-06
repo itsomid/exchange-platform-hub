@@ -2,26 +2,92 @@
 @section('title', 'ویرایش بازار')
 @section('content')
 
-    <div class="row">
+    <div class="row g-6">
+        <div class="col-xl-6 col-sm-6">
+            <div class="card h-100">
+                <div class="card-header pb-0">
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-3 card-title">قیمت مرجع بازار </h5>
+                        <div class="avatar-group d-flex align-items-center assigned-avatar">
+                            <div class="me-8">{{$market->base_currency}}/{{$market->quote_currency}}</div>
+                            <div class="avatar avatar-md">
+                                <img src="{{asset($market->quoteCurrency->coinLogo())}}" class="rounded-circle ">
+                            </div>
+                            <div class="avatar avatar-md ">
+                                <img src="{{asset($market->baseCurrency->coinLogo())}}" class="rounded-circle  ">
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 align-items-center my-3 justify-content-end  font-number">
+                        <div
+                            class="badge rounded bg-label-{{ $market->price_change_percentage < 0 ? 'danger' : 'success' }}"
+                            dir="ltr">
+                            {{ $market->price_change_percentage > 0 ? '+' : '' }}{{ number_format($market->price_change_percentage, 2) }}
+                            %
+                        </div>
+                        <h2 class="mb-0">
+                            ${{number_format($market->price,2)}}
+                        </h2>
+
+                    </div>
+                </div>
+                <div class="card-body px-0">
+                    <div id="averageDailySales"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6 col-sm-6">
+            <div class="card h-100">
+                <div class="card-header pb-0">
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-3 card-title">قیمت ارايه شده صرافی
+                            <div
+                                class="badge rounded bg-label-{{ $market->exchange_profit < 0 ? 'danger' : 'success' }}"
+                                dir="ltr">
+                                {{ $market->exchange_profit > 0 ? '+' : '' }}{{$market->exchange_profit * 100 }}%
+                            </div>
+                        </h5>
+                        <div class="avatar-group d-flex align-items-center assigned-avatar">
+                            <div class="me-8">{{$market->base_currency}}/{{$market->quote_currency}}</div>
+                            <div class="avatar avatar-md">
+                                <img src="{{asset($market->quoteCurrency->coinLogo())}}" class="rounded-circle ">
+                            </div>
+                            <div class="avatar avatar-md">
+                                <img src="{{asset($market->baseCurrency->coinLogo())}}" class="rounded-circle  ">
+                            </div>
+
+                        </div>
+                    </div>
+
+
+                    <div class="d-flex gap-2 align-items-center my-3 justify-content-end font-number">
+                        <div
+                            class="badge rounded bg-label-{{ $market->price_change_percentage < 0 ? 'danger' : 'success' }}" dir="ltr">
+                            {{ $market->price_change_percentage > 0 ? '+' : '' }}{{ number_format($market->price_change_percentage, 2) }}%
+                        </div>
+                        <h2 class="mb-0">
+                            ${{number_format($market->exchange_price,2)}}
+                        </h2>
+
+                    </div>
+                </div>
+                <div class="card-body px-0">
+                    <div id="exchangePrice"></div>
+                </div>
+            </div>
+        </div>
         <div class="col-md-12">
             <div class="card">
-                <h5 class="card-header d-flex justify-content-between">
+                <h4 class="card-header d-flex justify-content-between">
                     <div>
                         بازار{{$market->baseCurrency->symbol}}/{{$market->quoteCurrency->symbol}}
                     </div>
 
-                    <div class=" d-flex flex-column">
-                        <div class="d-flex gap-2 align-items-center mb-3 flex-wrap font-number">
-                            <div class="badge rounded bg-label-success">+4.2%</div>
-                            <h2 class="mb-0">
-                                <span class="card-subtitle h3">USDT</span>
-                                {{number_format($market->price,2)}}
-                            </h2>
 
-                        </div>
-
-                    </div>
-                </h5>
+                </h4>
                 <div class="card-body">
 
                     <form action="{{route('admin.market.update',['market'=>$market])}}" method="post">
@@ -82,12 +148,12 @@
                         <div class="row mt-5">
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label class="form-label" for="exchange_price">قیمت صرافی</label>
-                                    <input name="exchange_price" id="exchange_price" class=" form-control"
-                                           placeholder="قیمت صرافی"
-                                           value="{{formatNumber($market->exchange_price,2)}}"
+                                    <label class="form-label" for="exchange_profit">سود صرافی</label>
+                                    <input name="exchange_profit" id="exchange_profit" class=" form-control"
+                                           placeholder="سود صرافی"
+                                           value="{{formatNumber($market->exchange_profit,2)}}"
                                            required>
-                                    @error('exchange_price')
+                                    @error('exchange_profit')
                                     <small class="text-danger">{{$message}}</small>
                                     @enderror
                                 </div>
@@ -117,8 +183,20 @@
             </div>
         </div>
     </div>
-    </div>
 
+@endsection
+@section('vendor-script')
+    @vite([
+            'resources/assets/vendor/libs/apex-charts/apexcharts.js',
+             'resources/assets/js/config.js',
+            'resources/assets/js/market.js'
+         ])
+@endsection
+
+@section('vendor-style')
+    @vite([
+    'resources/assets/vendor/libs/apex-charts/apex-charts.scss',
+])
 @endsection
 
 

@@ -118,14 +118,20 @@
                                 {{$currency->name}}
                             </td>
                             <td>
-                                @foreach($currency->chains as $chain)
-                                    <span class="badge bg-label-primary ms-2">{{$chain->chain}}</span>
-                                @endforeach
+                                @if(count($currency->chains))
+                                    @foreach($currency->chains as $chain)
+                                        <span class="badge bg-label-primary ms-2">{{$chain->chain}}</span>
+                                    @endforeach
+                                @else
+                                    <span class="badge bg-label-danger ms-2">بدون شبکه</span>
+                                @endif
+
                             </td>
                             <td>
                                 {{$currency->symbol}}
                             </td>
                             <td>
+                                @if(count($currency->chains))
                                 @foreach($currency->chains as $chain)
                                     <div class="d-flex align-items-center mb-2">
                                         @if($chain->deposit_enabled)
@@ -141,12 +147,14 @@
                                         @endif
                                     </div>
                                 @endforeach
+                                @else
+                                    <span class="badge bg-label-danger ms-2">بدون شبکه</span>
+                                @endif
                             </td>
                             <td>
                                 <div class="d-flex align-items-center">
 
-                                    <a class="text-secondary me-3"
-                                       href="{{ route('admin.currency.edit', ['currency' => $currency->id]) }}">
+                                    <a class="text-secondary me-3" href="{{ route('admin.currency.edit', ['currency' => $currency->id]) }}">
                                         <i class="fa-light fa-pen-to-square fa-lg"></i>
                                     </a>
                                     <a class="text-secondary me-3" href="">

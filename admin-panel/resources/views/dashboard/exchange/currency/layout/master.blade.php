@@ -5,20 +5,26 @@
         <div class="col-12">
             <div class="card mb-6" dir="ltr">
 
-                <div class="user-profile-header d-flex flex-column flex-lg-row text-sm-start text-center">
+                <div class="d-flex flex-column flex-lg-row text-sm-start text-center">
                     <div class="d-flex align-items-center">
                         <img src="{{$currency->coinLogo()}}" width="100" class="mx-5 my-3">
+                        <h4 class="mb-2 mt-lg-6 text-end">{{$currency->name}}</h4>
                     </div>
-                    <div class="flex-grow-1 mt-3 mt-lg-5">
-                        <div class="d-flex align-items-md-end align-items-sm-start align-items-center justify-content-md-between justify-content-start mx-5 flex-md-row flex-column gap-4">
-                            <div >
-                                <h4 class="mb-2 mt-lg-6 text-end">{{$currency->name}}</h4>
+                    <div class="d-flex flex-column align-items-end justify-content-center flex-grow-1 ms-5">
+                        @if(count($currency->chains))
+                        <a class="btn btn-{{count($currency->chains)?'success':'danger'}} ">
 
-                            </div>
-                            <a href="javascript:void(0)" class="btn btn-primary mb-1 waves-effect waves-light">
-                                <i class="ti ti-user-check ti-xs me-2"></i>Connected
+                                دارای شبکه فعال
+                        </a>
+                        @else
+                            <a class="btn btn-{{count($currency->chains)?'success':'danger'}}">
+                                بدون شبکه فعال
                             </a>
-                        </div>
+                            <div class="alert alert-warning mt-2" role="alert">
+                                بعد از ایجاد کوین نسبت به ساخت شبکه آن اقدام کنید
+                            </div>
+                        @endif
+
                     </div>
                 </div>
             </div>

@@ -5,7 +5,10 @@
         <div class="col-md-12">
             <div class="card">
                 <div class="card-body">
-                    <form action="{{route('admin.currency.store')}}" method="post">
+                    <div class="alert alert-warning" role="alert">
+                       بعد از ایجاد کوین نسبت به ساخت شبکه آن اقدام کنید
+                    </div>
+                    <form action="{{route('admin.currency.store')}}" method="post"  enctype="multipart/form-data">
                         @csrf
                         <div class="row">
                             <div class="col-md-6">
@@ -32,45 +35,26 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group mt-3">
-                                    <label for="Code">Code</label>
-                                    <input name="code" id="Code" class="form-control"
-                                           placeholder="کد کوپن را وارد کنید."
-                                           value="{{old('name')}}">
-                                    @error('code')
-                                    <small class="text-danger">{{$message}}</small>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group mt-3">
-                                    <label for="is_active">وضعیت</label>
-                                    <select id="is_active" name="is_active" class="form-select text-capitalize mb-md-0">
-                                        <option value="1">فعال</option>
-                                        <option value="0">غیرفعال</option>
-                                    </select>
-                                    @error('is_active')
-                                    <small class="text-danger">{{$message}}</small>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-6 mt-3">
-                                <div class="form-group ">
-                                    <label for="network">شبکه</label>
-                                    <select id="network" name="network" class="form-select text-capitalize mb-md-0">
-                                        @foreach($currencies_type as  $type)
-                                            <option value="{{$type->value}}">{{$type->name}}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
+
+
                             <div class="col-md-6 mb-1">
                                 <div class="form-group mt-3">
-                                    <label class="form-label" for="img_filename">تصویر کوین:</label>
-                                    <input class="form-control-file form-control" type="file" id="img_filename"
-                                           name="img_filename">
+                                    <label class="form-label" for="logo">تصویر کوین:</label>
+                                    <input class="form-control-file form-control" type="file" id="logo"
+                                           name="logo">
                                     @error('img_filename')<small class="text-danger">{{$message}}</small>@enderror
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mt-5">
+                                    <label class="switch  switch-lg">
+                                        <input type="checkbox" class="switch-input"
+                                               name="is_active"
+                                               value="1"/>
+                                        <span class="switch-toggle-slider"></span>
+                                        <span class="switch-label">وضعیت ارز(فعال/غیرفعال)</span>
+                                    </label>
                                 </div>
                             </div>
                             <div class=" d-flex justify-content-start mt-5">
@@ -95,14 +79,5 @@
 @endsection
 @section('vendor-style')
     @vite(['resources/assets/vendor/libs/select2/select2.scss'])
-    <style>
-        .instagram {
-            background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
-            -webkit-background-clip: text;
-            /* Also define standard property for compatibility */
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-    </style>
 @endsection
 

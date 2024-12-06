@@ -22,7 +22,7 @@ return new class extends Migration {
             $table->integer('safe_confirmations')->default(0);  // Number of confirmations for safe deposit
 //            $table->integer('irreversible_confirmations')->default(0); // Number of irreversible confirmations
             $table->decimal('network_fee', 18, 8);  // network fee for withdraw in this chain
-            $table->decimal('exchange_fee', 18, 8)->default(0);  // Exchange fee for withdraw in this chain
+            $table->decimal('exchange_profit', 18, 8)->default(0);  // Exchange fee for withdraw in this chain
             $table->integer('withdrawal_precision')->default(8); // Precision for withdrawal (decimal places)
             $table->string('memo')->nullable(); // Memo required for deposit (if any)
             $table->boolean('is_memo_required_for_deposit')->default(false); // Is memo required for deposit

@@ -3,9 +3,14 @@
 namespace App\Http\Controllers\Exchange;
 
 use App\Enums\CurrencyChainEnum;
+use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Currency\CreateCurrencyRequest;
+use App\Http\Requests\Currency\UpdateCurrencyRequest;
 use App\Models\Currency;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class CurrencyController extends Controller
 {
@@ -33,9 +38,22 @@ class CurrencyController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(CreateCurrencyRequest $request)
     {
-        //
+
+        $currency = Currency::create([
+            'name' => $request->name,
+            'symbol' => $request->symbol,
+            'is_active' => $request->is_active
+        ]);
+        if ($request->hasFile('logo')) {
+            $timestamp = now()->timestamp;
+            $imageName = $currency->id . '_' . $currency->symbol .'_'.$timestamp. '.' . $request->file('logo')->getClientOriginalExtension();
+            $request->file('logo')->storeAs('coins', $imageName, ['disk' => 'public']);
+            $currency->update(['logo' => $imageName]);
+        }
+        Toast::message('ارز مورد نظر با موفقیت ایجاد شد.')->success()->notify();
+        return redirect()->route('admin.currency.index');
     }
 
     /**
@@ -64,9 +82,29 @@ class CurrencyController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateCurrencyRequest $request, Currency $currency)
     {
-        //
+        $oldImage = $currency->logo;
+        if ($request->hasFile('logo')) {
+            $timestamp = now()->timestamp;
+            $imageName = $currency->id . '_' . $currency->symbol .'_'.$timestamp .'.' . $request->file('logo')->getClientOriginalExtension();
+            $request->file('logo')->storeAs('coins', $imageName, ['disk' => 'public']);
+            $currency->update(['logo' => $imageName]);
+        }
+        $currency->update([
+            'name' => $request->name,
+            'symbol' => $request->symbol,
+            'is_active' => $request->is_active
+        ]);
+        // Check if the old image exists and delete it
+        if ($request->hasFile('logo')) {
+            $oldImagePath = 'coins/' . $oldImage;
+            if ($oldImage && Storage::disk('public')->exists($oldImagePath)) {
+                Storage::disk('public')->delete($oldImagePath);
+            }
+        }
+        Toast::message('ارز مورد نظر با موفقیت ایجاد شد.')->success()->notify();
+        return redirect()->route('admin.currency.index');
     }
 
     /**

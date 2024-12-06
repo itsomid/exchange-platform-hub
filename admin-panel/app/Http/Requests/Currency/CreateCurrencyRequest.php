@@ -4,7 +4,7 @@ namespace App\Http\Requests\Currency;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateCurrencyRequest extends FormRequest
+class CreateCurrencyRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,7 +23,7 @@ class UpdateCurrencyRequest extends FormRequest
     {
         return [
             'name' => 'required',
-            'symbol' => 'required|unique:currencies,symbol,'.$this->currency->id,
+            'symbol' => 'required|unique:currencies,symbol',
             'is_active' => 'boolean',
             'logo' => 'image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
         ];

@@ -26,7 +26,7 @@ class MarketController extends Controller
     }
     public function edit(Market $market)
     {
-        $market->load(['baseCurrency', 'quoteCurrency']);
+         $market->load(['baseCurrency', 'quoteCurrency']);
         return view('dashboard.exchange.market.edit',['market'=>$market]);
     }
 
@@ -37,7 +37,7 @@ class MarketController extends Controller
         $market->update([
             'min_trade_amount' => $request->min_trade_amount,
             'max_trade_amount' => $request->max_trade_amount,
-            'exchange_price'   => $request->exchange_price,
+            'exchange_profit'   => $request->exchange_profit,
             'is_active'        => $request->has('is_active') ? $request->is_active : false,
         ]);
 

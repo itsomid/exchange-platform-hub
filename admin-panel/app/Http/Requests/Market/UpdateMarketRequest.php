@@ -24,7 +24,7 @@ class UpdateMarketRequest extends FormRequest
         return [
             'min_trade_amount' => ['required', 'numeric', 'min:0'],
             'max_trade_amount' => ['required', 'numeric', 'gt:min_trade_amount'],
-            'exchange_price'   => ['required', 'numeric', 'min:0'],
+            'exchange_profit'   => ['required', 'numeric', 'min:0'],
             'is_active'        => ['nullable', 'boolean'],
         ];
     }
@@ -33,7 +33,7 @@ class UpdateMarketRequest extends FormRequest
         $this->merge([
             'min_trade_amount' => str_replace(',', '', $this->min_trade_amount),
             'max_trade_amount' => str_replace(',', '', $this->max_trade_amount),
-            'exchange_price' => str_replace(',', '', $this->exchange_price),
+            'exchange_profit' => str_replace(',', '', $this->exchange_profit),
 
         ]);
     }

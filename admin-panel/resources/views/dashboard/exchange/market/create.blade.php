@@ -81,12 +81,12 @@
                         <div class="row mt-5">
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label class="form-label" for="exchange_price">قیمت صرافی</label>
-                                    <input name="exchange_price" id="exchange_price" class=" form-control"
-                                           placeholder="قیمت صرافی"
-                                           value="{{formatNumber(old('exchange_price'),2)}}"
+                                    <label class="form-label" for="exchange_profit">سود صرافی</label>
+                                    <input name="exchange_profit" id="exchange_profit" class=" form-control"
+                                           placeholder="سود صرافی"
+                                           value="{{formatNumber(old('exchange_profit'),2)}}"
                                            required>
-                                    @error('exchange_price')
+                                    @error('exchange_profit')
                                     <small class="text-danger">{{$message}}</small>
                                     @enderror
                                 </div>

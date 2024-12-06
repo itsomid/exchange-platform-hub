@@ -97,8 +97,9 @@
                     <tr>
                         <th>#</th>
                         <th>کوین</th>
-                        <th>آخرین قیمت</th>
-                        <th>قیمت صرافی</th>
+                        <th>آخرین قیمت (USDT)</th>
+                        <th>تغییرات (۲۴ ساعت)</th>
+                        <th>سود صرافی</th>
                         <th>حداقل مقدار معامله</th>
                         <th>جداکثر مقدار معامله</th>
                         <th>وضعیت</th>
@@ -129,10 +130,22 @@
                             </td>
 
                             <td class="">
-                                <span class="font-number text-heading h5">{{formatNumber($market->price)}}</span>
+                                <h4 class="font-number text-heading h5">
+
+                                    <span class="ms-1">{{formatNumber($market->price)}}</span>
+
+                                    <small class="text-muted">USDT</small>
+                                </h4>
+
                             </td>
-                            <td class="font-number text-heading fw-medium">
-                                <span>{{formatNumber($market->exchange_price)}}</span>
+                            <td class="font-number">
+                                <div class="badge rounded bg-label-{{ $market->price_change_percentage < 0 ? 'danger' : 'success' }}" dir="ltr">
+                                    {{ $market->price_change_percentage > 0 ? '+' : '' }}{{ number_format($market->price_change_percentage, 2) }}%
+                                </div>
+                            </td>
+                            <td class="font-number text-heading h5">
+                                <span class="ms-1">{{formatNumber($market->exchange_profit)}}</span>
+                                <small class="text-muted">USDT</small>
                             </td>
                             <td class="font-number">
                                 {{formatNumber($market->min_trade_amount,8)}}
