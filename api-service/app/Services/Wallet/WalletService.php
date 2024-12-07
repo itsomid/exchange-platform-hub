@@ -2,11 +2,15 @@
 
 namespace App\Services\Wallet;
 
+use App\Enums\BalanceOperationEnum;
 use App\Repositories\Interfaces\WalletChainRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Services\Wallet\DTO\Wallet\GenerateAddressRequestDTO;
 use App\Services\Wallet\DTO\Wallet\GenerateAddressResponseDTO;
+use App\Services\Wallet\DTO\Wallet\UpdateBalanceRequestDTO;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Throwable;
 
 class WalletService
 {
@@ -36,5 +40,35 @@ class WalletService
 
         return resolve(GenerateAddressResponseDTO::class)
             ->setAddress($address);
+    }
+
+    public function updateBalance(UpdateBalanceRequestDTO $requestDTO): bool
+    {
+
+        try {
+            DB::beginTransaction();
+
+            $wallet = $this->walletRepository
+                ->getWalletWithLock($requestDTO->getCurrencySymbol(), $requestDTO->getUserId());
+
+            $balance = $wallet->balance;
+            if ($requestDTO->getOperation() === BalanceOperationEnum::Increase) {
+                $balance = bcadd($wallet->balance, $requestDTO->getAmount(), 8);
+            } elseif ($requestDTO->getOperation() === BalanceOperationEnum::Decrease) {
+                $balance = bcsub($wallet->balance, $requestDTO->getAmount(), 8);
+            }
+
+            $this->walletRepository->updateBalance($requestDTO->getCurrencySymbol(), $requestDTO->getUserId(), $balance);
+
+            DB::commit();
+
+            return true;
+        } catch (Throwable $exception) {
+            report($exception);
+            DB::rollBack();
+
+            return false;
+        }
+
     }
 }
