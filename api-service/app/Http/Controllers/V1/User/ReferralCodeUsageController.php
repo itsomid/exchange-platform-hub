@@ -4,6 +4,8 @@ namespace App\Http\Controllers\V1\User;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\User\ReferralCodeRegisteredUsersCollection;
+use App\Http\Resources\V1\User\ReferralCodeTransactionsCollection;
+use App\Services\User\DTO\ReferralCode\ReferralCodeGetOwnerProfitsRequestDTO;
 use App\Services\User\DTO\ReferralCode\ReferralCodeGetRegisteredUsersRequestDTO;
 use App\Services\User\ReferralCodeService;
 use Illuminate\Support\Facades\Auth;
@@ -81,5 +83,16 @@ class ReferralCodeUsageController extends Controller
         );
 
         return new ReferralCodeRegisteredUsersCollection($registeredUsers);
+    }
+
+    public function ownerProfits(int $userId)
+    {
+        $transactionsDTO = $this->referralCodeService->getOwnerProfits(
+            resolve(ReferralCodeGetOwnerProfitsRequestDTO::class)
+                ->setUserId(Auth::id())
+                ->setReferredUserId($userId)
+        );
+
+        return new ReferralCodeTransactionsCollection($transactionsDTO);
     }
 }
