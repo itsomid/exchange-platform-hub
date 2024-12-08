@@ -7,4 +7,5 @@ return [
     \App\Exceptions\User\OldPasswordNotMatchedNewPasswordException::class => 'The old password and new password do not match.',
     \App\Exceptions\Auth\GoogleInvalidUserSecretKeyException::class => 'The secret key you entered is invalid.',
     \App\Exceptions\NotFoundException::class => 'No results found.',
+    \App\Exceptions\User\ReferralCodeDoesNotBelongsToUser::class => 'The referral code does not belong to the user.',
 ];

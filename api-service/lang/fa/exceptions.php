@@ -7,4 +7,5 @@ return [
     \App\Exceptions\User\OldPasswordNotMatchedNewPasswordException::class => 'رمز عبور قدیمی و رمز عبور جدید مطابقت ندارند.',
     \App\Exceptions\Auth\GoogleInvalidUserSecretKeyException::class => 'کد وارد شده معتبر نمی باشد.',
     \App\Exceptions\NotFoundException::class => 'صفحه مورد نظر وجود ندارد.',
+    \App\Exceptions\User\ReferralCodeDoesNotBelongsToUser::class => 'کد معرف متعلق به کاربر نیست.',
 ];
