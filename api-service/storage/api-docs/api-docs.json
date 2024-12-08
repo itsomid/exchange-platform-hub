@@ -1095,6 +1095,64 @@
                 ]
             }
         },
+        "/api/v1/referred-users/{userId}/owner-profits": {
+            "get": {
+                "tags": [
+                    "Referral Code"
+                ],
+                "summary": "Get profits received from a referred user's transactions",
+                "description": "Retrieve the total profits earned by the owner of a referral code from transactions made by a specific referred user.",
+                "operationId": "getOwnerProfits",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "The ID of the referred user whose transactions generated profits for the referral code owner",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 42
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of profits received from the referred user's transactions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ReferralCodeOwnerProfitsResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/wallets/generate-address": {
             "post": {
                 "tags": [
@@ -1622,6 +1680,28 @@
                         "description": "The fee the friend will pay.",
                         "type": "integer",
                         "example": 10
+                    }
+                },
+                "type": "object"
+            },
+            "ReferralCodeOwnerProfitsResponse": {
+                "properties": {
+                    "amount": {
+                        "description": "The profit amount received from the referred user.",
+                        "type": "number",
+                        "format": "float",
+                        "example": 100.75
+                    },
+                    "received_date": {
+                        "description": "The date when the profit was received.",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-11-25T14:21:17Z"
+                    },
+                    "transaction_description": {
+                        "description": "A description of the transaction related to the profit.",
+                        "type": "string",
+                        "example": "Referral bonus for order #12345"
                     }
                 },
                 "type": "object"
