@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Collection;
 
 class ReferralCodeRepository implements ReferralCodeRepositoryInterface
 {
-    public function getReferralCodeByCode(string $code): ReferralCode
+    public function getReferralCodeByCode(string $code): ?ReferralCode
     {
         return ReferralCode::query()
             ->where('code', $code)

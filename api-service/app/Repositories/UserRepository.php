@@ -6,6 +6,8 @@ use App\Models\User;
 use App\Repositories\DTO\User\UpdateLastLoginRequestDTO;
 use App\Repositories\DTO\User\UserRegisterRequestDTO;
 use App\Repositories\Interfaces\UserRepositoryInterface;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class UserRepository implements UserRepositoryInterface
 {
@@ -86,5 +88,14 @@ class UserRepository implements UserRepositoryInterface
         User::query()
             ->where('id', $userId)
             ->update($data);
+    }
+
+    public function getReferredUsers(int $referralId): Collection
+    {
+        return Cache::remember(__CLASS__.'.getReferredUsers.'.$referralId, now()->addHours(1), fn () => User::query()
+            ->where('introducer_code', $referralId)
+            ->withCount('referredTransactions')
+            ->withSum('referredTransactions', 'amount')
+            ->get());
     }
 }

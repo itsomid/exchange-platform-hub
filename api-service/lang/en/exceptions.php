@@ -6,4 +6,5 @@ return [
     \App\Exceptions\Auth\InvalidUsernameOrPasswordException::class => 'These credentials do not match our records.',
     \App\Exceptions\User\OldPasswordNotMatchedNewPasswordException::class => 'The old password and new password do not match.',
     \App\Exceptions\Auth\GoogleInvalidUserSecretKeyException::class => 'The secret key you entered is invalid.',
+    \App\Exceptions\NotFoundException::class => 'No results found.',
 ];

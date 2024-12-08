@@ -14,6 +14,8 @@ Route::prefix('/profile')->group(function () {
 Route::prefix('/referral-codes')->group(function () {
     Route::post('/', [App\Http\Controllers\V1\User\ReferralCodeController::class, 'store'])->name('referral-codes.store');
     Route::get('/', [App\Http\Controllers\V1\User\ReferralCodeController::class, 'lists'])->name('referral-codes.lists');
+
+    Route::get('/registered-users/{referralCode}', [\App\Http\Controllers\V1\User\ReferralCodeUsageController::class, 'registeredUsers'])->name('referral-codes-usage.registered-users');
 });
 
 //Currency

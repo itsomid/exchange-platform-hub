@@ -32,6 +32,7 @@ class RepositoryServiceProvider extends ServiceProvider
         app()->bind(WalletRepositoryInterface::class, WalletRepository::class);
         app()->bind(WalletChainRepositoryInterface::class, WalletChainRepository::class);
         app()->bind(DepositRepositoryInterface::class, DepositRepository::class);
+        app()->bind(ReferralCodeRepositoryInterface::class, ReferralCodeRepository::class);
     }
 
     /**

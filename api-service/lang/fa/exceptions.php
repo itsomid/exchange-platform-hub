@@ -6,4 +6,5 @@ return [
     \App\Exceptions\Auth\InvalidUsernameOrPasswordException::class => 'نام کاربری یا رمزعبور نادرست می باشد.',
     \App\Exceptions\User\OldPasswordNotMatchedNewPasswordException::class => 'رمز عبور قدیمی و رمز عبور جدید مطابقت ندارند.',
     \App\Exceptions\Auth\GoogleInvalidUserSecretKeyException::class => 'کد وارد شده معتبر نمی باشد.',
+    \App\Exceptions\NotFoundException::class => 'صفحه مورد نظر وجود ندارد.',
 ];
