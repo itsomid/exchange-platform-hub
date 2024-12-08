@@ -45,6 +45,14 @@
             </li>
         @endcan
         @can('user.index')
+            <li class="menu-item @if(request()->is('admin/users/financial-status*')) active @endif">
+                <a href="" class="menu-link">
+                    <i class="menu-icon fa-light fa-users fa-lg"></i>
+                    <div >بلاک کاربر</div>
+                </a>
+            </li>
+        @endcan
+        @can('user.index')
             <li class="menu-item @if(request()->is('admin/inquiry*')) active @endif">
                 <a disabled="" href="{{route('admin.inquiry.index')}}" class="menu-link">
                     <i class="menu-icon fa-light fa-user-alt fa-lg"></i>

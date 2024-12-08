@@ -15,6 +15,7 @@
                         </div>
                         <span class="badge bg-label-primary rounded p-2">
                             <i class="fa-light fa-users fa-lg"></i>
+
                         </span>
                     </div>
                 </div>

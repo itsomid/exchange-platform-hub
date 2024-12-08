@@ -38,7 +38,7 @@
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="content-left">
                             <h5 class="mb-1">{{number_format($conversationRate,2)}}%</h5>
-                            <small>Conversation Rate</small>
+                            <small>نرخ تبدیل</small>
                         </div>
                         <span class="badge bg-label-success rounded-circle p-3">
                             <i class="fa-light fa-infinity "></i>
