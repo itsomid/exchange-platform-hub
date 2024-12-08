@@ -85,6 +85,41 @@ class ReferralCodeUsageController extends Controller
         return new ReferralCodeRegisteredUsersCollection($registeredUsers);
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/v1/referred-users/{userId}/owner-profits",
+     *     summary="Get profits received from a referred user's transactions",
+     *     description="Retrieve the total profits earned by the owner of a referral code from transactions made by a specific referred user.",
+     *     operationId="getOwnerProfits",
+     *     tags={"Referral Code"},
+     *     security={{"sanctum": {}}},
+     *
+     *     @OA\Parameter(
+     *         name="userId",
+     *         in="path",
+     *         required=true,
+     *         description="The ID of the referred user whose transactions generated profits for the referral code owner",
+     *         @OA\Schema(type="integer", example=42)
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of profits received from the referred user's transactions",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(ref="#/components/schemas/ReferralCodeOwnerProfitsResponse")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
+     *         )
+     *     ),
+     * )
+     */
     public function ownerProfits(int $userId)
     {
         $transactionsDTO = $this->referralCodeService->getOwnerProfits(
