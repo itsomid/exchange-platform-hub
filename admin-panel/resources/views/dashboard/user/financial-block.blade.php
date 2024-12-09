@@ -81,8 +81,8 @@
                             <span class="badge bg-label-primary me-1">  {{$block->action }}</span>
 
                         </td>
-                        <td class="text-truncate">{{\App\Helpers\DateFormatter::convertToPersianDate($block->created_at,'%Y-%m-%d H:i:s')}}</td>
-                        <td class="text-truncate">{{\App\Helpers\DateFormatter::convertToPersianDate($block->restricted_until,'%Y-%m-%d H:i:s')}}</td>
+                        <td class="text-truncate">{{\App\Helpers\DateFormatter::convertToPersianDate($block->created_at,'H:i:s %Y-%m-%d')}}</td>
+                        <td class="text-truncate">{{\App\Helpers\DateFormatter::convertToPersianDate($block->restricted_until,'H:i:s %Y-%m-%d')}}</td>
                         <td class="">{{$block->reason}}</td>
                         <td class="">
                             <a class="text-secondary me-3" href="{{}}">

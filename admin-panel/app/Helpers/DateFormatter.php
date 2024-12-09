@@ -48,4 +48,41 @@ class DateFormatter
 
         return (string) $date;
     }
+    public static function timeUntilInPersian($date)
+    {
+        $now = Carbon::now();
+        $target = Carbon::parse($date);
+
+        if ($target->isPast()) {
+            return 'منقضی شده'; // Handle past dates
+        }
+
+        $diffInSeconds = $now->diffInSeconds($target);
+
+        if ($diffInSeconds < 3600) { // Less than an hour
+            $diffInMinutes = $now->diffInMinutes($target); // Get whole minutes
+            return self::convertToPersianNumbers($diffInMinutes) . ' دقیقه مانده';
+        } elseif ($diffInSeconds < 86400) { // Less than a day
+            $diffInHours = $now->diffInHours($target); // Get whole hours
+            if ($diffInHours == 1) {
+                return 'یک ساعت مانده';
+            }
+            return self::convertToPersianNumbers($diffInHours) . ' ساعت مانده';
+        } else { // More than a day
+            $diffInDays = $now->diffInDays($target); // Get whole days
+            if ($diffInDays == 1) {
+                return 'یک روز مانده';
+            }
+            return self::convertToPersianNumbers($diffInDays) . ' روز مانده';
+        }
+    }
+
+    public static function convertToPersianNumbers($number)
+    {
+        $persianNumbers = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+        $englishNumbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+
+        return str_replace($englishNumbers, $persianNumbers, floor($number));
+    }
+
 }
