@@ -268,15 +268,15 @@ services:
     networks:
       - laravel
 
-  #
-  #    redis:
-  #        image: redis:alpine
-  #        container_name: redis
-  #        restart: unless-stopped
-  #        ports:
-  #            - 6380:6379
-  #        networks:
-  #            - laravel
+
+  #  redis:
+  #    image: redis:alpine
+  #    container_name: redis
+  #    restart: unless-stopped
+  #    ports:
+  #      - 6380:6379
+  #    networks:
+  #      - laravel
 
     #  phpmyadmin:
     #    image: phpmyadmin:5.2.0
