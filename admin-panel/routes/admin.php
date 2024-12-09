@@ -67,9 +67,13 @@ Route::get('/users/{user}/update-password', [UserSecurityController::class, 'pas
 Route::patch('/users/{user}/update-password', [UserSecurityController::class, 'passwordUpdate'])->name('user.password.update');
 Route::get('/users/{user}/security', [UserSecurityController::class, 'index'])->name('user.security');
 Route::get('/users/{user}/reset-password', [UserSecurityController::class, 'sendResetLinkEmail'])->name('user.reset-password-email');
+
+
+Route::get('/users/financial-status',[UserFinancialBlockController::class, 'index'])->name('user.financial-status');
 Route::get('/users/{user}/financial-status', [UserFinancialBlockController::class, 'getBlocks'])->name('user.financial-block.getBlocks');
 Route::post('/users/{user}/financial-status', [UserFinancialBlockController::class, 'addBlock'])->name('user.financial-block.addBlock');
-
+Route::get('/users/financial-status/mass-block', [UserFinancialBlockController::class, 'createMassBlock'])->name('user.financial-block.create-mass-block');
+Route::post('/users/financial-status/mass-block', [UserFinancialBlockController::class, 'storeMassBlock'])->name('user.financial-block.store-mass-block');
 
 //Route::get('/users/2fa', [UserSecurityController::class, ''])->name('profile.2fa.edit');
 //Route::get('/users/{user}/tokens', [UserTokenController::class, 'twoFAEdit'])->name('user.token.index')->can('user.edit');

@@ -1,4 +1,4 @@
-FROM php:8.4.1-fpm-alpine
+    FROM php:8.4.1-fpm-alpine
 
 # environment arguments
 ARG UID

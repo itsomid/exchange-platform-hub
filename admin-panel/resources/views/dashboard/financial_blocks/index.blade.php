@@ -15,6 +15,7 @@
                         </div>
                         <span class="badge bg-label-primary rounded p-2">
                             <i class="fa-light fa-users fa-lg"></i>
+
                         </span>
                     </div>
                 </div>
@@ -164,9 +165,9 @@
                             <th>نام کاربری</th>
                             <th>نام</th>
                             <th>کد معرف ثبت نامی</th>
+                            <th>وضعیت اکانت</th>
                             <th>وضعیت حساب</th>
                             <th>آخرین فعالیت</th>
-                            <th>وضعیت اکانت</th>
                             <th>عملیات</th>
                         </tr>
                         </thead>
@@ -180,6 +181,7 @@
                                 </td>
 
                                 <td>
+
                                     <div class="d-flex flex-column">
                                         <a href="" class="text-heading text-truncate">
                                             <span class="fw-medium">{{$user->email}}</span>
@@ -207,22 +209,6 @@
                                 </td>
 
 
-
-                                <td>
-                                    @if($user->activeFinancialBlocks->isEmpty())
-                                        <span class="badge bg-label-success">بدون محدودیت</span>
-                                    @else
-                                        @foreach($user->activeFinancialBlocks as $block)
-                                            <div class="badge bg-label-danger me-2">
-                                                <p class="mb-1">{{\App\Enums\UserFinancialBlockAction::TYPE_LABEL[$block->action] }}</p>
-                                                <span>{{\App\Helpers\DateFormatter::timeUntilInPersian($block->restricted_until)}}</span>
-                                            </div>
-                                        @endforeach
-                                    @endif
-                                </td>
-                                <td>
-                                    فعالیتی نداشته است
-                                </td>
                                 <td>
                                     @if($user->status === 'active')
                                         <span class="badge bg-label-success">فعال</span>
@@ -232,6 +218,18 @@
                                         <span class="badge bg-label-secondary">غیرفعال</span>
                                     @endif
 
+                                </td>
+                                <td>
+                                    @if($user->activeFinancialBlocks->isEmpty())
+                                        <span class="badge bg-label-success">بدون محدودیت</span>
+                                    @else
+                                        @foreach($user->activeFinancialBlocks as $block)
+                                            <span class="badge bg-label-danger me-2">     {{\App\Enums\UserFinancialBlockAction::TYPE_LABEL[$block->action] }}</span>
+                                        @endforeach
+                                    @endif
+                                </td>
+                                <td>
+                                    فعالیتی نداشته است
                                 </td>
                                 <td >
                                     <div class="d-flex align-items-center">
@@ -289,8 +287,6 @@
                                     </div>
 
                                 </td>
-
-
                             </tr>
                         @endforeach
                         </tbody>

@@ -12,6 +12,11 @@ use Illuminate\Http\Request;
 
 class UserFinancialBlockController extends Controller
 {
+    public function index()
+    {
+        return $blockedUsers = User::with('financialBlocks')->get();
+        return view('user.financial_block.index');
+    }
     public function getBlocks(User $user)
     {
         $userFinancialBlockActions = UserFinancialBlockAction::cases();
@@ -40,5 +45,11 @@ class UserFinancialBlockController extends Controller
         Toast::message('محدودیت با موفقیت اعمال شد.')->success()->notify();
 
         return redirect()->back();
+    }
+
+    public function createMassBlock()
+    {
+
+        return view('dashboard.user.financial-block.create-mass-block');
     }
 }
