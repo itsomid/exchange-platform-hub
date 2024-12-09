@@ -7,14 +7,14 @@
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
-                            <span>همه ی کاربران</span>
+                            <span>تعداد کاربران محدود شده</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{$users->total()}}</h4>
-                                <p class="text-success mb-0">(+6%)</p>
+                                <h4 class="mb-0 me-2">{{count($blockedUsers)}}</h4>
+
                             </div>
                         </div>
-                        <span class="badge bg-label-primary rounded p-2">
-                            <i class="fa-light fa-users fa-lg"></i>
+                        <span class="badge bg-label-danger rounded p-2">
+                            <i class="fa-light fa-user-lock fa-lg"></i>
 
                         </span>
                     </div>
@@ -26,13 +26,14 @@
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
-                            <span>سشن های فعال</span>
+                            <span>تعداد کاربران بلاک از برداشت</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">1</h4>
+
+                                <h4 class="mb-0 me-2">{{$withdrawBlockedUsers}}</h4>
                             </div>
                         </div>
-                        <span class="badge bg-label-primary rounded p-2">
-                            <i class="fa-light fa-user-alt fa-lg"></i>
+                        <span class="badge bg-label-warning rounded ">
+                            <i class="fa-light fa-money-bill-wave"></i>
 
                         </span>
                     </div>
@@ -44,14 +45,13 @@
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
-                            <span>کاربران تایید شده</span>
+                            <span>تعداد کاربران بلاک از واریز</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{$users->total()}}</h4>
-                                <p class="text-success mb-0">(+6%)</p>
+                                <h4 class="mb-0 me-2">{{$depositBlockedUsers}}</h4>
                             </div>
                         </div>
-                        <span class="badge bg-label-success rounded p-2">
-                           <i class="fa-regular fa-user-check fa-xl"></i>
+                        <span class="badge bg-label-danger rounded p-2">
+                            <i class="fa-regular fa-money-from-bracket"></i>
                         </span>
                     </div>
                 </div>
@@ -62,14 +62,13 @@
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
-                            <span>در انتظار تایید</span>
+                            <span>تعداد کاربران بلاک از معامله</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">12</h4>
-                                <p class="text-danger mb-0">(+6%)</p>
+                                <h4 class="mb-0 me-2">{{$tradeBlockedUsers}}</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-warning rounded p-2">
-                           <i class="fa-regular fa-user-clock fa-lg"></i>
+                         <i class="fa-solid fa-money-bill-transfer"></i>
                         </span>
                     </div>
                 </div>
@@ -118,18 +117,6 @@
                 </div>
 
 
-                <div class="col-md-4 user_status ">
-                    <label class="form-label" for="support_description">توضیحات پشتیبان :</label>
-                    <select id="support_description" name="support_description"
-                            class="form-select text-capitalize mb-md-0 ">
-                        <option value="">همه</option>
-                        @foreach($supportDescriptions as $key=>$desc)
-                            <option
-                                value="{{$desc['support_description']}}" {{request()->input('support_description') === $desc['support_description'] ? 'selected' : null}}>{{$desc['support_description']}}</option>
-                        @endforeach
-                    </select>
-                </div>
-
                 <div class="col-md-12 mt-2">
                     <button type="submit" class="btn btn-primary mt-2 text-white">
                         <span class="mx-2">جستجو</span>
@@ -140,22 +127,18 @@
         </div>
         <div class="card-body">
             <div class="card-title header-elements">
-                <h5 class="m-0 me-2">لیست کاربران</h5>
+                <h5 class="m-0 me-2">لیست کاربران بلاک شده</h5>
 
                 <div class="card-title-elements ms-auto">
-                    <a href="{{route('admin.user.create')}}" class="btn btn-danger">
+                    <a href="{{route('admin.user.financial-block.create-mass-block')}}" class="btn btn-danger">
                         <i class="fa-regular fa-ban mx-2"></i>
                         مسدود سازی گروهی کاربران
-                    </a>
-                    <a href="{{route('admin.user.create')}}" class="btn btn-primary">
-                        <i class="fa fa-plus mx-2"></i>
-                        افزودن کاربر جدید
                     </a>
 
                 </div>
             </div>
 
-            @if(count($users))
+            @if(count($blockedUsers))
 
                 <div class="table-responsive text-nowrap">
                     <table class="table">
@@ -164,7 +147,6 @@
                             <th>ID</th>
                             <th>نام کاربری</th>
                             <th>نام</th>
-                            <th>کد معرف ثبت نامی</th>
                             <th>وضعیت اکانت</th>
                             <th>وضعیت حساب</th>
                             <th>آخرین فعالیت</th>
@@ -174,7 +156,7 @@
                         <tbody class="table-border-bottom-0">
 
 
-                        @foreach($users as $user)
+                        @foreach($blockedUsers as $user)
                             <tr>
                                 <td>
                                     {{$user->id}}
@@ -192,21 +174,6 @@
                                 <td>
                                     {{$user->fullname()}}
                                 </td>
-                                <td>
-
-                                    @if($user->introducerReferral)
-                                        <a class="btn btn-primary font-number p-1" data-bs-html='true'
-                                           data-bs-toggle="tooltip" data-bs-placement="top"
-                                           data-bs-custom-class="tooltip-dark"
-                                           title="<span class='fw-medium'>نام:</span>
-                                                    {{ $user->introducerReferral->user->fullname()}}</span>
-                                                    <br> <span class='fw-medium'>شناسه کاربری:</span>
-                                                    <span class='fw-medium font-monospace'>({{ $user->introducerReferral->user->id }}#)</span>"
-                                        >
-                                            {{ $user->introducerReferral->code}}
-                                        </a>
-                                    @endif
-                                </td>
 
 
                                 <td>
@@ -219,15 +186,20 @@
                                     @endif
 
                                 </td>
+
                                 <td>
                                     @if($user->activeFinancialBlocks->isEmpty())
                                         <span class="badge bg-label-success">بدون محدودیت</span>
                                     @else
                                         @foreach($user->activeFinancialBlocks as $block)
-                                            <span class="badge bg-label-danger me-2">     {{\App\Enums\UserFinancialBlockAction::TYPE_LABEL[$block->action] }}</span>
+                                            <div class="badge bg-label-danger me-2">
+                                                <p class="mb-1">{{\App\Enums\UserFinancialBlockAction::TYPE_LABEL[$block->action] }}</p>
+                                                <span>{{\App\Helpers\DateFormatter::timeUntilInPersian($block->restricted_until)}}</span>
+                                            </div>
                                         @endforeach
                                     @endif
                                 </td>
+
                                 <td>
                                     فعالیتی نداشته است
                                 </td>
@@ -297,7 +269,7 @@
             @endif
         </div>
         <div class="row justify-content-center">
-            {{$users->links()}}
+            {{$blockedUsers->links()}}
         </div>
     </div>
 

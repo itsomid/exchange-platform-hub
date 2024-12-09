@@ -1,11 +1,11 @@
-@extends('dashboard.user.layout.master')
+@extends('dashboard.layout.master')
 @section('title','وضعیت دسترسی مالی کاربر')
-@section('user-body')
+@section('content')
 
     <div class="card mb-4">
-        <h5 class="card-header">ایجاد محدودیت دسترسی مالی</h5>
+        <h5 class="card-header">ایجاد گروهی محدودیت دسترسی مالی</h5>
         <div class="card-body">
-            <form action="{{route('admin.user.financial-block.addBlock', ['user' => $user->id])}}" method="post">
+            <form action="{{route('admin.user.financial-block.store-mass-block')}}" method="post">
                 @csrf
                 <div class="row">
 
@@ -15,12 +15,17 @@
                             <select id="action" name="action" class="form-select text-capitalize mb-md-0 ">
                                 @foreach($userFinancialBlockActions as $action)
                                     <option
-                                        {{ old('action') == $action->value ? 'selected' : '' }} value="{{$action}}">{{ \App\Enums\UserFinancialBlockAction::TYPE_LABEL[$action->value] }}</option>
+                                        {{ old('action') == $action->value ? 'selected' : '' }} value="{{$action}}">
+                                        {{ \App\Enums\UserFinancialBlockAction::TYPE_LABEL[$action->value] }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
                     </div>
-
+                    <div class="col-md-6 mb-1">
+                        <label for="users" class="form-label">لیست کاربران (Email)</label>
+                        <textarea name="users" class="form-control" id="users" rows="3"></textarea>
+                    </div>
                     <div class="col-md-6 mb-1">
                         <div class="form-group mt-2">
                             <div class="form-group">
@@ -34,11 +39,10 @@
                                        autocomplete="off"
                                        required
                                        placeholder="زمان پایان محدودیت را وارد کنید">
-                                @error('final_installment_date')<small class="text-danger">{{$message}}</small>@enderror
                             </div>
                         </div>
                     </div>
-
+                    <div class="w-100"></div>
 
                     <div class="col-md-6 mt-4">
                         <div class="form-group">
@@ -59,43 +63,7 @@
         </div>
 
     </div>
-    <div class="card mb-6">
-        <h5 class="card-header">محدودیت های اخیر کاربر</h5>
-        <div class="table-responsive">
-            <table class="table">
-                <thead>
-                <tr>
-                    <th class="text-truncate">بلاک از</th>
-                    <th class="text-truncate">زمان شروع</th>
-                    <th class="text-truncate">زمان پایان محدودیت</th>
-                    <th class="text-truncate">توضیحات</th>
-                    <th class="text-truncate">عملیات</th>
-                </tr>
-                </thead>
-                <tbody>
-                @foreach($user->financialBlocks as $block)
 
-                    <tr class=" {{$block->isExpired()?'table-danger':null}}">
-                        <td class="text-truncate text-heading fw-medium">
-                            {{\App\Enums\UserFinancialBlockAction::TYPE_LABEL[$block->action] }}
-                            <span class="badge bg-label-primary me-1">  {{$block->action }}</span>
-
-                        </td>
-                        <td class="text-truncate">{{\App\Helpers\DateFormatter::convertToPersianDate($block->created_at,'%Y-%m-%d H:i:s')}}</td>
-                        <td class="text-truncate">{{\App\Helpers\DateFormatter::convertToPersianDate($block->restricted_until,'%Y-%m-%d H:i:s')}}</td>
-                        <td class="">{{$block->reason}}</td>
-                        <td class="">
-                            <a class="text-secondary me-3" href="{{}}">
-                                <i class="fa-light fa-trash-alt fa-lg"></i>
-                            </a>
-                        </td>
-                    </tr>
-
-                @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
 
 @endsection
 @section('vendor-script')

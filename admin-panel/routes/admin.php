@@ -72,6 +72,8 @@ Route::get('/users/{user}/reset-password', [UserSecurityController::class, 'send
 Route::get('/users/financial-status',[UserFinancialBlockController::class, 'index'])->name('user.financial-status');
 Route::get('/users/{user}/financial-status', [UserFinancialBlockController::class, 'getBlocks'])->name('user.financial-block.getBlocks');
 Route::post('/users/{user}/financial-status', [UserFinancialBlockController::class, 'addBlock'])->name('user.financial-block.addBlock');
+Route::delete('/users/{user}/financial-status/{financialBlock}', [UserFinancialBlockController::class, 'removeBlock'])->name('user.financial-block.deleteBlock');
+
 Route::get('/users/financial-status/mass-block', [UserFinancialBlockController::class, 'createMassBlock'])->name('user.financial-block.create-mass-block');
 Route::post('/users/financial-status/mass-block', [UserFinancialBlockController::class, 'storeMassBlock'])->name('user.financial-block.store-mass-block');
 

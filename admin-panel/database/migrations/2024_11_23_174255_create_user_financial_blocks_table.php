@@ -14,13 +14,15 @@ return new class extends Migration
         Schema::create('user_financial_blocks', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id'); // Reference to the user
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->string('action'); // Financial status (active or restricted)
-            $table->text('reason')->nullable(); // Timestamp until withdrawal is restricted
+            $table->string('reason'); // reason of block (admin,group block, password change,...)
+            $table->unsignedBigInteger('admin_id')->nullable();
+            $table->text('description')->nullable(); // Timestamp until withdrawal is restricted
             $table->timestamp('restricted_until')->nullable(); // Timestamp until withdrawal is restricted
 
             $table->timestamps();
-
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->softDeletes();
         });
     }
 

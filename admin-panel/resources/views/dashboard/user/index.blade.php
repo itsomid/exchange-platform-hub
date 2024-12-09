@@ -142,10 +142,6 @@
                 <h5 class="m-0 me-2">لیست کاربران</h5>
 
                 <div class="card-title-elements ms-auto">
-                    <a href="{{route('admin.user.create')}}" class="btn btn-danger">
-                        <i class="fa-regular fa-ban mx-2"></i>
-                        مسدود سازی گروهی کاربران
-                    </a>
                     <a href="{{route('admin.user.create')}}" class="btn btn-primary">
                         <i class="fa fa-plus mx-2"></i>
                         افزودن کاربر جدید

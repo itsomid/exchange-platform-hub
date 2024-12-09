@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\FinancialBlockReasonsEnum;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
@@ -13,6 +15,8 @@ class UserFinancialBlock extends Model
         'user_id',
         'action',
         'reason',
+        'admin_id',
+        'description',
         'restricted_until',
     ];
 
@@ -25,4 +29,12 @@ class UserFinancialBlock extends Model
     {
         return $this->restricted_until < Carbon::now();
     }
+    public function setReasonAttribute($value)
+    {
+        if (!FinancialBlockReasonsEnum::tryFrom($value)) {
+            throw new \InvalidArgumentException("Invalid reason provided: $value");
+        }
+        $this->attributes['reason'] = $value;
+    }
+
 }

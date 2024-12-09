@@ -72,9 +72,23 @@ class User extends Authenticatable implements CanResetPassword
     {
         return $this->hasMany(UserFinancialBlock::class,'user_id')->orderBy('restricted_until', 'desc');
     }
+
     public function activeFinancialBlocks() : HasMany
     {
         return $this->hasMany(UserFinancialBlock::class,'user_id')->where('restricted_until', '>', Carbon::now())->orderBy('restricted_until', 'desc');
+    }
+
+    public function financialBlocksFrom(string $action = null)
+    {
+        $query = $this->hasMany(UserFinancialBlock::class, 'user_id')
+            ->where('restricted_until', '>', Carbon::now())
+            ->orderBy('restricted_until', 'desc');
+
+        if ($action) {
+            $query->where('action', $action);
+        }
+
+        return $query;
     }
     public function twoFAStatus()
     {

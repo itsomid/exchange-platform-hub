@@ -42,8 +42,8 @@
 
                     <div class="col-md-6 mt-4">
                         <div class="form-group">
-                            <label for="reason">توضیحات</label>
-                            <textarea class="form-control" name="reason" id="reason"
+                            <label for="description">توضیحات</label>
+                            <textarea class="form-control" name="description" id="description"
                                       rows="3"></textarea>
                         </div>
                     </div>
@@ -68,6 +68,7 @@
                     <th class="text-truncate">بلاک از</th>
                     <th class="text-truncate">زمان شروع</th>
                     <th class="text-truncate">زمان پایان محدودیت</th>
+                    <th class="text-truncate">دلیل</th>
                     <th class="text-truncate">توضیحات</th>
                     <th class="text-truncate">عملیات</th>
                 </tr>
@@ -83,11 +84,17 @@
                         </td>
                         <td class="text-truncate">{{\App\Helpers\DateFormatter::convertToPersianDate($block->created_at,'H:i:s %Y-%m-%d')}}</td>
                         <td class="text-truncate">{{\App\Helpers\DateFormatter::convertToPersianDate($block->restricted_until,'H:i:s %Y-%m-%d')}}</td>
-                        <td class="">{{$block->reason}}</td>
+                        <td class="">{{$block->reason === 'admin' ? $block->reason .'_'. $block->admin_id : $block->reason}}</td>
+                        <td class="">{{$block->description}}</td>
                         <td class="">
-                            <a class="text-secondary me-3" href="{{}}">
-                                <i class="fa-light fa-trash-alt fa-lg"></i>
-                            </a>
+                            <form action="{{route('admin.user.financial-block.deleteBlock',['user'=>$user,'financialBlock'=>$block->id])}}" method="post">
+                                @csrf
+                                @method('DELETE')
+                                <button class="btn btn-icon btn-danger ">
+                                    <i class="fa-light fa-trash-alt fa-lg"></i>
+                                </button>
+                            </form>
+
                         </td>
                     </tr>
 
