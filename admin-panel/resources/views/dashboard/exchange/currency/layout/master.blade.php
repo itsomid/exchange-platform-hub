@@ -55,6 +55,13 @@
                             افزودن شبکه جدید برای کوین
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link @if(request()->route()->getName() == 'admin.currency.nodeprovider.edit') active @endif"
+                           href="{{route('admin.currency.nodeprovider.edit',['currency'=>$currency])}}">
+                            <i class="fa-regular fa-share-nodes fa-lg me-2"></i>
+                            NodeProvider Configuration
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>

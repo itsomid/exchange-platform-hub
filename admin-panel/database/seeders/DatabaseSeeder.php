@@ -39,6 +39,7 @@ class DatabaseSeeder extends Seeder
             TransactionSeeder::class,
             SettingTableSeeder::class,
             MarketSeeder::class,
+            NodeProviderSeeder::class,
             ExternalApiConfigSeeder::class,
         ]);
     }

@@ -22,6 +22,7 @@ use App\Http\Controllers\Exchange\CurrencyController;
 use App\Http\Controllers\User\UserFinancialBlockController;
 use App\Http\Controllers\Exchange\CurrencyChainController;
 use App\Http\Controllers\Exchange\MarketController;
+use App\Http\Controllers\Exchange\NodeProviderController;
 
 Route::get('/users_select', [SelectsApiController::class, 'users'])->name('users.select.index');
 Route::get('/admins_select', [SelectsApiController::class, 'admins'])->name('admins.select.index');
@@ -109,6 +110,9 @@ Route::get('/exchange/currencies/{currency}/chains', [CurrencyChainController::c
 Route::get('/exchange/currencies/{currency}/chains/create', [CurrencyChainController::class, 'createChain'])->name('currency.chains.create')->can('currency');
 Route::post('/exchange/currencies/{currency}/chains', [CurrencyChainController::class, 'storeChain'])->name('currency.chains.store')->can('currency');
 Route::patch('/exchange/currencies/{currency}/chains', [CurrencyChainController::class, 'updateChains'])->name('currency.chains.update')->can('currency');
+
+Route::get('/exchange/currencies/{currency}/nodeprovider', [NodeProviderController::class, 'edit'])->name('currency.nodeprovider.edit')->can('currency');
+Route::patch('/exchange/currencies/{currency}/nodeprovider', [NodeProviderController::class, 'update'])->name('currency.nodeprovider.update')->can('currency');
 
 Route::get('/exchange/markets',[MarketController::class,'index'])->name('market.index')->can('market');
 Route::get('/exchange/markets/create',[MarketController::class,'create'])->name('market.create')->can('market');

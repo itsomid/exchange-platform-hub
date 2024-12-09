@@ -34,6 +34,11 @@ class Currency extends Model
     {
         return $this->hasMany(Market::class, 'quote_currency', 'symbol');
     }
+
+    public function NodeProviders() : HasMany
+    {
+        return $this->hasMany(NodeProvider::class,'currency_id');
+    }
     public function coinLogo(): string
     {
         $logoPath = storage_path("app/public/coins/{$this->logo}");

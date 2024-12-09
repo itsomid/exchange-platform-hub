@@ -15,7 +15,7 @@
                                 <div class="form-group">
                                     <label class="form-label" for="referral_profit_percentage">درصد اهدایی به کاربران برای معرفی دوستان</label>
                                     <input type="number" name="referral_profit_percentage" id="referral_profit_percentage" class="form-control"
-                                           placeholder="کارمزد خرید از مشتری"
+                                           placeholder="درصد اهدایی به کاربران برای معرفی دوستان"
                                            value="{{$referralProfitPercentage->value}}"
                                            required>
                                     @error('otcBuyFee')
@@ -60,9 +60,9 @@
                         <div class="row mt-5">
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label class="form-label" for="otc_buy_fee">کارمزد خرید از مشتری</label>
+                                    <label class="form-label" for="otc_buy_fee">کارمزد خرید از مشتری (درصد)</label>
                                     <input name="otc_buy_fee" id="otc_buy_fee" class="form-control"
-                                           placeholder="کارمزد خرید از مشتری"
+                                           placeholder="کارمزد خرید از مشتری(درصد)"
                                            value="{{$otcBuyFee->value}}"
                                            required>
                                     @error('otcBuyFee')
@@ -72,7 +72,7 @@
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label class="form-label" for="otc_sell_fee">کارمزد فروش به مشتری</label>
+                                    <label class="form-label" for="otc_sell_fee">کارمزد فروش به مشتری(درصد) </label>
                                     <input name="otc_sell_fee" id="otc_sell_fee" class="form-control"
                                            placeholder="کارمزد فروش به مشتری"
                                            value="{{$otcSellFee->value}}" required>

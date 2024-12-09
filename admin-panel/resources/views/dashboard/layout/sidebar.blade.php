@@ -100,7 +100,7 @@
                     <div >معاملات OTC</div>
                 </a>
             </li>
-            <li class="menu-item @if(request()->is('admin/exchange/market*')) active @endif">
+            <li class="menu-item @if(request()->is('admin/exchange/market123123*')) active @endif">
                 <a href="{{route('admin.market.index')}}" class="menu-link">
                     <i class="menu-icon fa-regular fa-wallet"></i>
                     <div >مدیریت کیف پول ها</div>

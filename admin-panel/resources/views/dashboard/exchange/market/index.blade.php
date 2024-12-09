@@ -8,7 +8,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
-                            <span>تعداد کوین</span>
+                            <span>تعداد بازار</span>
                             <div class="d-flex align-items-center my-1">
                                 <h4 class="mb-0 me-2">{{$markets->count()}}</h4>
                             </div>
@@ -25,7 +25,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
-                            <span>کوین های فعال</span>
+                            <span>بازار های فعال</span>
                             <div class="d-flex align-items-center my-1">
                                 <h4 class="mb-0 me-2">{{$markets->where('is_active')->count()}}</h4>
                             </div>
@@ -42,7 +42,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
-                            <span>کوین های غیر فعال</span>
+                            <span>بازار های غیر فعال</span>
                             <div class="d-flex align-items-center my-1">
                                 <h4 class="mb-0 me-2">{{$markets->where('is_active', false)->count()}}</h4>
                             </div>
