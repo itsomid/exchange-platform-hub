@@ -84,7 +84,7 @@
                         </td>
                         <td class="text-truncate">{{\App\Helpers\DateFormatter::convertToPersianDate($block->created_at,'H:i:s %Y-%m-%d')}}</td>
                         <td class="text-truncate">{{\App\Helpers\DateFormatter::convertToPersianDate($block->restricted_until,'H:i:s %Y-%m-%d')}}</td>
-                        <td class="">{{$block->reason === 'admin' ? $block->reason .'_'. $block->admin_id : $block->reason}}</td>
+                        <td class="">{{$block->reason === 'admin' ? $block->reason .' (#'. $block->admin_id . ')' : $block->reason }}</td>
                         <td class="">{{$block->description}}</td>
                         <td class="">
                             <form action="{{route('admin.user.financial-block.deleteBlock',['user'=>$user,'financialBlock'=>$block->id])}}" method="post">
