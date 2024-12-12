@@ -12,7 +12,7 @@ class FinancialBlockService
 
     public function saveOrUpdateState(SaveFinancialBlockRequestDTO $requestDTO): void
     {
-        $this->repository->saveOrUpdateState(
+        $this->repository->saveNewState(
             resolve(SaveOrUpdateBlockStateRequestDTO::class)
                 ->setUserId($requestDTO->getUserId())
                 ->setReason($requestDTO->getReason())

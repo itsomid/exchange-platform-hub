@@ -6,5 +6,5 @@ use App\Repositories\DTO\UserFinancialBlock\SaveOrUpdateBlockStateRequestDTO;
 
 interface UserFinancialBlockRepositoryInterface
 {
-    public function saveOrUpdateState(SaveOrUpdateBlockStateRequestDTO $requestDTO): void;
+    public function saveNewState(SaveOrUpdateBlockStateRequestDTO $requestDTO): void;
 }
