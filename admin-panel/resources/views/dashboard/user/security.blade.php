@@ -26,30 +26,26 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr>
-                        <td class="text-truncate text-heading fw-medium">
-                            <i class="fa-brands fa-windows me-2"></i>Chrome on Windows
-                        </td>
-                        <td class="text-truncate">HP Spectre 360</td>
-                        <td class="text-truncate">Switzerland</td>
-                        <td class="text-truncate">10, July 2021 20:07</td>
-                    </tr>
-                    <tr>
-                        <td class="text-truncate text-heading fw-medium">
-                            <i class="fa-brands fa-apple me-2"></i>Chrome on iPhone</td>
-                        <td class="text-truncate">iPhone 12x</td>
-                        <td class="text-truncate">Australia</td>
-                        <td class="text-truncate">13, July 2021 10:10</td>
-                    </tr>
-                    <tr>
-                        <td class="text-truncate text-heading fw-medium">
-                            <i class="fa-brands fa-android me-2"></i>
-                            Chrome on Android</td>
-                        <td class="text-truncate">Oneplus 9 Pro</td>
-                        <td class="text-truncate">Dubai</td>
-                        <td class="text-truncate">14, July 2021 15:15</td>
-                    </tr>
+                    @foreach($user->tokens as $token)
+                        @php
+                            $agent->setUserAgent($token->user_agent);
+                        @endphp
+                        <tr>
+                            <td class="text-truncate text-heading fw-medium">
+                                <i class="fa-brands
+                                <x-os-fa-icon :platform="$agent->platform()"></x-os-fa-icon>
+                                me-2">
 
+                                </i>
+                                {{$agent->browser()}} On {{  $agent->platform() }}
+                            </td>
+                            <td class="text-truncate">{{  $agent->device() }}</td>
+                            <td class="text-truncate">{{ App\Helpers\LocationFinder::getCountryAndCity($token->ip) }}</td>
+                            <td class="text-truncate">
+                                <x-jalali-convertor :date="$token->last_used_at"></x-jalali-convertor>
+                            </td>
+                        </tr>
+                    @endforeach
                     </tbody>
                 </table>
             </div>

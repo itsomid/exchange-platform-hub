@@ -10,6 +10,8 @@ class GenerateTokenRequestDTO
     private User $user;
 
     private string $tokenName;
+    private string $ipAddress;
+    private string $userAgent;
 
     private Carbon $expirationDate;
 
@@ -52,5 +54,27 @@ class GenerateTokenRequestDTO
     public function getExpirationDate(): Carbon
     {
         return $this->expirationDate;
+    }
+
+    public function setIpAddress(string $ipAddress): self
+    {
+        $this->ipAddress = $ipAddress;
+        return $this;
+    }
+
+    public function getIpAddress(): string
+    {
+        return $this->ipAddress;
+    }
+
+    public function setUserAgent(string $userAgent): self
+    {
+        $this->userAgent = $userAgent;
+        return $this;
+    }
+
+    public function getUserAgent(): string
+    {
+        return $this->userAgent;
     }
 }

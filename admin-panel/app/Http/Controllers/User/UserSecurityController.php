@@ -8,12 +8,14 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Jenssegers\Agent\Agent;
 
 class UserSecurityController extends Controller
 {
     public function index(User $user)
     {
-        return view('dashboard.user.security',['user'=>$user]);
+        $agent = new Agent();
+        return view('dashboard.user.security',['user'=>$user, 'agent'=>$agent]);
     }
 
     public function sendResetLinkEmail(User $user)

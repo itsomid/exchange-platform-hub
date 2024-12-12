@@ -90,6 +90,8 @@ class RegisterController extends Controller
             resolve(GenerateTokenRequestDTO::class)
                 ->setUser($registerResponse->getUser())
                 ->setTokenName('desktop')
+                ->setIpAddress($request->ip())
+                ->setUserAgent($request->userAgent())
                 ->setExpirationDate(now()->addMinutes(60)) // 1 hour
         );
         //Send Email Activation
