@@ -9,6 +9,7 @@
         "ext-bcmath": "*",
         "bacon/bacon-qr-code": "^3.0",
         "darkaonline/l5-swagger": "^8.6",
+        "jenssegers/agent": "^2.6",
         "laravel/framework": "^11.9",
         "laravel/pulse": "^1.2",
         "laravel/sanctum": "^4.0",
