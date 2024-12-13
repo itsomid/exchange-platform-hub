@@ -4,7 +4,7 @@ use App\Http\Controllers\V1\Currency\ConfigController;
 use App\Http\Controllers\V1\Wallet\WalletController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/captcha', [\App\Http\Controllers\CaptchaController::class, '__invoke'])->withoutMiddleware('auth:sanctum');
+Route::get('/captcha', [\App\Http\Controllers\CaptchaController::class, '__invoke'])->withoutMiddleware(['auth:sanctum', 'verified']);
 Route::prefix('/profile')->group(function () {
     Route::patch('/change-password', [\App\Http\Controllers\V1\Profile\UserController::class, 'changePassword'])->name('user.change-password');
     Route::patch('/update-profile', [\App\Http\Controllers\V1\Profile\UserController::class, 'updateProfile'])->name('user.update-profile');
