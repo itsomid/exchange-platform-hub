@@ -20,6 +20,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int    $referral_code_usage_count
  * @property int    $registered_users_count
  * @property string $code
+ * @property int    $user_id
+ * @property mixed  $amount
  */
 class ReferralCode extends Model
 {

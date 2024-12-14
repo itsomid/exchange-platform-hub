@@ -83,6 +83,8 @@ class LoginController extends Controller
                 resolve(GenerateTokenRequestDTO::class)
                     ->setUser($responseDTO->getUser())
                     ->setTokenName('desktop')
+                    ->setIpAddress($request->ip())
+                    ->setUserAgent($request->userAgent())
                     ->setExpirationDate(now()->addMinutes(60)) // 1 hour
             );
             $data['token'] = new AccessTokenResource($tokenResponse);

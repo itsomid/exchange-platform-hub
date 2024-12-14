@@ -5,6 +5,7 @@ namespace App\Repositories\Interfaces;
 use App\Models\User;
 use App\Repositories\DTO\User\UpdateLastLoginRequestDTO;
 use App\Repositories\DTO\User\UserRegisterRequestDTO;
+use Illuminate\Database\Eloquent\Collection;
 
 interface UserRepositoryInterface
 {
@@ -25,4 +26,6 @@ interface UserRepositoryInterface
     public function saveSecret(int $userId, string $secret): void;
 
     public function updateUser(int $userId, array $data): void;
+
+    public function getReferredUsers(int $referralId): Collection;
 }
