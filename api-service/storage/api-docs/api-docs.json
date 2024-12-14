@@ -1005,6 +1005,154 @@
                 ]
             }
         },
+        "/api/v1/referral-codes/referred-users/{referralCode}": {
+            "get": {
+                "tags": [
+                    "Referral Code"
+                ],
+                "summary": "Get Registered Users by Referral Code",
+                "description": "Retrieve the list of users registered using a specific referral code, including their total transaction count and the total profit generated.",
+                "operationId": "getRegisteredUsers",
+                "parameters": [
+                    {
+                        "name": "referralCode",
+                        "in": "path",
+                        "description": "The referral code used to register users.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "REF74XGQ387"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of registered users retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ReferralCodeRegisteredUsersResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Referral Code not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "No results found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "code does not belong to the user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "The referral code does not belong to the user."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/referred-users/{userId}/owner-profits": {
+            "get": {
+                "tags": [
+                    "Referral Code"
+                ],
+                "summary": "Get profits received from a referred user's transactions",
+                "description": "Retrieve the total profits earned by the owner of a referral code from transactions made by a specific referred user.",
+                "operationId": "getOwnerProfits",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "The ID of the referred user whose transactions generated profits for the referral code owner",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 42
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of profits received from the referred user's transactions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ReferralCodeOwnerProfitsResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/wallets/generate-address": {
             "post": {
                 "tags": [
@@ -1297,12 +1445,12 @@
                     "currency": {
                         "description": "The symbol of the currency (e.g., BTC, ETH). Must exist in the currencies table.",
                         "type": "string",
-                        "example": "BTC"
+                        "example": "USDT"
                     },
                     "chain": {
                         "description": "The chain symbol for the currency. Must exist in the currency chains table with 'deposit_enabled' set to true.",
                         "type": "string",
-                        "example": "BTC"
+                        "example": "TRC20"
                     }
                 },
                 "type": "object"
@@ -1483,6 +1631,39 @@
                 },
                 "type": "object"
             },
+            "ReferralCodeRegisteredUsersResponse": {
+                "properties": {
+                    "total_orders": {
+                        "description": "Total number of transactions performed by the referred user.",
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "total_profit": {
+                        "description": "Total profit received from transactions performed by the referred user.",
+                        "type": "number",
+                        "format": "float",
+                        "example": 250.75
+                    },
+                    "user": {
+                        "description": "Details of the referred user.",
+                        "properties": {
+                            "name": {
+                                "description": "Name of the referred user.",
+                                "type": "string",
+                                "example": "John Doe"
+                            },
+                            "email": {
+                                "description": "Email of the referred user.",
+                                "type": "string",
+                                "format": "email",
+                                "example": "john.doe@example.com"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
             "ReferralCodeResource": {
                 "properties": {
                     "code": {
@@ -1503,12 +1684,39 @@
                 },
                 "type": "object"
             },
+            "ReferralCodeOwnerProfitsResponse": {
+                "properties": {
+                    "amount": {
+                        "description": "The profit amount received from the referred user.",
+                        "type": "number",
+                        "format": "float",
+                        "example": 100.75
+                    },
+                    "received_date": {
+                        "description": "The date when the profit was received.",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-11-25T14:21:17Z"
+                    },
+                    "transaction_description": {
+                        "description": "A description of the transaction related to the profit.",
+                        "type": "string",
+                        "example": "Referral bonus for order #12345"
+                    }
+                },
+                "type": "object"
+            },
             "CoinAddressResponse": {
                 "properties": {
                     "address": {
                         "description": "The generated wallet address for the user.",
                         "type": "string",
                         "example": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+                    },
+                    "valid_until": {
+                        "description": "The addresss expiration date",
+                        "type": "string",
+                        "example": "2025-01-12 15:05:01"
                     }
                 },
                 "type": "object"

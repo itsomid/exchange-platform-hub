@@ -3,8 +3,22 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ReferralCodeUsage extends Model
 {
-    //
+    public function referralCode(): BelongsTo
+    {
+        return $this->belongsTo(ReferralCode::class, 'referral_code_id');
+    }
+
+    public function transaction(): BelongsTo
+    {
+        return $this->belongsTo(Transaction::class, 'transaction_id');
+    }
+
+    public function usedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'used_by');
+    }
 }

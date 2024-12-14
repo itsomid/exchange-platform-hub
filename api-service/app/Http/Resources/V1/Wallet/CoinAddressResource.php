@@ -16,7 +16,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  *         type="string",
  *         example="1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
  *         description="The generated wallet address for the user."
- *     )
+ *     ),
  *      @OA\Property(
  *          property="valid_until",
  *          type="string",

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Collection;
 
 interface ReferralCodeRepositoryInterface
 {
-    public function getReferralCodeByCode(string $code): ReferralCode;
+    public function getReferralCodeByCode(string $code): ?ReferralCode;
 
     public function create(ReferralCodeCreateDTO $createDTO): ReferralCode;
 
