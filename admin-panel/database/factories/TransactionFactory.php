@@ -2,10 +2,13 @@
 
 namespace Database\Factories;
 
+use App\Enums\BalanceOperationEnum;
 use App\Models\ReferralCode;
 use App\Models\ReferralCodeUsage;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Services\Wallet\DTO\UpdateBalanceRequestDTO;
+use App\Services\Wallet\WalletService;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -41,6 +44,16 @@ class TransactionFactory extends Factory
                 'description' => 'charge for referral',
             ];
         })->afterCreating(function (Transaction $transaction) use ($user_id) {
+
+            $walletService = resolve(WalletService::class);
+            $walletService->updateBalance(
+                resolve(UpdateBalanceRequestDTO::class)
+                    ->setAmount($transaction->amount)
+                    ->setOperation(BalanceOperationEnum::Increase)
+                    ->setCurrencySymbol('USDT')
+                    ->setUserId($user_id)
+            );
+
             $referralCode = ReferralCode::query()
                 ->where('user_id', $user_id)
                 ->first();
