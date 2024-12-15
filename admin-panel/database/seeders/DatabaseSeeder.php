@@ -38,6 +38,7 @@ class DatabaseSeeder extends Seeder
             CurrencyChainSeeder::class,
             TransactionSeeder::class,
             SettingTableSeeder::class,
+            ExchangeSeeder::class,
             MarketSeeder::class,
             NodeProviderSeeder::class,
             ExternalApiConfigSeeder::class,

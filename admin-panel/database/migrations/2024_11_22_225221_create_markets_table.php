@@ -22,9 +22,6 @@ return new class extends Migration
             $table->decimal('min_trade_amount', 18, 8)->default(0);
             $table->decimal('max_trade_amount', 18, 8)->default(0);
 
-            $table->decimal('price', 18, 8)->default(0);
-            $table->decimal('open_price', 18, 8)->default(0);
-            $table->decimal('exchange_profit', 5, 4)->default(0);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
 

@@ -22,13 +22,13 @@
                     </div>
                     <div class="d-flex gap-2 align-items-center my-3 justify-content-end  font-number">
                         <div
-                            class="badge rounded bg-label-{{ $market->price_change_percentage < 0 ? 'danger' : 'success' }}"
+                            class="badge rounded bg-label-{{ $market->activeExchangePrices->price_change_percentage < 0 ? 'danger' : 'success' }}"
                             dir="ltr">
-                            {{ $market->price_change_percentage > 0 ? '+' : '' }}{{ number_format($market->price_change_percentage, 2) }}
+                            {{ $market->activeExchangePrices->price > 0 ? '+' : '' }}{{ number_format($market->activeExchangePrices->price_change_percentage, 2) }}
                             %
                         </div>
                         <h2 class="mb-0">
-                            ${{number_format($market->price,2)}}
+                            ${{number_format($market->activeExchangePrices->price,2)}}
                         </h2>
 
                     </div>
@@ -45,9 +45,9 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-3 card-title">قیمت ارايه شده صرافی
                             <div
-                                class="badge rounded bg-label-{{ $market->exchange_profit < 0 ? 'danger' : 'success' }}"
+                                class="badge rounded bg-label-{{ $market->activeExchangePrices->exchange_profit < 0 ? 'danger' : 'success' }}"
                                 dir="ltr">
-                                {{ $market->exchange_profit > 0 ? '+' : '' }}{{$market->exchange_profit * 100 }}%
+                                {{ $market->activeExchangePrices->exchange_profit > 0 ? '+' : '' }}{{$market->activeExchangePrices->exchange_profit * 100 }}%
                             </div>
                         </h5>
                         <div class="avatar-group d-flex align-items-center assigned-avatar">
@@ -66,10 +66,10 @@
                     <div class="d-flex gap-2 align-items-center my-3 justify-content-end font-number">
                         <div
                             class="badge rounded bg-label-{{ $market->price_change_percentage < 0 ? 'danger' : 'success' }}" dir="ltr">
-                            {{ $market->price_change_percentage > 0 ? '+' : '' }}{{ number_format($market->price_change_percentage, 2) }}%
+                            {{ $market->activeExchangePrices->price_change_percentage > 0 ? '+' : '' }}{{ number_format($market->activeExchangePrices->price_change_percentage, 2) }}%
                         </div>
                         <h2 class="mb-0">
-                            ${{number_format($market->exchange_price,2)}}
+                            ${{number_format($market->activeExchangePrices->exchange_price,2)}}
                         </h2>
 
                     </div>
@@ -151,7 +151,7 @@
                                     <label class="form-label" for="exchange_profit">سود صرافی</label>
                                     <input name="exchange_profit" id="exchange_profit" class=" form-control"
                                            placeholder="سود صرافی"
-                                           value="{{formatNumber($market->exchange_profit,2)}}"
+                                           value="{{formatNumber($market->activeExchangePrices->exchange_profit,2)}}"
                                            required>
                                     @error('exchange_profit')
                                     <small class="text-danger">{{$message}}</small>

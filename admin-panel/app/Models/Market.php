@@ -28,17 +28,18 @@ class Market extends Model
     {
         return $this->belongsTo(Currency::class, 'quote_currency', 'symbol');
     }
-
-    public function getPriceChangePercentageAttribute(): ?float
+    public function activeExchange()
     {
-        if ($this->open_price > 0) {
-            return (($this->price - $this->open_price) / $this->open_price) * 100;
-        }
-        return null;
+        return $this->hasOneThrough(Exchange::class, ExchangePrice::class, 'market_id', 'id', 'id', 'exchange_id')
+            ->where('exchanges.is_active', true); // Filter
     }
 
-    public function getExchangePriceAttribute()
+    public function activeExchangePrices()
     {
-        return ($this->price * $this->exchange_profit) + $this->price;
+        return $this->hasOne(ExchangePrice::class)->whereHas('exchange', function ($query) {
+            $query->where('is_active', true); // Only get the price for the active exchange
+        });
     }
+
+
 }

@@ -115,7 +115,7 @@
                 </a>
             </li>
         @endcan
-        @canany(['setting.int.index', 'setting.ext.index'])
+        @canany(['exchange.currency', 'exchange.market','exchange.ref-exchanges'])
             <li class="menu-header small text-uppercase">
                 <span class="menu-header-text">مدیریت Exchange</span>
             </li>
@@ -129,6 +129,12 @@
                 <a href="{{route('admin.market.index')}}" class="menu-link">
                     <i class="menu-icon fa-regular fa-display-chart-up-circle-dollar"></i>
                     <div >Market</div>
+                </a>
+            </li>
+            <li class="menu-item @if(request()->is('admin/exchange/ref-exchanges*')) active @endif">
+                <a href="{{route('admin.market.index')}}" class="menu-link">
+                    <i class="menu-icon fa-regular fa-display-chart-up-circle-dollar"></i>
+                    <div >مدیریت صرافی های مرجع</div>
                 </a>
             </li>
 

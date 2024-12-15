@@ -53,8 +53,9 @@ class PermissionList
             ['setting.int.view-logs', 'مشاهده لاگ ها و خطاهای سیستم'],
             ['setting.ext.index', 'مشاهده تنظیمات خارجی'],
 
-            ['currency','مدیریت کوین ها'],
-            ['market','مدیریت بازار'],
+            ['exchange.currency','مدیریت کوین ها'],
+            ['exchange.market','مدیریت بازار'],
+            ['exchange.ref-exchanges','مدیریت صرافی های مرجع'],
 
         ];
 

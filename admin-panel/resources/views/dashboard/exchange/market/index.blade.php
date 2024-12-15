@@ -83,11 +83,11 @@
     <div class="card">
         <div class="card-body">
             <div class="card-title header-elements">
-                <h5 class="m-0 me-2">لیست بازارها</h5>
+                <h5 class="m-0 me-2">لیست بازارها ({{$activeExchange->name}})</h5>
                 <div class="card-title-elements ms-auto">
                     <a href="{{route('admin.market.create')}}" class="btn btn-primary">
                         <i class="fa fa-plus mx-2"></i>
-                        افزودن  بازار جدید
+                        افزودن بازار جدید
                     </a>
                 </div>
             </div>
@@ -99,7 +99,13 @@
                         <th>کوین</th>
                         <th>آخرین قیمت (USDT)</th>
                         <th>تغییرات (۲۴ ساعت)</th>
-                        <th>سود صرافی</th>
+                        <th>قیمت صرافی
+
+                            <div class="badge rounded bg-label-success" dir="ltr">
+                                {{ $markets[0]->activeExchangePrices->exchange_profit > 0 ? '+' : '' }}{{$markets[0]->activeExchangePrices->exchange_profit * 100 }}
+                                %
+                            </div>
+                        </th>
                         <th>حداقل مقدار معامله</th>
                         <th>جداکثر مقدار معامله</th>
                         <th>وضعیت</th>
@@ -116,14 +122,16 @@
                                     <div class="avatar-group d-flex align-items-center assigned-avatar">
 
                                         <div class="avatar avatar-md">
-                                            <img src="{{asset($market->quoteCurrency->coinLogo())}}" class="rounded-circle ">
+                                            <img src="{{asset($market->quoteCurrency->coinLogo())}}"
+                                                 class="rounded-circle ">
                                         </div>
-                                        <div class="avatar avatar-md " >
-                                            <img src="{{asset($market->baseCurrency->coinLogo())}}" class="rounded-circle  ">
+                                        <div class="avatar avatar-md ">
+                                            <img src="{{asset($market->baseCurrency->coinLogo())}}"
+                                                 class="rounded-circle  ">
                                         </div>
                                     </div>
-{{--                                    <img src="{{asset($market->baseCurrency->coinLogo())}}" class="img-fluid me-3"--}}
-{{--                                         width="50px">--}}
+                                    {{--                                    <img src="{{asset($market->baseCurrency->coinLogo())}}" class="img-fluid me-3"--}}
+                                    {{--                                         width="50px">--}}
                                     <div class="ms-3">{{$market->base_currency}}/{{$market->quote_currency}}</div>
                                 </div>
 
@@ -132,19 +140,22 @@
                             <td class="">
                                 <h4 class="font-number text-heading h5">
 
-                                    <span class="ms-1">{{formatNumber($market->price)}}</span>
+                                    <span class="ms-1">{{formatNumber($market->activeExchangePrices->price)}}</span>
 
                                     <small class="text-muted">USDT</small>
                                 </h4>
 
                             </td>
                             <td class="font-number">
-                                <div class="badge rounded bg-label-{{ $market->price_change_percentage < 0 ? 'danger' : 'success' }}" dir="ltr">
-                                    {{ $market->price_change_percentage > 0 ? '+' : '' }}{{ number_format($market->price_change_percentage, 2) }}%
+                                <div
+                                    class="badge rounded bg-label-{{ $market->active_exchange_prices < 0 ? 'danger' : 'success' }}"
+                                    dir="ltr">
+                                    {{ $market->activeExchangePrices->price_change_percentage > 0 ? '+' : '' }}{{ number_format($market->activeExchangePrices->price_change_percentage, 2) }}
+                                    %
                                 </div>
                             </td>
                             <td class="font-number text-heading h5">
-                                <span class="ms-1">{{formatNumber($market->exchange_profit)}}</span>
+                                <span class="ms-1">{{formatNumber($market->activeExchangePrices->own_price)}}</span>
                                 <small class="text-muted">USDT</small>
                             </td>
                             <td class="font-number">

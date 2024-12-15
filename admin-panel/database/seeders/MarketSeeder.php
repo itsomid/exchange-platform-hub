@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Currency;
+use App\Models\Exchange;
+use App\Models\ExchangePrice;
 use App\Models\Market;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -22,25 +24,43 @@ class MarketSeeder extends Seeder
         $tron = Currency::where('symbol', 'TRX')->first();
         $bnb = Currency::where('symbol', 'BNB')->first();
 
-        // Insert markets for each pair
+        // Get exchanges (assuming exchanges already exist)
+        $binance = Exchange::where('slug', 'binance')->first();
+        $coinex = Exchange::where('slug', 'coinex')->first();
+
+        // Insert markets for each pair (without price and exchange_profit, as they are handled in ExchangePrice)
         $markets = [
-            ['base_currency' => $btc->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 0.001, 'max_trade_amount' => 1000, 'price' => 45000.00, 'exchange_profit' => 0.01],
-            ['base_currency' => $eth->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 0.01, 'max_trade_amount' => 1000, 'price' => 3000.00, 'exchange_profit' => 0.02],
-            ['base_currency' => $doge->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 10, 'max_trade_amount' => 100000, 'price' => 0.25, 'exchange_profit' => 0.25],
-            ['base_currency' => $tron->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 10, 'max_trade_amount' => 1000000, 'price' => 0.08, 'exchange_profit' => 0.08],
-            ['base_currency' => $bnb->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 0.01, 'max_trade_amount' => 1000, 'price' => 400.00, 'exchange_profit' => 0.01],
+            ['base_currency' => $btc->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 0.001, 'max_trade_amount' => 1000],
+            ['base_currency' => $eth->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 0.01, 'max_trade_amount' => 1000],
+            ['base_currency' => $doge->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 10, 'max_trade_amount' => 100000],
+            ['base_currency' => $tron->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 10, 'max_trade_amount' => 1000000],
+            ['base_currency' => $bnb->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 0.01, 'max_trade_amount' => 1000],
         ];
 
-        foreach ($markets as $market) {
-            Market::create([
-                'base_currency' => $market['base_currency'],
-                'quote_currency' => $market['quote_currency'],
-                'min_trade_amount' => $market['min_trade_amount'],
-                'max_trade_amount' => $market['max_trade_amount'],
-                'price' => $market['price'],
-                'exchange_profit' => $market['exchange_profit'],
+        foreach ($markets as $marketData) {
+            // Insert the market into the markets table
+            $market = Market::create([
+                'base_currency' => $marketData['base_currency'],
+                'quote_currency' => $marketData['quote_currency'],
+                'min_trade_amount' => $marketData['min_trade_amount'],
+                'max_trade_amount' => $marketData['max_trade_amount'],
                 'is_active' => true,
             ]);
+
+            // Insert price and exchange profit into the exchange_prices table for each market and exchange
+            $exchangePrices = [
+                ['exchange_id' => $binance->id, 'price' => 45000.00, 'exchange_profit' => 0.01],  // Binance price and profit
+                ['exchange_id' => $coinex->id, 'price' => 45010.00, 'exchange_profit' => 0.01],  // CoinEx price and profit
+            ];
+
+            foreach ($exchangePrices as $exchangePriceData) {
+                ExchangePrice::create([
+                    'market_id' => $market->id,
+                    'exchange_id' => $exchangePriceData['exchange_id'],
+                    'price' => $exchangePriceData['price'],
+                    'exchange_profit' => $exchangePriceData['exchange_profit'],
+                ]);
+            }
         }
     }
 }

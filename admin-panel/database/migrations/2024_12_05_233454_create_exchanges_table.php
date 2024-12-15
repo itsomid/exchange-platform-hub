@@ -13,8 +13,12 @@ return new class extends Migration
     {
         Schema::create('exchanges', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('name'); // e.g., Binance, CoinEx
+            $table->string('slug')->unique(); // Unique identifier for the exchange (e.g., binance, coinex)
+            $table->boolean('is_active')->unique()->default(false);
+            $table->unsignedInteger('priority');
             $table->timestamps();
+
         });
     }
 
