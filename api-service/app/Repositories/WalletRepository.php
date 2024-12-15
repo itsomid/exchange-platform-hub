@@ -30,6 +30,7 @@ class WalletRepository implements WalletRepositoryInterface
     public function getWalletWithLock(string $symbol, int $userId): Wallet
     {
         return Wallet::query()->where('currency_symbol', $symbol)
+            ->where('user_id', $userId)
             ->lockForUpdate()
             ->first();
     }
