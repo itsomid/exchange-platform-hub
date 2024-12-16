@@ -12,6 +12,7 @@ use App\Services\Auth\DTO\RevokeAllSessionRequestDTO;
 use App\Services\Auth\RegisterService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 
 class RegisterController extends Controller
 {
@@ -103,5 +104,50 @@ class RegisterController extends Controller
                 'token' => new AccessTokenResource($tokenResponse),
             ],
         ], Response::HTTP_CREATED);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/v1/auth/email/resend",
+     *     summary="Resend Email Activation",
+     *     description="Resend the activation email to the authenticated user.",
+     *     operationId="resendEmailActivation",
+     *     tags={"Authentication"},
+     *     security={{"sanctum": {}}},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Activation email resent successfully.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="The activation email has been resent.")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=429,
+     *         description="Too Many Requests",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Too many requests. Please try again later.")
+     *         )
+     *     )
+     * )
+     */
+    public function resend()
+    {
+        $user = Auth::user();
+        event(new Registered($user));
+
+        return response([
+            'message' => __('passwords.sent'),
+        ]);
     }
 }

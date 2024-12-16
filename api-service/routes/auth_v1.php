@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 //Register routes
 Route::post('/register', [\App\Http\Controllers\V1\Auth\RegisterController::class, 'register'])->name('register')->middleware(['throttle:auth-actions']);
+Route::post('/email/resend', [\App\Http\Controllers\V1\Auth\RegisterController::class, 'resend'])->name('resend')->middleware(['auth:sanctum', 'throttle:auth-actions']);
 Route::post('/email/verify', [\App\Http\Controllers\V1\Auth\EmailVerificationController::class, '__invoke'])->name('email.verify')->middleware(['auth:sanctum', 'throttle:3,1']);
 //Login Routes
 Route::post('/login', [\App\Http\Controllers\V1\Auth\LoginController::class, 'login'])->name('login')->middleware(['throttle:auth-actions']);
