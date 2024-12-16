@@ -72,6 +72,11 @@ class User extends Authenticatable implements CanResetPassword, MustVerifyEmail
         return $this->hasMany(Transaction::class);
     }
 
+    public function wallets(): HasMany
+    {
+        return $this->hasMany(Wallet::class);
+    }
+
     public function referredTransactions(): HasManyThrough
     {
         return $this->hasManyThrough(Transaction::class, ReferralCodeUsage::class, 'used_by', 'id', 'id', 'transaction_id');
