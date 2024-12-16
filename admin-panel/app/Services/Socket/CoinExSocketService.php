@@ -2,6 +2,8 @@
 
 namespace App\Services\Socket;
 
+use App\Models\Exchange;
+use App\Models\ExchangePrice;
 use App\Models\Market;
 use Exception;
 use Ratchet\Client\WebSocket;
@@ -31,7 +33,7 @@ class CoinExSocketService
                     // Send subscription message
                     $subscribeMessage = [
                         'method' => 'state.subscribe',
-                        'params' => ['market_list' => ['BTCUSDT', 'ETHUSDT', 'DOGEUSDT', 'TRXUSDT', 'BNBUSDT']],
+                        'params' => ['market_list' => ['USDTUSDT','BTCUSDT', 'ETHUSDT', 'DOGEUSDT', 'TRXUSDT', 'BNBUSDT']],
                         'id' => 1,
                     ];
                     $conn->send(json_encode($subscribeMessage));
@@ -126,13 +128,38 @@ class CoinExSocketService
             ];
 
             // Update the database
-            Market::query()
-                ->where('base_currency', $baseCurrent)
-                ->where('quote_currency', 'USDT')
-                ->update([
-                    'price' => $lastPrice,
-                    'open_price' => $openPrice,
-                ]);
+            $coinExExchange = Exchange::where('slug', 'coinex')->where('is_active', true)->first();
+            // Update the database
+
+            if ($coinExExchange) {
+                // Find the exchange price related to the market for CoinEx
+                $exchangePrice = ExchangePrice::where('market_id', function ($query) use ($baseCurrent) {
+                    $query->from('markets')
+                        ->where('base_currency', $baseCurrent)
+                        ->where('quote_currency', 'USDT')
+                        ->select('id');
+                })
+                    ->where('exchange_id', $coinExExchange->id)
+                    ->first();
+
+                if (!$exchangePrice) {
+                    // If no existing exchange price, create a new one
+                    ExchangePrice::create([
+                        'market_id' => Market::where('base_currency', $baseCurrent)
+                            ->where('quote_currency', 'USDT')
+                            ->first()->id,
+                        'exchange_id' => $coinExExchange->id,
+                        'price' => $lastPrice,
+                        'open_price' => $openPrice,
+                    ]);
+                } else {
+                    // If the price has changed, update the existing exchange price
+                    $exchangePrice->update([
+                        'price' => $lastPrice,
+                        'open_price' => $openPrice,
+                    ]);
+                }
+            }
         }
     }
 }
