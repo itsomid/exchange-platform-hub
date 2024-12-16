@@ -1,15 +1,18 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\AdminRoleController;
 use App\Http\Controllers\Admin\AdminSecurityController;
-use App\Http\Controllers\Admin\ProfileController;
-
 use App\Http\Controllers\Admin\HomeController;
+use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ReferralCodeController;
 use App\Http\Controllers\Admin\SelectsApiController;
 use App\Http\Controllers\Admin\SessionController;
+use App\Http\Controllers\Exchange\CurrencyChainController;
+use App\Http\Controllers\Exchange\CurrencyController;
+use App\Http\Controllers\Exchange\MarketController;
+use App\Http\Controllers\Exchange\NodeProviderController;
+use App\Http\Controllers\Exchange\RefExchangeController;
 use App\Http\Controllers\RolePermission\PermissionController;
 use App\Http\Controllers\RolePermission\RoleController;
 use App\Http\Controllers\Setting\ExternalSettingController;
@@ -17,12 +20,11 @@ use App\Http\Controllers\Setting\InternalSettingController;
 use App\Http\Controllers\Setting\ThemeController;
 use App\Http\Controllers\User\InquiryController;
 use App\Http\Controllers\User\UserController;
-use App\Http\Controllers\User\UserSecurityController;
-use App\Http\Controllers\Exchange\CurrencyController;
 use App\Http\Controllers\User\UserFinancialBlockController;
-use App\Http\Controllers\Exchange\CurrencyChainController;
-use App\Http\Controllers\Exchange\MarketController;
-use App\Http\Controllers\Exchange\NodeProviderController;
+use App\Http\Controllers\User\UserSecurityController;
+use App\Http\Controllers\User\UserWalletController;
+use Illuminate\Support\Facades\Route;
+
 
 Route::get('/users_select', [SelectsApiController::class, 'users'])->name('users.select.index');
 Route::get('/admins_select', [SelectsApiController::class, 'admins'])->name('admins.select.index');
@@ -77,6 +79,7 @@ Route::delete('/users/{user}/financial-status/{financialBlock}', [UserFinancialB
 Route::get('/users/financial-status/mass-block', [UserFinancialBlockController::class, 'createMassBlock'])->name('user.financial-block.create-mass-block');
 Route::post('/users/financial-status/mass-block', [UserFinancialBlockController::class, 'storeMassBlock'])->name('user.financial-block.store-mass-block');
 
+Route::get('/users/{user}/wallets',[UserWalletController::class,'userWallets'])->name('wallet.index')->can('wallet');
 //Route::get('/users/2fa', [UserSecurityController::class, ''])->name('profile.2fa.edit');
 //Route::get('/users/{user}/tokens', [UserTokenController::class, 'twoFAEdit'])->name('user.token.index')->can('user.edit');
 //Route::patch('/users/{user}/tokens/{token}/revoke', [UserTokenController::class, 'revoke'])->name('user.token.revoke')->can('user.edit');
@@ -125,6 +128,11 @@ Route::get('/exchange/markets/create',[MarketController::class,'create'])->name(
 Route::post('/exchange/markets',[MarketController::class,'store'])->name('market.store')->can('market');
 Route::get('/exchange/markets/{market}/edit',[MarketController::class,'edit'])->name('market.edit')->can('market');
 Route::patch('/exchange/markets/{market}',[MarketController::class,'update'])->name('market.update')->can('market');
+
+Route::get('/exchange/ref-exchanges',[RefExchangeController::class,'index'])->name('exchange.index')->can('ref-exchanges');
+
+
+
 
 
 Route::get('/internal-settings', [InternalSettingController::class, 'index'])->name('internal.setting.index')->can('setting.int.index');

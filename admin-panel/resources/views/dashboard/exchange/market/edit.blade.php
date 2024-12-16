@@ -69,7 +69,7 @@
                             {{ $market->activeExchangePrices->price_change_percentage > 0 ? '+' : '' }}{{ number_format($market->activeExchangePrices->price_change_percentage, 2) }}%
                         </div>
                         <h2 class="mb-0">
-                            ${{number_format($market->activeExchangePrices->exchange_price,2)}}
+                            ${{number_format($market->activeExchangePrices->own_price,2)}}
                         </h2>
 
                     </div>

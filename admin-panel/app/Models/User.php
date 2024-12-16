@@ -90,6 +90,11 @@ class User extends Authenticatable implements CanResetPassword
 
         return $query;
     }
+
+    public function wallets()
+    {
+        return $this->hasMany(Wallet::class,'user_id');
+    }
     public function twoFAStatus()
     {
         return (bool)$this->two_factore_secret;

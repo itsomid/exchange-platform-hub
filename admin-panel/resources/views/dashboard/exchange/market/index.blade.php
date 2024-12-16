@@ -148,7 +148,7 @@
                             </td>
                             <td class="font-number">
                                 <div
-                                    class="badge rounded bg-label-{{ $market->active_exchange_prices < 0 ? 'danger' : 'success' }}"
+                                    class="badge rounded bg-label-{{ $market->activeExchangePrices->price_change_percentage < 0 ? 'danger' : 'success' }}"
                                     dir="ltr">
                                     {{ $market->activeExchangePrices->price_change_percentage > 0 ? '+' : '' }}{{ number_format($market->activeExchangePrices->price_change_percentage, 2) }}
                                     %

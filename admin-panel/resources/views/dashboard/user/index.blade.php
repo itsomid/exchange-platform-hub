@@ -235,6 +235,9 @@
                                             <a class="btn btn-outline-secondary text-dark" href="">
                                                 <i class="fa-light fa-eye"></i>
                                             </a>
+                                            <a class="btn btn-outline-secondary text-dark" href="{{route('admin.wallet.index',['user'=>$user->id])}}">
+                                                <i class="fa-regular fa-wallet"></i>
+                                            </a>
                                             @can('user.edit-note')
                                                 <a class="btn {{$user->support_description ? 'btn-primary' :'btn-outline-secondary text-dark'}}"
                                                    href="#"
