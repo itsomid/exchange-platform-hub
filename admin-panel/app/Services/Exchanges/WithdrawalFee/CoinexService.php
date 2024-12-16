@@ -33,6 +33,8 @@ class CoinexService implements ExchangeInterface
             return [
                 'network' => $chain['chain'],
                 'withdrawal_fee' => $chain['withdrawal_fee'],
+                'deposit_enabled' => $chain['deposit_enabled'],
+                'withdraw_enabled' => $chain['withdraw_enabled']
             ];
         }, $chains);
 

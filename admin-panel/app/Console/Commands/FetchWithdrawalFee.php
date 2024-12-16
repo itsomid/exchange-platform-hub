@@ -46,6 +46,8 @@ class FetchWithdrawalFee extends Command
 
             $chain->update([
                 'network_fee' => $foundNetwork[0]['withdrawal_fee'],
+                'withdraw_enabled' => $foundNetwork[0]['withdraw_enabled'],
+                'deposit_enabled' => $foundNetwork[0]['deposit_enabled'],
             ]);
         } else {
             report("Can not fetch withdrawal fee with network $chainSymbol");
