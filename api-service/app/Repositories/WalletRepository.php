@@ -26,4 +26,22 @@ class WalletRepository implements WalletRepositoryInterface
                 'locked_balance' => 0,
             ]);
     }
+
+    public function getWalletWithLock(string $symbol, int $userId): Wallet
+    {
+        return Wallet::query()->where('currency_symbol', $symbol)
+            ->where('user_id', $userId)
+            ->lockForUpdate()
+            ->first();
+    }
+
+    public function updateBalance(string $symbol, int $userId, string $amount): void
+    {
+        Wallet::query()
+            ->where('currency_symbol', $symbol)
+            ->where('user_id', $userId)
+            ->update([
+                'balance' => $amount,
+            ]);
+    }
 }
