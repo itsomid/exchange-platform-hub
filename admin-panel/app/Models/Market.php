@@ -15,6 +15,7 @@ class Market extends Model
         'max_trade_amount',
         'price',
         'exchange_profit',
+        'exchange_id',
         'is_active'
     ];
 

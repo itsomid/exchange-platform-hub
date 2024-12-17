@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Exchange;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -19,11 +20,15 @@ return new class extends Migration
             $table->string('quote_currency'); // e.g., USD
             $table->foreign('quote_currency')->references('symbol')->on('currencies')->onDelete('cascade');
 
+            $table->foreignIdFor(Exchange::class)->constrained()->restrictOnDelete();
+
             $table->decimal('min_trade_amount', 18, 8)->default(0);
             $table->decimal('max_trade_amount', 18, 8)->default(0);
 
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+
+            $table->unique(['base_currency', 'quote_currency']);
 
         });
     }

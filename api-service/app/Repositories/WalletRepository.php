@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\Wallet;
 use App\Models\WalletChain;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
+use Illuminate\Database\Eloquent\Collection;
 
 class WalletRepository implements WalletRepositoryInterface
 {
@@ -43,5 +44,13 @@ class WalletRepository implements WalletRepositoryInterface
             ->update([
                 'balance' => $amount,
             ]);
+    }
+
+    public function getLists(int $getUserId): ?Collection
+    {
+        return Wallet::query()
+            ->where('user_id', $getUserId)
+            ->with('exchangePrice')
+            ->get();
     }
 }

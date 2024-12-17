@@ -8,6 +8,7 @@ use App\Models\ExchangePrice;
 use App\Models\Market;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Arr;
 
 class MarketSeeder extends Seeder
 {
@@ -44,6 +45,7 @@ class MarketSeeder extends Seeder
                 'quote_currency' => $marketData['quote_currency'],
                 'min_trade_amount' => $marketData['min_trade_amount'],
                 'max_trade_amount' => $marketData['max_trade_amount'],
+                'exchange_id' => Arr::random([$binance->id, $coinex->id]),
                 'is_active' => true,
             ]);
 
