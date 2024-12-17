@@ -79,10 +79,10 @@ class AdminTableSeeder extends Seeder
             ],
             [
                 'id' => 6,
-                'first_name' => 'حسن',
-                'last_name' => 'رضایی',
+                'first_name' => 'آریا',
+                'last_name' => 'عرب گل',
                 'email' => 'a.arabgol@vista-group.ir',
-                'mobile' => '09109529484',
+                'mobile' => '09109529485',
             ],
         ];
     }
