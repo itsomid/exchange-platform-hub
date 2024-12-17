@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Market extends Model
 {
@@ -35,11 +36,9 @@ class Market extends Model
             ->where('exchanges.is_active', true); // Filter
     }
 
-    public function activeExchangePrices()
+    public function activeExchangePrice(): HasOne
     {
-        return $this->hasOne(ExchangePrice::class)->whereHas('exchange', function ($query) {
-            $query->where('is_active', true); // Only get the price for the active exchange
-        });
+        return $this->hasOne(ExchangePrice::class);
     }
 
 

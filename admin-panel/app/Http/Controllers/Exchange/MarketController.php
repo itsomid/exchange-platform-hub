@@ -15,7 +15,7 @@ class MarketController extends Controller
     public function index()
     {
         $activeExchange = Exchange::query()->active()->first();
-        $markets = Market::with(['baseCurrency', 'quoteCurrency', 'activeExchangePrices'])->get();
+        $markets = Market::with(['baseCurrency', 'quoteCurrency', 'activeExchangePrice.exchange'])->get();
 //        return $markets[0]->activeExchangePrices->price;
         return view('dashboard.exchange.market.index', [
             'markets' => $markets,
