@@ -20,6 +20,6 @@ class Wallet extends Model
 
     public function exchangePrice(): HasOneThrough
     {
-        return $this->hasOneThrough(ExchangePrice::class, Market::class, 'base_currency', 'market_id', 'currency_symbol', 'id')->whereColumn('markets.exchange_id', 'exchange_prices.exchange_id');
+        return $this->hasOneThrough(ExchangePrice::class, Market::class, 'base_currency', 'market_id', 'currency_symbol', 'id');
     }
 }

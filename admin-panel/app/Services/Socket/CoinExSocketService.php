@@ -15,6 +15,8 @@ class CoinExSocketService
     private string $socketUrl = 'wss://socket.coinex.com/v2/spot';
 
     private array $coinsPrice = [];
+    private ?int $coinexID = null;
+    private array $marketIds = [];
 
     public function startListener(): void
     {
@@ -111,55 +113,45 @@ class CoinExSocketService
 
     private function updateCurrencyPrice(string $symbol, ?string $lastPrice, ?string $openPrice): void
     {
-        $baseCurrent = str_replace('USDT', '', $symbol);
+        $baseCurrency = str_replace('USDT', '', $symbol);
 
         if (
-            ! isset($this->coinsPrice[$baseCurrent]) ||
-            $this->coinsPrice[$baseCurrent]['last'] !== $lastPrice ||
-            $this->coinsPrice[$baseCurrent]['open'] !== $openPrice
+            ! isset($this->coinsPrice[$baseCurrency]) ||
+            $this->coinsPrice[$baseCurrency]['last'] !== $lastPrice ||
+            $this->coinsPrice[$baseCurrency]['open'] !== $openPrice
         ) {
-            echo $baseCurrent.': last->'.$lastPrice.PHP_EOL;
-            echo $baseCurrent.': open->'.$openPrice.PHP_EOL;
+            echo $baseCurrency.': last->'.$lastPrice.PHP_EOL;
+            echo $baseCurrency.': open->'.$openPrice.PHP_EOL;
 
             // Update cached prices
-            $this->coinsPrice[$baseCurrent] = [
+            $this->coinsPrice[$baseCurrency] = [
                 'last' => $lastPrice,
                 'open' => $openPrice,
             ];
 
-            // Update the database
-            $coinExExchange = Exchange::where('slug', 'coinex')->where('is_active', true)->first();
-            // Update the database
-
-            if ($coinExExchange) {
-                // Find the exchange price related to the market for CoinEx
-                $exchangePrice = ExchangePrice::where('market_id', function ($query) use ($baseCurrent) {
-                    $query->from('markets')
-                        ->where('base_currency', $baseCurrent)
-                        ->where('quote_currency', 'USDT')
-                        ->select('id');
-                })
-                    ->where('exchange_id', $coinExExchange->id)
+            if(is_null($this->coinexID)){
+                $coinExExchange = Exchange::query()
+                    ->where('slug', 'coinex')
+                    ->where('is_active', true)
                     ->first();
-
-                if (!$exchangePrice) {
-                    // If no existing exchange price, create a new one
-                    ExchangePrice::create([
-                        'market_id' => Market::where('base_currency', $baseCurrent)
-                            ->where('quote_currency', 'USDT')
-                            ->first()->id,
-                        'exchange_id' => $coinExExchange->id,
-                        'price' => $lastPrice,
-                        'open_price' => $openPrice,
-                    ]);
-                } else {
-                    // If the price has changed, update the existing exchange price
-                    $exchangePrice->update([
-                        'price' => $lastPrice,
-                        'open_price' => $openPrice,
-                    ]);
-                }
+                $this->coinexID = $coinExExchange->id;
             }
+            if(!isset($this->marketIds[$baseCurrency])){
+                $market = Market::query()
+                    ->where('base_currency', $baseCurrency)
+                    ->first();
+                $this->marketIds[$baseCurrency] = $market->id;
+            }
+                // Find the exchange price related to the market for CoinEx
+            ExchangePrice::query()
+                ->where('market_id', $this->marketIds[$baseCurrency])
+                ->where('exchange_id', $this->coinexID)
+                ->update([
+                    'price' => $lastPrice,
+                    'open_price' => $openPrice,
+                ]);
+
+
         }
     }
 }

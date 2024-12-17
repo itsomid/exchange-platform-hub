@@ -77,13 +77,13 @@ class AdminTableSeeder extends Seeder
                 'email' => 'h.rezaei@gmail.com',
                 'mobile' => '09109529484',
             ],
-            [
-                'id' => 6,
-                'first_name' => 'حسن',
-                'last_name' => 'رضایی',
-                'email' => 'a.arabgol@vista-group.ir',
-                'mobile' => '09109529484',
-            ],
+//            [
+//                'id' => 6,
+//                'first_name' => 'حسن',
+//                'last_name' => 'رضایی',
+//                'email' => 'a.arabgol@vista-group.ir',
+//                'mobile' => '09109529484',
+//            ],
         ];
     }
 

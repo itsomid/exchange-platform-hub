@@ -20,8 +20,6 @@ return new class extends Migration
             $table->string('quote_currency'); // e.g., USD
             $table->foreign('quote_currency')->references('symbol')->on('currencies')->onDelete('cascade');
 
-            $table->foreignIdFor(Exchange::class)->constrained()->restrictOnDelete();
-
             $table->decimal('min_trade_amount', 18, 8)->default(0);
             $table->decimal('max_trade_amount', 18, 8)->default(0);
 

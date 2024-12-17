@@ -45,24 +45,26 @@ class MarketSeeder extends Seeder
                 'quote_currency' => $marketData['quote_currency'],
                 'min_trade_amount' => $marketData['min_trade_amount'],
                 'max_trade_amount' => $marketData['max_trade_amount'],
-                'exchange_id' => Arr::random([$binance->id, $coinex->id]),
                 'is_active' => true,
             ]);
 
             // Insert price and exchange profit into the exchange_prices table for each market and exchange
             $exchangePrices = [
-                ['exchange_id' => $binance->id, 'price' => 45000.00, 'exchange_profit' => 0.01],  // Binance price and profit
-                ['exchange_id' => $coinex->id, 'price' => 45010.00, 'exchange_profit' => 0.01],  // CoinEx price and profit
+                ['market_id' => $market->id, 'exchange_id' => $binance->id, 'price' => 45000.00, 'exchange_profit' => 0.01],  // Binance price and profit
+                ['market_id' => $market->id, 'exchange_id' => $coinex->id, 'price' => 45010.00, 'exchange_profit' => 0.01],  // CoinEx price and profit
             ];
 
-            foreach ($exchangePrices as $exchangePriceData) {
-                ExchangePrice::create([
-                    'market_id' => $market->id,
-                    'exchange_id' => $exchangePriceData['exchange_id'],
-                    'price' => $exchangePriceData['price'],
-                    'exchange_profit' => $exchangePriceData['exchange_profit'],
-                ]);
-            }
+            $insertData = Arr::random($exchangePrices);
+            ExchangePrice::query()->create($insertData);
+
+//            foreach ($exchangePrices as $exchangePriceData) {
+//                ExchangePrice::create([
+//                    'market_id' => $market->id,
+//                    'exchange_id' => $exchangePriceData['exchange_id'],
+//                    'price' => $exchangePriceData['price'],
+//                    'exchange_profit' => $exchangePriceData['exchange_profit'],
+//                ]);
+//            }
         }
     }
 }
