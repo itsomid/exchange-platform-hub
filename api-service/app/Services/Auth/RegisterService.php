@@ -35,8 +35,6 @@ readonly class RegisterService
             resolve(UserRegisterRequestDTO::class)
                 ->setUsername($this->generateUsername($registerRequestDTO->getEmail()))
                 ->setEmail($registerRequestDTO->getEmail())
-                ->setFirstName($registerRequestDTO->getFirstName())
-                ->setLastName($registerRequestDTO->getLastName())
                 ->setIntroducerId($referralCodeModel?->id)
                 ->setHashedPassword(
                     Hash::make($registerRequestDTO->getPassword())

@@ -70,8 +70,6 @@ class RegisterController extends Controller
             resolve(RegisterRequestDTO::class)
                 ->setEmail($validatedData['email'])
                 ->setPassword($validatedData['password'])
-                ->setFirstName($validatedData['first_name'])
-                ->setLastName($validatedData['last_name'])
                 ->setIntroducerCode($validatedData['introducer_code'] ?? null)
                 ->setLengthVerificationToken(5)
                 ->setTokenExpirationDate(

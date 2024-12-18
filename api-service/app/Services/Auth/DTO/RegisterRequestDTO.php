@@ -6,10 +6,6 @@ use Carbon\Carbon;
 
 class RegisterRequestDTO
 {
-    private string $firstName;
-
-    private string $lastName;
-
     private string $email;
 
     private string $password;
@@ -19,36 +15,6 @@ class RegisterRequestDTO
     private int $lengthVerificationToken;
 
     private Carbon $tokenExpirationDate;
-
-    /**
-     * @return $this
-     */
-    public function setFirstName(string $firstName): self
-    {
-        $this->firstName = $firstName;
-
-        return $this;
-    }
-
-    public function getFirstName(): string
-    {
-        return $this->firstName;
-    }
-
-    /**
-     * @return $this
-     */
-    public function setLastName(string $lastName): self
-    {
-        $this->lastName = $lastName;
-
-        return $this;
-    }
-
-    public function getLastName(): string
-    {
-        return $this->lastName;
-    }
 
     /**
      * @return $this

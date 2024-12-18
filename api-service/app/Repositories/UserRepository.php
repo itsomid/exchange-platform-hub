@@ -19,9 +19,9 @@ class UserRepository implements UserRepositoryInterface
             ->updateOrCreate(
                 ['email' => $registerRequestDTO->getEmail()],
                 [
-                    'first_name' => $registerRequestDTO->getFirstName(),
+                    'first_name' => null,
                     'username' => $registerRequestDTO->getUsername(),
-                    'last_name' => $registerRequestDTO->getLastName(),
+                    'last_name' => null,
                     'password' => $registerRequestDTO->getHashedPassword(),
                     'introducer_code' => $registerRequestDTO->getIntroducerId(),
                 ]

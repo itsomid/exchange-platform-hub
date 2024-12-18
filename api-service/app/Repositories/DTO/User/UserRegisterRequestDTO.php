@@ -4,9 +4,6 @@ namespace App\Repositories\DTO\User;
 
 class UserRegisterRequestDTO
 {
-    private string $firstName;
-
-    private string $lastName;
 
     private string $email;
 
@@ -15,36 +12,6 @@ class UserRegisterRequestDTO
     private ?int $introducerId;
 
     private string $hashedPassword;
-
-    /**
-     * @return $this
-     */
-    public function setFirstName(string $firstName): self
-    {
-        $this->firstName = $firstName;
-
-        return $this;
-    }
-
-    public function getFirstName(): string
-    {
-        return $this->firstName;
-    }
-
-    /**
-     * @return $this
-     */
-    public function setLastName(string $lastName): self
-    {
-        $this->lastName = $lastName;
-
-        return $this;
-    }
-
-    public function getLastName(): string
-    {
-        return $this->lastName;
-    }
 
     /**
      * @return $this
