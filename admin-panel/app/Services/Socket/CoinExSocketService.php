@@ -17,9 +17,19 @@ class CoinExSocketService
     private array $coinsPrice = [];
     private ?int $coinexID = null;
     private array $marketIds = [];
+    private array $currentMarkets = [];
 
     public function startListener(): void
     {
+        if(is_null($this->coinexID)){
+            $coinExExchange = Exchange::query()
+                ->where('slug', 'coinex')
+                ->where('is_active', true)
+                ->first();
+            $this->coinexID = $coinExExchange->id;
+        }
+
+
         $reactConnector = new \React\Socket\Connector([
             'dns' => '1.1.1.1',
             'timeout' => 10,
@@ -29,17 +39,17 @@ class CoinExSocketService
 
         $connector($this->socketUrl)
             ->then(
-                function (WebSocket $conn) {
+                function (WebSocket $conn) use($loop) {
                     echo "Connected to WebSocket\n";
 
-                    // Send subscription message
-                    $subscribeMessage = [
-                        'method' => 'state.subscribe',
-                        'params' => ['market_list' => ['USDTUSDT','BTCUSDT', 'ETHUSDT', 'DOGEUSDT', 'TRXUSDT', 'BNBUSDT']],
-                        'id' => 1,
-                    ];
-                    $conn->send(json_encode($subscribeMessage));
+                    // Fetch initial markets and send subscription
+                    $this->currentMarkets = $this->fetchMarkets();
+                    $this->subscribeToMarkets($conn, $this->currentMarkets);
 
+                    // Monitor database changes in a periodic timer
+                    $loop->addPeriodicTimer(60, function () use ($conn) {
+                        $this->checkForMarketChanges($conn);
+                    });
                     // Handle incoming messages
                     $conn->on('message', function (MessageInterface $message) {
                         try {
@@ -128,20 +138,13 @@ class CoinExSocketService
                 'last' => $lastPrice,
                 'open' => $openPrice,
             ];
-
-            if(is_null($this->coinexID)){
-                $coinExExchange = Exchange::query()
-                    ->where('slug', 'coinex')
-                    ->where('is_active', true)
-                    ->first();
-                $this->coinexID = $coinExExchange->id;
-            }
             if(!isset($this->marketIds[$baseCurrency])){
                 $market = Market::query()
                     ->where('base_currency', $baseCurrency)
                     ->first();
                 $this->marketIds[$baseCurrency] = $market->id;
             }
+
                 // Find the exchange price related to the market for CoinEx
             ExchangePrice::query()
                 ->where('market_id', $this->marketIds[$baseCurrency])
@@ -152,6 +155,46 @@ class CoinExSocketService
                 ]);
 
 
+        }
+    }
+
+    private function fetchMarkets(): array
+    {
+        // Fetch current markets from the database
+        return Market::query()
+            ->whereHas('activeExchangePrice', function ($query) {
+                $query->where('exchange_id', $this->coinexID);
+            })->pluck('base_currency') ->map(fn($market) => $market . 'USDT')
+            ->toArray();
+    }
+
+    private function subscribeToMarkets(WebSocket $stream, array $markets): void
+    {
+        if (empty($markets)) {
+            echo "No markets to subscribe.\n";
+            return;
+        }
+
+        $subscribeMessage = [
+            'method' => 'state.subscribe',
+            'params' => ['market_list' =>$markets],
+            'id' => 1,
+        ];
+        $stream->send(json_encode($subscribeMessage));
+        echo "Subscribed to markets: " . implode(', ', $markets) . "\n";
+    }
+
+    private function checkForMarketChanges($stream): void
+    {
+        $newMarkets = $this->fetchMarkets();
+
+        // Compare current markets with the new list
+        if ($newMarkets !== $this->currentMarkets) {
+            echo "Market list updated. Resubscribing...\n";
+            $this->currentMarkets = $newMarkets;
+
+            // Send a new subscription with the updated list
+            $this->subscribeToMarkets($stream, $newMarkets);
         }
     }
 }
