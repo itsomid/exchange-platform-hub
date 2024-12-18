@@ -5,9 +5,11 @@ namespace App\Http\Controllers\V1\Wallet;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Wallet\GenerateAddressRequest;
 use App\Http\Resources\V1\Wallet\CoinAddressResource;
+use App\Http\Resources\V1\Wallet\WalletListsCollection;
 use App\Services\Wallet\DepositService;
 use App\Services\Wallet\DTO\Deposit\AddPendingDepositRequestDTO;
 use App\Services\Wallet\DTO\Wallet\GenerateAddressRequestDTO;
+use App\Services\Wallet\DTO\Wallet\WalletListsRequestDTO;
 use App\Services\Wallet\WalletService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -92,5 +94,15 @@ class WalletController extends Controller
         return response([
             'data' => new CoinAddressResource($res, $expirationDate),
         ]);
+    }
+
+    public function lists()
+    {
+        $responseDTO = $this->service->getLists(
+            resolve(WalletListsRequestDTO::class)
+                ->setUserId(Auth::id())
+        );
+
+        return new WalletListsCollection($responseDTO);
     }
 }

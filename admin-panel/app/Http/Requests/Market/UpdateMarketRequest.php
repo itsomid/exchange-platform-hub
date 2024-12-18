@@ -26,6 +26,7 @@ class UpdateMarketRequest extends FormRequest
             'max_trade_amount' => ['required', 'numeric', 'gt:min_trade_amount'],
             'exchange_profit'   => ['required', 'numeric', 'min:0'],
             'is_active'        => ['nullable', 'boolean'],
+            'exchange_id' => ['required', 'numeric', 'exists:exchanges,id'],
         ];
     }
     protected function prepareForValidation(): void

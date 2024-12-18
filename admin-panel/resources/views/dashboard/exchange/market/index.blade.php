@@ -102,10 +102,11 @@
                         <th>قیمت صرافی
 
                             <div class="badge rounded bg-label-success" dir="ltr">
-                                {{ $markets[0]->activeExchangePrices->exchange_profit > 0 ? '+' : '' }}{{$markets[0]->activeExchangePrices->exchange_profit * 100 }}
+                                {{ $markets[0]->activeExchangePrice->exchange_profit > 0 ? '+' : '' }}{{$markets[0]->activeExchangePrice->exchange_profit * 100 }}
                                 %
                             </div>
                         </th>
+                        <th>صرافی مرجع</th>
                         <th>حداقل مقدار معامله</th>
                         <th>جداکثر مقدار معامله</th>
                         <th>وضعیت</th>
@@ -140,7 +141,7 @@
                             <td class="">
                                 <h4 class="font-number text-heading h5">
 
-                                    <span class="ms-1">{{formatNumber($market->activeExchangePrices->price)}}</span>
+                                    <span class="ms-1">{{formatNumber($market->activeExchangePrice->price)}}</span>
 
                                     <small class="text-muted">USDT</small>
                                 </h4>
@@ -148,15 +149,18 @@
                             </td>
                             <td class="font-number">
                                 <div
-                                    class="badge rounded bg-label-{{ $market->activeExchangePrices->price_change_percentage < 0 ? 'danger' : 'success' }}"
+                                    class="badge rounded bg-label-{{ $market->activeExchangePrice->price_change_percentage < 0 ? 'danger' : 'success' }}"
                                     dir="ltr">
-                                    {{ $market->activeExchangePrices->price_change_percentage > 0 ? '+' : '' }}{{ number_format($market->activeExchangePrices->price_change_percentage, 2) }}
+                                    {{ $market->activeExchangePrice->price_change_percentage > 0 ? '+' : '' }}{{ number_format($market->activeExchangePrice->price_change_percentage, 2) }}
                                     %
                                 </div>
                             </td>
                             <td class="font-number text-heading h5">
-                                <span class="ms-1">{{formatNumber($market->activeExchangePrices->own_price)}}</span>
+                                <span class="ms-1">{{formatNumber($market->activeExchangePrice->own_price)}}</span>
                                 <small class="text-muted">USDT</small>
+                            </td>
+                            <td>
+                                {{ $market->activeExchangePrice->exchange->name }}
                             </td>
                             <td class="font-number">
                                 {{formatNumber($market->min_trade_amount,8)}}

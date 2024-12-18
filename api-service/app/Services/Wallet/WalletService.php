@@ -3,18 +3,23 @@
 namespace App\Services\Wallet;
 
 use App\Enums\BalanceOperationEnum;
+use App\Models\Wallet;
 use App\Repositories\Interfaces\WalletChainRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Services\Wallet\DTO\Wallet\GenerateAddressRequestDTO;
 use App\Services\Wallet\DTO\Wallet\GenerateAddressResponseDTO;
 use App\Services\Wallet\DTO\Wallet\UpdateBalanceRequestDTO;
+use App\Services\Wallet\DTO\Wallet\WalletListsResponseDTO;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Throwable;
 
 class WalletService
 {
-    public function __construct(private readonly WalletRepositoryInterface $walletRepository, private readonly WalletChainRepositoryInterface $walletChainRepository) {}
+    public function __construct(
+        private readonly WalletRepositoryInterface $walletRepository,
+        private readonly WalletChainRepositoryInterface $walletChainRepository,
+    ) {}
 
     public function generateAddress(GenerateAddressRequestDTO $requestDTO): GenerateAddressResponseDTO
     {
@@ -70,5 +75,25 @@ class WalletService
             return false;
         }
 
+    }
+
+    public function getLists(DTO\Wallet\WalletListsRequestDTO $requestDTO): array
+    {
+        $wallets = $this->walletRepository->getLists($requestDTO->getUserId());
+//dd($wallets);
+        return $wallets->map(fn (Wallet $wallet) => resolve(WalletListsResponseDTO::class)
+            ->setId($wallet->id)
+            ->setCurrency($wallet->currency_symbol)
+            ->setBalance($wallet->balance)
+            ->setLockedBalance($wallet->locked_balance)
+            ->setUsdtBalance(
+                $wallet->exchangePrice ?
+                bcmul($wallet->exchangePrice->price, $wallet->balance, 8) : $wallet->balance
+            )
+            ->setUsdtLockedBalance(
+                $wallet->exchangePrice ?
+                    bcmul($wallet->exchangePrice->price, $wallet->locked_balance, 8) : $wallet->locked_balance
+            )
+        )->toArray();
     }
 }

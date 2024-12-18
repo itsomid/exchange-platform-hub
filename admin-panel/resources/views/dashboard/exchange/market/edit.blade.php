@@ -22,13 +22,13 @@
                     </div>
                     <div class="d-flex gap-2 align-items-center my-3 justify-content-end  font-number">
                         <div
-                            class="badge rounded bg-label-{{ $market->activeExchangePrices->price_change_percentage < 0 ? 'danger' : 'success' }}"
+                            class="badge rounded bg-label-{{ $market->activeExchangePrice->price_change_percentage < 0 ? 'danger' : 'success' }}"
                             dir="ltr">
-                            {{ $market->activeExchangePrices->price > 0 ? '+' : '' }}{{ number_format($market->activeExchangePrices->price_change_percentage, 2) }}
+                            {{ $market->activeExchangePrice->price > 0 ? '+' : '' }}{{ number_format($market->activeExchangePrice->price_change_percentage, 2) }}
                             %
                         </div>
                         <h2 class="mb-0">
-                            ${{number_format($market->activeExchangePrices->price,2)}}
+                            ${{number_format($market->activeExchangePrice->price,2)}}
                         </h2>
 
                     </div>
@@ -45,9 +45,9 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-3 card-title">قیمت ارايه شده صرافی
                             <div
-                                class="badge rounded bg-label-{{ $market->activeExchangePrices->exchange_profit < 0 ? 'danger' : 'success' }}"
+                                class="badge rounded bg-label-{{ $market->activeExchangePrice->exchange_profit < 0 ? 'danger' : 'success' }}"
                                 dir="ltr">
-                                {{ $market->activeExchangePrices->exchange_profit > 0 ? '+' : '' }}{{$market->activeExchangePrices->exchange_profit * 100 }}%
+                                {{ $market->activeExchangePrice->exchange_profit > 0 ? '+' : '' }}{{$market->activeExchangePrice->exchange_profit * 100 }}%
                             </div>
                         </h5>
                         <div class="avatar-group d-flex align-items-center assigned-avatar">
@@ -66,10 +66,10 @@
                     <div class="d-flex gap-2 align-items-center my-3 justify-content-end font-number">
                         <div
                             class="badge rounded bg-label-{{ $market->price_change_percentage < 0 ? 'danger' : 'success' }}" dir="ltr">
-                            {{ $market->activeExchangePrices->price_change_percentage > 0 ? '+' : '' }}{{ number_format($market->activeExchangePrices->price_change_percentage, 2) }}%
+                            {{ $market->activeExchangePrice->price_change_percentage > 0 ? '+' : '' }}{{ number_format($market->activeExchangePrice->price_change_percentage, 2) }}%
                         </div>
                         <h2 class="mb-0">
-                            ${{number_format($market->activeExchangePrices->own_price,2)}}
+                            ${{number_format($market->activeExchangePrice->own_price,2)}}
                         </h2>
 
                     </div>
@@ -151,13 +151,28 @@
                                     <label class="form-label" for="exchange_profit">سود صرافی</label>
                                     <input name="exchange_profit" id="exchange_profit" class=" form-control"
                                            placeholder="سود صرافی"
-                                           value="{{formatNumber($market->activeExchangePrices->exchange_profit,2)}}"
+                                           value="{{formatNumber($market->activeExchangePrice->exchange_profit,2)}}"
                                            required>
                                     @error('exchange_profit')
                                     <small class="text-danger">{{$message}}</small>
                                     @enderror
                                 </div>
                             </div>
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label class="form-label" for="exchange_profit">صرافی مرجع</label>
+                                    <select name="exchange_id" id="" class="form-control">
+                                        @foreach($exchanges as $exchange)
+                                            <option @if($exchange->id === $market->activeExchangePrice->exchange_id) selected @endif value="{{ $exchange->id }}">{{ $exchange->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('exchange_id')
+                                    <small class="text-danger">{{$message}}</small>
+                                    @enderror
+                                </div>
+                            </div>
+
                         </div>
                         <div class="row">
                             <div class="col-md-6 mt-5">

@@ -8,6 +8,7 @@ use App\Models\ExchangePrice;
 use App\Models\Market;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Arr;
 
 class MarketSeeder extends Seeder
 {
@@ -49,18 +50,21 @@ class MarketSeeder extends Seeder
 
             // Insert price and exchange profit into the exchange_prices table for each market and exchange
             $exchangePrices = [
-                ['exchange_id' => $binance->id, 'price' => 45000.00, 'exchange_profit' => 0.01],  // Binance price and profit
-                ['exchange_id' => $coinex->id, 'price' => 45010.00, 'exchange_profit' => 0.01],  // CoinEx price and profit
+                ['market_id' => $market->id, 'exchange_id' => $binance->id, 'price' => 45000.00, 'exchange_profit' => 0.01],  // Binance price and profit
+                ['market_id' => $market->id, 'exchange_id' => $coinex->id, 'price' => 45010.00, 'exchange_profit' => 0.01],  // CoinEx price and profit
             ];
 
-            foreach ($exchangePrices as $exchangePriceData) {
-                ExchangePrice::create([
-                    'market_id' => $market->id,
-                    'exchange_id' => $exchangePriceData['exchange_id'],
-                    'price' => $exchangePriceData['price'],
-                    'exchange_profit' => $exchangePriceData['exchange_profit'],
-                ]);
-            }
+            $insertData = Arr::random($exchangePrices);
+            ExchangePrice::query()->create($insertData);
+
+//            foreach ($exchangePrices as $exchangePriceData) {
+//                ExchangePrice::create([
+//                    'market_id' => $market->id,
+//                    'exchange_id' => $exchangePriceData['exchange_id'],
+//                    'price' => $exchangePriceData['price'],
+//                    'exchange_profit' => $exchangePriceData['exchange_profit'],
+//                ]);
+//            }
         }
     }
 }

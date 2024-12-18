@@ -27,7 +27,7 @@ class WalletService
             // Get the current market price for the wallet's currency
             $market = $wallet->currency->baseMarkets->first(); // Assuming you have a relationship in the Currency model
 
-            $currencyPrice = $market ? $market->activeExchangePrices->price : 1;
+            $currencyPrice = $market ? $market->activeExchangePrice->price : 1;
 
             $totalAssetsValue += $wallet->balance * $currencyPrice;
 //
