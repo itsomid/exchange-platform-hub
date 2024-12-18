@@ -91,6 +91,19 @@
                                     @enderror
                                 </div>
                             </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label class="form-label" for="exchange_profit">صرافی مرجع</label>
+                                    <select name="exchange_id" id="" class="form-control">
+                                        @foreach($exchanges as $exchange)
+                                            <option @if(old('exchange_id') === $exchange->id) selected @endif value="{{ $exchange->id }}">{{ $exchange->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('exchange_id')
+                                    <small class="text-danger">{{$message}}</small>
+                                    @enderror
+                                </div>
+                            </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mt-5">

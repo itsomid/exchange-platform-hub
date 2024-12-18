@@ -32,8 +32,7 @@ class Market extends Model
     }
     public function activeExchange()
     {
-        return $this->hasOneThrough(Exchange::class, ExchangePrice::class, 'market_id', 'id', 'id', 'exchange_id')
-            ->where('exchanges.is_active', true); // Filter
+        return $this->hasOneThrough(Exchange::class, ExchangePrice::class, 'market_id', 'id', 'id', 'exchange_id');
     }
 
     public function activeExchangePrice(): HasOne

@@ -25,15 +25,16 @@ class MarketController extends Controller
 
     public function create()
     {
-
+        $exchanges = Exchange::query()->orderBy('priority')->get();
         $currencies = Currency::all();
-        return view('dashboard.exchange.market.create', ['currencies' => $currencies]);
+        return view('dashboard.exchange.market.create', ['currencies' => $currencies, 'exchanges' => $exchanges]);
     }
 
     public function edit(Market $market)
     {
-        $market->load(['baseCurrency', 'quoteCurrency', 'activeExchangePrices']);
-        return view('dashboard.exchange.market.edit', ['market' => $market]);
+        $market->load(['baseCurrency', 'quoteCurrency', 'activeExchangePrice']);
+        $exchanges = Exchange::query()->orderBy('priority')->get();
+        return view('dashboard.exchange.market.edit', ['market' => $market, 'exchanges' => $exchanges]);
     }
 
     public function update(UpdateMarketRequest $request, Market $market)
@@ -45,8 +46,9 @@ class MarketController extends Controller
             'max_trade_amount' => $request->max_trade_amount,
             'is_active' => $request->has('is_active') ? $request->is_active : false,
         ]);
-         $market->activeExchangePrices->exchange_profit = $request->exchange_profit;
-        $market->activeExchangePrices->save();
+        $market->activeExchangePrice->exchange_profit = $request->exchange_profit;
+        $market->activeExchangePrice->exchange_id = $request->exchange_id;
+        $market->activeExchangePrice->save();
         // Redirect back with a success message
         return redirect()
             ->route('admin.market.index')
