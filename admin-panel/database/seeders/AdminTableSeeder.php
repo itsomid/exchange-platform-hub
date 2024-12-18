@@ -77,13 +77,13 @@ class AdminTableSeeder extends Seeder
                 'email' => 'h.rezaei@gmail.com',
                 'mobile' => '09109529484',
             ],
-//            [
-//                'id' => 6,
-//                'first_name' => 'حسن',
-//                'last_name' => 'رضایی',
-//                'email' => 'a.arabgol@vista-group.ir',
-//                'mobile' => '09109529484',
-//            ],
+            [
+                'id' => 6,
+                'first_name' => 'آریا',
+                'last_name' => 'عرب گل',
+                'email' => 'a.arabgol@vista-group.ir',
+                'mobile' => '09109529485',
+            ],
         ];
     }
 
@@ -91,7 +91,7 @@ class AdminTableSeeder extends Seeder
     {
         return [
             [
-                'id' => 6,
+                'id' => 7,
                 'first_name' => 'حسین',
                 'last_name' => 'زکایی',
                 'email' => 'h.zokaei@gmail.com',
@@ -105,21 +105,21 @@ class AdminTableSeeder extends Seeder
         return [
 
             [
-                'id' => 7,
+                'id' => 8,
                 'first_name' => 'آرین',
                 'last_name' => 'هاشمی',
                 'email' => 'fazeli@gmail.com',
                 'mobile' => '09913233751',
             ],
             [
-                'id' => 8,
+                'id' => 9,
                 'first_name' => 'گلناز',
                 'last_name' => 'فرهمند',
                 'email' => 'farahmand@gmail.com',
                 'mobile' => '09399297035',
             ],
             [
-                'id' => 9,
+                'id' => 10,
                 'first_name' => 'سهراب',
                 'last_name' => 'کلانتری',
                 'email' => 'sohrab.kalantari@gmail.com',
