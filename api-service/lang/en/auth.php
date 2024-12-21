@@ -32,6 +32,7 @@ return [
     ],
     'two-factor' => [
         'save-secret' => '2FA setup completed successfully.',
+        'disable-success' => '2FA has been successfully disabled.',
     ],
     'too_many_attempts' => 'Too many attempts. Please try again later.',
 ];

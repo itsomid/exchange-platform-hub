@@ -4,8 +4,10 @@ namespace App\Providers;
 
 use App\Repositories\CurrencyRepository;
 use App\Repositories\DepositRepository;
+use App\Repositories\EmailOTPRepository;
 use App\Repositories\Interfaces\CurrencyRepositoryInterface;
 use App\Repositories\Interfaces\DepositRepositoryInterface;
+use App\Repositories\Interfaces\EmailOTPRepositoryInterface;
 use App\Repositories\Interfaces\ReferralCodeRepositoryInterface;
 use App\Repositories\Interfaces\ReferralCodeUsageRepositoryInterface;
 use App\Repositories\Interfaces\UserEmailVerificationInterface;
@@ -36,6 +38,7 @@ class RepositoryServiceProvider extends ServiceProvider
         app()->bind(DepositRepositoryInterface::class, DepositRepository::class);
         app()->bind(ReferralCodeRepositoryInterface::class, ReferralCodeRepository::class);
         app()->bind(ReferralCodeUsageRepositoryInterface::class, ReferralCodeUsageRepository::class);
+        app()->bind(EmailOTPRepositoryInterface::class, EmailOTPRepository::class);
     }
 
     /**

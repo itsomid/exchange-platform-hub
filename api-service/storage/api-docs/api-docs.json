@@ -711,6 +711,78 @@
                 ]
             }
         },
+        "/api/v1/auth/2fa/disable": {
+            "post": {
+                "tags": [
+                    "Two-Factor Authentication"
+                ],
+                "summary": "Disable two-factor authentication",
+                "description": "This endpoint disables two-factor authentication (2FA) for the authenticated user.",
+                "operationId": "disableTwoFactor",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DisableTwoFactorRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Two-factor authentication disabled successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Two-factor authentication disabled successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation errors",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "additionalProperties": [
+                                                {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The 2fa field is required."
+                                                    },
+                                                    "property": "field"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/deposit-withdraw/config": {
             "post": {
                 "tags": [
@@ -1301,6 +1373,21 @@
                 },
                 "type": "object"
             },
+            "DisableTwoFactorRequest": {
+                "title": "DisableTwoFactorRequest",
+                "description": "Disable Two-Factor Authentication Request",
+                "required": [
+                    "2fa"
+                ],
+                "properties": {
+                    "2fa": {
+                        "description": "The 6-digit two-factor authentication code.",
+                        "type": "integer",
+                        "example": 123456
+                    }
+                },
+                "type": "object"
+            },
             "EmailVerificationRequest": {
                 "required": [
                     "token"
@@ -1359,16 +1446,6 @@
                     "password"
                 ],
                 "properties": {
-                    "first_name": {
-                        "description": "The user's first name.",
-                        "type": "string",
-                        "maxLength": 255
-                    },
-                    "last_name": {
-                        "description": "The user's last name.",
-                        "type": "string",
-                        "maxLength": 255
-                    },
                     "email": {
                         "description": "The user's email address.",
                         "type": "string",

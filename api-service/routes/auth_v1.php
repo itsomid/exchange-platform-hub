@@ -20,5 +20,6 @@ Route::post('/reset-password', [\App\Http\Controllers\V1\Auth\ForgetPasswordCont
 
 Route::prefix('/2fa')->middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('setup', [\App\Http\Controllers\V1\Auth\TwoFactorController::class, 'setup'])->name('2fa.setup');
-    Route::post('save-secret', [\App\Http\Controllers\V1\Auth\TwoFactorController::class, 'saveSecret'])->name('2fa.save');
+    Route::post('save-secret', [\App\Http\Controllers\V1\Auth\TwoFactorController::class, 'saveSecret'])->name('2fa.save')->middleware(\App\Http\Middleware\VerifyOTPEmailMiddleware::class.':'.\App\Enums\EmailOTPActionEnum::TWO_FACTOR_SETUP->value);
+    Route::post('disable', [\App\Http\Controllers\V1\Auth\TwoFactorController::class, 'disable'])->name('2fa.disable');
 });

@@ -3,6 +3,8 @@
 namespace App\Http\Requests\V1\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class SaveSecretRequest extends FormRequest
 {
@@ -43,7 +45,11 @@ class SaveSecretRequest extends FormRequest
     {
         return [
             '2fa' => ['required'],
-            'secret' => ['required'],
+            'secret' => ['required', function ($attribute, $value, $fail) {
+                if (!empty(Auth::user()->two_factor_secret)){
+                    $fail('You have already set up 2FA.');
+                }
+            }],
         ];
     }
 }
