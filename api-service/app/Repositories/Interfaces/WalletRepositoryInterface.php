@@ -14,4 +14,6 @@ interface WalletRepositoryInterface
     public function updateBalance(string $symbol, int $userId, string $amount): void;
 
     public function getLists(int $getUserId): ?Collection;
+
+    public function getOrCreateWallet(int $userId, string $symbol): Wallet;
 }
