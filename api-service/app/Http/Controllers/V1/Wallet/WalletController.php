@@ -95,6 +95,37 @@ class WalletController extends Controller
             'data' => new CoinAddressResource($res, $expirationDate),
         ]);
     }
+    /**
+     * @OA\Get(
+     *     path="/api/v1/wallets/lists",
+     *     summary="List User Wallets",
+     *     description="Retrieve a list of the authenticated user's wallets. Displays wallet balances and their values in USDT.",
+     *     operationId="listUserWallets",
+     *     tags={"Wallet"},
+     *     security={{"sanctum": {}}},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of wallets retrieved successfully.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *              @OA\Property(
+     *               property="data",
+     *               type="array",
+     *           @OA\Items(ref="#/components/schemas/WalletListsListCollection")
+     *           )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
+     *         )
+     *     )
+     * )
+     */
 
     public function lists()
     {

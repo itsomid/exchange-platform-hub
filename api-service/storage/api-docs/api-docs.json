@@ -1275,6 +1275,57 @@
                     }
                 ]
             }
+        },
+        "/api/v1/wallets/lists": {
+            "get": {
+                "tags": [
+                    "Wallet"
+                ],
+                "summary": "List User Wallets",
+                "description": "Retrieve a list of the authenticated user's wallets. Displays wallet balances and their values in USDT.",
+                "operationId": "listUserWallets",
+                "responses": {
+                    "200": {
+                        "description": "List of wallets retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/WalletListsListCollection"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -1782,6 +1833,41 @@
                         "description": "The addresss expiration date",
                         "type": "string",
                         "example": "2025-01-12 15:05:01"
+                    }
+                },
+                "type": "object"
+            },
+            "WalletListsListCollection": {
+                "properties": {
+                    "id": {
+                        "description": "Unique identifier of the wallet.",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "currency": {
+                        "description": "The currency symbol of the wallet.",
+                        "type": "string",
+                        "example": "BTC"
+                    },
+                    "balance": {
+                        "description": "The available balance of the wallet.",
+                        "type": "string",
+                        "example": "0.12345"
+                    },
+                    "frozen_balance": {
+                        "description": "The frozen (locked) balance of the wallet.",
+                        "type": "string",
+                        "example": "0.01234"
+                    },
+                    "usdt_balance": {
+                        "description": "The available balance of the wallet in USDT.",
+                        "type": "string",
+                        "example": "500.25"
+                    },
+                    "usdt_frozen_balance": {
+                        "description": "The frozen (locked) balance of the wallet in USDT.",
+                        "type": "string",
+                        "example": "10.50"
                     }
                 },
                 "type": "object"
