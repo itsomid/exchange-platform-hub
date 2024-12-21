@@ -39,6 +39,11 @@ class Currency extends Model
     {
         return $this->hasMany(NodeProvider::class,'currency_id');
     }
+
+    public function wallets()
+    {
+        return $this->hasMany(Wallet::class,'currency_symbol');
+    }
     public function coinLogo(): string
     {
         $logoPath = storage_path("app/public/coins/{$this->logo}");

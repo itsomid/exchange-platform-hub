@@ -23,6 +23,7 @@ use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\User\UserFinancialBlockController;
 use App\Http\Controllers\User\UserSecurityController;
 use App\Http\Controllers\User\UserWalletController;
+use App\Http\Controllers\Transaction\TransactionController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -80,6 +81,8 @@ Route::get('/users/financial-status/mass-block', [UserFinancialBlockController::
 Route::post('/users/financial-status/mass-block', [UserFinancialBlockController::class, 'storeMassBlock'])->name('user.financial-block.store-mass-block');
 
 Route::get('/users/{user}/wallets',[UserWalletController::class,'userWallets'])->name('wallet.index')->can('wallet');
+Route::get('/users/{user}/wallets/{wallet}/{type}',[UserWalletController::class,'walletDetails'])->name('wallet.detail')->can('wallet');
+
 //Route::get('/users/2fa', [UserSecurityController::class, ''])->name('profile.2fa.edit');
 //Route::get('/users/{user}/tokens', [UserTokenController::class, 'twoFAEdit'])->name('user.token.index')->can('user.edit');
 //Route::patch('/users/{user}/tokens/{token}/revoke', [UserTokenController::class, 'revoke'])->name('user.token.revoke')->can('user.edit');
@@ -128,10 +131,11 @@ Route::get('/exchange/markets/create',[MarketController::class,'create'])->name(
 Route::post('/exchange/markets',[MarketController::class,'store'])->name('market.store')->can('market');
 Route::get('/exchange/markets/{market}/edit',[MarketController::class,'edit'])->name('market.edit')->can('market');
 Route::patch('/exchange/markets/{market}',[MarketController::class,'update'])->name('market.update')->can('market');
-
 Route::get('/exchange/ref-exchanges',[RefExchangeController::class,'index'])->name('exchange.index')->can('ref-exchanges');
 
-
+Route::prefix('transactions')->group(function (){
+   Route::get('/',[TransactionController::class,'index'])->name('transaction.index')->can('transaction');
+});
 
 
 

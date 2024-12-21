@@ -23,21 +23,6 @@
     }
   }
 
-  #{$parent}.nav-tabs {
-    .nav-link {
-      &.waves-effect {
-        .waves-ripple {
-          background: radial-gradient(
-            rgba($background, 0.2) 0,
-            rgba($background, 0.3) 40%,
-            rgba($background, 0.4) 50%,
-            rgba($background, 0.5) 60%,
-            rgba($white, 0) 70%
-          );
-        }
-      }
-    }
-  }
 
   #{$parent}.nav-tabs .nav-link.active,
   #{$parent}.nav-tabs .nav-link.active {

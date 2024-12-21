@@ -18,12 +18,12 @@ class ReferralCodeFactory extends Factory
      */
     public function definition(): array
     {
-        $friend_fee = $this->faker->randomFloat(0, 0, 30);
+        $introducer_fee = $this->faker->randomElement([5, 10, 15, 20, 25, 30]);
         return [
             'user_id' => User::factory(), // Generate a user who is the introducer
             'code' => ReferralCode::generateReferralCode(), // Generate a unique referral code
-            'friend_fee' => $friend_fee, // Random friend fee
-            'introducer_fee' => 30 - $friend_fee, // Random introducer fee
+            'introducer_fee' => $introducer_fee, // Random introducer fee
+            'friend_fee' => 30 - $introducer_fee, // Random friend fee
             'usage_limit' => $this->faker->optional()->numberBetween(1, 100), // Optional usage limit
         ];
     }

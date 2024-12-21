@@ -16,9 +16,14 @@
                                 <div class="col-md-3">
                                     <div class="form-group mt-3">
                                         <label for="type">نوع تراکنش:</label>
-                                        <select name="type" class="form-control" id="type" onclick="toggleDepositType()" onchange="toggleDepositType()">
-                                            <option value="deposit"  {{request()->has('type') && request()->input('type') == 'deposit' ? 'selected' : "" }}>واریز (deposit)</option>
-                                            <option value="buy"      {{request()->has('type') && request()->input('type') == 'buy'     ? 'selected' : "" }}>   خرید (buy) </option>
+                                        <select name="type" class="form-control" id="type" onclick="toggleDepositType()"
+                                                onchange="toggleDepositType()">
+                                            <option value="deposit" {{request()->has('type') && request()->input('type') == 'deposit' ? 'selected' : "" }}>
+                                                واریز (deposit)
+                                            </option>
+                                            <option value="buy" {{request()->has('type') && request()->input('type') == 'buy'     ? 'selected' : "" }}>
+                                                خرید (buy)
+                                            </option>
                                         </select>
                                     </div>
                                 </div>
@@ -26,9 +31,9 @@
                                     <div class="form-group mt-3">
                                         <label for="deposit_type">نوع واریز</label>
                                         <select name="deposit_type" class="form-control" id="deposit_type">
-                                            <option value=""> همه </option>
+                                            <option value=""> همه</option>
 
-                                        @foreach(\App\Enums\DepositTypeEnum::TYPE_LABEL as $key=>$case)
+                                            @foreach(\App\Enums\DepositStatusEnum::TYPE_LABEL as $key=>$case)
                                                 <option value="{{$key}}" {{request()->has('deposit_type') && request()->input('deposit_type') == $key ? 'selected' : "" }}>
                                                     {{$case}}
                                                 </option>
@@ -39,20 +44,26 @@
                                 <div class="col-md-3">
                                     <div class="form-group mt-3">
                                         <label class="form-label" for="from_date">از تاریخ:</label>
-                                        <input name="from_date" type="text" id="from_date" class="form-control" placeholder="از تاریخ" value="{{old('from_date') ?? request()->input('from_date')}}" data-jdp autocomplete="off">
+                                        <input name="from_date" type="text" id="from_date" class="form-control"
+                                               placeholder="از تاریخ"
+                                               value="{{old('from_date') ?? request()->input('from_date')}}" data-jdp
+                                               autocomplete="off">
                                         @error('from_date')<small class="text-danger">{{$message}}</small>@enderror
                                     </div>
                                 </div>
                                 <div class="col-md-3">
                                     <div class="form-group mt-3">
                                         <label class="form-label" for="to_date">تا تاریخ:</label>
-                                        <input name="to_date" type="text" id="to_date" class="form-control" placeholder="تا تاریخ" value="{{old('to_date') ?? request()->input('to_date')}}" data-jdp autocomplete="off">
+                                        <input name="to_date" type="text" id="to_date" class="form-control"
+                                               placeholder="تا تاریخ"
+                                               value="{{old('to_date') ?? request()->input('to_date')}}" data-jdp
+                                               autocomplete="off">
                                         @error('to_date')<small class="text-danger">{{$message}}</small>@enderror
                                     </div>
                                 </div>
                                 <div class="col-md-2">
                                     <label class="mt-3"> </label>
-                                    <button type="submit"  class="btn btn-primary w-100 text-white" >فیلتر</button>
+                                    <button type="submit" class="btn btn-primary w-100 text-white">فیلتر</button>
                                 </div>
                             </div>
                         </form>
@@ -68,7 +79,8 @@
                     <div class="card h-100">
                         <div class="card-header d-flex justify-content-between mb-5">
                             <div class="card-title mb-0">
-                                <h5 class="mb-0">نمودار مجموع {{request()->input('type') == 'deposit' ? 'واریز' : "خرید" }}</h5>
+                                <h5 class="mb-0">نمودار
+                                    مجموع {{request()->input('type') == 'deposit' ? 'واریز' : "خرید" }}</h5>
                                 <small class="text-muted">{{request()->input('time_span',7)}} روز اخیر</small>
                             </div>
                         </div>
@@ -146,7 +158,7 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             toggleDepositType();
         });
     </script>

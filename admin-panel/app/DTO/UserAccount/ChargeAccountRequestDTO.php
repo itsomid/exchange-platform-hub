@@ -2,7 +2,7 @@
 
 namespace App\DTO\UserAccount;
 
-use App\Enums\DepositTypeEnum;
+use App\Enums\DepositStatusEnum;
 
 class ChargeAccountRequestDTO
 {
@@ -14,7 +14,7 @@ class ChargeAccountRequestDTO
 
     private ?int $adminId = null;
 
-    private DepositTypeEnum $depositType;
+    private DepositStatusEnum $depositType;
 
     /**
      * @return $this
@@ -91,7 +91,7 @@ class ChargeAccountRequestDTO
         return $this->adminId;
     }
 
-    public function getDepositType(): DepositTypeEnum
+    public function getDepositType(): DepositStatusEnum
     {
         return $this->depositType;
     }
@@ -99,7 +99,7 @@ class ChargeAccountRequestDTO
     /**
      * @return $this
      */
-    public function setDepositType(DepositTypeEnum $depositType): self
+    public function setDepositType(DepositStatusEnum $depositType): self
     {
         $this->depositType = $depositType;
 

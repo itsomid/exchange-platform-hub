@@ -17,7 +17,7 @@ class WalletService
      * @param  \App\Models\User  $user
      * @return float
      */
-    public function totalAssets(User $user)
+    public function totalAssetsValue(User $user)
     {
         // Initialize the total assets value
         $totalAssetsValue = 0;
@@ -34,6 +34,28 @@ class WalletService
         }
 
         return $totalAssetsValue;
+    }
+
+    public function specificAssetValue(User $user, string $currency_symbol)
+    {
+        // Initialize the specific asset value
+        $specificAssetValue = 0;
+
+        // Loop through the user's wallets
+        foreach ($user->wallets as $wallet) {
+            // Check if the wallet's currency matches the provided currency ID
+            if ($wallet->currency_symbol === $currency_symbol) {
+                // Get the current market price for the wallet's currency
+                $market = $wallet->currency->baseMarkets->first(); // Assuming you have a relationship in the Currency model
+
+                $currencyPrice = $market ? $market->activeExchangePrice->price : 1;
+
+                // Add the wallet's value to the specific asset value
+                $specificAssetValue += $wallet->balance * $currencyPrice;
+            }
+        }
+
+        return $specificAssetValue;
     }
 
     public function updateBalance(UpdateBalanceRequestDTO $requestDTO): bool

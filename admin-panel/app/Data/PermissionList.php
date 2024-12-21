@@ -58,6 +58,9 @@ class PermissionList
             ['ref-exchanges','مدیریت صرافی های مرجع'],
             ['wallet','مدیریت کیف پول ها'],
 
+            ['transaction','مدیریت تراکنش ها']
+
+
         ];
 
         return array_map(fn($permission) => [$permission[0], $permission[1]], $permissions);

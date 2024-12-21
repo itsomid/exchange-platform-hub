@@ -58,17 +58,6 @@
   .list-group-item.active {
     background-color: rgba-to-hex(rgba($background, 0.16), $card-bg);
     color: $background;
-    &.waves-effect {
-      .waves-ripple {
-        background: radial-gradient(
-          rgba($background, 0.2) 0,
-          rgba($background, 0.3) 40%,
-          rgba($background, 0.4) 50%,
-          rgba($background, 0.5) 60%,
-          rgba($black, 0) 70%
-        );
-      }
-    }
   }
 }
 

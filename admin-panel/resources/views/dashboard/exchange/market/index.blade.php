@@ -135,7 +135,6 @@
                                     {{--                                         width="50px">--}}
                                     <div class="ms-3">{{$market->base_currency}}/{{$market->quote_currency}}</div>
                                 </div>
-
                             </td>
 
                             <td class="">

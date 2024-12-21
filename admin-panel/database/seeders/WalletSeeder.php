@@ -24,17 +24,37 @@ class WalletSeeder extends Seeder
                 \DB::table('wallets')->insert([
                     'user_id' => $user->id,
                     'currency_symbol' => $currency,
-                    'balance' => $this->generateRandomBalance(),
-                    'locked_balance' => $this->generateRandomBalance(),
+                    'balance' => $this->generateRealisticBalance($currency),
+                    'locked_balance' => $this->generateRealisticBalance($currency),
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
             }
         }
     }
-    private function generateRandomBalance()
+
+    private function generateRealisticBalance(string $currency)
     {
-        // Generate a random balance between 0 and 1000 with 8 decimal places
-        return rand(0, 1000) + rand(0, 99999999) / 100000000;
+        switch (strtoupper($currency)) {
+            case 'BTC':
+                return $this->randomFloat(0, 10, 8);
+            case 'ETH':
+                return $this->randomFloat(0, 100, 8);
+            case 'DOGE':
+                return $this->randomFloat(0, 100000, 2);
+            case 'BNB':
+                return $this->randomFloat(0, 100, 8);
+            case 'USDT':
+                return $this->randomFloat(0, 10000, 2);
+            default:
+                return $this->randomFloat(0, 1000, 8); // Default range for other currencies
+        }
     }
+
+    private function randomFloat(float $min, float $max, int $decimals): float
+    {
+        $scale = pow(10, $decimals);
+        return mt_rand($min * $scale, $max * $scale) / $scale;
+    }
+
 }

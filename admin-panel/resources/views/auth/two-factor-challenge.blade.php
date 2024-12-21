@@ -51,7 +51,7 @@
                             @enderror
                         </div>
                         <button
-                            class="btn btn-primary w-100 waves-effect waves-float waves-light"
+                            class="btn btn-primary w-100"
                             tabindex="0" type="submit">بررسی کد<span
                                 class="MuiTouchRipple-root mui-w0pj6f"></span>
                         </button>

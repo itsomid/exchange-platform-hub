@@ -39,10 +39,6 @@ class UserFactory extends Factory
             // Create a referral code for the user
             ReferralCode::factory()->create([
                 'user_id' => $user->id,  // Associate the referral code with the created user
-                'code' => ReferralCode::generateReferralCode(),  // Generate a unique referral code
-                'friend_fee' => $this->faker->randomFloat(0, 0, 30),  // Random friend fee
-                'introducer_fee' => 30 - $this->faker->randomFloat(0, 0, 30),  // Introducer fee
-                'usage_limit' => $this->faker->optional()->numberBetween(1, 100),  // Optional usage limit
             ]);
         });
     }

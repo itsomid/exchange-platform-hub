@@ -6,10 +6,12 @@
             <div class="card mb-6">
                 <div class="user-profile-header d-flex flex-column flex-lg-row text-sm-start text-center m-2">
                     <div class="d-flex align-items-center">
-                        <img class="img-fluid rounded" src="http://127.0.0.1:8000/images/avatars/avatar.webp" height="50" width="50" alt="User avatar">
+                        <img class="img-fluid rounded" src="http://127.0.0.1:8000/images/avatars/avatar.webp"
+                             height="50" width="50" alt="User avatar">
                     </div>
                     <div class="flex-grow-1">
-                        <div class="d-flex align-items-md-end align-items-sm-start align-items-center justify-content-md-between justify-content-start mx-5 flex-md-row flex-column gap-4">
+                        <div
+                            class="d-flex align-items-md-end align-items-sm-start align-items-center justify-content-md-between justify-content-start mx-5 flex-md-row flex-column gap-4">
                             <div class="user-profile-info">
                                 <h4 class="mb-2">{{$user->fullname()}}</h4>
                                 <ul class="list-inline mb-0 d-flex align-items-center flex-wrap justify-content-sm-start justify-content-center gap-4 my-2">
@@ -28,9 +30,7 @@
 
                                 </ul>
                             </div>
-                            <a href="javascript:void(0)" class="btn btn-primary mb-1 waves-effect waves-light">
-                                <i class="ti ti-user-check ti-xs me-2"></i>Connected
-                            </a>
+
                         </div>
                     </div>
                 </div>
@@ -47,14 +47,14 @@
                     </div>
                     <div class="dropdown">
                         <button
-                            class="btn btn-text-secondary rounded-pill text-muted border-0 p-2 me-n1 waves-effect waves-light"
+                            class="btn btn-text-secondary rounded-pill text-muted border-0 p-2 me-n1 "
                             type="button" id="earningReportsId" data-bs-toggle="dropdown" aria-haspopup="true"
                             aria-expanded="false">
                             <i class="fa-regular fa-grip-dots-vertical ti-md text-muted"></i>
                         </button>
                         <div class="dropdown-menu dropdown-menu-end" aria-labelledby="earningReportsId">
-                            <a class="dropdown-item waves-effect" href="javascript:void(0);">View More</a>
-                            <a class="dropdown-item waves-effect" href="javascript:void(0);">Delete</a>
+                            <a class="dropdown-item " href="javascript:void(0);">View More</a>
+                            <a class="dropdown-item " href="javascript:void(0);">Delete</a>
                         </div>
                     </div>
                     <!-- </div> -->
@@ -153,19 +153,30 @@
                             </div>
                             <h4 class="mb-0">کیف پول {{$wallet->currency->name}}</h4>
                         </div>
-                        <h3 class="mt-4 mb-1">{{$wallet->balance}} <span class="text-muted h4">{{$wallet->currency_symbol}}</span></h3>
+                        <h3 class="mt-4 mb-1">{{$wallet->balance}}
+                            <span class="text-muted h4">{{$wallet->currency_symbol}}</span>
+                        </h3>
                         <p class="mb-5">
                             <small class="text-muted fw-light">USDT</small>
-                            <span class="text-muted  me-2">103,305.27</span>
+                            <span class="text-muted  me-2">{{number_format($wallet->assetValue,2)}}</span>
                         </p>
-                        <p class="mb-0">
-                            <small class="text-danger">موجودی مسدود شده:</small>
-                            <small class="text-danger fw-bold ms-2">103,305.27 <span class="text-danger ">USDT</span></small>
-                        </p>
+                        @if($wallet->locked_balance !=0)
+                            <p class="mb-0">
+                                <small class="text-danger">موجودی مسدود شده:</small>
+                                <small class="text-danger fw-bold ms-2">{{$wallet->locked_balance}}<span
+                                        class="text-danger ">USDT</span></small>
+                            </p>
+                        @endif
+
                     </div>
                     <div class="card-body border-top">
-                        <button type="button" class="btn btn-primary me-2">مشاهده جزئیات</button>
-                        <button type="button" class="btn btn-danger waves-effect waves-light">مسدود کردن</button>
+                        <a href="{{route('admin.wallet.detail',['user'=>$user->id,'wallet'=>$wallet->id,'type'=>'deposit'])}}"
+                           class="btn btn-label-primary me-2">مشاهده جزئیات</a>
+                        <button type="button" class="btn btn-icon btn-primary">
+                            <span class="fa-regular fa-plus fa-xl"></span>
+                        </button>
+                        {{--                        <button type="button" class="btn btn-danger me-2">مسدود کردن موجودی</button>--}}
+                        {{--                        <button type="button" class="btn btn-success">آزادسازی موجودی</button>--}}
                     </div>
                 </div>
             </div>

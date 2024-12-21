@@ -123,17 +123,7 @@
 
   #{$parent} {
     color: $label-color;
-    &.waves-effect {
-      .waves-ripple {
-        background: radial-gradient(
-          rgba($background, 0.2) 0,
-          rgba($background, 0.3) 40%,
-          rgba($background, 0.4) 50%,
-          rgba($background, 0.5) 60%,
-          rgba($white, 0) 70%
-        );
-      }
-    }
+
 
     &:hover {
       border-color: $border;
@@ -220,17 +210,7 @@
     border-color: $border !important;
     background: $label-background !important;
     @include box-shadow($btn-box-shadow);
-    &.waves-effect {
-      .waves-ripple {
-        background: radial-gradient(
-          rgba($background, 0.2) 0,
-          rgba($background, 0.3) 40%,
-          rgba($background, 0.4) 50%,
-          rgba($background, 0.5) 60%,
-          rgba($white, 0) 70%
-        );
-      }
-    }
+
 
     &:hover {
       border-color: $border !important;
@@ -302,17 +282,7 @@
     color: $color;
     border-color: $color;
     background: transparent;
-    &.waves-effect {
-      .waves-ripple {
-        background: radial-gradient(
-          rgba($color, 0.2) 0,
-          rgba($color, 0.3) 40%,
-          rgba($color, 0.4) 50%,
-          rgba($color, 0.5) 60%,
-          rgba($white, 0) 70%
-        );
-      }
-    }
+
 
     &:hover {
       color: $color-hover !important;

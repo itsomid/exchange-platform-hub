@@ -90,17 +90,7 @@
         border-color: rgba-to-hex(rgba($black, 0.22), $rgba-to-hex-bg);
         color: $headings-color;
       }
-      &.waves-effect {
-        .waves-ripple {
-          background: radial-gradient(
-            rgba($black, 0.3) 0,
-            rgba($black, 0.4) 40%,
-            rgba($black, 0.5) 50%,
-            rgba($black, 0.6) 60%,
-            rgba($black, 0) 70%
-          );
-        }
-      }
+
     }
   }
 }
@@ -210,17 +200,7 @@
         background-color: rgba-to-hex(rgba($base, 0.06), $rgba-to-hex-bg);
         border-color: rgba-to-hex(rgba($base, 0.22), $rgba-to-hex-bg);
       }
-      &.waves-effect {
-        .waves-ripple {
-          background: radial-gradient(
-            rgba(#000, 0.3) 0,
-            rgba(#000, 0.4) 40%,
-            rgba(#000, 0.5) 50%,
-            rgba(#000, 0.6) 60%,
-            rgba(#000, 0) 70%
-          );
-        }
-      }
+
     }
   }
 }

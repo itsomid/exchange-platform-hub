@@ -16,4 +16,14 @@ class Wallet extends Model
     {
         return $this->belongsTo(Currency::class, 'currency_symbol', 'symbol');
     }
+
+    public function coinLogo()
+    {
+        $logoPath = storage_path("app/public/coins/{$this->currency_symbol}");
+        if (file_exists($logoPath)) {
+            return asset("storage/coins/{$this->currency_symbol}");
+        }
+
+        return asset("images/coins/{$this->currency_symbol}");
+    }
 }

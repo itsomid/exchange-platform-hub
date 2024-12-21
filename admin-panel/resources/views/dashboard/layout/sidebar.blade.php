@@ -85,8 +85,8 @@
 {{--            </li>--}}
 {{--        @endcan--}}
         @can('order.index')
-            <li class="menu-item @if(request()->is('admin/orders*')) active @endif">
-                <a href="" class="menu-link">
+            <li class="menu-item @if(request()->is('admin/transactions*')) active @endif">
+                <a href="{{route('admin.transaction.index')}}" class="menu-link">
                     <i class="menu-icon fa-regular fa-chart-candlestick"></i>
                     <div>لیست تراکنش ها</div>
                 </a>

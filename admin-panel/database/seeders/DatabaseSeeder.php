@@ -36,6 +36,7 @@ class DatabaseSeeder extends Seeder
             UserTableSeeder::class,
             CurrencySeeder::class,
             CurrencyChainSeeder::class,
+            WalletSeeder::class,
             TransactionSeeder::class,
             SettingTableSeeder::class,
             ExchangeSeeder::class,

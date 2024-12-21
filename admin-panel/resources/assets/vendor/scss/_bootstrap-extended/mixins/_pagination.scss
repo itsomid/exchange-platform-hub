@@ -27,20 +27,6 @@
       color: if($color, $color, color-contrast($background));
     }
   }
-  #{$parent} .page-item .page-link,
-  #{$parent}.pagination li > a:not(.page-link) {
-    &.waves-effect {
-      .waves-ripple {
-        background: radial-gradient(
-          rgba($background, 0.2) 0,
-          rgba($background, 0.3) 40%,
-          rgba($background, 0.4) 50%,
-          rgba($background, 0.5) 60%,
-          rgba($black, 0) 70%
-        );
-      }
-    }
-  }
 }
 
 // Pagination Outline Variant
@@ -53,17 +39,6 @@
       border-color: $background !important;
       color: $background !important;
       background-color: rgba-to-hex(rgba($background, 0.16), $card-bg) !important;
-    }
-    &.waves-effect {
-      .waves-ripple {
-        background: radial-gradient(
-          rgba($background, 0.2) 0,
-          rgba($background, 0.3) 40%,
-          rgba($background, 0.4) 50%,
-          rgba($background, 0.5) 60%,
-          rgba($black, 0) 70%
-        );
-      }
     }
   }
 }
