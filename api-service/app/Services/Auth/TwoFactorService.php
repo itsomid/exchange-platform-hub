@@ -6,6 +6,7 @@ use App\Exceptions\Auth\Google2faSecretInvalidException;
 use App\Exceptions\Auth\GoogleInvalidUserSecretKeyException;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 use App\Services\Auth\DTO\CheckTwoFactorRequestDTO;
+use App\Services\Auth\DTO\DisableTwoFactorRequestDTO;
 use App\Services\Auth\DTO\TwoFactorSaveSecretRequestDTO;
 use App\Services\Auth\DTO\TwoFactorSetupRequestDTO;
 use App\Services\Auth\DTO\TwoFactorSetupResponseDTO;
@@ -66,5 +67,24 @@ class TwoFactorService
         }
 
         $this->userRepository->saveSecret($requestDTO->getUserId(), $requestDTO->getGoogle2faSecret());
+    }
+
+    /**
+     * @throws IncompatibleWithGoogleAuthenticatorException
+     * @throws InvalidCharactersException
+     * @throws GoogleInvalidUserSecretKeyException
+     * @throws SecretKeyTooShortException
+     */
+    public function disableTwoFactor(DisableTwoFactorRequestDTO $requestDTO): void
+    {
+        $user = $this->userRepository->getUserById($requestDTO->getUserId());
+
+        $is_valid = $this->google2faService->verifyKey($user->two_factor_secret, $requestDTO->getGoogle2fa());
+
+        if (! $is_valid) {
+            throw new GoogleInvalidUserSecretKeyException;
+        }
+
+        $this->userRepository->updateUser($requestDTO->getUserId(), ['two_factor_secret' => null]);
     }
 }

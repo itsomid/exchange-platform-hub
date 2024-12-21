@@ -5,12 +5,14 @@ namespace App\Http\Controllers\V1\Auth;
 use App\Enums\EmailOTPActionEnum;
 use App\Exceptions\Auth\GoogleInvalidUserSecretKeyException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\V1\Auth\DisableTwoFactorRequest;
 use App\Http\Requests\V1\Auth\SaveSecretRequest;
 use App\Http\Requests\V1\Auth\ValidateTwoFactorRequest;
 use App\Http\Resources\Auth\AccessTokenResource;
 use App\Http\Resources\TwoFactorSetupResource;
 use App\Services\Auth\AccessTokenService;
 use App\Services\Auth\DTO\CheckTwoFactorRequestDTO;
+use App\Services\Auth\DTO\DisableTwoFactorRequestDTO;
 use App\Services\Auth\DTO\GenerateTokenRequestDTO;
 use App\Services\Auth\DTO\TwoFactorSaveSecretRequestDTO;
 use App\Services\Auth\DTO\TwoFactorSetupRequestDTO;
@@ -227,5 +229,51 @@ class TwoFactorController extends Controller
                 'token' => new AccessTokenResource($tokenResponse),
             ],
         ], Response::HTTP_OK);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/v1/auth/2fa/disable",
+     *     summary="Disable two-factor authentication",
+     *     description="This endpoint disables two-factor authentication (2FA) for the authenticated user.",
+     *     operationId="disableTwoFactor",
+     *     tags={"Authentication"},
+     *     security={
+     *     {"sanctum": {}}
+     *     },
+     *
+     *     @OA\RequestBody(
+     *     required=true,
+     *
+     *     @OA\JsonContent(
+     *     required={"2fa"},
+     *     @OA\JsonContent(ref="#/components/schemas/ValidateTwoFactorRequest")
+     *    )
+     *  ),
+     *     @OA\Response(
+     *     response=200,
+     *     description="Two-factor authentication disabled successfully",
+     *
+     *     @OA\JsonContent(
+     *     @OA\Property(property="message", type="string", example="Two-factor authentication disabled successfully.")
+     *   )
+     *
+     * @throws IncompatibleWithGoogleAuthenticatorException
+     * @throws InvalidCharactersException
+     * @throws GoogleInvalidUserSecretKeyException
+     * @throws SecretKeyTooShortException
+     */
+    public function disable(DisableTwoFactorRequest $request)
+    {
+        $validatedData = $request->validated();
+        $this->twoFactorService->disableTwoFactor(
+            resolve(DisableTwoFactorRequestDTO::class)
+                ->setGoogle2fa($validatedData['2fa'])
+                ->setUserId(Auth::id())
+        );
+
+        return response([
+            'message' => __('auth.two-factor.disable-success'),
+        ]);
     }
 }
