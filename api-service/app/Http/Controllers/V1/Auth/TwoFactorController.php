@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\V1\Auth;
 
+use App\Enums\EmailOTPActionEnum;
 use App\Exceptions\Auth\GoogleInvalidUserSecretKeyException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Auth\SaveSecretRequest;
@@ -14,6 +15,8 @@ use App\Services\Auth\DTO\GenerateTokenRequestDTO;
 use App\Services\Auth\DTO\TwoFactorSaveSecretRequestDTO;
 use App\Services\Auth\DTO\TwoFactorSetupRequestDTO;
 use App\Services\Auth\TwoFactorService;
+use App\Services\System\DTO\SendOTPRequestDTO;
+use App\Services\System\EmailOTPService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use PragmaRX\Google2FA\Exceptions\IncompatibleWithGoogleAuthenticatorException;
@@ -67,6 +70,14 @@ class TwoFactorController extends Controller
             resolve(TwoFactorSetupRequestDTO::class)
                 ->setEmail(Auth::user()->email)
                 ->setCompanyName(config('app.name')),
+        );
+
+        //Send Email
+        $emailOtpService = resolve(EmailOTPService::class);
+        $emailOtpService->send(
+            resolve(SendOTPRequestDTO::class)
+                ->setEmail(Auth::user()->email)
+                ->setAction(EmailOTPActionEnum::TWO_FACTOR_SETUP)
         );
 
         return new TwoFactorSetupResource($responseDTO);
