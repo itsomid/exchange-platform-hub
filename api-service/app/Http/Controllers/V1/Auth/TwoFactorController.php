@@ -237,31 +237,50 @@ class TwoFactorController extends Controller
      *     summary="Disable two-factor authentication",
      *     description="This endpoint disables two-factor authentication (2FA) for the authenticated user.",
      *     operationId="disableTwoFactor",
-     *     tags={"Authentication"},
-     *     security={
-     *     {"sanctum": {}}
-     *     },
+     *     tags={"Two-Factor Authentication"},
+     *     security={{"sanctum": {}}},
      *
      *     @OA\RequestBody(
-     *     required=true,
-     *
-     *     @OA\JsonContent(
-     *     required={"2fa"},
-     *     @OA\JsonContent(ref="#/components/schemas/ValidateTwoFactorRequest")
-     *    )
-     *  ),
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"2fa"},
+     *             ref="#/components/schemas/DisableTwoFactorRequest"
+     *         )
+     *     ),
      *     @OA\Response(
-     *     response=200,
-     *     description="Two-factor authentication disabled successfully",
-     *
-     *     @OA\JsonContent(
-     *     @OA\Property(property="message", type="string", example="Two-factor authentication disabled successfully.")
-     *   )
-     *
-     * @throws IncompatibleWithGoogleAuthenticatorException
-     * @throws InvalidCharactersException
-     * @throws GoogleInvalidUserSecretKeyException
-     * @throws SecretKeyTooShortException
+     *         response=200,
+     *         description="Two-factor authentication disabled successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Two-factor authentication disabled successfully."
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation errors",
+     *         @OA\JsonContent(
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="The given data was invalid."
+     *             ),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object",
+     *                 additionalProperties={
+     *                     @OA\Property(
+     *                         property="field",
+     *                         type="array",
+     *                         @OA\Items(type="string", example="The 2fa field is required.")
+     *                     )
+     *                 }
+     *             )
+     *         )
+     *     )
+     * )
      */
     public function disable(DisableTwoFactorRequest $request)
     {

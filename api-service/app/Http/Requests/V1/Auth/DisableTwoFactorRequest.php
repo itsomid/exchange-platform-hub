@@ -6,7 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * @OA\Schema(
- *     schema="ValidateTwoFactorRequest",
+ *     schema="DisableTwoFactorRequest",
  *     title="DisableTwoFactorRequest",
  *     description="Disable Two-Factor Authentication Request",
  *     required={"2fa"},
