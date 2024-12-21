@@ -53,7 +53,7 @@
                             </h3>
                             <p class="mb-5">
                                 <small class="text-muted fw-light">USDT</small>
-                                <span class="h5  me-2">{{number_format($specificAssetValue,2)}}</span>
+                                <span class="h5  me-2">{{formatNumber($specificAssetValue,2)}}</span>
                             </p>
 
                         </div>
@@ -92,7 +92,7 @@
                     </h3>
                     <p class="mb-5">
                         <small class="text-muted fw-light">USDT</small>
-                        <span class="text-muted  me-2">{{number_format($specificAssetValue,2)}}</span>
+                        <span class="text-muted  me-2">{{formatNumber($specificAssetValue,2)}}</span>
                     </p>
                     <p class="mb-0">
 
@@ -118,7 +118,7 @@
                     </h3>
                     <p class="mb-5">
                         <small class="text-muted fw-light">USDT</small>
-                        <span class="text-muted  me-2">{{number_format($specificAssetValue,2)}}</span>
+                        <span class="text-muted  me-2">{{formatNumber($specificAssetValue,2)}}</span>
                     </p>
                     <p class="mb-0">
 
@@ -145,7 +145,7 @@
                     </h3>
                     <p class="mb-5">
                         <small class="text-muted fw-light">USDT</small>
-                        <span class="text-muted  me-2">{{number_format($specificAssetValue,2)}}</span>
+                        <span class="text-muted  me-2">{{formatNumber($specificAssetValue,2)}}</span>
                     </p>
                     <p class="mb-0">
 
@@ -172,7 +172,7 @@
                     </h3>
                     <p class="mb-5">
                         <small class="text-muted fw-light">USDT</small>
-                        <span class="text-muted  me-2">{{number_format($specificAssetValue,2)}}</span>
+                        <span class="text-muted  me-2">{{formatNumber($specificAssetValue,2)}}</span>
                     </p>
                     <p class="mb-0">
 

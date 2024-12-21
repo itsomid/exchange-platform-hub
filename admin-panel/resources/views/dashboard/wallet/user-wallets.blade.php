@@ -64,7 +64,7 @@
                         <div class="col-12 col-md-4 d-flex flex-column">
                             <div class="d-flex gap-2 align-items-center mb-3 flex-wrap">
 
-                                <h2 class="mb-0">{{number_format($totalAssetsValue,2)}}
+                                <h2 class="mb-0">{{formatNumber($totalAssetsValue,2)}}
                                     <small class="text-muted fw-light">USDT</small>
                                 </h2>
                                 <div class="badge rounded bg-label-success">+4.2%</div>
@@ -158,7 +158,7 @@
                         </h3>
                         <p class="mb-5">
                             <small class="text-muted fw-light">USDT</small>
-                            <span class="text-muted  me-2">{{number_format($wallet->assetValue,2)}}</span>
+                            <span class="text-muted  me-2">{{formatNumber($wallet->assetValue,2)}}</span>
                         </p>
                         @if($wallet->locked_balance !=0)
                             <p class="mb-0">

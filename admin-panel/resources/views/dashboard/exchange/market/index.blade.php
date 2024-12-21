@@ -150,7 +150,7 @@
                                 <div
                                     class="badge rounded bg-label-{{ $market->activeExchangePrice->price_change_percentage < 0 ? 'danger' : 'success' }}"
                                     dir="ltr">
-                                    {{ $market->activeExchangePrice->price_change_percentage > 0 ? '+' : '' }}{{ number_format($market->activeExchangePrice->price_change_percentage, 2) }}
+                                    {{ $market->activeExchangePrice->price_change_percentage > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->price_change_percentage, 2) }}
                                     %
                                 </div>
                             </td>

@@ -42,7 +42,7 @@ class TransactionFactory extends Factory
                 ->where('currency_symbol', 'USDT')
                 ->first();
             $amount = $this->faker->randomFloat(2, 2, 5);
-            $newBalance = $wallet ? $wallet->balance + $amount : $amount;
+            $newBalance = $wallet ? bcadd($wallet->balance  ,$amount,8): $amount;
 
             return [
                 'user_id' => $user_id,
@@ -63,17 +63,17 @@ class TransactionFactory extends Factory
                     ->setCurrencySymbol('USDT')
                     ->setUserId($user_id)
             );
-            // Fetch the updated Wallet to ensure correct balance
-//            $wallet = Wallet::query()
-//                ->where('user_id', $user_id)
-//                ->where('currency_symbol', 'USDT')
-//                ->first();
-//
-//            if ($wallet) {
-//                $transaction->update([
-//                    'balance' => $wallet->balance, // Ensure the transaction reflects the correct updated balance
-//                ]);
-//            }
+
+            $wallet = Wallet::query()
+                ->where('user_id', $user_id)
+                ->where('currency_symbol', 'USDT')
+                ->first();
+
+            if ($wallet) {
+                $transaction->update([
+                    'balance' => $wallet->balance, // Ensure the transaction reflects the correct updated balance
+                ]);
+            }
             $referralCode = ReferralCode::query()
                 ->where('user_id', $user_id)
                 ->first();

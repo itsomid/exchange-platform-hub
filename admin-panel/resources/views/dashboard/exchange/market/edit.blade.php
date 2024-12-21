@@ -24,11 +24,11 @@
                         <div
                             class="badge rounded bg-label-{{ $market->activeExchangePrice->price_change_percentage < 0 ? 'danger' : 'success' }}"
                             dir="ltr">
-                            {{ $market->activeExchangePrice->price > 0 ? '+' : '' }}{{ number_format($market->activeExchangePrice->price_change_percentage, 2) }}
+                            {{ $market->activeExchangePrice->price > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->price_change_percentage, 2) }}
                             %
                         </div>
                         <h2 class="mb-0">
-                            ${{number_format($market->activeExchangePrice->price,2)}}
+                            ${{formatNumber($market->activeExchangePrice->price,2)}}
                         </h2>
 
                     </div>
@@ -66,10 +66,10 @@
                     <div class="d-flex gap-2 align-items-center my-3 justify-content-end font-number">
                         <div
                             class="badge rounded bg-label-{{ $market->price_change_percentage < 0 ? 'danger' : 'success' }}" dir="ltr">
-                            {{ $market->activeExchangePrice->price_change_percentage > 0 ? '+' : '' }}{{ number_format($market->activeExchangePrice->price_change_percentage, 2) }}%
+                            {{ $market->activeExchangePrice->price_change_percentage > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->price_change_percentage, 2) }}%
                         </div>
                         <h2 class="mb-0">
-                            ${{number_format($market->activeExchangePrice->own_price,2)}}
+                            ${{formatNumber($market->activeExchangePrice->own_price,2)}}
                         </h2>
 
                     </div>

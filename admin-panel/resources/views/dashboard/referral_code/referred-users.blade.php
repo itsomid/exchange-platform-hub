@@ -37,7 +37,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="content-left">
-                            <h5 class="mb-1">{{number_format($conversationRate,2)}}%</h5>
+                            <h5 class="mb-1">{{formatNumber($conversationRate,2)}}%</h5>
                             <small>نرخ تبدیل</small>
                         </div>
                         <span class="badge bg-label-success rounded-circle p-3">

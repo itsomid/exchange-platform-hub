@@ -92,6 +92,10 @@
             <div class="card-body">
                 <div class="card-title header-elements">
                     <h5 class="m-0 me-2">لیست تراکنش ها</h5>
+                    <div class="card-title-elements ms-auto"><a href="http://127.0.0.1:8000/admin/admins/create" class="btn btn-primary">
+                            <i class="fa fa-plus mx-2"></i> افزودن همکار جدید </a>
+                    </div>
+
                 </div>
                 <div class="table-responsive text-nowrap">
                     <table class="table">
@@ -172,20 +176,22 @@
                                 </td>
 
                                 <td>{{$transaction->wallet->currency_symbol}}</td>
-                                <td>
-                                    <small>{{$transaction->amount}}</small>
+                                <td class="font-number">
+                                    <h6>{{formatNumber($transaction->amount)}}</h6>
+                                </td>
+                                <td class="font-number">
+                                    <h6>{{formatNumber($transaction->balance)}}</h6>
                                 </td>
                                 <td>
-                                    <small>{{$transaction->balance}}</small>
+                                    {{$transaction->description}}
                                 </td>
-                                <td>
-                                        <small>{{$transaction->user_description}}</small>
+                                <td class="font-number">
+                                    {{\App\Helpers\DateFormatter::convertToPersianDate($transaction->created_at,'H:i:s %Y/%m/%d')}}
                                 </td>
-                                <td>{{$transaction->created_at}}</td>
+
                                 <td>
                                     @if($transaction->deposit)
-                                        <a href=""
-                                           class="btn btn-{{\App\Enums\DepositStatusEnum::TYPE_COLOR[$transaction->deposit->deposit_type->value]}} btn-sm">
+                                        <a href="" class="btn btn-{{\App\Enums\DepositStatusEnum::TYPE_COLOR[$transaction->deposit->deposit_type->value]}} btn-sm">
                                             {{\App\Enums\DepositStatusEnum::TYPE_LABEL[$transaction->deposit->deposit_type->value]}}
                                         </a>
                                     @endif

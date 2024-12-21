@@ -60,7 +60,7 @@
                                 </li>
                                 <li class="mb-2 pt-1  d-flex justify-content-between">
                                     <span class="fw-semibold me-1">اعتبار:</span>
-                                    <span>{{number_format($user->balance, 0) . " ریال";}}</span>
+                                    <span>{{number_format($user->balance, 0)}}</span>
                                 </li>
                                 <li class="mb-2 pt-1  d-flex justify-content-between">
                                     <span class="fw-semibold me-1">تاریخ ایجاد حساب:</span>
