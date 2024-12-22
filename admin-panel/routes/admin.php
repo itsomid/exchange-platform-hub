@@ -24,6 +24,7 @@ use App\Http\Controllers\User\UserFinancialBlockController;
 use App\Http\Controllers\User\UserSecurityController;
 use App\Http\Controllers\User\UserWalletController;
 use App\Http\Controllers\Transaction\TransactionController;
+use App\Http\Controllers\Wallet\WalletController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -100,9 +101,9 @@ Route::get('/permissions/{permission}/edit', [PermissionController::class, 'edit
 Route::patch('/permissions/{permission}', [PermissionController::class, 'update'])->name('permission.update')->can('permission.edit');
 
 Route::get('/referral-codes', [ReferralCodeController::class, 'index'])->name('referral_code.index')->can('referral_code.index');
+Route::get('/referral-codes/create', [ReferralCodeController::class, 'create'])->name('referral_code.create')->can('referral_code.create');
 Route::get('/referral-codes/{referral_code}', [ReferralCodeController::class, 'showUsage'])->name('referral_code.show')->can('referral_code.index');
 Route::get('/referral-codes/referred-user/{user}/transactions', [ReferralCodeController::class, 'showTransactionsForReferredUser'])->name('referral_code.showTransactionsForReferredUser')->can('referral_code.index');
-Route::get('/referral-codes/create', [ReferralCodeController::class, 'create'])->name('referral_code.create')->can('referral_code.create');
 Route::post('/referral-codes', [ReferralCodeController::class, 'store'])->name('referral_code.store')->can('referral_code.create');
 Route::get('/referral-codes/{referral_code}/edit', [ReferralCodeController::class, 'edit'])->name('referral_code.edit')->can('referral_code.edit');
 Route::patch('/referral-codes/{referral_code}', [ReferralCodeController::class, 'update'])->name('referral_code.update')->can('referral_code.edit');
@@ -137,8 +138,6 @@ Route::prefix('transactions')->group(function (){
    Route::get('/',[TransactionController::class,'index'])->name('transaction.index')->can('transaction');
 });
 
-
-
 Route::get('/internal-settings', [InternalSettingController::class, 'index'])->name('internal.setting.index')->can('setting.int.index');
 Route::post('/internal-settings/update-permissions', [InternalSettingController::class, 'updatePermissions'])->name('setting.int.update-permissions')->can('setting.int.index');
 Route::post('/internal-settings/update-otc-setting', [InternalSettingController::class, 'updateOTCSetting'])->name('setting.int.update-otc-setting')->can('setting.int.index');
@@ -147,3 +146,7 @@ Route::post('/internal-settings/update-referral-setting', [InternalSettingContro
 Route::get('/external-settings', [ExternalSettingController::class, 'index'])->name('external-setting.index')->can('setting.ext.index');
 Route::post('/external-settings/update-ref-address', [ExternalSettingController::class, 'updateRefAddress'])->name('setting.ext.update-ref-address')->can('setting.ext.index');
 
+Route::prefix('wallet')->group(function (){
+    Route::get('wallet/increase-credit',[WalletController::class,'increaseCreditForm'])->name('wallet.increase-credit.form')->can('wallet');
+    Route::post('wallet/increase-credit',[WalletController::class,'increaseCredit'])->name('wallet.increase-credit')->can('wallet');
+});

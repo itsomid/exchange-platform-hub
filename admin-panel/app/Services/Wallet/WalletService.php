@@ -60,39 +60,35 @@ class WalletService
 
     public function updateBalance(UpdateBalanceRequestDTO $requestDTO): bool
     {
-
         try {
-            DB::beginTransaction();
+            DB::transaction(function () use ($requestDTO) {
+                $wallet = Wallet::query()
+                    ->where('currency_symbol', $requestDTO->getCurrencySymbol())
+                    ->where('user_id', $requestDTO->getUserId())
+                    ->lockForUpdate()
+                    ->firstOrFail(); // Ensures wallet exists, throws exception otherwise
 
-            $wallet = Wallet::query()
-                ->where('currency_symbol', $requestDTO->getCurrencySymbol())
-                ->where('user_id', $requestDTO->getUserId())
-            ->lockForUpdate()
-            ->first();
+                $newBalance = $this->calculateNewBalance(
+                    $wallet->balance,
+                    $requestDTO->getAmount(),
+                    $requestDTO->getOperation()
+                );
 
-            $balance = $wallet->balance;
-            if ($requestDTO->getOperation() === BalanceOperationEnum::Increase) {
-                $balance = bcadd($wallet->balance, $requestDTO->getAmount(), 8);
-            } elseif ($requestDTO->getOperation() === BalanceOperationEnum::Decrease) {
-                $balance = bcsub($wallet->balance, $requestDTO->getAmount(), 8);
-            }
-
-            Wallet::query()
-                ->where('currency_symbol', $requestDTO->getCurrencySymbol())
-                ->where('user_id', $requestDTO->getUserId())
-                ->update([
-                    'balance' => $balance,
-                ]);
-
-            DB::commit();
+                $wallet->update(['balance' => $newBalance]);
+            });
 
             return true;
         } catch (Throwable $exception) {
             report($exception);
-            DB::rollBack();
-
             return false;
         }
-
+    }
+    private function calculateNewBalance(string $currentBalance, string $amount, BalanceOperationEnum $operation): string
+    {
+        return match ($operation) {
+            BalanceOperationEnum::INCREASE => bcadd($currentBalance, $amount, 8),
+            BalanceOperationEnum::DECREASE => bcsub($currentBalance, $amount, 8),
+            default => throw new \InvalidArgumentException("Invalid balance operation: {$operation}"),
+        };
     }
 }

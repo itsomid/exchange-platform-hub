@@ -59,7 +59,7 @@ class TransactionFactory extends Factory
             $walletService->updateBalance(
                 resolve(UpdateBalanceRequestDTO::class)
                     ->setAmount($transaction->amount)
-                    ->setOperation(BalanceOperationEnum::Increase)
+                    ->setOperation(BalanceOperationEnum::INCREASE)
                     ->setCurrencySymbol('USDT')
                     ->setUserId($user_id)
             );

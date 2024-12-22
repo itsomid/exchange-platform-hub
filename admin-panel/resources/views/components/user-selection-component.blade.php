@@ -15,7 +15,7 @@
 @section('vendor-script')
     @parent
     @vite(['resources/assets/vendor/libs/select2/select2.js',
-            'resources/assets/vendor/js/forms-selects.js',
+//            'resources/assets/vendor/js/forms-selects.js',
             'resources/assets/js/select-user.js',
           ])
 @endsection

@@ -92,8 +92,10 @@
             <div class="card-body">
                 <div class="card-title header-elements">
                     <h5 class="m-0 me-2">لیست تراکنش ها</h5>
-                    <div class="card-title-elements ms-auto"><a href="http://127.0.0.1:8000/admin/admins/create" class="btn btn-primary">
-                            <i class="fa fa-plus mx-2"></i> افزودن همکار جدید </a>
+                    <div class="card-title-elements ms-auto">
+                        <a href="{{route('admin.wallet.increase-credit')}}" class="btn btn-primary">
+                            <i class="fa fa-plus mx-2"></i> افزایش اعتبار
+                        </a>
                     </div>
 
                 </div>
