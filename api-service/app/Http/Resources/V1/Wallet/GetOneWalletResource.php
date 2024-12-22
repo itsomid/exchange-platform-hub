@@ -15,12 +15,11 @@ class GetOneWalletResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->getId(),
-            'currency' => $this->getCurrency(),
+            'currency' => $this->getCurrencySymbol(),
             'balance' => $this->getBalance(),
             'frozen_balance' => $this->getLockedBalance(),
             'usdt_balance' => $this->getUsdtBalance(),
             'usdt_frozen_balance' => $this->getUsdtLockedBalance(),
-            ];
+        ];
     }
 }
