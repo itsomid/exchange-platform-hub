@@ -39,7 +39,9 @@ class FetchMarketHistory extends Command
         $markets = Market::query()->get();
         foreach ($markets as $market) {
             $candle = $exchange->fetchHistory($market->base_currency . $market->quote_currency, $period, $limit);
-            $this->saveMarketHistory($market, $candle[0]);
+            if($this->saveMarketHistory($market, $candle[0])){
+                $this->info('Market history for ' . $market->base_currency . ' fetched successfully.');
+            }
         }
 
         //Truncate the table to keep only the last 7 days of data
@@ -50,9 +52,9 @@ class FetchMarketHistory extends Command
     /**
      * @param Market $market
      * @param array $candle
-     * @return void
+     * @return bool
      */
-    public function saveMarketHistory(Market $market, array $candle): void
+    public function saveMarketHistory(Market $market, array $candle): bool
     {
         try {
             MarketHistory::query()
@@ -65,11 +67,13 @@ class FetchMarketHistory extends Command
                     'volume' => $candle['volume'],
                     'timestamp' => $candle['timestamp'],
                 ]);
+            return true;
         } catch (UniqueConstraintViolationException $e) {
             report($e);
-            $this->info("{$market->base_currency} Market history for {$market->name} already exists.");
+            $this->info("Market history for {$market->base_currency} already exists.");
         } catch (Throwable $e) {
             report($e);
         }
+        return false;
     }
 }
