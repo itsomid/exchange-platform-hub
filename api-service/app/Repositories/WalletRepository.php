@@ -53,4 +53,16 @@ class WalletRepository implements WalletRepositoryInterface
             ->with('exchangePrice')
             ->get();
     }
+
+    public function getOrCreateWallet(int $userId, string $symbol): Wallet
+    {
+        return Wallet::query()
+            ->firstOrCreate([
+                'user_id' => $userId,
+                'currency_symbol' => $symbol,
+            ], [
+                'balance' => 0,
+                'locked_balance' => 0,
+            ]);
+    }
 }

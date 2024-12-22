@@ -4,11 +4,14 @@ namespace App\Http\Controllers\V1\Wallet;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Wallet\GenerateAddressRequest;
+use App\Http\Requests\V1\Wallet\GetOneWalletRequest;
 use App\Http\Resources\V1\Wallet\CoinAddressResource;
+use App\Http\Resources\V1\Wallet\GetOneWalletResource;
 use App\Http\Resources\V1\Wallet\WalletListsCollection;
 use App\Services\Wallet\DepositService;
 use App\Services\Wallet\DTO\Deposit\AddPendingDepositRequestDTO;
 use App\Services\Wallet\DTO\Wallet\GenerateAddressRequestDTO;
+use App\Services\Wallet\DTO\Wallet\GetOneWalletRequestDTO;
 use App\Services\Wallet\DTO\Wallet\WalletListsRequestDTO;
 use App\Services\Wallet\WalletService;
 use Illuminate\Support\Facades\Auth;
@@ -95,6 +98,7 @@ class WalletController extends Controller
             'data' => new CoinAddressResource($res, $expirationDate),
         ]);
     }
+
     /**
      * @OA\Get(
      *     path="/api/v1/wallets/lists",
@@ -107,11 +111,14 @@ class WalletController extends Controller
      *     @OA\Response(
      *         response=200,
      *         description="List of wallets retrieved successfully.",
+     *
      *         @OA\JsonContent(
      *             type="object",
+     *
      *              @OA\Property(
      *               property="data",
      *               type="array",
+     *
      *           @OA\Items(ref="#/components/schemas/WalletListsListCollection")
      *           )
      *         )
@@ -120,13 +127,14 @@ class WalletController extends Controller
      *     @OA\Response(
      *         response=401,
      *         description="Unauthorized",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="message", type="string", example="Unauthenticated.")
      *         )
      *     )
      * )
      */
-
     public function lists()
     {
         $responseDTO = $this->service->getLists(
@@ -135,5 +143,37 @@ class WalletController extends Controller
         );
 
         return new WalletListsCollection($responseDTO);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/v1/wallets/{currencySymbol}",
+     *     summary="Get Wallet Balance",
+     *     tags={"Wallet"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(
+     *         name="currencySymbol",
+     *         in="path",
+     *         description="Currency symbol to fetch the wallet details.",
+     *         required=true,
+     *         @OA\Schema(type="string", example="BTC")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Wallet details retrieved successfully.",
+     *         @OA\JsonContent(ref="#/components/schemas/GetOneWalletResponse")
+     *     ),
+     * )
+     */
+    public function show(GetOneWalletRequest $request)
+    {
+        $symbol = $request->input('currencySymbol');
+        $walletDTO = $this->service->getWallet(
+            resolve(GetOneWalletRequestDTO::class)
+                ->setCurrencySymbol($symbol)
+                ->setUserId(Auth::id())
+        );
+
+        return new GetOneWalletResource($walletDTO);
     }
 }

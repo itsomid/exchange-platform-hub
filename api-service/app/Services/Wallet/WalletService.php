@@ -8,6 +8,8 @@ use App\Repositories\Interfaces\WalletChainRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Services\Wallet\DTO\Wallet\GenerateAddressRequestDTO;
 use App\Services\Wallet\DTO\Wallet\GenerateAddressResponseDTO;
+use App\Services\Wallet\DTO\Wallet\GetOneWalletRequestDTO;
+use App\Services\Wallet\DTO\Wallet\GetOneWalletResponseDTO;
 use App\Services\Wallet\DTO\Wallet\UpdateBalanceRequestDTO;
 use App\Services\Wallet\DTO\Wallet\WalletListsResponseDTO;
 use Illuminate\Support\Facades\DB;
@@ -80,7 +82,8 @@ class WalletService
     public function getLists(DTO\Wallet\WalletListsRequestDTO $requestDTO): array
     {
         $wallets = $this->walletRepository->getLists($requestDTO->getUserId());
-//dd($wallets);
+
+        //dd($wallets);
         return $wallets->map(fn (Wallet $wallet) => resolve(WalletListsResponseDTO::class)
             ->setId($wallet->id)
             ->setCurrency($wallet->currency_symbol)
@@ -95,5 +98,26 @@ class WalletService
                     bcmul($wallet->exchangePrice->price, $wallet->locked_balance, 8) : $wallet->locked_balance
             )
         )->toArray();
+    }
+
+    public function getWallet(GetOneWalletRequestDTO $requestDTO): GetOneWalletResponseDTO
+    {
+        $wallet = $this->walletRepository->getOrCreateWallet(
+            $requestDTO->getUserId(),
+            $requestDTO->getCurrencySymbol()
+        );
+
+        return resolve(GetOneWalletResponseDTO::class)
+            ->setCurrencySymbol($wallet->currency_symbol)
+            ->setBalance($wallet->balance)
+            ->setLockedBalance($wallet->locked_balance)
+            ->setUsdtBalance(
+                $wallet->exchangePrice ?
+                    bcmul($wallet->exchangePrice->price, $wallet->balance, 8) : $wallet->balance
+            )
+            ->setUsdtLockedBalance(
+                $wallet->exchangePrice ?
+                    bcmul($wallet->exchangePrice->price, $wallet->locked_balance, 8) : $wallet->locked_balance
+            );
     }
 }
