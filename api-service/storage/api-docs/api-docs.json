@@ -1326,6 +1326,44 @@
                     }
                 ]
             }
+        },
+        "/api/v1/wallets/{currencySymbol}": {
+            "get": {
+                "tags": [
+                    "Wallet"
+                ],
+                "summary": "Get Wallet Balance",
+                "operationId": "a3c2e723ee72bc589a26a7f5d189705a",
+                "parameters": [
+                    {
+                        "name": "currencySymbol",
+                        "in": "path",
+                        "description": "Currency symbol to fetch the wallet details.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "BTC"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Wallet details retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetOneWalletResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -1833,6 +1871,42 @@
                         "description": "The addresss expiration date",
                         "type": "string",
                         "example": "2025-01-12 15:05:01"
+                    }
+                },
+                "type": "object"
+            },
+            "GetOneWalletResponse": {
+                "title": "Wallet Balance Resource",
+                "description": "Resource representing wallet details for a specific currency.",
+                "properties": {
+                    "currency": {
+                        "description": "Currency symbol (e.g., BTC, ETH, USDT).",
+                        "type": "string",
+                        "example": "BTC"
+                    },
+                    "balance": {
+                        "description": "Available balance in the wallet.",
+                        "type": "number",
+                        "format": "float",
+                        "example": 0.12345
+                    },
+                    "frozen_balance": {
+                        "description": "Frozen balance in the wallet.",
+                        "type": "number",
+                        "format": "float",
+                        "example": 0.01
+                    },
+                    "usdt_balance": {
+                        "description": "Equivalent USDT value of the available balance.",
+                        "type": "number",
+                        "format": "float",
+                        "example": 3000
+                    },
+                    "usdt_frozen_balance": {
+                        "description": "Equivalent USDT value of the frozen balance.",
+                        "type": "number",
+                        "format": "float",
+                        "example": 100
                     }
                 },
                 "type": "object"
