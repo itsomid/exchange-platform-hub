@@ -13,7 +13,7 @@ return new class extends Migration {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id(); // Primary key
             $table->unsignedBigInteger('user_id'); // Foreign key
-            $table->unsignedBigInteger('admin_id'); // Foreign key
+            $table->unsignedBigInteger('admin_id')->nullable(); // Foreign key
             $table->unsignedBigInteger('wallet_id'); // Foreign key
             $table->unsignedBigInteger('deposit_id')->nullable(); // Foreign key
             $table->unsignedBigInteger('withdrawal_id')->nullable(); // Foreign key
