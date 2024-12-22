@@ -5,7 +5,7 @@ namespace App\Services\Wallet\DTO\Wallet;
 class GetOneWalletRequestDTO
 {
     private int $userId;
-    private string $symbol;
+    private string $currencySymbol;
 
     public function setUserId(int $userId): self
     {
@@ -18,14 +18,14 @@ class GetOneWalletRequestDTO
         return $this->userId;
     }
 
-    public function setSymbol(string $symbol): self
+    public function setCurrencySymbol(string $currencySymbol): self
     {
-        $this->symbol = $symbol;
+        $this->currencySymbol = $currencySymbol;
         return $this;
     }
 
-    public function getSymbol(): string
+    public function getCurrencySymbol(): string
     {
-        return $this->symbol;
+        return $this->currencySymbol;
     }
 }

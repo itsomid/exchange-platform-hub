@@ -145,12 +145,32 @@ class WalletController extends Controller
         return new WalletListsCollection($responseDTO);
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/v1/wallets/{currencySymbol}",
+     *     summary="Get Wallet Balance",
+     *     tags={"Wallet"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(
+     *         name="currencySymbol",
+     *         in="path",
+     *         description="Currency symbol to fetch the wallet details.",
+     *         required=true,
+     *         @OA\Schema(type="string", example="BTC")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Wallet details retrieved successfully.",
+     *         @OA\JsonContent(ref="#/components/schemas/GetOneWalletResponse")
+     *     ),
+     * )
+     */
     public function show(GetOneWalletRequest $request)
     {
         $symbol = $request->input('currencySymbol');
         $walletDTO = $this->service->getWallet(
             resolve(GetOneWalletRequestDTO::class)
-                ->setSymbol($symbol)
+                ->setCurrencySymbol($symbol)
                 ->setUserId(Auth::id())
         );
 

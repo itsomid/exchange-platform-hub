@@ -4,21 +4,21 @@ namespace App\Services\Wallet\DTO\Wallet;
 
 class GetOneWalletResponseDTO
 {
-    private string $symbol;
+    private string $currencySymbol;
     private string $balance;
     private string $lockedBalance;
     private string $usdtBalance;
     private string $usdtLockedBalance;
 
-    public function setSymbol(string $symbol): self
+    public function setCurrencySymbol(string $currencySymbol): self
     {
-        $this->symbol = $symbol;
+        $this->currencySymbol = $currencySymbol;
         return $this;
     }
 
-    public function getSymbol(): string
+    public function getCurrencySymbol(): string
     {
-        return $this->symbol;
+        return $this->currencySymbol;
     }
 
     public function setBalance(string $balance): self

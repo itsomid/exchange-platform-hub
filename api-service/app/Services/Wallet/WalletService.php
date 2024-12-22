@@ -104,11 +104,11 @@ class WalletService
     {
         $wallet = $this->walletRepository->getOrCreateWallet(
             $requestDTO->getUserId(),
-            $requestDTO->getSymbol()
+            $requestDTO->getCurrencySymbol()
         );
 
         return resolve(GetOneWalletResponseDTO::class)
-            ->setSymbol($wallet->currency_symbol)
+            ->setCurrencySymbol($wallet->currency_symbol)
             ->setBalance($wallet->balance)
             ->setLockedBalance($wallet->locked_balance)
             ->setUsdtBalance(
