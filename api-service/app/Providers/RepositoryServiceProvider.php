@@ -8,12 +8,14 @@ use App\Repositories\EmailOTPRepository;
 use App\Repositories\Interfaces\CurrencyRepositoryInterface;
 use App\Repositories\Interfaces\DepositRepositoryInterface;
 use App\Repositories\Interfaces\EmailOTPRepositoryInterface;
+use App\Repositories\Interfaces\MarketHistoryRepositoryInterface;
 use App\Repositories\Interfaces\ReferralCodeRepositoryInterface;
 use App\Repositories\Interfaces\ReferralCodeUsageRepositoryInterface;
 use App\Repositories\Interfaces\UserEmailVerificationInterface;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 use App\Repositories\Interfaces\WalletChainRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
+use App\Repositories\MarketHistoryRepository;
 use App\Repositories\ReferralCodeRepository;
 use App\Repositories\ReferralCodeUsageRepository;
 use App\Repositories\UserEmailVerificationRepository;
@@ -39,6 +41,7 @@ class RepositoryServiceProvider extends ServiceProvider
         app()->bind(ReferralCodeRepositoryInterface::class, ReferralCodeRepository::class);
         app()->bind(ReferralCodeUsageRepositoryInterface::class, ReferralCodeUsageRepository::class);
         app()->bind(EmailOTPRepositoryInterface::class, EmailOTPRepository::class);
+        app()->bind(MarketHistoryRepositoryInterface::class, MarketHistoryRepository::class);
     }
 
     /**

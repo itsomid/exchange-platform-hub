@@ -14,7 +14,7 @@ class EmailVerificationController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/v1/auth/email-verification",
+     *     path="/api/v1/auth/email/veiry",
      *     summary="Verify email address and activate account",
      *     description="This endpoint verifies the user's email address using a provided verification token. If the token is valid, the user's account is activated, and a success message is returned. No access token is returned in this case.",
      *     operationId="verifyEmail",

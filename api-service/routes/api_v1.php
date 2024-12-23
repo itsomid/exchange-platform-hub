@@ -29,3 +29,7 @@ Route::prefix('/wallets')->group(function () {
     Route::get('/lists', [WalletController::class, 'lists'])->name('wallets.lists');
     Route::get('/{currencySymbol}', [WalletController::class, 'show'])->name('wallets.show');
 });
+//Portfolio
+Route::prefix('/portfolio')->group(function () {
+    Route::get('/last-week', [\App\Http\Controllers\V1\Wallet\PortfolioController::class, 'getPortfolioLastWeek'])->name('portfolio.get-portfolio-last-week');
+});

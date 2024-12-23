@@ -71,7 +71,7 @@
                 }
             }
         },
-        "/api/v1/auth/email-verification": {
+        "/api/v1/auth/email/veiry": {
             "post": {
                 "tags": [
                     "Authentication"
@@ -1290,6 +1290,52 @@
                 ]
             }
         },
+        "/api/v1/portfolio/last-week": {
+            "get": {
+                "tags": [
+                    "Portfolio"
+                ],
+                "summary": "Get Portfolio Report for Last Week",
+                "description": "Retrieve a daily portfolio report for the last week, including total profit, profit percentage, and total balance.",
+                "operationId": "e04068e6d35488fa88f53249c87250ae",
+                "responses": {
+                    "200": {
+                        "description": "Portfolio report retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/PortfolioLastWeekReport"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/wallets/generate-address": {
             "post": {
                 "tags": [
@@ -1988,6 +2034,37 @@
                 },
                 "type": "object"
             },
+            "PortfolioLastWeekReport": {
+                "title": "Portfolio Last Week Report",
+                "description": "Daily portfolio report for the last week.",
+                "properties": {
+                    "report_date": {
+                        "description": "The date of the report in YYYY-MM-DD format.",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2024-12-15"
+                    },
+                    "total_profit": {
+                        "description": "Total profit for the given date.",
+                        "type": "number",
+                        "format": "float",
+                        "example": 1500.75
+                    },
+                    "total_profit_percentage": {
+                        "description": "Total profit percentage for the given date.",
+                        "type": "number",
+                        "format": "float",
+                        "example": 2.45
+                    },
+                    "total_balance": {
+                        "description": "Total portfolio balance for the given date.",
+                        "type": "number",
+                        "format": "float",
+                        "example": 62000.5
+                    }
+                },
+                "type": "object"
+            },
             "WalletListsListCollection": {
                 "properties": {
                     "id": {
@@ -2049,6 +2126,10 @@
         {
             "name": "Referral Code",
             "description": "Referral Code"
+        },
+        {
+            "name": "Portfolio",
+            "description": "Portfolio"
         },
         {
             "name": "Wallet",

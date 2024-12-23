@@ -54,6 +54,14 @@ class WalletRepository implements WalletRepositoryInterface
             ->get();
     }
 
+    public function getListsWithMarket(int $getUserId): ?Collection
+    {
+        return Wallet::query()
+            ->where('user_id', $getUserId)
+            ->with('market')
+            ->get();
+    }
+
     public function getOrCreateWallet(int $userId, string $symbol): Wallet
     {
         return Wallet::query()

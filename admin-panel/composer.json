@@ -24,7 +24,8 @@
         "opcodesio/log-viewer": "^v3.11.2",
         "ratchet/pawl": "^0.4.1",
         "spatie/laravel-permission": "^6.10.1",
-        "vladimir-yuldashev/laravel-queue-rabbitmq": "^v14.1.0"
+        "vladimir-yuldashev/laravel-queue-rabbitmq": "^v14.1.0",
+        "ext-bcmath": "*"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^v3.14.6",
