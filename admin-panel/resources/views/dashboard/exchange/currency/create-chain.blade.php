@@ -88,13 +88,13 @@
                         <div class="row mt-5">
                             <div class="col-md-3 ">
                                 <div class="form-group">
-                                    <label class="form-label" for="exchange_profit">فی صرافی برای برداشت
+                                    <label class="form-label" for="exchange_withdrawal_fee">فی صرافی برای برداشت
                                         (واحد)</label>
-                                    <input name="exchange_profit" id="exchange_profit"
+                                    <input name="exchange_withdrawal_fee" id="exchange_withdrawal_fee"
                                            class="form-control"
-                                           placeholder="فی صرافیی را وارد کنید." value="{{old('exchange_profit')}}"
+                                           placeholder="فی صرافیی را وارد کنید." value="{{old('exchange_withdrawal_fee')}}"
                                            required>
-                                    @error('exchange_profit')
+                                    @error('exchange_withdrawal_fee')
                                     <small class="text-danger">{{$message}}</small>
                                     @enderror
                                 </div>

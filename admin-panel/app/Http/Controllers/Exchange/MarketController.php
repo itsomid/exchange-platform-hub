@@ -46,7 +46,8 @@ class MarketController extends Controller
             'max_trade_amount' => $request->max_trade_amount,
             'is_active' => $request->has('is_active') ? $request->is_active : false,
         ]);
-        $market->activeExchangePrice->exchange_profit = $request->exchange_profit;
+        $market->activeExchangePrice->exchange_profit_sell = $request->exchange_profit_sell;
+        $market->activeExchangePrice->exchange_profit_buy = $request->exchange_profit_buy;
         $market->activeExchangePrice->exchange_id = $request->exchange_id;
         $market->activeExchangePrice->save();
         // Redirect back with a success message

@@ -86,19 +86,19 @@
                                 <div class="row mt-5">
                                     <div class="col-md-3 ">
                                         <div class="form-group">
-                                            <label class="form-label" for="exchange_profit_{{$chain->id}}">فی صرافی برای برداشت (واحد)</label>
-                                            <input  name="chains[{{$chain->id}}][exchange_profit]" id="exchange_profit_{{$chain->id}}" class="form-control"
-                                                    placeholder="فی صرافیی را وارد کنید." value="{{$chain->exchange_profit}}" required>
-                                            @error('exchange_profit')
+                                            <label class="form-label" for="exchange_withdrawal_fee_{{$chain->id}}">فی صرافی برای برداشت (واحد)</label>
+                                            <input  name="chains[{{$chain->id}}][exchange_withdrawal_fee]" id="exchange_withdrawal_fee_{{$chain->id}}" class="form-control"
+                                                    placeholder="فی صرافیی را وارد کنید." value="{{$chain->exchange_withdrawal_fee}}" required>
+                                            @error('exchange_withdrawal_fee')
                                             <small class="text-danger">{{$message}}</small>
                                             @enderror
                                         </div>
                                     </div>
                                     <div class="col-md-3">
                                         <div class="form-group">
-                                            <label class="form-label" for="network_fee_{{$chain->id}}">فی شبکه برای برداشت (واحد)</label>
+                                            <label class="form-label" for="network_fee_{{$chain->id}}" >فی شبکه برای برداشت (واحد)</label>
                                             <input  name="chains[{{$chain->id}}][network_fee]" id="network_fee_{{$chain->id}}" class="form-control"
-                                                    placeholder="فی شبکه." value="{{$chain->network_fee}}" required>
+                                                    placeholder="فی شبکه." value="{{$chain->network_fee}}" disabled required>
                                             @error('network_fee')
                                             <small class="text-danger">{{$message}}</small>
                                             @enderror

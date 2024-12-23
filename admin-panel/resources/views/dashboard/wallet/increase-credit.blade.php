@@ -15,7 +15,7 @@
                             <label class="form-check-label" for="transaction-type-deposit">واریز</label>
                         </div>
                         <div class="form-check form-check-inline">
-                            <input name="transaction_type" class="form-check-input" type="radio" value="withdraw"
+                            <input name="transaction_type" class="form-check-input" type="radio" value="withdrawal"
                                    id="transaction-type-withdraw">
                             <label class="form-check-label" for="transaction-type-withdraw">برداشت</label>
                         </div>

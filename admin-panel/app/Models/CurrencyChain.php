@@ -14,7 +14,7 @@ class CurrencyChain extends Model
         'min_withdraw_amount',
         'deposit_delay_minutes',
         'safe_confirmations',
-        'exchange_profit',
+        'exchange_withdrawal_fee',
         'network_fee',
         'deposit_enabled',
         'withdraw_enabled'
@@ -27,6 +27,6 @@ class CurrencyChain extends Model
 
     public function calculateTotalWithdrawalFee()
     {
-        return bcadd($this->network_fee, $this->exchange_profit, 8);
+        return bcadd($this->network_fee, $this->exchange_withdrawal_fee, 8);
     }
 }

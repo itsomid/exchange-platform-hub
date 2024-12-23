@@ -3,6 +3,8 @@
 namespace App\Services\Wallet;
 
 use App\Enums\BalanceOperationEnum;
+use App\Models\Currency;
+use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Services\Wallet\DTO\UpdateBalanceRequestDTO;
@@ -57,7 +59,24 @@ class WalletService
 
         return $specificAssetValue;
     }
+    public function totalTransactionValueBasedType(string $currencySymbol, array $transactionTypes): float
+    {
+        // Get the total amount of deposits for the given currency
+        $totalDeposits = Transaction::whereIn('type', $transactionTypes)
+            ->whereHas('wallet', function ($query) use ($currencySymbol) {
+                $query->where('currency_symbol', $currencySymbol);
+            })
+            ->sum('amount');
 
+        // Fetch the exchange rate for the currency
+        $currency = Currency::where('symbol', $currencySymbol)->first();
+        $exchangeRate = $currency && $currency->baseMarkets->first()
+            ? $currency->baseMarkets->first()->activeExchangePrice->price
+            : 1; // Default to 1 if no exchange rate found
+
+        // Calculate the value in USDT
+        return $totalDeposits * $exchangeRate;
+    }
     public function updateBalance(UpdateBalanceRequestDTO $requestDTO): bool
     {
         try {

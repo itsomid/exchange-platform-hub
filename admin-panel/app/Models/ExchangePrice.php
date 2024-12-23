@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ExchangePrice extends Model
 {
-    protected $fillable = ['market_id', 'exchange_id','price','open_price','exchange_profit'];
+    protected $fillable = ['market_id', 'exchange_id','price','open_price','exchange_profit_sell','exchange_profit_buy'];
 
     public function exchange()
     {
@@ -28,8 +28,13 @@ class ExchangePrice extends Model
 
     }
 
-    public function getOwnPriceAttribute()
+    public function getSellOwnPriceAttribute()
     {
-        return ($this->price * $this->exchange_profit) + $this->price;
+        return ($this->price * $this->exchange_profit_sell) + $this->price;
+    }
+
+    public function getBuyOwnPriceAttribute()
+    {
+        return ($this->price * $this->exchange_profit_buy) + $this->price;
     }
 }

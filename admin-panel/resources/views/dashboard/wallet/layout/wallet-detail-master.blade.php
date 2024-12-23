@@ -2,7 +2,6 @@
 @section('title', 'مدیریت کیف پول')
 @section('content')
 
-
     <div class="row">
         <div class="col-12 mb-6">
 
@@ -59,9 +58,9 @@
                         </div>
                         <div class="d-flex align-content-center flex-wrap gap-4">
                             <div class="d-flex gap-4">
-                                <button type="button" class="btn btn-success">
+                                <a href="{{route('admin.wallet.increase-credit.form')}}" type="button" class="btn btn-success">
                                     <i class="fa-regular fa-plus me-1"></i> افزایش موجودی
-                                </button>
+                                </a>
                                 <button type="button" class="btn btn-google-plus">
                                     <i class="fa-regular fa-ban me-1"></i> مسدود سازی موجودی
                                 </button>
@@ -87,16 +86,18 @@
                             </span>
                         </div>
                     </div>
-                    <h3 class="mt-4 mb-1">{{$wallet->balance}}
+                    <h3 class="mt-4 mb-1">{{formatNumber($totalDeposits)}}
                         <span class="text-muted h4">{{$wallet->currency_symbol}}</span>
                     </h3>
                     <p class="mb-5">
                         <small class="text-muted fw-light">USDT</small>
-                        <span class="text-muted  me-2">{{formatNumber($specificAssetValue,2)}}</span>
+                        <span class="text-muted  me-2">{{formatNumber($totalDepositsValue,2)}}</span>
                     </p>
                     <p class="mb-0">
 
-                        <small class="text-muted">آخرین واریزی ۲۲ مهر ۱۴۰۳</small>
+                        <small class="text-muted">آخرین واریزی
+                            <span class="text-secondary fw-bold">{{$lastDepositDate}}</span>
+                        </small>
                     </p>
                 </div>
             </div>
@@ -113,7 +114,7 @@
                             </span>
                         </div>
                     </div>
-                    <h3 class="mt-4 mb-1">{{$wallet->balance}}
+                    <h3 class="mt-4 mb-1">{{formatNumber($totalWithdraws)}}
                         <span class="text-muted h4">{{$wallet->currency_symbol}}</span>
                     </h3>
                     <p class="mb-5">
@@ -122,7 +123,9 @@
                     </p>
                     <p class="mb-0">
 
-                        <small class="text-muted">آخرین برداشت ۲۲ مهر ۱۴۰۳</small>
+                        <small class="text-muted">آخرین برداشت:
+                            <span class="text-secondary fw-bold">{{$lastWithdrawDate}}</span>
+                        </small>
                     </p>
                 </div>
             </div>
@@ -140,16 +143,17 @@
                             </span>
                         </div>
                     </div>
-                    <h3 class="mt-4 mb-1">{{$wallet->balance}}
+                    <h3 class="mt-4 mb-1">{{$totalOtcSell}}
                         <span class="text-muted h4">{{$wallet->currency_symbol}}</span>
                     </h3>
                     <p class="mb-5">
                         <small class="text-muted fw-light">USDT</small>
-                        <span class="text-muted  me-2">{{formatNumber($specificAssetValue,2)}}</span>
+                        <span class="text-muted  me-2">{{formatNumber($totalOtcSellValue,2)}}</span>
                     </p>
                     <p class="mb-0">
-
-                        <small class="text-muted">آخرین معامله ۲۲ مهر ۱۴۰۳</small>
+                        <small class="text-muted">آخرین معامله:
+                            <span class="text-secondary fw-bold">{{$lastOtcSellDate}}</span>
+                        </small>
                     </p>
                 </div>
             </div>
@@ -167,16 +171,19 @@
                             </span>
                         </div>
                     </div>
-                    <h3 class="mt-4 mb-1">{{$wallet->balance}}
+                    <h3 class="mt-4 mb-1">{{$totalOtcBuy}}
                         <span class="text-muted h4">{{$wallet->currency_symbol}}</span>
                     </h3>
                     <p class="mb-5">
                         <small class="text-muted fw-light">USDT</small>
-                        <span class="text-muted  me-2">{{formatNumber($specificAssetValue,2)}}</span>
+                        <span class="text-muted  me-2">{{formatNumber($totalOtcBuyValue,2)}}</span>
                     </p>
                     <p class="mb-0">
 
-                        <small class="text-muted">آخرین معامله ۲۲ مهر ۱۴۰۳</small>
+                        <small class="text-muted">آخرین معامله
+                            <span class="text-secondary fw-bold">{{$lastOtcBuyDate}}</span>
+
+                        </small>
                     </p>
                 </div>
             </div>
@@ -194,23 +201,23 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link @if(request()->route('type') == 'withdraw') active @endif"
-                   href="{{route('admin.wallet.detail',['user' => $user->id,'wallet'=>$wallet->id,'type'=>'withdraw'])}}">
+                <a class="nav-link @if(request()->route('type') == 'withdrawal') active @endif"
+                   href="{{route('admin.wallet.detail',['user' => $user->id,'wallet'=>$wallet->id,'type'=>'withdrawal'])}}">
                     <i class="fa-regular fa-arrow-up-from-bracket me-2"></i>
                     برداشت
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link @if(request()->route('type') == 'otc-buy') active @endif"
-                   href="{{route('admin.wallet.detail',['user' => $user->id,'wallet'=>$wallet->id,'type'=>'otc-buy'])}}">
+                <a class="nav-link @if(request()->route('type') == 'otc_buy') active @endif"
+                   href="{{route('admin.wallet.detail',['user' => $user->id,'wallet'=>$wallet->id,'type'=>'otc_buy'])}}">
                     <i class="fa-solid fa-swap me-2"></i>
                     خرید OTC
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link @if(request()->route('type') == 'otc-sell') active @endif"
-                   href="{{route('admin.wallet.detail',['user' => $user->id,'wallet'=>$wallet->id, 'type'=>'otc-sell'])}}">
+                <a class="nav-link @if(request()->route('type') == 'otc_sell') active @endif"
+                   href="{{route('admin.wallet.detail',['user' => $user->id,'wallet'=>$wallet->id, 'type'=>'otc_sell'])}}">
                     <i class="fa-solid fa-swap me-2"></i>
                     فروش OTC
                 </a>

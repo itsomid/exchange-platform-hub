@@ -41,7 +41,7 @@ class CurrencyChainController extends Controller
             'min_withdraw_amount' => 'required|numeric',
             'deposit_delay_minutes' => 'required|integer',
             'safe_confirmations' => 'required|integer',
-            'exchange_profit' => 'required|numeric',
+            'exchange_withdrawal_fee' => 'required|numeric',
             'network_fee' => 'required|numeric',
             'deposit_enabled' => 'nullable|boolean',
             'withdraw_enabled' => 'nullable|boolean',
@@ -66,7 +66,7 @@ class CurrencyChainController extends Controller
             'min_withdraw_amount' => $request->min_withdraw_amount,
             'deposit_delay_minutes' => $request->deposit_delay_minutes,
             'safe_confirmations' => $request->safe_confirmations,
-            'exchange_profit' => $request->exchange_profit,
+            'exchange_withdrawal_fee' => $request->exchange_withdrawal_fee,
             'network_fee' => $request->network_fee,
             'deposit_enabled' => $request->has('deposit_enabled'),  // Convert checkbox to boolean
             'withdraw_enabled' => $request->has('withdraw_enabled'),  // Convert checkbox to boolean
@@ -100,14 +100,12 @@ class CurrencyChainController extends Controller
      */
     public function updateChains(Request $request, Currency $currency)
     {
-
         $validated = $request->validate([
             'chains.*.min_deposit_amount' => 'required|numeric',
             'chains.*.min_withdraw_amount' => 'required|numeric',
             'chains.*.deposit_delay_minutes' => 'required|integer',
             'chains.*.safe_confirmations' => 'required|integer',
-            'chains.*.exchange_profit' => 'required|numeric',
-            'chains.*.network_fee' => 'required|numeric',
+            'chains.*.exchange_withdrawal_fee' => 'required|numeric',
             'chains.*.deposit_enabled' => 'nullable|boolean',
             'chains.*.withdraw_enabled' => 'nullable|boolean',
         ]);
@@ -124,8 +122,7 @@ class CurrencyChainController extends Controller
                     'min_withdraw_amount' => $chainData['min_withdraw_amount'],
                     'deposit_delay_minutes' => $chainData['deposit_delay_minutes'],
                     'safe_confirmations' => $chainData['safe_confirmations'],
-                    'exchange_profit' => $chainData['exchange_profit'],
-                    'network_fee' => $chainData['network_fee'],
+                    'exchange_withdrawal_fee' => $chainData['exchange_withdrawal_fee'],
                     'deposit_enabled' => isset($chainData['deposit_enabled']) && $chainData['deposit_enabled'] == '1',
                     'withdraw_enabled' => isset($chainData['withdraw_enabled']) && $chainData['withdraw_enabled'] == '1',
                 ]);

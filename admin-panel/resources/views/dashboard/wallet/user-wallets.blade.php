@@ -102,7 +102,7 @@
                                     <div class="badge rounded bg-label-danger p-2">
                                         <i class="fa-regular fa-ban"></i>
                                     </div>
-                                    <h6 class="mb-0 fw-normal">موجودی مسدود شده</h6>
+                                    <h6 class="mb-0 fw-normal">موجودی مسدود شده (به USDT)</h6>
                                 </div>
                                 <h4 class="my-2">$74.19</h4>
                             </div>
@@ -172,7 +172,7 @@
                     <div class="card-body border-top">
                         <a href="{{route('admin.wallet.detail',['user'=>$user->id,'wallet'=>$wallet->id,'type'=>'deposit'])}}"
                            class="btn btn-label-primary me-2">مشاهده جزئیات</a>
-                        <button type="button" class="btn btn-icon btn-primary">
+                        <button type="button" class="btn btn-icon btn-primary" disabled>
                             <span class="fa-regular fa-plus fa-xl"></span>
                         </button>
                         {{--                        <button type="button" class="btn btn-danger me-2">مسدود کردن موجودی</button>--}}

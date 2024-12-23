@@ -102,7 +102,7 @@
                         <th>قیمت صرافی
 
                             <div class="badge rounded bg-label-success" dir="ltr">
-                                {{ $markets[0]->activeExchangePrice->exchange_profit > 0 ? '+' : '' }}{{$markets[0]->activeExchangePrice->exchange_profit * 100 }}
+                                {{ $markets[0]->activeExchangePrice->exchange_profit_sell > 0 ? '+' : '' }}{{$markets[0]->activeExchangePrice->exchange_profit * 100 }}
                                 %
                             </div>
                         </th>
