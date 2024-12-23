@@ -81,19 +81,31 @@
                         <div class="row mt-5">
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label class="form-label" for="exchange_profit">سود صرافی</label>
-                                    <input name="exchange_profit" id="exchange_profit" class=" form-control"
+                                    <label class="form-label" for="exchange_profit_sell">سود صرافی</label>
+                                    <input name="exchange_profit_sell" id="exchange_profit_sell" class=" form-control"
                                            placeholder="سود صرافی"
-                                           value="{{formatNumber(old('exchange_profit'),2)}}"
+                                           value="{{formatNumber(old('exchange_profit_sell'),2)}}"
                                            required>
-                                    @error('exchange_profit')
+                                    @error('exchange_profit_sell')
                                     <small class="text-danger">{{$message}}</small>
                                     @enderror
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label class="form-label" for="exchange_profit">صرافی مرجع</label>
+                                    <label class="form-label" for="exchange_profit_buy">سود صرافی</label>
+                                    <input name="exchange_profit_buy" id="exchange_profit_buy" class=" form-control"
+                                           placeholder="سود صرافی"
+                                           value="{{formatNumber(old('exchange_profit_buy'),2)}}"
+                                           required>
+                                    @error('exchange_profit_buy')
+                                    <small class="text-danger">{{$message}}</small>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label class="form-label" for="exchange_profit_sell">صرافی مرجع</label>
                                     <select name="exchange_id" id="" class="form-control">
                                         @foreach($exchanges as $exchange)
                                             <option @if(old('exchange_id') === $exchange->id) selected @endif value="{{ $exchange->id }}">{{ $exchange->name }}</option>

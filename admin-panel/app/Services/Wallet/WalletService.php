@@ -3,6 +3,8 @@
 namespace App\Services\Wallet;
 
 use App\Enums\BalanceOperationEnum;
+use App\Models\Currency;
+use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Services\Wallet\DTO\UpdateBalanceRequestDTO;
@@ -57,42 +59,55 @@ class WalletService
 
         return $specificAssetValue;
     }
+    public function totalTransactionValueBasedType(string $currencySymbol, array $transactionTypes): float
+    {
+        // Get the total amount of deposits for the given currency
+        $totalDeposits = Transaction::whereIn('type', $transactionTypes)
+            ->whereHas('wallet', function ($query) use ($currencySymbol) {
+                $query->where('currency_symbol', $currencySymbol);
+            })
+            ->sum('amount');
 
+        // Fetch the exchange rate for the currency
+        $currency = Currency::where('symbol', $currencySymbol)->first();
+        $exchangeRate = $currency && $currency->baseMarkets->first()
+            ? $currency->baseMarkets->first()->activeExchangePrice->price
+            : 1; // Default to 1 if no exchange rate found
+
+        // Calculate the value in USDT
+        return $totalDeposits * $exchangeRate;
+    }
     public function updateBalance(UpdateBalanceRequestDTO $requestDTO): bool
     {
-
         try {
-            DB::beginTransaction();
+            DB::transaction(function () use ($requestDTO) {
+                $wallet = Wallet::query()
+                    ->where('currency_symbol', $requestDTO->getCurrencySymbol())
+                    ->where('user_id', $requestDTO->getUserId())
+                    ->lockForUpdate()
+                    ->firstOrFail(); // Ensures wallet exists, throws exception otherwise
 
-            $wallet = Wallet::query()
-                ->where('currency_symbol', $requestDTO->getCurrencySymbol())
-                ->where('user_id', $requestDTO->getUserId())
-            ->lockForUpdate()
-            ->first();
+                $newBalance = $this->calculateNewBalance(
+                    $wallet->balance,
+                    $requestDTO->getAmount(),
+                    $requestDTO->getOperation()
+                );
 
-            $balance = $wallet->balance;
-            if ($requestDTO->getOperation() === BalanceOperationEnum::Increase) {
-                $balance = bcadd($wallet->balance, $requestDTO->getAmount(), 8);
-            } elseif ($requestDTO->getOperation() === BalanceOperationEnum::Decrease) {
-                $balance = bcsub($wallet->balance, $requestDTO->getAmount(), 8);
-            }
-
-            Wallet::query()
-                ->where('currency_symbol', $requestDTO->getCurrencySymbol())
-                ->where('user_id', $requestDTO->getUserId())
-                ->update([
-                    'balance' => $balance,
-                ]);
-
-            DB::commit();
+                $wallet->update(['balance' => $newBalance]);
+            });
 
             return true;
         } catch (Throwable $exception) {
             report($exception);
-            DB::rollBack();
-
             return false;
         }
-
+    }
+    private function calculateNewBalance(string $currentBalance, string $amount, BalanceOperationEnum $operation): string
+    {
+        return match ($operation) {
+            BalanceOperationEnum::INCREASE => bcadd($currentBalance, $amount, 8),
+            BalanceOperationEnum::DECREASE => bcsub($currentBalance, $amount, 8),
+            default => throw new \InvalidArgumentException("Invalid balance operation: {$operation}"),
+        };
     }
 }

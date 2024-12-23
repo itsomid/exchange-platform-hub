@@ -10,122 +10,113 @@
                     <table class="table table-hover">
                         <thead>
                         <tr>
-                            <th>Project</th>
-                            <th>Client</th>
-                            <th>Users</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <th>شناسه</th>
+                            <th>نوع تراکنش</th>
+                            <th>کاربر</th>
+                            <th>رمز ارز</th>
+                            <th>
+                                @php
+                                    $currentParams = request()->except('sortByAmount');
+                                    $newSortDirection = request()->input('sortByAmount') == 'asc' ? 'desc' : 'asc';
+                                @endphp
+                                <a href="{{ route('admin.transaction.index', array_merge($currentParams, ['sortByAmount' => $newSortDirection])) }}"
+                                   class="text-black">
+                                    مقدار
+                                    @if( request()->input('sortByAmount') == 'asc')
+                                        <span>&uarr;</span>
+                                    @else
+                                        <span>&darr;</span>
+                                    @endif
+                                </a>
+                            </th>
+                            <th>مقدار موجودی</th>
+                            <th>توضیحات</th>
+                            <th>
+                                @php
+                                    $currentParams = request()->except('sortByCreatedAt');
+                                    $newSortDirection = request()->input('sortByCreatedAt') == 'asc' ? 'desc' : 'asc';
+                                @endphp
+                                <a href="{{ route('admin.transaction.index', array_merge($currentParams, ['sortByCreatedAt' => $newSortDirection])) }}"
+                                   class="text-black">
+                                    تاریخ و زمان
+                                    @if( request()->input('sortByCreatedAt') == 'asc')
+                                        <span>&uarr;</span>
+                                    @else
+                                        <span>&darr;</span>
+                                    @endif
+                                </a>
+                            </th>
+                            <th>عملیات</th>
                         </tr>
                         </thead>
                         <tbody class="table-border-bottom-0">
-                        <tr>
-                            <td><i class="ti ti-brand-angular ti-md text-danger me-4"></i> <span class="fw-medium">Angular Project</span></td>
-                            <td>Albert Cook</td>
-                            <td>
-                                <ul class="list-unstyled m-0 avatar-group d-flex align-items-center">
-                                    <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top" class="avatar avatar-xs pull-up" aria-label="Lilian Fuller" data-bs-original-title="Lilian Fuller">
-                                        <img src="http://127.0.0.1:8002/assets/img/avatars/5.png" alt="Avatar" class="rounded-circle">
-                                    </li>
-                                    <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top" class="avatar avatar-xs pull-up" aria-label="Sophia Wilkerson" data-bs-original-title="Sophia Wilkerson">
-                                        <img src="http://127.0.0.1:8002/assets/img/avatars/6.png" alt="Avatar" class="rounded-circle">
-                                    </li>
-                                    <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top" class="avatar avatar-xs pull-up" aria-label="Christina Parker" data-bs-original-title="Christina Parker">
-                                        <img src="http://127.0.0.1:8002/assets/img/avatars/7.png" alt="Avatar" class="rounded-circle">
-                                    </li>
-                                </ul>
-                            </td>
-                            <td><span class="badge bg-label-primary me-1">Active</span></td>
-                            <td>
-                                <div class="dropdown">
-                                    <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical"></i></button>
-                                    <div class="dropdown-menu">
-                                        <a class="dropdown-item waves-effect" href="javascript:void(0);"><i class="ti ti-pencil me-1"></i> Edit</a>
-                                        <a class="dropdown-item waves-effect" href="javascript:void(0);"><i class="ti ti-trash me-1"></i> Delete</a>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><i class="ti ti-brand-react-native ti-md text-info me-4"></i> <span class="fw-medium">React Project</span></td>
-                            <td>Barry Hunter</td>
-                            <td>
-                                <ul class="list-unstyled m-0 avatar-group d-flex align-items-center">
-                                    <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top" class="avatar avatar-xs pull-up" aria-label="Lilian Fuller" data-bs-original-title="Lilian Fuller">
-                                        <img src="http://127.0.0.1:8002/assets/img/avatars/5.png" alt="Avatar" class="rounded-circle">
-                                    </li>
-                                    <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top" class="avatar avatar-xs pull-up" aria-label="Sophia Wilkerson" data-bs-original-title="Sophia Wilkerson">
-                                        <img src="http://127.0.0.1:8002/assets/img/avatars/6.png" alt="Avatar" class="rounded-circle">
-                                    </li>
-                                    <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top" class="avatar avatar-xs pull-up" aria-label="Christina Parker" data-bs-original-title="Christina Parker">
-                                        <img src="http://127.0.0.1:8002/assets/img/avatars/7.png" alt="Avatar" class="rounded-circle">
-                                    </li>
-                                </ul>
-                            </td>
-                            <td><span class="badge bg-label-success me-1">Completed</span></td>
-                            <td>
-                                <div class="dropdown">
-                                    <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical"></i></button>
-                                    <div class="dropdown-menu">
-                                        <a class="dropdown-item waves-effect" href="javascript:void(0);"><i class="ti ti-pencil me-1"></i> Edit</a>
-                                        <a class="dropdown-item waves-effect" href="javascript:void(0);"><i class="ti ti-trash me-1"></i> Delete</a>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><i class="ti ti-brand-vue ti-md text-success me-4"></i> <span class="fw-medium">VueJs Project</span></td>
-                            <td>Trevor Baker</td>
-                            <td>
-                                <ul class="list-unstyled m-0 avatar-group d-flex align-items-center">
-                                    <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top" class="avatar avatar-xs pull-up" aria-label="Lilian Fuller" data-bs-original-title="Lilian Fuller">
-                                        <img src="http://127.0.0.1:8002/assets/img/avatars/5.png" alt="Avatar" class="rounded-circle">
-                                    </li>
-                                    <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top" class="avatar avatar-xs pull-up" aria-label="Sophia Wilkerson" data-bs-original-title="Sophia Wilkerson">
-                                        <img src="http://127.0.0.1:8002/assets/img/avatars/6.png" alt="Avatar" class="rounded-circle">
-                                    </li>
-                                    <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top" class="avatar avatar-xs pull-up" aria-label="Christina Parker" data-bs-original-title="Christina Parker">
-                                        <img src="http://127.0.0.1:8002/assets/img/avatars/7.png" alt="Avatar" class="rounded-circle">
-                                    </li>
-                                </ul>
-                            </td>
-                            <td><span class="badge bg-label-info me-1">Scheduled</span></td>
-                            <td>
-                                <div class="dropdown">
-                                    <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical"></i></button>
-                                    <div class="dropdown-menu">
-                                        <a class="dropdown-item waves-effect" href="javascript:void(0);"><i class="ti ti-pencil me-1"></i> Edit</a>
-                                        <a class="dropdown-item waves-effect" href="javascript:void(0);"><i class="ti ti-trash me-1"></i> Delete</a>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><i class="ti ti-brand-bootstrap ti-md text-primary me-4"></i> <span class="fw-medium">Bootstrap Project</span></td>
-                            <td>Jerry Milton</td>
-                            <td>
-                                <ul class="list-unstyled m-0 avatar-group d-flex align-items-center">
-                                    <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top" class="avatar avatar-xs pull-up" aria-label="Lilian Fuller" data-bs-original-title="Lilian Fuller">
-                                        <img src="http://127.0.0.1:8002/assets/img/avatars/5.png" alt="Avatar" class="rounded-circle">
-                                    </li>
-                                    <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top" class="avatar avatar-xs pull-up" aria-label="Sophia Wilkerson" data-bs-original-title="Sophia Wilkerson">
-                                        <img src="http://127.0.0.1:8002/assets/img/avatars/6.png" alt="Avatar" class="rounded-circle">
-                                    </li>
-                                    <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top" class="avatar avatar-xs pull-up" aria-label="Christina Parker" data-bs-original-title="Christina Parker">
-                                        <img src="http://127.0.0.1:8002/assets/img/avatars/7.png" alt="Avatar" class="rounded-circle">
-                                    </li>
-                                </ul>
-                            </td>
-                            <td><span class="badge bg-label-warning me-1">Pending</span></td>
-                            <td>
-                                <div class="dropdown">
-                                    <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical"></i></button>
-                                    <div class="dropdown-menu">
-                                        <a class="dropdown-item waves-effect" href="javascript:void(0);"><i class="ti ti-pencil me-1"></i> Edit</a>
-                                        <a class="dropdown-item waves-effect" href="javascript:void(0);"><i class="ti ti-trash me-1"></i> Delete</a>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
+                        @if($transactions->isEmpty())
+                            <tr>
+                                <td colspan="9" class="text-center">تراکنشی موجود نیست</td>
+                            </tr>
+                        @else
+                            @foreach($transactions as $transaction)
+                                <tr>
+                                    <td>{{$transaction->id}}</td>
+                                    <td class="text-heading fw-medium">
+                                        <div class="d-flex justify-content-start align-items-center">
+                                            <div class="trans-avatar-group d-flex align-items-center assigned-avatar">
+
+                                                <div class="avatar avatar-md ">
+                                                    <img src="{{asset($transaction->wallet->currency->coinLogo())}}"
+                                                         class="rounded-circle  ">
+                                                </div>
+                                                <div class="avatar avatar-md">
+                                                <span
+                                                    class="avatar-initial rounded-circle bg-label-{{\App\Enums\TransactionTypeEnum::TYPE_COLOR[$transaction->type->value]}}">
+                                                    <i class="fa-regular fa-{{\App\Enums\TransactionTypeEnum::TYPE_ICON[$transaction->type->value]}} mx-3"></i>
+                                                </span>
+                                                </div>
+                                            </div>
+
+                                            <span
+                                                class="badge bg-label-{{\App\Enums\TransactionTypeEnum::TYPE_COLOR[$transaction->type->value]}} ms-2">
+                                           {{$transaction->type->value}}
+                                        </span>
+                                        </div>
+
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <a href="" class="text-heading text-truncate">
+                                                <span class="fw-medium">{{$transaction->user->email}}</span>
+                                            </a>
+                                            <small>{{$transaction->user->username}}</small>
+                                        </div>
+                                    </td>
+
+                                    <td>{{$transaction->wallet->currency_symbol}}</td>
+                                    <td class="font-number">
+                                        <h6>{{formatNumber($transaction->amount)}}</h6>
+                                    </td>
+                                    <td class="font-number">
+                                        <h6>{{formatNumber($transaction->balance)}}</h6>
+                                    </td>
+                                    <td>
+                                        {{$transaction->description}}
+                                    </td>
+                                    <td class="font-number">
+                                        {{\App\Helpers\DateFormatter::convertToPersianDate($transaction->created_at,'H:i:s %Y/%m/%d')}}
+                                    </td>
+
+                                    <td>
+                                        @if($transaction->deposit)
+                                            <a href=""
+                                               class="btn btn-{{\App\Enums\DepositStatusEnum::TYPE_COLOR[$transaction->deposit->deposit_type->value]}} btn-sm">
+                                                {{\App\Enums\DepositStatusEnum::TYPE_LABEL[$transaction->deposit->deposit_type->value]}}
+                                            </a>
+                                        @endif
+
+                                    </td>
+                                </tr>
+
+                            @endforeach
+                        @endif
                         </tbody>
                     </table>
                 </div>

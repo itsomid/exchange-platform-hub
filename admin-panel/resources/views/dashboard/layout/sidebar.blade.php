@@ -93,7 +93,7 @@
             </li>
         @endcan
         @can('transaction.index')
-            <li class="menu-item @if(request()->is('admin/transaction*')) active @endif">
+            <li class="menu-item @if(request()->is('admin/deposits*')) active @endif">
                 <a href="" class="menu-link">
                     <i class="menu-icon fa-regular fa-money-from-bracket"></i>
                     <div>لیست واریزی ها</div>
@@ -101,7 +101,7 @@
             </li>
         @endcan
         @can('transaction.index')
-            <li class="menu-item @if(request()->is('admin/transaction*')) active @endif">
+            <li class="menu-item @if(request()->is('admin/withdraws*')) active @endif">
                 <a href="" class="menu-link">
                     <i class="menu-icon fa-regular fa-money-bill-wave"></i>
                     <div>لیست برداشت ها</div>
@@ -109,7 +109,7 @@
             </li>
         @endcan
         @can('transaction.index')
-            <li class="menu-item @if(request()->is('admin/transaction*')) active @endif">
+            <li class="menu-item @if(request()->is('admin/otc*')) active @endif">
                 <a href="" class="menu-link">
                     <i class="menu-icon  fa-regular fa-swap"></i>
 

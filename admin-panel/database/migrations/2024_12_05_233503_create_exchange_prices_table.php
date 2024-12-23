@@ -17,7 +17,8 @@ return new class extends Migration
             $table->foreignId('exchange_id')->constrained('exchanges')->onDelete('cascade'); // Reference to exchanges table
             $table->decimal('price', 18, 8)->default(0); // Price of the market on that exchange
             $table->decimal('open_price', 18, 8)->default(0); // Opening price on the exchange
-            $table->decimal('exchange_profit', 5, 4)->default(0); // Profit margin or fee for the exchange
+            $table->decimal('exchange_profit_sell', 5, 4)->default(0); // Profit margin or fee for the exchange
+            $table->decimal('exchange_profit_buy', 5, 4)->default(0); // Profit margin or fee for the exchange
             $table->timestamps();
 
             // Index the foreign key columns for faster joins and lookups

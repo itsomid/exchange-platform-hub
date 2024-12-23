@@ -3,7 +3,7 @@
 @section('content')
 
     <div class="row g-6">
-        <div class="col-xl-6 col-sm-6">
+        <div class="col-xl-4 col-sm-6">
             <div class="card h-100">
                 <div class="card-header pb-0">
 
@@ -38,16 +38,16 @@
                 </div>
             </div>
         </div>
-        <div class="col-xl-6 col-sm-6">
+        <div class="col-xl-4 col-sm-6">
             <div class="card h-100">
                 <div class="card-header pb-0">
 
                     <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-3 card-title">قیمت ارايه شده صرافی
+                        <h5 class="mb-3 card-title">قیمت ارايه شده صرافی (فروش به مشتری)
                             <div
-                                class="badge rounded bg-label-{{ $market->activeExchangePrice->exchange_profit < 0 ? 'danger' : 'success' }}"
+                                class="badge rounded bg-label-{{ $market->activeExchangePrice->exchange_profit_sell < 0 ? 'danger' : 'success' }}"
                                 dir="ltr">
-                                {{ $market->activeExchangePrice->exchange_profit > 0 ? '+' : '' }}{{$market->activeExchangePrice->exchange_profit * 100 }}%
+                                {{ $market->activeExchangePrice->exchange_profit_sell > 0 ? '+' : '' }}{{$market->activeExchangePrice->exchange_profit_sell * 100 }}%
                             </div>
                         </h5>
                         <div class="avatar-group d-flex align-items-center assigned-avatar">
@@ -69,7 +69,48 @@
                             {{ $market->activeExchangePrice->price_change_percentage > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->price_change_percentage, 2) }}%
                         </div>
                         <h2 class="mb-0">
-                            ${{formatNumber($market->activeExchangePrice->own_price,2)}}
+                            ${{formatNumber($market->activeExchangePrice->sell_own_price,2)}}
+                        </h2>
+
+                    </div>
+                </div>
+                <div class="card-body px-0">
+                    <div id="exchangePrice"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-sm-6">
+            <div class="card h-100">
+                <div class="card-header pb-0">
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-3 card-title">قیمت ارايه شده صرافی (خرید از مشتری)
+                            <div
+                                class="badge rounded bg-label-{{ $market->activeExchangePrice->exchange_profit_buy < 0 ? 'danger' : 'success' }}"
+                                dir="ltr">
+                                {{ $market->activeExchangePrice->exchange_profit_buy > 0 ? '+' : '' }}{{$market->activeExchangePrice->exchange_profit_buy * 100 }}%
+                            </div>
+                        </h5>
+                        <div class="avatar-group d-flex align-items-center assigned-avatar">
+                            <div class="me-8">{{$market->base_currency}}/{{$market->quote_currency}}</div>
+                            <div class="avatar avatar-md">
+                                <img src="{{asset($market->quoteCurrency->coinLogo())}}" class="rounded-circle ">
+                            </div>
+                            <div class="avatar avatar-md">
+                                <img src="{{asset($market->baseCurrency->coinLogo())}}" class="rounded-circle  ">
+                            </div>
+
+                        </div>
+                    </div>
+
+
+                    <div class="d-flex gap-2 align-items-center my-3 justify-content-end font-number">
+                        <div
+                            class="badge rounded bg-label-{{ $market->price_change_percentage < 0 ? 'danger' : 'success' }}" dir="ltr">
+                            {{ $market->activeExchangePrice->price_change_percentage > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->price_change_percentage, 2) }}%
+                        </div>
+                        <h2 class="mb-0">
+                            ${{formatNumber($market->activeExchangePrice->buy_own_price,2)}}
                         </h2>
 
                     </div>
@@ -95,7 +136,20 @@
                         @csrf
                         <h6>اطلاعات بازار</h6>
                         <div class="row">
-
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label class="form-label" for="exchange">صرافی مرجع</label>
+                                    <select name="exchange_id"  id="exchange" class="select2 form-control">
+                                        @foreach($exchanges as $exchange)
+                                            <option @if($exchange->id === $market->activeExchangePrice->exchange_id) selected @endif value="{{ $exchange->id }}">{{ $exchange->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('exchange_id')
+                                    <small class="text-danger">{{$message}}</small>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="w-100 mb-4"></div>
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label class="form-label" for="symbol">کوین پایه</label>
@@ -148,31 +202,28 @@
                         <div class="row mt-5">
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label class="form-label" for="exchange_profit">سود صرافی</label>
-                                    <input name="exchange_profit" id="exchange_profit" class=" form-control"
-                                           placeholder="سود صرافی"
-                                           value="{{formatNumber($market->activeExchangePrice->exchange_profit,2)}}"
+                                    <label class="form-label" for="exchange_profit_sell">سود صرافی از محل خرید از صرافی مرجع (فروش به مشتری)</label>
+                                    <input name="exchange_profit_sell" id="exchange_profit_sell" class=" form-control font-number " dir="ltr"
+                                           placeholder="سود صرافی از محل خرید از صرافی مرجع( فروش به مشتری)"
+                                           value="{{formatNumber($market->activeExchangePrice->exchange_profit_sell,2)}}"
                                            required>
-                                    @error('exchange_profit')
+                                    @error('exchange_profit_sell')
                                     <small class="text-danger">{{$message}}</small>
                                     @enderror
                                 </div>
                             </div>
-
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label class="form-label" for="exchange_profit">صرافی مرجع</label>
-                                    <select name="exchange_id" id="" class="form-control">
-                                        @foreach($exchanges as $exchange)
-                                            <option @if($exchange->id === $market->activeExchangePrice->exchange_id) selected @endif value="{{ $exchange->id }}">{{ $exchange->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('exchange_id')
+                                    <label class="form-label" for="exchange_profit_buy">سود صرافی از محل فروش به صرافی مرجع (خرید از مشتری)</label>
+                                    <input name="exchange_profit_buy" id="exchange_profit_buy" class=" form-control font-number " dir="ltr"
+                                           placeholder="سود صرافی از محل فروش به صرافی مرجع (خرید از مشتری)"
+                                           value="{{formatNumber($market->activeExchangePrice->exchange_profit_buy,2)}}"
+                                           required>
+                                    @error('exchange_profit_buy')
                                     <small class="text-danger">{{$message}}</small>
                                     @enderror
                                 </div>
                             </div>
-
                         </div>
                         <div class="row">
                             <div class="col-md-6 mt-5">
@@ -203,15 +254,19 @@
 @section('vendor-script')
     @vite([
             'resources/assets/vendor/libs/apex-charts/apexcharts.js',
-             'resources/assets/js/config.js',
-            'resources/assets/js/market.js'
+            'resources/assets/js/config.js',
+            'resources/assets/js/market.js',
+            'resources/assets/vendor/js/forms-selects.js',
+            'resources/assets/vendor/libs/select2/select2.js',
          ])
+
 @endsection
 
 @section('vendor-style')
     @vite([
-    'resources/assets/vendor/libs/apex-charts/apex-charts.scss',
-])
+        'resources/assets/vendor/libs/apex-charts/apex-charts.scss',
+        'resources/assets/vendor/libs/select2/select2.scss',
+    ])
 @endsection
 
 

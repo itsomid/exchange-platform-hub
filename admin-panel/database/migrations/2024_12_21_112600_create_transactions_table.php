@@ -11,8 +11,9 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('transactions', function (Blueprint $table) {
-            $table->id('id'); // Primary key
+            $table->id(); // Primary key
             $table->unsignedBigInteger('user_id'); // Foreign key
+            $table->unsignedBigInteger('admin_id')->nullable(); // Foreign key
             $table->unsignedBigInteger('wallet_id'); // Foreign key
             $table->unsignedBigInteger('deposit_id')->nullable(); // Foreign key
             $table->unsignedBigInteger('withdrawal_id')->nullable(); // Foreign key
@@ -28,6 +29,7 @@ return new class extends Migration {
 
             // Define foreign key constraints
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('admin_id')->references('id')->on('admins')->onDelete('cascade');
             $table->foreign('wallet_id')->references('id')->on('wallets')->onDelete('cascade');
             $table->foreign('deposit_id')->references('id')->on('deposits')->onDelete('set null');
             $table->foreign('withdrawal_id')->references('id')->on('withdrawals')->onDelete('set null');

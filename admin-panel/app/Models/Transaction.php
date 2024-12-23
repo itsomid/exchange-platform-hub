@@ -15,7 +15,7 @@ class Transaction extends Model
     use Filterable, HasApiTokens, HasFactory;
     public $filterNameSpace = 'App\Filters\TransactionFilter';
     protected $fillable = [
-        'amount', 'user_id', 'type', 'description','status'
+        'wallet_id','amount','balance', 'user_id', 'type', 'description','status'
     ];
     protected function casts(): array
     {
