@@ -12,6 +12,7 @@ class MarketHistoryRepository implements MarketHistoryRepositoryInterface
     {
         return MarketHistory::query()->where('market_id', $marketId)
             ->whereDate('timestamp', $date)
+            ->latest()
             ->first();
     }
 }
