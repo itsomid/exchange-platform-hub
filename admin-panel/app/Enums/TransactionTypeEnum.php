@@ -9,6 +9,7 @@ enum TransactionTypeEnum: string
     case DEPOSIT = 'deposit';
     case WITHDRAWAL= 'withdrawal';
     case REFERRAL = 'referral';
+    case FEE = 'fee';
 
     const array TYPE_LABEL = [
         self::OTC_BUY->value => 'خرید',
@@ -16,6 +17,7 @@ enum TransactionTypeEnum: string
         self::DEPOSIT->value => 'واریز',
         self::WITHDRAWAL->value => 'برداشت',
         self::REFERRAL->value => 'دعوت از دوستان',
+        self::FEE->value => 'دعوت از دوستان',
 //        self::ADMIN_CREDIT->value => 'اعتبار ادمین',
     ];
 
@@ -25,6 +27,7 @@ enum TransactionTypeEnum: string
         self::DEPOSIT->value => 'success',
         self::WITHDRAWAL->value => 'danger',
         self::REFERRAL->value => 'primary',
+        self::FEE->value => 'primary',
 //        self::ADMIN_CREDIT->value => 'info',
     ];
     const array TYPE_ICON = [
@@ -33,6 +36,7 @@ enum TransactionTypeEnum: string
         self::DEPOSIT->value => 'arrow-down-left',
         self::WITHDRAWAL->value => 'arrow-up-right',
         self::REFERRAL->value => 'user-tag',
+        self::FEE->value => 'user-tag',
 //        self::ADMIN_CREDIT->value => 'user-tie-hair',
     ];
 
