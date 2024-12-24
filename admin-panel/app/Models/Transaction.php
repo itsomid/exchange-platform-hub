@@ -13,10 +13,12 @@ use Laravel\Sanctum\HasApiTokens;
 class Transaction extends Model
 {
     use Filterable, HasApiTokens, HasFactory;
+
     public $filterNameSpace = 'App\Filters\TransactionFilter';
     protected $fillable = [
-        'wallet_id','amount','balance', 'user_id', 'type', 'description','status'
+        'user_id', 'admin_id', 'wallet_id', 'amount', 'balance', 'type', 'subtype', 'description','admin_description', 'status'
     ];
+
     protected function casts(): array
     {
         return [
@@ -28,6 +30,7 @@ class Transaction extends Model
     {
         return $this->belongsTo(User::class);
     }
+
     public function referralCodeUsage(): HasOne
     {
         return $this->hasOne(ReferralCodeUsage::class, 'transaction_id');

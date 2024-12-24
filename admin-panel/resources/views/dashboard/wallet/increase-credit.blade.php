@@ -55,8 +55,8 @@
                     </div>
 
                     <div class="col-md-6 user_role mt-3">
-                        <label class="form-label" for="user_description">توضیحات تراکنش (اختیاری):</label>
-                        <textarea class="form-control" id="user_description" name="user_description"
+                        <label class="form-label" for="admin_description">توضیحات تراکنش (اختیاری):</label>
+                        <textarea class="form-control" id="admin_description" name="admin_description"
                                   placeholder="توضیحات..."></textarea>
 
                     </div>

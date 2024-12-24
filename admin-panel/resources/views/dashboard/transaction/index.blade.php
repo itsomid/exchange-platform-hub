@@ -10,7 +10,7 @@
                         <div class="content-left"><span>تعداد تراکنش ها</span>
                             <div class="d-flex align-items-center my-1">
                                 <h4 class="mb-0 me-2">{{count($transactions)}}</h4>
-                            </div>ُق
+                            </div>
                         </div>
                         <span class="badge bg-label-danger rounded p-2">
                             <i class="fa-light fa-money-bill-wave fa-lg"></i>

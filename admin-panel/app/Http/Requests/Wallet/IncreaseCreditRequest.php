@@ -27,6 +27,7 @@ class IncreaseCreditRequest extends FormRequest
             'user' => ['required', 'exists:users,id'],
             'currency' => ['required','string','max:10'],
             'description' => ['nullable'],
+            'admin_description' => ['nullable'],
         ];
     }
 

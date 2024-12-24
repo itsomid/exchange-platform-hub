@@ -26,6 +26,7 @@ return new class extends Migration {
             $table->string('status', 50); // Status column
 
             $table->text('description')->nullable(); // Optional description
+            $table->text('admin_description')->nullable(); // Optional description
             $table->timestamps();
 
             // Define foreign key constraints

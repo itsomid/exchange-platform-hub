@@ -12,6 +12,7 @@ use App\Http\Requests\Wallet\IncreaseCreditRequest;
 use App\Models\Currency;
 use App\Models\Transaction;
 use App\Models\Wallet;
+use App\Services\Transaction\TransactionService;
 use App\Services\Wallet\DTO\UpdateBalanceRequestDTO;
 use App\Services\Wallet\WalletService;
 use Illuminate\Http\Request;
@@ -29,70 +30,36 @@ class WalletController extends Controller
         ]);
     }
 
-    public function increaseCredit(IncreaseCreditRequest $request, WalletService $walletService)
+    public function increaseCredit(IncreaseCreditRequest $request, TransactionService $transactionService)
     {
 
         try {
             $admin = auth()->user(); // Assuming the admin is logged in.
 
-            DB::transaction(function () use ($request, $admin, $walletService) {
 
-                // Check if the wallet for the specified currency exists
-                $wallet = Wallet::firstOrCreate(
-                    [
-                        'user_id' => $request->user,
-                        'currency_symbol' => $request->currency, // Use currency to find/create wallet
-                    ],
-                    [
-                        'balance' => 0, // Initialize balance for new wallet
-                    ]
-                );
+            // Check if the wallet for the specified currency exists
+             $fromUserId = $request->transaction_type === TransactionTypeEnum::WITHDRAWAL->value ? $request->user : TransactionService::EXCHANGE_USER_ID;
+             $toUserId = $request->transaction_type === TransactionTypeEnum::DEPOSIT->value ? $request->user : TransactionService::EXCHANGE_USER_ID;
 
-                // Validate transaction type
-                if (!in_array($request->transaction_type, [TransactionTypeEnum::DEPOSIT->value, TransactionTypeEnum::WITHDRAWAL->value])) {
-                    throw new \InvalidArgumentException('Invalid transaction type.');
-                }
+            $transactionService->transferBetweenWallets(
+                fromUserId: $fromUserId,
+                toUserId: $toUserId,
+                amount: $request->amount,
+                currency: $request->currency,
+                type: $request->transaction_type,
+                subtype: 'manual_admin',
+                description: $request->description ?? 'Manual transaction by admin #' . $admin->id,
+                admin_description: $request->admin_description
+            );
+            Toast::message('.افزایش اعتبار با موفقیت انجام شد')->success()->notify();
+            return redirect()->back();
 
-                if ($request->transaction_type === TransactionTypeEnum::WITHDRAWAL->value && $wallet->balance < $request->amount) {
-                    throw new \Exception('Insufficient balance for withdrawal.');
-                }
-
-                // Calculate the new balance
-                // Calculate the new balance
-                $newBalance = $request->transaction_type === TransactionTypeEnum::DEPOSIT->value
-                    ? $wallet->balance + $request->amount
-                    : $wallet->balance - $request->amount;
-
-                // Log the transaction
-                Transaction::create([
-                    'user_id' => $request->user,
-                    'wallet_id' => $wallet->id,
-                    'admin_id' => $admin->id,
-                    'amount' => $request->amount,
-                    'balance' => $newBalance,
-                    'type' => $request->transaction_type,
-                    'status' => 'completed',
-                    'description' => $request->description ?? 'Credit increased by admin #' . $admin->id,
-                ]);
-                // Update the wallet balance using WalletService.
-
-                $walletService->updateBalance(
-                    resolve(UpdateBalanceRequestDTO::class)
-                        ->setAmount($request->amount)
-                        ->setOperation($request->transaction_type === TransactionTypeEnum::DEPOSIT->value? BalanceOperationEnum::INCREASE : BalanceOperationEnum::DECREASE)
-                        ->setCurrencySymbol($request->currency)
-                        ->setUserId($request->user)
-                );
-
-
-            });
-        }catch (\Throwable $exception) {
+        } catch (\Throwable $exception) {
             report($exception);
 
             return redirect()->back()->with('error', 'An error occurred while updating the credit. Please try again.');
         }
 
-        Toast::message('.افزایش اعتبار با موفقیت انجام شد')->success()->notify();
-        return redirect()->back();
+
     }
 }
