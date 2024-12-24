@@ -1,0 +1,27 @@
+<?php
+
+namespace App\Listeners;
+
+use App\Mail\PasswordChangedMail;
+use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Support\Facades\Mail;
+
+class SendChangePasswordNotification
+{
+    /**
+     * Create the event listener.
+     */
+    public function __construct()
+    {
+        //
+    }
+
+    /**
+     * Handle the event.
+     */
+    public function handle(PasswordReset $event): void
+    {
+        $user = $event->user;
+        Mail::to($user->email)->send(new PasswordChangedMail);
+    }
+}

@@ -10,7 +10,6 @@ use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Str;
 
 class ForgetPasswordController extends Controller
 {
@@ -114,7 +113,7 @@ class ForgetPasswordController extends Controller
             function (User $user, string $password) {
                 $user->forceFill([
                     'password' => Hash::make($password),
-                ])->setRememberToken(Str::random(60));
+                ]);
 
                 $user->save();
 
