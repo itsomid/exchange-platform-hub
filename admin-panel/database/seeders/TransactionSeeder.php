@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
+use App\Models\Admin;
 use App\Models\Market;
 use App\Models\ReferralCode;
 use App\Models\Setting;
@@ -23,91 +24,63 @@ class TransactionSeeder extends Seeder
     {
         Transaction::factory(5)->withReferralCodeUsage()->create();
 
-        $user = User::factory()
-            ->has(
-                Wallet::factory(2)->sequence(['balance' => 1, 'currency_symbol' => 'BTC'], ['balance' => 10000, 'currency_symbol' => 'USDT']),
-                'wallets'
+
+        $admin = User::query()->where('id', 1)->with('wallets')->first();
+
+        $user = User::factory()->has(
+            Wallet::factory(2)->sequence(
+                ['currency_symbol' => 'BTC', 'balance' => 0],
+                ['currency_symbol' => 'USDT', 'balance' => 10000]
             )
-            ->create();
+        )->create();
 
-        $admin = User::query()->find(1);
-        $adminWallet = Wallet::query()
-            ->where('user_id', $admin->id)
-            ->where('currency_symbol', 'BTC')
-            ->first();
-        //For OTC - Buy 0.1 BTC
+        // Buy BTC with USDT
+        //BTC Transaction
         $amount = 0.1;
-        //Withdraw from Bitexroom
-        Transaction::query()->create([
-            'user_id' => 1,
-            'wallet_id' => $adminWallet->id,
-            'amount' => $amount,
-            'balance' => bcsub($adminWallet->balance, $amount, 8),
-            'type' => TransactionTypeEnum::OTC_SELL,
-            'subtype' => TransactionSubTypeEnum::OTC,
-            'status' => TransactionStatusEnum::SUCCESS,
-            'description' => 'برداشت بیت کوین از حساب صرافی',
-        ]);
-        $adminWallet
-            ->decrement('balance', $amount);
-        //Deposit into user
-        Transaction::query()->create([
-            'user_id' => $user->id,
-            'wallet_id' => $user->wallets[0]->id,
-            'amount' => $amount,
-            'balance' =>  bcadd("1", $amount, 8),
-            'type' => TransactionTypeEnum::OTC_BUY,
-            'subtype' => TransactionSubTypeEnum::OTC,
-            'status' => TransactionStatusEnum::SUCCESS,
-            'description' => 'واریز بیت کوین به حساب مشتری',
-        ]);
-        Wallet::query()
-            ->where('id', $user->wallets[0]->id)
-            ->decrement('balance', $amount);
-
-        //FEE
-        Transaction::query()->create([
-            'user_id' => 1,
-            'wallet_id' => $adminWallet->id,
-            'amount' => $fee = bcmul($amount, Setting::getSetting('otc_buy_fee'), 8),
-            'balance' => $fee = bcadd($adminWallet->balance, $fee, 8),
-            'type' => TransactionTypeEnum::FEE,
-            'subtype' => TransactionSubTypeEnum::OTC,
-            'status' => TransactionStatusEnum::SUCCESS,
-            'description' => 'مبلغ کارمزد',
-        ]);
-
-        $usdt = Market::query()->where('base_currency', 'BTC')->first();
-        $walletUSDT = Wallet::query()->where('user_id', $user->id)->where('currency_symbol', 'USDT')->first();
-        //Withdraw USDT from user
-        Transaction::query()->create([
-            'user_id' => $user->id,
-            'wallet_id' => $walletUSDT->id,
-            'amount' => $btcValue = bcmul($amount, $usdt->activeExchangePrice->price, 8),
-            'balance' => bcadd($walletUSDT->balance, $btcValue, 8),
-            'type' => TransactionTypeEnum::OTC_SELL,
-            'subtype' => TransactionSubTypeEnum::OTC,
-            'status' => TransactionStatusEnum::SUCCESS,
-            'description' => 'برداشت معادل تتری',
-
-        ]);
-
-        $walletUSDT
-            ->decrement('balance', $btcValue);
-
-        //Deposit USDT to bitexroom
-        $adminUSDTWallet = Wallet::query()->where('user_id', 1)->where('currency_symbol', 'USDT')->first();
-        Transaction::query()->create([
-            'user_id' => 1,
-            'wallet_id' => $adminUSDTWallet->id,
-            'amount' => $btcValue,
-            'balance' => bcadd($adminUSDTWallet->balance, $btcValue, 8),
-            'type' => TransactionTypeEnum::DEPOSIT,
-            'subtype' => TransactionSubTypeEnum::OTC,
-            'status' => TransactionStatusEnum::SUCCESS,
-            'description' => 'واریز مبلغ تتر از حساب مشتری به حساب صرافی',
-        ]);
-
+        Transaction::query()
+            ->create([
+                'user_id' => $user->id,
+                'wallet_id' => $user->wallets()->where('currency_symbol', 'BTC')->first()->id,
+                'amount' => $amount,
+                'fee' => $fee = bcmul(Setting::getSetting('otc_buy_fee'), $amount, 8),
+                'total' => $total = bcsub($amount, $fee, 8),
+                'balance' => $user->wallets->where('currency_symbol', 'BTC')->first()->balance,//Before create transaction
+                'type' => TransactionTypeEnum::OTC_BUY,
+                'subtype' => TransactionSubTypeEnum::OTC,
+                'description' => 'خرید بیت کوین با تتر',
+                'status' => TransactionStatusEnum::SUCCESS,
+            ]);
+        //Withdraw BTC Bitexroom exchange
+        Transaction::query()
+            ->create([
+                'user_id' => $admin->id,
+                'wallet_id' => $admin->wallets()->where('currency_symbol', 'BTC')->first()->id,
+                'amount' => $amount,
+                'fee' => 0,
+                'total' => $total,
+                'balance' => $admin->wallets->where('currency_symbol', 'BTC')->first()->balance,//Before create transaction
+                'type' => TransactionTypeEnum::OTC_SELL,
+                'subtype' => TransactionSubTypeEnum::OTC,
+                'description' => 'فروش بیت کوین به مشتری',
+                'status' => TransactionStatusEnum::SUCCESS,
+            ]);
+        //Deposit user's USDT into Bitexroom exchange
+        //calculate BTC value in USDT
+        $market=  Market::query()->where('base_currency','BTC')->first();
+        $amountUSDT = bcmul($market->activeExchangePrice->price, $amount, 8);
+        Transaction::query()
+            ->create([
+                'user_id' => $user->id,
+                'wallet_id' => $user->wallets()->where('currency_symbol', 'USDT')->first()->id,
+                'amount' => $amountUSDT,
+                'fee' => 0,
+                'total' => $amountUSDT,
+                'balance' => $user->wallets()->where('currency_symbol', 'USDT')->first()->balance,//Before create transaction
+                'type' => TransactionTypeEnum::DEPOSIT,
+                'subtype' => TransactionSubTypeEnum::OTC,
+                'description' => 'واریز تتر مشتری بابت خرید بیت کوین',
+                'status' => TransactionStatusEnum::SUCCESS,
+            ]);
     }
 
 
