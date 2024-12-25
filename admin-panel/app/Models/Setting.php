@@ -30,4 +30,9 @@ class Setting extends Model
             ? cache()->get('setting.rework.service.address')
             : static::query()->where('key', 'rework_service_address')->first()->value;
     }
+
+    public static function getSetting(string $key): ?string
+    {
+        return static::query()->where('key', $key)->first()?->value;
+    }
 }
