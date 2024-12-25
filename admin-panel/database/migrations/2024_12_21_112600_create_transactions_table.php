@@ -20,6 +20,8 @@ return new class extends Migration {
 //            $table->unsignedBigInteger('otc_order_id')->nullable(); // Foreign key
 //            $table->unsignedBigInteger('spot_order_id')->nullable(); // Foreign key
             $table->decimal('amount', 20, 8); // To handle precise values like cryptocurrency
+            $table->decimal('fee', 20, 8)->default(0); // Fee for the transaction
+            $table->decimal('total', 20, 8)->nullable(); // Total amount after fee
             $table->decimal('balance', 18, 8); // balance after transaction
             $table->string('type', 50); // Type of transaction
             $table->string('subtype')->nullable(); // Example: otc, spot, withdrawal,introducer,friend

@@ -32,15 +32,15 @@ class DatabaseSeeder extends Seeder
     private function seedAdditionalData(): void
     {
         $this->call([
+            SettingTableSeeder::class,
             AdminTableSeeder::class,
             UserTableSeeder::class,
             CurrencySeeder::class,
             CurrencyChainSeeder::class,
-            WalletSeeder::class,
-            TransactionSeeder::class,
-            SettingTableSeeder::class,
             ExchangeSeeder::class,
             MarketSeeder::class,
+            WalletSeeder::class,
+            TransactionSeeder::class,
             NodeProviderSeeder::class,
             ExternalApiConfigSeeder::class,
         ]);
