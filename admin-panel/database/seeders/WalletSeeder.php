@@ -25,7 +25,7 @@ class WalletSeeder extends Seeder
                     'user_id' => $user->id,
                     'currency_symbol' => $currency,
                     'balance' => $this->generateRealisticBalance($currency),
-                    'locked_balance' => $this->generateRealisticBalance($currency),
+                    'locked_balance' => $this->generateRealisticLockedBalance($currency),
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -37,19 +37,37 @@ class WalletSeeder extends Seeder
     {
         switch (strtoupper($currency)) {
             case 'BTC':
-                return $this->randomFloat(0, 10, 8);
+                return $this->randomFloat(2, 10, 8);
             case 'ETH':
-                return $this->randomFloat(0, 100, 8);
+                return $this->randomFloat(10, 100, 8);
             case 'DOGE':
-                return $this->randomFloat(0, 100000, 2);
+                return $this->randomFloat(20000, 100000, 2);
             case 'BNB':
-                return $this->randomFloat(0, 100, 8);
+                return $this->randomFloat(15, 100, 8);
             case 'USDT':
-                return $this->randomFloat(0, 10000, 2);
+                return $this->randomFloat(2000, 10000, 2);
             default:
                 return $this->randomFloat(0, 1000, 8); // Default range for other currencies
         }
     }
+    private function generateRealisticLockedBalance(string $currency)
+    {
+        switch (strtoupper($currency)) {
+            case 'BTC':
+                return $this->randomFloat(0, 2, 8);
+            case 'ETH':
+                return $this->randomFloat(0, 10, 8);
+            case 'DOGE':
+                return $this->randomFloat(0, 20000, 2);
+            case 'BNB':
+                return $this->randomFloat(0, 15, 8);
+            case 'USDT':
+                return $this->randomFloat(0, 2000, 2);
+            default:
+                return $this->randomFloat(0, 1000, 8); // Default range for other currencies
+        }
+    }
+
 
     private function randomFloat(float $min, float $max, int $decimals): float
     {

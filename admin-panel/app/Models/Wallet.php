@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Wallet extends Model
 {
     use HasFactory;
-    protected $fillable = ['user_id','currency_symbol','balance','locked_balance'];
+    protected $fillable = ['user_id','currency_symbol','balance','locked_balance','description'];
     public function user() : BelongsTo
     {
         return $this->belongsTo(User::class);

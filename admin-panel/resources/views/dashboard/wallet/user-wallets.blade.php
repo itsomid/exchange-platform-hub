@@ -15,17 +15,21 @@
                             <div class="user-profile-info">
                                 <h4 class="mb-2">{{$user->fullname()}}</h4>
                                 <ul class="list-inline mb-0 d-flex align-items-center flex-wrap justify-content-sm-start justify-content-center gap-4 my-2">
+                                    <li class="list-inline-item d-flex gap-1 align-items-center">
+                                        <i class="fa-regular fa-hashtag"></i>
+                                        <span class="font-number">{{$user->id}}</span>
+                                    </li>
                                     <li class="list-inline-item d-flex gap-2 align-items-center">
                                         <i class="fa-regular fa-user-check"></i>
-                                        <small class="text-body">{{$user->username}}</small>
+                                        <span class="text-body">{{$user->username}}</span>
                                     </li>
                                     <li class="list-inline-item d-flex gap-2 align-items-center">
                                         <i class="fa-regular fa-envelope"></i>
-                                        <small class="text-body">{{$user->email}}</small>
+                                        <span class="text-body">{{$user->email}}</span>
                                     </li>
                                     <li class="list-inline-item d-flex gap-2 align-items-center">
                                         <i class="fa-regular fa-clock"></i>
-                                        <small class="text-body">آخرین فعالیت در ۳ مهر ۱۴۰۳</small>
+                                        <span class="text-body">آخرین فعالیت در ۳ مهر ۱۴۰۳</span>
                                     </li>
 
                                 </ul>
@@ -43,7 +47,6 @@
                 <div class="card-header pb-0 d-flex justify-content-between">
                     <div class="card-title mb-0">
                         <h5 class="mb-0 card-title">ارزش کل موجودی‌ها به USDT</h5>
-                        {{--                        <p class="card-subtitle">Weekly Earnings Overview</p>--}}
                     </div>
                     <div class="dropdown">
                         <button
@@ -64,7 +67,7 @@
                         <div class="col-12 col-md-4 d-flex flex-column">
                             <div class="d-flex gap-2 align-items-center mb-3 flex-wrap">
 
-                                <h2 class="mb-0">{{formatNumber($totalAssetsValue,2)}}
+                                <h2 class="mb-0 font-number">{{formatNumber($totalAssetsValue,2)}}
                                     <small class="text-muted fw-light">USDT</small>
                                 </h2>
                                 <div class="badge rounded bg-label-success">+4.2%</div>
@@ -153,18 +156,21 @@
                             </div>
                             <h4 class="mb-0">کیف پول {{$wallet->currency->name}}</h4>
                         </div>
-                        <h3 class="mt-4 mb-1">{{$wallet->balance}}
+                        <h3 class="mt-4 mb-1 font-number">{{formatNumberTrimZeros($wallet->balance)}}
                             <span class="text-muted h4">{{$wallet->currency_symbol}}</span>
                         </h3>
                         <p class="mb-5">
                             <small class="text-muted fw-light">USDT</small>
-                            <span class="text-muted  me-2">{{formatNumber($wallet->assetValue,2)}}</span>
+                            <span
+                                class="text-muted  me-2 font-number">{{formatNumberTrimZeros($wallet->assetValue,2)}}</span>
                         </p>
                         @if($wallet->locked_balance !=0)
                             <p class="mb-0">
                                 <small class="text-danger">موجودی مسدود شده:</small>
-                                <small class="text-danger fw-bold ms-2">{{$wallet->locked_balance}}<span
-                                        class="text-danger ">USDT</span></small>
+                                <small
+                                    class="text-danger fw-bold ms-2 font-number">{{formatNumberTrimZeros($wallet->locked_balance)}}
+                                    <span class="text-danger ">{{$wallet->currency_symbol}}</span>
+                                </small>
                             </p>
                         @endif
 
@@ -172,11 +178,16 @@
                     <div class="card-body border-top">
                         <a href="{{route('admin.wallet.detail',['user'=>$user->id,'wallet'=>$wallet->id,'type'=>'deposit'])}}"
                            class="btn btn-label-primary me-2">مشاهده جزئیات</a>
-                        <button type="button" class="btn btn-icon btn-primary" disabled>
-                            <span class="fa-regular fa-plus fa-xl"></span>
-                        </button>
-                        {{--                        <button type="button" class="btn btn-danger me-2">مسدود کردن موجودی</button>--}}
-                        {{--                        <button type="button" class="btn btn-success">آزادسازی موجودی</button>--}}
+                        <a  class="btn btn-icon btn-primary" href="{{route('admin.wallet.increase-credit.form',['currency'=>$wallet->currency_symbol , 'user'=>$user])}}">
+                            <i class="fa-regular fa-plus fa-xl"></i>
+                        </a>
+                        <a class="btn btn-icon btn-danger ms-2" href="{{route('admin.wallet.block-balance.form',['wallet'=>$wallet , 'user'=>$user])}}">
+                            <i class="fa-regular fa-ban fa-xl"></i>
+                        </a>
+                        <a class="btn btn-icon btn-success ms-2" href="{{route('admin.wallet.unblock-balance.form',['wallet'=>$wallet , 'user'=>$user])}}">
+                            <i class="fa-regular fa-lock-open fa-xl"></i>
+                        </a>
+
                     </div>
                 </div>
             </div>

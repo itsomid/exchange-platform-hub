@@ -9,4 +9,4 @@
 
 @vite(['resources/assets/js/main.js'])
 @yield('vendor-script')
-@yield('scripts')
+@stack('scripts')

@@ -17,6 +17,10 @@
 
 
                             <ul class="list-inline mb-0 d-flex align-items-center flex-wrap justify-content-sm-start justify-content-center gap-4 my-2">
+                                <li class="list-inline-item d-flex gap-1 align-items-center">
+                                    <i class="fa-regular fa-hashtag"></i>
+                                    <span class="font-number">{{$user->id}}</span>
+                                </li>
                                 <li class="list-inline-item d-flex gap-2 align-items-center">
                                     <i class="fa-regular fa-user-check"></i>
                                     <small class="text-body">{{$user->username}}</small>
@@ -47,23 +51,26 @@
 
                         <div class="d-flex flex-column justify-content-center">
                             <h5 class="mb-1">موجودی کیف پول</h5>
-                            <h3 class="text-primary mt-4 mb-1">{{$wallet->balance}}
+                            <h3 class="text-primary mt-4 mb-1 font-number">{{formatNumberTrimZeros($wallet->balance)}}
                                 <span class=" h5">{{$wallet->currency_symbol}}</span>
                             </h3>
                             <p class="mb-5">
                                 <small class="text-muted fw-light">USDT</small>
-                                <span class="h5  me-2">{{formatNumber($specificAssetValue,2)}}</span>
+                                <span class="h5  me-2 font-number">{{formatNumber($specificAssetValue,2)}}</span>
                             </p>
 
                         </div>
                         <div class="d-flex align-content-center flex-wrap gap-4">
                             <div class="d-flex gap-4">
-                                <a href="{{route('admin.wallet.increase-credit.form')}}" type="button" class="btn btn-success">
+                                <a href="{{route('admin.wallet.increase-credit.form',['user'=>$user,'currency'=>$wallet->currency_symbol])}}" class="btn btn-info">
                                     <i class="fa-regular fa-plus me-1"></i> افزایش موجودی
                                 </a>
-                                <button type="button" class="btn btn-google-plus">
+                                <a href="{{route('admin.wallet.block-balance.form',['wallet'=>$wallet,'user'=>$user])}}" class="btn btn-google-plus">
                                     <i class="fa-regular fa-ban me-1"></i> مسدود سازی موجودی
-                                </button>
+                                </a>
+                                <a href="{{route('admin.wallet.block-balance.form',['wallet'=>$wallet,'user'=>$user])}}" class="btn btn-success">
+                                    <i class="fa-regular fa-lock-open me-1"></i> آزاد سازی موجودی
+                                </a>
                             </div>
 
                         </div>
@@ -86,7 +93,7 @@
                             </span>
                         </div>
                     </div>
-                    <h3 class="mt-4 mb-1">{{formatNumber($totalDeposits)}}
+                    <h3 class="mt-4 mb-1">{{formatNumberTrimZeros($totalDeposits)}}
                         <span class="text-muted h4">{{$wallet->currency_symbol}}</span>
                     </h3>
                     <p class="mb-5">
@@ -114,7 +121,7 @@
                             </span>
                         </div>
                     </div>
-                    <h3 class="mt-4 mb-1">{{formatNumber($totalWithdraws)}}
+                    <h3 class="mt-4 mb-1">{{formatNumberTrimZeros($totalWithdraws)}}
                         <span class="text-muted h4">{{$wallet->currency_symbol}}</span>
                     </h3>
                     <p class="mb-5">
@@ -143,7 +150,7 @@
                             </span>
                         </div>
                     </div>
-                    <h3 class="mt-4 mb-1">{{$totalOtcSell}}
+                    <h3 class="mt-4 mb-1">{{formatNumberTrimZeros($totalOtcSell)}}
                         <span class="text-muted h4">{{$wallet->currency_symbol}}</span>
                     </h3>
                     <p class="mb-5">
@@ -171,7 +178,7 @@
                             </span>
                         </div>
                     </div>
-                    <h3 class="mt-4 mb-1">{{$totalOtcBuy}}
+                    <h3 class="mt-4 mb-1">{{formatNumberTrimZeros($totalOtcBuy)}}
                         <span class="text-muted h4">{{$wallet->currency_symbol}}</span>
                     </h3>
                     <p class="mb-5">

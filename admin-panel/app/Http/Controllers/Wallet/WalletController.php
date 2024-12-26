@@ -2,15 +2,13 @@
 
 namespace App\Http\Controllers\Wallet;
 
-use App\DTO\StudentAccount\ChargeAccountDTO;
-use App\Enums\BalanceOperationEnum;
-use App\Enums\DepositTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Wallet\IncreaseCreditRequest;
 use App\Models\Currency;
 use App\Models\Transaction;
+use App\Models\User;
 use App\Models\Wallet;
 use App\Services\Transaction\TransactionService;
 use App\Services\Wallet\DTO\UpdateBalanceRequestDTO;
@@ -21,12 +19,17 @@ use Illuminate\Support\Facades\DB;
 
 class WalletController extends Controller
 {
-    public function increaseCreditForm()
+    public function increaseCreditForm(Request $request)
     {
 
         $currencies = Currency::all();
+
+        $selectedUser = User::find($request->user);
+        $selectedCurrency = $request->get('currency');
         return view('dashboard.wallet.increase-credit', [
-            'currencies' => $currencies
+            'currencies' => $currencies,
+            'selectedUser' => $selectedUser,
+            'selectedCurrency' => $selectedCurrency,
         ]);
     }
 
@@ -60,6 +63,60 @@ class WalletController extends Controller
             return redirect()->back()->with('error', 'An error occurred while updating the credit. Please try again.');
         }
 
+    }
+    public function blockBalanceForm(Wallet $wallet, User $user)
+    {
 
+        return view('dashboard.wallet.block-balance', [
+            'wallet'  => $wallet,
+            'user'  => $user,
+        ]);
+    }
+
+    public function blockBalance(Wallet $wallet, Request $request)
+    {
+
+        $validated = $request->validate([
+            'block_amount' => 'required|numeric|min:0',
+            'description' => 'nullable|string',
+        ]);
+        // Check if block amount is valid
+
+        if ($validated['block_amount'] > $wallet->balance - $wallet->locked_balance) {
+            return redirect()->back()->withErrors(['block_amount' => 'مقدار بلاکی از موجودی کاربر بیشتر است']);
+        }
+
+        // Update the blocked balance
+        $wallet->locked_balance += $validated['block_amount'];
+        $wallet->save();
+
+        return redirect()->back()->with('success', 'موجودی کاربر با موفقیت بروزسانی شد.');
+    }
+    public function unblockBalanceForm(Wallet $wallet, User $user)
+    {
+
+        return view('dashboard.wallet.unblock-balance', [
+            'wallet'  => $wallet,
+            'user'  => $user,
+        ]);
+    }
+    public function unblockBalance(Wallet $wallet, Request $request)
+    {
+        $validated = $request->validate([
+            'unblock_amount' => 'required|numeric|min:0',
+            'description' => 'nullable|string',
+        ]);
+
+
+        // Check if unblock amount is valid
+        if ($validated['unblock_amount'] > $wallet->locked_balance) {
+            return redirect()->back()->withErrors(['unblock_amount' => 'مقدار آزادسازی موجودی از مقدار بلاک شده بیشتر است.']);
+        }
+
+        // Update the blocked balance
+        $wallet->locked_balance -= $validated['unblock_amount'];
+        $wallet->save();
+
+        return redirect()->back()->with('success', 'موجودی کاربر با موفقیت بروزسانی شد.');
     }
 }

@@ -26,8 +26,8 @@
                         <x-user-selection-component
                             input-name="user"
                             multiple="0"
-                            selected=""
-                            selected-label=""
+                            selected="{{ $selectedUser ?$selectedUser->id: '' }}"
+                            selected-label="({{$selectedUser->id}}#) {{$selectedUser->fullname()}} | {{$selectedUser->email}}"
                         ></x-user-selection-component>
                     </div>
                     <div class="w-100"></div>
@@ -38,7 +38,7 @@
                             <select id="currency" class="form-select" name="currency"
                                     data-placeholder="لطفا کوین  مورد نظر را انتخاب کنید.">
                                 @foreach($currencies as $currency)
-                                    <option value="{{$currency->symbol}}">{{$currency->name}}</option>
+                                    <option {{$selectedCurrency === $currency->symbol ? 'selected' : ''}} value="{{$currency->symbol}}">{{$currency->name}}</option>
                                 @endforeach
                             </select>
                             @error('currency')<small class="text-danger">{{$message}}</small>@enderror
