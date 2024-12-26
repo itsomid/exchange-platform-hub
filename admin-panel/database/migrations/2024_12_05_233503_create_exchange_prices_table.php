@@ -24,6 +24,7 @@ return new class extends Migration
             // Index the foreign key columns for faster joins and lookups
             $table->index('market_id');
             $table->index('exchange_id');
+            $table->index(['market_id', 'exchange_id']);
 
             // Optional: Composite index on market_id and exchange_id for common queries
             $table->unique(['market_id']); // This ensures that there is only one price per market-exchange pair.
