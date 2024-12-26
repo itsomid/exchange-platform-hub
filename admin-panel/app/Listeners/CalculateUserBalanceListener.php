@@ -27,7 +27,7 @@ class CalculateUserBalanceListener
 
         // Calculate the sum of the balance
         $sumOfBuy = Transaction::query()->where('user_id', $user->id)
-            ->where('transactionType', TransactionTypeEnum::OTC_BUY)
+            ->where('transactionType', TransactionTypeEnum::BUY)
             ->sum('balance');
 
         $account = Account::query()

@@ -4,16 +4,16 @@ namespace App\Enums;
 
 enum TransactionTypeEnum: string
 {
-    case OTC_BUY = 'otc_buy';
-    case OTC_SELL = 'otc_sell';
+    case BUY = 'buy';
+    case SELL = 'sell';
     case DEPOSIT = 'deposit';
     case WITHDRAWAL= 'withdrawal';
     case REFERRAL = 'referral';
     case FEE = 'fee';
 
     const array TYPE_LABEL = [
-        self::OTC_BUY->value => 'خرید',
-        self::OTC_SELL->value => 'فروش',
+        self::BUY->value => 'خرید',
+        self::SELL->value => 'فروش',
         self::DEPOSIT->value => 'واریز',
         self::WITHDRAWAL->value => 'برداشت',
         self::REFERRAL->value => 'دعوت از دوستان',
@@ -22,8 +22,8 @@ enum TransactionTypeEnum: string
     ];
 
     const array TYPE_COLOR = [
-        self::OTC_BUY->value => 'primary',
-        self::OTC_SELL->value => 'primary',
+        self::BUY->value => 'success',
+        self::SELL->value => 'danger',
         self::DEPOSIT->value => 'success',
         self::WITHDRAWAL->value => 'danger',
         self::REFERRAL->value => 'primary',
@@ -31,8 +31,8 @@ enum TransactionTypeEnum: string
 //        self::ADMIN_CREDIT->value => 'info',
     ];
     const array TYPE_ICON = [
-        self::OTC_BUY->value => 'money-bill-transfer',
-        self::OTC_SELL->value => 'money-bill-transfer',
+        self::BUY->value => 'money-bill-transfer',
+        self::SELL->value => 'money-bill-transfer',
         self::DEPOSIT->value => 'arrow-down-left',
         self::WITHDRAWAL->value => 'arrow-up-right',
         self::REFERRAL->value => 'user-tag',

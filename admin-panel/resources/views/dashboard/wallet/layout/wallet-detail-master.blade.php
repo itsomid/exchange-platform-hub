@@ -215,16 +215,16 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link @if(request()->route('type') == 'otc_buy') active @endif"
-                   href="{{route('admin.wallet.detail',['user' => $user->id,'wallet'=>$wallet->id,'type'=>'otc_buy'])}}">
+                <a class="nav-link @if(request()->route('type') == 'buy') active @endif"
+                   href="{{route('admin.wallet.detail',['user' => $user->id,'wallet'=>$wallet->id,'type'=>'buy'])}}">
                     <i class="fa-solid fa-swap me-2"></i>
                     خرید OTC
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link @if(request()->route('type') == 'otc_sell') active @endif"
-                   href="{{route('admin.wallet.detail',['user' => $user->id,'wallet'=>$wallet->id, 'type'=>'otc_sell'])}}">
+                <a class="nav-link @if(request()->route('type') == 'sell') active @endif"
+                   href="{{route('admin.wallet.detail',['user' => $user->id,'wallet'=>$wallet->id, 'type'=>'sell'])}}">
                     <i class="fa-solid fa-swap me-2"></i>
                     فروش OTC
                 </a>

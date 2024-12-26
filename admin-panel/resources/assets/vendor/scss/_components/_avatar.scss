@@ -153,11 +153,7 @@
         transition: all 0.25s ease;
         width: 2.2rem;
         height: 2.2rem;
-        img,
-        .avatar-initial {
-            //border: 2px solid $avatar-group-border;
-            // box-shadow: 0 0 0 2px $avatar-group-border, inset 0 0 0 1px rgba($black, 0.07); //0 2px 10px 0 rgba($secondary,.3);
-        }
+
 
         .avatar-initial {
             color: $body-color;
@@ -189,7 +185,7 @@
     }
 
     .avatar-md {
-        margin-left: -2.9rem;
+        margin-left: -3.2rem;
     }
 
     .avatar-lg {
@@ -245,7 +241,7 @@
         }
 
         .avatar-md {
-            margin-right: -1rem;
+            margin-right: -0.8rem;
         }
 
         .avatar-lg {

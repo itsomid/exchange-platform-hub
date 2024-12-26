@@ -47,8 +47,8 @@ class UserWalletController extends Controller
         $transactionTypes = [
             'deposit' => ['title' => 'واریز', 'data' => $wallet],
             'withdrawal' => ['title' => 'برداشت', 'data' => $wallet],
-            'otc_buy' => ['title' => 'خرید OTC', 'data' => $wallet],
-            'otc_sell' => ['title' => 'فروش OTC', 'data' => $wallet],
+            'buy' => ['title' => 'خرید OTC', 'data' => $wallet],
+            'sell' => ['title' => 'فروش OTC', 'data' => $wallet],
         ];
         $transactionTitle = $transactionTypes[$type]['title'] ?? 'Transactions';
         // Fetch transactions based on type
@@ -93,26 +93,26 @@ class UserWalletController extends Controller
         $lastWithdrawDate = $lastWithdraw ? \App\Helpers\DateFormatter::convertToPersianDate($lastWithdraw->created_at, '%d %B %Y') : 'بدون برداشت';
 
         // Fetch the total OTC sell and buy amounts and last transaction dates
-        $totalOtcSell = Transaction::where('type', 'otc_sell')
+        $totalOtcSell = Transaction::where('type', 'sell')
             ->where('wallet_id', $wallet->id)
             ->sum('amount');
 
-        $totalOtcSellValue = $this->walletService->totalTransactionValueBasedType($wallet->currency_symbol, [TransactionTypeEnum::OTC_SELL]);
+        $totalOtcSellValue = $this->walletService->totalTransactionValueBasedType($wallet->currency_symbol, [TransactionTypeEnum::SELL]);
 
-        $lastOtcSell = Transaction::where('type', 'otc_sell')
+        $lastOtcSell = Transaction::where('type', 'sell')
             ->where('wallet_id', $wallet->id)
             ->latest('created_at')
             ->first();
 
         $lastOtcSellDate = $lastOtcSell ? \App\Helpers\DateFormatter::convertToPersianDate($lastOtcSell->created_at, '%d %B %Y') : 'بدون فروش OTC';
 
-        $totalOtcBuyValue = $this->walletService->totalTransactionValueBasedType($wallet->currency_symbol, [TransactionTypeEnum::OTC_BUY]);
+        $totalOtcBuyValue = $this->walletService->totalTransactionValueBasedType($wallet->currency_symbol, [TransactionTypeEnum::BUY]);
 
-        $totalOtcBuy = Transaction::where('type', 'otc_buy')
+        $totalOtcBuy = Transaction::where('type', 'buy')
             ->where('wallet_id', $wallet->id)
             ->sum('amount');
 
-        $lastOtcBuy = Transaction::where('type', 'otc_buy')
+        $lastOtcBuy = Transaction::where('type', 'buy')
             ->where('wallet_id', $wallet->id)
             ->latest('created_at')
             ->first();

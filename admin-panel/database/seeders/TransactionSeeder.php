@@ -45,7 +45,7 @@ class TransactionSeeder extends Seeder
                 'fee' => $fee = bcmul(Setting::getSetting('otc_buy_fee'), $amount, 8),
                 'total' => $total = bcsub($amount, $fee, 8),
                 'balance' => $user->wallets->where('currency_symbol', 'BTC')->first()->balance,//Before create transaction
-                'type' => TransactionTypeEnum::OTC_BUY,
+                'type' => TransactionTypeEnum::BUY,
                 'subtype' => TransactionSubTypeEnum::OTC,
                 'description' => 'خرید بیت کوین با تتر',
                 'status' => TransactionStatusEnum::SUCCESS,
@@ -59,7 +59,7 @@ class TransactionSeeder extends Seeder
                 'fee' => 0,
                 'total' => $total,
                 'balance' => $admin->wallets->where('currency_symbol', 'BTC')->first()->balance,//Before create transaction
-                'type' => TransactionTypeEnum::OTC_SELL,
+                'type' => TransactionTypeEnum::SELL,
                 'subtype' => TransactionSubTypeEnum::OTC,
                 'description' => 'فروش بیت کوین به مشتری',
                 'status' => TransactionStatusEnum::SUCCESS,
