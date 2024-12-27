@@ -17,7 +17,7 @@ enum TransactionTypeEnum: string
         self::DEPOSIT->value => 'واریز',
         self::WITHDRAWAL->value => 'برداشت',
         self::REFERRAL->value => 'دعوت از دوستان',
-        self::FEE->value => 'دعوت از دوستان',
+        self::FEE->value => 'کارمزد معامله',
 //        self::ADMIN_CREDIT->value => 'اعتبار ادمین',
     ];
 

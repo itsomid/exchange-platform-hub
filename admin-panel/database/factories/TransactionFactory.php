@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use App\Enums\BalanceOperationEnum;
+use App\Enums\TransactionSubTypeEnum;
+use App\Enums\TransactionTypeEnum;
 use App\Models\ReferralCode;
 use App\Models\ReferralCodeUsage;
 use App\Models\Transaction;
@@ -47,7 +49,8 @@ class TransactionFactory extends Factory
             return [
                 'user_id' => $user_id,
                 'wallet_id'=>$wallet->id,
-                'type' => 'referral', // Creates a referral code and assigns it
+                'type' => TransactionTypeEnum::REFERRAL, // Creates a referral code and assigns it
+                'subtype' => TransactionSubTypeEnum::REFERRAL_INTRODUCER,
                 'status' => 'completed',
                 'amount' => $amount,
                 'balance' => $newBalance,

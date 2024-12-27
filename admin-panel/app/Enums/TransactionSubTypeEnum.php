@@ -12,8 +12,8 @@ enum TransactionSubTypeEnum : string
 
     case SPOT = 'spot';
 
-    case REFERRAL_INTRODUCER = 'referral_introducer';
-    case REFERRAL_FRIEND = 'referral_friend';
+    case REFERRAL_INTRODUCER = 'introducer';
+    case REFERRAL_FRIEND = 'friend';
 
     case WITHDRAWAL_FEE = 'withdrawal_fee';
 

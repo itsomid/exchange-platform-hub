@@ -17,11 +17,9 @@ return new class extends Migration {
             $table->unsignedBigInteger('wallet_id'); // Foreign key
             $table->unsignedBigInteger('deposit_id')->nullable(); // Foreign key
             $table->unsignedBigInteger('withdrawal_id')->nullable(); // Foreign key
-//            $table->unsignedBigInteger('otc_order_id')->nullable(); // Foreign key
+            $table->unsignedBigInteger('otc_order_id')->nullable(); // Foreign key
 //            $table->unsignedBigInteger('spot_order_id')->nullable(); // Foreign key
             $table->decimal('amount', 20, 8); // To handle precise values like cryptocurrency
-            $table->decimal('fee', 20, 8)->default(0); // Fee for the transaction
-            $table->decimal('total', 20, 8)->nullable(); // Total amount after fee
             $table->decimal('balance', 18, 8); // balance after transaction
             $table->string('type', 50); // Type of transaction
             $table->string('subtype')->nullable(); // Example: otc, spot, withdrawal,introducer,friend
@@ -37,7 +35,7 @@ return new class extends Migration {
             $table->foreign('wallet_id')->references('id')->on('wallets')->onDelete('cascade');
             $table->foreign('deposit_id')->references('id')->on('deposits')->onDelete('set null');
             $table->foreign('withdrawal_id')->references('id')->on('withdrawals')->onDelete('set null');
-//            $table->foreign('otc_order_id')->references('id')->on('otc_orders')->onDelete('set null');
+            $table->foreign('otc_order_id')->references('id')->on('otc_orders')->onDelete('set null');
 //            $table->foreign('spot_order_id')->references('id')->on('spot_orders')->onDelete('set null');
         });
     }
