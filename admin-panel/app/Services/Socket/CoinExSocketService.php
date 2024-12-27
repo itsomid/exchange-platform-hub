@@ -6,6 +6,7 @@ use App\Models\Exchange;
 use App\Models\ExchangePrice;
 use App\Models\Market;
 use Exception;
+use Illuminate\Support\Facades\Redis;
 use Ratchet\Client\WebSocket;
 use Ratchet\RFC6455\Messaging\MessageInterface;
 use Throwable;
@@ -75,8 +76,9 @@ class CoinExSocketService
                     });
 
                     // Handle connection close
-                    $conn->on('close', function ($code = null, $reason = null) {
+                    $conn->on('close', function ($code = null, $reason = null) use ($loop){
                         echo "WebSocket closed: {$code} - {$reason}\n";
+                        $this->reconnect($loop);
                     });
                 },
                 function (Exception $e) {
@@ -85,6 +87,14 @@ class CoinExSocketService
             );
 
         $loop->run();
+    }
+
+    private function reconnect($loop): void
+    {
+        echo "Reconnecting to WebSocket...\n";
+        $loop->addTimer(5, function () {
+            $this->startListener();
+        });
     }
 
     private function processMessage(array $data): void
@@ -100,25 +110,13 @@ class CoinExSocketService
 
     private function decompressMessage(string $data): ?string
     {
-        // Attempt gzinflate (raw deflate)
-        $message = @gzinflate($data);
-        if ($message !== false) {
-            return $message;
+        // Attempt decompression methods
+        $message = zlib_decode($data) ;
+        if ($message === false) {
+            echo "Failed to decompress message.\n";
+            return null;
         }
-
-        // Attempt gzdecode (gzip)
-        $message = @gzdecode($data);
-        if ($message !== false) {
-            return $message;
-        }
-
-        // Attempt zlib_decode
-        $message = @zlib_decode($data);
-        if ($message !== false) {
-            return $message;
-        }
-
-        return $data; // Decompression failed
+        return $message;
     }
 
     private function updateCurrencyPrice(string $symbol, ?string $lastPrice, ?string $openPrice): void
@@ -146,14 +144,31 @@ class CoinExSocketService
             }
 
                 // Find the exchange price related to the market for CoinEx
-            ExchangePrice::query()
+            $exchangePriceModel = ExchangePrice::query()
                 ->where('market_id', $this->marketIds[$baseCurrency])
                 ->where('exchange_id', $this->coinexID)
-                ->update([
+                ->first();
+
+            $exchangePriceModel->update([
                     'price' => $lastPrice,
                     'open_price' => $openPrice,
                 ]);
 
+            $sellPrice = bcmul($lastPrice, $exchangePriceModel->exchange_profit_sell + 1, 8);
+            $buyPrice = bcmul($lastPrice, $exchangePriceModel->exchange_profit_buy + 1, 8);
+
+            $sellOpenPrice = bcmul($openPrice, $exchangePriceModel->exchange_profit_sell + 1, 8);
+            $buyOpenPrice = bcmul($openPrice, $exchangePriceModel->exchange_profit_buy + 1, 8);
+
+            // Publish to Redis
+            Redis::publish('market_prices', json_encode([
+                'base_currency' => $baseCurrency,
+                'sell_price' => $sellPrice,
+                'sell_open_price' => $sellOpenPrice,
+                'buy_price' => $buyPrice,
+                'buy_open_price' => $buyOpenPrice,
+                'timestamp' => now()->timestamp,
+            ]));
 
         }
     }
