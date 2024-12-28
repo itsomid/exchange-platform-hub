@@ -1095,6 +1095,49 @@
                 ]
             }
         },
+        "/api/v1/profile/show": {
+            "get": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Get User Profile",
+                "description": "Retrieve the profile information of the authenticated user.",
+                "operationId": "adeb4879a2efd89d58ee3c466c61e9ef",
+                "responses": {
+                    "200": {
+                        "description": "User profile retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserProfileResource"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/referral-codes": {
             "get": {
                 "tags": [
@@ -1977,6 +2020,28 @@
                         "description": "Indicates if the session is still active.",
                         "type": "boolean",
                         "example": "true"
+                    }
+                },
+                "type": "object"
+            },
+            "UserProfileResource": {
+                "properties": {
+                    "first_name": {
+                        "description": "The user's first name.",
+                        "type": "string"
+                    },
+                    "last_name": {
+                        "description": "The user's last name.",
+                        "type": "string"
+                    },
+                    "email": {
+                        "description": "The user's email address.",
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "username": {
+                        "description": "The user's username",
+                        "type": "string"
                     }
                 },
                 "type": "object"

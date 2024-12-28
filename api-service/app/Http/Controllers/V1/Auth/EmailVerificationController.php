@@ -4,7 +4,7 @@ namespace App\Http\Controllers\V1\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Auth\EmailVerificationRequest;
-use App\Http\Resources\Auth\UserResource;
+use App\Http\Resources\V1\Profile\UserProfileResource;
 use App\Services\Auth\DTO\EmailVerifyRequestDTO;
 use App\Services\Auth\EmailVerificationService;
 use Illuminate\Support\Facades\Auth;
@@ -37,7 +37,7 @@ class EmailVerificationController extends Controller
      *            @OA\Property(
      *              property="data",
      *              type="object",
-     *              @OA\Property(property="user", ref="#/components/schemas/UserResource"),
+     *              @OA\Property(property="user", ref="#/components/schemas/UserProfileResource"),
      *            )
      *         )
      *     ),
@@ -77,7 +77,7 @@ class EmailVerificationController extends Controller
 
         return response([
             'message' => __('auth.email-verification.success'),
-            'data' => new UserResource(Auth::user()),
+            'data' => new UserProfileResource(Auth::user()),
         ]);
     }
 }

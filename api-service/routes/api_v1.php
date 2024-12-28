@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/captcha', [\App\Http\Controllers\CaptchaController::class, '__invoke'])->withoutMiddleware(['auth:sanctum', 'verified']);
 Route::prefix('/profile')->group(function () {
+    Route::get('/show', [\App\Http\Controllers\V1\Profile\UserController::class, 'show'])->name('user.show');
     Route::patch('/change-password', [\App\Http\Controllers\V1\Profile\UserController::class, 'changePassword'])->name('user.change-password');
     Route::patch('/update-profile', [\App\Http\Controllers\V1\Profile\UserController::class, 'updateProfile'])->name('user.update-profile');
     Route::get('/sessions/active', [\App\Http\Controllers\V1\Profile\SessionController::class, 'active'])->name('user.active-sessions');
