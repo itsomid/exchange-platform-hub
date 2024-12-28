@@ -64,10 +64,10 @@
                         </div>
                         <ul class="list-unstyled avatar-group d-flex my-0">
                             @foreach($transactions as $transaction)
-                                <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top"
-                                    title="{{$transaction->user->email}}" class="avatar pull-up">
-                                    <img class="rounded-circle" src="http://127.0.0.1:8000/images/avatars/male/2.png" alt="Avatar">
-                                </li>
+{{--                                <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top"--}}
+{{--                                    title="{{$transaction->user->email}}" class="avatar pull-up">--}}
+{{--                                    <img class="rounded-circle" src="http://127.0.0.1:8000/images/avatars/male/2.png" alt="Avatar">--}}
+{{--                                </li>--}}
                             @endforeach
                         </ul>
                     </div>
@@ -133,7 +133,7 @@
 
                 </div>
                 <div class="table-responsive text-nowrap">
-                    <table class="table">
+                    <table class="table table-striped">
                         <thead>
                         <tr>
                             <th>شناسه</th>
@@ -218,11 +218,11 @@
                                     </td>
 
                                     <td>{{$transaction->wallet->currency_symbol}}</td>
-                                    <td class="font-number">
-                                        <h6>{{formatNumber($transaction->amount)}}</h6>
+                                    <td class="font-number" dir="ltr">
+                                        <h6 class="{{$transaction->amount > 0 ?'': 'text-danger'}}">{{formatNumberTrimZeros($transaction->amount)}}</h6>
                                     </td>
                                     <td class="font-number">
-                                        <h6>{{formatNumber($transaction->balance)}}</h6>
+                                        <h6>{{formatNumberTrimZeros($transaction->balance)}}</h6>
                                     </td>
                                     <td>
                                         {{$transaction->description}}
