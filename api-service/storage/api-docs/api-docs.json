@@ -870,6 +870,68 @@
                 ]
             }
         },
+        "/api/v1/profile/sessions/active": {
+            "get": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Get Active Sessions",
+                "description": "Retrieve a list of active sessions for the authenticated user.",
+                "operationId": "e4299ebd8af20bd5fd469cf2af929418",
+                "responses": {
+                    "200": {
+                        "description": "Active sessions retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ActiveSession"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "An error occurred while fetching active sessions."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/profile/change-password": {
             "patch": {
                 "tags": [
@@ -1858,6 +1920,44 @@
                             },
                             "type": "object"
                         }
+                    }
+                },
+                "type": "object"
+            },
+            "ActiveSession": {
+                "title": "Active Session",
+                "description": "Details of a user's active session.",
+                "properties": {
+                    "ip": {
+                        "description": "IP address of the session.",
+                        "type": "string",
+                        "example": "192.168.1.1"
+                    },
+                    "location": {
+                        "description": "Location of the session, if available.",
+                        "type": "string",
+                        "example": "New York, USA"
+                    },
+                    "platform": {
+                        "description": "Operating system/platform of the session.",
+                        "type": "string",
+                        "example": "Windows 10"
+                    },
+                    "browser": {
+                        "description": "Browser used for the session.",
+                        "type": "string",
+                        "example": "Google Chrome"
+                    },
+                    "login_at": {
+                        "description": "Timestamp of the session login.",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-12-21T14:30:00Z"
+                    },
+                    "is_active": {
+                        "description": "Indicates if the session is still active.",
+                        "type": "boolean",
+                        "example": "true"
                     }
                 },
                 "type": "object"
