@@ -4,8 +4,12 @@ namespace App\Services\Profile;
 
 use App\Exceptions\User\OldPasswordNotMatchedNewPasswordException;
 use App\Repositories\Interfaces\UserRepositoryInterface;
+use App\Services\Profile\DTO\UserActiveSessionsResponseDTO;
+use App\Utils\LocationFinder;
+use App\Utils\UserAgent;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\PersonalAccessToken;
 
 readonly class ProfileService
 {
@@ -36,5 +40,23 @@ readonly class ProfileService
             'last_name' => $requestDTO->getLastName(),
             'mobile' => $requestDTO->getMobile(),
         ]);
+    }
+
+    public function getActiveSessions(int $userId): array
+    {
+        $user = $this->userRepository->getUserById($userId);
+
+        return $user->tokens->map(function (PersonalAccessToken $token) {
+            $userAgent = new UserAgent($token->user_agent);
+            $locationFiner = new LocationFinder;
+
+            return resolve(UserActiveSessionsResponseDTO::class)
+                ->setLoginAt($token->created_at)
+                ->setLocation($locationFiner->getCountryAndCity($token->ip))
+                ->setPlatform($userAgent->getPlatform())
+                ->setBrowser($userAgent->getBrowser())
+                ->setIp($token->ip)
+                ->setIsActive($token->expires_at->isPast());
+        })->toArray();
     }
 }
