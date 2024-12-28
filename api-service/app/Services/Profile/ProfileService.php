@@ -56,7 +56,7 @@ readonly class ProfileService
                 ->setPlatform($userAgent->getPlatform())
                 ->setBrowser($userAgent->getBrowser())
                 ->setIp($token->ip)
-                ->setIsActive($token->expires_at->isPast());
+                ->setIsActive($token->expires_at->isFuture());
         })->toArray();
     }
 }

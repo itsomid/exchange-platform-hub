@@ -21,6 +21,7 @@ class ActiveSessionCollection extends ResourceCollection
             'platform' => $session->getPlatform(),
             'browser' => $session->getBrowser(),
             'login_at' => $session->getLoginAt(),
+            'is_active' => $session->getIsActive(),
         ])->toArray();
     }
 }
