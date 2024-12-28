@@ -110,6 +110,14 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Email verified successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "user": {
+                                                    "$ref": "#/components/schemas/UserResource"
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -409,6 +417,9 @@
                                             "properties": {
                                                 "token": {
                                                     "$ref": "#/components/schemas/AccessTokenResource"
+                                                },
+                                                "user": {
+                                                    "$ref": "#/components/schemas/UserResource"
                                                 }
                                             },
                                             "type": "object"
@@ -1805,14 +1816,22 @@
             },
             "UserResource": {
                 "properties": {
-                    "name": {
-                        "description": "The user's full name.",
+                    "first_name": {
+                        "description": "The user's first name.",
+                        "type": "string"
+                    },
+                    "last_name": {
+                        "description": "The user's last name.",
                         "type": "string"
                     },
                     "email": {
                         "description": "The user's email address.",
                         "type": "string",
                         "format": "email"
+                    },
+                    "username": {
+                        "description": "The user's username",
+                        "type": "string"
                     },
                     "has_two_factor": {
                         "description": "Indicates whether the user has two-factor authentication enabled.",
