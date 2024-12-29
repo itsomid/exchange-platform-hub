@@ -34,3 +34,8 @@ Route::prefix('/wallets')->group(function () {
 Route::prefix('/portfolio')->group(function () {
     Route::get('/last-week', [\App\Http\Controllers\V1\Wallet\PortfolioController::class, 'getPortfolioLastWeek'])->name('portfolio.get-portfolio-last-week');
 });
+//OTC
+Route::prefix('/otc')->group(function () {
+    //get-markets
+    Route::get('/markets', [\App\Http\Controllers\V1\OTC\MarketController::class, 'lists'])->name('otc.markets');
+});
