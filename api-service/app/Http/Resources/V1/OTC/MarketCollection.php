@@ -71,6 +71,7 @@ class MarketCollection extends ResourceCollection
     public function toArray(Request $request): array
     {
         return $this->collection->map(fn (MarketResponseDTO $DTO) => [
+            'market_id' => $DTO->getMarketId(),
             'base_currency' => $DTO->getBaseCurrency(),
             'quote_currency' => $DTO->getQuoteCurrency(),
             'is_active' => $DTO->getIsActive(),

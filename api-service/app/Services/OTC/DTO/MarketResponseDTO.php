@@ -4,6 +4,7 @@ namespace App\Services\OTC\DTO;
 
 class MarketResponseDTO
 {
+    private int $marketId;
     private string $baseCurrency;
 
     private string $quoteCurrency;
@@ -100,5 +101,16 @@ class MarketResponseDTO
     public function getMaxTradeAmount(): string
     {
         return $this->maxTradeAmount;
+    }
+
+    public function setMarketId(int $marketId): self
+    {
+        $this->marketId = $marketId;
+        return $this;
+    }
+
+    public function getMarketId(): int
+    {
+        return $this->marketId;
     }
 }

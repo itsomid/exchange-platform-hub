@@ -15,4 +15,10 @@ class MarketRepository implements MarketRepositoryInterface
             return Market::query()->get();
         });
     }
+
+    public function getMarketById(int $marketId): Market
+    {
+        return Market::query()
+            ->find($marketId);
+    }
 }

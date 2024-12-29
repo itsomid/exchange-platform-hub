@@ -18,4 +18,6 @@ interface WalletRepositoryInterface
     public function getListsWithMarket(int $getUserId): ?Collection;
 
     public function getOrCreateWallet(int $userId, string $symbol): Wallet;
+
+    public function getOneByCurrency(string $base_currency, int $userId): Wallet;
 }

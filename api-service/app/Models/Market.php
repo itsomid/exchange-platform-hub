@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property ExchangePrice $exchangePrice
  * @property string        $min_trade_amount
  * @property string        $max_trade_amount
+ * @property int           $id
  */
 class Market extends Model
 {
