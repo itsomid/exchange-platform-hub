@@ -17,6 +17,10 @@ class Market extends Model
         'is_active'
     ];
 
+    protected $appends = [
+      'name'
+    ];
+
     public function baseCurrency(): BelongsTo
     {
         return $this->belongsTo(Currency::class, 'base_currency', 'symbol');
@@ -35,6 +39,11 @@ class Market extends Model
     public function activeExchangePrice(): HasOne
     {
         return $this->hasOne(ExchangePrice::class);
+    }
+
+    public function getNameAttribute()
+    {
+        return $this->base_currency . '/' .$this->quote_currency;
     }
 
 

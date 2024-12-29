@@ -105,23 +105,6 @@ class OTCService
                 $buyerQuoteWallet->decrement('balance', $amountInQuoteCurrency);
 
 
-                // Seller transaction (Base currency)
-                Transaction::query()->create([
-                    'user_id' => $requestDTO->getSellerUserId(),
-                    'wallet_id' => $sellerWallet->id,
-                    'otc_order_id' => $otc_order->id,
-                    'balance' => $sellerWallet->balance,
-                    'amount' => $receivedAmount,
-                    'type' => TransactionTypeEnum::SELL,
-                    'subtype' => TransactionSubTypeEnum::OTC,
-                    'status' => TransactionStatusEnum::SUCCESS,
-                    'description' => "فروش " . formatNumberTrimZeros($buyAmount)
-                        . " {$market->base_currency} به قیمت "
-                        . formatNumberTrimZeros($market->activeExchangePrice->price) . " تتر",
-                ]);
-
-                $sellerWallet->decrement('balance', $receivedAmount);
-
                 // Seller transaction (Quote currency)
                 Transaction::query()->create([
                     'user_id' => $requestDTO->getSellerUserId(),
@@ -137,6 +120,25 @@ class OTCService
                         . formatNumberTrimZeros($market->activeExchangePrice->price) . " تتر",
                 ]);
                 $sellerQuoteWallet->increment('balance', $amountInQuoteCurrency);
+
+                // Seller transaction (Base currency)
+                Transaction::query()->create([
+                    'user_id' => $requestDTO->getSellerUserId(),
+                    'wallet_id' => $sellerWallet->id,
+                    'otc_order_id' => $otc_order->id,
+                    'balance' => $sellerWallet->balance,
+                    'amount' => -$receivedAmount,
+                    'type' => TransactionTypeEnum::SELL,
+                    'subtype' => TransactionSubTypeEnum::OTC,
+                    'status' => TransactionStatusEnum::SUCCESS,
+                    'description' => "فروش " . formatNumberTrimZeros($buyAmount)
+                        . " {$market->base_currency} به قیمت "
+                        . formatNumberTrimZeros($market->activeExchangePrice->price) . " تتر",
+                ]);
+
+                $sellerWallet->decrement('balance', $receivedAmount);
+
+
 
 
                 // 3. Commission Transaction

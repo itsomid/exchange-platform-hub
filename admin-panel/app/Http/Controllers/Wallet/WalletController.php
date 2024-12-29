@@ -51,6 +51,7 @@ class WalletController extends Controller
                 currency: $request->currency,
                 type: $request->transaction_type,
                 subtype: 'manual_admin',
+                adminId: Auth::user()->id,
                 description: $request->description ?? 'Manual transaction by admin #' . $admin->id,
                 admin_description: $request->admin_description
             );

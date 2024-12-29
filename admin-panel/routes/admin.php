@@ -25,6 +25,7 @@ use App\Http\Controllers\User\UserSecurityController;
 use App\Http\Controllers\User\UserWalletController;
 use App\Http\Controllers\Transaction\TransactionController;
 use App\Http\Controllers\Wallet\WalletController;
+use App\Http\Controllers\OTCOrder\OTCOrderController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -138,6 +139,10 @@ Route::prefix('transactions')->group(function (){
    Route::get('/',[TransactionController::class,'index'])->name('transaction.index')->can('transaction');
 });
 
+Route::prefix('otc_orders')->group(function (){
+    Route::get('/',[OTCOrderController::class,'index'])->name('otc_orders.index')->can('transaction');
+});
+
 Route::get('/internal-settings', [InternalSettingController::class, 'index'])->name('internal.setting.index')->can('setting.int.index');
 Route::post('/internal-settings/update-permissions', [InternalSettingController::class, 'updatePermissions'])->name('setting.int.update-permissions')->can('setting.int.index');
 Route::post('/internal-settings/update-otc-setting', [InternalSettingController::class, 'updateOTCSetting'])->name('setting.int.update-otc-setting')->can('setting.int.index');
@@ -153,5 +158,4 @@ Route::prefix('wallet')->group(function (){
     Route::post('wallet/{wallet}/block-balance', [WalletController::class, 'blockBalance'])->name('wallet.block-balance')->can('wallet');
     Route::get('wallet/{wallet}/user/{user}/unblock-balance', [WalletController::class, 'unblockBalanceForm'])->name('wallet.unblock-balance.form')->can('wallet');
     Route::post('wallet/{wallet}/unblock-balance', [WalletController::class, 'unblockBalance'])->name('wallet.unblock-balance')->can('wallet');
-
 });

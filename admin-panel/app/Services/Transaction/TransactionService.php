@@ -172,7 +172,7 @@ class TransactionService
             'user_id' => $wallet->user_id,
             'admin_id' => $adminId,
             'wallet_id' => $wallet->id,
-            'amount' => abs($amount),
+            'amount' => $amount,
             'balance' => $wallet->balance,
             'type' => $type,
             'subtype' => $subtype,
