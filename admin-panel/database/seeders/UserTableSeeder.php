@@ -21,6 +21,14 @@ class UserTableSeeder extends Seeder
             'password' => Hash::make('password'),
             'mobile' => '09121110111',
         ]);
+        User::create([
+            'first_name' => 'آریا',
+            'last_name' => 'عرب گل',
+            'username' => 'a.arabgol',
+            'email' => 'a.arabgol@vista-group.ir',
+            'password' => Hash::make('password'),
+            'mobile' => '09121110112',
+        ]);
         User::factory(5)->withReferralCode()->create();
         User::factory(10)->withIntroducer()->create();
         //        User::factory(10)->create();
