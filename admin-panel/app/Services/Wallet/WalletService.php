@@ -110,4 +110,49 @@ class WalletService
             default => throw new \InvalidArgumentException("Invalid balance operation: {$operation}"),
         };
     }
+
+    public function createDepositAddress(int $userId, string $currencySymbol, string $currencyChain)
+    {
+        DB::beginTransaction();
+
+        try {
+
+            $wallet = Wallet::firstOrCreate(
+                ['user_id' => $userId, 'currency_symbol' => $currencySymbol],
+                ['balance' => 0, 'locked_balance' => 0]
+            );
+
+            // Check if a deposit address for this chain already exists
+            $existingChain = WalletChain::where('wallet_id', $wallet->id)
+                ->where('currency_chain', $currencyChain)
+                ->first();
+
+            if ($existingChain) {
+                throw new \Exception("A deposit address for this currency chain already exists.");
+            }
+
+            //TODO: give it from HD Wallet
+            $depositAddress = $this->generateUniqueAddress();
+
+            // Create the wallet chain record
+            $walletChain = WalletChain::create([
+                'wallet_id' => $wallet->id,
+                'currency_chain' => $currencyChain,
+                'address' => $depositAddress,
+            ]);
+
+            DB::commit();
+
+            return $walletChain;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
+    private function generateUniqueAddress()
+    {
+        // Placeholder for address generation logic
+        return '0x' . bin2hex(random_bytes(20));
+    }
 }

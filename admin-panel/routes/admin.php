@@ -26,6 +26,7 @@ use App\Http\Controllers\User\UserWalletController;
 use App\Http\Controllers\Transaction\TransactionController;
 use App\Http\Controllers\Wallet\WalletController;
 use App\Http\Controllers\OTCOrder\OTCOrderController;
+use App\Http\Controllers\Deposit\DepositController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -141,6 +142,10 @@ Route::prefix('transactions')->group(function (){
 
 Route::prefix('otc_orders')->group(function (){
     Route::get('/',[OTCOrderController::class,'index'])->name('otc_orders.index')->can('transaction');
+});
+
+Route::prefix('deposits')->group(function (){
+   Route::get('/',[DepositController::class,'index'])->name('deposit.index')->can('deposit');
 });
 
 Route::get('/internal-settings', [InternalSettingController::class, 'index'])->name('internal.setting.index')->can('setting.int.index');

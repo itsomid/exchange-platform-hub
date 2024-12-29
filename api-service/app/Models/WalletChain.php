@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * @property string $public_key
+ * @property string $address
  * @property int    $id
  */
 class WalletChain extends Model
 {
     protected $fillable = [
-        'wallet_id', 'currency_chain', 'public_key',
+        'wallet_id', 'currency_chain', 'address',
     ];
 }

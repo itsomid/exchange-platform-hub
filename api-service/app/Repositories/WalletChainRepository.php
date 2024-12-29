@@ -16,7 +16,7 @@ class WalletChainRepository implements WalletChainRepositoryInterface
                     'currency_chain' => $currencyChain,
                 ],
                 [
-                    'public_key' => null,
+                    'address' => null,
                 ]
             );
     }
@@ -25,6 +25,6 @@ class WalletChainRepository implements WalletChainRepositoryInterface
     {
         WalletChain::query()
             ->where('wallet_id', $walletChainId)
-            ->update(['public_key' => $publicKey]);
+            ->update(['address' => $publicKey]);
     }
 }

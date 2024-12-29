@@ -35,14 +35,14 @@ class WalletService
             $requestDTO->getCurrency()
         );
 
-        if (is_null($chain->public_key)) {
+        if (is_null($chain->address)) {
             //Generate Public Key
             $this->walletChainRepository->savePublicKey(
                 $chain->id,
                 $address = Str::random(24)
             );
         } else {
-            $address = $chain->public_key;
+            $address = $chain->address;
         }
 
         return resolve(GenerateAddressResponseDTO::class)

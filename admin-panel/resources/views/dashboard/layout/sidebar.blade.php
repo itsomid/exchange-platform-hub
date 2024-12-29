@@ -84,7 +84,7 @@
 {{--                </a>--}}
 {{--            </li>--}}
 {{--        @endcan--}}
-        @can('order.index')
+        @can('transaction')
             <li class="menu-item @if(request()->is('admin/transactions*')) active @endif">
                 <a href="{{route('admin.transaction.index')}}" class="menu-link">
                     <i class="menu-icon fa-regular fa-chart-candlestick"></i>
@@ -92,7 +92,7 @@
                 </a>
             </li>
         @endcan
-        @can('order.index')
+        @can('otc_order')
             <li class="menu-item @if(request()->is('admin/otc*')) active @endif">
                 <a href="{{route('admin.otc_orders.index')}}" class="menu-link">
                     <i class="menu-icon  fa-regular fa-swap"></i>
@@ -101,15 +101,15 @@
                 </a>
             </li>
         @endcan
-        @can('transaction.index')
+        @can('deposit')
             <li class="menu-item @if(request()->is('admin/deposits*')) active @endif">
-                <a href="" class="menu-link">
+                <a href="{{route('admin.deposit.index')}}" class="menu-link">
                     <i class="menu-icon fa-regular fa-money-from-bracket"></i>
                     <div>لیست واریزی ها</div>
                 </a>
             </li>
         @endcan
-        @can('transaction.index')
+        @can('withdraw')
             <li class="menu-item @if(request()->is('admin/withdraws*')) active @endif">
                 <a href="" class="menu-link">
                     <i class="menu-icon fa-regular fa-money-bill-wave"></i>

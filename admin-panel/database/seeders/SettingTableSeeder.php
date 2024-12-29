@@ -13,12 +13,12 @@ class SettingTableSeeder extends Seeder
         \DB::table('settings')->insert([
             [
                 'key' => 'otc_buy_fee',
-                'name' => 'کارمزد خرید از مشتری',
+                'name' => 'کارمزد خرید مشتری',
                 'value' => '0.03',
             ],
             [
                 'key' => 'otc_sell_fee',
-                'name' => 'کارمزد فروش به مشتری',
+                'name' => 'کارمزد فروش مشتری',
                 'value' => '0.002',
             ],
             [

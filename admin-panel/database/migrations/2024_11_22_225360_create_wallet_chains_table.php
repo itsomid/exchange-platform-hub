@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Wallet::class)->constrained()->cascadeOnDelete();
             $table->string('currency_chain');
-            $table->string('public_key')->nullable();
+            $table->string('address')->nullable();
             $table->timestamps();
 
             $table->unique(['wallet_id', 'currency_chain']);

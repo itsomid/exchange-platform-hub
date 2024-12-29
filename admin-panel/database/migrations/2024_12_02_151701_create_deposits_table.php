@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('currency_chain');
             $table->string('currency_symbol');
             $table->decimal('amount', 8, 2)->nullable();
-            $table->string('public_key');
+            $table->string('address');
             $table->string('transaction_hash', 64)->nullable();
             $table->string('status')->default('pending');
             $table->text('note')->nullable(); // Optional note or description
