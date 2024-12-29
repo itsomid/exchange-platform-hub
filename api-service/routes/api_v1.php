@@ -39,6 +39,8 @@ Route::prefix('/portfolio')->group(function () {
 Route::prefix('/otc')->group(function () {
     //get-markets
     Route::get('/markets', [\App\Http\Controllers\V1\OTC\MarketController::class, 'lists'])->name('otc.markets');
-    //get bitexroom available coins
-    Route::get('/bitexroom-available-balance', [\App\Http\Controllers\V1\OTC\MarketController::class, 'bitexroomAvailableBalance'])->name('otc.bitexroom-available-balance');
+    Route::prefix('/buy')->group(function () {
+        //get bitexroom available coins
+        Route::get('/bitexroom-available-balance', [\App\Http\Controllers\V1\OTC\MarketController::class, 'bitexroomAvailableBalance'])->name('otc.bitexroom-available-balance');
+    });
 });
