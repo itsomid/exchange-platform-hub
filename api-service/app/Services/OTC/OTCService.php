@@ -54,6 +54,10 @@ class OTCService
         return $wallet->available;
     }
 
+    /**
+     * @throws Throwable
+     * @throws InsufficientBalanceException
+     */
     public function buy(OTCBuyRequestDTO $requestDTO): void
     {
         try {
@@ -92,11 +96,11 @@ class OTCService
             $fee = bcmul($buyAmount, Setting::getSetting('otc_buy_fee'), 8);
             $receivedAmount = bcsub($buyAmount, $fee, 8);
 
-            if ($buyerQuoteWallet->balance < $amountInQuoteCurrency) {
+            if (bccomp($buyerQuoteWallet->balance, $amountInQuoteCurrency, 8) === -1) {
                 throw new InsufficientBalanceException('Buyer does not have enough '.$market->quote_currency);
             }
 
-            if ($sellerWallet->balance < $receivedAmount) {
+            if (bccomp($sellerWallet->balance, $receivedAmount, 8) === -1) {
                 throw new InsufficientBalanceException('Seller does not have enough base currency. '.$market->base_currency);
             }
 
