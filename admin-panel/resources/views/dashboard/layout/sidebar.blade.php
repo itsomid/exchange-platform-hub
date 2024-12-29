@@ -92,6 +92,15 @@
                 </a>
             </li>
         @endcan
+        @can('order.index')
+            <li class="menu-item @if(request()->is('admin/otc*')) active @endif">
+                <a href="{{route('admin.otc_orders.index')}}" class="menu-link">
+                    <i class="menu-icon  fa-regular fa-swap"></i>
+
+                    <div>معاملات OTC</div>
+                </a>
+            </li>
+        @endcan
         @can('transaction.index')
             <li class="menu-item @if(request()->is('admin/deposits*')) active @endif">
                 <a href="" class="menu-link">
@@ -108,15 +117,7 @@
                 </a>
             </li>
         @endcan
-        @can('transaction.index')
-            <li class="menu-item @if(request()->is('admin/otc*')) active @endif">
-                <a href="" class="menu-link">
-                    <i class="menu-icon  fa-regular fa-swap"></i>
 
-                    <div>معاملات OTC</div>
-                </a>
-            </li>
-        @endcan
         @canany(['currency', 'market','ref-exchanges'])
             <li class="menu-header small text-uppercase">
                 <span class="menu-header-text">مدیریت Exchange</span>

@@ -1,15 +1,15 @@
 @extends('dashboard.layout.master')
-@section('title', 'مدیریت تراکنش ها')
+@section('title', 'مدیریت معاملات')
 @section('content')
-
+{{--    TODO: Complete OTC ORder Card--}}
     <div class="row g-4 mb-4">
         <div class="col-sm-12 col-xl-3">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
-                        <div class="content-left"><span>تعداد تراکنش ها</span>
+                        <div class="content-left"><span>تعداد معاملات</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{count($transactions)}}</h4>
+                                <h4 class="mb-0 me-2">{{count($otcOrders)}}</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-danger rounded p-2">
@@ -24,9 +24,9 @@
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
-                            <span>تعداد تراکنش های امروز</span>
+                            <span>تعداد معاملات امروز</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{count($transactions)}}</h4>
+                                <h4 class="mb-0 me-2">{{count($otcOrders)}}</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-warning rounded">
@@ -40,9 +40,10 @@
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
-                        <div class="content-left"><span>تعداد تراکنش های Referral</span>
+                        <div class="content-left">
+                            <span>تعداد معاملات خرید</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{$referralTransactionsCount}}</h4>
+                                <h4 class="mb-0 me-2">{{count($otcOrders)}}</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-primary rounded p-2">
@@ -57,17 +58,17 @@
                 <div class="card-body bg-success">
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
-                            <span class="text-white">کاربران با بیشترین تراکنش امروز</span>
+                            <span class="text-white">کاربران با بیشترین معامله امروز</span>
                             <div class="d-flex align-items-center my-1">
                                 <h4 class="mb-0 me-2">?</h4>
                             </div>
                         </div>
                         <ul class="list-unstyled avatar-group d-flex my-0">
-                            @foreach($transactions as $transaction)
-{{--                                <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top"--}}
-{{--                                    title="{{$transaction->user->email}}" class="avatar pull-up">--}}
-{{--                                    <img class="rounded-circle" src="http://127.0.0.1:8000/images/avatars/male/2.png" alt="Avatar">--}}
-{{--                                </li>--}}
+                            @foreach($otcOrders as $order)
+                                {{--                                <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top"--}}
+                                {{--                                    title="{{$transaction->user->email}}" class="avatar pull-up">--}}
+                                {{--                                    <img class="rounded-circle" src="http://127.0.0.1:8000/images/avatars/male/2.png" alt="Avatar">--}}
+                                {{--                                </li>--}}
                             @endforeach
                         </ul>
                     </div>
@@ -124,7 +125,7 @@
         <div class="card">
             <div class="card-body">
                 <div class="card-title header-elements">
-                    <h5 class="m-0 me-2">لیست تراکنش ها</h5>
+                    <h5 class="m-0 me-2">لیست معاملات OTC</h5>
                     <div class="card-title-elements ms-auto">
                         <a href="{{route('admin.wallet.increase-credit')}}" class="btn btn-primary">
                             <i class="fa fa-plus mx-2"></i> افزایش اعتبار
@@ -137,9 +138,10 @@
                         <thead>
                         <tr>
                             <th>شناسه</th>
-                            <th>نوع تراکنش</th>
+                            <th>بازار</th>
+                            <th>نوع معامله</th>
                             <th>کاربر</th>
-                            <th>رمز ارز</th>
+                            <th>قیمت</th>
                             <th>
                                 @php
                                     $currentParams = request()->except('sortByAmount');
@@ -155,8 +157,8 @@
                                     @endif
                                 </a>
                             </th>
-                            <th>مقدار موجودی</th>
-                            <th>توضیحات</th>
+                            <th>ارزش</th>
+                            <th>کارمزد</th>
                             <th>
                                 @php
                                     $currentParams = request()->except('sortByCreatedAt');
@@ -172,74 +174,56 @@
                                     @endif
                                 </a>
                             </th>
-                            <th>عملیات</th>
+                            <th>وضعیت</th>
                         </tr>
                         </thead>
                         <tbody class="table-border-bottom-0">
-                        @if($transactions->isEmpty())
+                        @if($otcOrders->isEmpty())
                             <tr>
                                 <td colspan="9" class="text-center">تراکنشی یافت نشد.</td>
                             </tr>
                         @else
 
-                            @foreach($transactions as $transaction)
+                            @foreach($otcOrders as $order)
                                 <tr>
-                                    <td>{{$transaction->id}}</td>
+                                    <td>{{$order->id}}</td>
                                     <td class="text-heading fw-medium">
-                                        <div class="d-flex justify-content-start align-items-center">
-                                            <div class="trans-avatar-group d-flex align-items-center assigned-avatar">
-
-                                                <div class="avatar avatar-md ">
-                                                    <img src="{{asset($transaction->wallet->currency->coinLogo())}}"
-                                                         class="rounded-circle  ">
-                                                </div>
-                                                <div class="avatar avatar-md">
-                                                <span
-                                                    class="avatar-initial rounded-circle bg-label-{{\App\Enums\TransactionTypeEnum::TYPE_COLOR[$transaction->type->value]}}">
-                                                    <i class="fa-regular fa-{{\App\Enums\TransactionTypeEnum::TYPE_ICON[$transaction->type->value]}} mx-3"></i>
-                                                </span>
-                                                </div>
-                                            </div>
-
-                                            <span
-                                                class="badge bg-label-{{\App\Enums\TransactionTypeEnum::TYPE_COLOR[$transaction->type->value]}} ms-2">
-                                           {{$transaction->type->value}}
-                                        </span>
-                                        </div>
-
+                                        <img src="{{asset($order->market->baseCurrency->coinLogo())}}"
+                                             class="rounded-circle">
+                                        {{$order->market->name}}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-label-{{$order->type->color()}}">{{$order->type->label()}}</span>
                                     </td>
                                     <td>
                                         <div class="d-flex flex-column">
                                             <a href="" class="text-heading text-truncate">
-                                                <span class="fw-medium">{{$transaction->user->email}}</span>
+                                                <span class="fw-medium">{{$order->user->email}}</span>
                                             </a>
-                                            <small>{{$transaction->user->username}}</small>
+                                            <small>{{$order->user->username}}</small>
                                         </div>
                                     </td>
 
-                                    <td>{{$transaction->wallet->currency_symbol}}</td>
                                     <td class="font-number" dir="ltr">
-                                        <h6 class="mb-0 {{$transaction->amount > 0 ?'text-success': 'text-danger'}}">{{formatNumberTrimZeros($transaction->amount)}}</h6>
+                                        <h6 class="mb-0">{{formatNumberTrimZeros($order->price)}}</h6>
                                     </td>
                                     <td class="font-number">
-                                        <h6 class="mb-0">{{formatNumberTrimZeros($transaction->balance)}}</h6>
-                                    </td>
-                                    <td>
-                                        @if($transaction->admin_id) {{$transaction->admin->last_name}} @endif
-                                        {{$transaction->description}}
+                                        <h6 class="mb-0">{{formatNumberTrimZeros($order->quantity)}}</h6>
                                     </td>
                                     <td class="font-number">
-                                        {{\App\Helpers\DateFormatter::convertToPersianDate($transaction->created_at,'H:i:s %Y/%m/%d')}}
+                                        {{formatNumberTrimZeros($order->price * $order->quantity)}}
+                                        <small>USDT</small>
+                                    </td>
+                                    <td class="font-number">
+                                        {{formatNumberTrimZeros($order->fee)}}
+                                        <small>{{$order->market->baseCurrency->symbol}}</small>
+                                    </td>
+                                    <td class="font-number">
+                                        {{\App\Helpers\DateFormatter::convertToPersianDate($order->created_at,'H:i:s %Y/%m/%d')}}
                                     </td>
 
                                     <td>
-                                        @if($transaction->deposit)
-                                            <a href=""
-                                               class="btn btn-{{\App\Enums\DepositStatusEnum::TYPE_COLOR[$transaction->deposit->deposit_type->value]}} btn-sm">
-                                                {{\App\Enums\DepositStatusEnum::TYPE_LABEL[$transaction->deposit->deposit_type->value]}}
-                                            </a>
-                                        @endif
-
+                                        <span class="badge bg-label-success">{{$order->status}}</span>
                                     </td>
                                 </tr>
                             @endforeach

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Exceptions\InsufficientBalanceException;
 use App\Models\Market;
 use App\Services\OTC\DTO\BuyRequestDTO;
 use App\Services\OTC\OTCService;
@@ -31,11 +32,11 @@ class OTCBuySeeder extends Seeder
 
             if ($result) {
                 echo "OTC Buy transaction successfully seeded.\n";
-            } else {
-                echo "Failed to seed OTC Buy transaction. No specific error provided.\n";
             }
+        } catch (InsufficientBalanceException $e) {
+            echo "Transaction failed: " . $e->getMessage() . "\n";
         } catch (\Exception $e) {
-            // Capture and display the reason for failure
+            // Capture and display any other exceptions
             echo "Failed to seed OTC Buy transaction. Error: " . $e->getMessage() . "\n";
         }
     }

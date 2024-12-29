@@ -5,6 +5,7 @@ namespace App\Http\Controllers\V1\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Auth\RegisterRequest;
 use App\Http\Resources\Auth\AccessTokenResource;
+use App\Http\Resources\Auth\UserResource;
 use App\Services\Auth\AccessTokenService;
 use App\Services\Auth\DTO\GenerateTokenRequestDTO;
 use App\Services\Auth\DTO\RegisterRequestDTO;
@@ -42,7 +43,8 @@ class RegisterController extends Controller
      *             @OA\Property(
      *                 property="data",
      *                 type="object",
-     *                 @OA\Property(property="token", ref="#/components/schemas/AccessTokenResource")
+     *                 @OA\Property(property="token", ref="#/components/schemas/AccessTokenResource"),
+     *                 @OA\Property(property="user", ref="#/components/schemas/UserResource")
      *             )
      *         )
      *     ),
@@ -100,6 +102,7 @@ class RegisterController extends Controller
             'message' => __('auth.register.success'),
             'data' => [
                 'token' => new AccessTokenResource($tokenResponse),
+                'user' => new UserResource($registerResponse->getUser()),
             ],
         ], Response::HTTP_CREATED);
     }
@@ -116,8 +119,10 @@ class RegisterController extends Controller
      *     @OA\Response(
      *         response=200,
      *         description="Activation email resent successfully.",
+     *
      *         @OA\JsonContent(
      *             type="object",
+     *
      *             @OA\Property(property="message", type="string", example="The activation email has been resent.")
      *         )
      *     ),
@@ -125,7 +130,9 @@ class RegisterController extends Controller
      *     @OA\Response(
      *         response=401,
      *         description="Unauthorized",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="message", type="string", example="Unauthenticated.")
      *         )
      *     ),
@@ -133,7 +140,9 @@ class RegisterController extends Controller
      *     @OA\Response(
      *         response=429,
      *         description="Too Many Requests",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="message", type="string", example="Too many requests. Please try again later.")
      *         )
      *     )

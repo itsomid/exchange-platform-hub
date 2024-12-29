@@ -5,6 +5,7 @@ namespace App\Http\Controllers\V1\Profile;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Profile\ChangePasswordRequest;
 use App\Http\Requests\V1\Profile\UpdateProfileRequest;
+use App\Http\Resources\V1\Profile\UserProfileResource;
 use App\Services\Profile\ChangePasswordRequestDTO;
 use App\Services\Profile\ProfileService;
 use App\Services\Profile\UserUpdateProfileRequestDTO;
@@ -132,5 +133,36 @@ class UserController extends Controller
         return response([
             'status' => __('user.profile.updated'),
         ]);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/v1/profile/show",
+     *     summary="Get User Profile",
+     *     description="Retrieve the profile information of the authenticated user.",
+     *     tags={"Profile"},
+     *     security={{"sanctum": {}}},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="User profile retrieved successfully.",
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/UserProfileResource")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
+     *         )
+     *     )
+     * )
+     */
+    public function show()
+    {
+        return new UserProfileResource(Auth::user());
     }
 }

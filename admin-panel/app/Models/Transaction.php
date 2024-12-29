@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Filters\Filterable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,20 +16,27 @@ class Transaction extends Model
     use Filterable, HasApiTokens, HasFactory;
 
     public $filterNameSpace = 'App\Filters\TransactionFilter';
+
     protected $fillable = [
-        'user_id', 'admin_id', 'wallet_id', 'amount', 'balance', 'type', 'subtype', 'description','admin_description', 'status', 'total', 'fee'
+        'user_id', 'admin_id', 'wallet_id', 'amount', 'balance', 'type', 'subtype', 'description', 'admin_description', 'status', 'total', 'fee'
     ];
 
     protected function casts(): array
     {
         return [
-            'type' => TransactionTypeEnum::class
+            'type' => TransactionTypeEnum::class,
+            'subtype' => TransactionSubTypeEnum::class
         ];
     }
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function admin(): BelongsTo
+    {
+        return $this->belongsTo(Admin::class);
     }
 
     public function referralCodeUsage(): HasOne
@@ -39,5 +47,10 @@ class Transaction extends Model
     public function wallet(): BelongsTo
     {
         return $this->belongsTo(Wallet::class);
+    }
+
+    public function OTCOrder()
+    {
+        return $this->belongsTo(OTCOrder::class,'otc_order_id');
     }
 }

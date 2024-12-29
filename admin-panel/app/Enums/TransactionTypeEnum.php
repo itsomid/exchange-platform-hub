@@ -17,7 +17,7 @@ enum TransactionTypeEnum: string
         self::DEPOSIT->value => 'واریز',
         self::WITHDRAWAL->value => 'برداشت',
         self::REFERRAL->value => 'دعوت از دوستان',
-        self::FEE->value => 'کارمزد معامله',
+        self::FEE->value => 'کارمزد',
 //        self::ADMIN_CREDIT->value => 'اعتبار ادمین',
     ];
 
@@ -27,7 +27,7 @@ enum TransactionTypeEnum: string
         self::DEPOSIT->value => 'success',
         self::WITHDRAWAL->value => 'danger',
         self::REFERRAL->value => 'primary',
-        self::FEE->value => 'primary',
+        self::FEE->value => 'info',
 //        self::ADMIN_CREDIT->value => 'info',
     ];
     const array TYPE_ICON = [
@@ -36,7 +36,8 @@ enum TransactionTypeEnum: string
         self::DEPOSIT->value => 'arrow-down-left',
         self::WITHDRAWAL->value => 'arrow-up-right',
         self::REFERRAL->value => 'user-tag',
-        self::FEE->value => 'user-tag',
+        self::FEE->value => 'hand-holding-dollar',
+
 //        self::ADMIN_CREDIT->value => 'user-tie-hair',
     ];
 
