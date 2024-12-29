@@ -15,7 +15,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  *         property="available",
  *         type="array",
  *         description="List of available coins.",
- *         @OA\Items(type="string", example="BTC")
+ *         @OA\Items(type="string", example="8.2")
  *     )
  * )
  */
