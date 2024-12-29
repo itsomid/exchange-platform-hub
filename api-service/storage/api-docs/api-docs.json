@@ -114,7 +114,7 @@
                                         "data": {
                                             "properties": {
                                                 "user": {
-                                                    "$ref": "#/components/schemas/UserResource"
+                                                    "$ref": "#/components/schemas/UserProfileResource"
                                                 }
                                             },
                                             "type": "object"
@@ -879,6 +879,93 @@
                         "sanctum": []
                     }
                 ]
+            }
+        },
+        "/api/v1/otc/markets": {
+            "get": {
+                "tags": [
+                    "OTC"
+                ],
+                "summary": "List OTC Markets",
+                "description": "Retrieve a list of OTC markets with their details such as base currency, quote currency, and trade limits.",
+                "operationId": "7747f9bc41dae2be012146c30bab7733",
+                "responses": {
+                    "200": {
+                        "description": "List of OTC markets retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Market"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/otc/bitexroom-available-balance": {
+            "get": {
+                "tags": [
+                    "OTC"
+                ],
+                "summary": "Get Bitexroom Available Balance",
+                "description": "Retrieve the available balance for a given base currency in the OTC market.",
+                "operationId": "8a80b764c97a1242bac162207d0ff2c9",
+                "parameters": [
+                    {
+                        "name": "market_id",
+                        "in": "query",
+                        "description": "The ID of the market to retrieve the available balance for.",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The available balance for the base currency.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AvailableCoin"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation failed for the request.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The market_id field is required."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "market_id": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The selected market_id is invalid."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/api/v1/profile/sessions/active": {
@@ -1770,6 +1857,21 @@
                 },
                 "type": "object"
             },
+            "AvailableCoinRequest": {
+                "title": "Available Coin Request",
+                "description": "Request payload to fetch available coins for a specific market.",
+                "required": [
+                    "market_id"
+                ],
+                "properties": {
+                    "market_id": {
+                        "description": "The ID of the market.",
+                        "type": "integer",
+                        "example": 1
+                    }
+                },
+                "type": "object"
+            },
             "ChangePasswordRequest": {
                 "required": [
                     "old_password",
@@ -1982,6 +2084,67 @@
                             },
                             "type": "object"
                         }
+                    }
+                },
+                "type": "object"
+            },
+            "AvailableCoin": {
+                "title": "AvailableCoin",
+                "description": "List of available coins for a specific market.",
+                "properties": {
+                    "available": {
+                        "description": "List of available coins.",
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "example": "8.2"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "Market": {
+                "title": "Market",
+                "description": "Details of an OTC market.",
+                "properties": {
+                    "base_currency": {
+                        "description": "Base currency of the market.",
+                        "type": "string",
+                        "example": "BTC"
+                    },
+                    "quote_currency": {
+                        "description": "Quote currency of the market.",
+                        "type": "string",
+                        "example": "USDT"
+                    },
+                    "is_active": {
+                        "description": "Whether the market is active.",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "sell_price": {
+                        "description": "Sell price in quote currency.",
+                        "type": "number",
+                        "format": "float",
+                        "example": 45000.5
+                    },
+                    "buy_price": {
+                        "description": "Buy price in quote currency.",
+                        "type": "number",
+                        "format": "float",
+                        "example": 44000.75
+                    },
+                    "min_trade_amount": {
+                        "description": "Minimum trade amount in base currency.",
+                        "type": "number",
+                        "format": "float",
+                        "example": 0.01
+                    },
+                    "max_trade_amount": {
+                        "description": "Maximum trade amount in base currency.",
+                        "type": "number",
+                        "format": "float",
+                        "example": 10
                     }
                 },
                 "type": "object"
@@ -2302,6 +2465,10 @@
         {
             "name": "Currency",
             "description": "Currency"
+        },
+        {
+            "name": "OTC",
+            "description": "OTC"
         },
         {
             "name": "Profile",

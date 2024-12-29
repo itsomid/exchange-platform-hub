@@ -35,3 +35,13 @@ Route::prefix('/wallets')->group(function () {
 Route::prefix('/portfolio')->group(function () {
     Route::get('/last-week', [\App\Http\Controllers\V1\Wallet\PortfolioController::class, 'getPortfolioLastWeek'])->name('portfolio.get-portfolio-last-week');
 });
+//OTC
+Route::prefix('/otc')->group(function () {
+    //get-markets
+    Route::get('/markets', [\App\Http\Controllers\V1\OTC\MarketController::class, 'lists'])->name('otc.markets');
+    Route::prefix('/buy')->group(function () {
+        //get bitexroom available coins
+        Route::get('/bitexroom-available-balance', [\App\Http\Controllers\V1\OTC\MarketController::class, 'bitexroomAvailableBalance'])->name('otc.bitexroom-available-balance');
+        Route::post('/', [\App\Http\Controllers\V1\OTC\BuyController::class, 'create'])->name('otc.buy');
+    });
+});

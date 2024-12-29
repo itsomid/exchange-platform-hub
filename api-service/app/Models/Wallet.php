@@ -9,8 +9,9 @@ use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 /**
  * @property int           $id
  * @property string        $balance
- * @property string        $currency_symbol
  * @property string        $locked_balance
+ * @property string        $available
+ * @property string        $currency_symbol
  * @property ExchangePrice $exchangePrice
  * @property Market        $market
  */
@@ -28,5 +29,10 @@ class Wallet extends Model
     public function market(): BelongsTo
     {
         return $this->belongsTo(Market::class, 'currency_symbol', 'base_currency');
+    }
+
+    public function getAvailableAttribute(): string
+    {
+        return bcsub($this->balance, $this->locked_balance, 8);
     }
 }

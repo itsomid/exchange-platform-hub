@@ -73,4 +73,12 @@ class WalletRepository implements WalletRepositoryInterface
                 'locked_balance' => 0,
             ]);
     }
+
+    public function getOneByCurrency(string $base_currency, int $userId): Wallet
+    {
+        return Wallet::query()
+            ->where('currency_symbol', $base_currency)
+            ->where('user_id', $userId)
+            ->first();
+    }
 }

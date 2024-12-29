@@ -8,4 +8,5 @@ return [
     \App\Exceptions\Auth\GoogleInvalidUserSecretKeyException::class => 'کد وارد شده معتبر نمی باشد.',
     \App\Exceptions\NotFoundException::class => 'صفحه مورد نظر وجود ندارد.',
     \App\Exceptions\User\ReferralCodeDoesNotBelongsToUser::class => 'کد معرف متعلق به کاربر نیست.',
+    \App\Exceptions\V1\OTC\InsufficientBalanceException::class => 'موجودی کافی نیست.',
 ];
