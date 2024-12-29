@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @property string $price
+ * @property string $sell_price
+ * @property string $buy_price
  * @property float  $exchange_profit_sell
  * @property float  $exchange_profit_buy
  */
