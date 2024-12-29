@@ -9,14 +9,14 @@ enum DepositStatusEnum: string
     case FAILED = 'failed';
 
     const array TYPE_LABEL = [
-        self::PENDING->value => 'pending',
-        self::COMPLETED->value => 'completed',
-        self::FAILED->value => 'failed',
+        self::PENDING->value => 'تکمیل نشده',
+        self::COMPLETED->value => 'موفق',
+        self::FAILED->value => 'ناموفق',
     ];
 
     const array TYPE_COLOR = [
-        self::PENDING->value => 'primary',
-        self::COMPLETED->value => 'warning',
+        self::PENDING->value => 'warning',
+        self::COMPLETED->value => 'success',
         self::FAILED->value => 'danger',
     ];
 

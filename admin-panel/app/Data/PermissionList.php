@@ -29,7 +29,7 @@ class PermissionList
             ['permission.index', 'مشاهده لیست مجوز ها'],
             ['permission.edit', 'ویرایش مجوز'],
 
-            ['order.index', 'مشاهده لیست سفارش ها'],
+
 
             ['transaction.index', 'مشاهده لیست تراکنش ها'],
 
@@ -58,8 +58,10 @@ class PermissionList
             ['ref-exchanges','مدیریت صرافی های مرجع'],
             ['wallet','مدیریت کیف پول ها'],
 
-            ['transaction','مدیریت تراکنش ها']
-
+            ['transaction','مدیریت تراکنش ها'],
+            ['otc_order', 'مشاهده لیست سفارش ها'],
+            ['deposit', 'مشاهده لیست واریزی ها'],
+            ['withdraw', 'مشاهده لیست برداشت ها'],
 
         ];
 

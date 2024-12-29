@@ -17,7 +17,7 @@ class DepositRepository implements DepositRepositoryInterface
                 'status' => $requestDTO->getStatus(),
                 'currency_symbol' => $requestDTO->getCurrencySymbol(),
                 'currency_chain' => $requestDTO->getCurrencyChain(),
-                'public_key' => $requestDTO->getPublicKey(),
+                'address' => $requestDTO->getPublicKey(),
                 'expiration_date' => $requestDTO->getExpirationDate(),
             ]);
     }
