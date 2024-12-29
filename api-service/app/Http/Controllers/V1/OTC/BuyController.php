@@ -19,8 +19,13 @@ class BuyController extends Controller
         $this->OTCService->buy(
             resolve(OTCBuyRequestDTO::class)
                 ->setMarketId($validateData['market_id'])
-                ->setUserId(Auth::id())
+                ->setBuyerUserId(Auth::id())
+                ->setSellerUserId(config('bitexroom.bitexroom_user_id'))
                 ->setQuantity($validateData['quantity'])
         );
+
+        return response([
+            'message' => 'successfully'
+        ]);
     }
 }

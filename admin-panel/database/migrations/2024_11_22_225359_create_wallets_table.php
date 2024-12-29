@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('currency_symbol');
-            $table->decimal('balance', 18, 8); // Amount of the currency in the wallet
+            $table->decimal('balance', 18, 8)->default(0); // Amount of the currency in the wallet
             $table->decimal('locked_balance', 18, 8)->default(0); // Amount of the currency in the wallet
             $table->text('description')->nullable(); // Amount of the currency in the wallet
             $table->timestamps();

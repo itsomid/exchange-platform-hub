@@ -3,6 +3,7 @@
 namespace App\Services\OTC;
 
 use App\Enums\OTCOrderStatusEnum;
+use App\Enums\OTCOrderTypeEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
@@ -66,10 +67,13 @@ class OTCService
                 ->first();
 
             $buyerWallet = Wallet::query()
-                ->where('user_id', $requestDTO->getBuyerUserId())
-                ->where('currency_symbol', $market->base_currency)
                 ->lockForUpdate()
-                ->first();
+                ->firstOrCreate(
+                    [
+                        'user_id' => $requestDTO->getBuyerUserId(),
+                        'currency_symbol' => $market->base_currency,
+                    ]
+                );
 
             $sellerQuoteWallet = Wallet::query()
                 ->where('user_id', $requestDTO->getSellerUserId())
@@ -102,7 +106,7 @@ class OTCService
                 'quantity' => $buyAmount,
                 'price' => $market->exchangePrice->price,
                 'fee' => $fee,
-                'type' => 'buy',
+                'type' => OTCOrderTypeEnum::BUY,
                 'status' => OTCOrderStatusEnum::SUCCESS,
             ]);
 
