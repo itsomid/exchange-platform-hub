@@ -19,7 +19,7 @@ use Illuminate\Foundation\Http\FormRequest;
  *     )
  * )
  */
-class AvailableCoinRequest extends FormRequest
+class AvailableBalanceRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

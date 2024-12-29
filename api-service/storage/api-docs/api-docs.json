@@ -906,19 +906,19 @@
                 }
             }
         },
-        "/api/v1/otc/bitexroom-available-coins": {
+        "/api/v1/otc/bitexroom-available-balance": {
             "get": {
                 "tags": [
                     "OTC"
                 ],
-                "summary": "Get Bitexroom Available Coins",
-                "description": "Retrieve the available coins for trading in the Bitexroom market by market ID.",
-                "operationId": "3a80629960396fa0165bde28a5188cc1",
+                "summary": "Get Bitexroom Available Balance",
+                "description": "Retrieve the available balance for a given base currency in the OTC market.",
+                "operationId": "8a80b764c97a1242bac162207d0ff2c9",
                 "parameters": [
                     {
                         "name": "market_id",
                         "in": "query",
-                        "description": "The ID of the market to retrieve available coins for.",
+                        "description": "The ID of the market to retrieve the available balance for.",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -928,7 +928,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "A list of available coins.",
+                        "description": "The available balance for the base currency.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -958,22 +958,6 @@
                                                 }
                                             },
                                             "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Server error.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "An error occurred while retrieving available coins."
                                         }
                                     },
                                     "type": "object"
@@ -2113,7 +2097,7 @@
                         "type": "array",
                         "items": {
                             "type": "string",
-                            "example": "BTC"
+                            "example": "8.2"
                         }
                     }
                 },

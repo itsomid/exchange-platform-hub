@@ -30,7 +30,7 @@ class OTCService
         )->toArray();
     }
 
-    public function bitexroomAvailableCoins(int $marketId): string
+    public function bitexroomAvailableBalance(int $marketId): string
     {
         $market = $this->marketRepository->getMarketById($marketId);
 
