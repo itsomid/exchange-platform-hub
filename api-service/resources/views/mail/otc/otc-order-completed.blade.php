@@ -12,7 +12,7 @@
     <br>
     @if($type === 'sell')
         <div style="text-align: right">
-            سفارش فروش شما تکمیل شد. مبلغ معادل {{$quantity}} {{$currencySymbol}} به حساب شما برداشت شد.
+            سفارش فروش شما تکمیل شد. مبلغ معادل {{$quantity}} {{$currencySymbol}} از حساب شما برداشت شد.
         </div>
     @elseif($type === 'buy')
         <div style="text-align: right">
