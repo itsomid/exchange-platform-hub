@@ -81,4 +81,14 @@ class WalletRepository implements WalletRepositoryInterface
             ->where('user_id', $userId)
             ->first();
     }
+
+    public function getOneOrCreateByCurrencyWithLock(string $base_currency, int $userId): Wallet
+    {
+        return Wallet::query()
+            ->lockForUpdate()
+            ->firstOrCreate([
+                'user_id' => $userId,
+                'currency_symbol' => $base_currency,
+            ]);
+    }
 }

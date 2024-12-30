@@ -3,37 +3,40 @@
 namespace App\Http\Controllers\V1\OTC;
 
 use App\Events\OTCOrderCreated;
-use App\Http\Controllers\Controller;
-use App\Http\Requests\V1\OTC\OTCBuyRequest;
-use App\Services\OTC\DTO\OTCBuyRequestDTO;
+use App\Http\Requests\V1\OTC\OTCSellRequest;
+use App\Services\OTC\DTO\OTCSellRequestDTO;
 use App\Services\OTC\OTCService;
 use Illuminate\Support\Facades\Auth;
 
-class BuyController extends Controller
+class SellController
 {
     public function __construct(private readonly OTCService $OTCService) {}
 
     /**
      * @OA\Post(
-     *     path="/api/v1/otc/buy",
-     *     summary="Buy coins in OTC",
-     *     description="Submit a buy order in the OTC market for the specified market and quantity.",
+     *     path="/api/v1/otc/sell",
+     *     summary="Create OTC Sell Order",
+     *     description="Submit a sell order for a coin in the OTC exchange.",
      *     tags={"OTC"},
      *     security={{"sanctum": {}}},
      *
      *     @OA\RequestBody(
      *         required=true,
      *
-     *         @OA\JsonContent(ref="#/components/schemas/OTCBuyRequest")
+     *          @OA\JsonContent(ref="#/components/schemas/OTCSellRequest")
      *     ),
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Buy order submitted successfully.",
+     *         description="Sell order submitted successfully.",
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="Buy order submitted successfully.")
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="The sell order has been submitted successfully."
+     *             )
      *         )
      *     ),
      *
@@ -43,7 +46,11 @@ class BuyController extends Controller
      *
      *         @OA\JsonContent(
      *
-     *             @OA\Property(property="message", type="string", example="The given data was invalid."),
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="The given data was invalid."
+     *             ),
      *             @OA\Property(
      *                 property="errors",
      *                 type="object",
@@ -62,25 +69,25 @@ class BuyController extends Controller
      *                 )
      *             )
      *         )
-     *     )
+     *     ),
      * )
      */
-    public function create(OTCBuyRequest $request)
+    public function create(OTCSellRequest $request)
     {
         $validateData = $request->validated();
 
-        $this->OTCService->buy(
-            resolve(OTCBuyRequestDTO::class)
+        $this->OTCService->sell(
+            resolve(OTCSellRequestDTO::class)
                 ->setMarketId($validateData['market_id'])
-                ->setBuyerUserId(Auth::id())
-                ->setSellerUserId(config('bitexroom.bitexroom_user_id'))
+                ->setSellerUserId(Auth::id())
+                ->setBuyerUserId(config('bitexroom.bitexroom_user_id'))
                 ->setQuantity($validateData['quantity'])
         );
 
         event(new OTCOrderCreated);
 
         return response([
-            'message' => __('otc.buy_order_submitted'),
+            'message' => __('otc.sell_order_submitted'),
         ]);
     }
 }

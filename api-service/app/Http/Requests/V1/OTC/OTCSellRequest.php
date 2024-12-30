@@ -6,26 +6,25 @@ use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * @OA\Schema(
- *     schema="OTCBuyRequest",
+ *     schema="OTCSellRequest",
  *     type="object",
  *     required={"market_id", "quantity"},
  *     @OA\Property(
  *         property="market_id",
  *         type="integer",
- *         description="The ID of the market where the coin will be bought.",
+ *         description="The ID of the market where the coin will be sold.",
  *         example=1
  *     ),
  *     @OA\Property(
  *         property="quantity",
  *         type="number",
  *         format="float",
- *         description="The quantity of the coin to buy.",
+ *         description="The quantity of the coin to sell.",
  *         example=10.5
  *     )
  * )
  */
-
-class OTCBuyRequest extends FormRequest
+class OTCSellRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

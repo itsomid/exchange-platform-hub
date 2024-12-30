@@ -881,6 +881,84 @@
                 ]
             }
         },
+        "/api/v1/otc/buy": {
+            "post": {
+                "tags": [
+                    "OTC"
+                ],
+                "summary": "Buy coins in OTC",
+                "description": "Submit a buy order in the OTC market for the specified market and quantity.",
+                "operationId": "28b2f0e142a708041b1320e180390b05",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OTCBuyRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Buy order submitted successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Buy order submitted successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation failed for the request.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "market_id": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The selected market_id is invalid."
+                                                    }
+                                                },
+                                                "quantity": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The quantity must be at least 0."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/otc/markets": {
             "get": {
                 "tags": [
@@ -966,6 +1044,84 @@
                         }
                     }
                 }
+            }
+        },
+        "/api/v1/otc/sell": {
+            "post": {
+                "tags": [
+                    "OTC"
+                ],
+                "summary": "Create OTC Sell Order",
+                "description": "Submit a sell order for a coin in the OTC exchange.",
+                "operationId": "2ce15e709fef6dee262da9f979d3c423",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OTCSellRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Sell order submitted successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The sell order has been submitted successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation failed for the request.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "market_id": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The selected market_id is invalid."
+                                                    }
+                                                },
+                                                "quantity": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The quantity must be at least 0."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/api/v1/profile/sessions/active": {
@@ -1868,6 +2024,46 @@
                         "description": "The ID of the market.",
                         "type": "integer",
                         "example": 1
+                    }
+                },
+                "type": "object"
+            },
+            "OTCBuyRequest": {
+                "required": [
+                    "market_id",
+                    "quantity"
+                ],
+                "properties": {
+                    "market_id": {
+                        "description": "The ID of the market where the coin will be bought.",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "quantity": {
+                        "description": "The quantity of the coin to buy.",
+                        "type": "number",
+                        "format": "float",
+                        "example": 10.5
+                    }
+                },
+                "type": "object"
+            },
+            "OTCSellRequest": {
+                "required": [
+                    "market_id",
+                    "quantity"
+                ],
+                "properties": {
+                    "market_id": {
+                        "description": "The ID of the market where the coin will be sold.",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "quantity": {
+                        "description": "The quantity of the coin to sell.",
+                        "type": "number",
+                        "format": "float",
+                        "example": 10.5
                     }
                 },
                 "type": "object"
