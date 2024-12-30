@@ -5,15 +5,21 @@ namespace App\Services\Wallet\DTO\Wallet;
 class WalletListsResponseDTO
 {
     private int $id;
+
     private string $currency;
+
     private string $balance;
+
     private string $lockedBalance;
+
     private string $usdtBalance;
+
     private string $usdtLockedBalance;
 
     public function setId(int $id): WalletListsResponseDTO
     {
         $this->id = $id;
+
         return $this;
     }
 
@@ -25,6 +31,7 @@ class WalletListsResponseDTO
     public function setCurrency(string $currency): WalletListsResponseDTO
     {
         $this->currency = $currency;
+
         return $this;
     }
 
@@ -36,6 +43,7 @@ class WalletListsResponseDTO
     public function setBalance(string $balance): WalletListsResponseDTO
     {
         $this->balance = $balance;
+
         return $this;
     }
 
@@ -47,6 +55,7 @@ class WalletListsResponseDTO
     public function setLockedBalance(string $lockedBalance): WalletListsResponseDTO
     {
         $this->lockedBalance = $lockedBalance;
+
         return $this;
     }
 
@@ -58,6 +67,7 @@ class WalletListsResponseDTO
     public function setUsdtBalance(string $usdtBalance): WalletListsResponseDTO
     {
         $this->usdtBalance = $usdtBalance;
+
         return $this;
     }
 
@@ -69,6 +79,7 @@ class WalletListsResponseDTO
     public function setUsdtLockedBalance(string $usdtLockedBalance): WalletListsResponseDTO
     {
         $this->usdtLockedBalance = $usdtLockedBalance;
+
         return $this;
     }
 

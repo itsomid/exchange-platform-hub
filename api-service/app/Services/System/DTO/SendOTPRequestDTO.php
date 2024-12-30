@@ -7,6 +7,7 @@ use App\Enums\EmailOTPActionEnum;
 class SendOTPRequestDTO
 {
     private ?string $name = null;
+
     private string $email;
 
     private ?string $mailable = null;
@@ -52,6 +53,7 @@ class SendOTPRequestDTO
     public function setName(?string $name): self
     {
         $this->name = $name;
+
         return $this;
     }
 

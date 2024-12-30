@@ -10,6 +10,7 @@ class Currency extends Model
     protected $fillable = [
 
     ];
+
     public function chains(): HasMany
     {
         return $this->hasMany(CurrencyChain::class);

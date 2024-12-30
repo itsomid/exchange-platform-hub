@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @method Builder activeRestriction()
+ *
  * @property Carbon $restricted_until
  */
 class UserFinancialBlock extends Model

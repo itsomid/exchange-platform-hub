@@ -9,6 +9,7 @@ class WalletListsRequestDTO
     public function setUserId(int $userId): self
     {
         $this->userId = $userId;
+
         return $this;
     }
 

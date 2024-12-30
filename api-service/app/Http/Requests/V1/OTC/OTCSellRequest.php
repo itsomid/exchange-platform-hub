@@ -9,6 +9,7 @@ use Illuminate\Foundation\Http\FormRequest;
  *     schema="OTCSellRequest",
  *     type="object",
  *     required={"market_id", "quantity"},
+ *
  *     @OA\Property(
  *         property="market_id",
  *         type="integer",

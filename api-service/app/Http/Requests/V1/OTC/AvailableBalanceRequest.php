@@ -11,6 +11,7 @@ use Illuminate\Foundation\Http\FormRequest;
  *     required={"market_id"},
  *     title="Available Coin Request",
  *     description="Request payload to fetch available coins for a specific market.",
+ *
  *     @OA\Property(
  *         property="market_id",
  *         type="integer",

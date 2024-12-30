@@ -5,12 +5,14 @@ namespace App\Http\Resources\V1\Profile;
 use App\Services\Profile\DTO\UserActiveSessionsResponseDTO;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
+
 /**
  * @OA\Schema(
  *     schema="ActiveSession",
  *     type="object",
  *     title="Active Session",
  *     description="Details of a user's active session.",
+ *
  *     @OA\Property(
  *         property="ip",
  *         type="string",

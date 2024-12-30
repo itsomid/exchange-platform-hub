@@ -11,6 +11,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  *      type="object",
  *      title="Wallet Balance Resource",
  *      description="Resource representing wallet details for a specific currency.",
+ *
  *      @OA\Property(property="currency", type="string", description="Currency symbol (e.g., BTC, ETH, USDT).", example="BTC"),
  *      @OA\Property(property="balance", type="number", format="float", description="Available balance in the wallet.", example=0.12345),
  *      @OA\Property(property="frozen_balance", type="number", format="float", description="Frozen balance in the wallet.", example=0.01),

@@ -4,7 +4,6 @@ namespace App\Repositories\DTO\User;
 
 class UserRegisterRequestDTO
 {
-
     private string $email;
 
     private string $username;

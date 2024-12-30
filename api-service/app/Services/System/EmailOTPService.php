@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Mail;
 class EmailOTPService
 {
     const int CODE_LENGTH = 6;
+
     const int EXPIRATION_PER_MINUTES = 15;
 
     public function __construct(private EmailOTPRepositoryInterface $emailOTPRepository) {}

@@ -9,6 +9,7 @@ use Illuminate\Foundation\Http\FormRequest;
  *     schema="OTCBuyRequest",
  *     type="object",
  *     required={"market_id", "quantity"},
+ *
  *     @OA\Property(
  *         property="market_id",
  *         type="integer",
@@ -24,7 +25,6 @@ use Illuminate\Foundation\Http\FormRequest;
  *     )
  * )
  */
-
 class OTCBuyRequest extends FormRequest
 {
     /**

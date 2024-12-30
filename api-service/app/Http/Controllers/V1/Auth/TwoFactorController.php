@@ -242,15 +242,19 @@ class TwoFactorController extends Controller
      *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(
      *             required={"2fa"},
      *             ref="#/components/schemas/DisableTwoFactorRequest"
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Two-factor authentication disabled successfully",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(
      *                 property="message",
      *                 type="string",
@@ -258,10 +262,13 @@ class TwoFactorController extends Controller
      *             )
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=422,
      *         description="Validation errors",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(
      *                 property="message",
      *                 type="string",
@@ -274,6 +281,7 @@ class TwoFactorController extends Controller
      *                     @OA\Property(
      *                         property="field",
      *                         type="array",
+     *
      *                         @OA\Items(type="string", example="The 2fa field is required.")
      *                     )
      *                 }

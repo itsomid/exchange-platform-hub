@@ -8,13 +8,17 @@ use Carbon\Carbon;
 class SaveFinancialBlockRequestDTO
 {
     private int $userId;
+
     private UserFinancialBlockAction $action;
+
     private string $reason;
+
     private Carbon $restrictedUntil;
 
     public function setUserId(int $userId): self
     {
         $this->userId = $userId;
+
         return $this;
     }
 
@@ -26,6 +30,7 @@ class SaveFinancialBlockRequestDTO
     public function setAction(UserFinancialBlockAction $action): self
     {
         $this->action = $action;
+
         return $this;
     }
 
@@ -37,6 +42,7 @@ class SaveFinancialBlockRequestDTO
     public function setReason(string $reason): self
     {
         $this->reason = $reason;
+
         return $this;
     }
 
@@ -48,6 +54,7 @@ class SaveFinancialBlockRequestDTO
     public function setRestrictedUntil(Carbon $restrictedUntil): self
     {
         $this->restrictedUntil = $restrictedUntil;
+
         return $this;
     }
 

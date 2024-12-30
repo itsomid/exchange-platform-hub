@@ -5,9 +5,11 @@ namespace App\Http\Resources\V1\Wallet;
 use App\Services\Wallet\DTO\Wallet\WalletListsResponseDTO;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
+
 /**
  * @OA\Schema(
  *      schema="WalletListsListCollection",
+ *
  *      @OA\Property(property="id", type="integer", example=1, description="Unique identifier of the wallet."),
  *      @OA\Property(property="currency", type="string", example="BTC", description="The currency symbol of the wallet."),
  *      @OA\Property(property="balance", type="string", example="0.12345", description="The available balance of the wallet."),

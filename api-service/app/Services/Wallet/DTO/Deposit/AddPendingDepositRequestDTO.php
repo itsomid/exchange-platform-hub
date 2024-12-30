@@ -13,6 +13,7 @@ class AddPendingDepositRequestDTO
     private string $currencyChain;
 
     private string $publicKey;
+
     private Carbon $expirationDate;
 
     public function setUserId(int $userId): self
@@ -66,6 +67,7 @@ class AddPendingDepositRequestDTO
     public function setExpirationDate(Carbon $expirationDate): self
     {
         $this->expirationDate = $expirationDate;
+
         return $this;
     }
 

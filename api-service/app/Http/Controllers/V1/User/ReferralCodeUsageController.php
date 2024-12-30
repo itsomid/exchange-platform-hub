@@ -99,14 +99,17 @@ class ReferralCodeUsageController extends Controller
      *         in="path",
      *         required=true,
      *         description="The ID of the referred user whose transactions generated profits for the referral code owner",
+     *
      *         @OA\Schema(type="integer", example=42)
      *     ),
      *
      *     @OA\Response(
      *         response=200,
      *         description="List of profits received from the referred user's transactions",
+     *
      *         @OA\JsonContent(
      *             type="array",
+     *
      *             @OA\Items(ref="#/components/schemas/ReferralCodeOwnerProfitsResponse")
      *         )
      *     ),
@@ -114,7 +117,9 @@ class ReferralCodeUsageController extends Controller
      *     @OA\Response(
      *         response=401,
      *         description="Unauthorized",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="message", type="string", example="Unauthenticated.")
      *         )
      *     ),

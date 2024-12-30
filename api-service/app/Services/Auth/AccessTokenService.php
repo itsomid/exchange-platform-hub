@@ -19,8 +19,8 @@ class AccessTokenService
             expiresAt: $requestDTO->getExpirationDate()
         );
         // Update token details with IP and user agent
-        $tokenObject->accessToken->ip= $requestDTO->getIpAddress();
-        $tokenObject->accessToken->user_agent= $requestDTO->getUserAgent();
+        $tokenObject->accessToken->ip = $requestDTO->getIpAddress();
+        $tokenObject->accessToken->user_agent = $requestDTO->getUserAgent();
         $tokenObject->accessToken->save();
 
         return resolve(GenerateTokenResponseDTO::class)

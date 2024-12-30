@@ -5,7 +5,6 @@ namespace App\Listeners;
 use App\Events\OTCOrderCreated;
 use App\Mail\OTCCreateNotifyEmail;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Mail;
 
 class SendOTCOrderEmail implements ShouldQueue
