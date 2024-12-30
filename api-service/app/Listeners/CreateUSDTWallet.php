@@ -3,8 +3,9 @@
 namespace App\Listeners;
 
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
-class CreateUSDTWallet
+class  CreateUSDTWallet implements ShouldQueue
 {
     /**
      * Create the event listener.

@@ -4,9 +4,10 @@ namespace App\Listeners;
 
 use App\Mail\PasswordChangedMail;
 use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Mail;
 
-class SendChangePasswordNotification
+class SendChangePasswordNotification implements ShouldQueue
 {
     /**
      * Create the event listener.

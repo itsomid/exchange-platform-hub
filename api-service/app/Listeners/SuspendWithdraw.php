@@ -6,8 +6,9 @@ use App\Enums\UserFinancialBlockAction;
 use App\Services\User\DTO\FinancialBlock\SaveFinancialBlockRequestDTO;
 use App\Services\User\FinancialBlockService;
 use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
-class SuspendWithdraw
+class SuspendWithdraw implements ShouldQueue
 {
     /**
      * Create the event listener.
