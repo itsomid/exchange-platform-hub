@@ -2,6 +2,7 @@
 
 namespace App\Events;
 
+use App\Models\OTCOrder;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -14,7 +15,7 @@ class OTCOrderCreated
     /**
      * Create a new event instance.
      */
-    public function __construct()
+    public function __construct(private OTCOrder $OTCOrder, private string $type)
     {
         //
     }

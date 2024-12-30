@@ -69,7 +69,7 @@ class BuyController extends Controller
     {
         $validateData = $request->validated();
 
-        $this->OTCService->buy(
+        $responseDTO = $this->OTCService->buy(
             resolve(OTCBuyRequestDTO::class)
                 ->setMarketId($validateData['market_id'])
                 ->setBuyerUserId(Auth::id())
@@ -77,7 +77,7 @@ class BuyController extends Controller
                 ->setQuantity($validateData['quantity'])
         );
 
-        event(new OTCOrderCreated);
+        event(new OTCOrderCreated($responseDTO->getOtcOrderModel(), 'buy'));
 
         return response([
             'message' => __('otc.buy_order_submitted'),

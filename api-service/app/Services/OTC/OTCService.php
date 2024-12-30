@@ -19,6 +19,7 @@ use App\Repositories\Interfaces\TransactionRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Services\OTC\DTO\MarketResponseDTO;
 use App\Services\OTC\DTO\OTCBuyRequestDTO;
+use App\Services\OTC\DTO\OTCBuyResponseDTO;
 use App\Services\OTC\DTO\OTCSellRequestDTO;
 use Throwable;
 
@@ -63,7 +64,7 @@ class OTCService
      * @throws Throwable
      * @throws InsufficientBalanceException
      */
-    public function buy(OTCBuyRequestDTO $requestDTO): void
+    public function buy(OTCBuyRequestDTO $requestDTO): OTCBuyResponseDTO
     {
         try {
             //Find Market
@@ -213,13 +214,15 @@ class OTCService
             throw $exception;
         }
 
+        return resolve(OTCBuyResponseDTO::class)
+            ->setOtcOrderModel($otc_order);
     }
 
     /**
      * @throws Throwable
      * @throws InsufficientBalanceException
      */
-    public function sell(OTCSellRequestDTO $requestDTO): void
+    public function sell(OTCSellRequestDTO $requestDTO): OTCBuyResponseDTO
     {
         try {
             // Find Market
@@ -367,5 +370,8 @@ class OTCService
 
             throw $exception;
         }
+
+        return resolve(OTCBuyResponseDTO::class)
+            ->setOtcOrderModel($otc_order);
     }
 }

@@ -76,7 +76,7 @@ class SellController
     {
         $validateData = $request->validated();
 
-        $this->OTCService->sell(
+        $responseDTO = $this->OTCService->sell(
             resolve(OTCSellRequestDTO::class)
                 ->setMarketId($validateData['market_id'])
                 ->setSellerUserId(Auth::id())
@@ -84,7 +84,7 @@ class SellController
                 ->setQuantity($validateData['quantity'])
         );
 
-        event(new OTCOrderCreated);
+        event(new OTCOrderCreated($responseDTO->getOtcOrderModel(), 'buy'));
 
         return response([
             'message' => __('otc.sell_order_submitted'),
