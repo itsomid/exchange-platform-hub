@@ -374,9 +374,4 @@ class OTCService
         return resolve(OTCBuyResponseDTO::class)
             ->setOtcOrderModel($otc_order);
     }
-
-    public function getWallet()
-    {
-        return $this->walletRepository->getWallets();
-    }
 }
