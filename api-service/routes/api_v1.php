@@ -28,6 +28,7 @@ Route::prefix('/currencies')->group(function () {
 
 //Wallet
 Route::prefix('/wallets')->group(function () {
+    Route::post('/generate-address', [WalletController::class, 'generateAddress'])->name('wallets.generate-address');
     Route::get('/lists', [WalletController::class, 'lists'])->name('wallets.lists');
     Route::get('/{currencySymbol}', [WalletController::class, 'show'])->name('wallets.show');
 });
