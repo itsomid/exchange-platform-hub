@@ -15,7 +15,7 @@ class OTCOrderCreated
     /**
      * Create a new event instance.
      */
-    public function __construct(private OTCOrder $OTCOrder, private string $type)
+    public function __construct(public OTCOrder $OTCOrder, public string $type)
     {
         //
     }
