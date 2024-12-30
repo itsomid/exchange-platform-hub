@@ -8,8 +8,6 @@ use App\Http\Requests\V1\Wallet\GetOneWalletRequest;
 use App\Http\Resources\V1\Wallet\CoinAddressResource;
 use App\Http\Resources\V1\Wallet\GetOneWalletResource;
 use App\Http\Resources\V1\Wallet\WalletListsCollection;
-use App\Services\Wallet\DepositService;
-use App\Services\Wallet\DTO\Deposit\AddPendingDepositRequestDTO;
 use App\Services\Wallet\DTO\Wallet\GenerateAddressRequestDTO;
 use App\Services\Wallet\DTO\Wallet\GetOneWalletRequestDTO;
 use App\Services\Wallet\DTO\Wallet\WalletListsRequestDTO;
@@ -21,7 +19,7 @@ use Throwable;
 
 class WalletController extends Controller
 {
-    public function __construct(private readonly WalletService $service, private readonly DepositService $depositService) {}
+    public function __construct(private readonly WalletService $service) {}
 
     /**
      * @OA\Post(
@@ -74,16 +72,6 @@ class WalletController extends Controller
                     ->setChainSymbol($validated['chain'])
             );
 
-            //Insert Pending Deposit
-            $this->depositService->addPendingDeposit(
-                resolve(AddPendingDepositRequestDTO::class)
-                    ->setUserId($userId)
-                    ->setCurrencySymbol($validated['currency'])
-                    ->setCurrencyChain($validated['chain'])
-                    ->setPublicKey($res->getAddress())
-                    ->setExpirationDate($expirationDate = now()->addMinutes(config('bitexroom.deposit_watching_per_minutes')))
-            );
-
             DB::commit();
         } catch (Throwable $exception) {
             DB::rollBack();
@@ -95,7 +83,7 @@ class WalletController extends Controller
         }
 
         return response([
-            'data' => new CoinAddressResource($res, $expirationDate),
+            'data' => new CoinAddressResource($res),
         ]);
     }
 
@@ -151,16 +139,20 @@ class WalletController extends Controller
      *     summary="Get Wallet Balance",
      *     tags={"Wallet"},
      *     security={{"sanctum": {}}},
+     *
      *     @OA\Parameter(
      *         name="currencySymbol",
      *         in="path",
      *         description="Currency symbol to fetch the wallet details.",
      *         required=true,
+     *
      *         @OA\Schema(type="string", example="BTC")
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Wallet details retrieved successfully.",
+     *
      *         @OA\JsonContent(ref="#/components/schemas/GetOneWalletResponse")
      *     ),
      * )
