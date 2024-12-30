@@ -86,6 +86,22 @@ class CurrencyChainSeeder extends Seeder
                 'memo' => null,
                 'is_memo_required_for_deposit' => false,
             ],
+            [
+                'currency_id' => $usdt->id,
+                'chain' => 'BEP20',
+                'min_deposit_amount' => 1,
+                'min_withdraw_amount' => 1,
+                'deposit_enabled' => true,
+                'withdraw_enabled' => true,
+                'deposit_delay_minutes' => 5,
+                'safe_confirmations' => 12,
+                'exchange_withdrawal_fee' => 0,
+                'network_fee' => 3.1,
+                'withdrawal_precision' => 6,
+                'memo' => null,
+                'is_memo_required_for_deposit' => false,
+            ],
+
             // BNB (BSC) chain
             [
                 'currency_id' => $bnb->id,

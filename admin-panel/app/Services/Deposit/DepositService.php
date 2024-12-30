@@ -2,15 +2,15 @@
 
 namespace App\Services\Deposit;
 
-use App\Enums\DepositStatusEnum;
+
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
+use App\Models\Deposit;
 use App\Models\Transaction;
 use App\Models\Wallet;
-use App\Repositories\DTO\Deposit\CreateDepositRequestDTO;
-use App\Repositories\Interfaces\DepositRepositoryInterface;
-use App\Services\Wallet\DTO\Deposit\AddPendingDepositRequestDTO;
+use Illuminate\Support\Facades\DB;
+
 
 class DepositService
 {
@@ -84,7 +84,7 @@ class DepositService
             ]);
 
             // Update transaction status
-            $transaction = Transaction::where('transaction_hash', $deposit->transaction_hash)->first();
+            $transaction = Transaction::where('deposit_id', $deposit->id)->first();
             if ($transaction) {
                 $transaction->update(['status' => 'confirmed']);
             }

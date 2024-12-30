@@ -7,6 +7,7 @@ use App\Models\Currency;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Models\WalletChain;
 use App\Services\Wallet\DTO\UpdateBalanceRequestDTO;
 use Illuminate\Support\Facades\DB;
 use Throwable;

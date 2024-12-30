@@ -5,18 +5,18 @@ namespace App\Enums;
 enum DepositStatusEnum: string
 {
     case PENDING = 'pending';
-    case COMPLETED = 'completed';
+    case CONFIRMED = 'confirmed';
     case FAILED = 'failed';
 
     const array TYPE_LABEL = [
         self::PENDING->value => 'تکمیل نشده',
-        self::COMPLETED->value => 'موفق',
+        self::CONFIRMED->value => 'انجام شده',
         self::FAILED->value => 'ناموفق',
     ];
 
     const array TYPE_COLOR = [
         self::PENDING->value => 'warning',
-        self::COMPLETED->value => 'success',
+        self::CONFIRMED->value => 'success',
         self::FAILED->value => 'danger',
     ];
 

@@ -14,4 +14,13 @@ class Deposit extends Model
     protected $casts = [
       'status' => DepositStatusEnum::class
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class,'currency_symbol','symbol');
+    }
 }

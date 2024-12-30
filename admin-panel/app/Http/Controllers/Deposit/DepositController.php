@@ -10,7 +10,7 @@ class DepositController extends Controller
 {
     public function index()
     {
-        $deposits = Deposit::all();
+        $deposits = Deposit::with('currency')->get();
         return view('dashboard.deposits.index', [
             'deposits' => $deposits
         ]);

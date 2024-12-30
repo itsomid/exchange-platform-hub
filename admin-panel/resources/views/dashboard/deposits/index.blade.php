@@ -153,7 +153,6 @@
                                 </a>
                             </th>
                             <th>ارزش</th>
-                            <th>هزینه‍ شبکه و برداشت</th>
                             <th>آدرس</th>
                             <th>(TxID) لینک تراکنش</th>
                             <th>
@@ -177,21 +176,14 @@
                         <tbody class="table-border-bottom-0">
                         @if($deposits->isEmpty())
                             <tr>
-                                <td colspan="9" class="text-center">تراکنشی یافت نشد.</td>
+                                <td colspan="11" class="text-center">واریزی یافت نشد.</td>
                             </tr>
                         @else
 
                             @foreach($deposits as $deposit)
                                 <tr>
                                     <td>{{$deposit->id}}</td>
-                                    <td class="text-heading fw-medium">
-                                        <img src="{{asset($deposit->market->baseCurrency->coinLogo())}}"
-                                             class="rounded-circle">
-                                        {{$deposit->market->name}}
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-label-{{$deposit->type->color()}}">{{$deposit->type->label()}}</span>
-                                    </td>
+
                                     <td>
                                         <div class="d-flex flex-column">
                                             <a href="" class="text-heading text-truncate">
@@ -200,27 +192,33 @@
                                             <small>{{$deposit->user->username}}</small>
                                         </div>
                                     </td>
-
-                                    <td class="font-number" dir="ltr">
-                                        <h6 class="mb-0">{{formatNumberTrimZeros($deposit->price)}}</h6>
+                                    <td class="text-heading fw-medium">
+                                        <img src="{{asset($deposit->currency->coinLogo())}}"
+                                             class="rounded-circle">
+                                        {{$deposit->currency_symbol}}
                                     </td>
-                                    <td class="font-number">
-                                        <h6 class="mb-0">{{formatNumberTrimZeros($deposit->quantity)}}</h6>
+                                    <td>{{$deposit->currency_chain}}</td>
+                                    <td class="font-number" dir="ltr">
+                                        <h6 class="mb-0">{{formatNumberTrimZeros($deposit->amount)}}</h6>
                                     </td>
                                     <td class="font-number">
                                         {{formatNumberTrimZeros($deposit->price * $deposit->quantity)}}
                                         <small>USDT</small>
                                     </td>
+
                                     <td class="font-number">
-                                        {{formatNumberTrimZeros($deposit->fee)}}
-                                        <small>{{$deposit->market->baseCurrency->symbol}}</small>
+                                        <h6 class="mb-0">{{$deposit->address}}</h6>
+                                    </td>
+
+                                    <td class="font-number">
+                                        {{formatNumberTrimZeros($deposit->transaction_hash)}}
                                     </td>
                                     <td class="font-number">
                                         {{\App\Helpers\DateFormatter::convertToPersianDate($deposit->created_at,'H:i:s %Y/%m/%d')}}
                                     </td>
 
                                     <td>
-                                        <span class="badge bg-label-success">{{$deposit->status}}</span>
+                                        <span class="badge bg-label-{{$deposit->status->color()}}">{{$deposit->status->label()}}</span>
                                     </td>
                                 </tr>
                             @endforeach
