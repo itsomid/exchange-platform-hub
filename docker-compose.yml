@@ -151,6 +151,27 @@ services:
     networks:
       - laravel
 
+  # Laravel Queue Workers
+  coinex-listen:
+    build:
+      context: ./dockerfiles
+      dockerfile: php.dockerfile
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - USER=${USER:-f}
+    container_name: coinex-listen
+    volumes:
+      - ./admin-panel:/var/www/html:delegated
+      - ./env/admin_panel.env:/var/www/html/.env
+    depends_on:
+      - database
+      - redis
+    working_dir: /var/www/html
+    entrypoint: [ 'php', '/var/www/html/artisan', 'coinex:listen' ]
+    networks:
+      - laravel
+
   laravel-migrate-seed:
     build:
       context: ./dockerfiles
@@ -268,15 +289,14 @@ services:
     networks:
       - laravel
 
-
-  #  redis:
-  #    image: redis:alpine
-  #    container_name: redis
-  #    restart: unless-stopped
-  #    ports:
-  #      - 6380:6379
-  #    networks:
-  #      - laravel
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - 6380:6379
+    networks:
+      - laravel
 
     #  phpmyadmin:
     #    image: phpmyadmin:5.2.0

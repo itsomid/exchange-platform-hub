@@ -22,6 +22,8 @@ RUN echo "php_admin_flag[log_errors] = on" >> /usr/local/etc/php-fpm.d/www.conf
 RUN apk update && apk upgrade
 RUN docker-php-ext-install pdo pdo_mysql bcmath
 
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+
 # Installing php extensions
 
 # Install extensions
@@ -31,6 +33,13 @@ RUN apk add --no-cache freetype libjpeg-turbo libpng libwebp libxpm \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp --with-xpm \
     && docker-php-ext-install gd pdo pdo_mysql bcmath \
     && apk del freetype-dev libjpeg-turbo-dev libpng-dev libwebp-dev libxpm-dev
+
+
+# Install Redis extension
+RUN apk add --no-cache $PHPIZE_DEPS \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apk del $PHPIZE_DEPS
 
 # Set permissions for Laravel storage and cache directories
 RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache && \
