@@ -4,6 +4,7 @@ namespace App\Services\Wallet;
 
 use App\Enums\BalanceOperationEnum;
 use App\Models\Currency;
+use App\Models\Deposit;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
@@ -141,6 +142,19 @@ class WalletService
                 'currency_chain' => $currencyChain,
                 'address' => $depositAddress,
             ]);
+
+
+             Deposit::create([
+                'user_id' => $userId,
+                'currency_symbol' => $currencySymbol,
+                'currency_chain' => $currencyChain,
+                'amount' => 0,
+                'address' => $depositAddress,
+                'transaction_hash' => null,
+                'note' => $note ?? 'Awaiting deposit',
+                'status' => 'pending',
+            ]);
+
 
             DB::commit();
 

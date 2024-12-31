@@ -29,22 +29,16 @@ class DepositSeeder extends Seeder
             currencySymbol: $currencySymbol,
             currencyChain: $currencyChain
         );
-        $amount = 55; // Example amount
 
+        // Step 3: Simulate a deposit confirmation
+        $depositId = $walletChain->wallet->deposits->first()->id; // Assuming a deposit is created for this wallet
+        $amount = 0.01; // Example deposit amount
         $transactionHash = 'txhash_' . bin2hex(random_bytes(10)); // Example transaction hash
-        $note = 'Test deposit for seeding';
 
-        $deposit = $depositService->createDeposit(
-            userId: $user->id,
-            currency_symbol: $currencySymbol,
-            currency_chain: $currencyChain,
-            amount: $amount,
-            address: $walletChain->address,
-            transaction_hash: $transactionHash,
-            note: $note
-        );
+        $depositService->confirmDeposit($depositId, $amount, $transactionHash);
 
 
-        $depositService->confirmDeposit($deposit->id);
+        echo "Deposit Address: {$walletChain->address}\n";
+        echo "Deposit ID: {$depositId} confirmed successfully.\n";
     }
 }
