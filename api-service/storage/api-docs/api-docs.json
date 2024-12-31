@@ -528,7 +528,7 @@
                 ]
             }
         },
-        "/api/v1/2fa/setup": {
+        "/api/v1/auth/2fa/setup": {
             "get": {
                 "tags": [
                     "Two-Factor Authentication"
@@ -571,7 +571,7 @@
                 ]
             }
         },
-        "/api/v1/2fa/save-secret": {
+        "/api/v1/auth/2fa/save-secret": {
             "post": {
                 "tags": [
                     "Two-Factor Authentication"
