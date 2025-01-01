@@ -140,7 +140,7 @@
                             <td class="">
                                 <h4 class="font-number text-heading h5">
 
-                                    <span class="ms-1">{{formatNumber($market->activeExchangePrice->price)}}</span>
+                                    <span class="ms-1">{{formatNumberTrimZeros($market->activeExchangePrice->price)}}</span>
 
                                     <small class="text-muted">USDT</small>
                                 </h4>

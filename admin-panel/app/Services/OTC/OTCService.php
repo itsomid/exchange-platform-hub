@@ -156,7 +156,7 @@ class OTCService
     private function createCommissionTransaction($userId, $wallet, $otc_order, $fee, $market, $quantity, $description)
     {
         Transaction::query()->create([
-            'user_id' => $userId,
+            'user_id' => 1,
             'wallet_id' => $wallet->id,
             'otc_order_id' => $otc_order->id,
             'balance' => $wallet->balance,

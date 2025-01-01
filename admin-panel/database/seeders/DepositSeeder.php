@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Deposit;
 use App\Models\User;
 use App\Services\Deposit\DepositService;
 use App\Services\Wallet\WalletService;
@@ -21,8 +22,8 @@ class DepositSeeder extends Seeder
 
         $user = User::find(2);
 
-        $currencySymbol = 'USDT';
-        $currencyChain = 'BEP20';
+        $currencySymbol = 'BTC';
+        $currencyChain = 'BTC';
 
         $walletChain = $walletService->createDepositAddress(
             userId: $user->id,
@@ -30,15 +31,20 @@ class DepositSeeder extends Seeder
             currencyChain: $currencyChain
         );
 
+        $deposit = Deposit::where('address', $walletChain->address)->where('status','pending')->first();
+
+        if (!$deposit) {
+            throw new \Exception("No deposit found for the created wallet chain address.");
+        }
         // Step 3: Simulate a deposit confirmation
-        $depositId = $walletChain->wallet->deposits->first()->id; // Assuming a deposit is created for this wallet
+
         $amount = 0.01; // Example deposit amount
         $transactionHash = 'txhash_' . bin2hex(random_bytes(10)); // Example transaction hash
 
-        $depositService->confirmDeposit($depositId, $amount, $transactionHash);
+        $depositService->confirmDeposit($deposit->id,$walletChain->wallet, $amount, $transactionHash);
 
 
         echo "Deposit Address: {$walletChain->address}\n";
-        echo "Deposit ID: {$depositId} confirmed successfully.\n";
+        echo "Deposit ID: {$deposit->id} confirmed successfully.\n";
     }
 }

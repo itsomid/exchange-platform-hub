@@ -53,4 +53,9 @@ class Transaction extends Model
     {
         return $this->belongsTo(OTCOrder::class,'otc_order_id');
     }
+
+    public function deposit()
+    {
+        return $this->belongsTo(Deposit::class,'deposit_id');
+    }
 }

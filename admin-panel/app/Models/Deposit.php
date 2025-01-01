@@ -23,4 +23,10 @@ class Deposit extends Model
     {
         return $this->belongsTo(Currency::class,'currency_symbol','symbol');
     }
+
+    public function transaction()
+    {
+        return $this->hasOne(Transaction::class,'deposit_id');
+    }
+
 }

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('currency_symbol');
             $table->decimal('amount', 8, 2)->nullable();
             $table->string('address');
-            $table->string('transaction_hash', 64)->nullable()->unique();
+            $table->string('transaction_hash', 96)->nullable()->unique();
             $table->string('status')->default('pending');
             $table->text('note')->nullable(); // Optional note or description
             $table->dateTime('expiration_date')->nullable()->default(null);

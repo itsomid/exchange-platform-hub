@@ -203,7 +203,7 @@
 
                                             <span
                                                 class="badge bg-label-{{\App\Enums\TransactionTypeEnum::TYPE_COLOR[$transaction->type->value]}} ms-2">
-                                           {{$transaction->type->value}}
+                                           {{\App\Enums\TransactionTypeEnum::TYPE_LABEL[$transaction->type->value]}}
                                         </span>
                                         </div>
 
@@ -224,7 +224,7 @@
                                     <td class="font-number">
                                         <h6 class="mb-0">{{formatNumberTrimZeros($transaction->balance)}}</h6>
                                     </td>
-                                    <td>
+                                    <td class="font-number">
                                         @if($transaction->admin_id) {{$transaction->admin->last_name}} @endif
                                         {{$transaction->description}}
                                     </td>
@@ -235,8 +235,8 @@
                                     <td>
                                         @if($transaction->deposit)
                                             <a href=""
-                                               class="btn btn-{{\App\Enums\DepositStatusEnum::TYPE_COLOR[$transaction->deposit->deposit_type->value]}} btn-sm">
-                                                {{\App\Enums\DepositStatusEnum::TYPE_LABEL[$transaction->deposit->deposit_type->value]}}
+                                               class="btn btn-{{\App\Enums\DepositStatusEnum::TYPE_COLOR[$transaction->deposit->status->value]}} btn-sm">
+                                                {{\App\Enums\DepositStatusEnum::TYPE_LABEL[$transaction->deposit->status->value]}}
                                             </a>
                                         @endif
 

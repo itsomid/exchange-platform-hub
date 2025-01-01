@@ -27,7 +27,7 @@
                         <div class="content-left">
                             <span>تعداد واریزی های امروز</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{count($deposits)}}</h4>
+                                <h4 class="mb-0 me-2">{{$todayDepositsCount}}</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-warning rounded">
@@ -44,7 +44,7 @@
                         <div class="content-left">
                             <span>ارزش واریزی های امروز</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{count($deposits)}}</h4>
+                                <h4 class="mb-0 me-2">{{$totalDepositsValue}}</h4>
                                 <small>USDT</small>
                             </div>
                         </div>
@@ -152,7 +152,6 @@
                                     @endif
                                 </a>
                             </th>
-                            <th>ارزش</th>
                             <th>آدرس</th>
                             <th>(TxID) لینک تراکنش</th>
                             <th>
@@ -171,6 +170,7 @@
                                 </a>
                             </th>
                             <th>وضعیت</th>
+                            <th>عملیات</th>
                         </tr>
                         </thead>
                         <tbody class="table-border-bottom-0">
@@ -201,17 +201,79 @@
                                     <td class="font-number" dir="ltr">
                                         <h6 class="mb-0">{{formatNumberTrimZeros($deposit->amount)}}</h6>
                                     </td>
+
                                     <td class="font-number">
-                                        {{formatNumberTrimZeros($deposit->price * $deposit->quantity)}}
-                                        <small>USDT</small>
+                                        <h6 class="mb-0">
+                                            {{$deposit->address}}
+                                            @php
+                                                $chain = $deposit->currency_chain; // Assuming $deposit->chain holds the blockchain type (e.g., 'BTC', 'ERC20')
+                                                $address = $deposit->address;
+
+                                                // Define node providers with their address URL patterns
+                                                $nodeProviderLinks = [
+                                                    'BTC' => 'https://blockstream.info/address/{address}',
+                                                    'ERC20' => 'https://etherscan.io/address/{address}',
+                                                    'BEP20' => 'https://bscscan.com/address/{address}',
+                                                    'TRC20' => 'https://tronscan.org/#/address/{address}',
+                                                    'BSC' => 'https://bscscan.com/address/{address}',
+                                                    'DOGE' => 'https://blockcypher.com/doge/address/{address}',
+                                                ];
+
+                                                // Get the appropriate link for the chain type
+                                                $targetLink = $nodeProviderLinks[$chain] ?? null;
+
+                                                // Replace placeholder with the actual address
+                                                if ($targetLink) {
+                                                    $targetLink = str_replace('{address}', $address, $targetLink);
+                                                }
+                                            @endphp
+
+                                            @if($targetLink)
+                                                <a href="{{ $targetLink }}" target="_blank">
+                                                    <i class="fa-regular fa-clone"></i>
+                                                </a>
+                                            @else
+                                                <span>Link not available</span>
+                                            @endif
+
+                                        </h6>
                                     </td>
 
                                     <td class="font-number">
-                                        <h6 class="mb-0">{{$deposit->address}}</h6>
-                                    </td>
+                                        @if($deposit->transaction_hash)
+                                            {{ formatNumberTrimZeros($deposit->transaction_hash) }}
+                                            @php
+                                                $chain = $deposit->currency_chain;
+                                                $transactionHash = $deposit->transaction_hash;
 
-                                    <td class="font-number">
-                                        {{formatNumberTrimZeros($deposit->transaction_hash)}}
+                                                // Define node providers with their URL patterns
+                                                $nodeProviderLinks = [
+                                                    'BTC' => 'https://blockstream.info/tx/{hash}',
+                                                    'ERC20' => 'https://etherscan.io/tx/{hash}',
+                                                    'BEP20' => 'https://bscscan.com/tx/{hash}',
+                                                    'TRC20' => 'https://tronscan.org/#/transaction/{hash}',
+                                                    'BSC' => 'https://bscscan.com/tx/{hash}',
+                                                    'DOGE' => 'https://blockcypher.com/doge/tx/{hash}',
+                                                ];
+
+                                                // Get the appropriate link for the chain type
+                                                $targetLink = $nodeProviderLinks[$chain] ?? null;
+
+                                                // Replace placeholder with the actual transaction hash
+                                                if ($targetLink) {
+                                                    $targetLink = str_replace('{hash}', $transactionHash, $targetLink);
+                                                }
+                                            @endphp
+
+                                            @if($targetLink)
+                                                <a href="{{ $targetLink }}" target="_blank">
+                                                    <i class="fa-regular fa-clone"></i>
+                                                </a>
+                                            @else
+                                                <span>Link not available</span>
+                                            @endif
+                                        @endif
+
                                     </td>
                                     <td class="font-number">
                                         {{\App\Helpers\DateFormatter::convertToPersianDate($deposit->created_at,'H:i:s %Y/%m/%d')}}
@@ -219,6 +281,53 @@
 
                                     <td>
                                         <span class="badge bg-label-{{$deposit->status->color()}}">{{$deposit->status->label()}}</span>
+                                    </td>
+                                    <td>
+                                        @if($deposit->status === \App\Enums\DepositStatusEnum::CONFIRMED)
+                                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#deposit-{{$deposit->id}}">
+                                                جزئیات
+                                            </button>
+                                        @endif
+
+                                        <div class="modal fade" id="deposit-{{$deposit->id}}" tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog" role="document">
+                                                <div class="modal-content">
+                                                    <div class="modal-header"  dir="ltr">
+                                                        <h5 class="modal-title font-number">Transaction #{{$deposit->transaction->id}}</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+
+                                                        <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom py-4 mb-4">
+
+                                                            <h6 class="m-0 mb-2 mb-md-0 me-12">شناسه تراکنش</h6>
+                                                            <div class="d-flex flex-wrap gap-4 font-number">
+                                                                #{{$deposit->transaction->id}}
+                                                            </div>
+                                                        </div>
+                                                        <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+
+                                                            <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی کاربر پس از واریز</h6>
+                                                            <div class="d-flex  gap-4 align-items-center">
+                                                                <small> {{$deposit->currency_symbol}}</small>
+                                                                <span class="font-number">{{formatNumberTrimZeros($deposit->transaction->balance)}}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+
+                                                            <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات</h6>
+                                                            <div class="text-wrap font-number">
+                                                                {{$deposit->transaction->description}}
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">بستن</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach

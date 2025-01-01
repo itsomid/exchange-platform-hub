@@ -6,6 +6,7 @@ use App\Filters\Filterable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Currency extends Model
 {
@@ -24,15 +25,15 @@ class Currency extends Model
     {
         return $this->hasMany(CurrencyChain::class,'currency_id');
     }
-    public function baseMarkets(): HasMany
+    public function baseMarkets(): HasOne
     {
-        return $this->hasMany(Market::class, 'base_currency', 'symbol');
+        return $this->hasOne(Market::class, 'base_currency', 'symbol');
     }
 
     // Relationship: A currency can have many markets where it is the quote currency
-    public function quoteMarkets(): HasMany
+    public function quoteMarkets(): HasOne
     {
-        return $this->hasMany(Market::class, 'quote_currency', 'symbol');
+        return $this->hasOne(Market::class, 'quote_currency', 'symbol');
     }
 
     public function NodeProviders() : HasMany

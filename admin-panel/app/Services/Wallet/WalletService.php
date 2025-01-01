@@ -18,7 +18,7 @@ class WalletService
     /**
      * Calculate the total assets value for a user's wallets.
      *
-     * @param  \App\Models\User  $user
+     * @param \App\Models\User $user
      * @return float
      */
     public function totalAssetsValue(User $user)
@@ -61,6 +61,7 @@ class WalletService
 
         return $specificAssetValue;
     }
+
     public function totalTransactionValueBasedType(string $currencySymbol, array $transactionTypes): float
     {
         // Get the total amount of deposits for the given currency
@@ -79,6 +80,7 @@ class WalletService
         // Calculate the value in USDT
         return $totalDeposits * $exchangeRate;
     }
+
     public function updateBalance(UpdateBalanceRequestDTO $requestDTO): bool
     {
         try {
@@ -104,6 +106,7 @@ class WalletService
             return false;
         }
     }
+
     private function calculateNewBalance(string $currentBalance, string $amount, BalanceOperationEnum $operation): string
     {
         return match ($operation) {
@@ -129,27 +132,28 @@ class WalletService
                 ->where('currency_chain', $currencyChain)
                 ->first();
 
-            if ($existingChain) {
-                throw new \Exception("A deposit address for this currency chain already exists.");
+            if (!$existingChain) {
+
+                //TODO: give it from HD Wallet
+                $depositAddress = $this->generateUniqueAddress();
+
+                // Create the wallet chain record
+                $existingChain = WalletChain::create([
+                    'wallet_id' => $wallet->id,
+                    'currency_chain' => $currencyChain,
+                    'address' => $depositAddress,
+                ]);
+//                throw new \Exception("A deposit address for this currency chain already exists.");
+            } else {
+                echo "A deposit address for this currency chain already exists.\n";
             }
 
-            //TODO: give it from HD Wallet
-            $depositAddress = $this->generateUniqueAddress();
-
-            // Create the wallet chain record
-            $walletChain = WalletChain::create([
-                'wallet_id' => $wallet->id,
-                'currency_chain' => $currencyChain,
-                'address' => $depositAddress,
-            ]);
-
-
-             Deposit::create([
+            Deposit::create([
                 'user_id' => $userId,
                 'currency_symbol' => $currencySymbol,
                 'currency_chain' => $currencyChain,
                 'amount' => 0,
-                'address' => $depositAddress,
+                'address' => $existingChain->address,
                 'transaction_hash' => null,
                 'note' => $note ?? 'Awaiting deposit',
                 'status' => 'pending',
@@ -158,7 +162,7 @@ class WalletService
 
             DB::commit();
 
-            return $walletChain;
+            return $existingChain;
         } catch (\Exception $e) {
             DB::rollBack();
             throw $e;
