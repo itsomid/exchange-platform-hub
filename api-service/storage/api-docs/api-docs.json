@@ -528,7 +528,7 @@
                 ]
             }
         },
-        "/api/v1/auth/2fa/setup": {
+        "/api/v1/2fa/setup": {
             "get": {
                 "tags": [
                     "Two-Factor Authentication"
@@ -571,7 +571,7 @@
                 ]
             }
         },
-        "/api/v1/auth/2fa/save-secret": {
+        "/api/v1/2fa/save-secret": {
             "post": {
                 "tags": [
                     "Two-Factor Authentication"
@@ -584,23 +584,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "2fa",
-                                    "secret"
-                                ],
-                                "properties": {
-                                    "2fa": {
-                                        "description": "The 2FA token entered by the user.",
-                                        "type": "string",
-                                        "example": "123456"
-                                    },
-                                    "secret": {
-                                        "description": "The secret key used for generating 2FA tokens.",
-                                        "type": "string",
-                                        "example": "JBSWY3DPEHPK3PXP"
-                                    }
-                                },
-                                "type": "object"
+                                "$ref": "#/components/schemas/Save2FASecretRequest"
                             }
                         }
                     }
@@ -1972,7 +1956,8 @@
                 "description": "Request body for saving the 2FA secret.",
                 "required": [
                     "2fa",
-                    "secret"
+                    "secret",
+                    "otp_code"
                 ],
                 "properties": {
                     "2fa": {
@@ -1984,6 +1969,11 @@
                         "description": "The secret key used for generating 2FA tokens.",
                         "type": "string",
                         "example": "JBSWY3DPEHPK3PXP"
+                    },
+                    "otp_code": {
+                        "description": "The OTP code mailed to the user.",
+                        "type": "string",
+                        "example": "123456"
                     }
                 },
                 "type": "object"
@@ -2532,11 +2522,6 @@
                         "description": "The generated wallet address for the user.",
                         "type": "string",
                         "example": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
-                    },
-                    "valid_until": {
-                        "description": "The addresss expiration date",
-                        "type": "string",
-                        "example": "2025-01-12 15:05:01"
                     }
                 },
                 "type": "object"

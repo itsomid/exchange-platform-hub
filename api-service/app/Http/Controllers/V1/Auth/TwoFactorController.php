@@ -97,22 +97,7 @@ class TwoFactorController extends Controller
      *      @OA\RequestBody(
      *          required=true,
      *
-     *          @OA\JsonContent(
-     *              required={"2fa", "secret"},
-     *
-     *              @OA\Property(
-     *                  property="2fa",
-     *                  type="string",
-     *                  description="The 2FA token entered by the user.",
-     *                  example="123456"
-     *              ),
-     *              @OA\Property(
-     *                  property="secret",
-     *                  type="string",
-     *                  description="The secret key used for generating 2FA tokens.",
-     *                  example="JBSWY3DPEHPK3PXP"
-     *              )
-     *          )
+     *      @OA\JsonContent(ref="#/components/schemas/Save2FASecretRequest")
      *      ),
      *
      *      @OA\Response(
