@@ -7,6 +7,7 @@ use App\Models\ExchangePrice;
 use App\Models\Market;
 use Exception;
 use Illuminate\Support\Facades\Redis;
+use Predis\Client as Predis;
 use Ratchet\Client\WebSocket;
 use Ratchet\RFC6455\Messaging\MessageInterface;
 use Throwable;
@@ -161,7 +162,7 @@ class CoinExSocketService
             $buyOpenPrice = bcmul($openPrice, $exchangePriceModel->exchange_profit_buy + 1, 8);
 
             // Publish to Redis
-            Redis::publish('market_prices', json_encode([
+            Redis::publish('market_prices', $updateJson = json_encode([
                 'base_currency' => $baseCurrency,
                 'sell_price' => $sellPrice,
                 'sell_open_price' => $sellOpenPrice,
@@ -169,6 +170,9 @@ class CoinExSocketService
                 'buy_open_price' => $buyOpenPrice,
                 'timestamp' => now()->timestamp,
             ]));
+
+            $predis = new Predis();
+            $predis->publish('market_prices', $updateJson);
 
         }
     }
