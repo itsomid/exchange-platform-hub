@@ -1,7 +1,7 @@
 @extends('dashboard.layout.master')
 @section('title', 'مدیریت واریزی ها')
 @section('content')
-{{--    TODO: Complete Deposit Card--}}
+    {{--    TODO: Complete Deposit Card--}}
     <div class="row g-4 mb-4">
         <div class="col-sm-12 col-xl-3">
             <div class="card">
@@ -44,7 +44,7 @@
                         <div class="content-left">
                             <span>ارزش واریزی های امروز</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{$totalDepositsValue}}</h4>
+                                <h4 class="mb-0 me-2">{{formatNumberTrimZeros($totalDepositsValue)}}</h4>
                                 <small>USDT</small>
                             </div>
                         </div>
@@ -62,16 +62,32 @@
                         <div class="content-left">
                             <span class="text-white">کاربران با بیشترین واریزی امروز</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">?</h4>
+                                <small class="text-white">مجموع: </small>
+                                <h4 class="mb-0 me-2">{{formatNumberTrimZeros($totalTopUsersDeposit)}}</h4>
+                                <small>USDT</small>
                             </div>
                         </div>
                         <ul class="list-unstyled avatar-group d-flex my-0">
-                            @foreach($deposits as $deposit)
-                                {{--                                <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top"--}}
-                                {{--                                    title="{{$transaction->user->email}}" class="avatar pull-up">--}}
-                                {{--                                    <img class="rounded-circle" src="http://127.0.0.1:8000/images/avatars/male/2.png" alt="Avatar">--}}
-                                {{--                                </li>--}}
-                            @endforeach
+                            @if(count($topUsers))
+                                @foreach($topUsers as $topUser)
+                                        <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-html='true' data-bs-placement="top"  class="avatar pull-up"
+                                            title="<span class='fw-medium'>نام:</span>
+                                                    {{ $topUser['user']->fullname()}}</span>
+                                                    <br> <span class='fw-medium'>شناسه کاربری:</span>
+                                                    <span class='fw-medium font-monospace'>({{ $topUser['user']->id }}#)</span>
+                                                    <br> <span class='fw-medium'>مجموع واریز:</span>
+                                                    <span class='fw-medium font-monospace'>{{ formatNumberTrimZeros($topUser['totalDeposit']) }}$</span>
+                                                    ">
+
+                                            <img class="rounded-circle"
+                                                 src="{{ $topUser['user']->avatar_url ?? 'http://127.0.0.1:8000/images/avatars/male/2.png' }}"
+                                                 alt="{{ $topUser['user']->name }}">
+                                        </li>
+                                @endforeach
+                            @else
+                                بدون واریز
+                            @endif
+
                         </ul>
                     </div>
                 </div>
@@ -89,11 +105,11 @@
                         <div class="col-md-3 mt-3">
                             <div class="form-group">
                                 <label class="form-label" for="type">وضعیت واریز:</label>
-                                <select name="type" class="form-control" id="type">
-                                    <option value=" ">همه</option>
+                                <select name="status" class="form-control" id="type">
+                                    <option value="">همه</option>
                                     @foreach(\App\Enums\DepositStatusEnum::cases() as $case)
                                         <option
-                                            value="{{$case->name}}" {{request()->has('type') && request()->input('type') == $case->name ? 'selected' : "" }}>
+                                            value="{{$case->value}}" {{request()->has('status') && request()->input('status') == $case->value ? 'selected' : "" }}>
                                             {{\App\Enums\DepositStatusEnum::TYPE_LABEL[$case->value]}}
                                         </option>
                                     @endforeach
@@ -105,8 +121,11 @@
                             <x-user-selection-component
                                 input-name="user"
                                 multiple="0"
-                                selected=""
-                                selected-label=""
+                                selected="{{ request()->filled('user')?$deposits[0]->user : '' }}"
+                                selected-label="{{ request()->filled('user')
+                                ? '('.$deposits[0]->user->id.'#) '.$deposits[0]->user->fullname().' | '.$deposits[0]->user->email
+                                : '' }}"
+
                             ></x-user-selection-component>
                         </div>
                         <div class="w-100"></div>
@@ -194,7 +213,7 @@
                                     </td>
                                     <td class="text-heading fw-medium">
                                         <img src="{{asset($deposit->currency->coinLogo())}}"
-                                             class="rounded-circle">
+                                             class="rounded-circle img-fluid" width="30">
                                         {{$deposit->currency_symbol}}
                                     </td>
                                     <td>{{$deposit->currency_chain}}</td>
@@ -204,6 +223,7 @@
 
                                     <td class="font-number">
                                         <h6 class="mb-0">
+
                                             {{$deposit->address}}
                                             @php
                                                 $chain = $deposit->currency_chain; // Assuming $deposit->chain holds the blockchain type (e.g., 'BTC', 'ERC20')
@@ -280,40 +300,50 @@
                                     </td>
 
                                     <td>
-                                        <span class="badge bg-label-{{$deposit->status->color()}}">{{$deposit->status->label()}}</span>
+                                        <span
+                                            class="badge bg-label-{{$deposit->status->color()}}">{{$deposit->status->label()}}</span>
                                     </td>
                                     <td>
                                         @if($deposit->status === \App\Enums\DepositStatusEnum::CONFIRMED)
-                                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#deposit-{{$deposit->id}}">
+                                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                                    data-bs-target="#deposit-{{$deposit->id}}">
                                                 جزئیات
                                             </button>
                                         @endif
 
-                                        <div class="modal fade" id="deposit-{{$deposit->id}}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal fade" id="deposit-{{$deposit->id}}" tabindex="-1"
+                                             aria-hidden="true">
                                             <div class="modal-dialog" role="document">
                                                 <div class="modal-content">
-                                                    <div class="modal-header"  dir="ltr">
-                                                        <h5 class="modal-title font-number">Transaction #{{$deposit->transaction->id}}</h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    <div class="modal-header" dir="ltr">
+                                                        <h5 class="modal-title font-number">Transaction
+                                                            #{{$deposit->transaction->id}}</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                                aria-label="Close"></button>
                                                     </div>
                                                     <div class="modal-body">
 
-                                                        <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom py-4 mb-4">
+                                                        <div
+                                                            class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom py-4 mb-4">
 
                                                             <h6 class="m-0 mb-2 mb-md-0 me-12">شناسه تراکنش</h6>
                                                             <div class="d-flex flex-wrap gap-4 font-number">
                                                                 #{{$deposit->transaction->id}}
                                                             </div>
                                                         </div>
-                                                        <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+                                                        <div
+                                                            class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
 
-                                                            <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی کاربر پس از واریز</h6>
+                                                            <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی کاربر پس از
+                                                                واریز</h6>
                                                             <div class="d-flex  gap-4 align-items-center">
                                                                 <small> {{$deposit->currency_symbol}}</small>
-                                                                <span class="font-number">{{formatNumberTrimZeros($deposit->transaction->balance)}}</span>
+                                                                <span
+                                                                    class="font-number">{{formatNumberTrimZeros($deposit->transaction->balance)}}</span>
                                                             </div>
                                                         </div>
-                                                        <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+                                                        <div
+                                                            class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
 
                                                             <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات</h6>
                                                             <div class="text-wrap font-number">
@@ -323,7 +353,9 @@
 
                                                     </div>
                                                     <div class="modal-footer">
-                                                        <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">بستن</button>
+                                                        <button type="button" class="btn btn-label-secondary"
+                                                                data-bs-dismiss="modal">بستن
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>

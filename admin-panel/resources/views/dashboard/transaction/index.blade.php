@@ -234,10 +234,10 @@
 
                                     <td>
                                         @if($transaction->deposit)
-                                            <a href=""
-                                               class="btn btn-{{\App\Enums\DepositStatusEnum::TYPE_COLOR[$transaction->deposit->status->value]}} btn-sm">
+                                            <span
+                                               class="badge bg-label-{{\App\Enums\DepositStatusEnum::TYPE_COLOR[$transaction->deposit->status->value]}} btn-sm">
                                                 {{\App\Enums\DepositStatusEnum::TYPE_LABEL[$transaction->deposit->status->value]}}
-                                            </a>
+                                            </span>
                                         @endif
 
                                     </td>

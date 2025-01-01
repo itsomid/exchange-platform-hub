@@ -20,31 +20,48 @@ class DepositSeeder extends Seeder
         $walletService = new WalletService();
         $depositService = new DepositService();
 
-        $user = User::find(2);
+        $currencies = [
+            ['symbol' => 'BTC', 'chain' => 'BTC'],
+            ['symbol' => 'ETH', 'chain' => 'ERC20'],
+            ['symbol' => 'USDT', 'chain' => 'ERC20'],
+            ['symbol' => 'BNB', 'chain' => 'BSC'],
+            ['symbol' => 'TRX', 'chain' => 'TRC20'],
+            ['symbol' => 'DOGE', 'chain' => 'DOGE'],
+        ];
 
-        $currencySymbol = 'BTC';
-        $currencyChain = 'BTC';
+        $users = User::where('id', '!=', 1)->take(10)->get(); // Get 10 users from the database
 
-        $walletChain = $walletService->createDepositAddress(
-            userId: $user->id,
-            currencySymbol: $currencySymbol,
-            currencyChain: $currencyChain
-        );
+        foreach ($users as $user) {
+            foreach ($currencies as $currency) {
+                try {
+                    // Step 1: Create a deposit address for each currency
+                    $walletChain = $walletService->createDepositAddress(
+                        userId: $user->id,
+                        currencySymbol: $currency['symbol'],
+                        currencyChain: $currency['chain']
+                    );
 
-        $deposit = Deposit::where('address', $walletChain->address)->where('status','pending')->first();
+                    // Step 2: Find or create a pending deposit
+                    $deposit = Deposit::where('address', $walletChain->address)
+                        ->where('status', 'pending')
+                        ->first();
 
-        if (!$deposit) {
-            throw new \Exception("No deposit found for the created wallet chain address.");
+                    if (!$deposit) {
+                        throw new \Exception("No deposit found for the created wallet chain address.");
+                    }
+
+                    // Step 3: Simulate a deposit confirmation
+                    $amount = rand(1, 100) / 100; // Random deposit amount between 0.01 and 1.00
+                    $transactionHash = 'txhash_' . bin2hex(random_bytes(10)); // Example transaction hash
+
+                    $depositService->confirmDeposit($deposit->id, $walletChain->wallet, $amount, $transactionHash);
+
+                    echo "User ID: {$user->id}, Currency: {$currency['symbol']}, Deposit Address: {$walletChain->address}\n";
+                    echo "Deposit ID: {$deposit->id} confirmed successfully.\n";
+                } catch (\Exception $e) {
+                    echo "Error for User ID: {$user->id}, Currency: {$currency['symbol']}: " . $e->getMessage() . "\n";
+                }
+            }
         }
-        // Step 3: Simulate a deposit confirmation
-
-        $amount = 0.01; // Example deposit amount
-        $transactionHash = 'txhash_' . bin2hex(random_bytes(10)); // Example transaction hash
-
-        $depositService->confirmDeposit($deposit->id,$walletChain->wallet, $amount, $transactionHash);
-
-
-        echo "Deposit Address: {$walletChain->address}\n";
-        echo "Deposit ID: {$deposit->id} confirmed successfully.\n";
     }
 }

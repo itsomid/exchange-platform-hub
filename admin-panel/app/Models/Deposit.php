@@ -3,10 +3,17 @@
 namespace App\Models;
 
 use App\Enums\DepositStatusEnum;
+use App\Filters\Filterable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+
 
 class Deposit extends Model
 {
+    use Filterable, HasApiTokens, Notifiable;
+    public $filterNameSpace = 'App\Filters\DepositFilter';
 
     protected $fillable = [
         'user_id', 'currency_chain', 'currency_symbol', 'amount', 'address', 'status', 'expiration_date',
