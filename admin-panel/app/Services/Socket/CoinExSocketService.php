@@ -7,7 +7,6 @@ use App\Models\ExchangePrice;
 use App\Models\Market;
 use Exception;
 use Illuminate\Support\Facades\Redis;
-use Predis\Client as Predis;
 use Ratchet\Client\WebSocket;
 use Ratchet\RFC6455\Messaging\MessageInterface;
 use Throwable;
@@ -17,20 +16,22 @@ class CoinExSocketService
     private string $socketUrl = 'wss://socket.coinex.com/v2/spot';
 
     private array $coinsPrice = [];
+
     private ?int $coinexID = null;
+
     private array $marketIds = [];
+
     private array $currentMarkets = [];
 
     public function startListener(): void
     {
-        if(is_null($this->coinexID)){
+        if (is_null($this->coinexID)) {
             $coinExExchange = Exchange::query()
                 ->where('slug', 'coinex')
                 ->where('is_active', true)
                 ->first();
             $this->coinexID = $coinExExchange->id;
         }
-
 
         $reactConnector = new \React\Socket\Connector([
             'dns' => '1.1.1.1',
@@ -41,7 +42,7 @@ class CoinExSocketService
 
         $connector($this->socketUrl)
             ->then(
-                function (WebSocket $conn) use($loop) {
+                function (WebSocket $conn) use ($loop) {
                     echo "Connected to WebSocket\n";
 
                     // Fetch initial markets and send subscription
@@ -77,7 +78,7 @@ class CoinExSocketService
                     });
 
                     // Handle connection close
-                    $conn->on('close', function ($code = null, $reason = null) use ($loop){
+                    $conn->on('close', function ($code = null, $reason = null) use ($loop) {
                         echo "WebSocket closed: {$code} - {$reason}\n";
                         $this->reconnect($loop);
                     });
@@ -112,11 +113,13 @@ class CoinExSocketService
     private function decompressMessage(string $data): ?string
     {
         // Attempt decompression methods
-        $message = zlib_decode($data) ;
+        $message = zlib_decode($data);
         if ($message === false) {
             echo "Failed to decompress message.\n";
+
             return null;
         }
+
         return $message;
     }
 
@@ -137,23 +140,23 @@ class CoinExSocketService
                 'last' => $lastPrice,
                 'open' => $openPrice,
             ];
-            if(!isset($this->marketIds[$baseCurrency])){
+            if (! isset($this->marketIds[$baseCurrency])) {
                 $market = Market::query()
                     ->where('base_currency', $baseCurrency)
                     ->first();
                 $this->marketIds[$baseCurrency] = $market->id;
             }
 
-                // Find the exchange price related to the market for CoinEx
+            // Find the exchange price related to the market for CoinEx
             $exchangePriceModel = ExchangePrice::query()
                 ->where('market_id', $this->marketIds[$baseCurrency])
                 ->where('exchange_id', $this->coinexID)
                 ->first();
 
             $exchangePriceModel->update([
-                    'price' => $lastPrice,
-                    'open_price' => $openPrice,
-                ]);
+                'price' => $lastPrice,
+                'open_price' => $openPrice,
+            ]);
 
             $sellPrice = bcmul($lastPrice, $exchangePriceModel->exchange_profit_sell + 1, 8);
             $buyPrice = bcmul($lastPrice, $exchangePriceModel->exchange_profit_buy + 1, 8);
@@ -162,7 +165,7 @@ class CoinExSocketService
             $buyOpenPrice = bcmul($openPrice, $exchangePriceModel->exchange_profit_buy + 1, 8);
 
             // Publish to Redis
-            Redis::publish('market_prices', $updateJson = json_encode([
+            Redis::publish('market_prices', json_encode([
                 'base_currency' => $baseCurrency,
                 'sell_price' => $sellPrice,
                 'sell_open_price' => $sellOpenPrice,
@@ -170,10 +173,6 @@ class CoinExSocketService
                 'buy_open_price' => $buyOpenPrice,
                 'timestamp' => now()->timestamp,
             ]));
-
-            $predis = new Predis();
-            $predis->publish('market_prices', $updateJson);
-
         }
     }
 
@@ -183,7 +182,7 @@ class CoinExSocketService
         return Market::query()
             ->whereHas('activeExchangePrice', function ($query) {
                 $query->where('exchange_id', $this->coinexID);
-            })->pluck('base_currency') ->map(fn($market) => $market . 'USDT')
+            })->pluck('base_currency')->map(fn ($market) => $market.'USDT')
             ->toArray();
     }
 
@@ -191,16 +190,17 @@ class CoinExSocketService
     {
         if (empty($markets)) {
             echo "No markets to subscribe.\n";
+
             return;
         }
 
         $subscribeMessage = [
             'method' => 'state.subscribe',
-            'params' => ['market_list' =>$markets],
+            'params' => ['market_list' => $markets],
             'id' => 1,
         ];
         $stream->send(json_encode($subscribeMessage));
-        echo "Subscribed to markets: " . implode(', ', $markets) . "\n";
+        echo 'Subscribed to markets: '.implode(', ', $markets)."\n";
     }
 
     private function checkForMarketChanges($stream): void
