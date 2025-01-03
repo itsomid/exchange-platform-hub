@@ -204,6 +204,7 @@ class TwoFactorController extends Controller
         $tokenResponse = $this->accessTokenService->generateToken(
             resolve(GenerateTokenRequestDTO::class)
                 ->setUser(Auth::user())
+                ->setIpAddress($request->ip())
                 ->setTokenName('desktop')
                 ->setExpirationDate(now()->addMinutes(60)) // 1 hour
         );
