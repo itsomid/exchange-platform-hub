@@ -5,7 +5,7 @@ namespace App\Repositories\DTO\Deposit;
 use App\Enums\DepositStatusEnum;
 use Carbon\Carbon;
 
-class CreateDepositRequestDTO
+class CreateOrUpdatePendingDepositRequestDTO
 {
     private int $userId;
 
@@ -15,13 +15,9 @@ class CreateDepositRequestDTO
 
     private ?string $amount = null;
 
-    private string $address;
+    private string $publicKey;
 
-    private string $transactionHash;
-
-    private Carbon $confirmedAt;
-
-    private ?Carbon $expirationDate = null;
+    private Carbon $expirationDate;
 
     private DepositStatusEnum $status;
 
@@ -85,51 +81,27 @@ class CreateDepositRequestDTO
         return $this->currencyChain;
     }
 
-    public function setAddress(string $address): self
+    public function setPublicKey(string $publicKey): self
     {
-        $this->address = $address;
+        $this->publicKey = $publicKey;
 
         return $this;
     }
 
-    public function getAddress(): string
+    public function getPublicKey(): string
     {
-        return $this->address;
+        return $this->publicKey;
     }
 
-    public function setExpirationDate(?Carbon $expirationDate): self
+    public function setExpirationDate(Carbon $expirationDate): self
     {
         $this->expirationDate = $expirationDate;
 
         return $this;
     }
 
-    public function getExpirationDate(): ?Carbon
+    public function getExpirationDate(): Carbon
     {
         return $this->expirationDate;
-    }
-
-    public function setTransactionHash(string $transactionHash): CreateDepositRequestDTO
-    {
-        $this->transactionHash = $transactionHash;
-
-        return $this;
-    }
-
-    public function getTransactionHash(): string
-    {
-        return $this->transactionHash;
-    }
-
-    public function setConfirmedAt(Carbon $confirmedAt): CreateDepositRequestDTO
-    {
-        $this->confirmedAt = $confirmedAt;
-
-        return $this;
-    }
-
-    public function getConfirmedAt(): Carbon
-    {
-        return $this->confirmedAt;
     }
 }

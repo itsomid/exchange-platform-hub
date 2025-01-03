@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('currency_chain');
             $table->string('currency_symbol');
-            $table->decimal('amount', 8, 2)->nullable();
+            $table->decimal('amount', 18, 8)->nullable();
             $table->string('address');
             $table->string('transaction_hash', 96)->nullable()->unique();
             $table->string('status')->default('pending');

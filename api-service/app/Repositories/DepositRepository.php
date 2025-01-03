@@ -2,13 +2,15 @@
 
 namespace App\Repositories;
 
+use App\Enums\DepositStatusEnum;
 use App\Models\Deposit;
-use App\Repositories\DTO\Deposit\CreateDepositRequestDTO;
+use App\Repositories\DTO\Deposit\CreateOrUpdatePendingDepositRequestDTO;
 use App\Repositories\Interfaces\DepositRepositoryInterface;
+use Illuminate\Database\Eloquent\Collection;
 
 class DepositRepository implements DepositRepositoryInterface
 {
-    public function createOrUpdateDeposit(CreateDepositRequestDTO $requestDTO): void
+    public function createOrUpdateDeposit(CreateOrUpdatePendingDepositRequestDTO $requestDTO): void
     {
         Deposit::query()
             ->updateOrCreate([
@@ -24,5 +26,36 @@ class DepositRepository implements DepositRepositoryInterface
                 'address' => $requestDTO->getPublicKey(),
                 'expiration_date' => $requestDTO->getExpirationDate(),
             ]);
+    }
+
+    public function getPendingDeposits(): Collection
+    {
+        return Deposit::query()
+            ->where('status', DepositStatusEnum::Pending)
+            ->where('expiration_date', '>', now())
+            ->get();
+    }
+
+    public function create(DTO\Deposit\CreateDepositRequestDTO $requestDTO): void
+    {
+        Deposit::query()
+            ->create([
+                'user_id' => $requestDTO->getUserId(),
+                'currency_symbol' => $requestDTO->getCurrencySymbol(),
+                'currency_chain' => $requestDTO->getCurrencyChain(),
+                'amount' => $requestDTO->getAmount(),
+                'address' => $requestDTO->getAddress(),
+                'transaction_hash' => $requestDTO->getTransactionHash(),
+                'confirmed_at' => $requestDTO->getConfirmedAt(),
+                'expiration_date' => $requestDTO->getExpirationDate(),
+                'status' => $requestDTO->getStatus(),
+            ]);
+    }
+
+    public function isDepositExists(string $transactionHash): bool
+    {
+        return Deposit::query()
+            ->where('transaction_hash', $transactionHash)
+            ->exists();
     }
 }
