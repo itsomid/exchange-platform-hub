@@ -1986,6 +1986,10 @@
                     "google2fa": {
                         "description": "The user's two-factor authentication code.",
                         "type": "string"
+                    },
+                    "encrypted_token": {
+                        "description": "This token exists in login api",
+                        "type": "string"
                     }
                 },
                 "type": "object"
@@ -2391,6 +2395,10 @@
                     "username": {
                         "description": "The user's username",
                         "type": "string"
+                    },
+                    "has_two_factor": {
+                        "description": "Shows user's two-factor state",
+                        "type": "boolean"
                     }
                 },
                 "type": "object"
@@ -2522,6 +2530,11 @@
                         "description": "The generated wallet address for the user.",
                         "type": "string",
                         "example": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+                    },
+                    "valid_until": {
+                        "description": "The addresss expiration date",
+                        "type": "string",
+                        "example": "2025-01-12 15:05:01"
                     }
                 },
                 "type": "object"
