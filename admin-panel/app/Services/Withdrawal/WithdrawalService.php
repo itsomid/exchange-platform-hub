@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Withdrawal;
 
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
+use App\Enums\WithdrawalStatusEnum;
 use App\Models\CurrencyChain;
 use App\Models\Wallet;
 use App\Models\Withdrawal;
@@ -61,13 +62,12 @@ class WithdrawalService
             // Create the withdrawal record
             $withdrawal = Withdrawal::create([
                 'user_id' => $userId,
-                'wallet_id' => $walletId,
                 'currency_chain' => $currencyChain,
                 'currency_symbol' => $currencySymbol,
                 'amount' => $amount,
                 'fee' => $fee,
                 'address' => $address,
-                'status' => 'pending',
+                'status' => WithdrawalStatusEnum::PENDING,
                 'description' => $description,
             ]);
 
@@ -104,7 +104,7 @@ class WithdrawalService
             // Update withdrawal record
             $withdrawal->update([
                 'transaction_hash' => $transactionHash,
-                'status' => 'completed',
+                'status' => WithdrawalStatusEnum::COMPLETED,
                 'confirmed_at' => now(),
             ]);
 
@@ -117,7 +117,7 @@ class WithdrawalService
                 'user_id' => $withdrawal->user->id,
                 'wallet_id' => $wallet->id,
                 'withdrawal_id' => $withdrawal->id,
-                'amount' => $withdrawal->amount,
+                'amount' => -$withdrawal->amount,
                 'balance' => $wallet->balance,
                 'type' => TransactionTypeEnum::WITHDRAWAL,
                 'subtype' => TransactionSubTypeEnum::USER_INITIATED,
@@ -144,13 +144,13 @@ class WithdrawalService
             // Fetch the withdrawal record
             $withdrawal = Withdrawal::findOrFail($withdrawalId);
 
-            if ($withdrawal->status !== 'pending') {
+            if ($withdrawal->status !== WithdrawalStatusEnum::PENDING) {
                 throw new \Exception("This withdrawal has already been processed.");
             }
 
             // Update withdrawal status to 'approved'
             $withdrawal->update([
-                'status' => 'approved',
+                'status' => WithdrawalStatusEnum::COMPLETED,
                 'admin_id' => $adminId, // Store which admin approved the withdrawal
                 'confirmed_at' => now(),
             ]);
@@ -159,7 +159,7 @@ class WithdrawalService
             Transaction::create([
                 'user_id' => $withdrawal->user_id,
                 'wallet_id' => $withdrawal->wallet_id,
-                'amount' => $withdrawal->amount,
+                'amount' => -$withdrawal->amount,
                 'balance' => $withdrawal->wallet->balance,
                 'type' => 'withdrawal',
                 'subtype' => 'admin_approved',
@@ -167,6 +167,35 @@ class WithdrawalService
                 'description' => "Admin approved withdrawal to address: {$withdrawal->address}",
                 'admin_description' => "Approved by Admin ID: {$adminId}",
             ]);
+
+            DB::commit();
+
+            return $withdrawal;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+    public function adminCancelWithdrawal(int $withdrawalId, int $adminId): Withdrawal
+    {
+        DB::beginTransaction();
+
+        try {
+            // Fetch the withdrawal record
+            $withdrawal = Withdrawal::findOrFail($withdrawalId);
+
+            if ($withdrawal->status !== WithdrawalStatusEnum::PENDING) {
+                throw new \Exception("This withdrawal has already been processed.");
+            }
+
+            // Update withdrawal status to 'approved'
+            $withdrawal->update([
+                'status' => WithdrawalStatusEnum::FAILED,
+                'admin_id' => $adminId, // Store which admin Canceled the withdrawal
+                'description' => 'Withdraw canceled by admin (#' .$adminId .')'
+            ]);
+
+
 
             DB::commit();
 

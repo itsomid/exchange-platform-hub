@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('withdrawals', function (Blueprint $table) {
             $table->id(); // Primary key
             $table->unsignedBigInteger('user_id'); // Foreign key
+            $table->unsignedBigInteger('admin_id')->nullable(); // Foreign key
             $table->string('currency_chain'); // Blockchain (e.g., Ethereum, Binance Smart Chain)
             $table->string('currency_symbol'); // Token/Currency Symbol (e.g., BTC, ETH)
             $table->decimal('amount', 20, 8); // Withdrawal amount
@@ -27,6 +28,7 @@ return new class extends Migration
 
             // Foreign key constraints
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('admin_id')->references('id')->on('admins')->onDelete('cascade');
         });
     }
 

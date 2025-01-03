@@ -310,7 +310,7 @@
             @endif
         </div>
         <div class="row justify-content-center">
-            {{$users->links()}}
+            {{$users->appends(request()->all())->links()}}
         </div>
     </div>
 

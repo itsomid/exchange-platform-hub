@@ -244,7 +244,7 @@
 
                                             // Define node providers with their address URL patterns
                                             $nodeProviderLinks = [
-                                                'BTC' => 'https://blockstream.info/address/{address}',
+                                              'BTC' => 'https://blockchair.com/bitcoin/address/{address}',
                                                 'ERC20' => 'https://etherscan.io/address/{address}',
                                                 'BEP20' => 'https://bscscan.com/address/{address}',
                                                 'TRC20' => 'https://tronscan.org/#/address/{address}',
@@ -284,7 +284,7 @@
 
                                         // Define node providers with their URL patterns
                                         $nodeProviderLinks = [
-                                            'BTC' => 'https://blockstream.info/tx/{hash}',
+                                            'BTC' => 'https://blockchair.com/bitcoin/transaction/{hash}',
                                             'ERC20' => 'https://etherscan.io/tx/{hash}',
                                             'BEP20' => 'https://bscscan.com/tx/{hash}',
                                             'TRC20' => 'https://tronscan.org/#/transaction/{hash}',
@@ -327,84 +327,85 @@
                                        data-bs-target="#deposit-{{$withdraw->id}}">
                                         <i class="fa-regular fa-eye fa-xl"></i>
                                     </a>
-                                @endif
+                                    <div class="modal fade" id="deposit-{{$withdraw->id}}" tabindex="-1"
+                                         aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header" dir="ltr">
+                                                    <h5 class="modal-title font-number">Withdraw
+                                                        #{{$withdraw->id}}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                            aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
 
-                                <div class="modal fade" id="deposit-{{$withdraw->id}}" tabindex="-1"
-                                     aria-hidden="true">
-                                    <div class="modal-dialog" role="document">
-                                        <div class="modal-content">
-                                            <div class="modal-header" dir="ltr">
-                                                <h5 class="modal-title font-number">Withdraw
-                                                    #{{$withdraw->id}}</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                        aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-
-                                                <div
+                                                    <div
                                                         class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom py-4 mb-4">
 
-                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">شناسه تراکنش</h6>
-                                                    <div class="d-flex flex-wrap gap-4 font-number">
-                                                        Transaction #{{$withdraw->transaction->id}}
+                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">شناسه تراکنش</h6>
+                                                        <div class="d-flex flex-wrap gap-4 font-number">
+                                                            Transaction #{{$withdraw->transaction->id}}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <div
+                                                    <div
                                                         class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
 
-                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی کاربر قبل از
-                                                        برداشت</h6>
-                                                    <div class="d-flex  gap-4 align-items-center">
-                                                        <small> {{$withdraw->currency_symbol}}</small>
-                                                        <span
+                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی کاربر قبل از
+                                                            برداشت</h6>
+                                                        <div class="d-flex  gap-4 align-items-center">
+                                                            <small> {{$withdraw->currency_symbol}}</small>
+                                                            <span
                                                                 class="font-number">{{formatNumberTrimZeros($withdraw->transaction->balance - $withdraw->transaction->amount)}}</span>
 
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <div
+                                                    <div
                                                         class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
 
-                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی کاربر پس از
-                                                        برداشت</h6>
-                                                    <div class="d-flex  gap-4 align-items-center">
-                                                        <small> {{$withdraw->currency_symbol}}</small>
-                                                        <span
+                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی کاربر پس از
+                                                            برداشت</h6>
+                                                        <div class="d-flex  gap-4 align-items-center">
+                                                            <small> {{$withdraw->currency_symbol}}</small>
+                                                            <span
                                                                 class="font-number text-primary">{{formatNumberTrimZeros($withdraw->transaction->balance)}}</span>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <div
+                                                    <div
                                                         class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
 
-                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات برداشت</h6>
-                                                    <div class="text-wrap font-number">
-                                                        {{$withdraw->description}}
+                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات برداشت</h6>
+                                                        <div class="text-wrap font-number">
+                                                            {{$withdraw->description}}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <div
+                                                    <div
                                                         class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
 
-                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات تراکنش</h6>
-                                                    <div class="text-wrap font-number">
-                                                        {{$withdraw->transaction->description}}
+                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات تراکنش</h6>
+                                                        <div class="text-wrap font-number">
+                                                            {{$withdraw->transaction->description}}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <div
+                                                    <div
                                                         class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
 
-                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات ادمین</h6>
-                                                    <div class="text-wrap font-number">
-                                                        {{$withdraw->transaction->admin_description}}
+                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات ادمین</h6>
+                                                        <div class="text-wrap font-number">
+                                                            {{$withdraw->transaction->admin_description}}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-label-secondary"
-                                                        data-bs-dismiss="modal">بستن
-                                                </button>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-label-secondary"
+                                                            data-bs-dismiss="modal">بستن
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                @endif
+
+
                             </td>
                         </tr>
                     @endforeach
@@ -414,7 +415,7 @@
         </div>
         <div class="row">
             <div class="col-md-12">
-                {{$withdraws->links()}}
+                {{$withdraws->appends(request()->all())->links()}}
             </div>
         </div>
 
