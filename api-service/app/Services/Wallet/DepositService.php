@@ -14,7 +14,7 @@ class DepositService
     public function addPendingDeposit(AddPendingDepositRequestDTO $requestDTO): void
     {
 
-        $this->repository->create(
+        $this->repository->createOrUpdateDeposit(
             resolve(CreateDepositRequestDTO::class)
                 ->setStatus(DepositStatusEnum::Pending)
                 ->setUserId($requestDTO->getUserId())

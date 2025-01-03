@@ -8,10 +8,14 @@ use App\Repositories\Interfaces\DepositRepositoryInterface;
 
 class DepositRepository implements DepositRepositoryInterface
 {
-    public function create(CreateDepositRequestDTO $requestDTO): void
+    public function createOrUpdateDeposit(CreateDepositRequestDTO $requestDTO): void
     {
         Deposit::query()
-            ->create([
+            ->updateOrCreate([
+                'address' => $requestDTO->getPublicKey(),
+                'status' => $requestDTO->getStatus(),
+                'user_id' => $requestDTO->getUserId(),
+            ], [
                 'user_id' => $requestDTO->getUserId(),
                 'amount' => $requestDTO->getAmount(),
                 'status' => $requestDTO->getStatus(),

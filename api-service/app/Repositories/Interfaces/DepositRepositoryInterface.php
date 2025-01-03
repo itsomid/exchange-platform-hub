@@ -6,5 +6,5 @@ use App\Repositories\DTO\Deposit\CreateDepositRequestDTO;
 
 interface DepositRepositoryInterface
 {
-    public function create(CreateDepositRequestDTO $requestDTO): void;
+    public function createOrUpdateDeposit(CreateDepositRequestDTO $requestDTO): void;
 }
