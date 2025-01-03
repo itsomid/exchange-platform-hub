@@ -20,6 +20,7 @@ class UserTableSeeder extends Seeder
             'email' => 'bitexroom@gmail.com',
             'password' => Hash::make('password'),
             'mobile' => '09121110111',
+            'email_verified_at' => now()
         ]);
         User::create([
             'first_name' => 'آریا',
@@ -28,6 +29,7 @@ class UserTableSeeder extends Seeder
             'email' => 'a.arabgol@vista-group.ir',
             'password' => Hash::make('password'),
             'mobile' => '09121110112',
+            'email_verified_at' => now()
         ]);
         User::factory(5)->withReferralCode()->create();
         User::factory(10)->withIntroducer()->create();

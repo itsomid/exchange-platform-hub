@@ -410,7 +410,11 @@
                 </tbody>
             </table>
         </div>
-        {{$deposits->links()}}
+        <div class="row mt-4">
+            <div class="col-md-12">
+                {{$deposits->links()}}
+            </div>
+        </div>
     </div>
 
 @endsection
