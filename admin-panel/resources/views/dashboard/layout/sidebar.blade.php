@@ -110,8 +110,8 @@
             </li>
         @endcan
         @can('withdraw')
-            <li class="menu-item @if(request()->is('admin/withdraws*')) active @endif">
-                <a href="" class="menu-link">
+            <li class="menu-item @if(request()->is('admin/withdrawal*')) active @endif">
+                <a href="{{route('admin.withdrawal.index')}}" class="menu-link">
                     <i class="menu-icon fa-regular fa-money-bill-wave"></i>
                     <div>لیست برداشت ها</div>
                 </a>

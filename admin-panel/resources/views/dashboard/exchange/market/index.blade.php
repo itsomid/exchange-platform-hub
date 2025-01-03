@@ -99,16 +99,11 @@
                         <th>کوین</th>
                         <th>آخرین قیمت (USDT)</th>
                         <th>تغییرات (۲۴ ساعت)</th>
-                        <th>قیمت صرافی
-
-                            <div class="badge rounded bg-label-success" dir="ltr">
-                                {{ $markets[0]->activeExchangePrice->exchange_profit_sell > 0 ? '+' : '' }}{{$markets[0]->activeExchangePrice->exchange_profit * 100 }}
-                                %
-                            </div>
-                        </th>
+                        <th>قیمت صرافی (فروش به مشتری)</th>
+                        <th>قیمت صرافی (خرید از مشتری)</th>
                         <th>صرافی مرجع</th>
                         <th>حداقل مقدار معامله</th>
-                        <th>جداکثر مقدار معامله</th>
+                        <th>حداکثر مقدار معامله</th>
                         <th>وضعیت</th>
                         <th>عملیات</th>
                     </tr>
@@ -154,18 +149,31 @@
                                     %
                                 </div>
                             </td>
-                            <td class="font-number text-heading h5">
-                                <span class="ms-1">{{formatNumber($market->activeExchangePrice->own_price)}}</span>
+                            <td class="font-number text-heading">
+                                <div class="badge rounded bg-label-{{ $market->activeExchangePrice->exchange_profit_sell < 0 ? 'danger' : 'success' }} me-3"
+                                     dir="ltr">
+                                    {{ $market->activeExchangePrice->exchange_profit_sell > 0 ? '+' : '' }}{{$market->activeExchangePrice->exchange_profit_sell * 100 }}%
+                                </div>
+                                <span class="ms-1 h5">{{formatNumberTrimZeros($market->activeExchangePrice->sell_own_price)}}</span>
+                                <small class="text-muted">USDT</small>
+
+                            </td>
+                            <td class="font-number text-heading ">
+                                <div class="badge rounded bg-label-{{ $market->activeExchangePrice->exchange_profit_buy < 0 ? 'danger' : 'success' }} me-3"
+                                     dir="ltr">
+                                    {{ $market->activeExchangePrice->exchange_profit_buy > 0 ? '+' : '' }}{{$market->activeExchangePrice->exchange_profit_buy * 100 }}%
+                                </div>
+                                <span class="ms-1 h5">{{formatNumberTrimZeros($market->activeExchangePrice->buy_own_price)}}</span>
                                 <small class="text-muted">USDT</small>
                             </td>
-                            <td>
+                            <td class="fw-bold">
                                 {{ $market->activeExchangePrice->exchange->name }}
                             </td>
-                            <td class="font-number">
-                                {{formatNumber($market->min_trade_amount,8)}}
+                            <td class="font-number ">
+                                {{formatNumberTrimZeros($market->min_trade_amount,8)}}
                             </td>
                             <td class="font-number">
-                                {{formatNumber($market->max_trade_amount,2)}}
+                                {{formatNumberTrimZeros($market->max_trade_amount,2)}}
                             </td>
                             <td>
                                 <span class="badge bg-label-{{$market->is_active?'success':'danger'}} me-1">
@@ -174,8 +182,7 @@
                             </td>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <a class="text-secondary me-3"
-                                       href="{{ route('admin.market.edit', ['market' => $market->id]) }}">
+                                    <a class="text-secondary me-3" href="{{ route('admin.market.edit', ['market' => $market->id]) }}">
                                         <i class="fa-light fa-pen-to-square fa-lg"></i>
                                     </a>
                                     <a class="text-secondary me-3" href="">

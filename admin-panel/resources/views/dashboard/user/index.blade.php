@@ -176,12 +176,20 @@
                                 </td>
 
                                 <td>
-                                    <div class="d-flex flex-column">
-                                        <a href="" class="text-heading text-truncate">
-                                            <span class="fw-medium">{{$user->email}}</span>
-                                        </a>
-                                        <small>{{$user->username}}</small>
+                                    <div class="d-flex">
+
+                                        <div class="avatar me-2">
+                                            <span class="avatar-initial rounded-circle bg-label-primary">{{$user->avatar_name}}</span>
+                                        </div>
+
+                                        <div class="d-flex flex-column">
+                                            <a href="" class="text-heading text-truncate">
+                                                <span class="fw-medium">{{$user->email}}</span>
+                                            </a>
+                                            <small>{{$user->username}}</small>
+                                        </div>
                                     </div>
+
                                 </td>
                                 <td>
                                     {{$user->fullname()}}
@@ -201,7 +209,6 @@
                                         </a>
                                     @endif
                                 </td>
-
 
 
                                 <td>
@@ -229,13 +236,14 @@
                                     @endif
 
                                 </td>
-                                <td >
+                                <td>
                                     <div class="d-flex align-items-center">
                                         <div class="btn-group btn-group-sm" role="group">
                                             <a class="btn btn-outline-secondary text-dark" href="">
                                                 <i class="fa-light fa-eye"></i>
                                             </a>
-                                            <a class="btn btn-outline-secondary text-dark" href="{{route('admin.wallet.index',['user'=>$user->id])}}">
+                                            <a class="btn btn-outline-secondary text-dark"
+                                               href="{{route('admin.wallet.index',['user'=>$user->id])}}">
                                                 <i class="fa-regular fa-wallet"></i>
                                             </a>
                                             @can('user.edit-note')
@@ -248,7 +256,7 @@
                                             @endcan
                                         </div>
 
-{{--                                        TODO: add Country--}}
+                                        {{--                                        TODO: add Country--}}
                                         <div class="dropdown mx-3">
 
                                             <button type="button" class="btn p-0 dropdown-toggle hide-arrow"
@@ -261,11 +269,13 @@
                                                     <i class="fa-light fa-pen"></i>
                                                     ویرایش کاربر
                                                 </a>
-                                                <a class="dropdown-item" href="{{route('admin.user.password.edit', ['user'=>$user->id])}}">
+                                                <a class="dropdown-item"
+                                                   href="{{route('admin.user.password.edit', ['user'=>$user->id])}}">
                                                     <i class="fa-regular fa-unlock"></i>
                                                     تغییر رمز عبور
                                                 </a>
-                                                <a class="dropdown-item" href="{{route('admin.user.financial-block.getBlocks', ['user'=>$user->id])}}">
+                                                <a class="dropdown-item"
+                                                   href="{{route('admin.user.financial-block.getBlocks', ['user'=>$user->id])}}">
                                                     <i class="fa-regular fa-unlock"></i>
                                                     محدودیت های مالی
                                                 </a>

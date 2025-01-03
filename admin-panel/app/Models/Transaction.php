@@ -18,7 +18,7 @@ class Transaction extends Model
     public $filterNameSpace = 'App\Filters\TransactionFilter';
 
     protected $fillable = [
-        'user_id', 'admin_id', 'wallet_id', 'amount', 'balance', 'type', 'subtype', 'description', 'admin_description', 'status', 'total', 'fee'
+        'user_id', 'admin_id', 'wallet_id','deposit_id','withdrawal_id','otc_order_id', 'amount', 'balance', 'type', 'subtype', 'description', 'admin_description', 'status'
     ];
 
     protected function casts(): array
@@ -57,5 +57,9 @@ class Transaction extends Model
     public function deposit()
     {
         return $this->belongsTo(Deposit::class,'deposit_id');
+    }
+    public function withdrawal()
+    {
+        return $this->belongsTo(Deposit::class,'withdrawal_id');
     }
 }

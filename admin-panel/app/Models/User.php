@@ -160,6 +160,19 @@ class User extends Authenticatable implements CanResetPassword
         $url = sprintf(config('frontend.reset-password-link'), $token);
         $this->notify(new ResetPasswordNotification($this, $url));
     }
+    public function getAvatarNameAttribute()
+    {
+        $firstName = $this->attributes['first_name'] ?? '';
+        $lastName  = $this->attributes['last_name'] ?? '';
 
+        return strtoupper(substr($firstName, 0, 2)) . ' ' . strtoupper(substr($lastName, 0, 2));
+    }
+
+    public function getAvatarUserNameAttribute()
+    {
+        $username = $this->attributes['username'] ?? '';
+
+        return strtoupper(substr($username, 0, 2)) ;
+    }
 
 }

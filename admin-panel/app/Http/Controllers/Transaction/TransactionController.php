@@ -11,7 +11,7 @@ class TransactionController extends Controller
 {
     public function index()
     {
-        $transaction = Transaction::with(['user', 'wallet'])->filterBy(request()->all())->paginate(50);
+        $transaction = Transaction::with(['user', 'wallet','admin','wallet.currency','deposit','withdrawal'])->filterBy(request()->all())->paginate(50);
         $referralTransactionsCount = Transaction::where('type', TransactionTypeEnum::REFERRAL)->count();
 //        return $transaction[0]->wallet->currency;
         return view('dashboard.transaction.index', [

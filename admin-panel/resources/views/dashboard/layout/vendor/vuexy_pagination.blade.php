@@ -1,6 +1,6 @@
 @if ($paginator->hasPages())
     <nav aria-label="Page navigation">
-        <ul class="pagination pagination-round pagination-secondary d-flex justify-content-center">
+        <ul class="pagination pagination-rounded pagination-primary d-flex justify-content-center">
             @foreach ($elements as $element)
                 {{-- "Three Dots" Separator --}}
                 @if (is_string($element))
