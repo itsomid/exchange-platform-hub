@@ -40,4 +40,9 @@ class GenerateAddressRequestDTO
 
         return $this;
     }
+
+    public function getChainSymbol(): string
+    {
+        return $this->chainSymbol;
+    }
 }
