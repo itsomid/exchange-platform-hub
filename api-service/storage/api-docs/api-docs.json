@@ -778,7 +778,7 @@
                 ]
             }
         },
-        "/api/v1/deposit-withdraw/config": {
+        "/api/v1/currencies/deposit-withdraw-config": {
             "post": {
                 "tags": [
                     "Currency"
@@ -865,7 +865,7 @@
                 ]
             }
         },
-        "/api/v1/currencies/all-deposit-withdraw": {
+        "/api/v1/currencies/all-deposit-withdraw-config": {
             "get": {
                 "tags": [
                     "Currency"
