@@ -19,6 +19,7 @@ return new class extends Migration
 //            $table->boolean('deposit_enabled')->default(true); // Is deposit enabled for this currency
 //            $table->boolean('withdraw_enabled')->default(true); // Is withdrawal enabled for this currency
             $table->boolean('inter_transfer_enabled')->default(true); // Is internal transfer enabled
+            $table->decimal('max_auto_withdraw_amount', 18, 8)->default(0); // Maximum withdrawal amount without admin approval
             $table->timestamps();
         });
     }

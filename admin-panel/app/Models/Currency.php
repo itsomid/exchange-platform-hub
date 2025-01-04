@@ -18,7 +18,8 @@ class Currency extends Model
         'name',
         'symbol',
         'logo',
-        'inter_transfer_enabled'
+        'inter_transfer_enabled',
+        'max_auto_withdraw_amount'
     ];
 
     public function chains() : HasMany

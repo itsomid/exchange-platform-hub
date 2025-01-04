@@ -870,7 +870,7 @@
                 "tags": [
                     "Currency"
                 ],
-                "summary": "Get Deposit and Withdrawal Configuration",
+                "summary": "Get All Deposit and Withdrawal Configuration",
                 "description": "Retrieve deposit and withdrawal configuration for all currencies.",
                 "operationId": "allDepositWithdrawConfig",
                 "responses": {
