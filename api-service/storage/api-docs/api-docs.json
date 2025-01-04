@@ -779,7 +779,7 @@
             }
         },
         "/api/v1/currencies/deposit-withdraw-config": {
-            "post": {
+            "get": {
                 "tags": [
                     "Currency"
                 ],
