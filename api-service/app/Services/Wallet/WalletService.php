@@ -5,7 +5,7 @@ namespace App\Services\Wallet;
 use App\Enums\BalanceOperationEnum;
 use App\Exceptions\V1\Wallet\InternalWalletHasProblemException;
 use App\Infrastructure\HDWallet\Exceptions\HDWalletException;
-use App\Models\Wallet;
+use App\Repositories\Interfaces\MarketRepositoryInterface;
 use App\Repositories\Interfaces\WalletChainRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Services\Wallet\DTO\Wallet\GenerateAddressRequestDTO;
@@ -24,6 +24,7 @@ class WalletService
     public function __construct(
         private readonly WalletRepositoryInterface $walletRepository,
         private readonly WalletChainRepositoryInterface $walletChainRepository,
+        private readonly MarketRepositoryInterface $marketRepository,
     ) {}
 
     /**
@@ -100,22 +101,31 @@ class WalletService
     public function getLists(DTO\Wallet\WalletListsRequestDTO $requestDTO): array
     {
         $wallets = $this->walletRepository->getLists($requestDTO->getUserId());
+        $markets = $this->marketRepository->getAll();
 
-        //dd($wallets);
-        return $wallets->map(fn (Wallet $wallet) => resolve(WalletListsResponseDTO::class)
-            ->setId($wallet->id)
-            ->setCurrency($wallet->currency_symbol)
-            ->setBalance($wallet->balance)
-            ->setLockedBalance($wallet->locked_balance)
-            ->setUsdtBalance(
-                $wallet->exchangePrice ?
-                bcmul($wallet->exchangePrice->price, $wallet->balance, 8) : $wallet->balance
-            )
-            ->setUsdtLockedBalance(
-                $wallet->exchangePrice ?
-                    bcmul($wallet->exchangePrice->price, $wallet->locked_balance, 8) : $wallet->locked_balance
-            )
-        )->toArray();
+        $lists = [];
+
+        $wallets = $wallets->keyBy('currency_symbol');
+
+        foreach ($markets as $market) {
+            $wallet = $wallets[$market->base_currency] ?? null;
+
+            $lists[] = resolve(WalletListsResponseDTO::class)
+                ->setId($wallet->id ?? null)
+                ->setCurrency($wallet->currency_symbol ?? $market->base_currency)
+                ->setBalance($wallet->balance ?? 0)
+                ->setLockedBalance($wallet->locked_balance ?? 0)
+                ->setUsdtBalance(
+                    $wallet && $wallet->exchangePrice ?
+                        bcmul($wallet->exchangePrice->price, $wallet->balance, 8) : 0
+                )
+                ->setUsdtLockedBalance(
+                    $wallet && $wallet->exchangePrice ?
+                        bcmul($wallet->exchangePrice->price, $wallet->locked_balance, 8) : 0
+                );
+        }
+
+        return $lists;
     }
 
     public function getWallet(GetOneWalletRequestDTO $requestDTO): GetOneWalletResponseDTO

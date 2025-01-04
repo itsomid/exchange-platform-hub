@@ -9,5 +9,7 @@ interface MarketRepositoryInterface
 {
     public function getOTCMarkets(): Collection;
 
+    public function getAll(): Collection;
+
     public function getMarketById(int $marketId): Market;
 }
