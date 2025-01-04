@@ -24,6 +24,7 @@ Route::prefix('/referral-codes')->group(function () {
 //Currency
 Route::prefix('/currencies')->group(function () {
     Route::get('/deposit-withdraw-config', [ConfigController::class, 'depositWithdrawConfig'])->name('currencies.deposit-withdraw-config');
+    Route::get('/all-deposit-withdraw-config', [ConfigController::class, 'allDepositWithdrawConfig'])->name('currencies.all-deposit-withdraw-config');
 });
 
 //Wallet
