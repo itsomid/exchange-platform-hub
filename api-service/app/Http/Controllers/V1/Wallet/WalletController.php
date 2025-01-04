@@ -13,6 +13,7 @@ use App\Services\Wallet\DTO\Deposit\AddPendingDepositRequestDTO;
 use App\Services\Wallet\DTO\Wallet\GenerateAddressRequestDTO;
 use App\Services\Wallet\DTO\Wallet\GetOneWalletRequestDTO;
 use App\Services\Wallet\DTO\Wallet\WalletListsRequestDTO;
+use App\Services\Wallet\DTO\Wallet\WalletValueUSDTRequestDTO;
 use App\Services\Wallet\WalletService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -151,16 +152,20 @@ class WalletController extends Controller
      *     summary="Get Wallet Balance",
      *     tags={"Wallet"},
      *     security={{"sanctum": {}}},
+     *
      *     @OA\Parameter(
      *         name="currencySymbol",
      *         in="path",
      *         description="Currency symbol to fetch the wallet details.",
      *         required=true,
+     *
      *         @OA\Schema(type="string", example="BTC")
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Wallet details retrieved successfully.",
+     *
      *         @OA\JsonContent(ref="#/components/schemas/GetOneWalletResponse")
      *     ),
      * )
@@ -175,5 +180,58 @@ class WalletController extends Controller
         );
 
         return new GetOneWalletResource($walletDTO);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/v1/wallets/value-usdt",
+     *     summary="Get total assets value in USDT",
+     *     description="Calculate and retrieve the total value of all user assets converted to USDT.",
+     *     tags={"Wallet"},
+     *     security={{"sanctum": {}}},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Total value of assets in USDT.",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="value_usdt",
+     *                     type="number",
+     *                     format="float",
+     *                     description="Total value of assets in USDT.",
+     *                     example=12345.67
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized, user is not authenticated.",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
+     *         )
+     *     )
+     * )
+     */
+    public function assetsUSDTValue()
+    {
+        $assetDTO = $this->service->walletUSDTValue(
+            resolve(WalletValueUSDTRequestDTO::class)
+                ->setUserId(Auth::id())
+        );
+
+        return response([
+            'data' => [
+                'value_usdt' => $assetDTO->getAmount(),
+            ],
+        ]);
     }
 }

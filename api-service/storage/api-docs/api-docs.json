@@ -1825,6 +1825,62 @@
                     }
                 ]
             }
+        },
+        "/api/v1/wallets/value-usdt": {
+            "get": {
+                "tags": [
+                    "Wallet"
+                ],
+                "summary": "Get total assets value in USDT",
+                "description": "Calculate and retrieve the total value of all user assets converted to USDT.",
+                "operationId": "e20e6c7f56c0f36ba86fc382b25e8b91",
+                "responses": {
+                    "200": {
+                        "description": "Total value of assets in USDT.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "value_usdt": {
+                                                    "description": "Total value of assets in USDT.",
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 12345.67
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized, user is not authenticated.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {

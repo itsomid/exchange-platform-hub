@@ -30,6 +30,7 @@ Route::prefix('/currencies')->group(function () {
 Route::prefix('/wallets')->group(function () {
     Route::post('/generate-address', [WalletController::class, 'generateAddress'])->name('wallets.generate-address');
     Route::get('/lists', [WalletController::class, 'lists'])->name('wallets.lists');
+    Route::get('/value-usdt', [WalletController::class, 'assetsUSDTValue'])->name('wallets.value-usdt');
     Route::get('/{currencySymbol}', [WalletController::class, 'show'])->name('wallets.show');
 });
 //Portfolio

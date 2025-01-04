@@ -21,4 +21,11 @@ class MarketRepository implements MarketRepositoryInterface
         return Market::query()
             ->find($marketId);
     }
+
+    public function getAll(): Collection
+    {
+        return Cache::remember(__CLASS__.'getAll', 60, function () {
+            return Market::query()->get();
+        });
+    }
 }
