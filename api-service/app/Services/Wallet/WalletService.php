@@ -14,6 +14,8 @@ use App\Services\Wallet\DTO\Wallet\GetOneWalletRequestDTO;
 use App\Services\Wallet\DTO\Wallet\GetOneWalletResponseDTO;
 use App\Services\Wallet\DTO\Wallet\UpdateBalanceRequestDTO;
 use App\Services\Wallet\DTO\Wallet\WalletListsResponseDTO;
+use App\Services\Wallet\DTO\Wallet\WalletValueUSDTRequestDTO;
+use App\Services\Wallet\DTO\Wallet\WalletValueUSDTResponseDTO;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -135,5 +137,21 @@ class WalletService
                 $wallet->exchangePrice ?
                     bcmul($wallet->exchangePrice->price, $wallet->locked_balance, 8) : $wallet->locked_balance
             );
+    }
+
+    public function walletUSDTValue(WalletValueUSDTRequestDTO $requestDTO)
+    {
+        $wallets = $this->walletRepository->getLists($requestDTO->getUserId());
+
+        $sumAmount = 0;
+
+        $wallets->map(function ($wallet) use (&$sumAmount) {
+            $sumAmount += $wallet->exchangePrice ?
+                bcmul($wallet->exchangePrice->price, $wallet->balance, 8) : $wallet->balance;
+
+        });
+
+        return resolve(WalletValueUSDTResponseDTO::class)
+            ->setAmount($sumAmount);
     }
 }
