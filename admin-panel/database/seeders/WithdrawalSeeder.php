@@ -14,45 +14,53 @@ class WithdrawalSeeder extends Seeder
     /**
      * Run the database seeds.
      */
+    private WithdrawalService $withdrawalService;
+    private string $currencySymbol = 'BTC';
+    private string $currencyChain = 'BTC';
+    private string $address = 'bc1qsl4egjdl8s3mw822mmakvzsup7sedkd4n5755d';
+    public function __construct()
+    {
+        $this->withdrawalService = new WithdrawalService();
+    }
+
     public function run(): void
     {
-        $withdrawalService = new WithdrawalService();
+        $this->processWithdrawals(0.09, 0, 3, false);
+        $this->processWithdrawals(0.05, 3, 3, true);
+        $this->processWithdrawals(0.2, 6, 3, false);
+    }
 
-        // Step 1: Fetch or create a user
-//        $users = User::where('id', '!=', 1)->take(3)->get();
-        $user = User::find(2);
+    private function processWithdrawals(float $amount, int $skip, int $limit, bool $confirm): void
+    {
+        $users = User::where('id', '>', 1)->skip($skip)->take($limit)->get();
 
-        $currencySymbol = 'BTC';
-        $currencyChain = 'BTC';
-
-        $wallet = Wallet::firstOrCreate(
-            ['user_id' => $user->id, 'currency_symbol' => $currencySymbol],
-            ['balance' => 1.0, 'locked_balance' => 0] // Ensure the wallet has funds
-        );
-
-
-        // Step 3: Create a withdrawal request
-        $amount = 0.05; // Example withdrawal amount
-        $address = 'bc1qsl4egjdl8s3mw822mmakvzsup7sedkd4n5755d'; // Example BTC address
-
-        try {
-            $withdrawal = $withdrawalService->createWithdrawal(
-                userId: $user->id,
-                walletId: $wallet->id,
-                currencyChain: $currencyChain,
-                currencySymbol: $currencySymbol,
-                amount: $amount,
-                address: $address,
-                description: 'Test withdrawal for seeding'
+        foreach ($users as $user) {
+            $wallet = Wallet::firstOrCreate(
+                ['user_id' => $user->id, 'currency_symbol' => $this->currencySymbol],
+                ['balance' => 1.0, 'locked_balance' => 0]
             );
 
-            // Step 4: Confirm the withdrawal
-//            $transactionHash = '44dbec29398e9844694d317928281ff36b873d93c07ab18bcfbb7b098a91523a'; // Example transaction hash
-//            $confirmedWithdrawal = $withdrawalService->confirmWithdrawal($withdrawal->id, $transactionHash);
+            try {
+                $withdrawal = $this->withdrawalService->createWithdrawal(
+                    userId: $user->id,
+                    walletId: $wallet->id,
+                    currencyChain: $this->currencyChain,
+                    currencySymbol: $this->currencySymbol,
+                    amount: $amount,
+                    address: $this->address,
+                    description: 'Test withdrawal for seeding'
+                );
 
-//            echo "Withdrawal created and confirmed: ID {$confirmedWithdrawal->id}, Hash: {$transactionHash}\n";
-        } catch (\Exception $e) {
-            echo "Error seeding withdrawal: " . $e->getMessage() . "\n";
+                if ($confirm) {
+                    $transactionHash = '44dbec29398e9844694d317928281ff36b873d93c07ab18bcfbb7b098a91523a' . rand(1, 100);
+                    $this->withdrawalService->confirmWithdrawal($withdrawal->id, $wallet->id, $transactionHash);
+                    echo "Withdrawal created and confirmed for User ID: {$user->id}, Hash: {$transactionHash}\n";
+                } else {
+                    echo "Withdrawal created for User ID: {$user->id}\n";
+                }
+            } catch (\Exception $e) {
+                echo "Error processing withdrawal for User ID {$user->id}: " . $e->getMessage() . "\n";
+            }
         }
     }
 }

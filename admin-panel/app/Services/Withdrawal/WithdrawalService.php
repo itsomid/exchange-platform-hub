@@ -6,6 +6,7 @@ use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Enums\WithdrawalStatusEnum;
+use App\Models\Currency;
 use App\Models\CurrencyChain;
 use App\Models\Wallet;
 use App\Models\Withdrawal;
@@ -23,7 +24,6 @@ class WithdrawalService
      * @param string $currencySymbol
      * @param float $amount
      * @param string $address
-     * @param float $fee
      * @param string|null description
      * @return Withdrawal
      * @throws \Exception
@@ -48,6 +48,7 @@ class WithdrawalService
                 throw new \Exception("Wallet does not belong to the user.");
             }
 
+            $currency = Currency::whereSymbol($currencySymbol)->first();
             $fee = CurrencyChain::where('chain',$currencyChain)->first()->total_withdrawal_fee;
             // Validate sufficient balance
             $totalAmount = $amount + $fee;
@@ -59,6 +60,7 @@ class WithdrawalService
             $wallet->decrement('balance', $totalAmount);
             $wallet->increment('locked_balance', $totalAmount);
 
+
             // Create the withdrawal record
             $withdrawal = Withdrawal::create([
                 'user_id' => $userId,
@@ -67,10 +69,18 @@ class WithdrawalService
                 'amount' => $amount,
                 'fee' => $fee,
                 'address' => $address,
-                'status' => WithdrawalStatusEnum::PENDING,
-                'description' => $description,
+                'status' => $amount >= $currency->max_auto_withdraw_amount ? WithdrawalStatusEnum::AWAITING_APPROVAL:WithdrawalStatusEnum::PENDING,
             ]);
-
+            if ($amount >= $currency->max_auto_withdraw_amount){
+                $withdrawal->update([
+                   'description' => 'Admin approval required'
+                ]);
+            }else{
+                $withdrawal->update([
+                    'description' => 'Withdraw request send to HD Wallet'
+                ]);
+                //TODO: Send Withdraw request to HD Wallet
+            }
             DB::commit();
 
             return $withdrawal;
@@ -84,20 +94,22 @@ class WithdrawalService
      * Confirm a withdrawal request.
      *
      * @param int $withdrawalId
+     * @param int $walletId
      * @param string $transactionHash
      * @return Withdrawal
      * @throws \Exception
      */
 
-    public function confirmWithdrawal(int $withdrawalId, string $transactionHash): Withdrawal
+    public function confirmWithdrawal(int $withdrawalId,int $walletId, string $transactionHash): Withdrawal
     {
         DB::beginTransaction();
 
         try {
             // Fetch the withdrawal record
             $withdrawal = Withdrawal::findOrFail($withdrawalId);
+            $wallet = Wallet::findOrFail($walletId);
 
-            if ($withdrawal->status !== 'pending') {
+            if ($withdrawal->status !== WithdrawalStatusEnum::PENDING) {
                 throw new \Exception("Withdrawal is already processed.");
             }
 
@@ -106,10 +118,10 @@ class WithdrawalService
                 'transaction_hash' => $transactionHash,
                 'status' => WithdrawalStatusEnum::COMPLETED,
                 'confirmed_at' => now(),
+                'description' =>'Withdraw Completed'
             ]);
 
             // Unlock funds and deduct locked balance
-            $wallet = $withdrawal->wallet;
             $wallet->decrement('locked_balance', $withdrawal->amount + $withdrawal->fee);
 
             // Create the transaction record
@@ -136,7 +148,10 @@ class WithdrawalService
         }
     }
 
-    public function adminConfirmWithdrawal(int $withdrawalId, int $adminId): Withdrawal
+    /**
+     * @throws \Exception
+     */
+    public function adminConfirmWithdrawal(int $withdrawalId, int $admin_id): Withdrawal
     {
         DB::beginTransaction();
 
@@ -144,29 +159,17 @@ class WithdrawalService
             // Fetch the withdrawal record
             $withdrawal = Withdrawal::findOrFail($withdrawalId);
 
-            if ($withdrawal->status !== WithdrawalStatusEnum::PENDING) {
+            if ($withdrawal->status !== WithdrawalStatusEnum::AWAITING_APPROVAL) {
                 throw new \Exception("This withdrawal has already been processed.");
             }
 
             // Update withdrawal status to 'approved'
             $withdrawal->update([
-                'status' => WithdrawalStatusEnum::COMPLETED,
-                'admin_id' => $adminId, // Store which admin approved the withdrawal
-                'confirmed_at' => now(),
+                'status' => WithdrawalStatusEnum::PENDING,
+                'admin_id' => $admin_id, // Store which admin approved the withdrawal
+                'description' =>'Withdraw request send to HD Wallet by admin (#' .$admin_id .')'
             ]);
 
-            // Create an admin confirmation transaction log
-            Transaction::create([
-                'user_id' => $withdrawal->user_id,
-                'wallet_id' => $withdrawal->wallet_id,
-                'amount' => -$withdrawal->amount,
-                'balance' => $withdrawal->wallet->balance,
-                'type' => 'withdrawal',
-                'subtype' => 'admin_approved',
-                'status' => 'approved',
-                'description' => "Admin approved withdrawal to address: {$withdrawal->address}",
-                'admin_description' => "Approved by Admin ID: {$adminId}",
-            ]);
 
             DB::commit();
 
@@ -176,7 +179,11 @@ class WithdrawalService
             throw $e;
         }
     }
-    public function adminCancelWithdrawal(int $withdrawalId, int $adminId): Withdrawal
+
+    /**
+     * @throws \Exception
+     */
+    public function adminCancelWithdrawal(int $withdrawalId, int $admin_id): Withdrawal
     {
         DB::beginTransaction();
 
@@ -184,15 +191,15 @@ class WithdrawalService
             // Fetch the withdrawal record
             $withdrawal = Withdrawal::findOrFail($withdrawalId);
 
-            if ($withdrawal->status !== WithdrawalStatusEnum::PENDING) {
+            if ($withdrawal->status !== WithdrawalStatusEnum::AWAITING_APPROVAL) {
                 throw new \Exception("This withdrawal has already been processed.");
             }
 
             // Update withdrawal status to 'approved'
             $withdrawal->update([
                 'status' => WithdrawalStatusEnum::FAILED,
-                'admin_id' => $adminId, // Store which admin Canceled the withdrawal
-                'description' => 'Withdraw canceled by admin (#' .$adminId .')'
+                'admin_id' => $admin_id, // Store which admin Canceled the withdrawal
+                'description' => 'Withdraw canceled by admin (#' .$admin_id .')'
             ]);
 
 

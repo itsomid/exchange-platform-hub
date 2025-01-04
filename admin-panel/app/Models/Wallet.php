@@ -30,4 +30,12 @@ class Wallet extends Model
         return asset("images/coins/{$this->currency_symbol}");
     }
 
+    public function withdrawals()
+    {
+        return $this->hasMany(Withdrawal::class, 'user_id', 'user_id')
+            ->where(function ($query) {
+                $query->where('currency_symbol', $this->currency_symbol);
+            });
+    }
+
 }

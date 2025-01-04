@@ -92,7 +92,7 @@
                                                 $randomColor = $colors[$randomIndex];
                                             @endphp
                                             <span
-                                                    class="avatar-initial rounded-circle bg-label-{{$randomColor}}">{{$topUser['user']->avatar_user_name}}</span>
+                                                class="avatar-initial rounded-circle bg-label-{{$randomColor}}">{{$topUser['user']->avatar_user_name}}</span>
                                         </div>
                                         {{--                                        <img class="rounded-circle" src="{{ $topUser['user']->avatar_url ?? 'http://127.0.0.1:8000/images/avatars/male/2.png' }}">--}}
                                     </li>
@@ -122,7 +122,7 @@
                                 <option value="">همه</option>
                                 @foreach(\App\Enums\WithdrawalStatusEnum::cases() as $case)
                                     <option
-                                            value="{{$case->value}}" {{request()->has('status') && request()->input('status') == $case->value ? 'selected' : "" }}>
+                                        value="{{$case->value}}" {{request()->has('status') && request()->input('status') == $case->value ? 'selected' : "" }}>
                                         {{\App\Enums\WithdrawalStatusEnum::TYPE_LABEL[$case->value]}}
                                     </option>
                                 @endforeach
@@ -132,10 +132,10 @@
                     <div class="col-md-6 mt-3">
                         <label class="form-label" for="user">کاربر :</label>
                         <x-user-selection-component
-                                input-name="user"
-                                multiple="0"
-                                selected="{{ request()->filled('user')?$deposits[0]->user : '' }}"
-                                selected-label="{{ request()->filled('user')
+                            input-name="user"
+                            multiple="0"
+                            selected="{{ request()->filled('user')?$deposits[0]->user : '' }}"
+                            selected-label="{{ request()->filled('user')
                                 ? '('.$deposits[0]->user->id.'#) '.$deposits[0]->user->fullname().' | '.$deposits[0]->user->email
                                 : '' }}"
 
@@ -174,9 +174,24 @@
                             $currentParams = request()->except('sortByAmount');
                             $newSortDirection = request()->input('sortByAmount') == 'asc' ? 'desc' : 'asc';
                         @endphp
-                        <a href="{{ route('admin.transaction.index', array_merge($currentParams, ['sortByAmount' => $newSortDirection])) }}"
+                        <a href="{{ route('admin.withdrawal.index', array_merge($currentParams, ['sortByAmount' => $newSortDirection])) }}"
                            class="text-black">
                             مقدار
+                            @if( request()->input('sortByAmount') == 'asc')
+                                <span>&uarr;</span>
+                            @else
+                                <span>&darr;</span>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        @php
+                            $currentParams = request()->except('sortByAmount');
+                            $newSortDirection = request()->input('sortByAmount') == 'asc' ? 'desc' : 'asc';
+                        @endphp
+                        <a href="{{ route('admin.withdrawal.index', array_merge($currentParams, ['sortByAmount' => $newSortDirection])) }}"
+                           class="text-black">
+                            کارمزد برداشت
                             @if( request()->input('sortByAmount') == 'asc')
                                 <span>&uarr;</span>
                             @else
@@ -233,11 +248,13 @@
                             <td class="font-number" dir="ltr">
                                 <h6 class="mb-0">{{formatNumberTrimZeros($withdraw->amount)}}</h6>
                             </td>
-
+                            <td class="font-number" dir="ltr">
+                                <h6 class="mb-0">{{formatNumberTrimZeros($withdraw->fee)}}</h6>
+                            </td>
                             <td class="font-number">
                                 <h6 class="mb-0">
                                     @if($withdraw->address)
-                                        {{$withdraw->address}}
+
                                         @php
                                             $chain = $withdraw->currency_chain; // Assuming $deposit->chain holds the blockchain type (e.g., 'BTC', 'ERC20')
                                             $address = $withdraw->address;
@@ -262,12 +279,13 @@
                                         @endphp
 
                                         @if($targetLink)
-                                            <a href="{{ $targetLink }}" target="_blank">
+                                            <a href="{{ $targetLink }}" target="_blank" class="me-1">
                                                 <i class="fa-regular fa-clone"></i>
                                             </a>
                                         @else
                                             <span>Link not available</span>
                                         @endif
+                                        <small>{{ $withdraw->address }}</small>
                                     @else
                                         <span>بدون آدرس</span>
                                     @endif
@@ -277,7 +295,6 @@
 
                             <td class="font-number">
                                 @if($withdraw->transaction_hash)
-                                    {{ formatNumberTrimZeros($withdraw->transaction_hash) }}
                                     @php
                                         $chain = $withdraw->currency_chain;
                                         $transactionHash = $withdraw->transaction_hash;
@@ -302,7 +319,7 @@
                                     @endphp
 
                                     @if($targetLink)
-                                        <a href="{{ $targetLink }}" target="_blank">
+                                        <a href="{{ $targetLink }}" target="_blank" class="me-1">
                                             <i class="fa-regular fa-clone"></i>
                                         </a>
                                     @else
@@ -311,7 +328,7 @@
                                 @else
                                     <span>بدون هش تراکنش</span>
                                 @endif
-
+                                <small>{{ $withdraw->transaction_hash }}</small>
                             </td>
                             <td class="font-number">
                                 {{\App\Helpers\DateFormatter::convertToPersianDate($withdraw->created_at,'H:i:s %Y/%m/%d')}}
@@ -319,10 +336,10 @@
 
                             <td>
                                         <span
-                                                class="badge bg-label-{{$withdraw->status->color()}}">{{$withdraw->status->label()}}</span>
+                                            class="badge bg-label-{{$withdraw->status->color()}}">{{$withdraw->status->label()}}</span>
                             </td>
                             <td>
-                                @if($withdraw->status === \App\Enums\WithdrawalStatusEnum::COMPLETED)
+                                @if($withdraw->status === \App\Enums\WithdrawalStatusEnum::COMPLETED )
                                     <a href="" class="btn btn-icon btn-text-secondary" data-bs-toggle="modal"
                                        data-bs-target="#deposit-{{$withdraw->id}}">
                                         <i class="fa-regular fa-eye fa-xl"></i>
@@ -373,8 +390,16 @@
                                                     <div
                                                         class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
 
-                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات برداشت</h6>
+                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">زمان تایید</h6>
                                                         <div class="text-wrap font-number">
+                                                            {{\App\Helpers\DateFormatter::convertToPersianDate($withdraw->confirmed_at,'H:i:s %Y/%m/%d')}}
+                                                        </div>
+                                                    </div>
+                                                    <div
+                                                        class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+
+                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات برداشت</h6>
+                                                        <div class="text-wrap font-number w-60">
                                                             {{$withdraw->description}}
                                                         </div>
                                                     </div>
@@ -382,7 +407,7 @@
                                                         class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
 
                                                         <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات تراکنش</h6>
-                                                        <div class="text-wrap font-number">
+                                                        <div class="text-wrap font-number w-60">
                                                             {{$withdraw->transaction->description}}
                                                         </div>
                                                     </div>
@@ -390,7 +415,7 @@
                                                         class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
 
                                                         <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات ادمین</h6>
-                                                        <div class="text-wrap font-number">
+                                                        <div class="text-wrap font-number ">
                                                             {{$withdraw->transaction->admin_description}}
                                                         </div>
                                                     </div>
@@ -404,8 +429,105 @@
                                         </div>
                                     </div>
                                 @endif
+                                @if($withdraw->status === \App\Enums\WithdrawalStatusEnum::AWAITING_APPROVAL)
+                                    <a href="{{route('admin.withdrawal.confirm-withdrawal',['withdraw'=>$withdraw])}}"
+                                       type="button" class="btn btn-icon btn-success me-2">
+                                        <i class="fa-regular fa-badge-check fa-lg"></i>
+                                    </a>
+                                    <a href="{{route('admin.withdrawal.cancel-withdrawal',['withdraw'=>$withdraw])}}"
+                                       type="button" class="btn btn-icon btn-danger ">
+                                        <i class="fa-regular fa-xmark fa-lg"></i>
+                                    </a>
+                                @endif
+                                @if($withdraw->status === \App\Enums\WithdrawalStatusEnum::PENDING)
+                                    <a href="" class="btn btn-icon btn-text-secondary" data-bs-toggle="modal"
+                                       data-bs-target="#deposit-{{$withdraw->id}}">
+                                        <i class="fa-regular fa-eye fa-xl"></i>
+                                    </a>
+                                    <div class="modal fade" id="deposit-{{$withdraw->id}}" tabindex="-1"
+                                         aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header" dir="ltr">
+                                                    <h5 class="modal-title font-number">Withdraw
+                                                        #{{$withdraw->id}}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                            aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div
+                                                        class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی کلی کاربر</h6>
+                                                        <div class="text-wrap font-number">
+                                                            {{$withdraw->wallet->balance}}
+                                                        </div>
+                                                    </div>
+                                                    <div
+                                                        class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی در دسترس کاربر</h6>
+                                                        <div class="text-wrap font-number">
+                                                            {{$withdraw->wallet->balance - $withdraw->wallet->locked_balance}}
+                                                        </div>
+                                                    </div>
+                                                    <div
+                                                        class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
 
+                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی بلاک شده کاربر</h6>
+                                                        <div class="text-wrap font-number text-danger">
+                                                            {{$withdraw->wallet->locked_balance}}
+                                                        </div>
+                                                    </div>
+                                                    <div
+                                                        class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
 
+                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی کلی کاربر پس از
+                                                            درخواست برداشت</h6>
+                                                        <div class="text-wrap font-number text-primary">
+                                                            {{$withdraw->wallet->balance - ($withdraw->amount + $withdraw->fee)}}
+                                                        </div>
+                                                    </div>
+                                                    <div
+                                                        class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+
+                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی در دسترس کاربر پس از
+                                                            درخواست برداشت</h6>
+                                                        <div class="text-wrap font-number text-success">
+                                                            {{$withdraw->wallet->balance - $withdraw->wallet->locked_balance - ($withdraw->amount + $withdraw->fee)}}
+                                                        </div>
+                                                    </div>
+                                                    <div
+                                                        class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+
+                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">تایید شده توسط ادمین</h6>
+                                                        <div class="text-wrap font-number">
+                                                            @if($withdraw->admin_id)
+                                                                {{$withdraw->admin->fullname()}} -
+                                                                #{{$withdraw->admin->id}}
+                                                            @else
+                                                                <span class="badge bg-label-danger">خیر</span>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+
+                                                    <div
+                                                        class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+
+                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات برداشت</h6>
+                                                        <div class="text-wrap font-number w-60">
+                                                            {{$withdraw->description}}
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-label-secondary"
+                                                            data-bs-dismiss="modal">بستن
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
                             </td>
                         </tr>
                     @endforeach

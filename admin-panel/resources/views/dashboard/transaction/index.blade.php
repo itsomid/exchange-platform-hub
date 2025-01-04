@@ -310,7 +310,7 @@
                                                     class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
 
                                                     <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات تراکنش</h6>
-                                                    <div class="text-wrap font-number">
+                                                    <div class="text-wrap font-number w-60">
                                                         {{$transaction->description}}
                                                     </div>
                                                 </div>
@@ -338,7 +338,11 @@
                 </tbody>
             </table>
         </div>
-        {{--            {{$transactions->appends()->links()}}--}}
+        <div class="row mt-4">
+            <div class="col-md-12">
+                {{$transactions->appends(request()->all())->links()}}
+            </div>
+        </div>
     </div>
 
 @endsection
