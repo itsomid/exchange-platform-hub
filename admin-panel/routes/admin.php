@@ -27,6 +27,7 @@ use App\Http\Controllers\Transaction\TransactionController;
 use App\Http\Controllers\Wallet\WalletController;
 use App\Http\Controllers\OTCOrder\OTCOrderController;
 use App\Http\Controllers\Deposit\DepositController;
+use App\Http\Controllers\Withdrawal\WithdrawalController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -148,6 +149,10 @@ Route::prefix('deposits')->group(function (){
    Route::get('/',[DepositController::class,'index'])->name('deposit.index')->can('deposit');
 });
 
+Route::prefix('withdrawal')->group(function (){
+    Route::get('/',[WithdrawalController::class,'index'])->name('withdrawal.index')->can('deposit');
+});
+
 Route::get('/internal-settings', [InternalSettingController::class, 'index'])->name('internal.setting.index')->can('setting.int.index');
 Route::post('/internal-settings/update-permissions', [InternalSettingController::class, 'updatePermissions'])->name('setting.int.update-permissions')->can('setting.int.index');
 Route::post('/internal-settings/update-otc-setting', [InternalSettingController::class, 'updateOTCSetting'])->name('setting.int.update-otc-setting')->can('setting.int.index');
@@ -157,10 +162,10 @@ Route::get('/external-settings', [ExternalSettingController::class, 'index'])->n
 Route::post('/external-settings/update-ref-address', [ExternalSettingController::class, 'updateRefAddress'])->name('setting.ext.update-ref-address')->can('setting.ext.index');
 
 Route::prefix('wallet')->group(function (){
-    Route::get('wallet/increase-credit',[WalletController::class,'increaseCreditForm'])->name('wallet.increase-credit.form')->can('wallet');
-    Route::post('wallet/increase-credit',[WalletController::class,'increaseCredit'])->name('wallet.increase-credit')->can('wallet');
-    Route::get('wallet/{wallet}/user/{user}/block-balance', [WalletController::class, 'blockBalanceForm'])->name('wallet.block-balance.form')->can('wallet');
-    Route::post('wallet/{wallet}/block-balance', [WalletController::class, 'blockBalance'])->name('wallet.block-balance')->can('wallet');
-    Route::get('wallet/{wallet}/user/{user}/unblock-balance', [WalletController::class, 'unblockBalanceForm'])->name('wallet.unblock-balance.form')->can('wallet');
-    Route::post('wallet/{wallet}/unblock-balance', [WalletController::class, 'unblockBalance'])->name('wallet.unblock-balance')->can('wallet');
+    Route::get('increase-credit',[WalletController::class,'increaseCreditForm'])->name('wallet.increase-credit.form')->can('wallet');
+    Route::post('increase-credit',[WalletController::class,'increaseCredit'])->name('wallet.increase-credit')->can('wallet');
+    Route::get('{wallet}/user/{user}/block-balance', [WalletController::class, 'blockBalanceForm'])->name('wallet.block-balance.form')->can('wallet');
+    Route::post('{wallet}/block-balance', [WalletController::class, 'blockBalance'])->name('wallet.block-balance')->can('wallet');
+    Route::get('{wallet}/user/{user}/unblock-balance', [WalletController::class, 'unblockBalanceForm'])->name('wallet.unblock-balance.form')->can('wallet');
+    Route::post('{wallet}/unblock-balance', [WalletController::class, 'unblockBalance'])->name('wallet.unblock-balance')->can('wallet');
 });

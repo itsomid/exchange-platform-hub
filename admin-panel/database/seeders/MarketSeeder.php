@@ -50,8 +50,8 @@ class MarketSeeder extends Seeder
 
             // Insert price and exchange profit into the exchange_prices table for each market and exchange
             $exchangePrices = [
-                ['market_id' => $market->id, 'exchange_id' => $binance->id, 'price' => 45000.00, 'exchange_profit_sell' => 0.01,'exchange_profit_buy'=>0.02],  // Binance price and profit
-                ['market_id' => $market->id, 'exchange_id' => $coinex->id, 'price' => 45010.00, 'exchange_profit_sell' => 0.01,'exchange_profit_buy'=>0.02],  // CoinEx price and profit
+                ['market_id' => $market->id, 'exchange_id' => $binance->id, 'price' => 45000.00, 'exchange_profit_sell' => 0.01,'exchange_profit_buy'=>-0.02],  // Binance price and profit
+                ['market_id' => $market->id, 'exchange_id' => $coinex->id, 'price' => 45010.00, 'exchange_profit_sell' => 0.01,'exchange_profit_buy'=>-0.02],  // CoinEx price and profit
             ];
 
             $insertData = Arr::random($exchangePrices);

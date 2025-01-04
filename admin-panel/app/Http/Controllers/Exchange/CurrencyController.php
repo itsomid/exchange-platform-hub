@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Currency\CreateCurrencyRequest;
 use App\Http\Requests\Currency\UpdateCurrencyRequest;
 use App\Models\Currency;
+use App\Models\CurrencyChain;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -20,6 +21,7 @@ class CurrencyController extends Controller
      */
     public function index()
     {
+
         $currencies = Currency::query()->with('chains')->filterBy(request()->all())->get();
         return view('dashboard.exchange.currency.index', ['currencies' => $currencies]);
     }

@@ -42,7 +42,7 @@ class DepositController extends Controller
         $totalTopUsersDeposit = $topUsers->sum('totalDeposit');
 //        return $topUsers;
 
-         $deposits = Deposit::filterBy(request()->all())->with(['user','currency', 'transaction'])->get();
+         $deposits = Deposit::filterBy(request()->all())->with(['user','currency', 'transaction'])->paginate(20);
 
 
         return view('dashboard.deposits.index', [

@@ -19,13 +19,17 @@ class CurrencyChain extends Model
         'deposit_enabled',
         'withdraw_enabled'
     ];
-
+    protected $casts = [
+        'network_fee' => 'float',
+        'exchange_withdrawal_fee' => 'float',
+    ];
+    protected $appends = ['total_withdrawal_fee'];
     public function currency(): BelongsTo
     {
         return $this->belongsTo(Currency::class);
     }
 
-    public function calculateTotalWithdrawalFee()
+    public function getTotalWithdrawalFeeAttribute()
     {
         return bcadd($this->network_fee, $this->exchange_withdrawal_fee, 8);
     }

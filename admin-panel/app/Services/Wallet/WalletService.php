@@ -155,7 +155,7 @@ class WalletService
                 'amount' => 0,
                 'address' => $existingChain->address,
                 'transaction_hash' => null,
-                'note' => $note ?? 'Awaiting deposit',
+                'description' => $description ?? 'Awaiting deposit',
                 'status' => 'pending',
             ]);
 

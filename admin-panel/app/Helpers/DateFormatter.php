@@ -10,7 +10,9 @@ class DateFormatter
 {
     public static function convertToPersianDate($timestamp, $format = '%A, %d %B %Y  H:i:s')
     {
-
+        if (!$timestamp) {
+            return 'N/A'; // Return an empty state instead of current time
+        }
         return Jalalian::forge($timestamp)->format($format);
     }
     public static function convertUnixTimeToPersianDate($timestamp, $addMinutes = 0, $format = '%A, %d %B %Y  H:i:s')

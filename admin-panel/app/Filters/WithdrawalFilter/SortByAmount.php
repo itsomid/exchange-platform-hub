@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filters\DepositFilter;
+namespace App\Filters\WithdrawalFilter;
 
 use App\Filters\FilterContract;
 

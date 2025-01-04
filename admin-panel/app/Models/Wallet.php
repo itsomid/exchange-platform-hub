@@ -29,4 +29,5 @@ class Wallet extends Model
 
         return asset("images/coins/{$this->currency_symbol}");
     }
+
 }

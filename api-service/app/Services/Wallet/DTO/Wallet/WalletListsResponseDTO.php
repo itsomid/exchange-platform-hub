@@ -4,7 +4,7 @@ namespace App\Services\Wallet\DTO\Wallet;
 
 class WalletListsResponseDTO
 {
-    private int $id;
+    private ?int $id = null;
 
     private string $currency;
 
@@ -16,14 +16,14 @@ class WalletListsResponseDTO
 
     private string $usdtLockedBalance;
 
-    public function setId(int $id): WalletListsResponseDTO
+    public function setId(?int $id): WalletListsResponseDTO
     {
         $this->id = $id;
 
         return $this;
     }
 
-    public function getId(): int
+    public function getId(): ?int
     {
         return $this->id;
     }
