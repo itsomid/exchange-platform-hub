@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Wallet;
 
+use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Wallet\IncreaseCreditRequest;
 use App\Models\Currency;
+use App\Models\CurrencyChain;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
@@ -23,13 +25,17 @@ class WalletController extends Controller
     {
 
         $currencies = Currency::all();
+        $currencyChains = CurrencyChain::all();
 
-        $selectedUser = User::find($request->user);
+        $selectedUser = $request->has('user')
+            ? User::find($request->user)
+            : null;
         $selectedCurrency = $request->get('currency');
         return view('dashboard.wallet.increase-credit', [
             'currencies' => $currencies,
             'selectedUser' => $selectedUser,
             'selectedCurrency' => $selectedCurrency,
+            'currencyChains' => $currencyChains,
         ]);
     }
 
@@ -39,20 +45,33 @@ class WalletController extends Controller
         try {
             $admin = auth()->user(); // Assuming the admin is logged in.
 
+            $currency = Currency::where('symbol', $request->currency)->first();
 
+            if (!$currency) {
+                return redirect()->back()->withErrors(['currency' => 'ارز انتخاب شده معتبر نیست.']);
+            }
+
+            // Retrieve valid chains for this currency
+             $validChains = $currency->chains()->pluck('chain')->toArray();
+
+            // Check if the selected chain is valid
+            if (!in_array($request->chain, $validChains)) {
+                return redirect()->back()->withErrors(['chain' => 'شبکه انتخاب شده با ارز مطابقت ندارد.']);
+            }
             // Check if the wallet for the specified currency exists
-             $fromUserId = $request->transaction_type === TransactionTypeEnum::WITHDRAWAL->value ? $request->user : TransactionService::EXCHANGE_USER_ID;
-             $toUserId = $request->transaction_type === TransactionTypeEnum::DEPOSIT->value ? $request->user : TransactionService::EXCHANGE_USER_ID;
+            $fromUserId = $request->transaction_type === TransactionTypeEnum::WITHDRAWAL->value ? $request->user : TransactionService::EXCHANGE_USER_ID;
+            $toUserId = $request->transaction_type === TransactionTypeEnum::DEPOSIT->value ? $request->user : TransactionService::EXCHANGE_USER_ID;
 
             $transactionService->transferBetweenWallets(
                 fromUserId: $fromUserId,
                 toUserId: $toUserId,
                 amount: $request->amount,
                 currency: $request->currency,
+                currencyChain: $request->chain,
                 type: $request->transaction_type,
-                subtype: 'manual_admin',
+                subtype: TransactionSubTypeEnum::MANUAL_ADMIN->value,
                 adminId: Auth::user()->id,
-                description: $request->description ?? 'Manual transaction by admin #' . $admin->id,
+                description: 'Manual transfer by admin #' . $admin->id,
                 admin_description: $request->admin_description
             );
             Toast::message('.افزایش اعتبار با موفقیت انجام شد')->success()->notify();
@@ -61,16 +80,17 @@ class WalletController extends Controller
         } catch (\Throwable $exception) {
             report($exception);
 
-            return redirect()->back()->with('error', 'An error occurred while updating the credit. Please try again.');
+            return redirect()->back()->withErrors(['general'=> $exception->getMessage()]);
         }
 
     }
+
     public function blockBalanceForm(Wallet $wallet, User $user)
     {
 
         return view('dashboard.wallet.block-balance', [
-            'wallet'  => $wallet,
-            'user'  => $user,
+            'wallet' => $wallet,
+            'user' => $user,
         ]);
     }
 
@@ -93,14 +113,16 @@ class WalletController extends Controller
 
         return redirect()->back()->with('success', 'موجودی کاربر با موفقیت بروزسانی شد.');
     }
+
     public function unblockBalanceForm(Wallet $wallet, User $user)
     {
 
         return view('dashboard.wallet.unblock-balance', [
-            'wallet'  => $wallet,
-            'user'  => $user,
+            'wallet' => $wallet,
+            'user' => $user,
         ]);
     }
+
     public function unblockBalance(Wallet $wallet, Request $request)
     {
         $validated = $request->validate([

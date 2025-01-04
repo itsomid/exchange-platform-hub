@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Deposit extends Model
 {
     protected $fillable = [
-        'user_id', 'currency_chain', 'currency_symbol', 'amount', 'address', 'status', 'expiration_date',
+        'user_id', 'currency_chain', 'currency_symbol', 'amount', 'address', 'status', 'expiration_date', 'confirmed_at', 'transaction_hash',
     ];
 
     protected function casts(): array
@@ -16,6 +16,7 @@ class Deposit extends Model
         return [
             'status' => DepositStatusEnum::class,
             'expiration_date' => 'datetime',
+            'confirmed_at' => 'datetime',
         ];
     }
 }

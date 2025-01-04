@@ -101,6 +101,7 @@
                         <th>نام</th>
                         <th>شبکه های موجود</th>
                         <th>سیمبول</th>
+                        <th>کارمزد برداشت (صرافی + شبکه)</th>
                         <th>وضعیت</th>
                         <th>عملیات</th>
                     </tr>
@@ -118,10 +119,13 @@
                                 {{$currency->name}}
                             </td>
                             <td>
+
                                 @if(count($currency->chains))
-                                    @foreach($currency->chains as $chain)
-                                        <span class="badge bg-label-primary ms-2">{{$chain->chain}}</span>
-                                    @endforeach
+                                    <div class="d-flex flex-column align-items-center mb-2">
+                                        @foreach($currency->chains as $chain)
+                                            <span class="badge bg-label-primary mb-2">{{$chain->chain}}</span>
+                                        @endforeach
+                                    </div>
                                 @else
                                     <span class="badge bg-label-danger ms-2">بدون شبکه</span>
                                 @endif
@@ -132,21 +136,36 @@
                             </td>
                             <td>
                                 @if(count($currency->chains))
-                                @foreach($currency->chains as $chain)
-                                    <div class="d-flex align-items-center mb-2">
-                                        @if($chain->deposit_enabled)
-                                            <span class="badge bg-label-success ms-2">{{$chain->chain}} -> واریز فعال</span>
-                                        @else
-                                            <span
-                                                class="badge bg-label-danger ms-2">{{$chain->chain}} -> واریز غیرفعال</span>
-                                        @endif
-                                        @if($chain->withdraw_enabled)
-                                            <span class="badge bg-label-success ms-2">{{$chain->chain}} -> برداشت فعال</span>
-                                        @else
-                                            <span class="badge bg-label-danger ms-2">{{$chain->chain}} -> برداشت غیرفعال</span>
-                                        @endif
-                                    </div>
-                                @endforeach
+                                    @foreach($currency->chains as $chain)
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="badge bg-label-primary ms-2 font-number">
+
+                                                <smal>{{$chain->chain}} -> </smal>
+
+                                                <span class="fw-bold text-primary">{{formatNumberTrimZeros($chain->total_withdrawal_fee)}}</span>
+                                                <smal class="me-2">{{$currency->symbol}}</smal>
+                                            </span>
+
+                                        </div>
+                                    @endforeach
+                                @endif
+                            </td>
+                            <td>
+                                @if(count($currency->chains))
+                                    @foreach($currency->chains as $chain)
+                                        <div class="d-flex align-items-center mb-2">
+                                            @if($chain->deposit_enabled)
+                                                <span class="badge bg-label-success ms-2">{{$chain->chain}} -> واریز فعال</span>
+                                            @else
+                                                <span class="badge bg-label-danger ms-2">{{$chain->chain}} -> واریز غیرفعال</span>
+                                            @endif
+                                            @if($chain->withdraw_enabled)
+                                                <span class="badge bg-label-success ms-2">{{$chain->chain}} -> برداشت فعال</span>
+                                            @else
+                                                <span class="badge bg-label-danger ms-2">{{$chain->chain}} -> برداشت غیرفعال</span>
+                                            @endif
+                                        </div>
+                                    @endforeach
                                 @else
                                     <span class="badge bg-label-danger ms-2">بدون شبکه</span>
                                 @endif
@@ -154,7 +173,8 @@
                             <td>
                                 <div class="d-flex align-items-center">
 
-                                    <a class="text-secondary me-3" href="{{ route('admin.currency.edit', ['currency' => $currency->id]) }}">
+                                    <a class="text-secondary me-3"
+                                       href="{{ route('admin.currency.edit', ['currency' => $currency->id]) }}">
                                         <i class="fa-light fa-pen-to-square fa-lg"></i>
                                     </a>
                                     <a class="text-secondary me-3" href="">

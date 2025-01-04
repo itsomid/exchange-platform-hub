@@ -28,10 +28,9 @@ class DepositService
             // Update deposit status
             $deposit->update([
                 'amount' => $amount,
-
                 'transaction_hash' => $transactionHash,
                 'status' => 'confirmed',
-                'note' => 'admin_test',
+                'description' => 'admin_test',
                 'confirmed_at' => now(),
             ]);
 

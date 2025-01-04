@@ -10,7 +10,7 @@ enum DepositStatusEnum: string
 
     const array TYPE_LABEL = [
         self::PENDING->value => 'تکمیل نشده',
-        self::CONFIRMED->value => 'انجام شده',
+        self::CONFIRMED->value => 'تایید شده',
         self::FAILED->value => 'ناموفق',
     ];
 

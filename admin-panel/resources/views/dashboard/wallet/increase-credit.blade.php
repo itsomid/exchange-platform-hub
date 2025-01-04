@@ -21,31 +21,47 @@
                         </div>
                     </div>
                     <div class="w-100"></div>
-                    <div class="col-md-6 mb-4">
+                    <div class="col-md-8 mb-4">
                         <label class="form-label" for="user">کاربر :</label>
                         <x-user-selection-component
                             input-name="user"
                             multiple="0"
                             selected="{{ $selectedUser ?$selectedUser->id: '' }}"
-                            selected-label="({{$selectedUser->id}}#) {{$selectedUser->fullname()}} | {{$selectedUser->email}}"
+                            selected-label="{{$selectedUser
+                                            ? '(' . $selectedUser->id . '#) ' . $selectedUser->fullname() . ' | ' . $selectedUser->email
+                                            : ''}}"
                         ></x-user-selection-component>
                     </div>
                     <div class="w-100"></div>
 
-                    <div class="col-md-6 mb-4">
+                    <div class="col-md-4 mb-4">
                         <div class="form-group">
                             <label class="form-label" for="currency">کوین مورد نظر را انتخاب کنید:</label>
                             <select id="currency" class="form-select" name="currency"
                                     data-placeholder="لطفا کوین  مورد نظر را انتخاب کنید.">
                                 @foreach($currencies as $currency)
-                                    <option {{$selectedCurrency === $currency->symbol ? 'selected' : ''}} value="{{$currency->symbol}}">{{$currency->name}}</option>
+                                    <option
+                                        {{$selectedCurrency === $currency->symbol ? 'selected' : ''}} value="{{$currency->symbol}}">{{$currency->name}}</option>
                                 @endforeach
                             </select>
                             @error('currency')<small class="text-danger">{{$message}}</small>@enderror
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <label for="numeral-mask" class="form-label mb-0">میزان اعتبار مورد نظر:</label>
+                    <div class="col-md-4 mb-4">
+                        <div class="form-group">
+                            <label class="form-label" for="chain">شبکه مورد نظر را انتخاب کنید:</label>
+                            <select id="chain" class="form-select" name="chain"
+                                    data-placeholder="لطفا شبکه  مورد نظر را انتخاب کنید.">
+                                @foreach($currencyChains as $chain)
+                                    <option value="{{$chain->chain}}">{{$chain->chain}}</option>
+                                @endforeach
+                            </select>
+                            @error('currency')<small class="text-danger">{{$message}}</small>@enderror
+                        </div>
+                    </div>
+                    <div class="w-100"></div>
+                    <div class="col-md-4 mb-3">
+                        <label for="numeral-mask" class="form-label ">میزان اعتبار مورد نظر:</label>
                         <input type="number"
                                name="amount"
                                step="0.01"
@@ -53,7 +69,7 @@
                                placeholder="میزان کوین مورد نظر را وارد کنید">
                         @error('amount')<small class="text-danger">{{$message}}</small>@enderror
                     </div>
-
+                    <div class="w-100"></div>
                     <div class="col-md-6 user_role mt-3">
                         <label class="form-label" for="admin_description">توضیحات تراکنش (اختیاری):</label>
                         <textarea class="form-control" id="admin_description" name="admin_description"

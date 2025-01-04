@@ -3,6 +3,8 @@
 namespace App\Services\Wallet;
 
 use App\Enums\BalanceOperationEnum;
+use App\Exceptions\V1\Wallet\InternalWalletHasProblemException;
+use App\Infrastructure\HDWallet\Exceptions\HDWalletException;
 use App\Models\Wallet;
 use App\Repositories\Interfaces\WalletChainRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
@@ -13,7 +15,6 @@ use App\Services\Wallet\DTO\Wallet\GetOneWalletResponseDTO;
 use App\Services\Wallet\DTO\Wallet\UpdateBalanceRequestDTO;
 use App\Services\Wallet\DTO\Wallet\WalletListsResponseDTO;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Throwable;
 
 class WalletService
@@ -23,6 +24,9 @@ class WalletService
         private readonly WalletChainRepositoryInterface $walletChainRepository,
     ) {}
 
+    /**
+     * @throws InternalWalletHasProblemException
+     */
     public function generateAddress(GenerateAddressRequestDTO $requestDTO): GenerateAddressResponseDTO
     {
         $wallet = $this->walletRepository->createOrGetWallet(
@@ -32,14 +36,26 @@ class WalletService
 
         $chain = $this->walletChainRepository->createOrGetChain(
             $wallet->id,
-            $requestDTO->getCurrency()
+            $requestDTO->getChainSymbol()
         );
 
         if (is_null($chain->address)) {
             //Generate Public Key
+            $hdWallet = resolve(\App\Infrastructure\HDWallet\Wallet::class);
+            try {
+                $address = $hdWallet->generateAddress(
+                    $requestDTO->getUserId(),
+                    $requestDTO->getCurrency(),
+                    $requestDTO->getChainSymbol()
+                );
+            } catch (HDWalletException $exception) {
+                report($exception);
+                throw new InternalWalletHasProblemException;
+            }
+
             $this->walletChainRepository->savePublicKey(
                 $chain->id,
-                $address = Str::random(24)
+                $address
             );
         } else {
             $address = $chain->address;

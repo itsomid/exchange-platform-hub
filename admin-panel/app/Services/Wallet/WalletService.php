@@ -29,7 +29,7 @@ class WalletService
         // Loop through each wallet and calculate its value
         foreach ($user->wallets as $wallet) {
             // Get the current market price for the wallet's currency
-            $market = $wallet->currency->baseMarkets->first(); // Assuming you have a relationship in the Currency model
+            $market = $wallet->currency->baseMarket; // Assuming you have a relationship in the Currency model
 
             $currencyPrice = $market ? $market->activeExchangePrice->price : 1;
 
@@ -50,7 +50,7 @@ class WalletService
             // Check if the wallet's currency matches the provided currency ID
             if ($wallet->currency_symbol === $currency_symbol) {
                 // Get the current market price for the wallet's currency
-                $market = $wallet->currency->baseMarkets->first(); // Assuming you have a relationship in the Currency model
+                $market = $wallet->currency->baseMarket; // Assuming you have a relationship in the Currency model
 
                 $currencyPrice = $market ? $market->activeExchangePrice->price : 1;
 
@@ -73,8 +73,8 @@ class WalletService
 
         // Fetch the exchange rate for the currency
         $currency = Currency::where('symbol', $currencySymbol)->first();
-        $exchangeRate = $currency && $currency->baseMarkets->first()
-            ? $currency->baseMarkets->first()->activeExchangePrice->price
+        $exchangeRate = $currency && $currency->baseMarket
+            ? $currency->baseMarket->activeExchangePrice->price
             : 1; // Default to 1 if no exchange rate found
 
         // Calculate the value in USDT
@@ -155,7 +155,7 @@ class WalletService
                 'amount' => 0,
                 'address' => $existingChain->address,
                 'transaction_hash' => null,
-                'note' => $note ?? 'Awaiting deposit',
+                'description' => $description ?? 'Awaiting deposit',
                 'status' => 'pending',
             ]);
 

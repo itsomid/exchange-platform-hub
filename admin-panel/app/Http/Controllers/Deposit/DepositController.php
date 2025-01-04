@@ -16,18 +16,41 @@ class DepositController extends Controller
         $todayDepositsCount = Deposit::whereDate('created_at', $today)->count();
 
         $totalDepositsValue = Deposit::with('currency')
-        ->whereDate('created_at', $today)// Assuming `currency` has the price
-        ->get()
+            ->whereDate('created_at', $today)// Assuming `currency` has the price
+            ->get()
             ->sum(function ($deposit) {
-                return $deposit->amount * $deposit->currency->baseMarkets->activeExchangePrice->price; // Multiply amount by coin price
+                return $deposit->amount * $deposit->currency->exchange_price; // Multiply amount by coin price
             });
 
+        // First 5 users with the most deposits (considering currency prices)
 
-        $deposits = Deposit::with(['currency', 'transaction'])->get();
+
+        $topUsers = Deposit::with(['currency', 'user'])
+            ->get()
+            ->groupBy('user_id')
+            ->map(function ($deposits, $userId) {
+                $totalDeposit = $deposits->sum(function ($deposit) {
+                    return $deposit->amount * $deposit->currency->exchange_price;
+                });
+                return [
+                    'user' => $deposits->first()->user,
+                    'totalDeposit' => $totalDeposit,
+                ];
+            })
+            ->sortByDesc('totalDeposit')
+            ->take(5);
+        $totalTopUsersDeposit = $topUsers->sum('totalDeposit');
+//        return $topUsers;
+
+         $deposits = Deposit::filterBy(request()->all())->with(['user','currency', 'transaction'])->paginate(20);
+
+
         return view('dashboard.deposits.index', [
             'deposits' => $deposits,
             'todayDepositsCount' => $todayDepositsCount,
-            'totalDepositsValue' => $totalDepositsValue
+            'totalDepositsValue' => $totalDepositsValue,
+            'topUsers' => $topUsers,
+            'totalTopUsersDeposit' => $totalTopUsersDeposit
         ]);
     }
 }

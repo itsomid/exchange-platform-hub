@@ -24,7 +24,7 @@ class WalletChainRepository implements WalletChainRepositoryInterface
     public function savePublicKey(int $walletChainId, string $publicKey): void
     {
         WalletChain::query()
-            ->where('wallet_id', $walletChainId)
+            ->where('id', $walletChainId)
             ->update(['address' => $publicKey]);
     }
 }

@@ -15,9 +15,13 @@ class CreateDepositRequestDTO
 
     private ?string $amount = null;
 
-    private string $publicKey;
+    private string $address;
 
-    private Carbon $expirationDate;
+    private string $transactionHash;
+
+    private Carbon $confirmedAt;
+
+    private ?Carbon $expirationDate = null;
 
     private DepositStatusEnum $status;
 
@@ -81,27 +85,51 @@ class CreateDepositRequestDTO
         return $this->currencyChain;
     }
 
-    public function setPublicKey(string $publicKey): self
+    public function setAddress(string $address): self
     {
-        $this->publicKey = $publicKey;
+        $this->address = $address;
 
         return $this;
     }
 
-    public function getPublicKey(): string
+    public function getAddress(): string
     {
-        return $this->publicKey;
+        return $this->address;
     }
 
-    public function setExpirationDate(Carbon $expirationDate): self
+    public function setExpirationDate(?Carbon $expirationDate): self
     {
         $this->expirationDate = $expirationDate;
 
         return $this;
     }
 
-    public function getExpirationDate(): Carbon
+    public function getExpirationDate(): ?Carbon
     {
         return $this->expirationDate;
+    }
+
+    public function setTransactionHash(string $transactionHash): CreateDepositRequestDTO
+    {
+        $this->transactionHash = $transactionHash;
+
+        return $this;
+    }
+
+    public function getTransactionHash(): string
+    {
+        return $this->transactionHash;
+    }
+
+    public function setConfirmedAt(Carbon $confirmedAt): CreateDepositRequestDTO
+    {
+        $this->confirmedAt = $confirmedAt;
+
+        return $this;
+    }
+
+    public function getConfirmedAt(): Carbon
+    {
+        return $this->confirmedAt;
     }
 }

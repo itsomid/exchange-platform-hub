@@ -25,13 +25,19 @@ class Currency extends Model
     {
         return $this->hasMany(CurrencyChain::class,'currency_id');
     }
-    public function baseMarkets(): HasOne
+    public function baseMarket(): HasOne
     {
         return $this->hasOne(Market::class, 'base_currency', 'symbol');
     }
-
+// In your Currency model
+    public function getExchangePriceAttribute()
+    {
+        return $this->baseMarket && $this->baseMarket->activeExchangePrice
+            ? $this->baseMarket->activeExchangePrice->price
+            : 1; // Default to 1 if no exchange rate is found
+    }
     // Relationship: A currency can have many markets where it is the quote currency
-    public function quoteMarkets(): HasOne
+    public function quoteMarket(): HasOne
     {
         return $this->hasOne(Market::class, 'quote_currency', 'symbol');
     }

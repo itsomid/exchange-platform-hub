@@ -15,11 +15,11 @@ return new class extends Migration
         Schema::create('market_histories', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(Market::class)->constrained();
-            $table->decimal('open', 16, 8);
-            $table->decimal('high', 16, 8);
-            $table->decimal('low', 16, 8);
-            $table->decimal('close', 16, 8);
-            $table->decimal('volume', 16, 8);
+            $table->decimal('open', 18, 8);
+            $table->decimal('high', 18, 8);
+            $table->decimal('low', 18, 8);
+            $table->decimal('close', 18, 8);
+            $table->decimal('volume', 18, 8);
             $table->timestamp('timestamp');
 
             $table->unique(['market_id', 'timestamp']);

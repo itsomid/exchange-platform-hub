@@ -20,7 +20,8 @@ class ValidateTwoFactorRequest extends FormRequest
      *      schema="ValidateTwoFactorRequest",
      *      required={"google2fa"},
      *
-     *      @OA\Property(property="google2fa", type="string", description="The user's two-factor authentication code.")
+     *      @OA\Property(property="google2fa", type="string", description="The user's two-factor authentication code."),
+     *      @OA\Property(property="encrypted_token", type="string", description="This token exists in login api")
      *  )
      * Get the validation rules that apply to the request.
      *
