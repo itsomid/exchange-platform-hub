@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -27,6 +28,22 @@ class RateLimiterServiceProvider extends ServiceProvider
             $key = $request->input('email') ?? $request->ip();
 
             return Limit::perMinute(config('auth.rate-limiter.too-many'))->by($key)
+                ->response(function () {
+                    return response()->json([
+                        'message' => __('auth.too_many_attempts'),
+                    ], 429);
+                });
+        });
+
+        RateLimiter::for('wallet-check', function (Request $request) {
+            // Use email if provided; otherwise, fallback to IP
+            if ($request->hasAny(['currency_symbol', 'chain_symbol'])) {
+                $key = $request->input('currency_symbol').$request->input('chain_symbol');
+            } else {
+                $key = $request->ip();
+            }
+
+            return Limit::perMinute(1)->by($key)
                 ->response(function () {
                     return response()->json([
                         'message' => __('auth.too_many_attempts'),

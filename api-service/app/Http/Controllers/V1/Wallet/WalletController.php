@@ -5,10 +5,13 @@ namespace App\Http\Controllers\V1\Wallet;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Wallet\GenerateAddressRequest;
 use App\Http\Requests\V1\Wallet\GetOneWalletRequest;
+use App\Http\Requests\V1\Wallet\RefreshWalletRequest;
 use App\Http\Resources\V1\Wallet\CoinAddressResource;
 use App\Http\Resources\V1\Wallet\GetOneWalletResource;
 use App\Http\Resources\V1\Wallet\WalletListsCollection;
+use App\Services\Wallet\CheckWalletService;
 use App\Services\Wallet\DepositService;
+use App\Services\Wallet\DTO\CheckWallet\CheckUserDepositRequestDTO;
 use App\Services\Wallet\DTO\Deposit\AddPendingDepositRequestDTO;
 use App\Services\Wallet\DTO\Wallet\GenerateAddressRequestDTO;
 use App\Services\Wallet\DTO\Wallet\GetOneWalletRequestDTO;
@@ -22,7 +25,11 @@ use Throwable;
 
 class WalletController extends Controller
 {
-    public function __construct(private readonly WalletService $service, private readonly DepositService $depositService) {}
+    public function __construct(
+        private readonly WalletService $service,
+        private readonly DepositService $depositService,
+        private readonly CheckWalletService $checkWalletService
+    ) {}
 
     /**
      * @OA\Post(
@@ -232,6 +239,82 @@ class WalletController extends Controller
             'data' => [
                 'value_usdt' => $assetDTO->getAmount(),
             ],
+        ]);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/v1/wallets/refresh",
+     *     summary="Refresh Wallet",
+     *     description="Refreshes the user's wallet by checking for new deposits on a specific currency and chain.",
+     *     tags={"Wallet"},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/RefreshWalletRequest")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Wallet refreshed successfully.",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Wallet refreshed successfully."
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation failed for the request.",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="The given data was invalid."
+     *             ),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="currency_symbol",
+     *                     type="array",
+     *
+     *                     @OA\Items(type="string", example="The selected currency symbol is invalid.")
+     *                 ),
+     *
+     *                 @OA\Property(
+     *                     property="chain_symbol",
+     *                     type="array",
+     *
+     *                     @OA\Items(type="string", example="The selected chain symbol is invalid.")
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function refresh(RefreshWalletRequest $request)
+    {
+        $validatedData = $request->validated();
+
+        resolve(CheckWalletService::class)
+            ->checkUserDeposit(
+                resolve(CheckUserDepositRequestDTO::class)
+                    ->setUserId(Auth::id())
+                    ->setCurrencySymbol($validatedData['currency_symbol'])
+                    ->setCurrencyChain($validatedData['chain_symbol'])
+            );
+
+        return response([
+            'message' => __('messages.wallet_refresh'),
         ]);
     }
 }

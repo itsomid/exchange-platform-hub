@@ -778,8 +778,8 @@
                 ]
             }
         },
-        "/api/v1/currencies/deposit-withdraw-config": {
-            "get": {
+        "/api/v1/deposit-withdraw/config": {
+            "post": {
                 "tags": [
                     "Currency"
                 ],
@@ -865,12 +865,12 @@
                 ]
             }
         },
-        "/api/v1/currencies/all-deposit-withdraw-config": {
+        "/api/v1/currencies/all-deposit-withdraw": {
             "get": {
                 "tags": [
                     "Currency"
                 ],
-                "summary": "Get All Deposit and Withdrawal Configuration",
+                "summary": "Get Deposit and Withdrawal Configuration",
                 "description": "Retrieve deposit and withdrawal configuration for all currencies.",
                 "operationId": "allDepositWithdrawConfig",
                 "responses": {
@@ -2049,6 +2049,79 @@
                     }
                 ]
             }
+        },
+        "/api/v1/wallets/refresh": {
+            "post": {
+                "tags": [
+                    "Wallet"
+                ],
+                "summary": "Refresh Wallet",
+                "description": "Refreshes the user's wallet by checking for new deposits on a specific currency and chain.",
+                "operationId": "13645cbefab3113c3b96e9776f211067",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RefreshWalletRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Wallet refreshed successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Wallet refreshed successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation failed for the request.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "currency_symbol": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The selected currency symbol is invalid."
+                                                    }
+                                                },
+                                                "chain_symbol": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The selected chain symbol is invalid."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -2360,6 +2433,25 @@
                         "description": "The chain symbol for the currency. Must exist in the currency chains table with 'deposit_enabled' set to true.",
                         "type": "string",
                         "example": "TRC20"
+                    }
+                },
+                "type": "object"
+            },
+            "RefreshWalletRequest": {
+                "required": [
+                    "currency_symbol",
+                    "chain_symbol"
+                ],
+                "properties": {
+                    "currency_symbol": {
+                        "description": "The symbol of the currency to refresh.",
+                        "type": "string",
+                        "example": "BNB"
+                    },
+                    "chain_symbol": {
+                        "description": "The symbol of the chain for the specified currency.",
+                        "type": "string",
+                        "example": "BSC"
                     }
                 },
                 "type": "object"

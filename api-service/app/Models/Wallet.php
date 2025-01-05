@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 /**
@@ -34,5 +35,10 @@ class Wallet extends Model
     public function getAvailableAttribute(): string
     {
         return bcsub($this->balance, $this->locked_balance, 8);
+    }
+
+    public function chains(): HasMany
+    {
+        return $this->hasMany(WalletChain::class);
     }
 }
