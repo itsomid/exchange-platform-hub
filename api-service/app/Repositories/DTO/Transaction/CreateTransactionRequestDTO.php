@@ -12,7 +12,7 @@ class CreateTransactionRequestDTO
 
     private int $walletId;
 
-    private int $otcOrderId;
+    private ?int $otcOrderId = null;
 
     private string $balance;
 
@@ -50,14 +50,14 @@ class CreateTransactionRequestDTO
         return $this->walletId;
     }
 
-    public function setOtcOrderId(int $otcOrderId): CreateTransactionRequestDTO
+    public function setOtcOrderId(?int $otcOrderId): CreateTransactionRequestDTO
     {
         $this->otcOrderId = $otcOrderId;
 
         return $this;
     }
 
-    public function getOtcOrderId(): int
+    public function getOtcOrderId(): ?int
     {
         return $this->otcOrderId;
     }
