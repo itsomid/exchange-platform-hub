@@ -6,7 +6,24 @@ use App\Models\Currency;
 use App\Models\CurrencyChain;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-
+/**
+ * @OA\Schema(
+ *     schema="RefreshWalletRequest",
+ *     required={"currency_symbol", "chain_symbol"},
+ *     @OA\Property(
+ *         property="currency_symbol",
+ *         type="string",
+ *         description="The symbol of the currency to refresh.",
+ *         example="BNB"
+ *     ),
+ *     @OA\Property(
+ *         property="chain_symbol",
+ *         type="string",
+ *         description="The symbol of the chain for the specified currency.",
+ *         example="BSC"
+ *     )
+ * )
+ */
 class RefreshWalletRequest extends FormRequest
 {
     /**

@@ -188,6 +188,54 @@ class WalletController extends Controller
         return new GetOneWalletResource($walletDTO);
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/v1/wallets/refresh",
+     *     summary="Refresh Wallet",
+     *     description="Refreshes the user's wallet by checking for new deposits on a specific currency and chain.",
+     *     tags={"Wallet"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(ref="#/components/schemas/RefreshWalletRequest")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Wallet refreshed successfully.",
+     *         @OA\JsonContent(
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Wallet refreshed successfully."
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation failed for the request.",
+     *         @OA\JsonContent(
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="The given data was invalid."
+     *             ),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="currency_symbol",
+     *                     type="array",
+     *                     @OA\Items(type="string", example="The selected currency symbol is invalid.")
+     *                 ),
+     *                 @OA\Property(
+     *                     property="chain_symbol",
+     *                     type="array",
+     *                     @OA\Items(type="string", example="The selected chain symbol is invalid.")
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
     public function refresh(RefreshWalletRequest $request)
     {
         $validatedData = $request->validated();
