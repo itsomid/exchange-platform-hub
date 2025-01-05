@@ -2,9 +2,12 @@
 
 namespace App\Repositories;
 
+use App\Enums\TransactionStatusEnum;
+use App\Enums\TransactionTypeEnum;
 use App\Models\Transaction;
 use App\Repositories\DTO\Transaction\CreateTransactionRequestDTO;
 use App\Repositories\Interfaces\TransactionRepositoryInterface;
+use Illuminate\Database\Eloquent\Collection;
 
 class TransactionRepository implements TransactionRepositoryInterface
 {
@@ -21,5 +24,16 @@ class TransactionRepository implements TransactionRepositoryInterface
             'status' => $requestDTO->getStatus(),
             'description' => $requestDTO->getDescription(),
         ]);
+    }
+
+    public function getAllDepositWithdraw(int $userId): Collection
+    {
+        return Transaction::query()
+            ->with('deposit', 'withdrawal')
+            ->where('user_id', $userId)
+            ->where('status', TransactionStatusEnum::SUCCESS)
+            ->whereIn('type', [TransactionTypeEnum::DEPOSIT, TransactionTypeEnum::WITHDRAWAL])
+            ->latest('id')
+            ->get();
     }
 }

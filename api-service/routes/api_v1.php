@@ -34,6 +34,11 @@ Route::prefix('/wallets')->group(function () {
     Route::get('/value-usdt', [WalletController::class, 'assetsUSDTValue'])->name('wallets.value-usdt');
     Route::get('/{currencySymbol}', [WalletController::class, 'show'])->name('wallets.show');
 });
+
+//Transaction
+Route::prefix('transactions')->group(function () {
+    Route::get('/all-deposit-withdraw', [\App\Http\Controllers\V1\Transaction\TransactionController::class, 'allDepositWithdraw'])->name('transactions.all-deposit-withdraw');
+});
 //Portfolio
 Route::prefix('/portfolio')->group(function () {
     Route::get('/last-week', [\App\Http\Controllers\V1\Wallet\PortfolioController::class, 'getPortfolioLastWeek'])->name('portfolio.get-portfolio-last-week');
