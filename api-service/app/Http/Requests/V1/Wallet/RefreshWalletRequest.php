@@ -1,0 +1,34 @@
+<?php
+
+namespace App\Http\Requests\V1\Wallet;
+
+use App\Models\Currency;
+use App\Models\CurrencyChain;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+class RefreshWalletRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return false;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        $currency = Currency::query()->where('symbol', $this->input('currency_symbol'))->first();
+
+        return [
+            'currency_symbol' => ['required', Rule::exists(Currency::class, 'symbol')],
+            'chain_symbol' => ['required', Rule::exists(CurrencyChain::class, 'chain')->where('currency_id', $currency?->id)],
+        ];
+    }
+}

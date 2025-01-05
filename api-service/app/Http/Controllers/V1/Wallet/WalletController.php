@@ -5,10 +5,13 @@ namespace App\Http\Controllers\V1\Wallet;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Wallet\GenerateAddressRequest;
 use App\Http\Requests\V1\Wallet\GetOneWalletRequest;
+use App\Http\Requests\V1\Wallet\RefreshWalletRequest;
 use App\Http\Resources\V1\Wallet\CoinAddressResource;
 use App\Http\Resources\V1\Wallet\GetOneWalletResource;
 use App\Http\Resources\V1\Wallet\WalletListsCollection;
+use App\Services\Wallet\CheckWalletService;
 use App\Services\Wallet\DepositService;
+use App\Services\Wallet\DTO\CheckWallet\CheckUserDepositRequestDTO;
 use App\Services\Wallet\DTO\Deposit\AddPendingDepositRequestDTO;
 use App\Services\Wallet\DTO\Wallet\GenerateAddressRequestDTO;
 use App\Services\Wallet\DTO\Wallet\GetOneWalletRequestDTO;
@@ -21,7 +24,11 @@ use Throwable;
 
 class WalletController extends Controller
 {
-    public function __construct(private readonly WalletService $service, private readonly DepositService $depositService) {}
+    public function __construct(
+        private readonly WalletService $service,
+        private readonly DepositService $depositService,
+        private readonly CheckWalletService $checkWalletService
+    ) {}
 
     /**
      * @OA\Post(
@@ -151,16 +158,20 @@ class WalletController extends Controller
      *     summary="Get Wallet Balance",
      *     tags={"Wallet"},
      *     security={{"sanctum": {}}},
+     *
      *     @OA\Parameter(
      *         name="currencySymbol",
      *         in="path",
      *         description="Currency symbol to fetch the wallet details.",
      *         required=true,
+     *
      *         @OA\Schema(type="string", example="BTC")
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Wallet details retrieved successfully.",
+     *
      *         @OA\JsonContent(ref="#/components/schemas/GetOneWalletResponse")
      *     ),
      * )
@@ -175,5 +186,22 @@ class WalletController extends Controller
         );
 
         return new GetOneWalletResource($walletDTO);
+    }
+
+    public function refresh(RefreshWalletRequest $request)
+    {
+        $validatedData = $request->validated();
+
+        resolve(CheckWalletService::class)
+            ->checkUserDeposit(
+                resolve(CheckUserDepositRequestDTO::class)
+                    ->setUserId(Auth::id())
+                    ->setCurrencySymbol($validatedData['currency_symbol'])
+                    ->setCurrencyChain($validatedData['chain_symbol'])
+            );
+
+        return response([
+            'message' => __('messages.wallet_refresh'),
+        ]);
     }
 }
