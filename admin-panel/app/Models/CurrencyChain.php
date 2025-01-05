@@ -24,6 +24,7 @@ class CurrencyChain extends Model
         'exchange_withdrawal_fee' => 'float',
     ];
     protected $appends = ['total_withdrawal_fee'];
+
     public function currency(): BelongsTo
     {
         return $this->belongsTo(Currency::class);
@@ -32,5 +33,15 @@ class CurrencyChain extends Model
     public function getTotalWithdrawalFeeAttribute()
     {
         return bcadd($this->network_fee, $this->exchange_withdrawal_fee, 8);
+    }
+
+    /**
+     * Scope to get total withdrawal fee using a database query
+     */
+    public function scopeTotalWithdrawalFee($query, $currencyChain)
+    {
+        return $query->where('chain', $currencyChain)
+            ->selectRaw('network_fee + exchange_withdrawal_fee as total_withdrawal_fee')
+            ->value('total_withdrawal_fee');
     }
 }
