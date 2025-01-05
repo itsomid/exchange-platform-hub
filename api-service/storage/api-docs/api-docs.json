@@ -1365,6 +1365,57 @@
                 ]
             }
         },
+        "/api/v1/transactions/all-deposit-withdraw": {
+            "get": {
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Get all deposit and withdrawal transactions",
+                "description": "Retrieve a list of all deposit and withdrawal transactions for the authenticated user.",
+                "operationId": "1cff133138d96a310f90a772aed0f0db",
+                "responses": {
+                    "200": {
+                        "description": "List of deposit and withdrawal transactions.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/DepositWithdrawResource"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized, user is not authenticated.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/referral-codes": {
             "get": {
                 "tags": [
@@ -2459,6 +2510,49 @@
                 },
                 "type": "object"
             },
+            "DepositWithdrawResource": {
+                "title": "Deposit and Withdraw Resource",
+                "description": "A resource representing a single deposit or withdrawal transaction.",
+                "properties": {
+                    "amount": {
+                        "description": "Transaction amount",
+                        "type": "number",
+                        "format": "float",
+                        "example": 100.5
+                    },
+                    "type": {
+                        "description": "Transaction type (deposit or withdrawal)",
+                        "type": "string",
+                        "enum": [
+                            "deposit",
+                            "withdrawal"
+                        ],
+                        "example": "deposit"
+                    },
+                    "currency_symbol": {
+                        "description": "Currency symbol",
+                        "type": "string",
+                        "example": "BTC"
+                    },
+                    "created_at": {
+                        "description": "Transaction date and time",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-12-21T14:30:00Z"
+                    },
+                    "status": {
+                        "description": "Transaction status",
+                        "type": "string",
+                        "enum": [
+                            "success",
+                            "failed",
+                            "pending"
+                        ],
+                        "example": "completed"
+                    }
+                },
+                "type": "object"
+            },
             "ReferralCodeListCollection": {
                 "properties": {
                     "id": {
@@ -2723,6 +2817,10 @@
         {
             "name": "Profile",
             "description": "Profile"
+        },
+        {
+            "name": "Transactions",
+            "description": "Transactions"
         },
         {
             "name": "Referral Code",
