@@ -1750,6 +1750,52 @@
                 ]
             }
         },
+        "/api/v1/portfolio/last-24-hours": {
+            "get": {
+                "tags": [
+                    "Portfolio"
+                ],
+                "summary": "Get Portfolio Report for last 24 hours",
+                "description": "Retrieve a daily portfolio report for the last 24 hours, including total profit, profit percentage, and total balance.",
+                "operationId": "02692af23b68b3ab8aa72f8811f0407f",
+                "responses": {
+                    "200": {
+                        "description": "Portfolio report retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/PortfolioLast24HoursReport"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/wallets/generate-address": {
             "post": {
                 "tags": [
@@ -2798,6 +2844,37 @@
                         "type": "string",
                         "format": "date",
                         "example": "2024-12-15"
+                    },
+                    "total_profit": {
+                        "description": "Total profit for the given date.",
+                        "type": "number",
+                        "format": "float",
+                        "example": 1500.75
+                    },
+                    "total_profit_percentage": {
+                        "description": "Total profit percentage for the given date.",
+                        "type": "number",
+                        "format": "float",
+                        "example": 2.45
+                    },
+                    "total_balance": {
+                        "description": "Total portfolio balance for the given date.",
+                        "type": "number",
+                        "format": "float",
+                        "example": 62000.5
+                    }
+                },
+                "type": "object"
+            },
+            "PortfolioLast24HoursReport": {
+                "title": "Portfolio Last 24 Hours Report",
+                "description": "Daily portfolio report for the last 24 hours.",
+                "properties": {
+                    "report_date": {
+                        "description": "The date of the report in YYYY-MM-DD format.",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2024-12-15 18:00"
                     },
                     "total_profit": {
                         "description": "Total profit for the given date.",
