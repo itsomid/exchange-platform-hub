@@ -61,7 +61,7 @@ class PermissionList
             ['transaction','مدیریت تراکنش ها'],
             ['otc_order', 'مشاهده لیست سفارش ها'],
             ['deposit', 'مشاهده لیست واریزی ها'],
-            ['withdraw', 'مشاهده لیست برداشت ها'],
+            ['withdrawal', 'مشاهده لیست برداشت ها'],
 
         ];
 

@@ -14,9 +14,9 @@
                         @csrf
                         <h6>1. اطلاعات کوین</h6>
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-4 mt-5">
                                 <div class="form-group">
-                                    <label for="name">نام</label>
+                                    <label class="form-label"  for="name">نام</label>
                                     <input name="name"
                                            id="name"
                                            class="form-control"
@@ -28,9 +28,9 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4 mt-5">
                                 <div class="form-group">
-                                    <label for="symbol">Symbol</label>
+                                    <label class="form-label"  for="symbol">Symbol</label>
                                     <input name="symbol" id="symbol" class="form-control"
                                            placeholder="Symbol را وارد کنید." value="{{$currency->symbol}}" required>
                                     @error('Symbol')
@@ -39,9 +39,21 @@
                                 </div>
                             </div>
 
-
-                            <div class="col-md-6 mb-1">
-                                <div class="form-group mt-3">
+                            <div class="w-100"></div>
+                            <div class="col-md-3 mt-5">
+                                <div class="form-group">
+                                    <label class="form-label" for="max_auto_withdraw_amount">حداکثر مقدار قابل برداشت بدون نیاز به تایید ادمین</label>
+                                    <input  name="max_auto_withdraw_amount" class="form-control font-number"
+                                            placeholder="حداکثر مقدار قابل برداشت"
+                                            value="{{formatNumberTrimZeros($currency->max_auto_withdraw_amount)}}" required>
+                                    @error('min_deposit_amount')
+                                    <small class="text-danger">{{$message}}</small>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="w-100"></div>
+                            <div class="col-md-6 mt-5">
+                                <div class="form-group">
                                     <label class="form-label" for="logo">تصویر کوین:</label>
                                     <input class="form-control-file form-control" type="file" id="logo"
                                            name="logo">

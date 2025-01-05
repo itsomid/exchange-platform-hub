@@ -62,7 +62,7 @@ class PortfolioService
             // Save the data for this day
             $portfolioReports[] = resolve(PortfolioLastWeekResponseDTO::class)
                 ->setTotalProfit($totalProfit)
-                ->setReportDate($date)
+                ->setReportDate(clone $date)
                 ->setTotalBalance($totalBalance)
                 ->setTotalProfitPercentage($totalProfitPercentage);
 

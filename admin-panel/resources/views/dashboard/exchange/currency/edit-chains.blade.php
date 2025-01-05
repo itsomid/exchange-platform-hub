@@ -38,11 +38,11 @@
                                 </div>
 
                                 <div class="row mt-5">
-                                    <div class="col-md-3 ">
+                                    <div class="col-md-3">
                                         <div class="form-group">
                                             <label class="form-label" for="min_deposit_amount_{{$chain->id}}">حداقل مقدار واریز</label>
-                                            <input  name="chains[{{$chain->id}}][min_deposit_amount]" id="min_deposit_amount_{{$chain->id}}" class="form-control"
-                                                    placeholder="Symbol را وارد کنید." value="{{$chain->min_deposit_amount}}" required>
+                                            <input  name="chains[{{$chain->id}}][min_deposit_amount]" id="min_deposit_amount_{{$chain->id}}" class="form-control font-number"
+                                                    placeholder="Symbol را وارد کنید." value="{{formatNumberTrimZeros($chain->min_deposit_amount)}}" required>
                                             @error('min_deposit_amount')
                                             <small class="text-danger">{{$message}}</small>
                                             @enderror
@@ -51,8 +51,8 @@
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label class="form-label" for="min_withdraw_amount_{{$chain->id}}">حداقل مقدار برداشت</label>
-                                            <input  name="chains[{{$chain->id}}][min_withdraw_amount]" id="min_withdraw_amount_{{$chain->id}}" class="form-control"
-                                                    placeholder="حداقل مقدار را وارد کنید." value="{{$chain->min_withdraw_amount}}" required>
+                                            <input  name="chains[{{$chain->id}}][min_withdraw_amount]" id="min_withdraw_amount_{{$chain->id}}" class="form-control font-number"
+                                                    placeholder="حداقل مقدار را وارد کنید." value="{{formatNumberTrimZeros($chain->min_withdraw_amount)}}" required>
                                             @error('min_withdraw_amount')
                                             <small class="text-danger">{{$message}}</small>
                                             @enderror
@@ -97,7 +97,7 @@
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label class="form-label" for="network_fee_{{$chain->id}}" >فی شبکه برای برداشت (واحد)</label>
-                                            <input  name="chains[{{$chain->id}}][network_fee]" id="network_fee_{{$chain->id}}" class="form-control"
+                                            <input  name="chains[{{$chain->id}}][network_fee]" id="network_fee_{{$chain->id}}" class="form-control font-number"
                                                     placeholder="فی شبکه." value="{{$chain->network_fee}}" disabled required>
                                             @error('network_fee')
                                             <small class="text-danger">{{$message}}</small>

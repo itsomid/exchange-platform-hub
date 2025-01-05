@@ -15,7 +15,7 @@ class Withdrawal extends Model
     public $filterNameSpace = 'App\Filters\WithdrawalFilter';
 
     protected $fillable = [
-        'user_id','wallet_id', 'currency_chain', 'currency_symbol', 'amount','fee', 'address','transaction_hash', 'status','description', 'confirmed_at',
+        'user_id','admin_id','wallet_id', 'currency_chain', 'currency_symbol', 'amount','fee', 'address','transaction_hash', 'status','description', 'confirmed_at',
     ];
     protected $casts = [
         'status' => WithdrawalStatusEnum::class
@@ -24,7 +24,10 @@ class Withdrawal extends Model
     {
         return $this->belongsTo(User::class);
     }
-
+    public function admin()
+    {
+        return $this->belongsTo(Admin::class);
+    }
     public function currency()
     {
         return $this->belongsTo(Currency::class,'currency_symbol','symbol');
@@ -33,5 +36,13 @@ class Withdrawal extends Model
     public function transaction()
     {
         return $this->hasOne(Transaction::class,'withdrawal_id');
+    }
+
+    public function wallet()
+    {
+        return $this->hasOne(Wallet::class, 'user_id', 'user_id')
+            ->where(function ($query) {
+                $query->where('currency_symbol', $this->currency_symbol);
+            });
     }
 }

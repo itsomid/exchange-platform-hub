@@ -109,7 +109,7 @@
                 </a>
             </li>
         @endcan
-        @can('withdraw')
+        @can('withdrawal')
             <li class="menu-item @if(request()->is('admin/withdrawal*')) active @endif">
                 <a href="{{route('admin.withdrawal.index')}}" class="menu-link">
                     <i class="menu-icon fa-regular fa-money-bill-wave"></i>

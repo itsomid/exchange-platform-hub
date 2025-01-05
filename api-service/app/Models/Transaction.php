@@ -6,7 +6,13 @@ use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * @property string                $amount
+ * @property TransactionStatusEnum $status
+ * @property TransactionTypeEnum   $type
+ */
 class Transaction extends Model
 {
     protected $fillable = [
@@ -20,5 +26,15 @@ class Transaction extends Model
             'subtype' => TransactionSubTypeEnum::class,
             'status' => TransactionStatusEnum::class,
         ];
+    }
+
+    public function deposit(): HasOne
+    {
+        return $this->hasOne(Deposit::class, 'id', 'deposit_id');
+    }
+
+    public function withdrawal(): HasOne
+    {
+        return $this->hasOne(Withdrawal::class, 'id', 'withdrawal_id');
     }
 }

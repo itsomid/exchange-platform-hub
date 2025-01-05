@@ -45,6 +45,7 @@ class DatabaseSeeder extends Seeder
             ExternalApiConfigSeeder::class,
             OTCBuySeeder::class,
             DepositSeeder::class,
+            WithdrawalSeeder::class,
         ]);
     }
 }

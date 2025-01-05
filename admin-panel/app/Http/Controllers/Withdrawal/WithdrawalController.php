@@ -3,13 +3,21 @@
 namespace App\Http\Controllers\Withdrawal;
 
 use App\Enums\TransactionTypeEnum;
+use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
+use App\Models\Wallet;
 use App\Models\Withdrawal;
+use App\Services\Withdrawal\WithdrawalService;
 use Illuminate\Http\Request;
 
 class WithdrawalController extends Controller
 {
+    public function __construct(WithdrawalService $withdrawalService)
+    {
+        $this->withdrawalService = $withdrawalService;
+    }
+
     public function index()
     {
 
@@ -28,7 +36,7 @@ class WithdrawalController extends Controller
         // First 5 users with the most deposits (considering currency prices)
 
 
-        $topUsers = Withdrawal::with(['currency', 'user'])
+         $topUsers = Withdrawal::with(['currency', 'user'])
             ->get()
             ->groupBy('user_id')
             ->map(function ($withdraws, $userId) {
@@ -42,8 +50,7 @@ class WithdrawalController extends Controller
             })
             ->sortByDesc('totalDeposit')
             ->take(5);
-        $totalTopUsersWithdrawals = $topUsers->sum('totalWithdraws');
-//        return $topUsers;
+        $totalTopUsersWithdrawals = $topUsers->sum('totalWithdraw');
 
         $withdraws = Withdrawal::filterBy(request()->all())->with(['user', 'currency', 'transaction'])->paginate(20);
 
@@ -55,5 +62,38 @@ class WithdrawalController extends Controller
             'topUsers' => $topUsers,
             'totalTopUsersWithdrawals' => $totalTopUsersWithdrawals
         ]);
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function confirmWithdrawal(Withdrawal $withdraw)
+    {
+        try {
+            $admin_id = \Auth::user()->id;
+            $this->withdrawalService->adminConfirmWithdrawal($withdraw->id, $admin_id);
+
+            Toast::message('.تایید برداشت با موفقیت انجام شد')->success()->notify();
+            return redirect()->back();
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return redirect()->back()->withErrors(['general' => $exception->getMessage()]);
+        }
+    }
+
+    public function cancelWithdrawal(Withdrawal $withdraw)
+    {
+        try {
+            $admin_id = \Auth::user()->id;
+            $this->withdrawalService->adminCancelWithdrawal($withdraw->id, $admin_id);
+
+            Toast::message('.تایید برداشت با موفقیت انجام شد')->success()->notify();
+            return redirect()->back();
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return redirect()->back()->withErrors(['general' => $exception->getMessage()]);
+        }
     }
 }
