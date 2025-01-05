@@ -9,9 +9,8 @@ use App\Http\Requests\V1\Wallet\RefreshWalletRequest;
 use App\Http\Resources\V1\Wallet\CoinAddressResource;
 use App\Http\Resources\V1\Wallet\GetOneWalletResource;
 use App\Http\Resources\V1\Wallet\WalletListsCollection;
-use App\Services\Wallet\CheckWalletService;
+use App\Jobs\CheckUserDepositJob;
 use App\Services\Wallet\DepositService;
-use App\Services\Wallet\DTO\CheckWallet\CheckUserDepositRequestDTO;
 use App\Services\Wallet\DTO\Deposit\AddPendingDepositRequestDTO;
 use App\Services\Wallet\DTO\Wallet\GenerateAddressRequestDTO;
 use App\Services\Wallet\DTO\Wallet\GetOneWalletRequestDTO;
@@ -27,8 +26,7 @@ class WalletController extends Controller
 {
     public function __construct(
         private readonly WalletService $service,
-        private readonly DepositService $depositService,
-        private readonly CheckWalletService $checkWalletService
+        private readonly DepositService $depositService
     ) {}
 
     /**
@@ -305,13 +303,7 @@ class WalletController extends Controller
     {
         $validatedData = $request->validated();
 
-        $this->checkWalletService
-            ->checkUserDeposit(
-                resolve(CheckUserDepositRequestDTO::class)
-                    ->setUserId(Auth::id())
-                    ->setCurrencySymbol($validatedData['currency_symbol'])
-                    ->setCurrencyChain($validatedData['chain_symbol'])
-            );
+        CheckUserDepositJob::dispatch(Auth::id(), $validatedData['currency_symbol'], $validatedData['chain_symbol']);
 
         return response([
             'message' => __('messages.wallet_refresh'),
