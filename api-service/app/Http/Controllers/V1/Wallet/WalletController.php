@@ -305,7 +305,7 @@ class WalletController extends Controller
     {
         $validatedData = $request->validated();
 
-        resolve(CheckWalletService::class)
+        $this->checkWalletService
             ->checkUserDeposit(
                 resolve(CheckUserDepositRequestDTO::class)
                     ->setUserId(Auth::id())
