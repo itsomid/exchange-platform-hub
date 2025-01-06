@@ -11,7 +11,6 @@ use App\Http\Resources\V1\Wallet\GetOneWalletResource;
 use App\Http\Resources\V1\Wallet\WalletListsCollection;
 use App\Jobs\CheckUserDepositJob;
 use App\Services\Wallet\DepositService;
-use App\Services\Wallet\DTO\Deposit\AddPendingDepositRequestDTO;
 use App\Services\Wallet\DTO\Wallet\GenerateAddressRequestDTO;
 use App\Services\Wallet\DTO\Wallet\GetOneWalletRequestDTO;
 use App\Services\Wallet\DTO\Wallet\WalletListsRequestDTO;
@@ -80,16 +79,6 @@ class WalletController extends Controller
                     ->setChainSymbol($validated['chain'])
             );
 
-            //Insert Pending Deposit
-            $this->depositService->addPendingDeposit(
-                resolve(AddPendingDepositRequestDTO::class)
-                    ->setUserId($userId)
-                    ->setCurrencySymbol($validated['currency'])
-                    ->setCurrencyChain($validated['chain'])
-                    ->setPublicKey($res->getAddress())
-                    ->setExpirationDate($expirationDate = now()->addMinutes(config('bitexroom.deposit_watching_per_minutes')))
-            );
-
             DB::commit();
         } catch (Throwable $exception) {
             DB::rollBack();
@@ -101,7 +90,7 @@ class WalletController extends Controller
         }
 
         return response([
-            'data' => new CoinAddressResource($res, $expirationDate),
+            'data' => new CoinAddressResource($res),
         ]);
     }
 

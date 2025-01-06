@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Enums\CurrencyBlockChainNameEnum;
 use App\Enums\CurrencyChainEnum;
 use App\Models\Currency;
 use App\Models\CurrencyChain;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class CurrencyChainSeeder extends Seeder
@@ -28,6 +28,7 @@ class CurrencyChainSeeder extends Seeder
             [
                 'currency_id' => $btc->id,
                 'chain' => CurrencyChainEnum::BTC,
+                'blockchain_name' => CurrencyBlockChainNameEnum::BITCOIN,
                 'min_deposit_amount' => 0.001,
                 'min_withdraw_amount' => 0.001,
                 'deposit_enabled' => true,
@@ -44,6 +45,7 @@ class CurrencyChainSeeder extends Seeder
             [
                 'currency_id' => $eth->id,
                 'chain' => CurrencyChainEnum::ETH,
+                'blockchain_name' => CurrencyBlockChainNameEnum::ETHEREUM,
                 'min_deposit_amount' => 0.01,
                 'min_withdraw_amount' => 0.01,
                 'deposit_enabled' => true,
@@ -60,6 +62,7 @@ class CurrencyChainSeeder extends Seeder
             [
                 'currency_id' => $usdt->id,
                 'chain' => CurrencyChainEnum::TRC20,
+                'blockchain_name' => CurrencyBlockChainNameEnum::TRON,
                 'min_deposit_amount' => 1,
                 'min_withdraw_amount' => 1,
                 'deposit_enabled' => true,
@@ -75,6 +78,7 @@ class CurrencyChainSeeder extends Seeder
             [
                 'currency_id' => $usdt->id,
                 'chain' => CurrencyChainEnum::ERC20,
+                'blockchain_name' => CurrencyBlockChainNameEnum::ETHEREUM,
                 'min_deposit_amount' => 1,
                 'min_withdraw_amount' => 1,
                 'deposit_enabled' => true,
@@ -90,6 +94,7 @@ class CurrencyChainSeeder extends Seeder
             [
                 'currency_id' => $usdt->id,
                 'chain' => CurrencyChainEnum::BEP20,
+                'blockchain_name' => CurrencyBlockChainNameEnum::BINANCE,
                 'min_deposit_amount' => 1,
                 'min_withdraw_amount' => 1,
                 'deposit_enabled' => true,
@@ -107,6 +112,7 @@ class CurrencyChainSeeder extends Seeder
             [
                 'currency_id' => $bnb->id,
                 'chain' => CurrencyChainEnum::BSC,
+                'blockchain_name' => CurrencyBlockChainNameEnum::BINANCE,
                 'min_deposit_amount' => 0.01,
                 'min_withdraw_amount' => 0.01,
                 'deposit_enabled' => true,
@@ -123,6 +129,7 @@ class CurrencyChainSeeder extends Seeder
             [
                 'currency_id' => $trx->id,
                 'chain' => CurrencyChainEnum::TRX,
+                'blockchain_name' => CurrencyBlockChainNameEnum::TRON,
                 'min_deposit_amount' => 0.1,
                 'min_withdraw_amount' => 0.1,
                 'deposit_enabled' => true,
@@ -139,6 +146,7 @@ class CurrencyChainSeeder extends Seeder
             [
                 'currency_id' => $doge->id,
                 'chain' => 'DOGE',
+                'blockchain_name' => CurrencyBlockChainNameEnum::DOGE,
                 'min_deposit_amount' => 1,
                 'min_withdraw_amount' => 1,
                 'deposit_enabled' => true,

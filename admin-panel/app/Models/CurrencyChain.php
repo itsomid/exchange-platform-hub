@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\CurrencyBlockChainNameEnum;
+use App\Enums\CurrencyChainEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -10,6 +12,7 @@ class CurrencyChain extends Model
     protected $fillable = [
         'currency_id',
         'chain',
+        'blockchain_name',
         'min_deposit_amount',
         'min_withdraw_amount',
         'deposit_delay_minutes',
@@ -17,12 +20,16 @@ class CurrencyChain extends Model
         'exchange_withdrawal_fee',
         'network_fee',
         'deposit_enabled',
-        'withdraw_enabled'
+        'withdraw_enabled',
     ];
+
     protected $casts = [
         'network_fee' => 'float',
         'exchange_withdrawal_fee' => 'float',
+        'chain' => CurrencyChainEnum::class,
+        'blockchain_name' => CurrencyBlockChainNameEnum::class,
     ];
+
     protected $appends = ['total_withdrawal_fee'];
 
     public function currency(): BelongsTo

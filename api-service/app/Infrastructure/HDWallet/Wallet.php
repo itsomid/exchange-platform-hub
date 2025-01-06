@@ -10,12 +10,12 @@ class Wallet
     /**
      * @throws HDDWalletUnavailable
      */
-    public function generateAddress(int $userId, string $currencySymbol, string $chain): string
+    public function generateAddress(int $userId, string $currencySymbol, string $blockchainName): string
     {
         $currencySymbol = strtolower($currencySymbol);
         $response = Http::post(HDWallet::getBaseUrl()."/api/v1/wallet/{$currencySymbol}", [
             'user_id' => $userId,
-            'blockchain' => CurrencyMapEnum::{$chain}->value,
+            'blockchain' => $blockchainName,
         ]);
 
         //Already exists

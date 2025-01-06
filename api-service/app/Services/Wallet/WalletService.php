@@ -5,6 +5,7 @@ namespace App\Services\Wallet;
 use App\Enums\BalanceOperationEnum;
 use App\Exceptions\V1\Wallet\InternalWalletHasProblemException;
 use App\Infrastructure\HDWallet\Exceptions\HDWalletException;
+use App\Infrastructure\HDWallet\Wallet;
 use App\Repositories\Interfaces\MarketRepositoryInterface;
 use App\Repositories\Interfaces\WalletChainRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
@@ -44,12 +45,12 @@ class WalletService
 
         if (is_null($chain->address)) {
             //Generate Public Key
-            $hdWallet = resolve(\App\Infrastructure\HDWallet\Wallet::class);
+            $hdWallet = resolve(Wallet::class);
             try {
                 $address = $hdWallet->generateAddress(
                     $requestDTO->getUserId(),
                     $requestDTO->getCurrency(),
-                    $requestDTO->getChainSymbol()
+                    $chain->currencyChain->blockchain_name->value
                 );
             } catch (HDWalletException $exception) {
                 report($exception);
