@@ -7,6 +7,7 @@
     "require": {
         "php": "^8.3",
         "ext-bcmath": "*",
+        "ext-curl": "*",
         "bacon/bacon-qr-code": "^3.0",
         "darkaonline/l5-swagger": "^8.6",
         "jenssegers/agent": "^2.6",
@@ -15,8 +16,8 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
         "mews/captcha": "^3.4",
-        "pragmarx/google2fa-laravel": "^2.2",
-        "ext-curl": "*"
+        "opcodesio/log-viewer": "^3.12",
+        "pragmarx/google2fa-laravel": "^2.2"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
