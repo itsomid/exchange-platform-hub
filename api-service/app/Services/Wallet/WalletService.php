@@ -49,7 +49,6 @@ class WalletService
             try {
                 $address = $hdWallet->generateAddress(
                     $requestDTO->getUserId(),
-                    $requestDTO->getCurrency(),
                     $chain->currencyChain->blockchain_name->value
                 );
             } catch (HDWalletException $exception) {

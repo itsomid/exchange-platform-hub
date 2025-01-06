@@ -10,17 +10,16 @@ class Wallet
     /**
      * @throws HDDWalletUnavailable
      */
-    public function generateAddress(int $userId, string $currencySymbol, string $blockchainName): string
+    public function generateAddress(int $userId, string $blockchainName): string
     {
-        $currencySymbol = strtolower($currencySymbol);
-        $response = Http::post(HDWallet::getBaseUrl()."/api/v1/wallet/{$currencySymbol}", [
+        $response = Http::post(HDWallet::getBaseUrl()."/api/v1/wallet/{$blockchainName}", [
             'user_id' => $userId,
             'blockchain' => $blockchainName,
         ]);
 
         //Already exists
         if ($response->badRequest()) {
-            $response = Http::get(HDWallet::getBaseUrl()."/api/v1/wallet/{$currencySymbol}/{$userId}");
+            $response = Http::get(HDWallet::getBaseUrl()."/api/v1/wallet/{$blockchainName}/{$userId}");
             if ($response->serverError()) {
                 report($response);
                 throw new HDDWalletUnavailable;
