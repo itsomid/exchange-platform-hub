@@ -6,6 +6,9 @@ use App\Enums\CurrencyBlockChainNameEnum;
 use App\Enums\CurrencyChainEnum;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property CurrencyBlockChainNameEnum $blockchain_name
+ */
 class CurrencyChain extends Model
 {
     protected $casts = [

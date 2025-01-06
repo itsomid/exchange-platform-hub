@@ -6,8 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * @property string $address
- * @property int    $id
+ * @property string        $address
+ * @property int           $id
+ * @property CurrencyChain $currencyChain
  */
 class WalletChain extends Model
 {
