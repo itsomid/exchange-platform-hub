@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Filters\Filterable;
@@ -18,14 +19,15 @@ class Transaction extends Model
     public $filterNameSpace = 'App\Filters\TransactionFilter';
 
     protected $fillable = [
-        'user_id', 'admin_id', 'wallet_id','deposit_id','withdrawal_id','otc_order_id', 'amount', 'balance', 'type', 'subtype', 'description', 'admin_description', 'status'
+        'user_id', 'admin_id', 'wallet_id', 'deposit_id', 'withdrawal_id', 'otc_order_id', 'amount', 'balance', 'type', 'subtype', 'description', 'admin_description', 'status'
     ];
 
     protected function casts(): array
     {
         return [
             'type' => TransactionTypeEnum::class,
-            'subtype' => TransactionSubTypeEnum::class
+            'subtype' => TransactionSubTypeEnum::class,
+            'status' => TransactionStatusEnum::class,
         ];
     }
 
@@ -51,15 +53,16 @@ class Transaction extends Model
 
     public function OTCOrder()
     {
-        return $this->belongsTo(OTCOrder::class,'otc_order_id');
+        return $this->belongsTo(OTCOrder::class, 'otc_order_id');
     }
 
     public function deposit()
     {
-        return $this->belongsTo(Deposit::class,'deposit_id');
+        return $this->belongsTo(Deposit::class, 'deposit_id');
     }
+
     public function withdrawal()
     {
-        return $this->belongsTo(Deposit::class,'withdrawal_id');
+        return $this->belongsTo(Deposit::class, 'withdrawal_id');
     }
 }

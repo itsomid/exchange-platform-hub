@@ -15,4 +15,11 @@ class MarketHistoryRepository implements MarketHistoryRepositoryInterface
             ->latest()
             ->first();
     }
+
+    public function getByMarketIdWithDateTime(int $marketId, Carbon $dateTime): ?MarketHistory
+    {
+        return MarketHistory::query()->where('market_id', $marketId)
+            ->where('timestamp', $dateTime->startOfHour()) // Round to the start of the hour
+            ->first();
+    }
 }

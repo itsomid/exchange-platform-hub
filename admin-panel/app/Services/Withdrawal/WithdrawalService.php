@@ -11,10 +11,20 @@ use App\Models\CurrencyChain;
 use App\Models\Wallet;
 use App\Models\Withdrawal;
 use App\Models\Transaction;
+use App\Services\Wallet\WalletService;
 use Illuminate\Support\Facades\DB;
 
 class WithdrawalService
 {
+    protected $walletService;
+    protected $exchangeUserId;
+
+    public function __construct(WalletService $walletService)
+    {
+        $this->walletService = $walletService;
+        $this->exchangeUserId = config('exchange.exchange_user_id', 1);
+    }
+
     /**
      * Create a new withdrawal request.
      *
@@ -29,14 +39,15 @@ class WithdrawalService
      * @throws \Exception
      */
     public function createWithdrawal(
-        int $userId,
-        int $walletId,
-        string $currencyChain,
-        string $currencySymbol,
-        float $amount,
-        string $address,
+        int     $userId,
+        int     $walletId,
+        string  $currencyChain,
+        string  $currencySymbol,
+        float   $amount,
+        string  $address,
         ?string $description = null
-    ): Withdrawal {
+    ): Withdrawal
+    {
         DB::beginTransaction();
 
         try {
@@ -49,7 +60,8 @@ class WithdrawalService
             }
 
             $currency = Currency::whereSymbol($currencySymbol)->first();
-            $fee = CurrencyChain::where('chain',$currencyChain)->first()->total_withdrawal_fee;
+            $fee = CurrencyChain::totalWithdrawalFee($currencyChain);
+
             // Validate sufficient balance
             $totalAmount = $amount + $fee;
             if ($wallet->balance < $totalAmount) {
@@ -69,13 +81,13 @@ class WithdrawalService
                 'amount' => $amount,
                 'fee' => $fee,
                 'address' => $address,
-                'status' => $amount >= $currency->max_auto_withdraw_amount ? WithdrawalStatusEnum::AWAITING_APPROVAL:WithdrawalStatusEnum::PENDING,
+                'status' => $amount >= $currency->max_auto_withdraw_amount ? WithdrawalStatusEnum::AWAITING_APPROVAL : WithdrawalStatusEnum::PENDING,
             ]);
-            if ($amount >= $currency->max_auto_withdraw_amount){
+            if ($amount >= $currency->max_auto_withdraw_amount) {
                 $withdrawal->update([
-                   'description' => 'Admin approval required'
+                    'description' => 'Admin approval required'
                 ]);
-            }else{
+            } else {
                 $withdrawal->update([
                     'description' => 'Withdraw request send to HD Wallet'
                 ]);
@@ -100,13 +112,14 @@ class WithdrawalService
      * @throws \Exception
      */
 
-    public function confirmWithdrawal(int $withdrawalId,int $walletId, string $transactionHash): Withdrawal
+    public function confirmWithdrawal(int $withdrawalId, int $walletId, string $transactionHash): Withdrawal
     {
         DB::beginTransaction();
 
         try {
             // Fetch the withdrawal record
             $withdrawal = Withdrawal::findOrFail($withdrawalId);
+
             $wallet = Wallet::findOrFail($walletId);
 
             if ($withdrawal->status !== WithdrawalStatusEnum::PENDING) {
@@ -118,11 +131,12 @@ class WithdrawalService
                 'transaction_hash' => $transactionHash,
                 'status' => WithdrawalStatusEnum::COMPLETED,
                 'confirmed_at' => now(),
-                'description' =>'Withdraw Completed'
+                'description' => 'Withdraw Completed'
             ]);
 
             // Unlock funds and deduct locked balance
             $wallet->decrement('locked_balance', $withdrawal->amount + $withdrawal->fee);
+
 
             // Create the transaction record
             Transaction::create([
@@ -139,6 +153,8 @@ class WithdrawalService
             ]);
 
 
+            $this->createExchangeWithdrawalFee($withdrawal->currency_symbol,$withdrawal->currency_chain, $withdrawal->id);
+
             DB::commit();
 
             return $withdrawal;
@@ -151,7 +167,7 @@ class WithdrawalService
     /**
      * @throws \Exception
      */
-    public function adminConfirmWithdrawal(int $withdrawalId, int $admin_id): Withdrawal
+    public function adminApproveWithdrawal(int $withdrawalId, int $admin_id): Withdrawal
     {
         DB::beginTransaction();
 
@@ -167,7 +183,7 @@ class WithdrawalService
             $withdrawal->update([
                 'status' => WithdrawalStatusEnum::PENDING,
                 'admin_id' => $admin_id, // Store which admin approved the withdrawal
-                'description' =>'Withdraw request send to HD Wallet by admin (#' .$admin_id .')'
+                'description' => 'Withdraw request send to HD Wallet by admin (#' . $admin_id . ')'
             ]);
 
 
@@ -199,14 +215,44 @@ class WithdrawalService
             $withdrawal->update([
                 'status' => WithdrawalStatusEnum::FAILED,
                 'admin_id' => $admin_id, // Store which admin Canceled the withdrawal
-                'description' => 'Withdraw canceled by admin (#' .$admin_id .')'
+                'description' => 'Withdraw canceled by admin (#' . $admin_id . ')'
             ]);
 
+            $withdrawal->wallet->decrement('locked_balance', $withdrawal->amount + $withdrawal->fee);
 
 
             DB::commit();
 
             return $withdrawal;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
+    private function createExchangeWithdrawalFee($currency_symbol,$currency_chain, $withdrawalId): void
+    {
+        try {
+
+            $exchangeWallet = $this->walletService->getExchangeWallet($currency_symbol);
+
+            $exchangeWithdrawalFee = CurrencyChain::whereChain($currency_chain)->value('exchange_withdrawal_fee');
+            if ($exchangeWithdrawalFee > 0){
+                Transaction::query()->create([
+                    'user_id' => $this->exchangeUserId,
+                    'wallet_id' => $exchangeWallet->id,
+                    'withdrawal_id' => $withdrawalId,
+                    'balance' => $exchangeWallet->balance,
+                    'amount' => $exchangeWithdrawalFee,
+                    'type' => TransactionTypeEnum::FEE,
+                    'subtype' => TransactionSubTypeEnum::WITHDRAWAL_FEE,
+                    'status' => TransactionStatusEnum::SUCCESS,
+                    'description' => "کارمزد برداشت  {$exchangeWallet->currency_symbol} به ارزش  " . formatNumberTrimZeros($exchangeWithdrawalFee),
+                ]);
+
+                $exchangeWallet->increment('balance',$exchangeWithdrawalFee);
+            }
+
         } catch (\Exception $e) {
             DB::rollBack();
             throw $e;

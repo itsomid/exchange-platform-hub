@@ -15,12 +15,38 @@ use Throwable;
 
 class WalletService
 {
+    protected $exchangeUserId;
+
+    public function __construct()
+    {
+        // Load exchange user ID from config
+        $this->exchangeUserId = config('exchange.exchange_user_id', 1);
+    }
     /**
      * Calculate the total assets value for a user's wallets.
      *
      * @param \App\Models\User $user
      * @return float
      */
+    /**
+     * Get a user's wallet by currency.
+     */
+    public function getUserWallet(int $userId, string $currency): ?Wallet
+    {
+        return Wallet::where('user_id', $userId)
+            ->where('currency', $currency)
+            ->first();
+    }
+
+    /**
+     * Get the exchange (system) wallet for a specific currency.
+     */
+    public function getExchangeWallet(string $currency): ?Wallet
+    {
+        return Wallet::where('user_id', $this->exchangeUserId)
+            ->where('currency_symbol', $currency)
+            ->first();
+    }
     public function totalAssetsValue(User $user)
     {
         // Initialize the total assets value

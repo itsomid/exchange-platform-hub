@@ -82,6 +82,15 @@ class WalletRepository implements WalletRepositoryInterface
             ->first();
     }
 
+    public function getOneByCurrencyWithChain(string $base_currency, string $chainSymbol, int $userId): Wallet
+    {
+        return Wallet::query()
+            ->with(['chains' => fn ($q) => $q->where('currency_chain', $chainSymbol)])
+            ->where('currency_symbol', $base_currency)
+            ->where('user_id', $userId)
+            ->first();
+    }
+
     public function getOneOrCreateByCurrencyWithLock(string $base_currency, int $userId): Wallet
     {
         return Wallet::query()

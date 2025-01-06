@@ -18,7 +18,12 @@ use Throwable;
 
 class OTCService
 {
+    protected $exchangeUserId;
 
+    public function __construct()
+    {
+        $this->exchangeUserId = config('exchange.exchange_user_id');
+    }
     public function buy(BuyRequestDTO $requestDTO): bool
     {
         return $this->processTransaction($requestDTO, 'buy');
@@ -133,7 +138,7 @@ class OTCService
         $this->createTransaction($requestDTO->getBuyerUserId(), $buyerWallet, $otc_order, $amount, TransactionTypeEnum::BUY, $market, $amount, 'خرید');
         $buyerWallet->increment('balance', $amount);
 
-        $this->createCommissionTransaction($requestDTO->getSellerUserId(), $sellerQuoteWallet, $otc_order, -$fee, $market, $amount, 'کارمزد معامله');
+        $this->createCommissionTransaction($sellerQuoteWallet, $otc_order, $fee, $market, $amount, 'کارمزد معامله');
     }
 
     private function createTransaction($userId, $wallet, $otc_order, $amount, $type, $market, $quantity, $description)
@@ -153,10 +158,10 @@ class OTCService
         ]);
     }
 
-    private function createCommissionTransaction($userId, $wallet, $otc_order, $fee, $market, $quantity, $description)
+    private function createCommissionTransaction($wallet, $otc_order, $fee, $market, $quantity, $description)
     {
         Transaction::query()->create([
-            'user_id' => 1,
+            'user_id' => $this->exchangeUserId,
             'wallet_id' => $wallet->id,
             'otc_order_id' => $otc_order->id,
             'balance' => $wallet->balance,

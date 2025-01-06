@@ -20,11 +20,12 @@ class WithdrawalSeeder extends Seeder
     private string $address = 'bc1qsl4egjdl8s3mw822mmakvzsup7sedkd4n5755d';
     public function __construct()
     {
-        $this->withdrawalService = new WithdrawalService();
+        $this->withdrawalService = app(WithdrawalService::class);
     }
 
     public function run(): void
     {
+
         $this->processWithdrawals(0.09, 0, 3, false);
         $this->processWithdrawals(0.05, 3, 3, true);
         $this->processWithdrawals(0.2, 6, 3, false);

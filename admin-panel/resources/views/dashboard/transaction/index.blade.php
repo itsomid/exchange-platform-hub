@@ -7,7 +7,8 @@
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
-                        <div class="content-left"><span>تعداد تراکنش ها</span>
+                        <div class="content-left">
+                            <span>تعداد تراکنش ها</span>
                             <div class="d-flex align-items-center my-1">
                                 <h4 class="mb-0 me-2">{{count($transactions)}}</h4>
                             </div>
@@ -36,17 +37,19 @@
                 </div>
             </div>
         </div>
+
         <div class="col-sm-12 col-xl-3">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
-                        <div class="content-left"><span>تعداد تراکنش های Referral</span>
+                        <div class="content-left">
+                            <span>تعداد کارمزدهای برداشت امروز</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{$referralTransactionsCount}}</h4>
+                                <h4 class="mb-0 me-2">{{$withdrawalFeeTransactionsCount}}</h4>
                             </div>
                         </div>
-                        <span class="badge bg-label-primary rounded p-2">
-                            <i class="fa-regular fa-user-tag"></i>
+                        <span class="badge bg-label-info rounded p-2">
+                          <i class="fa-regular fa-hand-holding-dollar fa-lg"></i>
                         </span>
                     </div>
                 </div>
@@ -54,22 +57,73 @@
         </div>
         <div class="col-sm-12 col-xl-3">
             <div class="card">
-                <div class="card-body bg-success">
+                <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
-                            <span class="text-white">کاربران با بیشترین تراکنش امروز</span>
+                            <span>تعداد کارمزدهای معاملات امروز OTC</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">?</h4>
+
+                                <h4 class="mb-0 me-2">{{$OTCFeeTransactionsCount}}</h4>
                             </div>
                         </div>
-                        <ul class="list-unstyled avatar-group d-flex my-0">
-                            @foreach($transactions as $transaction)
-                                {{--                                <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top"--}}
-                                {{--                                    title="{{$transaction->user->email}}" class="avatar pull-up">--}}
-                                {{--                                    <img class="rounded-circle" src="http://127.0.0.1:8000/images/avatars/male/2.png" alt="Avatar">--}}
-                                {{--                                </li>--}}
-                            @endforeach
-                        </ul>
+                        <span class="badge bg-label-success rounded p-2">
+                            <i class="fa-regular fa-chart-bar fa-lg"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 col-xl-3">
+            <div class="card bg-info">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                            <span class="text-white">سود صرافی از از معاملات امروز OTC</span>
+                            <div class="d-flex align-items-center my-1">
+
+                                <h4 class="mb-0 me-2">0</h4>
+                                <small class="text-white">USDT</small>
+                            </div>
+                        </div>
+                        <span class="badge bg-label-success rounded p-2">
+                            <i class="fa-regular fa-chart-bar fa-lg"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 col-xl-3">
+            <div class="card bg-info">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                            <span class="text-white">سود صرافی از از برداشت های امروز</span>
+                            <div class="d-flex align-items-center my-1">
+
+                                <h4 class="mb-0 me-2">234.10</h4>
+                                <small class="text-white">USDT</small>
+                            </div>
+                        </div>
+                        <span class="badge bg-label-info rounded p-2">
+                            <i class="fa-regular fa-dollar fa-lg"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 col-xl-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                            <span>تعداد تراکنش های Referral</span>
+                            <div class="d-flex align-items-center my-1">
+                                <h4 class="mb-0 me-2">{{$referralTransactionsCount}}</h4>
+                            </div>
+                        </div>
+                        <span class="badge bg-label-primary rounded p-2">
+                            <i class="fa-regular fa-user-tag"></i>
+                        </span>
                     </div>
                 </div>
             </div>
@@ -92,6 +146,20 @@
                                     <option
                                         value="{{$case->name}}" {{request()->has('type') && request()->input('type') == $case->name ? 'selected' : "" }}>
                                         {{\App\Enums\TransactionTypeEnum::TYPE_LABEL[$case->value]}}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mt-3">
+                        <div class="form-group">
+                            <label class="form-label" for="type">نوع تراکنش:</label>
+                            <select name="type" class="form-control" id="type">
+                                <option value=" ">همه</option>
+                                @foreach(\App\Enums\TransactionSubTypeEnum::cases() as $case)
+                                    <option
+                                        value="{{$case->name}}" {{request()->has('type') && request()->input('type') == $case->name ? 'selected' : "" }}>
+                                        {{\App\Enums\TransactionSubTypeEnum::TYPE_LABEL[$case->value]}}
                                     </option>
                                 @endforeach
                             </select>
@@ -236,12 +304,14 @@
                             </td>
 
                             <td>
-                                @if($transaction->deposit)
-                                    <span
-                                        class="badge bg-label-{{\App\Enums\DepositStatusEnum::TYPE_COLOR[$transaction->deposit->status->value]}} btn-sm">
-                                                {{\App\Enums\DepositStatusEnum::TYPE_LABEL[$transaction->deposit->status->value]}}
-                                            </span>
-                                @endif
+                                <span
+                                class="badge bg-label-{{$transaction->status->color()}}">{{$transaction->status->label()}}</span>
+{{--                                @if($transaction->deposit)--}}
+{{--                                    <span--}}
+{{--                                        class="badge bg-label-{{\App\Enums\DepositStatusEnum::TYPE_COLOR[$transaction->deposit->status->value]}} btn-sm">--}}
+{{--                                                {{\App\Enums\DepositStatusEnum::TYPE_LABEL[$transaction->deposit->status->value]}}--}}
+{{--                                            </span>--}}
+{{--                                @endif--}}
                             </td>
                             <td>
                                 <a href="" class="btn btn-icon btn-text-secondary" data-bs-toggle="modal"

@@ -71,7 +71,7 @@ class WithdrawalController extends Controller
     {
         try {
             $admin_id = \Auth::user()->id;
-            $this->withdrawalService->adminConfirmWithdrawal($withdraw->id, $admin_id);
+            $this->withdrawalService->adminApproveWithdrawal($withdraw->id, $admin_id);
 
             Toast::message('.تایید برداشت با موفقیت انجام شد')->success()->notify();
             return redirect()->back();
@@ -88,7 +88,7 @@ class WithdrawalController extends Controller
             $admin_id = \Auth::user()->id;
             $this->withdrawalService->adminCancelWithdrawal($withdraw->id, $admin_id);
 
-            Toast::message('.تایید برداشت با موفقیت انجام شد')->success()->notify();
+            Toast::message('.وضعیت برداشت به مورد تایید نیست تغییر کرد')->success()->notify();
             return redirect()->back();
         } catch (\Throwable $exception) {
             report($exception);

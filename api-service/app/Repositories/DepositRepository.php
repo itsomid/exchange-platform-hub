@@ -36,9 +36,9 @@ class DepositRepository implements DepositRepositoryInterface
             ->get();
     }
 
-    public function create(DTO\Deposit\CreateDepositRequestDTO $requestDTO): void
+    public function create(DTO\Deposit\CreateDepositRequestDTO $requestDTO): Deposit
     {
-        Deposit::query()
+        return Deposit::query()
             ->create([
                 'user_id' => $requestDTO->getUserId(),
                 'currency_symbol' => $requestDTO->getCurrencySymbol(),

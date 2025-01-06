@@ -50,7 +50,7 @@ class ConfigCollection extends ResourceCollection
     {
         return $this->collection->map(fn ($configResponseDTO) => [
             'asset' => [
-                'ccy' => $configResponseDTO->getName(),
+                'ccy' => $configResponseDTO->getSymbol(),
                 'inter_transfer_enabled' => $configResponseDTO->getInterTransferEnabled(),
             ],
             'chains' => array_map(function (ChainResponseDTO $chain) {
