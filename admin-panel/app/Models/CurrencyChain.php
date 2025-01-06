@@ -41,7 +41,6 @@ class CurrencyChain extends Model
     public function scopeTotalWithdrawalFee($query, $currencyChain)
     {
         return $query->where('chain', $currencyChain)
-            ->selectRaw('network_fee + exchange_withdrawal_fee as total_withdrawal_fee')
-            ->value('total_withdrawal_fee');
+            ->sum(\DB::raw('network_fee + exchange_withdrawal_fee'));
     }
 }

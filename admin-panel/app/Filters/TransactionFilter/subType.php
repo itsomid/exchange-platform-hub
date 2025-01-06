@@ -4,7 +4,7 @@ namespace App\Filters\TransactionFilter;
 
 use App\Filters\FilterContract;
 
-class Type implements FilterContract
+class subType implements FilterContract
 {
     protected $query;
 
@@ -15,9 +15,9 @@ class Type implements FilterContract
 
     public function handle($value = null): void
     {
-
+    
         if (! is_null($value)) {
-            $this->query->where('type', $value);
+            $this->query->where('subType', $value);
         }
     }
 }

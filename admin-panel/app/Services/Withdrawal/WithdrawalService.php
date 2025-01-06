@@ -61,6 +61,7 @@ class WithdrawalService
 
             $currency = Currency::whereSymbol($currencySymbol)->first();
             $fee = CurrencyChain::totalWithdrawalFee($currencyChain);
+
             // Validate sufficient balance
             $totalAmount = $amount + $fee;
             if ($wallet->balance < $totalAmount) {
@@ -217,6 +218,8 @@ class WithdrawalService
                 'description' => 'Withdraw canceled by admin (#' . $admin_id . ')'
             ]);
 
+            $withdrawal->wallet->decrement('locked_balance', $withdrawal->amount + $withdrawal->fee);
+
 
             DB::commit();
 
@@ -234,20 +237,22 @@ class WithdrawalService
             $exchangeWallet = $this->walletService->getExchangeWallet($currency_symbol);
 
             $exchangeWithdrawalFee = CurrencyChain::whereChain($currency_chain)->value('exchange_withdrawal_fee');
+            if ($exchangeWithdrawalFee > 0){
+                Transaction::query()->create([
+                    'user_id' => $this->exchangeUserId,
+                    'wallet_id' => $exchangeWallet->id,
+                    'withdrawal_id' => $withdrawalId,
+                    'balance' => $exchangeWallet->balance,
+                    'amount' => $exchangeWithdrawalFee,
+                    'type' => TransactionTypeEnum::FEE,
+                    'subtype' => TransactionSubTypeEnum::WITHDRAWAL_FEE,
+                    'status' => TransactionStatusEnum::SUCCESS,
+                    'description' => "کارمزد برداشت  {$exchangeWallet->currency_symbol} به ارزش  " . formatNumberTrimZeros($exchangeWithdrawalFee),
+                ]);
 
-            Transaction::query()->create([
-                'user_id' => $this->exchangeUserId,
-                'wallet_id' => $exchangeWallet->id,
-                'withdrawal_id' => $withdrawalId,
-                'balance' => $exchangeWallet->balance,
-                'amount' => $exchangeWithdrawalFee,
-                'type' => TransactionTypeEnum::FEE,
-                'subtype' => TransactionSubTypeEnum::WITHDRAWAL_FEE,
-                'status' => TransactionStatusEnum::SUCCESS,
-                'description' => "کارمزد برداشت  {$exchangeWallet->currency_symbol} به ارزش  " . formatNumberTrimZeros($exchangeWithdrawalFee),
-            ]);
+                $exchangeWallet->increment('balance',$exchangeWithdrawalFee);
+            }
 
-            $exchangeWallet->increment('balance',$exchangeWithdrawalFee);
         } catch (\Exception $e) {
             DB::rollBack();
             throw $e;

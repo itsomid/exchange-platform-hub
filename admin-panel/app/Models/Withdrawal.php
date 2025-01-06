@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\DepositStatusEnum;
+use App\Enums\TransactionTypeEnum;
 use App\Enums\WithdrawalStatusEnum;
 use App\Filters\Filterable;
 use Illuminate\Database\Eloquent\Model;
@@ -32,10 +33,13 @@ class Withdrawal extends Model
     {
         return $this->belongsTo(Currency::class,'currency_symbol','symbol');
     }
-
     public function transaction()
     {
         return $this->hasOne(Transaction::class,'withdrawal_id');
+    }
+    public function feeTransaction()
+    {
+        return $this->hasOne(Transaction::class,'withdrawal_id')->where('type', TransactionTypeEnum::FEE);
     }
 
     public function wallet()
