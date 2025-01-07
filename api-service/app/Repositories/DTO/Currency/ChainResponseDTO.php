@@ -2,9 +2,11 @@
 
 namespace App\Repositories\DTO\Currency;
 
+use App\Enums\CurrencyChainEnum;
+
 class ChainResponseDTO
 {
-    private string $chain;
+    private CurrencyChainEnum $chain;
 
     private string $minDepositAmount;
 
@@ -26,14 +28,14 @@ class ChainResponseDTO
 
     private bool $isMemoRequiredForDeposit;
 
-    public function setChain(string $chain): self
+    public function setChain(CurrencyChainEnum $chain): self
     {
         $this->chain = $chain;
 
         return $this;
     }
 
-    public function getChain(): string
+    public function getChain(): CurrencyChainEnum
     {
         return $this->chain;
     }

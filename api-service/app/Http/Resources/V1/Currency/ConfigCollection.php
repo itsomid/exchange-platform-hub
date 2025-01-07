@@ -55,7 +55,7 @@ class ConfigCollection extends ResourceCollection
             ],
             'chains' => array_map(function (ChainResponseDTO $chain) {
                 return [
-                    'chain' => $chain->getChain(),
+                    'chain' => $chain->getChain()->value,
                     'min_deposit_amount' => $chain->getMinDepositAmount(),
                     'min_withdraw_amount' => $chain->getMinWithdrawAmount(),
                     'deposit_enabled' => $chain->getDepositEnabled(),
