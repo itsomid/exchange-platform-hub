@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('currency_id');
             $table->string('chain'); // The chain (e.g., BSC, TRC20, ERC20, etc.)
+            $table->string('chain_name'); // The chain (e.g., BSC, TRC20, ERC20, etc.)
             $table->string('blockchain_name'); // The blockchain_name (e.g., BINANCE, TRON, ETHEREUM, etc.)
             $table->decimal('min_deposit_amount', 18, 8);  // Minimum deposit amount
             $table->decimal('min_withdraw_amount', 18, 8); // Minimum withdrawal amount
