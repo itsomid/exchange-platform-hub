@@ -41,7 +41,7 @@ class TwoFactorController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v1/2fa/setup",
+     *     path="/api/v1/auth/2fa/setup",
      *     summary="Setup Two-Factor Authentication",
      *     description="Generates a QR code and secret key for setting up two-factor authentication (2FA).",
      *     operationId="setup2FA",
@@ -87,7 +87,7 @@ class TwoFactorController extends Controller
 
     /**
      * @OA\Post(
-     *      path="/api/v1/2fa/save-secret",
+     *      path="/api/v1/auth/2fa/save-secret",
      *      summary="Save Two-Factor Authentication Secret",
      *      description="Validates and saves the 2FA secret key provided by the user.",
      *      operationId="save2FASecret",
