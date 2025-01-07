@@ -2,7 +2,9 @@
 
 namespace App\Infrastructure\HDWallet;
 
+use App\Infrastructure\HDWallet\Exceptions\HDDWalletServerError;
 use App\Infrastructure\HDWallet\Exceptions\HDDWalletUnavailable;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
 class Wallet
@@ -12,10 +14,15 @@ class Wallet
      */
     public function generateAddress(int $userId, string $blockchainName): string
     {
-        $response = Http::post(HDWallet::getBaseUrl()."/api/v1/wallet/{$blockchainName}", [
-            'user_id' => $userId,
-            'blockchain' => $blockchainName,
-        ]);
+        try {
+            $response = Http::post(HDWallet::getBaseUrl()."/api/v1/wallet/{$blockchainName}", [
+                'user_id' => $userId,
+                'blockchain' => $blockchainName,
+            ]);
+        } catch (ConnectionException $exception) {
+            report($exception);
+            throw new HDDWalletUnavailable;
+        }
 
         //Already exists
         if ($response->badRequest()) {
@@ -30,7 +37,7 @@ class Wallet
 
         if ($response->serverError()) {
             report($response);
-            throw new HDDWalletUnavailable;
+            throw new HDDWalletServerError;
         }
 
         return $response->json('address');

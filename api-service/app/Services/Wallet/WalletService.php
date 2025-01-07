@@ -4,6 +4,7 @@ namespace App\Services\Wallet;
 
 use App\Enums\BalanceOperationEnum;
 use App\Exceptions\V1\Wallet\InternalWalletHasProblemException;
+use App\Infrastructure\HDWallet\Exceptions\HDDWalletUnavailable;
 use App\Infrastructure\HDWallet\Exceptions\HDWalletException;
 use App\Infrastructure\HDWallet\Wallet;
 use App\Repositories\Interfaces\MarketRepositoryInterface;
@@ -30,38 +31,48 @@ class WalletService
 
     /**
      * @throws InternalWalletHasProblemException
+     * @throws Throwable
+     * @throws HDDWalletUnavailable
      */
     public function generateAddress(GenerateAddressRequestDTO $requestDTO): GenerateAddressResponseDTO
     {
-        $wallet = $this->walletRepository->createOrGetWallet(
-            $requestDTO->getCurrency(),
-            $requestDTO->getUserId()
-        );
 
-        $chain = $this->walletChainRepository->createOrGetChain(
-            $wallet->id,
-            $requestDTO->getChainSymbol()
-        );
-
-        if (is_null($chain->address)) {
-            //Generate Public Key
-            $hdWallet = resolve(Wallet::class);
-            try {
-                $address = $hdWallet->generateAddress(
-                    $requestDTO->getUserId(),
-                    $chain->currencyChain->blockchain_name->value
-                );
-            } catch (HDWalletException $exception) {
-                report($exception);
-                throw new InternalWalletHasProblemException;
-            }
-
-            $this->walletChainRepository->savePublicKey(
-                $chain->id,
-                $address
+        try {
+            DB::beginTransaction();
+            $wallet = $this->walletRepository->createOrGetWallet(
+                $requestDTO->getCurrency(),
+                $requestDTO->getUserId()
             );
-        } else {
+
+            $chain = $this->walletChainRepository->createOrGetChain(
+                $wallet->id,
+                $requestDTO->getChainSymbol()
+            );
+
             $address = $chain->address;
+            if (is_null($address)) {
+                //Generate Public Key
+                $hdWallet = resolve(Wallet::class);
+                try {
+                    $address = $hdWallet->generateAddress(
+                        $requestDTO->getUserId(),
+                        $chain->currencyChain->blockchain_name->value
+                    );
+                } catch (HDWalletException $exception) {
+                    report($exception);
+                    throw new InternalWalletHasProblemException;
+                }
+
+                $this->walletChainRepository->savePublicKey(
+                    $chain->id,
+                    $address
+                );
+            }
+            DB::commit();
+        } catch (Throwable $exception) {
+            DB::rollBack();
+            report($exception);
+            throw $exception;
         }
 
         return resolve(GenerateAddressResponseDTO::class)

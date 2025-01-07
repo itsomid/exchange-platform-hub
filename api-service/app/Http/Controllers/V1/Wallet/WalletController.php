@@ -17,9 +17,7 @@ use App\Services\Wallet\DTO\Wallet\WalletListsRequestDTO;
 use App\Services\Wallet\DTO\Wallet\WalletValueUSDTRequestDTO;
 use App\Services\Wallet\WalletService;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
-use Throwable;
 
 class WalletController extends Controller
 {
@@ -70,24 +68,12 @@ class WalletController extends Controller
         $validated = $request->validated();
         $userId = Auth::id();
 
-        try {
-            DB::beginTransaction();
-            $res = $this->service->generateAddress(
-                resolve(GenerateAddressRequestDTO::class)
-                    ->setUserId($userId)
-                    ->setCurrency($validated['currency'])
-                    ->setChainSymbol($validated['chain'])
-            );
-
-            DB::commit();
-        } catch (Throwable $exception) {
-            DB::rollBack();
-            report($exception);
-
-            return response([
-                'message' => __('messages.server_error'),
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+        $res = $this->service->generateAddress(
+            resolve(GenerateAddressRequestDTO::class)
+                ->setUserId($userId)
+                ->setCurrency($validated['currency'])
+                ->setChainSymbol($validated['chain'])
+        );
 
         return response([
             'data' => new CoinAddressResource($res),
