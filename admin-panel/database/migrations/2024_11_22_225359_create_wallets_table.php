@@ -19,6 +19,8 @@ return new class extends Migration
             $table->decimal('locked_balance', 18, 8)->default(0); // Amount of the currency in the wallet
             $table->text('description')->nullable(); // Amount of the currency in the wallet
             $table->timestamps();
+
+            $table->unique(['user_id', 'currency_symbol']);
         });
     }
 
