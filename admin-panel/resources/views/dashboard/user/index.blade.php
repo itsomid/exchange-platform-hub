@@ -177,9 +177,23 @@
 
                                 <td>
                                     <div class="d-flex">
+                                        @php
+                                            $lastUsed = optional($user->latestActiveToken())->last_used_at;
 
-                                        <div class="avatar me-2">
-                                            <span class="avatar-initial rounded-circle bg-label-primary">{{$user->avatar_name}}</span>
+                                              if (!$lastUsed) {
+                                                    $activityStatus = 'offline';
+                                                    $avatarStatus = 'secondary';
+                                                } elseif (abs(now()->diffInMinutes($lastUsed)) < 10) {
+                                                    $activityStatus = 'online';
+                                                    $avatarStatus = 'success';
+                                                } else {
+                                                    $activityStatus = 'away';
+                                                     $avatarStatus = 'warning';
+                                                }
+                                        @endphp
+                                        <div class="avatar me-2 avatar-{{ $activityStatus }}">
+                                            <span
+                                                class="avatar-initial rounded-circle bg-label-{{$avatarStatus}}">{{ $user->avatar_name }}</span>
                                         </div>
 
                                         <div class="d-flex flex-column">
@@ -223,8 +237,12 @@
                                         @endforeach
                                     @endif
                                 </td>
-                                <td>
-                                    فعالیتی نداشته است
+                                <td class="font-number">
+                                    @if($user->latestActiveToken())
+                                        {{\App\Helpers\DateFormatter::convertToPersianDate($user->latestActiveToken()->last_used_at,'H:i:s %Y/%m/%d')}}
+                                    @else
+                                        <span>فعالیتی نداشته است</span>
+                                    @endif
                                 </td>
                                 <td>
                                     @if($user->status === 'active')
@@ -256,7 +274,6 @@
                                             @endcan
                                         </div>
 
-                                        {{--                                        TODO: add Country--}}
                                         <div class="dropdown mx-3">
 
                                             <button type="button" class="btn p-0 dropdown-toggle hide-arrow"
@@ -298,8 +315,6 @@
                                     </div>
 
                                 </td>
-
-
                             </tr>
                         @endforeach
                         </tbody>

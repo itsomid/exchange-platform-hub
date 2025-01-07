@@ -14,6 +14,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Jenssegers\Agent\Agent;
 use Laravel\Sanctum\HasApiTokens;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class User extends Authenticatable implements CanResetPassword
 {
@@ -173,6 +174,22 @@ class User extends Authenticatable implements CanResetPassword
         $username = $this->attributes['username'] ?? '';
 
         return strtoupper(substr($username, 0, 2)) ;
+    }
+    public function personalAccessTokens(): HasMany
+    {
+        return $this->hasMany(PersonalAccessToken::class,'tokenable_id');
+    }
+    public function latestActiveToken()
+    {
+        return $this->personalAccessTokens()
+            ->whereNotNull('last_used_at') // Ensure the token has been used
+            ->orderByDesc('last_used_at') // Get the latest used token
+            ->first();
+    }
+
+    public function savedAddresses()
+    {
+        return $this->hasMany(SavedAddress::class);
     }
 
 }

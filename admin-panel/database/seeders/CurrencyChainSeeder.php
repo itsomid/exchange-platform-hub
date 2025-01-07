@@ -45,7 +45,7 @@ class CurrencyChainSeeder extends Seeder
             // ETH (ERC20) chains
             [
                 'currency_id' => $eth->id,
-                'chain' => CurrencyChainEnum::ETH,
+                'chain' => CurrencyChainEnum::ERC20,
                 'chain_name' => 'Ethereum (ERC20)',
                 'blockchain_name' => CurrencyBlockChainNameEnum::ETHEREUM,
                 'min_deposit_amount' => 0.01,
