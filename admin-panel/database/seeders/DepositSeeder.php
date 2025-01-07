@@ -22,10 +22,10 @@ class DepositSeeder extends Seeder
 
         $currencies = [
             ['symbol' => 'BTC', 'chain' => 'BTC'],
-            ['symbol' => 'ETH', 'chain' => 'ERC20'],
+            ['symbol' => 'ETH', 'chain' => 'ETH'],
             ['symbol' => 'USDT', 'chain' => 'ERC20'],
             ['symbol' => 'BNB', 'chain' => 'BSC'],
-            ['symbol' => 'TRX', 'chain' => 'TRC20'],
+            ['symbol' => 'TRX', 'chain' => 'TRX'],
             ['symbol' => 'DOGE', 'chain' => 'DOGE'],
         ];
 
