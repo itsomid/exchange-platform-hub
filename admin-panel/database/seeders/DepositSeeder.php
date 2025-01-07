@@ -46,19 +46,13 @@ class DepositSeeder extends Seeder
                             ['user_id' => $user->id, 'currency' => $currency['symbol'], 'amount' => 0]
                         );
 
-                        // Step 3: Simulate deposit confirmation or leave unconfirmed
-                        $isConfirmed = rand(0, 1); // Randomly decide whether to confirm the deposit
+                        $amount = rand(1, 100) / 100; // Random deposit amount between 0.01 and 1.00
+                        $transactionHash = 'txhash_' . bin2hex(random_bytes(10));
 
-                        if ($isConfirmed) {
-                            $amount = rand(1, 100) / 100; // Random deposit amount between 0.01 and 1.00
-                            $transactionHash = 'txhash_' . bin2hex(random_bytes(10));
+                        $depositService->confirmDeposit($deposit->id, $walletChain->wallet, $amount, $transactionHash);
 
-                            $depositService->confirmDeposit($deposit->id, $walletChain->wallet, $amount, $transactionHash);
+                        echo "[CONFIRMED] User ID: {$user->id}, Currency: {$currency['symbol']}, Address: {$walletChain->address}, Amount: {$amount}, TxHash: {$transactionHash}\n";
 
-                            echo "[CONFIRMED] User ID: {$user->id}, Currency: {$currency['symbol']}, Address: {$walletChain->address}, Amount: {$amount}, TxHash: {$transactionHash}\n";
-                        } else {
-                            echo "[PENDING] User ID: {$user->id}, Currency: {$currency['symbol']}, Address: {$walletChain->address}, Deposit ID: {$deposit->id} remains unconfirmed.\n";
-                        }
                     } catch (\Exception $e) {
                         echo "[ERROR] User ID: {$user->id}, Currency: {$currency['symbol']}: " . $e->getMessage() . "\n";
                     }
