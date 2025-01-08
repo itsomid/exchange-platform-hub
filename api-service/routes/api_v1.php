@@ -34,6 +34,7 @@ Route::prefix('/wallets')->group(function () {
     Route::get('/lists', [WalletController::class, 'lists'])->name('wallets.lists');
     Route::get('/value-usdt', [WalletController::class, 'assetsUSDTValue'])->name('wallets.value-usdt');
     Route::get('/{currencySymbol}', [WalletController::class, 'show'])->name('wallets.show');
+    Route::post('/withdraw', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, '__invoke'])->name('wallets.withdraw');
 });
 
 //Transaction
@@ -54,4 +55,8 @@ Route::prefix('/otc')->group(function () {
     Route::post('/buy', [\App\Http\Controllers\V1\OTC\BuyController::class, 'create'])->name('otc.buy');
     Route::post('/sell', [\App\Http\Controllers\V1\OTC\SellController::class, 'create'])->name('otc.sell');
 
+});
+
+Route::prefix('authorization')->group(function () {
+    Route::post('/otp-code/{action}', [\App\Http\Controllers\V1\Authorization\EmailOTPController::class, 'send']);
 });

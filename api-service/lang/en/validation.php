@@ -161,6 +161,10 @@ return [
     'ulid' => 'The :attribute field must be a valid ULID.',
     'uuid' => 'The :attribute field must be a valid UUID.',
     'captcha_api' => 'The entered security code is not valid.',
+    'min_amount' => 'The amount must be at least :min :currency.',
+    'insufficient_balance' => 'The amount :amount exceeds your wallet balance in :currency.',
+    'invalid_2fa_code' => 'The Google 2FA code provided is invalid.',
+    'invalid_otp_code' => 'The OTP code provided is invalid or expired.',
 
     /*
     |--------------------------------------------------------------------------
