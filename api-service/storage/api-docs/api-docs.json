@@ -2122,6 +2122,94 @@
                     }
                 }
             }
+        },
+        "/api/v1/wallets/withdraw": {
+            "post": {
+                "tags": [
+                    "Wallet"
+                ],
+                "summary": "Withdraw Funds",
+                "description": "Initiate a withdrawal request for a specific currency and chain.",
+                "operationId": "038316e7ee564d3672afcfbf2d902893",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WithdrawRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Withdrawal request created successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/WithdrawalResource"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation failed for the request.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "currency": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The selected currency is invalid."
+                                                    }
+                                                },
+                                                "currency_chain": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The selected currency chain is invalid."
+                                                    }
+                                                },
+                                                "destination_address": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The destination address is not valid."
+                                                    }
+                                                },
+                                                "2fa_code": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The Google 2FA code provided is invalid."
+                                                    }
+                                                },
+                                                "otp_code": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The OTP code is invalid."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -2452,6 +2540,49 @@
                         "description": "The symbol of the chain for the specified currency.",
                         "type": "string",
                         "example": "BSC"
+                    }
+                },
+                "type": "object"
+            },
+            "WithdrawRequest": {
+                "required": [
+                    "currency",
+                    "currency_chain",
+                    "destination_address",
+                    "amount",
+                    "otp_code"
+                ],
+                "properties": {
+                    "currency": {
+                        "description": "The currency symbol to withdraw.",
+                        "type": "string",
+                        "example": "BTC"
+                    },
+                    "currency_chain": {
+                        "description": "The chain of the currency for withdrawal.",
+                        "type": "string",
+                        "example": "BTC"
+                    },
+                    "destination_address": {
+                        "description": "The blockchain address to receive the withdrawal.",
+                        "type": "string",
+                        "example": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+                    },
+                    "amount": {
+                        "description": "The amount to withdraw.",
+                        "type": "number",
+                        "format": "float",
+                        "example": 0.01
+                    },
+                    "2fa_code": {
+                        "description": "This field is required only if the user has 2FA enabled.",
+                        "type": "boolean",
+                        "example": "563242"
+                    },
+                    "otp_code": {
+                        "description": "The OTP code for two-factor authentication.",
+                        "type": "string",
+                        "example": "123456"
                     }
                 },
                 "type": "object"
@@ -2976,11 +3107,6 @@
                         "description": "The generated wallet address for the user.",
                         "type": "string",
                         "example": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
-                    },
-                    "valid_until": {
-                        "description": "The addresss expiration date",
-                        "type": "string",
-                        "example": "2025-01-12 15:05:01"
                     }
                 },
                 "type": "object"
@@ -3114,6 +3240,32 @@
                         "description": "The frozen (locked) balance of the wallet in USDT.",
                         "type": "string",
                         "example": "10.50"
+                    }
+                },
+                "type": "object"
+            },
+            "WithdrawalResource": {
+                "properties": {
+                    "user_received_amount": {
+                        "description": "The amount the user will receive after the withdrawal fee is deducted.",
+                        "type": "number",
+                        "format": "float",
+                        "example": 0.009
+                    },
+                    "fee": {
+                        "description": "The fee charged for the withdrawal.",
+                        "type": "number",
+                        "format": "float",
+                        "example": 0.001
+                    },
+                    "status": {
+                        "description": "The status of the withdrawal.",
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "awaiting_approval"
+                        ],
+                        "example": "pending"
                     }
                 },
                 "type": "object"
