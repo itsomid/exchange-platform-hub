@@ -34,7 +34,7 @@ Route::prefix('/wallets')->group(function () {
     Route::get('/lists', [WalletController::class, 'lists'])->name('wallets.lists');
     Route::get('/value-usdt', [WalletController::class, 'assetsUSDTValue'])->name('wallets.value-usdt');
     Route::get('/{currencySymbol}', [WalletController::class, 'show'])->name('wallets.show');
-    Route::post('/withdraw', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, '__invoke'])->name('wallets.withdraw');
+    Route::post('/withdrawal', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, '__invoke'])->name('wallets.withdraw');
 });
 
 //Transaction

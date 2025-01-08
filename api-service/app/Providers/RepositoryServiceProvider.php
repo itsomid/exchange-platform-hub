@@ -18,6 +18,7 @@ use App\Repositories\Interfaces\UserEmailVerificationInterface;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 use App\Repositories\Interfaces\WalletChainRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
+use App\Repositories\Interfaces\WithdrawalRepositoryInterface;
 use App\Repositories\MarketHistoryRepository;
 use App\Repositories\MarketRepository;
 use App\Repositories\OTCOrderRepository;
@@ -28,6 +29,7 @@ use App\Repositories\UserEmailVerificationRepository;
 use App\Repositories\UserRepository;
 use App\Repositories\WalletChainRepository;
 use App\Repositories\WalletRepository;
+use App\Repositories\WithdrawalRepository;
 use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
@@ -51,6 +53,7 @@ class RepositoryServiceProvider extends ServiceProvider
         app()->bind(MarketRepositoryInterface::class, MarketRepository::class);
         app()->bind(TransactionRepositoryInterface::class, TransactionRepository::class);
         app()->bind(OTCOrderRepositoryInterface::class, OTCOrderRepository::class);
+        app()->bind(WithdrawalRepositoryInterface::class, WithdrawalRepository::class);
 
     }
 

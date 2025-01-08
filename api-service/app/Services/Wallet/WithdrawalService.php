@@ -4,10 +4,9 @@ namespace App\Services\Wallet;
 
 use App\Enums\WithdrawalStatusEnum;
 use App\Models\CurrencyChain;
-use App\Models\Wallet;
-use App\Models\Withdrawal;
 use App\Repositories\Interfaces\CurrencyRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
+use App\Repositories\Interfaces\WithdrawalRepositoryInterface;
 use App\Services\Wallet\DTO\Withdrawal\CreateWithdrawalRequestDTO;
 use App\Services\Wallet\DTO\Withdrawal\CreateWithdrawalResponseDTO;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +16,7 @@ class WithdrawalService
     public function __construct(
         private readonly WalletRepositoryInterface $walletRepository,
         private readonly CurrencyRepositoryInterface $currencyRepository,
+        private readonly WithdrawalRepositoryInterface $withdrawalRepository
 
     ) {}
 
@@ -47,15 +47,16 @@ class WithdrawalService
             $wallet->increment('locked_balance', $amount);
 
             // Create the withdrawal record
-            $withdrawal = Withdrawal::query()->create([
-                'user_id' => $requestDTO->getUserId(),
-                'currency_chain' => $requestDTO->getCurrencyChain(),
-                'currency_symbol' => $requestDTO->getCurrencySymbol(),
-                'amount' => $amount,
-                'fee' => $fee,
-                'address' => $requestDTO->getAddress(),
-                'status' => $withdrawalStatus,
-            ]);
+            $withdrawal = $this->withdrawalRepository->create(
+                resolve(\App\Repositories\DTO\Withdrawal\CreateWithdrawalRequestDTO::class)
+                    ->setUserId($requestDTO->getUserId())
+                    ->setCurrencyChain($requestDTO->getCurrencyChain())
+                    ->setCurrencySymbol($requestDTO->getCurrencySymbol())
+                    ->setAmount($amount)
+                    ->setAddress($requestDTO->getAddress())
+                    ->setFee($fee)
+                    ->setStatus($withdrawalStatus)
+            );
             if ($withdrawalStatus === WithdrawalStatusEnum::AWAITING_APPROVAL) {
                 $withdrawal->update([
                     'description' => 'Admin approval required',

@@ -15,7 +15,7 @@ class WithdrawController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/v1/wallets/withdraw",
+     *     path="/api/v1/wallets/withdrawal",
      *     summary="Withdraw Funds",
      *     description="Initiate a withdrawal request for a specific currency and chain.",
      *     tags={"Wallet"},
