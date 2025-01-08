@@ -26,7 +26,7 @@ class WithdrawalSeeder extends Seeder
     public function run(): void
     {
 
-        $this->processWithdrawals(0.09, 0, 3, false);
+        $this->processWithdrawals(0.1, 0, 3, false);
         $this->processWithdrawals(0.05, 3, 3, true);
         $this->processWithdrawals(0.2, 6, 3, false);
     }

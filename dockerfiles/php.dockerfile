@@ -1,4 +1,4 @@
-    FROM php:8.4.1-fpm-alpine
+FROM php:8.4.1-fpm-alpine
 
 # environment arguments
 ARG UID
@@ -22,7 +22,7 @@ RUN echo "php_admin_flag[log_errors] = on" >> /usr/local/etc/php-fpm.d/www.conf
 RUN apk update && apk upgrade
 RUN docker-php-ext-install pdo pdo_mysql bcmath
 
-RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+
 
 # Installing php extensions
 
@@ -45,5 +45,7 @@ RUN apk add --no-cache $PHPIZE_DEPS \
 RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache && \
     chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache && \
     chown -R ${USER}:${USER} /var/www/html/storage /var/www/html/bootstrap/cache
+
+COPY php.ini-production $PHP_INI_DIR/php.ini
 
 CMD ["php-fpm", "-y", "/usr/local/etc/php-fpm.conf", "-R"]

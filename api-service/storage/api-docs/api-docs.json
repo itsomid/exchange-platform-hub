@@ -10,9 +10,14 @@
     },
     "servers": [
         {
+            "url": "http://apid.bitexroom.com",
+            "description": "Production Development Server"
+        },
+        {
             "url": "http://localhost",
             "description": "Local Development Server"
         }
+
     ],
     "paths": {
         "/api/v1/captcha": {
@@ -71,7 +76,7 @@
                 }
             }
         },
-        "/api/v1/auth/email/veiry": {
+        "/api/v1/auth/email/verify": {
             "post": {
                 "tags": [
                     "Authentication"

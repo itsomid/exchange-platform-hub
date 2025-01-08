@@ -1,33 +1,17 @@
 FROM nginx:stable-alpine
 
-# environment arguments
-ARG UID
-ARG GID
-ARG USER
+# Argument for selecting the Nginx config file
 ARG NGINX_CONF
 
-ENV UID=${UID}
-ENV GID=${GID}
-ENV USER=${USER}
+# Ensure necessary directories exist
+RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Create a user group with a unique name
-RUN addgroup -g ${GID} ${USER} || true \
-    && adduser -G ${USER} -D -s /bin/sh -u ${UID} ${USER} || true
-
-# Modify nginx configuration to use the new user's privileges
-RUN sed -i "s/user nginx/user '${USER}'/g" /etc/nginx/nginx.conf
-
-# Make html directory
-RUN mkdir -p /var/www/html
-
-# Set permissions for Laravel directories
-#RUN chown -R ${USER}:${USER} /var/www/html/storage /var/www/html/bootstrap/cache \
-#    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
-
-RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache && \
-    chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache && \
-    chown -R ${USER}:${USER} /var/www/html/storage /var/www/html/bootstrap/cache
-
-
-# Copy the correct NGINX configuration based on the build argument
+# Copy the correct Nginx configuration based on the build argument
 COPY ./nginx/${NGINX_CONF} /etc/nginx/conf.d/default.conf
+
+# Expose port 80
+EXPOSE 80
+
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"]

@@ -63,14 +63,14 @@ class WithdrawalService
             $fee = CurrencyChain::totalWithdrawalFee($currencyChain);
 
             // Validate sufficient balance
-            $totalAmount = $amount + $fee;
-            if ($wallet->balance < $totalAmount) {
+            $totalAmount = $amount - $fee;
+            if ($wallet->balance < $amount) {
                 throw new \Exception("Insufficient balance in the wallet.");
             }
 
             // Deduct balance and lock funds
-            $wallet->decrement('balance', $totalAmount);
-            $wallet->increment('locked_balance', $totalAmount);
+            $wallet->decrement('balance', $amount);
+            $wallet->increment('locked_balance', $amount);
 
 
             // Create the withdrawal record
@@ -143,7 +143,7 @@ class WithdrawalService
                 'user_id' => $withdrawal->user->id,
                 'wallet_id' => $wallet->id,
                 'withdrawal_id' => $withdrawal->id,
-                'amount' => -$withdrawal->amount,
+                'amount' => -$withdrawal->amount + $withdrawal->fee,
                 'balance' => $wallet->balance,
                 'type' => TransactionTypeEnum::WITHDRAWAL,
                 'subtype' => TransactionSubTypeEnum::USER_INITIATED,
