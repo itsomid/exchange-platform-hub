@@ -2215,6 +2215,193 @@
                     }
                 }
             }
+        },
+        "/api/v1/saved-addresses/addresses": {
+            "get": {
+                "tags": [
+                    "Saved Addresses"
+                ],
+                "summary": "Get Saved Addresses",
+                "description": "Retrieve a list of saved withdrawal addresses for quick access.",
+                "operationId": "getSavedAddresses",
+                "responses": {
+                    "200": {
+                        "description": "List of saved addresses retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SavedAddressResource"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation failed for the request.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "address": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The address is not valid."
+                                                    }
+                                                },
+                                                "chain": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The chain is invalid."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Saved Addresses"
+                ],
+                "summary": "Save a New Address",
+                "description": "Save a new withdrawal address with a given name and blockchain network.",
+                "operationId": "saveAddress",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SavedAddressRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Address saved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SavedAddressResource"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation failed for the request.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "address": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The address is not valid."
+                                                    }
+                                                },
+                                                "name": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The name is required."
+                                                    }
+                                                },
+                                                "chain": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The chain is invalid."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/saved-addresses/addresses/{savedAdressId}": {
+            "delete": {
+                "tags": [
+                    "Saved Addresses"
+                ],
+                "summary": "Delete a Saved Address",
+                "description": "Remove a saved withdrawal address from the system.",
+                "operationId": "deleteSavedAddress",
+                "parameters": [
+                    {
+                        "name": "savedAddress",
+                        "in": "path",
+                        "required": true,
+                        "description": "The ID of the saved address to delete.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Saved address deleted successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Saved address deleted successfully."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Address not found.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The saved address could not be found."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -2591,6 +2778,23 @@
                     }
                 },
                 "type": "object"
+            },
+            "SavedAddressRequest": {
+                "type": "object",
+                "properties": {
+                    "address": {
+                        "type": "string",
+                        "example": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Personal USDT Wallet"
+                    },
+                    "chain": {
+                        "type": "string",
+                        "example": "ERC20"
+                    }
+                }
             },
             "AccessTokenResource": {
                 "properties": {
@@ -3274,6 +3478,41 @@
                     }
                 },
                 "type": "object"
+            },
+            "SavedAddressResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "4"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Personal USDT Wallet"
+                    },
+                    "address": {
+                        "type": "string",
+                        "example": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+                    },
+                    "chain": {
+                        "type": "string",
+                        "example": "ERC20"
+                    },
+                    "chain_name": {
+                        "type": "string",
+                        "example": "Ethereum (ERC20)"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-01-09T12:00:00Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-01-09T12:00:00Z"
+                    }
+                }
             }
         }
     },
@@ -3317,6 +3556,10 @@
         {
             "name": "Wallet",
             "description": "Wallet"
+        },
+        {
+            "name": "Saved Addresses",
+            "description": "Saved Addresses"
         }
     ]
 }

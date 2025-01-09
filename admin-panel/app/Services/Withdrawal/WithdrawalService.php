@@ -63,7 +63,7 @@ class WithdrawalService
             $fee = CurrencyChain::totalWithdrawalFee($currencyChain);
 
             $amountReceivedByUser = $totalAmount - $fee;
-            
+
             // Validate sufficient balance
             if ($wallet->balance < $totalAmount) {
                 throw new \Exception("Insufficient balance in the wallet.");

@@ -5,12 +5,11 @@ namespace App\Services\SavedAddressService;
 use App\Models\SavedAddress;
 use App\Models\User;
 
-class SaveAddressService
+class SavedAddressService
 {
-    public function listAddresses(User $user, $chain = null)
+    public function listAddresses(int $userId, $chain = null)
     {
-        $query = $user->savedAddresses();
-
+        $query = SavedAddress::query()->with(['currencyChain','user'])->where('user_id', $userId);
 
         if ($chain) {
             $query->where('chain', $chain);
