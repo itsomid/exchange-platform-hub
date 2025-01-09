@@ -40,7 +40,17 @@ class Withdrawal extends Model
     {
         return $this->belongsTo(Currency::class, 'currency_symbol', 'symbol');
     }
-
+    public function currencyChainName()
+    {
+        return $this->hasOneThrough(
+            CurrencyChain::class,
+            Currency::class,
+            'symbol', // Foreign key on Currency table
+            'currency_id', // Foreign key on CurrencyChain table
+            'currency_symbol', // Local key on Deposit table
+            'id' // Local key on Currency table
+        );
+    }
     public function transaction()
     {
         return $this->hasOne(Transaction::class, 'withdrawal_id');
