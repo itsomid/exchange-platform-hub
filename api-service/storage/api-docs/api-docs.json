@@ -2128,14 +2128,14 @@
                 }
             }
         },
-        "/api/v1/wallets/withdraw": {
+        "/api/v1/wallets/withdrawal": {
             "post": {
                 "tags": [
                     "Wallet"
                 ],
                 "summary": "Withdraw Funds",
                 "description": "Initiate a withdrawal request for a specific currency and chain.",
-                "operationId": "038316e7ee564d3672afcfbf2d902893",
+                "operationId": "8abff767afd84caa2bc60e6503374f83",
                 "requestBody": {
                     "required": true,
                     "content": {

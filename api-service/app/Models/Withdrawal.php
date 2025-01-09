@@ -5,6 +5,13 @@ namespace App\Models;
 use App\Enums\WithdrawalStatusEnum;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property string               $amount
+ * @property string               $currency_symbol
+ * @property string               $currency_chain
+ * @property WithdrawalStatusEnum $status
+ * @property int                  $user_id
+ */
 class Withdrawal extends Model
 {
     protected $fillable = [
