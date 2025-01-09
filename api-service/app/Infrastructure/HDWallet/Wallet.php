@@ -30,7 +30,7 @@ class Wallet
         }
 
         if (! $response->ok() || ! $response->created()) {
-            report($response->json());
+            report($response->body());
             throw new HDDWalletServerError;
         }
 
