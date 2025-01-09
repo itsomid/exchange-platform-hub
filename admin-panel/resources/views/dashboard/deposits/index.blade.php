@@ -246,7 +246,7 @@
                                      class="rounded-circle img-fluid" width="30">
                                 {{$deposit->currency_symbol}}
                             </td>
-                            <td>{{$deposit->currency_chain}}</td>
+                            <td>{{$deposit->currencyChainName->chain_name}}</td>
                             <td class="font-number" dir="ltr">
                                 <h6 class="mb-0">{{formatNumberTrimZeros($deposit->amount)}}</h6>
                             </td>
@@ -262,9 +262,11 @@
                                         // Define node providers with their address URL patterns
                                         $nodeProviderLinks = [
                                             'BTC' => 'https://blockchair.com/bitcoin/address/{address}',
+                                            'ETH' => 'https://etherscan.io/address/{address}',
                                             'ERC20' => 'https://etherscan.io/address/{address}',
                                             'BEP20' => 'https://bscscan.com/address/{address}',
                                             'TRC20' => 'https://tronscan.org/#/address/{address}',
+                                            'TRX' => 'https://tronscan.org/#/address/{address}',
                                             'BSC' => 'https://bscscan.com/address/{address}',
                                             'DOGE' => 'https://blockcypher.com/doge/address/{address}',
                                         ];
@@ -277,7 +279,6 @@
                                             $targetLink = str_replace('{address}', $address, $targetLink);
                                         }
                                     @endphp
-
                                     @if($targetLink)
                                         <a href="{{ $targetLink }}" class="me-1" target="_blank">
                                             <i class="fa-regular fa-clone"></i>
@@ -287,7 +288,7 @@
                                     @endif
                                     <small class="mb-0 ">{{$deposit->address}}</small>
                                 @else
-                                    <span>بدون آدرس</span>
+                                    <span>N/A Address</span>
                                 @endif
 
 
@@ -304,9 +305,11 @@
                                         // Define node providers with their URL patterns
                                         $nodeProviderLinks = [
                                             'BTC' => 'https://blockchair.com/bitcoin/transaction/{hash}',
+                                            'ETH' => 'https://etherscan.io/tx/{hash}',
                                             'ERC20' => 'https://etherscan.io/tx/{hash}',
                                             'BEP20' => 'https://bscscan.com/tx/{hash}',
                                             'TRC20' => 'https://tronscan.org/#/transaction/{hash}',
+                                            'TRX' => 'https://tronscan.org/#/transaction/{hash}',
                                             'BSC' => 'https://bscscan.com/tx/{hash}',
                                             'DOGE' => 'https://blockcypher.com/doge/tx/{hash}',
                                         ];
@@ -329,7 +332,7 @@
                                     @endif
                                     <small>{{ $deposit->transaction_hash }}</small>
                                 @else
-                                    <span>بدون هش تراکنش</span>
+                                    <span>N/A TxId</span>
                                 @endif
 
                             </td>
@@ -354,8 +357,7 @@
                                         <div class="modal-dialog" role="document">
                                             <div class="modal-content">
                                                 <div class="modal-header" dir="ltr">
-                                                    <h5 class="modal-title font-number">Deposit
-                                                        #{{$deposit->id}}</h5>
+                                                    <h5 class="modal-title font-number">Deposit #{{$deposit->id}}</h5>
                                                     <button type="button" class="btn-close" data-bs-dismiss="modal"
                                                             aria-label="Close"></button>
                                                 </div>
@@ -363,7 +365,6 @@
 
                                                     <div
                                                         class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom py-4 mb-4">
-
                                                         <h6 class="m-0 mb-2 mb-md-0 me-12">شناسه تراکنش</h6>
                                                         <div class="d-flex flex-wrap gap-4 font-number">
                                                             Transaction #{{$deposit->transaction->id}}
@@ -371,10 +372,9 @@
                                                     </div>
                                                     <div
                                                         class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
-
                                                         <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی کاربر قبل از
                                                             واریز</h6>
-                                                        <div class="d-flex  gap-4 align-items-center">
+                                                        <div class="d-flex  gap-2 align-items-end">
                                                             <small> {{$deposit->currency_symbol}}</small>
                                                             <span
                                                                 class="font-number">{{formatNumberTrimZeros($deposit->transaction->balance - $deposit->transaction->amount)}}</span>
@@ -385,10 +385,10 @@
                                                         class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
 
                                                         <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی کاربر پس از واریز</h6>
-                                                        <div class="d-flex  gap-4 align-items-center">
+                                                        <div class="d-flex  gap-2 align-items-end">
                                                             <small> {{$deposit->currency_symbol}}</small>
                                                             <span
-                                                                class="font-number text-primary">{{formatNumberTrimZeros($deposit->transaction->balance)}}</span>
+                                                                class="font-number text-success">{{formatNumberTrimZeros($deposit->transaction->balance)}}</span>
                                                         </div>
                                                     </div>
                                                     <div

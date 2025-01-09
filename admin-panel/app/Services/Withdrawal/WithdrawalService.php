@@ -32,7 +32,7 @@ class WithdrawalService
      * @param int $walletId
      * @param string $currencyChain
      * @param string $currencySymbol
-     * @param float $amount
+     * @param float $totalAmount
      * @param string $address
      * @param string|null description
      * @return Withdrawal
@@ -43,7 +43,7 @@ class WithdrawalService
         int     $walletId,
         string  $currencyChain,
         string  $currencySymbol,
-        float   $amount,
+        float   $totalAmount,
         string  $address,
         ?string $description = null
     ): Withdrawal
@@ -63,7 +63,7 @@ class WithdrawalService
             $fee = CurrencyChain::totalWithdrawalFee($currencyChain);
 
             // Validate sufficient balance
-            $totalAmount = $amount + $fee;
+            $amountReceivedByUser = $totalAmount - $fee;
             if ($wallet->balance < $totalAmount) {
                 throw new \Exception("Insufficient balance in the wallet.");
             }
@@ -78,12 +78,12 @@ class WithdrawalService
                 'user_id' => $userId,
                 'currency_chain' => $currencyChain,
                 'currency_symbol' => $currencySymbol,
-                'amount' => $amount,
+                'amount' => $totalAmount,
                 'fee' => $fee,
                 'address' => $address,
-                'status' => $amount >= $currency->max_auto_withdraw_amount ? WithdrawalStatusEnum::AWAITING_APPROVAL : WithdrawalStatusEnum::PENDING,
+                'status' => $totalAmount >= $currency->max_auto_withdraw_amount ? WithdrawalStatusEnum::AWAITING_APPROVAL : WithdrawalStatusEnum::PENDING,
             ]);
-            if ($amount >= $currency->max_auto_withdraw_amount) {
+            if ($totalAmount >= $currency->max_auto_withdraw_amount) {
                 $withdrawal->update([
                     'description' => 'Admin approval required'
                 ]);

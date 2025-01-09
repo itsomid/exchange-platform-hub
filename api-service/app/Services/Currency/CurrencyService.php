@@ -46,6 +46,7 @@ class CurrencyService
             ->setInterTransferEnabled($model->inter_transfer_enabled)
             ->setChains($model->chains->map(fn ($item) => resolve(ChainResponseDTO::class)
                 ->setChain($item->chain)
+                ->setChainName($item->chain_name)
                 ->setMinDepositAmount($item->min_deposit_amount)
                 ->setMinWithdrawAmount($item->min_withdraw_amount)
                 ->setDepositEnabled($item->deposit_enabled)

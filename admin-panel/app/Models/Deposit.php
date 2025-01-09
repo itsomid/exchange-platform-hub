@@ -13,27 +13,49 @@ use Laravel\Sanctum\HasApiTokens;
 class Deposit extends Model
 {
     use Filterable, HasApiTokens, Notifiable;
+
     public $filterNameSpace = 'App\Filters\DepositFilter';
 
     protected $fillable = [
-        'user_id', 'currency_chain', 'currency_symbol', 'amount', 'address', 'status','description', 'expiration_date',
+        'user_id', 'currency_chain', 'currency_symbol', 'amount', 'address', 'status', 'description', 'expiration_date',
     ];
     protected $casts = [
-      'status' => DepositStatusEnum::class
+        'status' => DepositStatusEnum::class
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }
+
     public function currency()
     {
-        return $this->belongsTo(Currency::class,'currency_symbol','symbol');
+        return $this->belongsTo(Currency::class, 'currency_symbol', 'symbol');
+    }
+
+    public function currencyChainName()
+    {
+        return $this->hasOneThrough(
+            CurrencyChain::class,
+            Currency::class,
+            'symbol', // Foreign key on Currency table
+            'currency_id', // Foreign key on CurrencyChain table
+            'currency_symbol', // Local key on Deposit table
+            'id' // Local key on Currency table
+        );
     }
 
     public function transaction()
     {
-        return $this->hasOne(Transaction::class,'deposit_id');
+        return $this->hasOne(Transaction::class, 'deposit_id');
+    }
+
+    public function wallet()
+    {
+        return $this->hasOne(Wallet::class, 'user_id', 'user_id')
+            ->where(function ($query) {
+                $query->where('currency_symbol', $this->currency_symbol);
+            });
     }
 
 }
