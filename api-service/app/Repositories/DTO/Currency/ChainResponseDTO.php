@@ -40,6 +40,18 @@ class ChainResponseDTO
         return $this->chain;
     }
 
+    public function setChainName(string $chainName): self
+    {
+        $this->chain_name = $chainName;
+
+        return $this;
+    }
+
+    public function getChainName(): string
+    {
+        return $this->chain_name;
+    }
+
     public function setMinDepositAmount(string $minDepositAmount): self
     {
         $this->minDepositAmount = $minDepositAmount;
