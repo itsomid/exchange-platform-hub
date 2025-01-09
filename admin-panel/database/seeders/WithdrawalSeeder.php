@@ -31,7 +31,7 @@ class WithdrawalSeeder extends Seeder
         $this->processWithdrawals(0.2, 6, 3, false);
     }
 
-    private function processWithdrawals(float $amount, int $skip, int $limit, bool $confirm): void
+    private function processWithdrawals(float $totalAmount, int $skip, int $limit, bool $confirm): void
     {
         $users = User::where('id', '>', 1)->skip($skip)->take($limit)->get();
 
@@ -47,7 +47,7 @@ class WithdrawalSeeder extends Seeder
                     walletId: $wallet->id,
                     currencyChain: $this->currencyChain,
                     currencySymbol: $this->currencySymbol,
-                    amount: $amount,
+                    totalAmount: $totalAmount,
                     address: $this->address,
                     description: 'Test withdrawal for seeding'
                 );

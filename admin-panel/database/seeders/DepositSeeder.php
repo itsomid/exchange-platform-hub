@@ -28,36 +28,36 @@ class DepositSeeder extends Seeder
             ['symbol' => 'TRX', 'chain' => 'TRX'],
             ['symbol' => 'DOGE', 'chain' => 'DOGE'],
         ];
+        $users = User::where('id', '>', 1)->skip(0)->take(3)->get();
 
-        User::where('id', '!=', 1)->chunk(5, function ($users) use ($walletService, $depositService, $currencies) {
-            foreach ($users as $user) {
-                foreach ($currencies as $currency) {
-                    try {
-                        // Step 1: Create a deposit address for the user
-                        $walletChain = $walletService->createDepositAddress(
-                            userId: $user->id,
-                            currencySymbol: $currency['symbol'],
-                            currencyChain: $currency['chain']
-                        );
+        foreach ($users as $user) {
+            foreach ($currencies as $currency) {
+                try {
+                    // Step 1: Create a deposit address for the user
+                    $walletChain = $walletService->createDepositAddress(
+                        userId: $user->id,
+                        currencySymbol: $currency['symbol'],
+                        currencyChain: $currency['chain']
+                    );
 
-                        // Step 2: Find or create a deposit record
-                        $deposit = Deposit::firstOrCreate(
-                            ['address' => $walletChain->address, 'status' => 'pending'],
-                            ['user_id' => $user->id, 'currency' => $currency['symbol'], 'amount' => 0]
-                        );
+                    // Step 2: Find or create a deposit record
+                    $deposit = Deposit::firstOrCreate(
+                        ['address' => $walletChain->address, 'status' => 'pending'],
+                        ['user_id' => $user->id, 'currency' => $currency['symbol'], 'amount' => 0]
+                    );
 
-                        $amount = rand(1, 100) / 100; // Random deposit amount between 0.01 and 1.00
-                        $transactionHash = 'txhash_' . bin2hex(random_bytes(10));
+                    $amount = rand(1, 100) / 100; // Random deposit amount between 0.01 and 1.00
+                    $transactionHash = 'txhash_' . bin2hex(random_bytes(10));
 
-                        $depositService->confirmDeposit($deposit->id, $walletChain->wallet, $amount, $transactionHash);
+                    $depositService->confirmDeposit($deposit->id, $walletChain->wallet, $amount, $transactionHash);
 
-                        echo "[CONFIRMED] User ID: {$user->id}, Currency: {$currency['symbol']}, Address: {$walletChain->address}, Amount: {$amount}, TxHash: {$transactionHash}\n";
+                    echo "[CONFIRMED] User ID: {$user->id}, Currency: {$currency['symbol']}, Address: {$walletChain->address}, Amount: {$amount}, TxHash: {$transactionHash}\n";
 
-                    } catch (\Exception $e) {
-                        echo "[ERROR] User ID: {$user->id}, Currency: {$currency['symbol']}: " . $e->getMessage() . "\n";
-                    }
+                } catch (\Exception $e) {
+                    echo "[ERROR] User ID: {$user->id}, Currency: {$currency['symbol']}: " . $e->getMessage() . "\n";
                 }
             }
-        });
+        }
+
     }
 }
