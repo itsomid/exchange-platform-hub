@@ -93,6 +93,8 @@ services:
       - ./api-service/storage:/var/www/html/storage
     networks:
       - laravel
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 
   # MySQL Database
