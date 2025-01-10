@@ -10,4 +10,5 @@ return [
     \App\Exceptions\User\ReferralCodeDoesNotBelongsToUser::class => 'کد معرف متعلق به کاربر نیست.',
     \App\Exceptions\V1\OTC\InsufficientBalanceException::class => 'موجودی کافی نیست.',
     \App\Exceptions\V1\Wallet\InternalWalletHasProblemException::class => 'سرویس کیف پول در حال حاضر در دسترس نیست. لطفا بعدا تلاش کنید.',
+    \App\Exceptions\Auth\ResetTwoFactor\TokenInvalidException::class => 'توکن وارد شده معتبر نمی باشد.',
 ];

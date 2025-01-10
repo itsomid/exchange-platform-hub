@@ -10,4 +10,5 @@ return [
     \App\Exceptions\User\ReferralCodeDoesNotBelongsToUser::class => 'The referral code does not belong to the user.',
     \App\Exceptions\V1\OTC\InsufficientBalanceException::class => 'Insufficient balance.',
     \App\Exceptions\V1\Wallet\InternalWalletHasProblemException::class => 'Wallet service is currently unavailable. Please try again later.',
+    \App\Exceptions\Auth\ResetTwoFactor\TokenInvalidException::class => 'Your entered token is invalid.',
 ];

@@ -528,6 +528,149 @@
                 ]
             }
         },
+        "/api/v1/2fa/reset/send-email-verification": {
+            "post": {
+                "tags": [
+                    "Two-Factor Reset"
+                ],
+                "summary": "Send email verification to disable two-factor authentication",
+                "description": "This endpoint sends an email verification code to the provided email address for disabling two-factor authentication.",
+                "operationId": "c263ef467f721367e7b4114537ae129a",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SendEmailVerificationRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Email verification code has been sent successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "A verification code has been sent to your email address to disable two-factor authentication."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "example": {
+                                                "email": [
+                                                    "The email field is required."
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/2fa/reset/disable": {
+            "post": {
+                "tags": [
+                    "Two-Factor Reset"
+                ],
+                "summary": "Disable two-factor authentication using email and token",
+                "description": "This endpoint disables two-factor authentication for a user after verifying the email and the token sent for verification.",
+                "operationId": "f03b7cc01c111ac4dafdf306f5581006",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DisableRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Two-factor authentication disabled successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Two-factor authentication has been disabled successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "example": {
+                                                "token": [
+                                                    "The token field is required."
+                                                ],
+                                                "email": [
+                                                    "The email field is required."
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid token or email not associated with the account.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid email or token."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/auth/2fa/setup": {
             "get": {
                 "tags": [
@@ -2602,6 +2745,40 @@
                 },
                 "type": "object"
             },
+            "DisableRequest": {
+                "required": [
+                    "email",
+                    "token"
+                ],
+                "properties": {
+                    "email": {
+                        "description": "The email address of the user requesting to disable two-factor authentication.",
+                        "type": "string",
+                        "format": "email",
+                        "example": "mehdints@gmail.com"
+                    },
+                    "token": {
+                        "description": "The token sent to the user's email address for verification.",
+                        "type": "string",
+                        "example": "encrypted-token-here"
+                    }
+                },
+                "type": "object"
+            },
+            "SendEmailVerificationRequest": {
+                "required": [
+                    "email"
+                ],
+                "properties": {
+                    "email": {
+                        "description": "The email address of the user requesting to disable two-factor authentication.",
+                        "type": "string",
+                        "format": "email",
+                        "example": "mehdints@gmail.com"
+                    }
+                },
+                "type": "object"
+            },
             "Save2FASecretRequest": {
                 "title": "Save 2FA Secret Request",
                 "description": "Request body for saving the 2FA secret.",
@@ -3622,6 +3799,10 @@
         {
             "name": "Authentication",
             "description": "Authentication"
+        },
+        {
+            "name": "Two-Factor Reset",
+            "description": "Two-Factor Reset"
         },
         {
             "name": "Currency",

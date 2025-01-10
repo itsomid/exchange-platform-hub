@@ -23,3 +23,8 @@ Route::prefix('/2fa')->middleware(['auth:sanctum', 'verified'])->group(function 
     Route::post('save-secret', [\App\Http\Controllers\V1\Auth\TwoFactorController::class, 'saveSecret'])->name('2fa.save')->middleware(\App\Http\Middleware\VerifyOTPEmailMiddleware::class.':'.\App\Enums\EmailOTPActionEnum::TWO_FACTOR_SETUP->value);
     Route::post('disable', [\App\Http\Controllers\V1\Auth\TwoFactorController::class, 'disable'])->name('2fa.disable');
 });
+
+Route::prefix('/2fa/reset')->group(function () {
+    Route::post('/send-email-verification', [\App\Http\Controllers\V1\Auth\ResetTwoFactorController::class, 'sendEmailVerification'])->middleware('guest');
+    Route::post('/disable', [\App\Http\Controllers\V1\Auth\ResetTwoFactorController::class, 'disable'])->middleware('guest');
+});

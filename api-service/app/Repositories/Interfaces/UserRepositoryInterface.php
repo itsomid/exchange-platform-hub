@@ -15,7 +15,7 @@ interface UserRepositoryInterface
 
     public function activeAccount(int $userId): void;
 
-    public function getUserByEmail(string $email): User;
+    public function getUserByEmail(string $email): ?User;
 
     public function getUserById(int $id): User;
 
