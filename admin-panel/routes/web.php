@@ -21,3 +21,10 @@ Route::get('/test', function (){
     return \App\Models\User::query()->find($user_id);
 });
 
+Route::get("test-omid", function (){
+   $asset = \App\Services\Exchanges\Asset\AssetFactory::make("coinex");
+
+   foreach ($asset->getBalance() as $balance){
+       echo "currency:".$balance->getCcy().' available:'.$balance->getAvailable() . ' frozen:'.$balance->getFrozen();
+   }
+});
