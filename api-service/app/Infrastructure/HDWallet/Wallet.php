@@ -27,11 +27,9 @@ class Wallet
         //Already exists
         if ($response->badRequest()) {
             $response = Http::get(HDWallet::getBaseUrl()."/api/v1/wallet/{$blockchainName}/{$userId}");
-
-            return $response->json('address');
         }
 
-        if (! ($response->ok() && $response->created())) {
+        if (! ($response->ok() || $response->created())) {
             report($response->body());
             throw new HDDWalletServerError;
         }
