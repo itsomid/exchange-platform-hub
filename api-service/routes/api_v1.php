@@ -36,14 +36,13 @@ Route::prefix('/wallets')->group(function () {
     Route::get('/{currencySymbol}', [WalletController::class, 'show'])->name('wallets.show');
     Route::post('/withdrawal', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, '__invoke'])->name('wallets.withdraw');
 
-    Route::prefix('saved-addresses')->group(function () {
-        Route::get('/', [\App\Http\Controllers\V1\Wallet\SavedAddressController::class, 'lists']);
-        Route::post('/', [\App\Http\Controllers\V1\Wallet\SavedAddressController::class, 'save']);
-        Route::delete('/{savedAddress}', [\App\Http\Controllers\V1\Wallet\SavedAddressController::class, 'delete']);
-
-    });
 });
+Route::prefix('saved-addresses')->group(function () {
+    Route::get('/addresses', [\App\Http\Controllers\V1\Wallet\SavedAddressController::class, 'lists']);
+    Route::post('/addresses', [\App\Http\Controllers\V1\Wallet\SavedAddressController::class, 'save']);
+    Route::delete('/addresses/{savedAddressId}', [\App\Http\Controllers\V1\Wallet\SavedAddressController::class, 'delete']);
 
+});
 //Transaction
 Route::prefix('transactions')->group(function () {
     Route::get('/all-deposit-withdraw', [\App\Http\Controllers\V1\Transaction\TransactionController::class, 'allDepositWithdraw'])->name('transactions.all-deposit-withdraw');

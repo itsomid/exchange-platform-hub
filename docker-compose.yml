@@ -5,6 +5,10 @@ networks:
 volumes:
   dbdata:
     driver: local
+  storage_admin:
+    driver: local
+  storage_api:
+    driver: local
 
 services:
   # NGINX for Admin Panel
@@ -13,18 +17,14 @@ services:
       context: ./dockerfiles
       dockerfile: nginx.dockerfile
       args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-        - USER=${USER:-laraveluser}
         - NGINX_CONF=admin.default.conf
     restart: unless-stopped
     container_name: nginx-admin
     ports:
       - 8000:80
     volumes:
-      - ./admin-panel:/var/www/html
-      - ./env/admin_panel.env:/var/www/html/.env
-      - ./admin-panel/storage:/var/www/html/storage
+      - "./admin-panel:/var/www/html:delegated"
+      - "./env/admin_panel.env:/var/www/html/.env"
     depends_on:
       - php-admin
       - database
@@ -45,9 +45,9 @@ services:
         - USER=${USER:-laraveluser}
     container_name: php-admin
     volumes:
-      - ./admin-panel:/var/www/html
-      - ./env/admin_panel.env:/var/www/html/.env
-      - ./admin-panel/storage:/var/www/html/storage
+      - "./admin-panel:/var/www/html:delegated"
+      - "./env/admin_panel.env:/var/www/html/.env"
+      - "./admin-panel/storage:/var/www/html/storage"
     networks:
       - laravel
 
@@ -57,18 +57,14 @@ services:
       context: ./dockerfiles
       dockerfile: nginx.dockerfile
       args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-        - USER=${USER:-laraveluser}
         - NGINX_CONF=api.default.conf
     restart: unless-stopped
     container_name: nginx-api
     ports:
       - 8001:80
     volumes:
-      - ./api-service:/var/www/html:delegated
-      - ./env/api_service.env:/var/www/html/.env
-      - ./api-service/storage:/var/www/html/storage
+      - "./api-service:/var/www/html:delegated"
+      - "./env/api_service.env:/var/www/html/.env"
     depends_on:
       - php-api
       - database
@@ -88,14 +84,13 @@ services:
         - USER=${USER:-laraveluser}
     container_name: php-api
     volumes:
-      - ./api-service:/var/www/html:delegated
-      - ./env/api_service.env:/var/www/html/.env
-      - ./api-service/storage:/var/www/html/storage
+      - "./api-service:/var/www/html:delegated"
+      - "./env/api_service.env:/var/www/html/.env"
+      - "./api-service/storage:/var/www/html/storage"
     networks:
       - laravel
     extra_hosts:
       - "host.docker.internal:host-gateway"
-
 
   # MySQL Database
   database:

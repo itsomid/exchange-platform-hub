@@ -46,6 +46,7 @@ class DatabaseSeeder extends Seeder
             OTCBuySeeder::class,
             DepositSeeder::class,
             WithdrawalSeeder::class,
+            SavedAddressesSeeder::class,
         ]);
     }
 }

@@ -62,8 +62,9 @@ class WithdrawalService
             $currency = Currency::whereSymbol($currencySymbol)->first();
             $fee = CurrencyChain::totalWithdrawalFee($currencyChain);
 
-            // Validate sufficient balance
             $amountReceivedByUser = $totalAmount - $fee;
+
+            // Validate sufficient balance
             if ($wallet->balance < $totalAmount) {
                 throw new \Exception("Insufficient balance in the wallet.");
             }
@@ -143,7 +144,7 @@ class WithdrawalService
                 'user_id' => $withdrawal->user->id,
                 'wallet_id' => $wallet->id,
                 'withdrawal_id' => $withdrawal->id,
-                'amount' => -$withdrawal->amount,
+                'amount' => -$withdrawal->amount + $withdrawal->fee,
                 'balance' => $wallet->balance,
                 'type' => TransactionTypeEnum::WITHDRAWAL,
                 'subtype' => TransactionSubTypeEnum::USER_INITIATED,

@@ -12,6 +12,7 @@ use App\Models\Admin;
 use App\Models\ReferralCode;
 use App\Models\User;
 use App\Services\JWT;
+use App\Services\SavedAddressService\SavedAddressService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -22,7 +23,6 @@ class UserController extends Controller
 {
     public function index()
     {
-
         $users = User::with('introducerReferral.user','activeFinancialBlocks')->orderBy('id')->filterBy(request()->all())->paginate(20);
         $referral_codes = ReferralCode::all();
 

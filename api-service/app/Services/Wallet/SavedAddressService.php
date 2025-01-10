@@ -4,11 +4,11 @@ namespace App\Services\Wallet;
 
 use App\Models\SavedAddress;
 
-class SaveAddressService
+class SavedAddressService
 {
     public function listAddresses(int $userId, $chain = null)
     {
-        $query = SavedAddress::query()->where('user_id', $userId);
+        $query = SavedAddress::query()->with(['currencyChain','user'])->where('user_id', $userId);
 
         if ($chain) {
             $query->where('chain', $chain);
@@ -27,11 +27,12 @@ class SaveAddressService
         ]);
     }
 
-    public function deleteAddress(int $userId, string $name)
+    public function deleteAddress(int $userId, int $savedAddressId)
     {
         SavedAddress::query()
             ->where('user_id', $userId)
-            ->where('name', $name)
+            ->where('id', $savedAddressId)
+            ->firstOrFail()
             ->delete();
     }
 }
