@@ -25,6 +25,6 @@ Route::prefix('/2fa')->middleware(['auth:sanctum', 'verified'])->group(function 
 });
 
 Route::prefix('/2fa/reset')->group(function () {
-    Route::post('/send-email-verification', [\App\Http\Controllers\V1\Auth\ResetTwoFactorController::class, 'sendEmailVerification'])->middleware('guest');
-    Route::post('/disable', [\App\Http\Controllers\V1\Auth\ResetTwoFactorController::class, 'disable'])->middleware('guest');
+    Route::post('/send-email-verification', [\App\Http\Controllers\V1\Auth\ResetTwoFactorController::class, 'sendEmailVerification'])->middleware(['guest', 'throttle:1,1']);
+    Route::post('/disable', [\App\Http\Controllers\V1\Auth\ResetTwoFactorController::class, 'disable'])->middleware(['guest', 'throttle:1,1']);
 });
