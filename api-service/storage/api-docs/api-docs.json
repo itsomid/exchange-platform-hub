@@ -2387,6 +2387,95 @@
                     }
                 }
             }
+        },
+        "/api/v1/authorization/otp-code/{action}": {
+            "post": {
+                "tags": [
+                    "Authorization"
+                ],
+                "summary": "Send OTP Code",
+                "description": "Send an OTP code via email for a specific action, such as withdrawal or two-factor setup.",
+                "operationId": "370b180a74b344c907a72f7c214c2ada",
+                "parameters": [
+                    {
+                        "name": "action",
+                        "in": "path",
+                        "description": "The action for which the OTP code is being sent. Possible values: `two-factor-setup`, `withdrawal`.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "two-factor-setup",
+                                "withdrawal"
+                            ],
+                            "example": "withdrawal"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OTP code sent successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "email send successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized. User is not authenticated.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid action parameter.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "example": {
+                                                "action": [
+                                                    "The action field must be one of `two-factor-setup`, `withdrawal`."
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -3565,6 +3654,10 @@
         {
             "name": "Wallet",
             "description": "Wallet"
+        },
+        {
+            "name": "Authorization",
+            "description": "Authorization"
         }
     ]
 }

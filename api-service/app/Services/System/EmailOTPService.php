@@ -18,6 +18,82 @@ class EmailOTPService
 
     public function __construct(private EmailOTPRepositoryInterface $emailOTPRepository) {}
 
+    /**
+     * @OA\Post(
+     *     path="/api/v1/authorization/otp-code/{action}",
+     *     summary="Send OTP Code",
+     *     description="Send an OTP code via email for a specific action, such as withdrawal or two-factor setup.",
+     *     tags={"Authorization"},
+     *
+     *     @OA\Parameter(
+     *         name="action",
+     *         in="path",
+     *         required=true,
+     *         description="The action for which the OTP code is being sent. Possible values: `two-factor-setup`, `withdrawal`.",
+     *
+     *         @OA\Schema(
+     *             type="string",
+     *             enum={"two-factor-setup", "withdrawal"},
+     *             example="withdrawal"
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="OTP code sent successfully.",
+     *
+     *         @OA\JsonContent(
+     *             type="object",
+     *
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="email send successfully"
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized. User is not authenticated.",
+     *
+     *         @OA\JsonContent(
+     *             type="object",
+     *
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Unauthenticated."
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=422,
+     *         description="Invalid action parameter.",
+     *
+     *         @OA\JsonContent(
+     *             type="object",
+     *
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="The given data was invalid."
+     *             ),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object",
+     *                 example={
+     *                     "action": {"The action field must be one of `two-factor-setup`, `withdrawal`."}
+     *                 }
+     *             )
+     *         )
+     *     ),
+     *     security={
+     *         {"bearerAuth": {}}
+     *     }
+     * )
+     */
     public function send(SendOTPRequestDTO $requestDTO)
     {
         $code = RandomToken::generate(self::CODE_LENGTH);
