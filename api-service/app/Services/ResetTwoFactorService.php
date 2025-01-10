@@ -21,6 +21,12 @@ class ResetTwoFactorService
             return;
         }
 
+        if (TwoFactorResetToken::query()
+            ->where('email', $email)
+            ->where('created_at', '>', now()->subMinutes(config('auth.two-factor.reset-two-factor-expiration')))
+            ->exists()) {
+            return;
+        }
         $rawToken = Str::random(64);
         $encryptedToken = encrypt($rawToken.'|'.$userIp);
 
@@ -42,7 +48,7 @@ class ResetTwoFactorService
         $hashedToken = hash('sha256', $rawToken);
         $record = TwoFactorResetToken::query()->where('token', $hashedToken)->first();
 
-        if ($tokenIp !== $ip || ! $record || now()->diffInMinutes($record->created_at) > 10 || $record->email !== $email) {
+        if ($tokenIp !== $ip || ! $record || now()->diffInMinutes($record->created_at) > config('auth.two-factor.reset-two-factor-expiration') || $record->email !== $email) {
             throw new TokenInvalidException;
         }
 

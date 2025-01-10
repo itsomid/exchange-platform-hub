@@ -119,4 +119,7 @@ return [
     'rate-limiter' => [
         'too-many' => env('APP_RATE_LIMITER_TOO_MANY', 3),
     ],
+    'two-factor' => [
+        'reset-two-factor-expiration' => 10, //per minutes
+    ],
 ];
