@@ -15,7 +15,7 @@ class GenerateTokenRequestDTO
 
     private string $userAgent;
 
-    private Carbon $expirationDate;
+    private ?Carbon $expirationDate = null;
 
     public function setUser(User $user): self
     {
@@ -46,14 +46,14 @@ class GenerateTokenRequestDTO
         return $this->tokenName;
     }
 
-    public function setExpirationDate(Carbon $expirationDate): GenerateTokenRequestDTO
+    public function setExpirationDate(?Carbon $expirationDate): GenerateTokenRequestDTO
     {
         $this->expirationDate = $expirationDate;
 
         return $this;
     }
 
-    public function getExpirationDate(): Carbon
+    public function getExpirationDate(): ?Carbon
     {
         return $this->expirationDate;
     }

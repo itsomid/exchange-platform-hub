@@ -85,7 +85,6 @@ class LoginController extends Controller
                     ->setTokenName('desktop')
                     ->setIpAddress($request->ip())
                     ->setUserAgent($request->userAgent())
-                    ->setExpirationDate(now()->addMinutes(60)) // 1 hour
             );
             $data['token'] = new AccessTokenResource($tokenResponse);
         }

@@ -16,7 +16,7 @@ class AccessTokenService
 
         $tokenObject = $user->createToken(
             name: $requestDTO->getTokenName(),
-            expiresAt: $requestDTO->getExpirationDate()
+            expiresAt: $requestDTO->getExpirationDate() ?? now()->addMinutes(config('sanctum.expiration'))
         );
         // Update token details with IP and user agent
         $tokenObject->accessToken->ip = $requestDTO->getIpAddress();

@@ -207,7 +207,6 @@ class TwoFactorController extends Controller
                 ->setIpAddress($request->ip())
                 ->setUserAgent($request->userAgent())
                 ->setTokenName('desktop')
-                ->setExpirationDate(now()->addMinutes(60)) // 1 hour
         );
 
         return response([

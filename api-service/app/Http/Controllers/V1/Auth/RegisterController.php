@@ -93,7 +93,6 @@ class RegisterController extends Controller
                 ->setTokenName('desktop')
                 ->setIpAddress($request->ip())
                 ->setUserAgent($request->userAgent())
-                ->setExpirationDate(now()->addMinutes(60)) // 1 hour
         );
         //Send Email Activation
         event(new Registered($registerResponse->getUser()));
