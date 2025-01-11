@@ -9,8 +9,9 @@ use App\Http\Requests\V1\Wallet\RefreshWalletRequest;
 use App\Http\Resources\V1\Wallet\CoinAddressResource;
 use App\Http\Resources\V1\Wallet\GetOneWalletResource;
 use App\Http\Resources\V1\Wallet\WalletListsCollection;
-use App\Jobs\CheckUserDepositJob;
+use App\Services\Wallet\CheckWalletService;
 use App\Services\Wallet\DepositService;
+use App\Services\Wallet\DTO\CheckWallet\CheckUserDepositRequestDTO;
 use App\Services\Wallet\DTO\Wallet\GenerateAddressRequestDTO;
 use App\Services\Wallet\DTO\Wallet\GetOneWalletRequestDTO;
 use App\Services\Wallet\DTO\Wallet\WalletListsRequestDTO;
@@ -277,11 +278,19 @@ class WalletController extends Controller
     public function refresh(RefreshWalletRequest $request)
     {
         $validatedData = $request->validated();
-
-        CheckUserDepositJob::dispatch(Auth::id(), $validatedData['currency_symbol'], $validatedData['chain_symbol']);
+        $hasNewTransaction = resolve(CheckWalletService::class)
+            ->checkUserDeposit(
+                resolve(CheckUserDepositRequestDTO::class)
+                    ->setUserId(Auth::id())
+                    ->setCurrencySymbol($validatedData['currency_symbol'])
+                    ->setCurrencyChain($validatedData['chain_symbol'])
+            );
 
         return response([
             'message' => __('messages.wallet_refresh'),
+            'data' => [
+                'has_new_transaction' => $hasNewTransaction,
+            ],
         ]);
     }
 }

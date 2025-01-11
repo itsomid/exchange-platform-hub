@@ -13,7 +13,7 @@ class HDDepositService
     {
         $response = Http::get(HDWallet::getBaseUrl()."/api/v1/wallet/deposits/{$requestDTO->getCurrencySymbol()}/{$requestDTO->getWalletAddress()}/all");
         if ($response->serverError()) {
-            report($response);
+            report($response->body());
             throw new InternalWalletHasProblemException;
         }
 
@@ -27,6 +27,6 @@ class HDDepositService
             ->setStatus($item['status'])
             ->setConfirmationBlocks($item['confirmation_blocks'])
             ->setBlockChain(CurrencyMapEnum::tryFrom($item['blockchain'])->name)
-            ->setWalletAddress($item['wallet_address']), $response->json('items'));
+            ->setWalletAddress($item['wallet_address']), $response->json());
     }
 }

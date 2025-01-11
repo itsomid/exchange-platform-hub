@@ -29,8 +29,9 @@ class CheckWalletService
     /**
      * @throws InternalWalletHasProblemException
      */
-    public function checkUserDeposit(CheckUserDepositRequestDTO $requestDTO): void
+    public function checkUserDeposit(CheckUserDepositRequestDTO $requestDTO): bool
     {
+        $hasNewTransaction = false;
         $wallet = $this->walletRepository->getOneByCurrency($requestDTO->getCurrencySymbol(), $requestDTO->getUserId());
         $chain = $wallet->chains[0];
 
@@ -72,11 +73,15 @@ class CheckWalletService
                 );
                 $wallet->increment('balance', $transaction->getAmount());
                 DB::commit();
+                $hasNewTransaction = true;
             } catch (Throwable $exception) {
                 DB::rollBack();
                 report($exception);
+                throw $exception;
             }
         }
+
+        return $hasNewTransaction;
 
     }
 
