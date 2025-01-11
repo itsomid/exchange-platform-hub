@@ -2467,6 +2467,15 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Wallet refreshed successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "has_new_transaction": {
+                                                    "type": "boolean",
+                                                    "example": "Wallet refreshed successfully."
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"

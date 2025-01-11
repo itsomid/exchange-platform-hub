@@ -239,7 +239,16 @@ class WalletController extends Controller
      *                 property="message",
      *                 type="string",
      *                 example="Wallet refreshed successfully."
-     *             )
+     *             ),
+     *                  @OA\Property(
+     *                  property="data",
+     *                  type="object",
+     *                  @OA\Property(
+     *                  property="has_new_transaction",
+     *                  type="boolean",
+     *                  example="is found new transactions ?"
+     *              ),
+     *              ),
      *         )
      *     ),
      *
