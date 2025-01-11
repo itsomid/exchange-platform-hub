@@ -81,7 +81,7 @@
                             <span class="text-white">سود صرافی از کارمزدهای معاملات OTC</span>
                             <div class="d-flex align-items-center my-1">
 
-                                <h4 class="mb-0 me-2">{{formatNumberTrimZeros($OTCFeeTransactionsSum)}}</h4>
+                                <h4 class="mb-0 me-2">{{formatNumber($OTCFeeTransactionsSum,2)}}</h4>
                                 <small class="text-white">USDT</small>
                             </div>
                         </div>
@@ -100,7 +100,7 @@
                             <span class="text-white">سود صرافی از کارمزدهای برداشت</span>
                             <div class="d-flex align-items-center my-1">
 
-                                <h4 class="mb-0 me-2">{{$withdrawalFeeTransactionsSum}}</h4>
+                                <h4 class="mb-0 me-2">{{formatNumber($withdrawalFeeTransactionsSum,2)}}</h4>
                                 <small class="text-white">USDT</small>
                             </div>
                         </div>
