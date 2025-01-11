@@ -7,6 +7,7 @@ use App\Exceptions\V1\Wallet\InternalWalletHasProblemException;
 use App\Infrastructure\HDWallet\Exceptions\HDDWalletUnavailable;
 use App\Infrastructure\HDWallet\Exceptions\HDWalletException;
 use App\Infrastructure\HDWallet\Wallet;
+use App\Models\Market;
 use App\Repositories\Interfaces\MarketRepositoryInterface;
 use App\Repositories\Interfaces\WalletChainRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
@@ -120,21 +121,12 @@ class WalletService
 
         foreach ($markets as $market) {
             $wallet = $wallets[$market->base_currency] ?? null;
-
-            $lists[] = resolve(WalletListsResponseDTO::class)
-                ->setId($wallet->id ?? null)
-                ->setCurrency($wallet->currency_symbol ?? $market->base_currency)
-                ->setBalance($wallet->balance ?? 0)
-                ->setLockedBalance($wallet->locked_balance ?? 0)
-                ->setUsdtBalance(
-                    $wallet && $wallet->exchangePrice ?
-                        bcmul($wallet->exchangePrice->price, $wallet->balance, 8) : 0
-                )
-                ->setUsdtLockedBalance(
-                    $wallet && $wallet->exchangePrice ?
-                        bcmul($wallet->exchangePrice->price, $wallet->locked_balance, 8) : 0
-                );
+            $lists[] = $this->SetWalletDTP($wallet, $market);
         }
+
+        //USDT
+        $wallet = $wallets['USDT'] ?? null;
+        $lists[] = $this->SetWalletDTP($wallet);
 
         return $lists;
     }
@@ -174,5 +166,22 @@ class WalletService
 
         return resolve(WalletValueUSDTResponseDTO::class)
             ->setAmount($sumAmount);
+    }
+
+    public function SetWalletDTP(?\App\Models\Wallet $wallet, ?Market $market = null): WalletListsResponseDTO
+    {
+        return resolve(WalletListsResponseDTO::class)
+            ->setId($wallet->id ?? null)
+            ->setCurrency($wallet->currency_symbol ?? $market->base_currency)
+            ->setBalance($wallet->balance ?? 0)
+            ->setLockedBalance($wallet->locked_balance ?? 0)
+            ->setUsdtBalance(
+                $wallet && $wallet->exchangePrice ?
+                    bcmul($wallet->exchangePrice->price, $wallet->balance, 8) : 0
+            )
+            ->setUsdtLockedBalance(
+                $wallet && $wallet->exchangePrice ?
+                    bcmul($wallet->exchangePrice->price, $wallet->locked_balance, 8) : 0
+            );
     }
 }
