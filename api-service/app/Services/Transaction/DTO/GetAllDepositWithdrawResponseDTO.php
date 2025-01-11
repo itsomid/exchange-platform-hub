@@ -17,6 +17,9 @@ class GetAllDepositWithdrawResponseDTO
     private Carbon $createdAt;
 
     private TransactionStatusEnum $status;
+    private string $address;
+    private string $transactionHashed;
+    private Carbon $confirmedAt;
 
     public function setCurrencySymbol(string $currencySymbol): self
     {
@@ -76,5 +79,38 @@ class GetAllDepositWithdrawResponseDTO
     public function getStatus(): TransactionStatusEnum
     {
         return $this->status;
+    }
+
+    public function setAddress(string $address): self
+    {
+        $this->address = $address;
+        return $this;
+    }
+
+    public function getAddress(): string
+    {
+        return $this->address;
+    }
+
+    public function setTransactionHashed(string $transactionHashed): self
+    {
+        $this->transactionHashed = $transactionHashed;
+        return $this;
+    }
+
+    public function getTransactionHashed(): string
+    {
+        return $this->transactionHashed;
+    }
+
+    public function setConfirmedAt(Carbon $confirmedAt): GetAllDepositWithdrawResponseDTO
+    {
+        $this->confirmedAt = $confirmedAt;
+        return $this;
+    }
+
+    public function getConfirmedAt(): Carbon
+    {
+        return $this->confirmedAt;
     }
 }

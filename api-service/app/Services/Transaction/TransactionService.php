@@ -17,15 +17,17 @@ class TransactionService
 
         return $lists->map(function (Transaction $transaction) {
             $relation = $transaction->relationLoaded('deposit') ? 'deposit' : 'withdrawal';
-            $currency = $transaction->{$relation}->currency_symbol;
-            $createdAt = $transaction->{$relation}->created_at;
+            $relation = $transaction->{$relation};
 
             return resolve(GetAllDepositWithdrawResponseDTO::class)
-                ->setCurrencySymbol($currency)
+                ->setCurrencySymbol($relation->currency_symbol)
                 ->setAmount($transaction->amount)
                 ->setStatus($transaction->status)
-                ->setCreatedAt($createdAt)
-                ->setType($transaction->type);
+                ->setCreatedAt($relation->created_at)
+                ->setType($transaction->type)
+                ->setAddress($relation->address)
+                ->setTransactionHashed($relation->transaction_hash)
+                ->setConfirmedAt($relation->confirmed_at);
         })->toArray();
     }
 }
