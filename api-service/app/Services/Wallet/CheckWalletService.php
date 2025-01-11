@@ -63,6 +63,7 @@ class CheckWalletService
 
                 $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
                     ->setUserId($requestDTO->getUserId())
+                    ->setDepositId($deposit->id)
                     ->setWalletId($wallet->id)
                     ->setBalance($wallet->balance)
                     ->setAmount($transaction->getAmount())
