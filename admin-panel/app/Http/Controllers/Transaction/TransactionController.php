@@ -12,7 +12,7 @@ class TransactionController extends Controller
 {
     public function index()
     {
-        $transaction = Transaction::with(['user', 'wallet', 'admin', 'wallet.currency', 'deposit', 'withdrawal'])->filterBy(request()->all())->paginate(50);
+        $transactions = Transaction::with(['user', 'wallet', 'admin', 'wallet.currency', 'deposit', 'withdrawal'])->filterBy(request()->all())->paginate(100);
         $referralTransactionsCount = Transaction::where('type', TransactionTypeEnum::REFERRAL)->count();
 
         $OTCFeeTransactionsCount = Transaction::where('type', TransactionTypeEnum::FEE)
@@ -20,11 +20,36 @@ class TransactionController extends Controller
 
         $withdrawalFeeTransactionsCount = Transaction::where('type', TransactionTypeEnum::FEE)
             ->where('subtype', TransactionSubTypeEnum::WITHDRAWAL_FEE)->count();
+
+
+         $OTCFeeTransactionsSum = Transaction::where('type', TransactionTypeEnum::FEE)
+            ->where('subtype', TransactionSubTypeEnum::OTC)
+            ->with('wallet.currency')
+            ->get()
+            ->sum(function ($transaction) {
+                return $transaction->wallet && $transaction->wallet->currency
+                    ? $transaction->amount * $transaction->wallet->currency->exchangePrice
+                    : 0;
+            });
+
+        // Calculate sum of withdrawal fee transactions
+        $withdrawalFeeTransactionsSum = Transaction::where('type', TransactionTypeEnum::FEE)
+            ->where('subtype', TransactionSubTypeEnum::WITHDRAWAL_FEE)
+            ->with('wallet.currency')
+            ->get()
+            ->sum(function ($transaction) {
+                return $transaction->wallet && $transaction->wallet->currency
+                    ? $transaction->amount * $transaction->wallet->currency->exchangePrice
+                    : 0;
+            });
+
         return view('dashboard.transaction.index', [
-            'transactions' => $transaction,
+            'transactions' => $transactions,
             'referralTransactionsCount' => $referralTransactionsCount,
             'OTCFeeTransactionsCount' => $OTCFeeTransactionsCount,
-            'withdrawalFeeTransactionsCount' => $withdrawalFeeTransactionsCount
+            'withdrawalFeeTransactionsCount' => $withdrawalFeeTransactionsCount,
+            'OTCFeeTransactionsSum' => $OTCFeeTransactionsSum,
+            'withdrawalFeeTransactionsSum' => $withdrawalFeeTransactionsSum
         ]);
     }
 }

@@ -68,9 +68,9 @@ class WalletSeeder extends Seeder
     {
         switch (strtoupper($currency)) {
             case 'BTC':
-                return $this->randomFloat(2, 10, 8);
+                return $this->randomFloat(1, 3, 8);
             case 'ETH':
-                return $this->randomFloat(10, 100, 8);
+                return $this->randomFloat(10, 20, 8);
             case 'DOGE':
                 return $this->randomFloat(20000, 100000, 2);
             case 'BNB':
@@ -87,7 +87,7 @@ class WalletSeeder extends Seeder
     {
         switch (strtoupper($currency)) {
             case 'BTC':
-                return $this->randomFloat(0, 2, 8);
+                return $this->randomFloat(0, 1, 8);
             case 'ETH':
                 return $this->randomFloat(0, 10, 8);
             case 'DOGE':

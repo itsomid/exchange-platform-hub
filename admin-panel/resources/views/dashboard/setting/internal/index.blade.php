@@ -60,9 +60,9 @@
                         <div class="row mt-5">
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label class="form-label" for="otc_buy_fee">کارمزد خرید مشتری (درصد)</label>
+                                    <label class="form-label" for="otc_buy_fee">کارمزد فروش به مشتری (درصد)</label>
                                     <input name="otc_buy_fee" id="otc_buy_fee" class="form-control"
-                                           placeholder="کارمزد خرید مشتری (درصد)"
+                                           placeholder="کارمزد فروش به مشتری (درصد)"
                                            value="{{$otcBuyFee->value}}"
                                            required>
                                     @error('otcBuyFee')
@@ -72,9 +72,9 @@
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label class="form-label" for="otc_sell_fee">کارمزد فروش مشتری (درصد) </label>
+                                    <label class="form-label" for="otc_sell_fee">کارمزد خرید از مشتری (درصد)</label>
                                     <input name="otc_sell_fee" id="otc_sell_fee" class="form-control"
-                                           placeholder="کارمزد فروش مشتری (درصد)"
+                                           placeholder="کارمزد خرید از مشتری (درصد)"
                                            value="{{$otcSellFee->value}}" required>
                                     @error('otcSellFee')
                                     <small class="text-danger">{{$message}}</small>

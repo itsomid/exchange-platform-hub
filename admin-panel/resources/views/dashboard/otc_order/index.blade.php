@@ -1,7 +1,7 @@
 @extends('dashboard.layout.master')
 @section('title', 'مدیریت معاملات')
 @section('content')
-{{--    TODO: Complete OTC ORder Card--}}
+    {{--    TODO: Complete OTC ORder Card--}}
     <div class="row g-4 mb-4">
         <div class="col-sm-12 col-xl-3">
             <div class="card">
@@ -76,165 +76,175 @@
             </div>
         </div>
     </div>
-    <div class="row">
-        <div class="card">
-            <div class="card-body">
-                <div class="card-title header-elements">
-                    <h5 class="m-0 me-2">فیلتر</h5>
-                </div>
-                <form action="{{route('admin.transaction.index')}}" method="get">
-                    <div class="row">
-                        <div class="col-md-3 mt-3">
-                            <div class="form-group">
-                                <label class="form-label" for="type">نوع تراکنش:</label>
-                                <select name="type" class="form-control" id="type">
-                                    <option value=" ">همه</option>
-                                    @foreach(\App\Enums\TransactionTypeEnum::cases() as $case)
-                                        <option
-                                            value="{{$case->name}}" {{request()->has('type') && request()->input('type') == $case->name ? 'selected' : "" }}>
-                                            {{\App\Enums\TransactionTypeEnum::TYPE_LABEL[$case->value]}}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mt-3">
-                            <label class="form-label" for="user">کاربر :</label>
-                            <x-user-selection-component
-                                input-name="user"
-                                multiple="0"
-                                selected=""
-                                selected-label=""
-                            ></x-user-selection-component>
-                        </div>
-                        <div class="w-100"></div>
-                        <div class="col-md-2">
-                            <div class="form-group mt-3"><br>
-                                <button class="btn btn-success text-white" type="submit">
-                                    <span>فیلتر</span><i class="fas fa-filter mx-3"></i>
-                                </button>
-                            </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="card-title header-elements">
+                <h5 class="m-0 me-2">فیلتر</h5>
+            </div>
+            <form action="{{route('admin.transaction.index')}}" method="get">
+                <div class="row">
+                    <div class="col-md-3 mt-3">
+                        <div class="form-group">
+                            <label class="form-label" for="type">نوع تراکنش:</label>
+                            <select name="type" class="form-control" id="type">
+                                <option value=" ">همه</option>
+                                @foreach(\App\Enums\TransactionTypeEnum::cases() as $case)
+                                    <option
+                                        value="{{$case->name}}" {{request()->has('type') && request()->input('type') == $case->name ? 'selected' : "" }}>
+                                        {{\App\Enums\TransactionTypeEnum::TYPE_LABEL[$case->value]}}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
-                </form>
-            </div>
+                    <div class="col-md-6 mt-3">
+                        <label class="form-label" for="user">کاربر :</label>
+                        <x-user-selection-component
+                            input-name="user"
+                            multiple="0"
+                            selected="{{ request()->filled('user')?$otcOrders[0]->user->id : '' }}"
+                            selected-label="{{ request()->filled('user')
+                                ? '('.$otcOrders[0]->user->id.'#) '.$otcOrders[0]->user->fullname().' | '.$otcOrders[0]->user->email
+                                : '' }}"
+                        ></x-user-selection-component>
+                    </div>
+                    <div class="w-100"></div>
+                    <div class="col-md-2">
+                        <div class="form-group mt-3"><br>
+                            <button class="btn btn-success text-white" type="submit">
+                                <span>فیلتر</span><i class="fas fa-filter mx-3"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 
-    <div class="row mt-5">
-        <div class="card">
-            <div class="card-body">
-                <div class="card-title header-elements">
-                    <h5 class="m-0 me-2">لیست معاملات OTC</h5>
-                    <div class="card-title-elements ms-auto">
-                        <a href="{{route('admin.wallet.increase-credit')}}" class="btn btn-primary">
-                            <i class="fa fa-plus mx-2"></i> افزایش اعتبار
+
+
+    <div class="card mt-3">
+        <div class="card-header">
+            <div class="card-title header-elements">
+                <h5 class="m-0 me-2">لیست معاملات OTC</h5>
+
+            </div>
+        </div>
+        <div class="table-responsive text-nowrap">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>شناسه</th>
+                    <th>بازار</th>
+                    <th>نوع معامله</th>
+                    <th>کاربر</th>
+                    <th>
+                        @php
+                            $currentParams = request()->except('sortByAmount');
+                            $newSortDirection = request()->input('sortByAmount') == 'asc' ? 'desc' : 'asc';
+                        @endphp
+                        <a href="{{ route('admin.transaction.index', array_merge($currentParams, ['sortByAmount' => $newSortDirection])) }}"
+                           class="text-black">
+                            مقدار
+                            @if( request()->input('sortByAmount') == 'asc')
+                                <span>&uarr;</span>
+                            @else
+                                <span>&darr;</span>
+                            @endif
                         </a>
-                    </div>
+                    </th>
+                    <th>قیمت</th>
+                    <th>ارزش</th>
+                    <th>کارمزد</th>
+                    <th>دریافتی</th>
+                    <th>
+                        @php
+                            $currentParams = request()->except('sortByCreatedAt');
+                            $newSortDirection = request()->input('sortByCreatedAt') == 'asc' ? 'desc' : 'asc';
+                        @endphp
+                        <a href="{{ route('admin.transaction.index', array_merge($currentParams, ['sortByCreatedAt' => $newSortDirection])) }}"
+                           class="text-black">
+                            تاریخ و زمان
+                            @if( request()->input('sortByCreatedAt') == 'asc')
+                                <span>&uarr;</span>
+                            @else
+                                <span>&darr;</span>
+                            @endif
+                        </a>
+                    </th>
+                    <th>وضعیت</th>
+                </tr>
+                </thead>
+                <tbody class="table-border-bottom-0">
+                @if($otcOrders->isEmpty())
+                    <tr>
+                        <td colspan="9" class="text-center">تراکنشی یافت نشد.</td>
+                    </tr>
+                @else
 
-                </div>
-                <div class="table-responsive text-nowrap">
-                    <table class="table table-striped">
-                        <thead>
+                    @foreach($otcOrders as $order)
                         <tr>
-                            <th>شناسه</th>
-                            <th>بازار</th>
-                            <th>نوع معامله</th>
-                            <th>کاربر</th>
-                            <th>قیمت</th>
-                            <th>
-                                @php
-                                    $currentParams = request()->except('sortByAmount');
-                                    $newSortDirection = request()->input('sortByAmount') == 'asc' ? 'desc' : 'asc';
-                                @endphp
-                                <a href="{{ route('admin.transaction.index', array_merge($currentParams, ['sortByAmount' => $newSortDirection])) }}"
-                                   class="text-black">
-                                    مقدار
-                                    @if( request()->input('sortByAmount') == 'asc')
-                                        <span>&uarr;</span>
-                                    @else
-                                        <span>&darr;</span>
-                                    @endif
-                                </a>
-                            </th>
-                            <th>ارزش</th>
-                            <th>کارمزد</th>
-                            <th>
-                                @php
-                                    $currentParams = request()->except('sortByCreatedAt');
-                                    $newSortDirection = request()->input('sortByCreatedAt') == 'asc' ? 'desc' : 'asc';
-                                @endphp
-                                <a href="{{ route('admin.transaction.index', array_merge($currentParams, ['sortByCreatedAt' => $newSortDirection])) }}"
-                                   class="text-black">
-                                    تاریخ و زمان
-                                    @if( request()->input('sortByCreatedAt') == 'asc')
-                                        <span>&uarr;</span>
-                                    @else
-                                        <span>&darr;</span>
-                                    @endif
-                                </a>
-                            </th>
-                            <th>وضعیت</th>
+                            <td>{{$order->id}}</td>
+                            <td class="text-heading fw-medium">
+                                <img src="{{asset($order->market->baseCurrency->coinLogo())}}"
+                                     class="rounded-circle" width="32px">
+                                {{$order->market->name}}
+                            </td>
+                            <td>
+                                <span class="badge bg-label-{{$order->type->color()}}">{{$order->type->label()}}</span>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <a href="" class="text-heading text-truncate">
+                                        <span class="fw-medium">{{$order->user->email}}</span>
+                                    </a>
+                                    <small>{{$order->user->username}}</small>
+                                </div>
+                            </td>
+
+                            <td class="font-number" dir="ltr">
+                                <span class="ms-2">{{formatNumberTrimZeros($order->quantity)}}</span>
+                                <small>{{$order->market->baseCurrency->symbol}}</small>
+                            </td>
+                            <td class="font-number" dir="ltr">
+                                <span class="ms-2">{{formatNumberTrimZeros($order->price)}}</span>
+                                <small>{{$order->market->quoteCurrency->symbol}}</small>
+                            </td>
+                            <td class="font-number" dir="ltr">
+                                {{formatNumberTrimZeros($order->price * $order->quantity)}}
+                                <small>USDT</small>
+                            </td>
+                            <td class="font-number" dir="ltr">
+                                {{formatNumberTrimZeros($order->fee)}}
+
+                                <small>{{$order->type === \App\Enums\OTCOrderTypeEnum::BUY ? $order->market->baseCurrency->symbol : $order->market->quoteCurrency->symbol}}</small>
+                            </td>
+                            <td class="font-number" dir="ltr">
+                                @if($order->type === \App\Enums\OTCOrderTypeEnum::BUY)
+                                    {{formatNumberTrimZeros($order->quantity -  $order->fee)}}
+                                    <small>{{$order->market->baseCurrency->symbol}}</small>
+                                @else
+                                    {{formatNumberTrimZeros(($order->price * $order->quantity) -  $order->fee)}}
+                                    <small>{{$order->market->quoteCurrency->symbol}}</small>
+                                @endif
+                            </td>
+                            <td class="font-number">
+                                {{\App\Helpers\DateFormatter::convertToPersianDate($order->created_at,'H:i:s %Y/%m/%d')}}
+                            </td>
+
+                            <td>
+                                <span class="badge bg-label-success">{{$order->status->label()}}</span>
+                            </td>
                         </tr>
-                        </thead>
-                        <tbody class="table-border-bottom-0">
-                        @if($otcOrders->isEmpty())
-                            <tr>
-                                <td colspan="9" class="text-center">تراکنشی یافت نشد.</td>
-                            </tr>
-                        @else
-
-                            @foreach($otcOrders as $order)
-                                <tr>
-                                    <td>{{$order->id}}</td>
-                                    <td class="text-heading fw-medium">
-                                        <img src="{{asset($order->market->baseCurrency->coinLogo())}}"
-                                             class="rounded-circle">
-                                        {{$order->market->name}}
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-label-{{$order->type->color()}}">{{$order->type->label()}}</span>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex flex-column">
-                                            <a href="" class="text-heading text-truncate">
-                                                <span class="fw-medium">{{$order->user->email}}</span>
-                                            </a>
-                                            <small>{{$order->user->username}}</small>
-                                        </div>
-                                    </td>
-
-                                    <td class="font-number" dir="ltr">
-                                        <h6 class="mb-0">{{formatNumberTrimZeros($order->price)}}</h6>
-                                    </td>
-                                    <td class="font-number">
-                                        <h6 class="mb-0">{{formatNumberTrimZeros($order->quantity)}}</h6>
-                                    </td>
-                                    <td class="font-number">
-                                        {{formatNumberTrimZeros($order->price * $order->quantity)}}
-                                        <small>USDT</small>
-                                    </td>
-                                    <td class="font-number">
-                                        {{formatNumberTrimZeros($order->fee)}}
-                                        <small>{{$order->market->baseCurrency->symbol}}</small>
-                                    </td>
-                                    <td class="font-number">
-                                        {{\App\Helpers\DateFormatter::convertToPersianDate($order->created_at,'H:i:s %Y/%m/%d')}}
-                                    </td>
-
-                                    <td>
-                                        <span class="badge bg-label-success">{{$order->status}}</span>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        @endif
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            {{--            {{$transactions->appends()->links()}}--}}
+                    @endforeach
+                @endif
+                </tbody>
+            </table>
         </div>
+        {{--            {{$transactions->appends()->links()}}--}}
     </div>
+
 @endsection
 @section('vendor-script')
     @vite([
