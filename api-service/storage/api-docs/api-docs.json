@@ -1322,6 +1322,49 @@
                 ]
             }
         },
+        "/api/v1/otc/fee": {
+            "get": {
+                "tags": [
+                    "OTC"
+                ],
+                "summary": "Get OTC Buy and Sell Fees",
+                "description": "Retrieve the buy and sell fees for OTC trades.",
+                "operationId": "abe8ee9e61f4610770f18e1ef93b164c",
+                "responses": {
+                    "200": {
+                        "description": "Buy and Sell fees for OTC trades.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FeeResource"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized, user is not authenticated.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/profile/sessions/active": {
             "get": {
                 "tags": [
@@ -3337,6 +3380,23 @@
                             "type": "string",
                             "example": "8.2"
                         }
+                    }
+                },
+                "type": "object"
+            },
+            "FeeResource": {
+                "title": "OTC Fees",
+                "description": "Representation of the buy and sell fees for OTC trades.",
+                "properties": {
+                    "buy_fee": {
+                        "description": "The fee for buying in OTC trades.",
+                        "type": "string",
+                        "example": "0.001"
+                    },
+                    "sell_fee": {
+                        "description": "The fee for selling in OTC trades.",
+                        "type": "string",
+                        "example": "0.002"
                     }
                 },
                 "type": "object"
