@@ -4,7 +4,8 @@ namespace Database\Seeders;
 
 use App\Exceptions\InsufficientBalanceException;
 use App\Models\Market;
-use App\Services\OTC\DTO\BuyRequestDTO;
+use App\Models\User;
+use App\Services\OTC\DTO\OTCRequestDTO;
 use App\Services\OTC\OTCService;
 
 use Illuminate\Database\Seeder;
@@ -17,21 +18,36 @@ class OTCBuySeeder extends Seeder
     public function run(): void
     {
         $otcService = app(OTCService::class);
-        $market = Market::where('base_currency','BTC')->first();
-        // Create a BuyRequestDTO with sample data
-        $buyRequestDTO = (new BuyRequestDTO())
-            ->setBuyerUserId(2) // Example buyer user ID
-            ->setSellerUserId(1) // Example seller user ID
-            ->setMarketId($market->id) // Example market ID
-            ->setQuantity('0.1'); // Buying 0.1 Bitcoin
+        $buyerUserId = User::find(4)->id;
+        $sellerUserId = User::find(3)->id;
+        $exchangeUserId = config('exchange.exchange_user_id', 1);
+        $firstMarket = Market::whereBaseCurrency('ETH')->first();
+        $secondMarket = Market::whereBaseCurrency('BNB')->first();
+        // Create a OTCRequestDTO with sample data
+        $buyRequestDTO = (new OTCRequestDTO())
+            ->setBuyerUserId($buyerUserId) // Example buyer user ID
+            ->setSellerUserId($exchangeUserId) // Example seller user ID
+            ->setMarketId($firstMarket->id) // Example market ID
+            ->setQuantity('1');
 
+
+        $sellRequestDTO = (new OTCRequestDTO())
+            ->setBuyerUserId($exchangeUserId) // Example buyer user ID
+            ->setSellerUserId($sellerUserId) // Example seller user ID
+            ->setMarketId($secondMarket->id) // Example market ID
+            ->setQuantity('1');
         // Execute the buy process
         try {
             // Execute the buy process
             $result = $otcService->buy($buyRequestDTO);
+//            $result = '';
+            $sellResult = $otcService->sell($sellRequestDTO);
 
             if ($result) {
                 echo "OTC Buy transaction successfully seeded.\n";
+            }
+            if ($sellResult) {
+                echo "OTC Sell transaction successfully seeded.\n";
             }
         } catch (InsufficientBalanceException $e) {
             echo "Transaction failed: " . $e->getMessage() . "\n";

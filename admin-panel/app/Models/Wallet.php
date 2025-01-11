@@ -38,4 +38,9 @@ class Wallet extends Model
             });
     }
 
+    public function getAccessBalanceAttribute()
+    {
+        return $this->balance - $this->locked_balance;
+    }
+
 }

@@ -134,7 +134,7 @@
                         <x-user-selection-component
                             input-name="user"
                             multiple="0"
-                            selected="{{ request()->filled('user')?$deposits[0]->user : '' }}"
+                            selected="{{ request()->filled('user')?$deposits[0]->user->id : '' }}"
                             selected-label="{{ request()->filled('user')
                                 ? '('.$deposits[0]->user->id.'#) '.$deposits[0]->user->fullname().' | '.$deposits[0]->user->email
                                 : '' }}"

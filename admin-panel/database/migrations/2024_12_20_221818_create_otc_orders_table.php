@@ -18,7 +18,7 @@ return new class extends Migration
             $table->decimal('quantity', 18, 8); // Quantity of BTC the user receives
             $table->decimal('price', 18, 8); // Swap price (e.g., BTC/USDT rate)
             $table->decimal('fee', 18, 8)->nullable(); // Optional transaction fee
-            $table->enum('type', ['buy', 'sell']); // NEW: Indicates whether it’s a buy or sell
+            $table->string('type'); // NEW: Indicates whether it’s a buy or sell
             $table->string('status')->default('pending');
             $table->timestamps();
         });

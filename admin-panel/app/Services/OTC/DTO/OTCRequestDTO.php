@@ -2,17 +2,17 @@
 
 namespace App\Services\OTC\DTO;
 
-class BuyRequestDTO
+class OTCRequestDTO
 {
     private int $buyerUserId;
 
     private int $sellerUserId;
 
-    private string $marketId;
+    private int $marketId;
 
     private string $quantity;
 
-    public function setBuyerUserId(int $buyerUserId): BuyRequestDTO
+    public function setBuyerUserId(int $buyerUserId): OTCRequestDTO
     {
         $this->buyerUserId = $buyerUserId;
 
@@ -24,7 +24,7 @@ class BuyRequestDTO
         return $this->buyerUserId;
     }
 
-    public function setSellerUserId(int $sellerUserId): BuyRequestDTO
+    public function setSellerUserId(int $sellerUserId): OTCRequestDTO
     {
         $this->sellerUserId = $sellerUserId;
 
@@ -36,19 +36,19 @@ class BuyRequestDTO
         return $this->sellerUserId;
     }
 
-    public function setMarketId(string $marketId): BuyRequestDTO
+    public function setMarketId(int $marketId): OTCRequestDTO
     {
         $this->marketId = $marketId;
 
         return $this;
     }
 
-    public function getMarketId(): string
+    public function getMarketId(): int
     {
         return $this->marketId;
     }
 
-    public function setQuantity(string $quantity): BuyRequestDTO
+    public function setQuantity(string $quantity): OTCRequestDTO
     {
         $this->quantity = $quantity;
 

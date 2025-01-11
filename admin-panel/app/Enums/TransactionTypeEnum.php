@@ -55,7 +55,7 @@ enum TransactionTypeEnum: string
     {
         return self::TYPE_COLOR[$this->value] ?? '';
     }
-    public function logo(): string
+    public function icon(): string
     {
         return self::TYPE_ICON[$this->value] ?? '';
     }

@@ -14,12 +14,12 @@ class SettingTableSeeder extends Seeder
             [
                 'key' => 'otc_buy_fee',
                 'name' => 'کارمزد خرید مشتری',
-                'value' => '0.03',
+                'value' => '0.11',
             ],
             [
                 'key' => 'otc_sell_fee',
                 'name' => 'کارمزد فروش مشتری',
-                'value' => '0.002',
+                'value' => '0.11',
             ],
             [
                 'key' => 'referral_profit_status',

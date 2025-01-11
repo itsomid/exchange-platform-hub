@@ -3,6 +3,85 @@
 @section('content')
 
     <div class="row g-6">
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between">
+                    <div class="card-title mb-0">
+                        <h5 class="mb-1">سود صرافی از محل کارمزدهای OTC</h5>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-text-secondary rounded-pill text-muted border-0 p-2 me-n1" type="button"
+                                id="MonthlyCampaign" data-bs-toggle="dropdown" aria-haspopup="true"
+                                aria-expanded="false">
+                            <i class="fa-regular fa-grip-dots-vertical text-muted"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="MonthlyCampaign">
+                            <a class="dropdown-item" href="javascript:void(0);">امروز</a>
+                            <a class="dropdown-item" href="javascript:void(0);">ماه</a>
+                            <a class="dropdown-item" href="javascript:void(0);">سال</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <ul class="p-0 m-0">
+                        @foreach($OTCFeeTransactionsByCurrency as $currency)
+                            <li class="mb-6 d-flex justify-content-between align-items-center">
+
+                                <img src="{{asset($currency->wallet->currency->coinLogo())}}" class="img-fluid" width="45px">
+
+                                <div class="d-flex justify-content-between w-100 flex-wrap">
+                                    <h6 class="mb-0 ms-4">{{$currency->wallet->currency_symbol}}</h6>
+                                    <div class="d-flex ">
+                                        <small class="me-2 align-self-end">{{$currency->wallet->currency_symbol}}</small>
+                                        <h5 class="mb-0 font-number">{{formatNumberTrimZeros($currency->total_amount)}}</h5>
+                                    </div>
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between">
+                    <div class="card-title mb-0">
+                        <h5 class="mb-1">سود صرافی از محل کارمزدهای برداشت</h5>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-text-secondary rounded-pill text-muted border-0 p-2 me-n1" type="button"
+                                id="MonthlyCampaign" data-bs-toggle="dropdown" aria-haspopup="true"
+                                aria-expanded="false">
+                            <i class="fa-regular fa-grip-dots-vertical text-muted"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="MonthlyCampaign">
+                            <a class="dropdown-item waves-effect" href="javascript:void(0);">Refresh</a>
+                            <a class="dropdown-item waves-effect" href="javascript:void(0);">Download</a>
+                            <a class="dropdown-item waves-effect" href="javascript:void(0);">View All</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <ul class="p-0 m-0">
+                        @foreach($withdrawalFeeTransactionsByCurrency as $currency)
+                            <li class="mb-6 d-flex justify-content-between align-items-center">
+
+                                <img src="{{asset($currency->wallet->currency->coinLogo())}}" class="img-fluid" width="45px">
+
+                                <div class="d-flex justify-content-between w-100 flex-wrap">
+                                    <h6 class="mb-0 ms-4">{{$currency->wallet->currency_symbol}}</h6>
+                                    <div class="d-flex ">
+                                        <small class="me-2 align-self-end">{{$currency->wallet->currency_symbol}}</small>
+                                        <h5 class="mb-0 font-number">{{formatNumberTrimZeros($currency->total_amount)}}</h5>
+                                    </div>
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="w-100 m-0"></div>
         <div class="col-xl-3 col-12">
             <div class="card h-100">
                 <div class="card-header">
@@ -59,7 +138,7 @@
 
                 <div class="card-header">
                     <div class="d-flex justify-content-between">
-                        <h6 class="mb-0 text-body">درآمد از کارمزد معاملات بر حسب تتر  (هفته اخیر)</h6>
+                        <h6 class="mb-0 text-body">درآمد از کارمزد معاملات بر حسب تتر (هفته اخیر)</h6>
                         <div class="badge bg-label-success">+15%</div>
                     </div>
                     <h4 class="card-title mb-1">${{number_format(23234,2)}}</h4>

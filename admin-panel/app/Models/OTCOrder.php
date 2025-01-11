@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\OTCOrderStatusEnum;
 use App\Enums\OTCOrderTypeEnum;
 use App\Filters\Filterable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,6 +19,7 @@ class OTCOrder extends Model
 
     protected $casts = [
         'type' => OTCOrderTypeEnum::class,
+        'status' => OTCOrderStatusEnum::class,
     ];
     public function transactions()
     {
