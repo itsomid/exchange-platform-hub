@@ -8,6 +8,7 @@ use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Enums\WithdrawalStatusEnum;
+use App\Models\Admin;
 use App\Models\Currency;
 use App\Models\Deposit;
 use App\Models\Transaction;
@@ -20,12 +21,77 @@ use App\Services\Wallet\WalletService;
 
 class TransactionService
 {
-    public const int EXCHANGE_USER_ID = 1; // Exchange wallet user ID
-
-    public function __construct(private WalletService $walletService)
+    protected $walletService;
+    public function __construct(WalletService $walletService)
     {
+        $this->walletService = $walletService;
     }
+    public function increaseDecreaseAdminWalletCredit(
+        int     $userId,
+        float   $amount,
+        string  $currency,
+        string  $currencyChain,
+        string  $type, // INCREASE or DECREASE
+        ?int    $adminId = null,
+        ?string $description = null,
+        ?string $admin_description = null
+    ): void {
+        \DB::transaction(function () use ($userId, $amount, $currency, $currencyChain, $type, $adminId, $description, $admin_description) {
+            // Fetch the wallet
+            $exchangeWallet = $this->walletService->getExchangeWallet($currency);
 
+            if (!$exchangeWallet) {
+                return redirect()->back()->withErrors(['wallet' => 'کیف پول مورد نظر یافت نشد.']);
+            }
+
+            if ($type === TransactionTypeEnum::WITHDRAWAL->value && $exchangeWallet->balance < $amount) {
+                throw new \Exception('موجودی کیف پول کافی نیست.');
+            }
+
+            if ($type === TransactionTypeEnum::DEPOSIT->value) {
+                $exchangeWallet->increment('balance', $amount);
+                $record = Deposit::create([
+                    'user_id' => $userId,
+                    'currency_symbol' => $currency,
+                    'currency_chain' => $currencyChain,
+                    'amount' => $amount,
+                    'address' => null,
+                    'transaction_hash' => null,
+                    'description' => 'Exchange Wallet credit increase by admin: (#' . $adminId . ') '.Admin::find($adminId)->fullname(),
+                    'status' => DepositStatusEnum::CONFIRMED,
+                ]);
+                $depositId = $record->id;
+                $withdrawalId = null;
+            } else {
+                $exchangeWallet->decrement('balance', $amount);
+                $record = Withdrawal::create([
+                    'user_id' => $userId,
+                    'currency_symbol' => $currency,
+                    'currency_chain' => $currencyChain,
+                    'amount' => $amount,
+                    'address' => null,
+                    'transaction_hash' => null,
+                    'description' => 'Exchange Wallet deduction by admin: (#' . $adminId . ') '.Admin::find($adminId)->fullname(),
+                    'status' => WithdrawalStatusEnum::COMPLETED,
+                ]);
+                $withdrawalId = $record->id;
+                $depositId = null;
+            }
+
+
+            // Log the transaction
+            $this->logTransaction(
+                wallet: $exchangeWallet,
+                amount: $type === TransactionTypeEnum::DEPOSIT->value ? $amount : -$amount,
+                type: $type === TransactionTypeEnum::DEPOSIT->value ? TransactionTypeEnum::DEPOSIT->value : TransactionTypeEnum::WITHDRAWAL->value,
+                adminId: $adminId,
+                depositId: $depositId, // No deposit ID for admin direct actions
+                withdrawalId: $withdrawalId, // No withdrawal ID for admin direct actions
+                description: $description ?? ($type === TransactionTypeEnum::DEPOSIT->value ? 'Exchange Wallet credit increase' : 'Exchange Wallet credit deduction'),
+                admin_description: $admin_description
+            );
+        });
+    }
     /**
      * Transfer funds between exchange wallet and user wallet.
      *
@@ -47,14 +113,13 @@ class TransactionService
         string  $currency,
         string  $currencyChain,
         string  $type,
-        ?string $subtype = null,
         ?int    $adminId = null,
         ?string $description = null,
         ?string $admin_description = null
     ): void
     {
 
-        \DB::transaction(function () use ($fromUserId, $toUserId, $amount, $currency, $currencyChain, $type, $subtype, $adminId, $description, $admin_description) {
+        \DB::transaction(function () use ($fromUserId, $toUserId, $amount, $currency, $currencyChain, $type, $adminId, $description, $admin_description) {
             // Fetch wallets
 
             $fromWallet = Wallet::firstOrCreate(
@@ -115,7 +180,6 @@ class TransactionService
                 $fromWallet,
                 -$amount,
                 TransactionTypeEnum::WITHDRAWAL->value,
-                $subtype,
                 $adminId,
                 null,
                 $withdrawalId,
@@ -135,7 +199,6 @@ class TransactionService
                 $toWallet,
                 $amount,
                 TransactionTypeEnum::DEPOSIT->value,
-                $subtype,
                 $adminId,
                 $depositId,
                 null,
@@ -152,7 +215,7 @@ class TransactionService
      * @param Wallet $wallet
      * @param float $amount
      * @param string $type
-     * @param string|null $subtype
+
      * @param string|null $description
      * @param string|null $admin_description
      * @return void
@@ -161,7 +224,6 @@ class TransactionService
         Wallet $wallet,
         float $amount,
         string $type,
-        string $subtype,
         ?int $adminId,
         ?int $depositId = null,
         ?int $withdrawalId = null,
@@ -178,7 +240,7 @@ class TransactionService
             'amount' => $amount,
             'balance' => $wallet->balance,
             'type' => $type,
-            'subtype' => $subtype,
+            'subtype' => TransactionSubTypeEnum::MANUAL_ADMIN,
             'status' => TransactionStatusEnum::SUCCESS,
             'description' => $description,
             'admin_description' => $admin_description

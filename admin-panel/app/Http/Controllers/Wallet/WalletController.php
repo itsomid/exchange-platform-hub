@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Wallet;
 
+use App\Enums\BalanceOperationEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Functions\FlashMessages\Toast;
@@ -21,6 +22,13 @@ use Illuminate\Support\Facades\DB;
 
 class WalletController extends Controller
 {
+    protected $exchangeUserId;
+
+    public function __construct()
+    {
+
+        $this->exchangeUserId = config('exchange.exchange_user_id', 1);
+    }
     public function increaseCreditForm(Request $request)
     {
 
@@ -57,22 +65,38 @@ class WalletController extends Controller
             if (!in_array($request->chain, $validChains)) {
                 return redirect()->back()->withErrors(['chain' => 'شبکه انتخاب شده با ارز مطابقت ندارد.']);
             }
-            // Check if the wallet for the specified currency exists
-            $fromUserId = $request->transaction_type === TransactionTypeEnum::WITHDRAWAL->value ? $request->user : TransactionService::EXCHANGE_USER_ID;
-            $toUserId = $request->transaction_type === TransactionTypeEnum::DEPOSIT->value ? $request->user : TransactionService::EXCHANGE_USER_ID;
 
-            $transactionService->transferBetweenWallets(
-                fromUserId: $fromUserId,
-                toUserId: $toUserId,
-                amount: $request->amount,
-                currency: $request->currency,
-                currencyChain: $request->chain,
-                type: $request->transaction_type,
-                subtype: TransactionSubTypeEnum::MANUAL_ADMIN->value,
-                adminId: Auth::user()->id,
-                description: 'Manual transfer by admin #' . $admin->id,
-                admin_description: $request->admin_description
-            );
+
+            if ($request->user == $this->exchangeUserId) {
+
+                $transactionService->increaseDecreaseAdminWalletCredit(
+                    userId:  $this->exchangeUserId,
+                    amount: $request->amount,
+                    currency: $request->currency,
+                    currencyChain: $request->chain,
+                    type: $request->transaction_type === TransactionTypeEnum::DEPOSIT->value ?  TransactionTypeEnum::DEPOSIT->value : TransactionTypeEnum::WITHDRAWAL->value, // Always increasing
+                    adminId: $admin->id,
+                    description: 'Manual credit increase by admin #' . $admin->id,
+                    admin_description: $request->admin_description
+                );
+            }else{
+                // Check if the wallet for the specified currency exists
+                $fromUserId = $request->transaction_type === TransactionTypeEnum::WITHDRAWAL->value ? $request->user : $this->exchangeUserId;
+                $toUserId = $request->transaction_type === TransactionTypeEnum::DEPOSIT->value ? $request->user : $this->exchangeUserId;
+
+                $transactionService->transferBetweenWallets(
+                    fromUserId: $fromUserId,
+                    toUserId: $toUserId,
+                    amount: $request->amount,
+                    currency: $request->currency,
+                    currencyChain: $request->chain,
+                    type: $request->transaction_type,
+                    adminId: Auth::user()->id,
+                    description: 'Manual transfer by admin #' . $admin->id,
+                    admin_description: $request->admin_description
+                );
+            }
+
             Toast::message('.افزایش اعتبار با موفقیت انجام شد')->success()->notify();
             return redirect()->back();
 
