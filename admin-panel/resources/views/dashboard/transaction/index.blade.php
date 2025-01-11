@@ -78,15 +78,15 @@
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
-                            <span class="text-white">سود صرافی از از معاملات امروز OTC</span>
+                            <span class="text-white">سود صرافی از کارمزدهای معاملات OTC</span>
                             <div class="d-flex align-items-center my-1">
 
-                                <h4 class="mb-0 me-2">0</h4>
+                                <h4 class="mb-0 me-2">{{formatNumberTrimZeros($OTCFeeTransactionsSum)}}</h4>
                                 <small class="text-white">USDT</small>
                             </div>
                         </div>
                         <span class="badge bg-label-success rounded p-2">
-                            <i class="fa-regular fa-chart-bar fa-lg"></i>
+                            <i class="fa-regular fa-chart-candlestick"></i>
                         </span>
                     </div>
                 </div>
@@ -97,10 +97,10 @@
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
-                            <span class="text-white">سود صرافی از از برداشت های امروز</span>
+                            <span class="text-white">سود صرافی از کارمزدهای برداشت</span>
                             <div class="d-flex align-items-center my-1">
 
-                                <h4 class="mb-0 me-2">234.10</h4>
+                                <h4 class="mb-0 me-2">{{$withdrawalFeeTransactionsSum}}</h4>
                                 <small class="text-white">USDT</small>
                             </div>
                         </div>
@@ -141,11 +141,11 @@
                         <div class="form-group">
                             <label class="form-label" for="type">نوع تراکنش:</label>
                             <select name="type" class="form-control" id="type">
-                                <option value=" ">همه</option>
+                                <option value="">همه</option>
                                 @foreach(\App\Enums\TransactionTypeEnum::cases() as $case)
                                     <option
-                                        value="{{$case->name}}" {{request()->has('type') && request()->input('type') == $case->name ? 'selected' : "" }}>
-                                        {{\App\Enums\TransactionTypeEnum::TYPE_LABEL[$case->value]}}
+                                        value="{{$case->value}}" {{request()->has('type') && request()->input('type') == $case->value ? 'selected' : "" }}>
+                                        {{$case->label()}}
                                     </option>
                                 @endforeach
                             </select>
@@ -153,13 +153,13 @@
                     </div>
                     <div class="col-md-3 mt-3">
                         <div class="form-group">
-                            <label class="form-label" for="type">نوع تراکنش:</label>
-                            <select name="type" class="form-control" id="type">
+                            <label class="form-label" for="subtype">نوع تراکنش:</label>
+                            <select name="subtype" class="form-control" id="subtype">
                                 <option value=" ">همه</option>
                                 @foreach(\App\Enums\TransactionSubTypeEnum::cases() as $case)
                                     <option
-                                        value="{{$case->name}}" {{request()->has('type') && request()->input('type') == $case->name ? 'selected' : "" }}>
-                                        {{\App\Enums\TransactionSubTypeEnum::TYPE_LABEL[$case->value]}}
+                                        value="{{$case->value}}" {{request()->has('type') && request()->input('type') == $case->name ? 'selected' : "" }}>
+                                        {{$case->label()}}
                                     </option>
                                 @endforeach
                             </select>
@@ -170,8 +170,10 @@
                         <x-user-selection-component
                             input-name="user"
                             multiple="0"
-                            selected=""
-                            selected-label=""
+                            selected="{{ request()->filled('user')?$transactions[0]->user->id : '' }}"
+                            selected-label="{{ request()->filled('user')
+                                ? '('.$transactions[0]->user->id.'#) '.$transactions[0]->user->fullname().' | '.$transactions[0]->user->email
+                                : '' }}"
                         ></x-user-selection-component>
                     </div>
                     <div class="w-100"></div>
@@ -225,7 +227,7 @@
                         </a>
                     </th>
                     <th>مقدار موجودی</th>
-                    <th>توضیحات</th>
+                    <th class="text-wrap">توضیحات</th>
                     <th>
                         @php
                             $currentParams = request()->except('sortByCreatedAt');
@@ -258,24 +260,28 @@
                             <td class="text-heading fw-medium">
                                 <div class="d-flex justify-content-start align-items-center">
                                     <div class="trans-avatar-group d-flex align-items-center assigned-avatar">
-
                                         <div class="avatar avatar-md ">
                                             <img src="{{asset($transaction->wallet->currency->coinLogo())}}"
-                                                 class="rounded-circle  ">
+                                                 class="rounded-circle">
                                         </div>
                                         <div class="avatar avatar-md">
-                                                <span
-                                                    class="avatar-initial rounded-circle bg-label-{{\App\Enums\TransactionTypeEnum::TYPE_COLOR[$transaction->type->value]}}">
-                                                    <i class="fa-regular fa-{{\App\Enums\TransactionTypeEnum::TYPE_ICON[$transaction->type->value]}} mx-3"></i>
-                                                </span>
+                                            <span
+                                                class="avatar-initial rounded-circle bg-label-{{$transaction->type->color()}}">
+                                                <i class="fa-regular fa-{{$transaction->type->icon()}} mx-3"></i>
+                                            </span>
                                         </div>
                                     </div>
-
-                                    <span class="badge bg-label-{{\App\Enums\TransactionTypeEnum::TYPE_COLOR[$transaction->type->value]}} ms-2">
-                                           {{\App\Enums\TransactionTypeEnum::TYPE_LABEL[$transaction->type->value]}}
+                                    <div class="d-flex flex-column align-items-start">
+                                        <span class="badge bg-label-{{$transaction->type->color()}} ms-2">
+                                            {{$transaction->type->label()}}
                                         </span>
+                                        @if($transaction->subtype->value != 'user_initiated')
+                                            <span class="badge bg-label-secondary ms-2 mt-2">
+                                                {{$transaction->subtype->label()}}
+                                            </span>
+                                        @endif
+                                    </div>
                                 </div>
-
                             </td>
                             <td>
                                 <div class="d-flex flex-column">
@@ -293,25 +299,22 @@
                             <td class="font-number">
                                 <h6 class="mb-0">{{formatNumberTrimZeros($transaction->balance)}}</h6>
                             </td>
-                            <td class="font-number">
+
+                            <td class="font-number text-wrap">
                                 @if($transaction->admin_id)
                                     {{$transaction->admin->last_name}}
                                 @endif
-                                {{$transaction->description}}
+                                <span>{{$transaction->description}}</span>
+
                             </td>
                             <td class="font-number">
                                 {{\App\Helpers\DateFormatter::convertToPersianDate($transaction->created_at,'H:i:s %Y/%m/%d')}}
                             </td>
 
                             <td>
-                                <span
-                                class="badge bg-label-{{$transaction->status->color()}}">{{$transaction->status->label()}}</span>
-{{--                                @if($transaction->deposit)--}}
-{{--                                    <span--}}
-{{--                                        class="badge bg-label-{{\App\Enums\DepositStatusEnum::TYPE_COLOR[$transaction->deposit->status->value]}} btn-sm">--}}
-{{--                                                {{\App\Enums\DepositStatusEnum::TYPE_LABEL[$transaction->deposit->status->value]}}--}}
-{{--                                            </span>--}}
-{{--                                @endif--}}
+                                <span class="badge bg-label-{{$transaction->status->color()}}">
+                                    {{$transaction->status->label()}}
+                                </span>
                             </td>
                             <td>
                                 <a href="" class="btn btn-icon btn-text-secondary" data-bs-toggle="modal"
@@ -335,11 +338,13 @@
                                                     <h6 class="m-0 mb-2 mb-md-0 me-12">مشخصات کاربر</h6>
                                                     <div class="d-flex  gap-4 align-items-center">
                                                         <div class="d-flex flex-column">
-                                                            <a href="" class="text-heading text-truncate">
-                                                                <span class="fw-medium">{{$transaction->user->email}}</span>
-                                                            </a>
-                                                            <small>{{$transaction->user->username}}</small>
                                                             <small>{{$transaction->user->fullname()}}</small>
+                                                            <small>{{$transaction->user->username}}</small>
+                                                            <a href="" class="text-heading text-truncate">
+                                                                <span
+                                                                    class="fw-medium">{{$transaction->user->email}}</span>
+                                                            </a>
+
                                                         </div>
                                                     </div>
                                                 </div>
@@ -349,24 +354,28 @@
                                                     <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی کاربر قبل از تراکنش</h6>
                                                     <div class="d-flex  gap-4 align-items-center">
                                                         <img
-                                                            src="{{asset($transaction->wallet->currency->coinLogo())}}" width="30"/>
+                                                            src="{{asset($transaction->wallet->currency->coinLogo())}}"
+                                                            width="30"/>
                                                         <span
                                                             class="font-number">{{formatNumberTrimZeros($transaction->balance - $transaction->amount)}}</span>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
-
-                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی کاربر پس از تراکنش</h6>
-                                                    <div class="d-flex  gap-4 align-items-center">
-                                                        <img src="{{asset($transaction->wallet->currency->coinLogo())}}" width="30"/>
-                                                        <span
-                                                            class="font-number text-primary">{{formatNumberTrimZeros($transaction->balance)}}</span>
                                                     </div>
                                                 </div>
                                                 <div
                                                     class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
 
-                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">ساخته شده توسط ادمین</h6>
+                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی کاربر پس از تراکنش</h6>
+                                                    <div class="d-flex  gap-4 align-items-center">
+                                                        <img src="{{asset($transaction->wallet->currency->coinLogo())}}"
+                                                             width="30"/>
+                                                        <span
+                                                            class="font-number text-primary">{{formatNumberTrimZeros($transaction->balance)}}</span>
+                                                    </div>
+                                                </div>
+
+                                                <div
+                                                    class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+
+                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">ایجاد شده توسط ادمین</h6>
                                                     <div class="text-wrap font-number">
                                                         @if($transaction->admin_id)
                                                             {{$transaction->admin->fullname()}} -

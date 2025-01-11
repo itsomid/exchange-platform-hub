@@ -21,7 +21,7 @@ return new class extends Migration {
 //            $table->unsignedBigInteger('spot_order_id')->nullable(); // Foreign key
             $table->decimal('amount', 20, 8); // To handle precise values like cryptocurrency
             $table->decimal('balance', 18, 8); // balance after transaction
-            $table->string('type', 50); // Type of transaction
+            $table->string('type', 50); // Status of transaction
             $table->string('subtype')->nullable(); // Example: otc, spot, withdrawal,introducer,friend
             $table->string('status', 50); // Status column
 

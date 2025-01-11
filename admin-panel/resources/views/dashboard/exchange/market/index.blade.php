@@ -154,7 +154,7 @@
                                      dir="ltr">
                                     {{ $market->activeExchangePrice->exchange_profit_sell > 0 ? '+' : '' }}{{$market->activeExchangePrice->exchange_profit_sell * 100 }}%
                                 </div>
-                                <span class="ms-1 h5">{{formatNumberTrimZeros($market->activeExchangePrice->sell_own_price)}}</span>
+                                <span class="ms-1 h5">{{formatNumberTrimZeros($market->activeExchangePrice->exchange_sell_price)}}</span>
                                 <small class="text-muted">USDT</small>
 
                             </td>
@@ -163,7 +163,7 @@
                                      dir="ltr">
                                     {{ $market->activeExchangePrice->exchange_profit_buy > 0 ? '+' : '' }}{{$market->activeExchangePrice->exchange_profit_buy * 100 }}%
                                 </div>
-                                <span class="ms-1 h5">{{formatNumberTrimZeros($market->activeExchangePrice->buy_own_price)}}</span>
+                                <span class="ms-1 h5">{{formatNumberTrimZeros($market->activeExchangePrice->exchange_buy_price)}}</span>
                                 <small class="text-muted">USDT</small>
                             </td>
                             <td class="fw-bold">

@@ -5,6 +5,20 @@
         <span class="font-number">{{ formatNumberTrimZeros($withdraw->amount - $withdraw->fee) }}</span>
     </div>
 </div>
+<div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+    <h6 class="m-0 mb-2 mb-md-0 me-12">کارمزد برداشت</h6>
+    <div class="d-flex gap-4 align-items-center">
+        <small> {{$withdraw->currency_symbol}}</small>
+        <span class="font-number">{{ formatNumberTrimZeros($withdraw->fee) }}</span>
+    </div>
+</div>
+<div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+    <h6 class="m-0 mb-2 mb-md-0 me-12">کارمزد صرافی</h6>
+    <div class="d-flex gap-4 align-items-center">
+        <small> {{$withdraw->currency_symbol}}</small>
+        <span class="font-number">{{ formatNumberTrimZeros($withdraw->exchange_fee) }}</span>
+    </div>
+</div>
 
 @if($withdraw->status === \App\Enums\WithdrawalStatusEnum::COMPLETED)
     <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
@@ -20,6 +34,7 @@
             {{ \App\Helpers\DateFormatter::convertToPersianDate($withdraw->confirmed_at,'H:i:s %Y/%m/%d') }}
         </div>
     </div>
+
 @endif
 
 @if($withdraw->status === \App\Enums\WithdrawalStatusEnum::AWAITING_APPROVAL ||

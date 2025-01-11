@@ -12,7 +12,7 @@ use App\Models\OTCOrder;
 use App\Models\Setting;
 use App\Models\Transaction;
 use App\Models\Wallet;
-use App\Services\OTC\DTO\BuyRequestDTO;
+use App\Services\OTC\DTO\OTCRequestDTO;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -24,17 +24,19 @@ class OTCService
     {
         $this->exchangeUserId = config('exchange.exchange_user_id');
     }
-    public function buy(BuyRequestDTO $requestDTO): bool
+
+    public function buy(OTCRequestDTO $requestDTO): bool
     {
+
         return $this->processTransaction($requestDTO, 'buy');
     }
 
-    public function sell(BuyRequestDTO $requestDTO): bool
+    public function sell(OTCRequestDTO $requestDTO): bool
     {
         return $this->processTransaction($requestDTO, 'sell');
     }
 
-    private function processTransaction(BuyRequestDTO $requestDTO, string $type): bool
+    private function processTransaction(OTCRequestDTO $requestDTO, string $type): bool
     {
         try {
             return DB::transaction(function () use ($requestDTO, $type) {
@@ -46,27 +48,63 @@ class OTCService
                 $sellerQuoteWallet = $this->getWallet($requestDTO->getSellerUserId(), $market->quote_currency);
                 $buyerQuoteWallet = $this->getWallet($requestDTO->getBuyerUserId(), $market->quote_currency);
 
-                $amount = $requestDTO->getQuantity();
-                $amountInQuoteCurrency = bcmul($market->activeExchangePrice->price, $amount, 8);
-                $fee = bcmul($amount, Setting::getSetting($type === 'buy' ? 'otc_buy_fee' : 'otc_sell_fee'), 8);
-                $receivedAmount = $type === 'buy' ? bcsub($amount, $fee, 8) : bcsub($amountInQuoteCurrency, $fee, 8);
+                $otcBuyFee = Setting::getSetting('otc_buy_fee') / 100;
+                $otcSellFee = Setting::getSetting('otc_sell_fee') / 100;
+                $quantity = $requestDTO->getQuantity();
+                if ($type === 'buy') {
+                    $orderUser = $requestDTO->getBuyerUserId();
+                    $orderPrice = $market->activeExchangePrice->exchange_sell_price;
+                    $amountInQuoteCurrency = bcmul($orderPrice, $quantity, 8);
+                    $fee = bcmul($quantity, $otcBuyFee, 8);
+                    $receivedAmount = bcsub($quantity, $fee, 8) ;
+                } else {
+                    $orderUser = $requestDTO->getSellerUserId();
+                    $orderPrice = $market->activeExchangePrice->exchange_buy_price;
+                    $amountInQuoteCurrency = bcmul($orderPrice, $quantity, 8);
+                    $fee = bcmul($amountInQuoteCurrency, $otcSellFee, 8);
+                    $receivedAmount = bcsub($amountInQuoteCurrency, $fee, 8);
+                }
 
-                $this->validateBalances($type, $buyerQuoteWallet, $sellerWallet, $amountInQuoteCurrency, $receivedAmount, $market);
+
+                $this->validateBalances($type, $buyerQuoteWallet, $sellerWallet,$quantity, $amountInQuoteCurrency, $receivedAmount, $market);
 
                 $otc_order = OTCOrder::query()->create([
-                    'user_id' => $type === 'buy' ? $requestDTO->getBuyerUserId() : $requestDTO->getSellerUserId(),
+                    'user_id' => $orderUser,
                     'market_id' => $market->id,
-                    'quantity' => $amount,
-                    'price' => $market->activeExchangePrice->price,
+                    'quantity' => $quantity,
+                    'price' => $orderPrice,
                     'fee' => $fee,
                     'type' => $type,
                     'status' => OTCOrderStatusEnum::SUCCESS,
                 ]);
 
                 if ($type === 'buy') {
-                    $this->processBuyTransactions($requestDTO, $buyerWallet, $sellerWallet, $buyerQuoteWallet, $sellerQuoteWallet, $amount, $amountInQuoteCurrency, $receivedAmount, $fee, $otc_order, $market);
+
+                    $this->processBuyTransactions(
+                        $requestDTO->getBuyerUserId(),
+                        $buyerWallet,
+                        $sellerWallet,
+                        $buyerQuoteWallet,
+                        $sellerQuoteWallet,
+                        $quantity,
+                        $amountInQuoteCurrency,
+                        $receivedAmount,
+                        $fee,
+                        $otc_order
+                    );
                 } else {
-                    $this->processSellTransactions($requestDTO, $sellerWallet, $buyerWallet, $sellerQuoteWallet, $buyerQuoteWallet, $amount, $amountInQuoteCurrency, $receivedAmount, $fee, $otc_order, $market);
+                    $this->processSellTransactions(
+                        $requestDTO->getSellerUserId(),
+                        $sellerWallet,
+                        $buyerWallet,
+                        $sellerQuoteWallet,
+                        $buyerQuoteWallet,
+                        $quantity,
+                        $amountInQuoteCurrency,
+                        $receivedAmount,
+                        $fee,
+                        $otc_order
+                    );
                 }
 
                 return true;
@@ -86,79 +124,81 @@ class OTCService
             ->first();
     }
 
-    private function validateBalances(string $type, $buyerQuoteWallet, $sellerWallet, $amountInQuoteCurrency, $receivedAmount, $market)
+    private function validateBalances(string $type, $buyerQuoteWallet, $sellerWallet,$quantity, $amountInQuoteCurrency, $receivedAmount, $market)
     {
         if ($type === 'buy') {
-            if ($buyerQuoteWallet->balance < $amountInQuoteCurrency) {
+            if ($buyerQuoteWallet->access_balance < $amountInQuoteCurrency) {
                 throw new InsufficientBalanceException("Buyer does not have enough {$market->quote_currency}");
             }
 
-            if ($sellerWallet->balance < $receivedAmount) {
+            if ($sellerWallet->access_balance < $receivedAmount) {
                 throw new InsufficientBalanceException("Seller does not have enough base currency. {$market->base_currency}");
             }
         } else {
-            if ($sellerWallet->balance < $receivedAmount) {
+            if ($sellerWallet->access_balance < $quantity) {
                 throw new InsufficientBalanceException("Seller does not have enough {$market->base_currency}");
             }
 
-            if ($buyerQuoteWallet->balance < $amountInQuoteCurrency) {
+            if ($buyerQuoteWallet->access_balance < $amountInQuoteCurrency) {
                 throw new InsufficientBalanceException("Buyer does not have enough {$market->quote_currency}");
             }
         }
     }
 
-    private function processBuyTransactions($requestDTO, $buyerWallet, $sellerWallet, $buyerQuoteWallet, $sellerQuoteWallet, $amount, $amountInQuoteCurrency, $receivedAmount, $fee, $otc_order, $market)
+    private function processBuyTransactions($buyerUserId, $buyerWallet, $sellerWallet, $buyerQuoteWallet, $sellerQuoteWallet, $quantity, $amountInQuoteCurrency, $receivedAmount, $fee, $otc_order)
     {
-        $this->createTransaction($requestDTO->getBuyerUserId(), $buyerWallet, $otc_order, $receivedAmount, TransactionTypeEnum::BUY, $market, $amount, 'خرید');
         $buyerWallet->increment('balance', $receivedAmount);
+        $this->createTransaction($buyerUserId, $buyerWallet, $otc_order, $receivedAmount, TransactionTypeEnum::BUY, $quantity, 'خرید');
 
-        $this->createTransaction($requestDTO->getBuyerUserId(), $buyerQuoteWallet, $otc_order, -$amountInQuoteCurrency, TransactionTypeEnum::SELL, $market, $amount, 'خرید');
         $buyerQuoteWallet->decrement('balance', $amountInQuoteCurrency);
+        $this->createTransaction($buyerUserId, $buyerQuoteWallet, $otc_order, -$amountInQuoteCurrency, TransactionTypeEnum::SELL, $quantity, 'خرید');
 
-        $this->createTransaction($requestDTO->getSellerUserId(), $sellerQuoteWallet, $otc_order, $amountInQuoteCurrency, TransactionTypeEnum::BUY, $market, $amount, 'فروش');
         $sellerQuoteWallet->increment('balance', $amountInQuoteCurrency);
+        $this->createTransaction($this->exchangeUserId, $sellerQuoteWallet, $otc_order, $amountInQuoteCurrency, TransactionTypeEnum::BUY, $quantity, 'فروش');
 
-        $this->createTransaction($requestDTO->getSellerUserId(), $sellerWallet, $otc_order, -$receivedAmount, TransactionTypeEnum::SELL, $market, $amount, 'فروش');
         $sellerWallet->decrement('balance', $receivedAmount);
+        $this->createTransaction($this->exchangeUserId, $sellerWallet, $otc_order, -$receivedAmount, TransactionTypeEnum::SELL, $quantity, 'فروش');
 
-        $this->createCommissionTransaction($requestDTO->getSellerUserId(), $sellerWallet, $otc_order, $fee, $market, $amount, 'کارمزد معامله');
+        $this->createCommissionTransaction($sellerWallet, $otc_order, $fee, $quantity);
     }
 
-    private function processSellTransactions($requestDTO, $sellerWallet, $buyerWallet, $sellerQuoteWallet, $buyerQuoteWallet, $amount, $amountInQuoteCurrency, $receivedAmount, $fee, $otc_order, $market)
+    private function processSellTransactions($sellerUserId, $sellerWallet, $buyerWallet, $sellerQuoteWallet, $buyerQuoteWallet, $quantity, $amountInQuoteCurrency, $receivedAmount, $fee, $otc_order)
     {
-        $this->createTransaction($requestDTO->getSellerUserId(), $sellerWallet, $otc_order, -$amount, TransactionTypeEnum::SELL, $market, $amount, 'فروش');
-        $sellerWallet->decrement('balance', $amount);
+        $sellerWallet->decrement('balance', $quantity);
+        $this->createTransaction($sellerUserId, $sellerWallet, $otc_order, -$quantity, TransactionTypeEnum::SELL, $quantity, 'فروش');
 
-        $this->createTransaction($requestDTO->getSellerUserId(), $sellerQuoteWallet, $otc_order, $receivedAmount, TransactionTypeEnum::BUY, $market, $amount, 'فروش');
         $sellerQuoteWallet->increment('balance', $receivedAmount);
+        $this->createTransaction($sellerUserId, $sellerQuoteWallet, $otc_order, $receivedAmount, TransactionTypeEnum::BUY, $quantity, 'فروش');
 
-        $this->createTransaction($requestDTO->getBuyerUserId(), $buyerQuoteWallet, $otc_order, -$amountInQuoteCurrency, TransactionTypeEnum::SELL, $market, $amount, 'خرید');
-        $buyerQuoteWallet->decrement('balance', $amountInQuoteCurrency);
+        $buyerQuoteWallet->decrement('balance', $receivedAmount);
+        $this->createTransaction($this->exchangeUserId, $buyerQuoteWallet, $otc_order, -$receivedAmount, TransactionTypeEnum::SELL, $quantity, 'خرید');
 
-        $this->createTransaction($requestDTO->getBuyerUserId(), $buyerWallet, $otc_order, $amount, TransactionTypeEnum::BUY, $market, $amount, 'خرید');
-        $buyerWallet->increment('balance', $amount);
+        $buyerWallet->increment('balance', $quantity);
+        $this->createTransaction($this->exchangeUserId, $buyerWallet, $otc_order, $quantity, TransactionTypeEnum::BUY, $quantity, 'خرید');
 
-        $this->createCommissionTransaction($sellerQuoteWallet, $otc_order, $fee, $market, $amount, 'کارمزد معامله');
+        if ($fee > 0) {
+            $this->createCommissionTransaction($buyerQuoteWallet, $otc_order, $fee, $quantity);
+        }
     }
 
-    private function createTransaction($userId, $wallet, $otc_order, $amount, $type, $market, $quantity, $description)
+    private function createTransaction($userId, $wallet, $otc_order, $receivedAmount, $type, $quantity, $description)
     {
         Transaction::query()->create([
             'user_id' => $userId,
             'wallet_id' => $wallet->id,
             'otc_order_id' => $otc_order->id,
             'balance' => $wallet->balance,
-            'amount' => $amount,
+            'amount' => $receivedAmount,
             'type' => $type,
             'subtype' => TransactionSubTypeEnum::OTC,
             'status' => TransactionStatusEnum::SUCCESS,
             'description' => "$description " . formatNumberTrimZeros($quantity)
-                . " {$market->base_currency} به قیمت "
-                . formatNumberTrimZeros($market->activeExchangePrice->price) . " تتر",
+            . " {$otc_order->market->base_currency} به قیمت "
+            . formatNumberTrimZeros($otc_order->price) . " تتر",
         ]);
     }
 
-    private function createCommissionTransaction($wallet, $otc_order, $fee, $market, $quantity, $description)
+    private function createCommissionTransaction($wallet, $otc_order, $fee, $quantity)
     {
         Transaction::query()->create([
             'user_id' => $this->exchangeUserId,
@@ -169,8 +209,9 @@ class OTCService
             'type' => TransactionTypeEnum::FEE,
             'subtype' => TransactionSubTypeEnum::OTC,
             'status' => TransactionStatusEnum::SUCCESS,
-            'description' => "$description  {$market->quote_currency} به ارزش  " . formatNumberTrimZeros($quantity),
+            'description' => "کارمزد معامله  {$otc_order->market->base_currency} به ارزش  " . formatNumberTrimZeros($quantity),
         ]);
+
     }
 
 }

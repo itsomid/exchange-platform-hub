@@ -92,7 +92,7 @@
                         <input type="number"
                                name="unblock_amount"
                                id="unblock_amount"
-                               step="0.0000001"
+                               step="0.000000001"
                                value="0"
                                class="form-control font-number"
 
@@ -102,7 +102,7 @@
                     <div class="w-100 my-3"></div>
                     <div class="col-md-6" dir="ltr" >
 
-                        <input type="range"  class="form-range" value="0" min="0" max="{{$wallet->locked_balance}}" step="0.0000001"  id="amount_range">
+                        <input type="range"  class="form-range" value="0" min="0" max="{{$wallet->locked_balance}}" step="0.000000001"  id="amount_range">
                     </div>
                     <div class="w-100"></div>
                     <div class="col-md-6 mt-5">

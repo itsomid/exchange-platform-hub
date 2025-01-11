@@ -69,7 +69,7 @@
                             {{ $market->activeExchangePrice->price_change_percentage > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->price_change_percentage, 2) }}%
                         </div>
                         <h2 class="mb-0">
-                            ${{formatNumber($market->activeExchangePrice->sell_own_price,2)}}
+                            ${{formatNumber($market->activeExchangePrice->exchange_sell_price,2)}}
                         </h2>
 
                     </div>
@@ -110,7 +110,7 @@
                             {{ $market->activeExchangePrice->price_change_percentage > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->price_change_percentage, 2) }}%
                         </div>
                         <h2 class="mb-0">
-                            ${{formatNumber($market->activeExchangePrice->buy_own_price,2)}}
+                            ${{formatNumber($market->activeExchangePrice->exchange_buy_price,2)}}
                         </h2>
 
                     </div>
@@ -202,7 +202,7 @@
                         <div class="row mt-5">
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label class="form-label" for="exchange_profit_sell">سود صرافی از محل خرید از صرافی مرجع (فروش به مشتری)</label>
+                                    <label class="form-label" for="exchange_profit_sell">سود صرافی از محل خرید از صرافی مرجع (فروش به مشتری) (درصد)</label>
                                     <input name="exchange_profit_sell" id="exchange_profit_sell" class=" form-control font-number " dir="ltr"
                                            placeholder="سود صرافی از محل خرید از صرافی مرجع( فروش به مشتری)"
                                            value="{{formatNumber($market->activeExchangePrice->exchange_profit_sell,2)}}"

@@ -43,7 +43,7 @@ class DatabaseSeeder extends Seeder
             TransactionSeeder::class,
             NodeProviderSeeder::class,
             ExternalApiConfigSeeder::class,
-            OTCBuySeeder::class,
+//            OTCBuySeeder::class,
             DepositSeeder::class,
             WithdrawalSeeder::class,
             SavedAddressesSeeder::class,

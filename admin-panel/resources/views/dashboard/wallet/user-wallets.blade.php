@@ -29,7 +29,13 @@
                                     </li>
                                     <li class="list-inline-item d-flex gap-2 align-items-center">
                                         <i class="fa-regular fa-clock"></i>
-                                        <span class="text-body">آخرین فعالیت در ۳ مهر ۱۴۰۳</span>
+                                        <span class="text-body">
+                                            @if($user->latestActiveToken())
+                                                {{\App\Helpers\DateFormatter::convertToPersianDate($user->latestActiveToken()->last_used_at,'H:i:s %Y/%m/%d')}}
+                                            @else
+                                                <span>فعالیتی نداشته است</span>
+                                            @endif
+                                        </span>
                                     </li>
 
                                 </ul>
@@ -160,9 +166,10 @@
                             <span class="text-muted h4">{{$wallet->currency_symbol}}</span>
                         </h3>
                         <p class="mb-5">
+
                             <small class="text-muted fw-light">USDT</small>
-                            <span
-                                class="text-muted  me-2 font-number">{{formatNumberTrimZeros($wallet->assetValue,2)}}</span>
+                            <span class="text-primary me-2 font-number">{{formatNumber($wallet->assetValue,2)}}</span>
+
                         </p>
                         @if($wallet->locked_balance !=0)
                             <p class="mb-0">
@@ -178,13 +185,16 @@
                     <div class="card-body border-top">
                         <a href="{{route('admin.wallet.detail',['user'=>$user->id,'wallet'=>$wallet->id,'type'=>'deposit'])}}"
                            class="btn btn-label-primary me-2">مشاهده جزئیات</a>
-                        <a  class="btn btn-icon btn-primary" href="{{route('admin.wallet.increase-credit.form',['currency'=>$wallet->currency_symbol , 'user'=>$user])}}">
+                        <a class="btn btn-icon btn-primary"
+                           href="{{route('admin.wallet.increase-credit.form',['currency'=>$wallet->currency_symbol , 'user'=>$user])}}">
                             <i class="fa-regular fa-plus fa-xl"></i>
                         </a>
-                        <a class="btn btn-icon btn-danger ms-2" href="{{route('admin.wallet.block-balance.form',['wallet'=>$wallet , 'user'=>$user])}}">
+                        <a class="btn btn-icon btn-danger ms-2"
+                           href="{{route('admin.wallet.block-balance.form',['wallet'=>$wallet , 'user'=>$user])}}">
                             <i class="fa-regular fa-ban fa-xl"></i>
                         </a>
-                        <a class="btn btn-icon btn-success ms-2" href="{{route('admin.wallet.unblock-balance.form',['wallet'=>$wallet , 'user'=>$user])}}">
+                        <a class="btn btn-icon btn-success ms-2"
+                           href="{{route('admin.wallet.unblock-balance.form',['wallet'=>$wallet , 'user'=>$user])}}">
                             <i class="fa-regular fa-lock-open fa-xl"></i>
                         </a>
 

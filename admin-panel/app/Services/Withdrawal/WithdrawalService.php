@@ -61,6 +61,7 @@ class WithdrawalService
 
             $currency = Currency::whereSymbol($currencySymbol)->first();
             $fee = CurrencyChain::totalWithdrawalFee($currencyChain);
+            $exchangeFee = CurrencyChain::whereChain($currencyChain)->value('exchange_withdrawal_fee');
 
             $amountReceivedByUser = $totalAmount - $fee;
 
@@ -81,6 +82,7 @@ class WithdrawalService
                 'currency_symbol' => $currencySymbol,
                 'amount' => $totalAmount,
                 'fee' => $fee,
+                'exchange_fee' => $exchangeFee,
                 'address' => $address,
                 'status' => $totalAmount >= $currency->max_auto_withdraw_amount ? WithdrawalStatusEnum::AWAITING_APPROVAL : WithdrawalStatusEnum::PENDING,
             ]);
@@ -144,17 +146,17 @@ class WithdrawalService
                 'user_id' => $withdrawal->user->id,
                 'wallet_id' => $wallet->id,
                 'withdrawal_id' => $withdrawal->id,
-                'amount' => -$withdrawal->amount + $withdrawal->fee,
+                'amount' => -$withdrawal->amount,
                 'balance' => $wallet->balance,
                 'type' => TransactionTypeEnum::WITHDRAWAL,
                 'subtype' => TransactionSubTypeEnum::USER_INITIATED,
                 'status' => TransactionStatusEnum::SUCCESS,
-                'description' => 'واریز به آدرس: ' . $withdrawal->address . ' هش تراکنش: ' . $transactionHash,
+                'description' => 'برداشت به آدرس: ' . $withdrawal->address . ' هش تراکنش: ' . $transactionHash,
                 'admin_description' => ''
             ]);
 
 
-            $this->createExchangeWithdrawalFee($withdrawal->currency_symbol,$withdrawal->currency_chain, $withdrawal->id);
+            $this->createExchangeWithdrawalFee($withdrawal->currency_symbol,$withdrawal->currency_chain, $withdrawal);
 
             DB::commit();
 
@@ -231,7 +233,7 @@ class WithdrawalService
         }
     }
 
-    private function createExchangeWithdrawalFee($currency_symbol,$currency_chain, $withdrawalId): void
+    private function createExchangeWithdrawalFee($currency_symbol,$currency_chain, $withdrawal): void
     {
         try {
 
@@ -242,13 +244,13 @@ class WithdrawalService
                 Transaction::query()->create([
                     'user_id' => $this->exchangeUserId,
                     'wallet_id' => $exchangeWallet->id,
-                    'withdrawal_id' => $withdrawalId,
+                    'withdrawal_id' => $withdrawal->id,
                     'balance' => $exchangeWallet->balance,
                     'amount' => $exchangeWithdrawalFee,
                     'type' => TransactionTypeEnum::FEE,
                     'subtype' => TransactionSubTypeEnum::WITHDRAWAL_FEE,
                     'status' => TransactionStatusEnum::SUCCESS,
-                    'description' => "کارمزد برداشت  {$exchangeWallet->currency_symbol} به ارزش  " . formatNumberTrimZeros($exchangeWithdrawalFee),
+                    'description' => "کارمزد برداشت  {$exchangeWallet->currency_symbol} کاربر  " . "(#{$withdrawal->user->id}) ". $withdrawal->user->username ,
                 ]);
 
                 $exchangeWallet->increment('balance',$exchangeWithdrawalFee);

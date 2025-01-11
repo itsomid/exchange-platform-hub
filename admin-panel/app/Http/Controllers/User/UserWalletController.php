@@ -27,7 +27,7 @@ class UserWalletController extends Controller
         $totalAssetsValue = $this->walletService->totalAssetsValue($user);
 
         // Calculate the value of each wallet's currency
-        $walletsWithAssetsValues = $wallets->map(function ($wallet) {
+         $walletsWithAssetsValues = $wallets->map(function ($wallet) {
             $specificAssetValue = $this->walletService->specificAssetValue($wallet->user, $wallet->currency_symbol);
             $wallet->assetValue = $specificAssetValue; // Add the value to the wallet object
             return $wallet;

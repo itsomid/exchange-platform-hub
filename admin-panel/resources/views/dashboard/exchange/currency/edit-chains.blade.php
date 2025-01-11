@@ -87,7 +87,7 @@
                                     <div class="col-md-3 ">
                                         <div class="form-group">
                                             <label class="form-label" for="exchange_withdrawal_fee_{{$chain->id}}">فی صرافی برای برداشت (واحد)</label>
-                                            <input  name="chains[{{$chain->id}}][exchange_withdrawal_fee]" id="exchange_withdrawal_fee_{{$chain->id}}" class="form-control"
+                                            <input  name="chains[{{$chain->id}}][exchange_withdrawal_fee]" id="exchange_withdrawal_fee_{{$chain->id}}" class="form-control font-number"
                                                     placeholder="فی صرافیی را وارد کنید." value="{{$chain->exchange_withdrawal_fee}}" required>
                                             @error('exchange_withdrawal_fee')
                                             <small class="text-danger">{{$message}}</small>
