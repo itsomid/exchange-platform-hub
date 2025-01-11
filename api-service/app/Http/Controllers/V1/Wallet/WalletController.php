@@ -244,10 +244,17 @@ class WalletController extends Controller
      *                  property="data",
      *                  type="object",
      *                  @OA\Property(
-     *                  property="has_new_transaction",
+     *                  property="available_in",
      *                  type="boolean",
-     *                  example="is found new transactions ?"
+     *                  description="This api lock in specific currency chain until available_in",
+     *                  example="2025-01-11 15:48:04"
      *              ),
+     *                       @OA\Property(
+     *                   property="has_new_transaction",
+     *                   type="boolean",
+     *                   description="is found new transactions ?",
+     *                   example="true",
+     *               ),
      *              ),
      *         )
      *     ),
@@ -298,6 +305,7 @@ class WalletController extends Controller
         return response([
             'message' => __('messages.wallet_refresh'),
             'data' => [
+                'available_in' => now()->addMinutes(config('bitexroom.wallet_refresh.minutes'))->format('Y-m-d H:i:s'),
                 'has_new_transaction' => $hasNewTransaction,
             ],
         ]);

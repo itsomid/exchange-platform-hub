@@ -2470,9 +2470,15 @@
                                         },
                                         "data": {
                                             "properties": {
-                                                "has_new_transaction": {
+                                                "available_in": {
+                                                    "description": "This api lock in specific currency chain until available_in",
                                                     "type": "boolean",
-                                                    "example": "Wallet refreshed successfully."
+                                                    "example": "2025-01-11 15:48:04"
+                                                },
+                                                "has_new_transaction": {
+                                                    "description": "is found new transactions ?",
+                                                    "type": "boolean",
+                                                    "example": "true"
                                                 }
                                             },
                                             "type": "object"

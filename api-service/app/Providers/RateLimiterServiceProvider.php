@@ -38,7 +38,7 @@ class RateLimiterServiceProvider extends ServiceProvider
                 $key = $request->ip();
             }
 
-            return Limit::perMinute(2)->by($key);
+            return Limit::perMinutes(config('bitexroom.wallet_refresh.minutes'), config('bitexroom.wallet_refresh.max_attempts'))->by($key);
         });
     }
 }
