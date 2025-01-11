@@ -31,10 +31,13 @@ class DepositWithdrawCollection extends ResourceCollection
     {
         return $this->collection->map(fn (GetAllDepositWithdrawResponseDTO $responseDTO) => [
             'amount' => $responseDTO->getAmount(),
-            'type' => $responseDTO->getType(),
             'currency_symbol' => $responseDTO->getCurrencySymbol(),
+            'transaction_hash' => $responseDTO->getTransactionHashed(),
+            'wallet_address' => $responseDTO->getAddress(),
+            'type' => __('enum.transaction-type.'.$responseDTO->getType()->name),
+            'status' => __('enum.transaction-status.'.$responseDTO->getStatus()->name),
+            'confirmed_at' => $responseDTO->getConfirmedAt(),
             'created_at' => $responseDTO->getCreatedAt(),
-            'status' => $responseDTO->getStatus(),
         ])->toArray();
     }
 }

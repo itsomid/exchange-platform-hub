@@ -1322,6 +1322,49 @@
                 ]
             }
         },
+        "/api/v1/otc/fee": {
+            "get": {
+                "tags": [
+                    "OTC"
+                ],
+                "summary": "Get OTC Buy and Sell Fees",
+                "description": "Retrieve the buy and sell fees for OTC trades.",
+                "operationId": "abe8ee9e61f4610770f18e1ef93b164c",
+                "responses": {
+                    "200": {
+                        "description": "Buy and Sell fees for OTC trades.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FeeResource"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized, user is not authenticated.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/profile/sessions/active": {
             "get": {
                 "tags": [
@@ -1587,6 +1630,32 @@
                 "summary": "Get all deposit and withdrawal transactions",
                 "description": "Retrieve a list of all deposit and withdrawal transactions for the authenticated user.",
                 "operationId": "1cff133138d96a310f90a772aed0f0db",
+                "parameters": [
+                    {
+                        "name": "ccy",
+                        "in": "query",
+                        "description": "The currency symbol for filtering transactions.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "BTC"
+                        }
+                    },
+                    {
+                        "name": "transaction_type",
+                        "in": "query",
+                        "description": "The type of transaction to filter (e.g., deposit, withdrawal).",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "deposit",
+                                "withdrawal"
+                            ],
+                            "example": "deposit"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "List of deposit and withdrawal transactions.",
@@ -2934,6 +3003,26 @@
                 },
                 "type": "object"
             },
+            "AllDepositWithdrawalRequest": {
+                "description": "Query parameters for filtering deposit and withdrawal transactions.",
+                "properties": {
+                    "ccy": {
+                        "description": "The currency symbol for filtering transactions.",
+                        "type": "string",
+                        "example": "BTC"
+                    },
+                    "transaction_type": {
+                        "description": "The type of transaction to filter (e.g., deposit, withdrawal).",
+                        "type": "string",
+                        "enum": [
+                            "deposit",
+                            "withdrawal"
+                        ],
+                        "example": "deposit"
+                    }
+                },
+                "type": "object"
+            },
             "ReferralCodeCreateRequest": {
                 "required": [
                     "friend_fee"
@@ -3291,6 +3380,23 @@
                             "type": "string",
                             "example": "8.2"
                         }
+                    }
+                },
+                "type": "object"
+            },
+            "FeeResource": {
+                "title": "OTC Fees",
+                "description": "Representation of the buy and sell fees for OTC trades.",
+                "properties": {
+                    "buy_fee": {
+                        "description": "The fee for buying in OTC trades.",
+                        "type": "string",
+                        "example": "0.001"
+                    },
+                    "sell_fee": {
+                        "description": "The fee for selling in OTC trades.",
+                        "type": "string",
+                        "example": "0.002"
                     }
                 },
                 "type": "object"
