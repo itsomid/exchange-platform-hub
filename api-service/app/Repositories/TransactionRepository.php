@@ -17,6 +17,8 @@ class TransactionRepository implements TransactionRepositoryInterface
         return Transaction::query()->create([
             'user_id' => $requestDTO->getUserId(),
             'wallet_id' => $requestDTO->getWalletId(),
+            'deposit_id' => $requestDTO->getDepositId(),
+            'withdrawal_id' => $requestDTO->getWithdrawalId(),
             'otc_order_id' => $requestDTO->getOtcOrderId(),
             'balance' => $requestDTO->getBalance(),
             'amount' => $requestDTO->getAmount(),
@@ -42,13 +44,24 @@ class TransactionRepository implements TransactionRepositoryInterface
             ->whereIn('type', $transactionType)
             ->latest('id');
 
-        $transactions->when($currencySymbol && in_array(TransactionTypeEnum::DEPOSIT, $transactionType), function (Builder $q) use ($currencySymbol) {
-            $q->whereHas('deposit', fn (Builder $q) => $q->where('currency_symbol', $currencySymbol));
-        });
-
-        $transactions->when($currencySymbol && in_array(TransactionTypeEnum::WITHDRAWAL, $transactionType), function (Builder $q) use ($currencySymbol) {
-            $q->whereHas('withdrawal', fn (Builder $q) => $q->where('currency_symbol', $currencySymbol));
-        });
+        if ($currencySymbol) {
+            $transactions->where(function ($q) use ($transactionType, $currencySymbol) {
+                if (in_array(TransactionTypeEnum::DEPOSIT, $transactionType)) {
+                    $q->whereHas('deposit', fn (Builder $q) => $q->where('currency_symbol', $currencySymbol));
+                }
+                if (in_array(TransactionTypeEnum::WITHDRAWAL, $transactionType)) {
+                    if (in_array(TransactionTypeEnum::DEPOSIT, $transactionType)) {
+                        $q->orWhereHas('withdrawal', fn (Builder $q) => $q->where('currency_symbol', $currencySymbol));
+                    } else {
+                        $q->WhereHas('withdrawal', fn (Builder $q) => $q->where('currency_symbol', $currencySymbol));
+                    }
+                }
+            });
+        } else {
+            $transactions->where(function ($q) {
+                $q->has('deposit')->orHas('withdrawal');
+            });
+        }
 
         return $transactions->get();
     }
