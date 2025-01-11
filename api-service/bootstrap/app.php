@@ -4,6 +4,7 @@ use App\Exceptions\ServiceException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -23,9 +24,15 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         //        $middleware->redirectGuestsTo('/login');
-        $middleware->append(\App\Http\Middleware\SetLocale::class);
+        $middleware->append(\App\Http\Middleware\SetLocale::class)
+            ->throttleWithRedis();
     })
     ->withExceptions(function (Exceptions $exceptions) {
+        $exceptions->renderable(function (ThrottleRequestsException $e) {
+            return response([
+                'message' => __('auth.too_many_attempts'),
+            ], 429, $e->getHeaders());
+        });
         //Service Exception
         $exceptions->renderable(function (ServiceException $e, $request) {
             if (property_exists($e, 'render')) {

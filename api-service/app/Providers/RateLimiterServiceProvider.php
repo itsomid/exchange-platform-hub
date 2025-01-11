@@ -27,12 +27,7 @@ class RateLimiterServiceProvider extends ServiceProvider
             // Use email if provided; otherwise, fallback to IP
             $key = $request->input('email') ?? $request->ip();
 
-            return Limit::perMinute(config('auth.rate-limiter.too-many'))->by($key)
-                ->response(function () {
-                    return response()->json([
-                        'message' => __('auth.too_many_attempts'),
-                    ], 429);
-                });
+            return Limit::perMinute(config('auth.rate-limiter.too-many'))->by($key);
         });
 
         RateLimiter::for('wallet-check', function (Request $request) {
@@ -43,12 +38,7 @@ class RateLimiterServiceProvider extends ServiceProvider
                 $key = $request->ip();
             }
 
-            return Limit::perMinute(1)->by($key)
-                ->response(function () {
-                    return response()->json([
-                        'message' => __('auth.too_many_attempts'),
-                    ], 429);
-                });
+            return Limit::perMinute(2)->by($key);
         });
     }
 }
