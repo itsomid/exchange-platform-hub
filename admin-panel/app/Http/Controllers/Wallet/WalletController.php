@@ -52,8 +52,7 @@ class WalletController extends Controller
             }
 
             // Retrieve valid chains for this currency
-             $validChains = $currency->chains()->pluck('chain')->toArray();
-
+            $validChains = $currency->chains()->pluck('chain')->map(fn($chain) => $chain->value)->toArray();
             // Check if the selected chain is valid
             if (!in_array($request->chain, $validChains)) {
                 return redirect()->back()->withErrors(['chain' => 'شبکه انتخاب شده با ارز مطابقت ندارد.']);

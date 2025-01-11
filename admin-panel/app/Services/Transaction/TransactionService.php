@@ -4,6 +4,7 @@ namespace App\Services\Transaction;
 
 use App\Enums\BalanceOperationEnum;
 use App\Enums\DepositStatusEnum;
+use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Enums\WithdrawalStatusEnum;
@@ -84,7 +85,7 @@ class TransactionService
                 'address' => null,
                 'transaction_hash' => null,
                 'description' => 'manual transfer by admin: (#' . $adminId . ') to: (#' . User::find($toUserId)->username . ')',
-                'status' => DepositStatusEnum::CONFIRMED->value,
+                'status' => DepositStatusEnum::CONFIRMED,
             ]);
             $withdrawal = Withdrawal::create([
                 'user_id' => $type === TransactionTypeEnum::WITHDRAWAL->value ? $toUserId : $fromUserId,
@@ -94,7 +95,7 @@ class TransactionService
                 'address' => null,
                 'transaction_hash' => null,
                 'description' => 'manual transfer by admin: (#' . $adminId . ') to: (#' . User::find($toUserId)->username . ')',
-                'status' => WithdrawalStatusEnum::COMPLETED->value,
+                'status' => WithdrawalStatusEnum::COMPLETED,
             ]);
             $depositId = $deposit->id;
             $withdrawalId = $withdrawal->id;
@@ -178,7 +179,7 @@ class TransactionService
             'balance' => $wallet->balance,
             'type' => $type,
             'subtype' => $subtype,
-            'status' => 'completed',
+            'status' => TransactionStatusEnum::SUCCESS,
             'description' => $description,
             'admin_description' => $admin_description
         ]);
