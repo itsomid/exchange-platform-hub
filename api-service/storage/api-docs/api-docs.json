@@ -1587,6 +1587,32 @@
                 "summary": "Get all deposit and withdrawal transactions",
                 "description": "Retrieve a list of all deposit and withdrawal transactions for the authenticated user.",
                 "operationId": "1cff133138d96a310f90a772aed0f0db",
+                "parameters": [
+                    {
+                        "name": "ccy",
+                        "in": "query",
+                        "description": "The currency symbol for filtering transactions.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "BTC"
+                        }
+                    },
+                    {
+                        "name": "transaction_type",
+                        "in": "query",
+                        "description": "The type of transaction to filter (e.g., deposit, withdrawal).",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "deposit",
+                                "withdrawal"
+                            ],
+                            "example": "deposit"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "List of deposit and withdrawal transactions.",
@@ -2930,6 +2956,26 @@
                         "description": "The mobile number of the user.",
                         "type": "string",
                         "example": "09107588958"
+                    }
+                },
+                "type": "object"
+            },
+            "AllDepositWithdrawalRequest": {
+                "description": "Query parameters for filtering deposit and withdrawal transactions.",
+                "properties": {
+                    "ccy": {
+                        "description": "The currency symbol for filtering transactions.",
+                        "type": "string",
+                        "example": "BTC"
+                    },
+                    "transaction_type": {
+                        "description": "The type of transaction to filter (e.g., deposit, withdrawal).",
+                        "type": "string",
+                        "enum": [
+                            "deposit",
+                            "withdrawal"
+                        ],
+                        "example": "deposit"
                     }
                 },
                 "type": "object"

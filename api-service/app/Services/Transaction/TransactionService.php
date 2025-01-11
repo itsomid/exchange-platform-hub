@@ -2,6 +2,7 @@
 
 namespace App\Services\Transaction;
 
+use App\Enums\TransactionTypeEnum;
 use App\Models\Transaction;
 use App\Repositories\Interfaces\TransactionRepositoryInterface;
 use App\Services\Transaction\DTO\GetAllDepositWithdrawRequestDTO;
@@ -13,10 +14,14 @@ class TransactionService
 
     public function getAllDepositWithdraw(GetAllDepositWithdrawRequestDTO $requestDTO): array
     {
-        $lists = $this->transactionRepository->getAllDepositWithdraw($requestDTO->getUserId());
+        $lists = $this->transactionRepository->getAllDepositWithdraw(
+            userId: $requestDTO->getUserId(),
+            transactionType: $requestDTO->getTransactionType(),
+            currencySymbol: $requestDTO->getCurrencySymbol()
+        );
 
         return $lists->map(function (Transaction $transaction) {
-            $relation = $transaction->relationLoaded('deposit') ? 'deposit' : 'withdrawal';
+            $relation = $transaction->type === TransactionTypeEnum::DEPOSIT ? 'deposit' : 'withdrawal';
             $relation = $transaction->{$relation};
 
             return resolve(GetAllDepositWithdrawResponseDTO::class)
