@@ -28,7 +28,7 @@ class OTCBuySeeder extends Seeder
             ->setBuyerUserId($buyerUserId) // Example buyer user ID
             ->setSellerUserId($exchangeUserId) // Example seller user ID
             ->setMarketId($firstMarket->id) // Example market ID
-            ->setQuantity('1');
+            ->setQuantity('0.1');
 
 
         $sellRequestDTO = (new OTCRequestDTO())
