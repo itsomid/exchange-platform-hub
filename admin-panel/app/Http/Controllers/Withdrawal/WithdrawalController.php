@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Withdrawal;
 
 use App\Enums\TransactionTypeEnum;
+use App\Enums\WithdrawalStatusEnum;
 use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
@@ -37,6 +38,7 @@ class WithdrawalController extends Controller
 
 
          $topUsers = Withdrawal::with(['currency', 'user'])
+             ->where('status',WithdrawalStatusEnum::COMPLETED)
             ->get()
             ->groupBy('user_id')
             ->map(function ($withdraws, $userId) {

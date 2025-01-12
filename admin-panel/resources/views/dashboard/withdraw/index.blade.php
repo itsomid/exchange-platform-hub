@@ -62,7 +62,7 @@
                             <span class="text-white">کاربران با بیشترین برداشت امروز</span>
                             <div class="d-flex align-items-baseline my-1">
                                 <small class="text-white mx-2">مجموع: </small>
-                                <h4 class="mb-0 me-2 text-primary">{{formatNumberTrimZeros($totalTopUsersWithdrawals)}}</h4>
+                                <h4 class="mb-0 me-2 text-primary">{{formatNumber($totalTopUsersWithdrawals,2)}}</h4>
                                 <small class="text-primary">USDT</small>
                             </div>
                         </div>
