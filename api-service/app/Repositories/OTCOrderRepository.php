@@ -23,12 +23,13 @@ class OTCOrderRepository implements OTCOrderRepositoryInterface
         ]);
     }
 
-    public function lists(int $userId): Collection
+    public function lists(int $userId, array $queryString): Collection
     {
         return OTCOrder::query()
             ->where('user_id', $userId)
             ->whereIn('status', [OTCOrderStatusEnum::SUCCESS, OTCOrderStatusEnum::PENDING])
             ->latest()
+            ->filterBy($queryString)
             ->get();
     }
 }

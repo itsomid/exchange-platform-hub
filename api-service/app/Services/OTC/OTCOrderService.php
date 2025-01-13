@@ -13,7 +13,7 @@ class OTCOrderService
 
     public function lists(OTCOrderListsRequestDTO $requestDTO): array
     {
-        $orders = $this->orderRepository->lists($requestDTO->getUserId());
+        $orders = $this->orderRepository->lists($requestDTO->getUserId(), $requestDTO->getFilterQueryString());
 
         return $orders->map(fn (OTCOrder $order) => resolve(OTCOrderListsResponseDTO::class)
             ->setCreatedAt($order->created_at)

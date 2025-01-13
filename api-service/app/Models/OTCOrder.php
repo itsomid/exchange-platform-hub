@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\OTCOrderStatusEnum;
 use App\Enums\OTCOrderTypeEnum;
+use App\Filters\Filterable;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,14 +21,21 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class OTCOrder extends Model
 {
+    use Filterable;
+
     protected $table = 'otc_orders';
 
     protected $fillable = ['user_id', 'market_id', 'quantity', 'price', 'fee', 'type', 'status'];
 
-    protected $casts = [
-        'type' => OTCOrderTypeEnum::class,
-        'status' => OTCOrderStatusEnum::class,
-    ];
+    public string $filterNameSpace = 'App\Filters\OTCOrderFilter';
+
+    protected function casts(): array
+    {
+        return [
+            'type' => OTCOrderTypeEnum::class,
+            'status' => OTCOrderStatusEnum::class,
+        ];
+    }
 
     public function transactions(): HasMany
     {

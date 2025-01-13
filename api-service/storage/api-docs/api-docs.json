@@ -1252,6 +1252,42 @@
                 "summary": "Get OTC Order Histories",
                 "description": "Retrieve the OTC order history for the authenticated user.",
                 "operationId": "6053bdd5d9bc12de93eea7a3713dd2b9",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Filter history by type (e.g., sell, buy)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "sell",
+                                "buy"
+                            ],
+                            "example": "sell"
+                        }
+                    },
+                    {
+                        "name": "market",
+                        "in": "query",
+                        "description": "Filter history by market id (e.g., deposit, withdrawal).",
+                        "required": false,
+                        "schema": {
+                            "type": "int",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "created_at",
+                        "in": "query",
+                        "description": "Filter history by created time",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "2022-12-01,2022-12-15 12:30:00"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "List of OTC order histories.",

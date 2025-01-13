@@ -10,5 +10,5 @@ interface OTCOrderRepositoryInterface
 {
     public function create(CreateOTCOrderRequestDTO $requestDTO): OTCOrder;
 
-    public function lists(int $userId): Collection;
+    public function lists(int $userId, array $queryString): Collection;
 }
