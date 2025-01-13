@@ -1,4 +1,5 @@
 <?php
+
 return [
     'transaction-type' => [
         \App\Enums\TransactionTypeEnum::DEPOSIT->name => 'deposit',
@@ -12,5 +13,16 @@ return [
         \App\Enums\TransactionStatusEnum::SUCCESS->name => 'success',
         \App\Enums\TransactionStatusEnum::FAILED->name => 'failed',
         \App\Enums\TransactionStatusEnum::PENDING->name => 'pending',
+    ],
+    'otc' => [
+        'status' => [
+            \App\Enums\OTCOrderStatusEnum::SUCCESS->name => 'success',
+            \App\Enums\OTCOrderStatusEnum::PENDING->name => 'failed',
+            \App\Enums\OTCOrderStatusEnum::CANCELED->name => 'canceled',
+        ],
+        'type' => [
+            \App\Enums\OTCOrderTypeEnum::BUY->name => 'buy',
+            \App\Enums\OTCOrderTypeEnum::SELL->name => 'sell',
+        ],
     ],
 ];

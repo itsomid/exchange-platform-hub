@@ -1244,6 +1244,52 @@
                 }
             }
         },
+        "/api/v1/otc/order-histories": {
+            "get": {
+                "tags": [
+                    "OTC"
+                ],
+                "summary": "Get OTC Order Histories",
+                "description": "Retrieve the OTC order history for the authenticated user.",
+                "operationId": "6053bdd5d9bc12de93eea7a3713dd2b9",
+                "responses": {
+                    "200": {
+                        "description": "List of OTC order histories.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/OTCOrderHistoryResource"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized, user is not authenticated.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/otc/sell": {
             "post": {
                 "tags": [
@@ -3458,6 +3504,58 @@
                         "type": "number",
                         "format": "float",
                         "example": 10
+                    }
+                },
+                "type": "object"
+            },
+            "OTCOrderHistoryResource": {
+                "title": "OTC Order History",
+                "description": "Representation of an OTC order history entry.",
+                "properties": {
+                    "created_at": {
+                        "description": "The date and time when the order was created.",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-01-10T12:34:56Z"
+                    },
+                    "type": {
+                        "description": "The type of the OTC order (e.g., buy or sell).",
+                        "type": "string",
+                        "enum": [
+                            "sell",
+                            "buy"
+                        ],
+                        "example": "buy"
+                    },
+                    "status": {
+                        "description": "The current status of the OTC order.",
+                        "type": "string",
+                        "enum": [
+                            "success",
+                            "pending",
+                            "canceled"
+                        ],
+                        "example": "success"
+                    },
+                    "quantity": {
+                        "description": "The quantity of the asset in the order.",
+                        "type": "string",
+                        "example": "1.2345"
+                    },
+                    "price": {
+                        "description": "The price of the asset in the order.",
+                        "type": "string",
+                        "example": "20000"
+                    },
+                    "fee": {
+                        "description": "The fee charged for the order.",
+                        "type": "string",
+                        "example": "0.001"
+                    },
+                    "market_name": {
+                        "description": "The market in which the OTC order was placed.",
+                        "type": "string",
+                        "example": "BTCUSDT"
                     }
                 },
                 "type": "object"
