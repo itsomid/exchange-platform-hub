@@ -3555,6 +3555,22 @@
                         "type": "string",
                         "example": "BTC"
                     },
+                    "wallet_address": {
+                        "description": "Wallet address",
+                        "type": "string",
+                        "example": "0xDE746Fb03a114674449d54ca5C90d34BBEB500ab"
+                    },
+                    "transaction_hash": {
+                        "description": "Transaction hashed",
+                        "type": "string",
+                        "example": "0xbeda06f753e2e507bd396049ab57bc4bd6685183"
+                    },
+                    "confirmed_at": {
+                        "description": "Transaction confirmed time",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-12-21T14:30:00Z"
+                    },
                     "created_at": {
                         "description": "Transaction date and time",
                         "type": "string",
