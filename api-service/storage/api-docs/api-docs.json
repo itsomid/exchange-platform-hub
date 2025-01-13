@@ -3550,6 +3550,11 @@
                         "type": "string",
                         "example": "BTC"
                     },
+                    "currency_chain": {
+                        "description": "Currency chain",
+                        "type": "string",
+                        "example": "BTC"
+                    },
                     "created_at": {
                         "description": "Transaction date and time",
                         "type": "string",
