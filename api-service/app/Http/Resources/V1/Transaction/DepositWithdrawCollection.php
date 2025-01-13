@@ -16,6 +16,7 @@ use Illuminate\Http\Resources\Json\ResourceCollection;
  *     @OA\Property(property="amount", type="number", format="float", description="Transaction amount", example=100.5),
  *     @OA\Property(property="type", type="string", enum={"deposit", "withdrawal"}, description="Transaction type (deposit or withdrawal)", example="deposit"),
  *     @OA\Property(property="currency_symbol", type="string", description="Currency symbol", example="BTC"),
+ *     @OA\Property(property="currency_chain", type="string", description="Currency chain", example="BTC"),
  *     @OA\Property(property="created_at", type="string", format="date-time", description="Transaction date and time", example="2024-12-21T14:30:00Z"),
  *     @OA\Property(property="status", enum={"success", "failed", "pending"}, type="string", description="Transaction status", example="completed")
  * )
@@ -32,6 +33,7 @@ class DepositWithdrawCollection extends ResourceCollection
         return $this->collection->map(fn (GetAllDepositWithdrawResponseDTO $responseDTO) => [
             'amount' => $responseDTO->getAmount(),
             'currency_symbol' => $responseDTO->getCurrencySymbol(),
+            'currency_chain' => $responseDTO->getCurrencyChain(),
             'transaction_hash' => $responseDTO->getTransactionHashed(),
             'wallet_address' => $responseDTO->getAddress(),
             'type' => __('enum.transaction-type.'.$responseDTO->getType()->name),
