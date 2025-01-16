@@ -9,6 +9,7 @@ use Carbon\Carbon;
 class GetAllDepositWithdrawResponseDTO
 {
     private string $currencySymbol;
+    private string $currencyChain;
 
     private string $amount;
 
@@ -112,5 +113,16 @@ class GetAllDepositWithdrawResponseDTO
     public function getConfirmedAt(): ?Carbon
     {
         return $this->confirmedAt;
+    }
+
+    public function setCurrencyChain(string $currencyChain): GetAllDepositWithdrawResponseDTO
+    {
+        $this->currencyChain = $currencyChain;
+        return $this;
+    }
+
+    public function getCurrencyChain(): string
+    {
+        return $this->currencyChain;
     }
 }

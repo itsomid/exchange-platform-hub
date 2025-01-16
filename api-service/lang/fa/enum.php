@@ -14,4 +14,15 @@ return [
         \App\Enums\TransactionStatusEnum::FAILED->name => 'خطا',
         \App\Enums\TransactionStatusEnum::PENDING->name => 'در انتظار',
     ],
+    'otc' => [
+        'status' => [
+            \App\Enums\OTCOrderStatusEnum::SUCCESS->name => 'موفق',
+            \App\Enums\OTCOrderStatusEnum::PENDING->name => 'موفق',
+            \App\Enums\OTCOrderStatusEnum::CANCELED->name => 'لغو شده',
+        ],
+        'type' => [
+            \App\Enums\OTCOrderTypeEnum::BUY->name => 'خرید',
+            \App\Enums\OTCOrderTypeEnum::SELL->name => 'فروش',
+        ],
+    ],
 ];

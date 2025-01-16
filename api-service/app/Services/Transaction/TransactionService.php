@@ -32,7 +32,8 @@ class TransactionService
                 ->setType($transaction->type)
                 ->setAddress($relation->address)
                 ->setTransactionHashed($relation->transaction_hash)
-                ->setConfirmedAt($relation->confirmed_at);
+                ->setConfirmedAt($relation->confirmed_at)
+                ->setCurrencyChain($relation->currency_chain);
         })->toArray();
     }
 }
