@@ -18,6 +18,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string $last_name
  * @property string $email
  * @property string $password
+ * @property string $introducer_code
  * @property string $google2fa_secret
  * @property int    $id
  * @property string $two_factor_secret

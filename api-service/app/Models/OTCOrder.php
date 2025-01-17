@@ -18,6 +18,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string             $price
  * @property string             $fee
  * @property OTCOrderStatusEnum $status
+ * @property User               $user
+ * @property int                $user_id
  */
 class OTCOrder extends Model
 {
