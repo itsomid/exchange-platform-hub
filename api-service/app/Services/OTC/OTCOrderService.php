@@ -23,6 +23,8 @@ class OTCOrderService
             ->setPrice($order->price)
             ->setFee($order->fee)
             ->setStatus($order->status)
+            ->setBaseCurrency($order->market->base_currency)
+            ->setQuoteCurrency($order->market->quote_currency)
         )->toArray();
     }
 }

@@ -11,6 +11,8 @@ class OTCOrderListsResponseDTO
     private Carbon $created_at;
 
     private string $market;
+    private string $baseCurrency;
+    private string $quoteCurrency;
 
     private OTCOrderTypeEnum $type;
 
@@ -104,5 +106,27 @@ class OTCOrderListsResponseDTO
     public function getStatus(): OTCOrderStatusEnum
     {
         return $this->status;
+    }
+
+    public function setBaseCurrency(string $baseCurrency): OTCOrderListsResponseDTO
+    {
+        $this->baseCurrency = $baseCurrency;
+        return $this;
+    }
+
+    public function getBaseCurrency(): string
+    {
+        return $this->baseCurrency;
+    }
+
+    public function setQuoteCurrency(string $quoteCurrency): OTCOrderListsResponseDTO
+    {
+        $this->quoteCurrency = $quoteCurrency;
+        return $this;
+    }
+
+    public function getQuoteCurrency(): string
+    {
+        return $this->quoteCurrency;
     }
 }

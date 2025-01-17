@@ -57,7 +57,19 @@ use Illuminate\Http\Resources\Json\ResourceCollection;
  *         type="string",
  *         description="The market in which the OTC order was placed.",
  *         example="BTCUSDT"
- *     )
+ *     ),
+ *          @OA\Property(
+ *          property="base_currency",
+ *          type="string",
+ *          description="The base currency in which the OTC order was placed.",
+ *          example="BTC"
+ *      ),
+ *      @OA\Property(
+ *          property="quote_currency",
+ *          type="string",
+ *          description="The quote currency in which the OTC order was placed.",
+ *          example="USDT"
+ *      )
  * )
  */
 class OrdersListsCollection extends ResourceCollection
@@ -77,6 +89,8 @@ class OrdersListsCollection extends ResourceCollection
             'price' => $responseDTO->getPrice(),
             'fee' => $responseDTO->getFee(),
             'market_name' => $responseDTO->getMarket(),
+            'base_currency' => $responseDTO->getBaseCurrency(),
+            'quote_currency' => $responseDTO->getQuoteCurrency(),
         ])->toArray();
     }
 }

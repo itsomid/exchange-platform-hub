@@ -26,6 +26,7 @@ class OTCOrderRepository implements OTCOrderRepositoryInterface
     public function lists(int $userId, array $queryString): Collection
     {
         return OTCOrder::query()
+            ->with('market')
             ->where('user_id', $userId)
             ->whereIn('status', [OTCOrderStatusEnum::SUCCESS, OTCOrderStatusEnum::PENDING])
             ->latest()
