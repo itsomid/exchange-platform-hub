@@ -352,8 +352,7 @@
                                        data-bs-target="#deposit-{{$deposit->id}}">
                                         <i class="fa-regular fa-eye fa-xl"></i>
                                     </a>
-                                    <div class="modal fade" id="deposit-{{$deposit->id}}" tabindex="-1"
-                                         aria-hidden="true">
+                                    <div class="modal fade" id="deposit-{{$deposit->id}}" tabindex="-1" aria-model="true">
                                         <div class="modal-dialog" role="document">
                                             <div class="modal-content">
                                                 <div class="modal-header" dir="ltr">
