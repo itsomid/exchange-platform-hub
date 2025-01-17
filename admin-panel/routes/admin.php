@@ -28,6 +28,7 @@ use App\Http\Controllers\Wallet\WalletController;
 use App\Http\Controllers\OTCOrder\OTCOrderController;
 use App\Http\Controllers\Deposit\DepositController;
 use App\Http\Controllers\Withdrawal\WithdrawalController;
+use App\Http\Controllers\Exchange\ExchangeWalletController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -136,6 +137,8 @@ Route::post('/exchange/markets',[MarketController::class,'store'])->name('market
 Route::get('/exchange/markets/{market}/edit',[MarketController::class,'edit'])->name('market.edit')->can('market');
 Route::patch('/exchange/markets/{market}',[MarketController::class,'update'])->name('market.update')->can('market');
 Route::get('/exchange/ref-exchanges',[RefExchangeController::class,'index'])->name('exchange.index')->can('ref-exchanges');
+Route::get('/exchange/wallets',[ExchangeWalletController::class,'index'])->name('exchange.wallet');
+
 
 Route::prefix('transactions')->group(function (){
    Route::get('/',[TransactionController::class,'index'])->name('transaction.index')->can('transaction');
