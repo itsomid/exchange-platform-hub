@@ -44,7 +44,6 @@ class ReferralCommissionService
 
             // convert commission from base currency to usdt
             if ($otcOrder->type === OTCOrderTypeEnum::BUY) {
-                dd(123123);
                 $introducerCommissionToUSDT = bcmul($introducerCommission, $otcOrder->price,8);
                 $friendCommissionToUSDT = bcmul($friendCommission, $otcOrder->price, 8);
                 if ($introducerCommission > 0) {
