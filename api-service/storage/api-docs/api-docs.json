@@ -3164,11 +3164,6 @@
                         "description": "The symbol of the currency to refresh.",
                         "type": "string",
                         "example": "BNB"
-                    },
-                    "chain_symbol": {
-                        "description": "The symbol of the chain for the specified currency.",
-                        "type": "string",
-                        "example": "BSC"
                     }
                 },
                 "type": "object"
@@ -3592,6 +3587,16 @@
                         "description": "The market in which the OTC order was placed.",
                         "type": "string",
                         "example": "BTCUSDT"
+                    },
+                    "base_currency": {
+                        "description": "The base currency in which the OTC order was placed.",
+                        "type": "string",
+                        "example": "BTC"
+                    },
+                    "quote_currency": {
+                        "description": "The quote currency in which the OTC order was placed.",
+                        "type": "string",
+                        "example": "USDT"
                     }
                 },
                 "type": "object"

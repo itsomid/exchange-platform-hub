@@ -33,57 +33,58 @@ class CheckWalletService
     {
         $hasNewTransaction = false;
         $wallet = $this->walletRepository->getOneByCurrency($requestDTO->getCurrencySymbol(), $requestDTO->getUserId());
-        $chain = $wallet->chains[0];
+        $chains = $wallet->chains;
 
         $hdDeposit = resolve(HDDepositService::class);
 
-        $transactions = $hdDeposit->getDepositLists(
-            resolve(GetDepositListsRequestDTO::class)
-                ->setCurrencySymbol($wallet->currency_symbol)
-                ->setWalletAddress($chain->address)
-        );
+        foreach ($chains as $chain) {
+            $transactions = $hdDeposit->getDepositLists(
+                resolve(GetDepositListsRequestDTO::class)
+                    ->setCurrencySymbol($wallet->currency_symbol)
+                    ->setWalletAddress($chain->address)
+            );
+            foreach ($transactions as $transaction) {
+                if ($this->depositRepository->isDepositExists($transaction->getTransactionHash())) {
+                    continue;
+                }
+                $transactionHash = $transaction->getTransactionHash();
+                try {
+                    DB::beginTransaction();
+                    $deposit = $this->depositRepository->create(resolve(CreateDepositRequestDTO::class)
+                        ->setUserId($transaction->getUserId())
+                        ->setCurrencySymbol($transaction->getCryptocurrency())
+                        ->setCurrencyChain($transaction->getBlockChain())
+                        ->setAmount($transaction->getAmount())
+                        ->setAddress($transaction->getWalletAddress())
+                        ->setTransactionHash($transaction->getTransactionHash())
+                        ->setConfirmedAt($transaction->getTimestamp())
+                        ->setStatus(DepositStatusEnum::CONFIRMED)
+                    );
 
-        foreach ($transactions as $transaction) {
-            if ($this->depositRepository->isDepositExists($transaction->getTransactionHash())) {
-                continue;
+                    $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
+                        ->setUserId($requestDTO->getUserId())
+                        ->setDepositId($deposit->id)
+                        ->setWalletId($wallet->id)
+                        ->setBalance($wallet->balance)
+                        ->setAmount($transaction->getAmount())
+                        ->setType(TransactionTypeEnum::DEPOSIT)
+                        ->setSubtype(TransactionSubTypeEnum::USER_INITIATED)
+                        ->setStatus(TransactionStatusEnum::SUCCESS)
+                        ->setDescription('واریز به آدرس: '.$deposit->address.' هش تراکنش: '.$transactionHash)
+                    );
+                    $wallet->increment('balance', $transaction->getAmount());
+                    DB::commit();
+                    $hasNewTransaction = true;
+                } catch (Throwable $exception) {
+                    DB::rollBack();
+                    report($exception);
+                    throw $exception;
+                }
             }
-            $transactionHash = $transaction->getTransactionHash();
-            try {
-                DB::beginTransaction();
-                $deposit = $this->depositRepository->create(resolve(CreateDepositRequestDTO::class)
-                    ->setUserId($transaction->getUserId())
-                    ->setCurrencySymbol($transaction->getCryptocurrency())
-                    ->setCurrencyChain($transaction->getBlockChain())
-                    ->setAmount($transaction->getAmount())
-                    ->setAddress($transaction->getWalletAddress())
-                    ->setTransactionHash($transaction->getTransactionHash())
-                    ->setConfirmedAt($transaction->getTimestamp())
-                    ->setStatus(DepositStatusEnum::CONFIRMED)
-                );
 
-                $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
-                    ->setUserId($requestDTO->getUserId())
-                    ->setDepositId($deposit->id)
-                    ->setWalletId($wallet->id)
-                    ->setBalance($wallet->balance)
-                    ->setAmount($transaction->getAmount())
-                    ->setType(TransactionTypeEnum::DEPOSIT)
-                    ->setSubtype(TransactionSubTypeEnum::USER_INITIATED)
-                    ->setStatus(TransactionStatusEnum::SUCCESS)
-                    ->setDescription('واریز به آدرس: '.$deposit->address.' هش تراکنش: '.$transactionHash)
-                );
-                $wallet->increment('balance', $transaction->getAmount());
-                DB::commit();
-                $hasNewTransaction = true;
-            } catch (Throwable $exception) {
-                DB::rollBack();
-                report($exception);
-                throw $exception;
-            }
         }
 
         return $hasNewTransaction;
-
     }
 
     public function checkDepositWallet()

@@ -3,7 +3,6 @@
 namespace App\Http\Requests\V1\Wallet;
 
 use App\Models\Currency;
-use App\Models\CurrencyChain;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -17,12 +16,6 @@ use Illuminate\Validation\Rule;
  *         type="string",
  *         description="The symbol of the currency to refresh.",
  *         example="BNB"
- *     ),
- *     @OA\Property(
- *         property="chain_symbol",
- *         type="string",
- *         description="The symbol of the chain for the specified currency.",
- *         example="BSC"
  *     )
  * )
  */
@@ -43,11 +36,8 @@ class RefreshWalletRequest extends FormRequest
      */
     public function rules(): array
     {
-        $currency = Currency::query()->where('symbol', $this->input('currency_symbol'))->first();
-
         return [
             'currency_symbol' => ['required', Rule::exists(Currency::class, 'symbol')],
-            'chain_symbol' => ['required', Rule::exists(CurrencyChain::class, 'chain')->where('currency_id', $currency?->id)],
         ];
     }
 }

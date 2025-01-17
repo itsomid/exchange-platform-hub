@@ -299,7 +299,7 @@ class WalletController extends Controller
                 resolve(CheckUserDepositRequestDTO::class)
                     ->setUserId(Auth::id())
                     ->setCurrencySymbol($validatedData['currency_symbol'])
-                    ->setCurrencyChain($validatedData['chain_symbol'])
+                //                    ->setCurrencyChain($validatedData['chain_symbol'])
             );
 
         return response([
