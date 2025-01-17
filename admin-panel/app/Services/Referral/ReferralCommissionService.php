@@ -42,26 +42,31 @@ class ReferralCommissionService
             $introducerCommission = bcmul($exchangeFee, $introducerFeeRate, 8);
             $friendCommission = bcmul($exchangeFee, $friendFeeRate, 8);
 
-
             // convert commission from base currency to usdt
             if ($otcOrder->type === OTCOrderTypeEnum::BUY) {
+                dd(123123);
+                $introducerCommissionToUSDT = bcmul($introducerCommission, $otcOrder->price,8);
+                $friendCommissionToUSDT = bcmul($friendCommission, $otcOrder->price, 8);
+                if ($introducerCommission > 0) {
+                    $this->applyCommission($introducer, $introducerCommissionToUSDT, $otcOrder, 'introducer');
+                }
 
-                $introducerCommission = bcmul($introducerCommission, $otcOrder->price,8);
-                $friendCommission = bcmul($friendCommission, $otcOrder->price, 8);
+                if ($friendCommission > 0) {
+                    $this->applyCommission($friend, $friendCommissionToUSDT, $otcOrder, 'friend');
+                }
+            }else{
 
+                if ($introducerCommission > 0) {
+                    $this->applyCommission($introducer, $introducerCommission, $otcOrder, 'introducer');
+                }
+
+                if ($friendCommission > 0) {
+                    $this->applyCommission($friend, $friendCommission, $otcOrder, 'friend');
+                }
             }
-
 
 
             $exchangeRemainingFee = bcsub($exchangeFee, bcadd($introducerCommission, $friendCommission, 8), 8);
-
-            if ($introducerCommission > 0) {
-                $this->applyCommission($introducer, $introducerCommission, $otcOrder, 'introducer');
-            }
-
-            if ($friendCommission > 0) {
-                $this->applyCommission($friend, $friendCommission, $otcOrder, 'friend');
-            }
 
             return $exchangeRemainingFee;
         });
