@@ -12,7 +12,7 @@ use Laravel\Sanctum\HasApiTokens;
 class OTCOrder extends Model
 {
     use Filterable, HasApiTokens, HasFactory;
-    public $filterNameSpace = 'App\Filters\OTCOrder';
+    public $filterNameSpace = 'App\Filters\OTCOrderFilter';
 
     protected $table = 'otc_orders';
     protected $fillable = ['user_id','market_id','quantity','price','fee','type','status'];

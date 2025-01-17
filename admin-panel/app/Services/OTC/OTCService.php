@@ -93,6 +93,10 @@ class OTCService
                     $fee
                 );
 
+                if ($otcOrder->user->introducer_code){
+                    $fee = $this->referralCommissionService->processReferralCommission($otcOrder, $fee);
+                }
+
                 // 6. Process wallet balances & transactions
                 if ($type === 'buy') {
                     $this->processBuyTransactions(
@@ -122,7 +126,7 @@ class OTCService
                     );
                 }
 
-                $this->referralCommissionService->processReferralCommission($otcOrder, $fee);
+
                 return true;
             });
         } catch (Throwable $exception) {
@@ -205,11 +209,8 @@ class OTCService
      * @param  Market         $market
      * @return array          [$fee, $amountInQuoteCurrency, $receivedAmount, $orderPrice]
      */
-    private function calculateFeesAndAmounts(
-        OTCRequestDTO $requestDTO,
-        string        $type,
-        Market        $market
-    ): array {
+    private function calculateFeesAndAmounts(OTCRequestDTO $requestDTO, string $type, Market $market): array
+    {
         $otcBuyFee  = Setting::getSetting('otc_buy_fee') / 100;
         $otcSellFee = Setting::getSetting('otc_sell_fee') / 100;
         $quantity   = $requestDTO->getQuantity();
@@ -398,7 +399,7 @@ class OTCService
 
         // Exchange collects fee in quote currency
         if ($fee > 0) {
-//            $this->createCommissionTransaction($buyerQuoteWallet, $otcOrder, $fee, $quantity);
+            $this->createCommissionTransaction($buyerQuoteWallet, $otcOrder, $fee, $quantity);
         }
     }
 

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\ReferralCode;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -23,7 +24,7 @@ class UserTableSeeder extends Seeder
             'email_verified_at' => now()
         ]);
 
-        User::create([
+        $specificIntroducer = User::create([
             'first_name' => 'امید',
             'last_name' => 'شبانی',
             'username' => 'o.shabani',
@@ -41,14 +42,15 @@ class UserTableSeeder extends Seeder
             'mobile' => '09121210112',
             'email_verified_at' => now()
         ]);
-        User::create([
+        $specificUser = User::create([
             'first_name' => 'نریمان',
             'last_name' => 'پلنگی',
             'username' => 'n.palangi',
             'email' => 'n.palangi91@gmail.com',
             'password' => Hash::make('12345678'),
             'mobile' => '09121110122',
-            'email_verified_at' => now()
+            'email_verified_at' => now(),
+
         ]);
         User::create([
             'first_name' => 'آریا',
@@ -62,6 +64,18 @@ class UserTableSeeder extends Seeder
 
         User::factory(5)->withReferralCode()->create();
         User::factory(10)->withIntroducer()->create();
+
+        $specificIntroducerReferralCode = ReferralCode::create([
+            'code' => ReferralCode::generateReferralCode(),
+            'user_id' => $specificIntroducer->id,
+            'introducer_fee' => 30,
+            'friend_fee' => 0,
+            'usage_limit' => 1000,
+        ]);
+        $specificUser->update([
+            'introducer_code' => $specificIntroducerReferralCode->id
+        ]);
+
         //        User::factory(10)->create();
         //        User::factory(10)->unverifiedWithIncompleteRegistration()->create();
         //        User::factory(10)->unverified()->create();

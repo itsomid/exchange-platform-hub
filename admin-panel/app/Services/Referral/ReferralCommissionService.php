@@ -2,6 +2,7 @@
 
 namespace App\Services\Referral;
 
+use App\Enums\OTCOrderTypeEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
@@ -17,13 +18,13 @@ class ReferralCommissionService
 {
     public function processReferralCommission(OTCOrder $otcOrder, float $exchangeFee)
     {
-        \DB::transaction(function () use ($otcOrder, $exchangeFee) {
+        return \DB::transaction(function () use ($otcOrder, $exchangeFee) {
 
 
             $userIntroducerCode = $otcOrder->user->introducer_code;
 
             if (!$userIntroducerCode) {
-                return; // No referral code used
+                return null; // No referral code used
             }
 
             $referralCode = ReferralCode::find($userIntroducerCode);
@@ -32,7 +33,7 @@ class ReferralCommissionService
             $friend = User::find($otcOrder->user_id);
 
             if (!$introducer || !$friend) {
-                return; // Invalid user references
+                return null; // Invalid user references
             }
 
             $introducerFeeRate = $referralCode->introducer_fee / 100;
@@ -40,6 +41,18 @@ class ReferralCommissionService
 
             $introducerCommission = bcmul($exchangeFee, $introducerFeeRate, 8);
             $friendCommission = bcmul($exchangeFee, $friendFeeRate, 8);
+
+
+            // convert commission from base currency to usdt
+            if ($otcOrder->type === OTCOrderTypeEnum::BUY) {
+
+                $introducerCommission = bcmul($introducerCommission, $otcOrder->price,8);
+                $friendCommission = bcmul($friendCommission, $otcOrder->price, 8);
+
+            }
+
+
+
             $exchangeRemainingFee = bcsub($exchangeFee, bcadd($introducerCommission, $friendCommission, 8), 8);
 
             if ($introducerCommission > 0) {
@@ -49,6 +62,8 @@ class ReferralCommissionService
             if ($friendCommission > 0) {
                 $this->applyCommission($friend, $friendCommission, $otcOrder, 'friend');
             }
+
+            return $exchangeRemainingFee;
         });
     }
 
@@ -73,7 +88,7 @@ class ReferralCommissionService
             'balance' => $wallet->balance,
             'amount' => $amount,
             'type' => TransactionTypeEnum::FEE,
-            'subtype' => $role === 'introducer' ? TransactionSubTypeEnum::REFERRAL_INTRODUCER : TransactionSubTypeEnum::REFERRAL_FRIEND ,
+            'subtype' => $role === 'introducer' ? TransactionSubTypeEnum::REFERRAL_INTRODUCER : TransactionSubTypeEnum::REFERRAL_FRIEND,
             'status' => TransactionStatusEnum::SUCCESS,
             'description' => "Referral commission ($role) from OTC order ID {$otcOrder->id}",
         ]);
