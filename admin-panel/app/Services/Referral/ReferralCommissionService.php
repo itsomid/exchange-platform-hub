@@ -47,20 +47,20 @@ class ReferralCommissionService
                 $introducerCommissionToUSDT = bcmul($introducerCommission, $otcOrder->price,8);
                 $friendCommissionToUSDT = bcmul($friendCommission, $otcOrder->price, 8);
                 if ($introducerCommission > 0) {
-                    $this->applyCommission($introducer, $introducerCommissionToUSDT, $otcOrder, 'introducer');
+                    $this->applyCommission($introducer, $introducerCommissionToUSDT, $otcOrder,$referralCode, 'introducer');
                 }
 
                 if ($friendCommission > 0) {
-                    $this->applyCommission($friend, $friendCommissionToUSDT, $otcOrder, 'friend');
+                    $this->applyCommission($friend, $friendCommissionToUSDT, $otcOrder,$referralCode, 'friend');
                 }
             }else{
 
                 if ($introducerCommission > 0) {
-                    $this->applyCommission($introducer, $introducerCommission, $otcOrder, 'introducer');
+                    $this->applyCommission($introducer, $introducerCommission, $otcOrder,$referralCode, 'introducer');
                 }
 
                 if ($friendCommission > 0) {
-                    $this->applyCommission($friend, $friendCommission, $otcOrder, 'friend');
+                    $this->applyCommission($friend, $friendCommission, $otcOrder,$referralCode, 'friend');
                 }
             }
 
@@ -71,7 +71,7 @@ class ReferralCommissionService
         });
     }
 
-    private function applyCommission(User $user, float $amount, OTCOrder $otcOrder, string $role)
+    private function applyCommission(User $user, float $amount, OTCOrder $otcOrder,ReferralCode $referralCode, string $role)
     {
         if ($amount <= 0) {
             return; // No commission to apply
@@ -85,7 +85,7 @@ class ReferralCommissionService
 
         $wallet->increment('balance', $amount);
 
-        Transaction::create([
+        $transaction = Transaction::create([
             'user_id' => $user->id,
             'wallet_id' => $wallet->id,
             'otc_order_id' => $otcOrder->id,
@@ -95,6 +95,13 @@ class ReferralCommissionService
             'subtype' => $role === 'introducer' ? TransactionSubTypeEnum::REFERRAL_INTRODUCER : TransactionSubTypeEnum::REFERRAL_FRIEND,
             'status' => TransactionStatusEnum::SUCCESS,
             'description' => "Referral commission ($role) from OTC order ID {$otcOrder->id}",
+        ]);
+
+        ReferralCodeUsage::create([
+            'referral_code_id' => $referralCode->id,
+            'used_by' => $user->id,
+            'transaction_id' => $transaction->id,
+            'used_at' => now(),
         ]);
     }
 }
