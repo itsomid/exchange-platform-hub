@@ -126,6 +126,9 @@ return [
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
+        'hd-wallet' => [
+            'path' => storage_path('logs/hd-wallet.log'),
+        ],
 
     ],
 
