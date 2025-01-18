@@ -38,6 +38,9 @@ class CheckWalletService
         $hdDeposit = resolve(HDDepositService::class);
 
         foreach ($chains as $chain) {
+            if (empty($chain->address)) {
+                continue;
+            }
             $transactions = $hdDeposit->getDepositLists(
                 resolve(GetDepositListsRequestDTO::class)
                     ->setCurrencySymbol($wallet->currency_symbol)
