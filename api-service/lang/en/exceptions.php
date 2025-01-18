@@ -11,4 +11,5 @@ return [
     \App\Exceptions\V1\OTC\InsufficientBalanceException::class => 'Insufficient balance.',
     \App\Exceptions\V1\Wallet\InternalWalletHasProblemException::class => 'Wallet service is currently unavailable. Please try again later.',
     \App\Exceptions\Auth\ResetTwoFactor\TokenInvalidException::class => 'Your entered token is invalid.',
+    \App\Exceptions\V1\Wallet\UserDoesNotHaveWalletAddress::class => 'You do not have an active wallet address. Please create a wallet address first.',
 ];

@@ -7,6 +7,7 @@ use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Exceptions\V1\Wallet\InternalWalletHasProblemException;
+use App\Exceptions\V1\Wallet\UserDoesNotHaveWalletAddress;
 use App\Infrastructure\HDWallet\DTO\HDDeposit\GetDepositListsRequestDTO;
 use App\Infrastructure\HDWallet\HDDepositService;
 use App\Repositories\DTO\Deposit\CreateDepositRequestDTO;
@@ -34,6 +35,9 @@ class CheckWalletService
         $hasNewTransaction = false;
         $wallet = $this->walletRepository->getOneByCurrency($requestDTO->getCurrencySymbol(), $requestDTO->getUserId());
         $chains = $wallet->chains;
+        if (! $chains->contains(fn ($chain) => ! empty($chain->address))) {
+            throw new UserDoesNotHaveWalletAddress;
+        }
 
         $hdDeposit = resolve(HDDepositService::class);
 
