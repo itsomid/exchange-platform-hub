@@ -39,6 +39,7 @@ class TransactionService
             }
 
             return resolve(GetAllDepositWithdrawResponseDTO::class)
+                ->setId($transaction->id)
                 ->setCurrencySymbol($transaction->currency_symbol)
                 ->setAmount($transaction->amount)
                 ->setStatus($transaction->status->name)

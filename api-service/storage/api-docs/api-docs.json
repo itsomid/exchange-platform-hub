@@ -3674,6 +3674,12 @@
                 "title": "Deposit and Withdraw Resource",
                 "description": "A resource representing a single deposit or withdrawal transaction.",
                 "properties": {
+                    "id": {
+                        "description": "Transaction id",
+                        "type": "number",
+                        "format": "int",
+                        "example": 1
+                    },
                     "amount": {
                         "description": "Transaction amount",
                         "type": "number",
@@ -4047,6 +4053,11 @@
             },
             "WithdrawalResource": {
                 "properties": {
+                    "id": {
+                        "description": "The withdrawal's id",
+                        "type": "integer",
+                        "example": 1
+                    },
                     "user_received_amount": {
                         "description": "The amount the user will receive after the withdrawal fee is deducted.",
                         "type": "number",

@@ -13,6 +13,7 @@ use Illuminate\Http\Resources\Json\ResourceCollection;
  *     title="Deposit and Withdraw Resource",
  *     description="A resource representing a single deposit or withdrawal transaction.",
  *
+ *     @OA\Property(property="id", type="number", format="int", description="Transaction id", example=1),
  *     @OA\Property(property="amount", type="number", format="float", description="Transaction amount", example=100.5),
  *     @OA\Property(property="type", type="string", enum={"deposit", "withdrawal"}, description="Transaction type (deposit or withdrawal)", example="deposit"),
  *     @OA\Property(property="currency_symbol", type="string", description="Currency symbol", example="BTC"),
@@ -34,6 +35,7 @@ class DepositWithdrawCollection extends ResourceCollection
     public function toArray(Request $request): array
     {
         return $this->collection->map(fn (GetAllDepositWithdrawResponseDTO $responseDTO) => [
+            'id' => $responseDTO->getId(),
             'amount' => $responseDTO->getAmount(),
             'currency_symbol' => $responseDTO->getCurrencySymbol(),
             'currency_chain' => $responseDTO->getCurrencyChain(),

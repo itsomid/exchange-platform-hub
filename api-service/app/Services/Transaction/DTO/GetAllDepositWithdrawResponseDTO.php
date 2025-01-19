@@ -7,6 +7,7 @@ use Carbon\Carbon;
 
 class GetAllDepositWithdrawResponseDTO
 {
+    private int $id;
     private string $currencySymbol;
 
     private string $currencyChain;
@@ -131,5 +132,16 @@ class GetAllDepositWithdrawResponseDTO
     public function getCurrencyChain(): string
     {
         return $this->currencyChain;
+    }
+
+    public function setId(int $id): GetAllDepositWithdrawResponseDTO
+    {
+        $this->id = $id;
+        return $this;
+    }
+
+    public function getId(): int
+    {
+        return $this->id;
     }
 }

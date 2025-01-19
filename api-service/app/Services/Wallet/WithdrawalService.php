@@ -70,6 +70,7 @@ class WithdrawalService
             DB::commit();
 
             return resolve(CreateWithdrawalResponseDTO::class)
+                ->setId($withdrawal->id)
                 ->setReceivedAmount(bcsub($amount, $fee, config('bitexroom.scale_precision')))
                 ->setFee($fee)
                 ->setStatus($withdrawalStatus);
