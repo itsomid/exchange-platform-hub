@@ -3296,6 +3296,11 @@
                                 "type": "string",
                                 "example": "BTC"
                             },
+                            "max_auto_withdraw_amount": {
+                                "description": "The maximum amount for automatic withdrawal. If the withdrawal amount exceeds this value, the withdrawal status will be set to 'awaiting admin approval'.",
+                                "type": "string",
+                                "example": "2.5"
+                            },
                             "inter_transfer_enabled": {
                                 "description": "Whether inter-transfer is enabled for this currency.",
                                 "type": "boolean",

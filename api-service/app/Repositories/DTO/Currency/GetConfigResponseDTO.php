@@ -8,6 +8,8 @@ class GetConfigResponseDTO
 
     private string $symbol;
 
+    private string $maxAutoWithdrawAmount;
+
     private bool $interTransferEnabled;
 
     private array $chains;
@@ -58,5 +60,17 @@ class GetConfigResponseDTO
     public function getChains(): array
     {
         return $this->chains;
+    }
+
+    public function setMaxAutoWithdrawAmount(string $maxAutoWithdrawAmount): GetConfigResponseDTO
+    {
+        $this->maxAutoWithdrawAmount = $maxAutoWithdrawAmount;
+
+        return $this;
+    }
+
+    public function getMaxAutoWithdrawAmount(): string
+    {
+        return $this->maxAutoWithdrawAmount;
     }
 }

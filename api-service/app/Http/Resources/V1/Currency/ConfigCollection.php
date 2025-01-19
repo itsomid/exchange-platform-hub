@@ -15,6 +15,12 @@ use Illuminate\Http\Resources\Json\ResourceCollection;
  *          property="asset",
  *          type="object",
  *          @OA\Property(property="ccy", type="string", example="BTC", description="Currency symbol."),
+ *          @OA\Property(
+ *              property="max_auto_withdraw_amount",
+ *              type="string",
+ *              example="2.5",
+ *              description="The maximum amount for automatic withdrawal. If the withdrawal amount exceeds this value, the withdrawal status will be set to 'awaiting admin approval'."
+ *          ),
  *          @OA\Property(property="inter_transfer_enabled", type="boolean", example=true, description="Whether inter-transfer is enabled for this currency.")
  *      ),
  *      @OA\Property(
@@ -52,6 +58,7 @@ class ConfigCollection extends ResourceCollection
             'asset' => [
                 'ccy' => $configResponseDTO->getSymbol(),
                 'inter_transfer_enabled' => $configResponseDTO->getInterTransferEnabled(),
+                'max_auto_withdraw_amount' => $configResponseDTO->getMaxAutoWithdrawAmount(),
             ],
             'chains' => array_map(function (ChainResponseDTO $chain) {
                 return [
