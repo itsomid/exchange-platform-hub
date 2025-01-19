@@ -2,13 +2,13 @@
 
 namespace App\Services\Transaction\DTO;
 
-use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionTypeEnum;
 use Carbon\Carbon;
 
 class GetAllDepositWithdrawResponseDTO
 {
     private string $currencySymbol;
+
     private string $currencyChain;
 
     private string $amount;
@@ -17,9 +17,12 @@ class GetAllDepositWithdrawResponseDTO
 
     private Carbon $createdAt;
 
-    private TransactionStatusEnum $status;
+    private string $status;
+
     private ?string $address;
+
     private ?string $transactionHashed;
+
     private ?Carbon $confirmedAt;
 
     public function setCurrencySymbol(string $currencySymbol): self
@@ -70,14 +73,14 @@ class GetAllDepositWithdrawResponseDTO
         return $this->createdAt;
     }
 
-    public function setStatus(TransactionStatusEnum $status): self
+    public function setStatus(string $status): self
     {
         $this->status = $status;
 
         return $this;
     }
 
-    public function getStatus(): TransactionStatusEnum
+    public function getStatus(): string
     {
         return $this->status;
     }
@@ -85,6 +88,7 @@ class GetAllDepositWithdrawResponseDTO
     public function setAddress(?string $address): self
     {
         $this->address = $address;
+
         return $this;
     }
 
@@ -96,6 +100,7 @@ class GetAllDepositWithdrawResponseDTO
     public function setTransactionHashed(?string $transactionHashed): self
     {
         $this->transactionHashed = $transactionHashed;
+
         return $this;
     }
 
@@ -107,6 +112,7 @@ class GetAllDepositWithdrawResponseDTO
     public function setConfirmedAt(?Carbon $confirmedAt): GetAllDepositWithdrawResponseDTO
     {
         $this->confirmedAt = $confirmedAt;
+
         return $this;
     }
 
@@ -118,6 +124,7 @@ class GetAllDepositWithdrawResponseDTO
     public function setCurrencyChain(string $currencyChain): GetAllDepositWithdrawResponseDTO
     {
         $this->currencyChain = $currencyChain;
+
         return $this;
     }
 

@@ -40,7 +40,7 @@ class DepositWithdrawCollection extends ResourceCollection
             'transaction_hash' => $responseDTO->getTransactionHashed(),
             'wallet_address' => $responseDTO->getAddress(),
             'type' => __('enum.transaction-type.'.$responseDTO->getType()->name),
-            'status' => __('enum.transaction-status.'.$responseDTO->getStatus()->name),
+            'status' => __('enum.deposit-withdrawal.'.$responseDTO->getStatus()),
             'confirmed_at' => $responseDTO->getConfirmedAt(),
             'created_at' => $responseDTO->getCreatedAt(),
         ])->toArray();

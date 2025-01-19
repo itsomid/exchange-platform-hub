@@ -16,4 +16,6 @@ interface DepositRepositoryInterface
     public function getPendingDeposits(): Collection;
 
     public function isDepositExists(string $transactionHash): bool;
+
+    public function getDeposits(int $userId, ?string $currencySymbol = null): Collection;
 }
