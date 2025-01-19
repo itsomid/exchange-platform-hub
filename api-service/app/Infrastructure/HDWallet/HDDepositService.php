@@ -27,7 +27,7 @@ class HDDepositService
         }
 
         $data = $response->json();
-        if (! is_array($data)) {
+        if (! $response->ok()) {
             Log::channel('hd-wallet')->error('HD Wallet Response Changed:'.$response->body());
             throw new InternalWalletHasProblemException;
         }
