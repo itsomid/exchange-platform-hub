@@ -378,9 +378,11 @@
                                                 </div>
                                             </div>
                                             <div class="modal-footer">
+                                                <a type="button" href="{{route('admin.transaction.index',['otc_order_id'=>$order->id])}}" class="btn btn-primary">لیست تراکنش ها</a>
                                                 <button type="button" class="btn btn-label-secondary waves-effect"
                                                         data-bs-dismiss="modal">بستن
                                                 </button>
+
                                             </div>
                                         </div>
                                     </div>
