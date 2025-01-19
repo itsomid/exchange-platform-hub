@@ -99,7 +99,7 @@ class ReferralCommissionService
 
         ReferralCodeUsage::create([
             'referral_code_id' => $referralCode->id,
-            'used_by' => $user->id,
+            'used_by' => $otcOrder->user->id,
             'transaction_id' => $transaction->id,
             'used_at' => now(),
         ]);
