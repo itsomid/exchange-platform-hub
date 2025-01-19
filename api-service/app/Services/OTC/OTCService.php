@@ -94,7 +94,7 @@ class OTCService
 
             $buyAmount = $requestDTO->getQuantity();
             $amountInQuoteCurrency = bcmul($market->exchangePrice->price, $requestDTO->getQuantity(), 8);
-            $fee = bcmul($buyAmount, Setting::getSetting('otc_buy_fee') / 100, 8);
+            $fee = bcmul($buyAmount, bcdiv(Setting::getSetting('otc_buy_fee'), 100, 8), 8);
             $receivedAmount = bcsub($buyAmount, $fee, 8);
 
             if (bccomp($buyerQuoteWallet->balance, $amountInQuoteCurrency, 8) === -1) {
@@ -255,7 +255,7 @@ class OTCService
 
             $sellAmount = $requestDTO->getQuantity();
             $amountInQuoteCurrency = bcmul($market->exchangePrice->price, $sellAmount, 8);
-            $fee = bcmul($sellAmount, Setting::getSetting('otc_sell_fee') / 100, 8);
+            $fee = bcmul($sellAmount, bcdiv(Setting::getSetting('otc_sell_fee'), 100, 8), 8);
             $receivedAmount = bcsub($amountInQuoteCurrency, $fee, 8);
 
             if (bccomp($sellerWallet->balance, $sellAmount, 8) === -1) {
