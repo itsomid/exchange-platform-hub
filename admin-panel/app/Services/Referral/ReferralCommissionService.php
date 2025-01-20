@@ -13,9 +13,18 @@ use App\Models\ReferralCodeUsage;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Services\Wallet\WalletService;
 
 class ReferralCommissionService
 {
+
+    protected $walletService;
+    protected int $exchangeUserId;
+    public function __construct(WalletService $walletService)
+    {
+        $this->walletService = $walletService;
+        $this->exchangeUserId = config('exchange.exchange_user_id');
+    }
     public function processReferralCommission(OTCOrder $otcOrder, float $exchangeFee)
     {
         return \DB::transaction(function () use ($otcOrder, $exchangeFee) {
@@ -91,7 +100,7 @@ class ReferralCommissionService
             'otc_order_id' => $otcOrder->id,
             'balance' => $wallet->balance,
             'amount' => $amount,
-            'type' => TransactionTypeEnum::FEE,
+            'type' => TransactionTypeEnum::REFERRAL,
             'subtype' => $role === 'introducer' ? TransactionSubTypeEnum::REFERRAL_INTRODUCER : TransactionSubTypeEnum::REFERRAL_FRIEND,
             'status' => TransactionStatusEnum::SUCCESS,
             'description' => "Referral commission ($role) from OTC order ID {$otcOrder->id}",
@@ -103,6 +112,24 @@ class ReferralCommissionService
             'transaction_id' => $transaction->id,
             'used_at' => now(),
         ]);
+
+        $exchangeWallet = $this->walletService->getExchangeWallet('USDT');
+        if ($exchangeWallet) {
+            $exchangeWallet->decrement('balance', $amount);
+
+            Transaction::create([
+                'user_id' =>  $this->exchangeUserId, // Admin or exchange user ID
+                'wallet_id' => $exchangeWallet->id,
+                'otc_order_id' => $otcOrder->id,
+                'balance' => $exchangeWallet->balance,
+                'amount' => -$amount,
+                'type' => TransactionTypeEnum::REFERRAL,
+                'subtype' => $role === 'introducer' ? TransactionSubTypeEnum::REFERRAL_INTRODUCER : TransactionSubTypeEnum::REFERRAL_FRIEND,
+                'status' => TransactionStatusEnum::SUCCESS,
+                'description' => "Referral commission ($role) expense from OTC order ID {$otcOrder->id}",
+            ]);
+        }
+
     }
 }
 
