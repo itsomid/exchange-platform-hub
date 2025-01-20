@@ -83,7 +83,7 @@ class OrdersListsCollection extends ResourceCollection
     {
         return $this->collection->map(fn (OTCOrderListsResponseDTO $responseDTO) => [
             'created_at' => $responseDTO->getCreatedAt(),
-            'type' => __('enum.otc.type.'.$responseDTO->getType()->name),
+            'type' => $responseDTO->getType()->value,
             'status' => __('enum.otc.status.'.$responseDTO->getStatus()->name),
             'quantity' => $responseDTO->getQuantity(),
             'price' => $responseDTO->getPrice(),
