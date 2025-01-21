@@ -31,7 +31,7 @@ class DepositRepository implements DepositRepositoryInterface
     public function getPendingDeposits(): Collection
     {
         return Deposit::query()
-            ->where('status', DepositStatusEnum::Pending)
+            ->where('status', DepositStatusEnum::PENDING)
             ->where('expiration_date', '>', now())
             ->get();
     }
@@ -57,5 +57,14 @@ class DepositRepository implements DepositRepositoryInterface
         return Deposit::query()
             ->where('transaction_hash', $transactionHash)
             ->exists();
+    }
+
+    public function getDeposits(int $userId, ?string $currencySymbol = null): Collection
+    {
+        return Deposit::query()
+            ->where('user_id', $userId)
+            ->when(! empty($currencySymbol), fn ($q) => $q->where('currency_symbol', $currencySymbol))
+            ->latest()
+            ->get();
     }
 }

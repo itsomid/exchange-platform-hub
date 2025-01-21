@@ -22,6 +22,7 @@ class CoinExSocketService
     private array $marketIds = [];
 
     private array $currentMarkets = [];
+    private array $exchangePrices = [];
 
     public function startListener(): void
     {
@@ -148,21 +149,31 @@ class CoinExSocketService
             }
 
             // Find the exchange price related to the market for CoinEx
-            $exchangePriceModel = ExchangePrice::query()
+            if(! isset($this->exchangePrices[$this->marketIds[$baseCurrency]]) || time() - $this->exchangePrices[$this->marketIds[$baseCurrency]]['last_update'] > 60){
+                $exchangePriceModel = ExchangePrice::query()
+                    ->where('market_id', $this->marketIds[$baseCurrency])
+                    ->where('exchange_id', $this->coinexID)
+                    ->first();
+                $this->exchangePrices[$this->marketIds[$baseCurrency]] = [
+                    'exchange_profit_sell' => $exchangePriceModel->exchange_profit_sell,
+                    'exchange_profit_buy' => $exchangePriceModel->exchange_profit_buy,
+                    'last_update' => time()
+                ];
+            }
+
+            ExchangePrice::query()
                 ->where('market_id', $this->marketIds[$baseCurrency])
                 ->where('exchange_id', $this->coinexID)
-                ->first();
+                ->update([
+                    'price' => $lastPrice,
+                    'open_price' => $openPrice,
+                ]);
 
-            $exchangePriceModel->update([
-                'price' => $lastPrice,
-                'open_price' => $openPrice,
-            ]);
+            $sellPrice = bcmul($lastPrice, $this->exchangePrices[$this->marketIds[$baseCurrency]]['exchange_profit_sell'] + 1, 8);
+            $buyPrice = bcmul($lastPrice, $this->exchangePrices[$this->marketIds[$baseCurrency]]['exchange_profit_buy']+ 1, 8);
 
-            $sellPrice = bcmul($lastPrice, $exchangePriceModel->exchange_profit_sell + 1, 8);
-            $buyPrice = bcmul($lastPrice, $exchangePriceModel->exchange_profit_buy + 1, 8);
-
-            $sellOpenPrice = bcmul($openPrice, $exchangePriceModel->exchange_profit_sell + 1, 8);
-            $buyOpenPrice = bcmul($openPrice, $exchangePriceModel->exchange_profit_buy + 1, 8);
+            $sellOpenPrice = bcmul($openPrice, $this->exchangePrices[$this->marketIds[$baseCurrency]]['exchange_profit_sell'] + 1, 8);
+            $buyOpenPrice = bcmul($openPrice, $this->exchangePrices[$this->marketIds[$baseCurrency]]['exchange_profit_buy']+ 1, 8);
 
             // Publish to Redis
             Redis::publish('market_prices', json_encode([

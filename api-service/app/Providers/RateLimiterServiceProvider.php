@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -38,7 +39,10 @@ class RateLimiterServiceProvider extends ServiceProvider
                 $key = $request->ip();
             }
 
-            return Limit::perMinutes(config('bitexroom.wallet_refresh.minutes'), config('bitexroom.wallet_refresh.max_attempts'))->by($key);
+            return Limit::perMinutes(
+                config('bitexroom.wallet_refresh.minutes'),
+                App::isLocal() ? 100 : config('bitexroom.wallet_refresh.max_attempts')
+            )->by($key);
         });
     }
 }

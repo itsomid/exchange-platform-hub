@@ -12,4 +12,5 @@ return [
     \App\Exceptions\V1\Wallet\InternalWalletHasProblemException::class => 'سرویس کیف پول در حال حاضر در دسترس نیست. لطفا بعدا تلاش کنید.',
     \App\Exceptions\Auth\ResetTwoFactor\TokenInvalidException::class => 'توکن وارد شده معتبر نمی باشد.',
     \App\Exceptions\V1\OTC\TradeWasFiledException::class => 'معامله شما با شکست مواجه شد.',
+    \App\Exceptions\V1\Wallet\UserDoesNotHaveWalletAddress::class => 'شما آدرس ولت فعالی ندارید. لطفاً ابتدا یک آدرس ولت ایجاد کنید.',
 ];

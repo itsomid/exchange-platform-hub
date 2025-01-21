@@ -40,7 +40,6 @@ class OTCBuySeeder extends Seeder
         try {
             // Execute the buy process
             $result = $otcService->buy($buyRequestDTO);
-//            $result = '';
             $sellResult = $otcService->sell($sellRequestDTO);
 
             if ($result) {

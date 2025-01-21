@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
+ * @property int                   $id
  * @property string                $amount
  * @property TransactionStatusEnum $status
  * @property TransactionTypeEnum   $type
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Transaction extends Model
 {
     protected $fillable = [
-        'user_id', 'admin_id', 'wallet_id', 'otc_order_id', 'deposit_id', 'withdrawal_id', 'amount', 'balance', 'type', 'subtype', 'description', 'admin_description', 'status',
+        'user_id', 'admin_id', 'wallet_id', 'deposit_id', 'withdrawal_id', 'otc_order_id', 'amount', 'balance', 'type', 'subtype', 'description', 'admin_description', 'status',
     ];
 
     protected function casts(): array

@@ -62,6 +62,8 @@ Route::prefix('/otc')->group(function () {
     Route::post('/sell', [\App\Http\Controllers\V1\OTC\SellController::class, 'create'])->name('otc.sell');
 
     Route::get('/fee', [\App\Http\Controllers\V1\OTC\SettingController::class, 'fee']);
+
+    Route::get('order-histories', [\App\Http\Controllers\V1\OTC\OrderController::class, 'lists']);
 });
 
 Route::prefix('authorization')->group(function () {

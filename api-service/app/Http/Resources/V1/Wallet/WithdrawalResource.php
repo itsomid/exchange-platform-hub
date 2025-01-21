@@ -10,6 +10,12 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * @OA\Schema(
  *     schema="WithdrawalResource",
  *
+ *          @OA\Property(
+ *          property="id",
+ *          type="int",
+ *          description="The withdrawal's id",
+ *          example=1
+ *      ),
  *     @OA\Property(
  *         property="user_received_amount",
  *         type="number",
@@ -48,6 +54,7 @@ class WithdrawalResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            'id' => $this->resource->getId(),
             'user_received_amount' => $this->resource->getReceivedAmount(),
             'fee' => $this->resource->getFee(),
             'status' => $this->resource->getStatus()->value,

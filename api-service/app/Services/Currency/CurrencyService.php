@@ -2,6 +2,8 @@
 
 namespace App\Services\Currency;
 
+use App\Models\Currency;
+use App\Models\CurrencyChain;
 use App\Repositories\DTO\Currency\ChainResponseDTO;
 use App\Repositories\DTO\Currency\GetConfigResponseDTO;
 use App\Repositories\Interfaces\CurrencyRepositoryInterface;
@@ -40,11 +42,12 @@ class CurrencyService
         $allCurrencies = $this->currencyRepository
             ->getAllCurrencyWithChains();
 
-        return $allCurrencies->map(fn ($model) => resolve(GetConfigResponseDTO::class)
+        return $allCurrencies->map(fn (Currency $model) => resolve(GetConfigResponseDTO::class)
             ->setName($model->name)
             ->setSymbol($model->symbol)
+            ->setMaxAutoWithdrawAmount($model->max_auto_withdraw_amount)
             ->setInterTransferEnabled($model->inter_transfer_enabled)
-            ->setChains($model->chains->map(fn ($item) => resolve(ChainResponseDTO::class)
+            ->setChains($model->chains->map(fn (CurrencyChain $item) => resolve(ChainResponseDTO::class)
                 ->setChain($item->chain)
                 ->setChainName($item->chain_name)
                 ->setMinDepositAmount($item->min_deposit_amount)

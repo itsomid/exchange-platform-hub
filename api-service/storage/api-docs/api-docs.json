@@ -1244,6 +1244,88 @@
                 }
             }
         },
+        "/api/v1/otc/order-histories": {
+            "get": {
+                "tags": [
+                    "OTC"
+                ],
+                "summary": "Get OTC Order Histories",
+                "description": "Retrieve the OTC order history for the authenticated user.",
+                "operationId": "6053bdd5d9bc12de93eea7a3713dd2b9",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Filter history by type (e.g., sell, buy)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "sell",
+                                "buy"
+                            ],
+                            "example": "sell"
+                        }
+                    },
+                    {
+                        "name": "market",
+                        "in": "query",
+                        "description": "Filter history by market id (e.g., deposit, withdrawal).",
+                        "required": false,
+                        "schema": {
+                            "type": "int",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "created_at",
+                        "in": "query",
+                        "description": "Filter history by created time",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "2022-12-01,2022-12-15 12:30:00"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of OTC order histories.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/OTCOrderHistoryResource"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized, user is not authenticated.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/otc/sell": {
             "post": {
                 "tags": [
@@ -3082,11 +3164,6 @@
                         "description": "The symbol of the currency to refresh.",
                         "type": "string",
                         "example": "BNB"
-                    },
-                    "chain_symbol": {
-                        "description": "The symbol of the chain for the specified currency.",
-                        "type": "string",
-                        "example": "BSC"
                     }
                 },
                 "type": "object"
@@ -3218,6 +3295,11 @@
                                 "description": "Currency symbol.",
                                 "type": "string",
                                 "example": "BTC"
+                            },
+                            "max_auto_withdraw_amount": {
+                                "description": "The maximum amount for automatic withdrawal. If the withdrawal amount exceeds this value, the withdrawal status will be set to 'awaiting admin approval'.",
+                                "type": "string",
+                                "example": "2.5"
                             },
                             "inter_transfer_enabled": {
                                 "description": "Whether inter-transfer is enabled for this currency.",
@@ -3462,6 +3544,68 @@
                 },
                 "type": "object"
             },
+            "OTCOrderHistoryResource": {
+                "title": "OTC Order History",
+                "description": "Representation of an OTC order history entry.",
+                "properties": {
+                    "created_at": {
+                        "description": "The date and time when the order was created.",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-01-10T12:34:56Z"
+                    },
+                    "type": {
+                        "description": "The type of the OTC order (e.g., buy or sell).",
+                        "type": "string",
+                        "enum": [
+                            "sell",
+                            "buy"
+                        ],
+                        "example": "buy"
+                    },
+                    "status": {
+                        "description": "The current status of the OTC order.",
+                        "type": "string",
+                        "enum": [
+                            "success",
+                            "pending",
+                            "canceled"
+                        ],
+                        "example": "success"
+                    },
+                    "quantity": {
+                        "description": "The quantity of the asset in the order.",
+                        "type": "string",
+                        "example": "1.2345"
+                    },
+                    "price": {
+                        "description": "The price of the asset in the order.",
+                        "type": "string",
+                        "example": "20000"
+                    },
+                    "fee": {
+                        "description": "The fee charged for the order.",
+                        "type": "string",
+                        "example": "0.001"
+                    },
+                    "market_name": {
+                        "description": "The market in which the OTC order was placed.",
+                        "type": "string",
+                        "example": "BTCUSDT"
+                    },
+                    "base_currency": {
+                        "description": "The base currency in which the OTC order was placed.",
+                        "type": "string",
+                        "example": "BTC"
+                    },
+                    "quote_currency": {
+                        "description": "The quote currency in which the OTC order was placed.",
+                        "type": "string",
+                        "example": "USDT"
+                    }
+                },
+                "type": "object"
+            },
             "ActiveSession": {
                 "title": "Active Session",
                 "description": "Details of a user's active session.",
@@ -3530,6 +3674,12 @@
                 "title": "Deposit and Withdraw Resource",
                 "description": "A resource representing a single deposit or withdrawal transaction.",
                 "properties": {
+                    "id": {
+                        "description": "Transaction id",
+                        "type": "number",
+                        "format": "int",
+                        "example": 1
+                    },
                     "amount": {
                         "description": "Transaction amount",
                         "type": "number",
@@ -3554,6 +3704,22 @@
                         "description": "Currency chain",
                         "type": "string",
                         "example": "BTC"
+                    },
+                    "wallet_address": {
+                        "description": "Wallet address",
+                        "type": "string",
+                        "example": "0xDE746Fb03a114674449d54ca5C90d34BBEB500ab"
+                    },
+                    "transaction_hash": {
+                        "description": "Transaction hashed",
+                        "type": "string",
+                        "example": "0xbeda06f753e2e507bd396049ab57bc4bd6685183"
+                    },
+                    "confirmed_at": {
+                        "description": "Transaction confirmed time",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-12-21T14:30:00Z"
                     },
                     "created_at": {
                         "description": "Transaction date and time",
@@ -3887,6 +4053,11 @@
             },
             "WithdrawalResource": {
                 "properties": {
+                    "id": {
+                        "description": "The withdrawal's id",
+                        "type": "integer",
+                        "example": 1
+                    },
                     "user_received_amount": {
                         "description": "The amount the user will receive after the withdrawal fee is deducted.",
                         "type": "number",

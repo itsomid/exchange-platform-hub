@@ -16,7 +16,7 @@ class DepositService
 
         $this->repository->createOrUpdateDeposit(
             resolve(CreateOrUpdatePendingDepositRequestDTO::class)
-                ->setStatus(DepositStatusEnum::Pending)
+                ->setStatus(DepositStatusEnum::PENDING)
                 ->setUserId($requestDTO->getUserId())
                 ->setCurrencySymbol($requestDTO->getCurrencySymbol())
                 ->setCurrencyChain($requestDTO->getCurrencyChain())

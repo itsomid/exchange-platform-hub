@@ -2,12 +2,12 @@
 
 namespace App\Services\Transaction\DTO;
 
-use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionTypeEnum;
 use Carbon\Carbon;
 
 class GetAllDepositWithdrawResponseDTO
 {
+    private int $id;
     private string $currencySymbol;
 
     private string $currencyChain;
@@ -18,7 +18,7 @@ class GetAllDepositWithdrawResponseDTO
 
     private Carbon $createdAt;
 
-    private TransactionStatusEnum $status;
+    private string $status;
 
     private ?string $address;
 
@@ -74,14 +74,14 @@ class GetAllDepositWithdrawResponseDTO
         return $this->createdAt;
     }
 
-    public function setStatus(TransactionStatusEnum $status): self
+    public function setStatus(string $status): self
     {
         $this->status = $status;
 
         return $this;
     }
 
-    public function getStatus(): TransactionStatusEnum
+    public function getStatus(): string
     {
         return $this->status;
     }
@@ -132,5 +132,16 @@ class GetAllDepositWithdrawResponseDTO
     public function getCurrencyChain(): string
     {
         return $this->currencyChain;
+    }
+
+    public function setId(int $id): GetAllDepositWithdrawResponseDTO
+    {
+        $this->id = $id;
+        return $this;
+    }
+
+    public function getId(): int
+    {
+        return $this->id;
     }
 }

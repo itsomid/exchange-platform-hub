@@ -4,22 +4,32 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class ReferralCodeUsage extends Model
 {
-    public function referralCode(): BelongsTo
+    protected $fillable = [
+        'referral_code_id', 'used_by', 'transaction_id', 'used_at',
+    ];
+
+    protected function casts(): array
     {
-        return $this->belongsTo(ReferralCode::class,'referral_code_id');
-    }
-    public function transaction() : BelongsTo
-    {
-        return $this->belongsTo(Transaction::class,'transaction_id');
+        return [
+            'used_at' => 'datetime',
+        ];
     }
 
+    public function referralCode(): BelongsTo
+    {
+        return $this->belongsTo(ReferralCode::class, 'referral_code_id');
+    }
+
+    public function transaction(): BelongsTo
+    {
+        return $this->belongsTo(Transaction::class, 'transaction_id');
+    }
 
     public function usedBy()
     {
-        return $this->belongsTo(User::class,'used_by');
+        return $this->belongsTo(User::class, 'used_by');
     }
 }

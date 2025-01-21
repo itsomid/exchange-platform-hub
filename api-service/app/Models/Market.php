@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property string        $min_trade_amount
  * @property string        $max_trade_amount
  * @property int           $id
+ * @property string        $market_name
  */
 class Market extends Model
 {
@@ -23,5 +24,10 @@ class Market extends Model
     public function exchangePrice(): HasOne
     {
         return $this->hasOne(ExchangePrice::class);
+    }
+
+    public function getMarketNameAttribute(): string
+    {
+        return $this->base_currency.''.$this->quote_currency;
     }
 }

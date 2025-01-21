@@ -299,11 +299,11 @@ class WalletController extends Controller
                 resolve(CheckUserDepositRequestDTO::class)
                     ->setUserId(Auth::id())
                     ->setCurrencySymbol($validatedData['currency_symbol'])
-                    ->setCurrencyChain($validatedData['chain_symbol'])
+                //                    ->setCurrencyChain($validatedData['chain_symbol'])
             );
 
         return response([
-            'message' => __('messages.wallet_refresh'),
+            'message' => $hasNewTransaction ? __('messages.wallet_refresh_succeed') : __('messages.wallet_refresh'),
             'data' => [
                 'available_in' => now()->addMinutes(config('bitexroom.wallet_refresh.minutes'))->format('Y-m-d H:i:s'),
                 'has_new_transaction' => $hasNewTransaction,

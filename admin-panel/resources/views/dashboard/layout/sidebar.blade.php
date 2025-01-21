@@ -140,7 +140,12 @@
                     <div>مدیریت صرافی های مرجع</div>
                 </a>
             </li>
-
+            <li class="menu-item @if(request()->is('admin/exchange/wallets*')) active @endif">
+                <a href="{{route('admin.exchange.wallet')}}" class="menu-link">
+                    <i class="menu-icon fa-regular fa-wallet"></i>
+                    <div>کیف پول های صرافی</div>
+                </a>
+            </li>
         @endcanany
         @canany(['setting.int.index', 'setting.ext.index'])
             <li class="menu-header small text-uppercase">

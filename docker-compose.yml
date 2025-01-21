@@ -83,6 +83,7 @@ services:
         - GID=${GID:-1000}
         - USER=${USER:-laraveluser}
     container_name: php-api
+    restart: unless-stopped
     volumes:
       - "./api-service:/var/www/html:delegated"
       - "./env/api_service.env:/var/www/html/.env"
@@ -168,6 +169,7 @@ services:
     entrypoint: [ 'php', '/var/www/html/artisan', 'coinex:listen' ]
     networks:
       - laravel
+    restart: always
 
   laravel-migrate-seed:
     build:
