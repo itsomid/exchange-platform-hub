@@ -31,11 +31,11 @@ class MarketSeeder extends Seeder
 
         // Insert markets for each pair (without price and exchange_profit, as they are handled in ExchangePrice)
         $markets = [
-            ['base_currency' => $btc->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 0.001, 'max_trade_amount' => 1000],
-            ['base_currency' => $eth->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 0.01, 'max_trade_amount' => 1000],
-            ['base_currency' => $doge->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 10, 'max_trade_amount' => 100000],
-            ['base_currency' => $tron->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 10, 'max_trade_amount' => 1000000],
-            ['base_currency' => $bnb->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 0.01, 'max_trade_amount' => 1000],
+            ['base_currency' => $btc->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => "0.00005", 'max_trade_amount' => 1000],
+            ['base_currency' => $eth->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => "0.0005", 'max_trade_amount' => 1000],
+            ['base_currency' => $doge->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => "5", 'max_trade_amount' => 100000],
+            ['base_currency' => $tron->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => "5", 'max_trade_amount' => 1000000],
+            ['base_currency' => $bnb->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => "0.005", 'max_trade_amount' => 1000],
         ];
 
         foreach ($markets as $marketData) {
