@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum TransactionSubTypeEnum : string
+enum TransactionSubTypeEnum: string
 {
     case MANUAL_ADMIN = 'manual_admin';
 
@@ -16,7 +16,7 @@ enum TransactionSubTypeEnum : string
     case REFERRAL_FRIEND = 'friend';
 
     case WITHDRAWAL_FEE = 'withdrawal_fee';
-
+    case COINEX = 'coinex';
 
     const array TYPE_LABEL = [
         self::MANUAL_ADMIN->value => 'ادمین',
@@ -27,7 +27,7 @@ enum TransactionSubTypeEnum : string
         self::REFERRAL_FRIEND->value => 'کارمزد معرفی شونده',
         self::WITHDRAWAL_FEE->value => 'کارمزد برداشت',
 
-//        self::ADMIN_CREDIT->value => 'اعتبار ادمین',
+        //        self::ADMIN_CREDIT->value => 'اعتبار ادمین',
     ];
 
     const array TYPE_COLOR = [
@@ -38,7 +38,7 @@ enum TransactionSubTypeEnum : string
         self::REFERRAL_INTRODUCER->value => 'info',
         self::REFERRAL_FRIEND->value => 'info',
         self::WITHDRAWAL_FEE->value => 'info',
-//        self::ADMIN_CREDIT->value => 'اعتبار ادمین',
+        //        self::ADMIN_CREDIT->value => 'اعتبار ادمین',
     ];
 
     public function label(): string
@@ -48,8 +48,6 @@ enum TransactionSubTypeEnum : string
 
     /**
      * Get color for the deposit status.
-     *
-     * @return string
      */
     public function color(): string
     {

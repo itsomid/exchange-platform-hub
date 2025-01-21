@@ -7,23 +7,27 @@ use App\Enums\OTCOrderTypeEnum;
 use App\Filters\Filterable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Sanctum\HasApiTokens;
 
 class OTCOrder extends Model
 {
     use Filterable, HasApiTokens, HasFactory;
+
     public $filterNameSpace = 'App\Filters\OTCOrder';
 
     protected $table = 'otc_orders';
-    protected $fillable = ['user_id','market_id','quantity','price','fee','type','status'];
+
+    protected $fillable = ['user_id', 'market_id', 'quantity', 'price', 'fee', 'type', 'status', 'exchange_id'];
 
     protected $casts = [
         'type' => OTCOrderTypeEnum::class,
         'status' => OTCOrderStatusEnum::class,
     ];
-    public function transactions()
+
+    public function transactions(): HasMany
     {
-        return $this->hasMany(Transaction::class,'otc_order_id');
+        return $this->hasMany(Transaction::class, 'otc_order_id');
     }
 
     public function market()
@@ -35,5 +39,4 @@ class OTCOrder extends Model
     {
         return $this->belongsTo(User::class);
     }
-
 }

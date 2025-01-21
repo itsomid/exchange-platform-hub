@@ -11,6 +11,8 @@ class CreateOTCOrderRequestDTO
 
     private int $marketId;
 
+    private ?int $exchangeId = null;
+
     private string $quantity;
 
     private string $price;
@@ -103,5 +105,17 @@ class CreateOTCOrderRequestDTO
     public function getStatus(): OTCOrderStatusEnum
     {
         return $this->status;
+    }
+
+    public function setExchangeId(?int $exchangeId): CreateOTCOrderRequestDTO
+    {
+        $this->exchangeId = $exchangeId;
+
+        return $this;
+    }
+
+    public function getExchangeId(): ?int
+    {
+        return $this->exchangeId;
     }
 }

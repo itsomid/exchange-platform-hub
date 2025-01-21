@@ -7,9 +7,10 @@ enum TransactionTypeEnum: string
     case BUY = 'buy';
     case SELL = 'sell';
     case DEPOSIT = 'deposit';
-    case WITHDRAWAL= 'withdrawal';
+    case WITHDRAWAL = 'withdrawal';
     case REFERRAL = 'referral';
     case FEE = 'fee';
+    case EXCHANGE = 'exchange';
 
     const array TYPE_LABEL = [
         self::BUY->value => 'خرید',
@@ -18,7 +19,8 @@ enum TransactionTypeEnum: string
         self::WITHDRAWAL->value => 'برداشت',
         self::REFERRAL->value => 'دعوت از دوستان',
         self::FEE->value => 'کارمزد',
-//        self::ADMIN_CREDIT->value => 'اعتبار ادمین',
+        self::EXCHANGE->value => 'صرافی مرجع',
+        //        self::ADMIN_CREDIT->value => 'اعتبار ادمین',
     ];
 
     const array TYPE_COLOR = [
@@ -28,8 +30,10 @@ enum TransactionTypeEnum: string
         self::WITHDRAWAL->value => 'danger',
         self::REFERRAL->value => 'primary',
         self::FEE->value => 'info',
-//        self::ADMIN_CREDIT->value => 'info',
+        self::EXCHANGE->value => 'info',
+        //        self::ADMIN_CREDIT->value => 'info',
     ];
+
     const array TYPE_ICON = [
         self::BUY->value => 'money-bill-transfer',
         self::SELL->value => 'money-bill-transfer',
@@ -37,8 +41,9 @@ enum TransactionTypeEnum: string
         self::WITHDRAWAL->value => 'arrow-up-right',
         self::REFERRAL->value => 'user-tag',
         self::FEE->value => 'hand-holding-dollar',
+        self::EXCHANGE->value => 'hand-holding-dollar',
 
-//        self::ADMIN_CREDIT->value => 'user-tie-hair',
+        //        self::ADMIN_CREDIT->value => 'user-tie-hair',
     ];
 
     public function label(): string
@@ -48,13 +53,12 @@ enum TransactionTypeEnum: string
 
     /**
      * Get color for the deposit status.
-     *
-     * @return string
      */
     public function color(): string
     {
         return self::TYPE_COLOR[$this->value] ?? '';
     }
+
     public function icon(): string
     {
         return self::TYPE_ICON[$this->value] ?? '';

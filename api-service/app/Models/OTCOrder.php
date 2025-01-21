@@ -7,12 +7,21 @@ use App\Enums\OTCOrderTypeEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
+/**
+ * @property string $quantity
+ * @property string $price
+ * @property string $fee
+ * @property string $received_amount
+ * @property Market $market
+ * @property int    $market_id
+ */
 class OTCOrder extends Model
 {
     protected $table = 'otc_orders';
 
-    protected $fillable = ['user_id', 'market_id', 'quantity', 'price', 'fee', 'type', 'status'];
+    protected $fillable = ['user_id', 'market_id', 'quantity', 'price', 'fee', 'type', 'status', 'exchange_id', 'ref_exchange_description'];
 
     protected $casts = [
         'type' => OTCOrderTypeEnum::class,
@@ -32,5 +41,19 @@ class OTCOrder extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function getReceivedAmountAttribute(): string
+    {
+        return bcsub(
+            bcmul($this->quantity, $this->price, config('bitexroom.scale_precision')),
+            $this->fee,
+            config('bitexroom.scale_precision')
+        );
+    }
+
+    public function refExchangeTransactions(): MorphOne
+    {
+        return $this->morphOne(ExchangeTransaction::class, 'orderable');
     }
 }

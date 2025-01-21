@@ -13,6 +13,7 @@ class OTCOrderRepository implements OTCOrderRepositoryInterface
         return OTCOrder::query()->create([
             'user_id' => $requestDTO->getUserId(),
             'market_id' => $requestDTO->getMarketId(),
+            'exchange_id' => $requestDTO->getExchangeId(),
             'quantity' => $requestDTO->getQuantity(),
             'price' => $requestDTO->getPrice(),
             'fee' => $requestDTO->getFee(),

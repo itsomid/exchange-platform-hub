@@ -19,6 +19,11 @@ class ExchangePrice extends Model
         return $this->belongsTo(Market::class);
     }
 
+    public function exchange(): BelongsTo
+    {
+        return $this->belongsTo(Exchange::class);
+    }
+
     public function getSellPriceAttribute(): string
     {
         return bcmul($this->price, (string) ($this->exchange_profit_sell + 1), 8);

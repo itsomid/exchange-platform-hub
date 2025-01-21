@@ -10,11 +10,10 @@ class CoinexRequest
 {
     public static function send(MethodEnum $method, string $path, array $data = []): \Illuminate\Http\Client\Response
     {
-        //        dd(CoinexAuthentication::getSigned($method, $path, $timestamp = time()));
         return Http::baseUrl(config('exchanges.coinex.base_url_v2'))
             ->withHeaders([
                 'X-COINEX-KEY' => config('exchanges.coinex.access_id'),
-                'X-COINEX-SIGN' => CoinexAuthentication::getSigned($method, $path, $timestamp = round(microtime(true) * 1000)),
+                'X-COINEX-SIGN' => CoinexAuthentication::getSigned($method, $path, $timestamp = round(microtime(true) * 1000), $data),
                 'X-COINEX-TIMESTAMP' => $timestamp,
             ])
             ->{$method->value}($path, $data);
