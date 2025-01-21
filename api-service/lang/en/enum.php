@@ -1,4 +1,5 @@
 <?php
+
 return [
     'transaction-type' => [
         \App\Enums\TransactionTypeEnum::DEPOSIT->name => 'deposit',

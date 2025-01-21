@@ -17,16 +17,20 @@ class ResetTwoFactorController extends Controller
      *     summary="Send email verification to disable two-factor authentication",
      *     description="This endpoint sends an email verification code to the provided email address for disabling two-factor authentication.",
      *     tags={"Two-Factor Reset"},
+     *
      *     @OA\RequestBody(
      *         required=true,
      *
      *         @OA\JsonContent(ref="#/components/schemas/SendEmailVerificationRequest")
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Email verification code has been sent successfully.",
+     *
      *         @OA\JsonContent(
      *             type="object",
+     *
      *             @OA\Property(
      *                 property="message",
      *                 type="string",
@@ -34,11 +38,14 @@ class ResetTwoFactorController extends Controller
      *             )
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=422,
      *         description="Validation error.",
+     *
      *         @OA\JsonContent(
      *             type="object",
+     *
      *             @OA\Property(
      *                 property="message",
      *                 type="string",
@@ -74,11 +81,14 @@ class ResetTwoFactorController extends Controller
      *     description="This endpoint disables two-factor authentication for a user after verifying the email and the token sent for verification.",
      *     tags={"Two-Factor Reset"},
 
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Two-factor authentication disabled successfully.",
+     *
      *         @OA\JsonContent(
      *             type="object",
+     *
      *             @OA\Property(
      *                 property="message",
      *                 type="string",
@@ -86,16 +96,20 @@ class ResetTwoFactorController extends Controller
      *             )
      *         )
      *     ),
+     *
      *          @OA\RequestBody(
      *          required=true,
      *
      *          @OA\JsonContent(ref="#/components/schemas/DisableRequest")
      *      ),
+     *
      *     @OA\Response(
      *         response=422,
      *         description="Validation error.",
+     *
      *         @OA\JsonContent(
      *             type="object",
+     *
      *             @OA\Property(
      *                 property="message",
      *                 type="string",
@@ -111,11 +125,14 @@ class ResetTwoFactorController extends Controller
      *             )
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=400,
      *         description="Invalid token or email not associated with the account.",
+     *
      *         @OA\JsonContent(
      *             type="object",
+     *
      *             @OA\Property(
      *                 property="message",
      *                 type="string",

@@ -9,6 +9,7 @@ use Carbon\Carbon;
 class GetAllDepositWithdrawResponseDTO
 {
     private string $currencySymbol;
+
     private string $currencyChain;
 
     private string $amount;
@@ -18,8 +19,11 @@ class GetAllDepositWithdrawResponseDTO
     private Carbon $createdAt;
 
     private TransactionStatusEnum $status;
+
     private ?string $address;
+
     private ?string $transactionHashed;
+
     private ?Carbon $confirmedAt;
 
     public function setCurrencySymbol(string $currencySymbol): self
@@ -85,6 +89,7 @@ class GetAllDepositWithdrawResponseDTO
     public function setAddress(?string $address): self
     {
         $this->address = $address;
+
         return $this;
     }
 
@@ -96,6 +101,7 @@ class GetAllDepositWithdrawResponseDTO
     public function setTransactionHashed(?string $transactionHashed): self
     {
         $this->transactionHashed = $transactionHashed;
+
         return $this;
     }
 
@@ -107,6 +113,7 @@ class GetAllDepositWithdrawResponseDTO
     public function setConfirmedAt(?Carbon $confirmedAt): GetAllDepositWithdrawResponseDTO
     {
         $this->confirmedAt = $confirmedAt;
+
         return $this;
     }
 
@@ -118,6 +125,7 @@ class GetAllDepositWithdrawResponseDTO
     public function setCurrencyChain(string $currencyChain): GetAllDepositWithdrawResponseDTO
     {
         $this->currencyChain = $currencyChain;
+
         return $this;
     }
 

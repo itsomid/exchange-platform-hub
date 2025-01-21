@@ -4,12 +4,14 @@ namespace App\Http\Resources\V1\OTC;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+
 /**
  * @OA\Schema(
  *     schema="FeeResource",
  *     type="object",
  *     title="OTC Fees",
  *     description="Representation of the buy and sell fees for OTC trades.",
+ *
  *     @OA\Property(
  *         property="buy_fee",
  *         type="string",
