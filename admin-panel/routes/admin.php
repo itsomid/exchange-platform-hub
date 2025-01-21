@@ -29,6 +29,8 @@ use App\Http\Controllers\OTCOrder\OTCOrderController;
 use App\Http\Controllers\Deposit\DepositController;
 use App\Http\Controllers\Withdrawal\WithdrawalController;
 use App\Http\Controllers\Exchange\ExchangeWalletController;
+use App\Http\Controllers\Withdrawal\WithdrawalReportController;
+use App\Http\Controllers\Deposit\DepositReportController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -173,4 +175,10 @@ Route::prefix('wallet')->group(function (){
     Route::post('{wallet}/block-balance', [WalletController::class, 'blockBalance'])->name('wallet.block-balance')->can('wallet');
     Route::get('{wallet}/user/{user}/unblock-balance', [WalletController::class, 'unblockBalanceForm'])->name('wallet.unblock-balance.form')->can('wallet');
     Route::post('{wallet}/unblock-balance', [WalletController::class, 'unblockBalance'])->name('wallet.unblock-balance')->can('wallet');
+});
+
+Route::prefix('report')->group(function (){
+    Route::get('deposit',[DepositReportController::class,'index'])->name('report.deposit')->can('report');
+    Route::get('withdrawal',[WithdrawalReportController::class,'index'])->name('report.withdrawal')->can('report');
+
 });

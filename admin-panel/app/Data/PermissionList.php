@@ -63,6 +63,8 @@ class PermissionList
             ['deposit', 'مشاهده لیست واریزی ها'],
             ['withdrawal', 'مشاهده لیست برداشت ها'],
 
+            ['report','لیست گزارش ها']
+
         ];
 
         return array_map(fn($permission) => [$permission[0], $permission[1]], $permissions);
