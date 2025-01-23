@@ -89,6 +89,7 @@ Route::post('/users/financial-status/mass-block', [UserFinancialBlockController:
 
 Route::get('/users/{user}/wallets',[UserWalletController::class,'userWallets'])->name('wallet.index')->can('wallet');
 Route::get('/users/{user}/wallets/{wallet}/{type}',[UserWalletController::class,'walletDetails'])->name('wallet.detail')->can('wallet');
+Route::get('/users/{user}/inquiry',[InquiryController::class,'userDetails'])->name('inquiry.user-details')->can('admin.inquiry');
 
 //Route::get('/users/2fa', [UserSecurityController::class, ''])->name('profile.2fa.edit');
 //Route::get('/users/{user}/tokens', [UserTokenController::class, 'twoFAEdit'])->name('user.token.index')->can('user.edit');
