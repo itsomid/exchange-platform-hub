@@ -159,7 +159,6 @@
             <div class="card-title header-elements">
                 <h5 class="m-0 me-2">لیست برداشت ها</h5>
             </div>
-
         </div>
         <div class="table-responsive text-nowrap">
             <table class="table table-striped">

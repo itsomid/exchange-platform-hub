@@ -161,13 +161,13 @@ class WalletService
             if (!$existingChain) {
 
                 //TODO: give it from HD Wallet
-                $depositAddress = $this->generateUniqueAddress();
+//                $depositAddress = $this->generateUniqueAddress();
 
                 // Create the wallet chain record
                 $existingChain = WalletChain::create([
                     'wallet_id' => $wallet->id,
                     'currency_chain' => $currencyChain,
-                    'address' => $depositAddress,
+                    'address' => null,
                 ]);
 //                throw new \Exception("A deposit address for this currency chain already exists.");
             } else {
@@ -179,7 +179,7 @@ class WalletService
                 'currency_symbol' => $currencySymbol,
                 'currency_chain' => $currencyChain,
                 'amount' => 0,
-                'address' => $existingChain->address,
+                'address' => null,
                 'transaction_hash' => null,
                 'description' => $description ?? 'Awaiting deposit',
                 'status' => 'pending',

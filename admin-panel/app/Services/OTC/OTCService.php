@@ -94,7 +94,7 @@ class OTCService
                 );
 
                 if ($otcOrder->user->introducer_code){
-                    $fee = $this->referralCommissionService->processReferralCommission($otcOrder, $fee);
+                     $this->referralCommissionService->processReferralCommission($otcOrder, $fee);
                 }
 
                 // 6. Process wallet balances & transactions

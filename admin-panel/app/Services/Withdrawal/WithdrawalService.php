@@ -12,6 +12,7 @@ use App\Models\Wallet;
 use App\Models\Withdrawal;
 use App\Models\Transaction;
 use App\Services\Wallet\WalletService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class WithdrawalService
@@ -34,7 +35,8 @@ class WithdrawalService
      * @param string $currencySymbol
      * @param float $totalAmount
      * @param string $address
-     * @param string|null description
+     * @param string|null $description
+     * @param Carbon|null $date
      * @return Withdrawal
      * @throws \Exception
      */
@@ -45,7 +47,9 @@ class WithdrawalService
         string  $currencySymbol,
         float   $totalAmount,
         string  $address,
-        ?string $description = null
+        ?string $description = null,
+        ?Carbon $date = null // Optional date parameter
+
     ): Withdrawal
     {
         DB::beginTransaction();
@@ -74,6 +78,8 @@ class WithdrawalService
             $wallet->decrement('balance', $totalAmount);
             $wallet->increment('locked_balance', $totalAmount);
 
+            // Set timestamps
+            $timestamp = $date ?? now();
 
             // Create the withdrawal record
             $withdrawal = Withdrawal::create([
@@ -85,6 +91,8 @@ class WithdrawalService
                 'exchange_fee' => $exchangeFee,
                 'address' => $address,
                 'status' => $totalAmount >= $currency->max_auto_withdraw_amount ? WithdrawalStatusEnum::AWAITING_APPROVAL : WithdrawalStatusEnum::PENDING,
+                'created_at' => $timestamp,
+                'updated_at' => $timestamp,
             ]);
             if ($totalAmount >= $currency->max_auto_withdraw_amount) {
                 $withdrawal->update([
