@@ -26,7 +26,7 @@ class FetchWithdrawalFee extends Command
                 $feeData = $service->fetchWithdrawalFee($currency->symbol);
                 foreach ($currency->chains as $chain) {
                     $this->saveWithdrawalFee($feeData, $chain);
-                    $this->info("Updated withdrawal fee #{$currency->symbol} On {$chain->chain} network | network_fee: {$chain->network_fee}");
+                    $this->info("Updated withdrawal fee #{$currency->symbol} On {$chain->chain->value} network | network_fee: {$chain->network_fee}");
                 }
             }
         } catch (Exception $e) {
@@ -37,13 +37,12 @@ class FetchWithdrawalFee extends Command
 
     private function saveWithdrawalFee(array $feeData, CurrencyChain $chain): void
     {
-        $chainSymbol = $chain->chain;
+        $chainSymbol = $chain->chain->value;
         $foundNetwork = array_values(array_filter($feeData['networks'], function (array $value) use ($chainSymbol) {
             return $value['network'] === $chainSymbol;
         }));
 
         if (count($foundNetwork)) {
-
             $chain->update([
                 'network_fee' => $foundNetwork[0]['withdrawal_fee'],
                 'withdraw_enabled' => $foundNetwork[0]['withdraw_enabled'],

@@ -43,4 +43,22 @@ class CoinexService implements ExchangeInterface
             'networks' => $withdrawalFeesByNetwork,
         ];
     }
+
+    public function fetchMinTrade(): array
+    {
+        $response = Http::get("{$this->baseUrl}/spot/market");
+
+        if(!$response->successful()){
+            throw new Exception('Failed to fetch data from CoinEx API');
+        }
+
+        return array_map(function(array $item){
+            return [
+                'market' => $item['market'],
+                'min_amount' => $item['min_amount'],
+                'base_ccy' => $item['base_ccy'],
+                'quote_ccy' => $item['quote_ccy']
+            ];
+        }, $response->json('data'));
+    }
 }

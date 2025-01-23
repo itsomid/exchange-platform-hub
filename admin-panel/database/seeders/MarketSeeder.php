@@ -31,11 +31,11 @@ class MarketSeeder extends Seeder
 
         // Insert markets for each pair (without price and exchange_profit, as they are handled in ExchangePrice)
         $markets = [
-            ['base_currency' => $btc->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 0.001, 'max_trade_amount' => 1000],
-            ['base_currency' => $eth->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 0.01, 'max_trade_amount' => 1000],
-            ['base_currency' => $doge->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 10, 'max_trade_amount' => 100000],
-            ['base_currency' => $tron->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 10, 'max_trade_amount' => 1000000],
-            ['base_currency' => $bnb->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 0.01, 'max_trade_amount' => 1000],
+            ['base_currency' => $btc->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 0.001, 'max_trade_amount' => 1000,  'min_otc_amount' => 0.00005000, 'max_otc_amount' => 1000],
+            ['base_currency' => $eth->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 0.01, 'max_trade_amount' => 1000, 'min_otc_amount' => 0.00050000, 'max_otc_amount' => 1000],
+            ['base_currency' => $doge->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 10, 'max_trade_amount' => 100000, 'min_otc_amount' => 5, 'max_otc_amount' => 1000],
+            ['base_currency' => $tron->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 10, 'max_trade_amount' => 1000000, 'min_otc_amount' => 5, 'max_otc_amount' => 1000],
+            ['base_currency' => $bnb->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 0.01, 'max_trade_amount' => 1000, 'min_otc_amount' => 0.00500000, 'max_otc_amount' => 1000],
         ];
 
         foreach ($markets as $marketData) {
@@ -45,6 +45,8 @@ class MarketSeeder extends Seeder
                 'quote_currency' => $marketData['quote_currency'],
                 'min_trade_amount' => $marketData['min_trade_amount'],
                 'max_trade_amount' => $marketData['max_trade_amount'],
+                'min_otc_amount' => $marketData['min_otc_amount'],
+                'max_otc_amount' => $marketData['max_otc_amount'],
                 'is_active' => true,
             ]);
 

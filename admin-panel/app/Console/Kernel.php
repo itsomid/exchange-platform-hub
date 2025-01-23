@@ -14,6 +14,8 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
         $schedule->command('fetch:market-history')->everyFiveMinutes();
+        $schedule->command('exchange:fetch-min-otc-amount coinex')->dailyAt('01:00');
+        $schedule->command('exchange:fetch-withdrawal-fee coinex')->dailyAt('02:00');
     }
 
     /**
