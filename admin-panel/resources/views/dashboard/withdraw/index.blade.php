@@ -94,7 +94,6 @@
                                             <span
                                                 class="avatar-initial rounded-circle bg-label-{{$randomColor}}">{{$topUser['user']->avatar_user_name}}</span>
                                         </div>
-                                        {{--                                        <img class="rounded-circle" src="{{ $topUser['user']->avatar_url ?? 'http://127.0.0.1:8000/images/avatars/male/2.png' }}">--}}
                                     </li>
                                 @endforeach
                             @else
@@ -248,7 +247,7 @@
                                 <h6 class="mb-0">{{formatNumberTrimZeros($withdraw->amount)}}</h6>
                             </td>
                             <td class="font-number" dir="ltr">
-                                <h6 class="mb-0">{{formatNumberTrimZeros($withdraw->fee)}}</h6>
+                                <h6 class="mb-0">{{formatNumberTrimZeros($withdraw->total_fee)}}</h6>
                             </td>
                             <td class="font-number">
                                 <h6 class="mb-0">
@@ -379,7 +378,130 @@
                                         </div>
                                     </div>
                                 @endif
+                                    @if($withdraw->status === \App\Enums\WithdrawalStatusEnum::COMPLETED)
+                                        <a href="" class="btn btn-icon btn-text-secondary" data-bs-toggle="modal"
+                                           data-bs-target="#withdraw-{{$withdraw->id}}">
+                                            <i class="fa-light fa-memo-circle-info fa-xl"></i>
+                                        </a>
+                                        <div class="modal fade" id="withdraw-{{$withdraw->id}}" tabindex="-1"
+                                             aria-model="true"
+                                             role="dialog">
+                                            <div class="modal-dialog modal-xl" role="document">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title font-number" id="exampleModalLabel4">تراکنش
+                                                            های
+                                                            برداشت #{{$withdraw->id}}</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                                aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <div class="table-responsive text-nowrap">
+                                                            <table class="table table-striped">
+                                                                <thead>
+                                                                <tr>
+                                                                    <th>شناسه</th>
+                                                                    <th>نوع تراکنش</th>
+                                                                    <th>رمز ارز</th>
+                                                                    <th>مقدار</th>
+                                                                    <th>مقدار موجودی</th>
+                                                                    <th>توضیحات</th>
+                                                                    <th>تاریخ و زمان</th>
+                                                                    <th>وضعیت</th>
+                                                                </tr>
+                                                                </thead>
+                                                                <tbody class="table-border-bottom-0">
+                                                                @if($withdraw->transactions->isEmpty())
+                                                                    <tr>
+                                                                        <td colspan="9" class="text-center">تراکنشی یافت
+                                                                            نشد.
+                                                                        </td>
+                                                                    </tr>
+                                                                @else
 
+                                                                    @foreach($withdraw->transactions as $transaction)
+
+                                                                        <tr>
+                                                                            <td>{{$transaction->id}}</td>
+                                                                            <td class="text-heading fw-medium">
+                                                                                <div
+                                                                                    class="d-flex justify-content-start align-items-center">
+                                                                                    <div
+                                                                                        class="trans-avatar-group d-flex align-items-center assigned-avatar">
+                                                                                        <div class="avatar avatar-md ">
+                                                                                            <img
+                                                                                                src="{{asset($transaction->wallet->currency->coinLogo())}}"
+                                                                                                class="rounded-circle">
+                                                                                        </div>
+                                                                                        <div class="avatar avatar-md">
+                                                                                <span
+                                                                                    class="avatar-initial rounded-circle bg-label-{{$transaction->type->color()}}">
+                                                                                    <i class="fa-regular fa-{{$transaction->type->icon()}} mx-3"></i>
+                                                                                </span>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div
+                                                                                        class="d-flex flex-column align-items-start">
+                                                                                    <span
+                                                                                        class="badge bg-label-{{$transaction->type->color()}} ms-2">
+                                                                                        {{$transaction->type->label()}}
+                                                                                    </span>
+                                                                                        @if($transaction->subtype->value != 'user_initiated')
+                                                                                            <span
+                                                                                                class="badge bg-label-secondary ms-2 mt-2">
+                                                                                         {{$transaction->subtype->label()}}
+                                                                                    </span>
+                                                                                        @endif
+                                                                                    </div>
+                                                                                </div>
+                                                                            </td>
+
+
+                                                                            <td>{{$transaction->wallet->currency_symbol}}</td>
+                                                                            <td class="font-number" dir="ltr">
+                                                                                <h6 class="mb-0 {{$transaction->amount > 0 ?'text-success': 'text-danger'}}">{{formatNumberTrimZeros($transaction->amount)}}</h6>
+                                                                            </td>
+                                                                            <td class="font-number">
+                                                                                <h6 class="mb-0">{{formatNumberTrimZeros($transaction->balance)}}</h6>
+                                                                            </td>
+
+                                                                            <td class="font-number text-wrap">
+                                                                                @if($transaction->admin_id)
+                                                                                    {{$transaction->admin->last_name}}
+                                                                                @endif
+                                                                                <span>{{$transaction->description}}</span>
+
+                                                                            </td>
+                                                                            <td class="font-number">
+                                                                                {{\App\Helpers\DateFormatter::convertToPersianDate($transaction->created_at,'H:i:s %Y/%m/%d')}}
+                                                                            </td>
+
+                                                                            <td>
+                                                                        <span
+                                                                            class="badge bg-label-{{$transaction->status->color()}}">
+                                                                            {{$transaction->status->label()}}
+                                                                        </span>
+                                                                            </td>
+                                                                        </tr>
+                                                                    @endforeach
+                                                                @endif
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <a type="button"
+                                                           href="{{route('admin.transaction.index',['withdrawal_id'=>$withdraw->id])}}"
+                                                           class="btn btn-primary">لیست تراکنش ها</a>
+                                                        <button type="button" class="btn btn-label-secondary waves-effect"
+                                                                data-bs-dismiss="modal">بستن
+                                                        </button>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
                                 @if($withdraw->status === \App\Enums\WithdrawalStatusEnum::AWAITING_APPROVAL)
                                     <a href="{{ route('admin.withdrawal.confirm-withdrawal', ['withdraw' => $withdraw]) }}"
                                        class="btn btn-icon btn-success me-2">
