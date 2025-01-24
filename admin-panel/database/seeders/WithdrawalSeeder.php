@@ -37,8 +37,9 @@ class WithdrawalSeeder extends Seeder
             for ($i = 1; $i < 6; $i++) {
                 $date = $startDate->copy()->addDays($i);
 
-                $this->processWithdrawals($this->generateRealisticBalance($currency['symbol']), 0, 3, false, $currency, $date);
+                $this->processWithdrawals(0.22, 0, 3, true, $currency, $date);
                 $this->processWithdrawals($this->generateRealisticBalance($currency['symbol']), 3, 3, true, $currency, $date);
+                $this->processWithdrawals($this->generateAdminApprovalBalance($currency['symbol']), 3, 3, true, $currency, $date);
 //                $this->processWithdrawals(0.2, 6, 3, false, $currency, $date);
             }
         }
@@ -83,9 +84,9 @@ class WithdrawalSeeder extends Seeder
     {
         switch (strtoupper($currency)) {
             case 'BTC':
-                return $this->randomFloat(0.001, 0.5, 8);
+                return $this->randomFloat(0.001, 0.22, 8);
             case 'ETH':
-                return $this->randomFloat(0.001, 1, 8);
+                return $this->randomFloat(0.001, 2, 8);
             case 'DOGE':
                 return $this->randomFloat(10, 1000, 2);
             case 'BNB':
@@ -99,6 +100,25 @@ class WithdrawalSeeder extends Seeder
         }
     }
 
+    private function generateAdminApprovalBalance(string $currency)
+    {
+        switch (strtoupper($currency)) {
+            case 'BTC':
+                return $this->randomFloat(0.26, 0.5, 8);
+            case 'ETH':
+                return $this->randomFloat(2, 4, 8);
+            case 'DOGE':
+                return $this->randomFloat(100000, 200000, 2);
+            case 'BNB':
+                return $this->randomFloat(3, 5, 8);
+            case 'USDT':
+                return $this->randomFloat(10000, 20000, 2);
+            case 'TRX':
+                return $this->randomFloat(100000, 210000, 2);
+            default:
+                return $this->randomFloat(0, 1000, 8); // Default range for other currencies
+        }
+    }
     private function randomFloat(float $min, float $max, int $decimals): float
     {
         $scale = pow(10, $decimals);
