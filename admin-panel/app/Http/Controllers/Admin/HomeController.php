@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
+use App\Enums\WithdrawalStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use App\Models\Withdrawal;
@@ -31,6 +32,7 @@ class HomeController extends Controller
             ->get();
 
         $withdrawalSums = Withdrawal::selectRaw('currency_symbol, SUM(amount) as total_amount')
+            ->where('status', WithdrawalStatusEnum::COMPLETED)
             ->groupBy('currency_symbol')
             ->get();
 

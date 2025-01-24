@@ -1,7 +1,7 @@
 'use strict';
 
 (function () {
-    let cardColor, borderColor, headingColor, labelColor,shadeColor, barBgColor;
+    let cardColor, borderColor, headingColor, labelColor, shadeColor, barBgColor;
     if (isDarkStyle) {
         cardColor = config.colors_dark.cardColor;
         labelColor = config.colors_dark.textMuted;
@@ -20,102 +20,117 @@
     }
     // Project Status - Line Chart
     // --------------------------------------------------------------------
-    const projectStatusEl = document.querySelector('#withdrawal-chart'),
-        projectStatusConfig = {
+    const withdrawalChartEl = document.querySelector('#withdrawalAmountChart');
+    if (!withdrawalChartEl) return;
 
-            chart: {
-                height: 320,
+    // Extract JSON from data attributes
+    const chartDataStr = withdrawalChartEl.getAttribute('data-chartdata');
+    const chartDatesStr = withdrawalChartEl.getAttribute('data-dates');
+
+    if (!chartDataStr || !chartDatesStr) return;
+
+    const chartData = JSON.parse(chartDataStr);
+    const chartDates = JSON.parse(chartDatesStr);
+    const realDataArray = Object.values(chartData);
+    // [The rest is the same as above: define colors, config, etc.]
+
+    const withdrawalChartOptions = {
+        chart: {
+            height: 350,
+            type: 'line',
+            stacked: false,
+            parentHeightOffset: 0,
+            toolbar: {show: false},
+            zoom: {enabled: false}
+        },
+        markers: {
+            size: [3, 0],
+            colors: [config.colors.white],
+            strokeColors: [config.colors.primary],
+            hover: {size: 3},
+            borderRadius: 4
+        },
+        stroke: {
+            width: [3, 0],
+            curve: 'straight'
+        },
+        dataLabels: {
+            enabled: false,         // turn on data labels in general
+            enabledOnSeries: [0]   // only show them on the second series
+        },
+        series: [
+            {
+                name: 'مقدار',
                 type: 'area',
-                stacked: false,
-                parentHeightOffset: 0,
-                toolbar: { show: false },
-                zoom: { enabled: false }
+                data: Object.values(chartData).map(item => parseFloat(item.total_amount))
             },
-            markers: {
-                size: 5,
-                colors: [config.colors.white],
-                strokeColors: [config.colors.primary],
-                hover: { size: 3 },
-                borderRadius: 4
+            {
+                name: 'تعداد',
+                data: Object.values(chartData).map(() => 0),
+                showInLegend: false // hide from the legend
             },
-            series: [
-                {
-                    name: 'مبلغ',
-                    type: 'area',
-                    data: [2000, 2000, 4000, 4000, 3050, 3050, 2000, 2000, 3050, 3050, 4700, 4700, 2750, 2750, 5700, 5700,2000,5700,3050,5700,5700,5700,4700,3050,5700,5700,5700,4700,5700,5700]
-                },
-                {
-                    name: 'تعداد',
-                    type: 'area',
-                    data: [20, 20, 56, 40, 30, 30, 20, 20, 30, 30, 47, 47, 20, 20, 57, 57,57,20,20,20,30,20,20,20,20,20,20,20,20,20]
-                }
-            ],
-            dataLabels: {
-                enabled: false
-            },
-            grid: {
-                show: true,
-                padding: {
-                    left: 10,
-                    right: 10
-                }
-            },
-            stroke: {
-                width: 3,
-                curve: 'straight'
-            },
-            colors: [config.colors.primary],
-            fill: {
-                type: 'gradient',
-                gradient: {
-                    opacityFrom: 0.6,
-                    opacityTo: 0.15,
-                    stops: [0, 95, 100]
-                }
-            },
-            xaxis: {
-                labels: {
-                    show: true,
-                    style: {
-                        colors: labelColor,
-                        fontSize: '13px',
-                        fontFamily: 'FarsiNumeral',
-                        fontWeight: 400
-                    },
-                },
-                axisBorder: {
-                    show: false
-                },
-                axisTicks: {
-                    show: false
-                },
-                lines: {
-                    show: false
-                }
-            },
-            legend: {
-                show: true,
-                position: 'bottom',
-
-                height: 40,
-                fontSize: '14px',
-                fontFamily: 'FarsiNumeral',
-                fontWeight: 400,
-            },
-            yaxis: {
-                labels: {
-                    show: true
-                },
-                min: 1000,
-                max: 6000,
-                tickAmount: 5
-            },
-            tooltip: {
-                enabled: true
+        ],
+        grid: {
+            show: true,
+            padding: {
+                left: 10,
+                right: 30
             }
-        };
-    if (typeof projectStatusEl !== undefined && projectStatusEl !== null) {
-        const projectStatus = new ApexCharts(projectStatusEl, projectStatusConfig);
-        projectStatus.render();
-    }
+        },
+        xaxis: {
+            categories: chartDates,
+            labels: {
+                rotate: -90,
+                rotateAlways: false,
+                style: {
+                    colors: labelColor,  // can be a single color or an array
+                    fontSize: '12px',
+                    fontFamily: 'FarsiNumeral', // if needed
+                    fontWeight: 400
+                }
+            },
+        },
+        yaxis: {
+            tickAmount: 5,
+            labels: {
+                formatter: function(val, index) {
+                    return val.toFixed(2);
+                }
+            },
+
+
+        },
+
+        colors: [config.colors.primary, config.colors.warning],
+
+        tooltip: {
+            style: {
+                fontSize: '12px',
+                fontFamily: 'FarsiNumeral', // if needed
+            },
+            y: {
+                formatter: function (val, { seriesIndex, dataPointIndex }) {
+                    if (seriesIndex === 0) {
+                        // Series 0 -> مقدار; just show the value
+                        return parseFloat(val).toLocaleString();
+                    } else {
+                        // Series 1 -> تعداد
+                        const realTransactions = realDataArray[dataPointIndex].total_transactions;
+                        return parseInt(realTransactions, 10).toLocaleString();
+                    }
+                }
+            }
+        },
+        legend: {
+            show: true,
+            position: 'bottom',
+            height: 40,
+            fontSize: '14px',
+            fontFamily: 'FarsiNumeral',
+            fontWeight: 400,
+        },
+    };
+
+    const chart = new ApexCharts(withdrawalChartEl, withdrawalChartOptions);
+    chart.render();
 })();

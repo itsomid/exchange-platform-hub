@@ -16,7 +16,7 @@ class Withdrawal extends Model
     public $filterNameSpace = 'App\Filters\WithdrawalFilter';
 
     protected $fillable = [
-        'user_id', 'admin_id', 'wallet_id', 'currency_chain', 'currency_symbol', 'amount', 'fee', 'address', 'transaction_hash', 'status', 'description', 'confirmed_at',
+        'user_id', 'admin_id', 'wallet_id', 'currency_chain', 'currency_symbol', 'amount', 'total_fee', 'address', 'transaction_hash', 'status', 'description', 'confirmed_at',
     ];
 
     protected function casts(): array
@@ -51,6 +51,11 @@ class Withdrawal extends Model
             'id' // Local key on Currency table
         );
     }
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class, 'withdrawal_id');
+    }
     public function transaction()
     {
         return $this->hasOne(Transaction::class, 'withdrawal_id');
@@ -68,4 +73,5 @@ class Withdrawal extends Model
                 $query->where('currency_symbol', $this->currency_symbol);
             });
     }
+
 }

@@ -39,11 +39,19 @@ class DepositSeeder extends Seeder
                         currencySymbol: $currency['symbol'],
                         currencyChain: $currency['chain']
                     );
+                    $timestamp = now()->subDays(rand(0, 4))->setTime(rand(0, 23), rand(0, 59), rand(0, 59));
 
                     // Step 2: Find or create a deposit record
                     $deposit = Deposit::firstOrCreate(
                         ['address' => $walletChain->address, 'status' => 'pending'],
-                        ['user_id' => $user->id, 'currency' => $currency['symbol'], 'amount' => 0]
+                        [
+                            'user_id' => $user->id,
+                            'currency_symbol' => $currency['symbol'],
+                            'currency_chain' => $currency['chain'],
+                            'amount' => 0,
+                            'created_at' => $timestamp,
+                            'updated_at' => $timestamp,
+                        ]
                     );
 
                     $amount = rand(1, 100) / 100; // Random deposit amount between 0.01 and 1.00
