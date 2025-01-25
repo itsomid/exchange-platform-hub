@@ -6,7 +6,6 @@ use App\Services\Wallet\CheckWalletService;
 use App\Services\Wallet\DTO\CheckWallet\CheckUserDepositRequestDTO;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Support\Facades\Auth;
 
 class CheckUserDepositJob implements ShouldQueue
 {

@@ -7,6 +7,9 @@ use App\Http\Requests\V1\OTC\OTCSellRequest;
 use App\Services\OTC\DTO\OTCSellRequestDTO;
 use App\Services\OTC\OTCService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 class SellController
 {
@@ -75,19 +78,33 @@ class SellController
     public function create(OTCSellRequest $request)
     {
         $validateData = $request->validated();
+        $lock = Cache::lock('order-sell:'.$validateData['market_id'].Auth::id(), 10);
 
-        $responseDTO = $this->OTCService->sell(
-            resolve(OTCSellRequestDTO::class)
-                ->setMarketId($validateData['market_id'])
-                ->setSellerUserId(Auth::id())
-                ->setBuyerUserId(config('bitexroom.bitexroom_user_id'))
-                ->setQuantity($validateData['quantity'])
-        );
+        if ($lock->get()) {
+            try {
+                $responseDTO = $this->OTCService->sell(
+                    resolve(OTCSellRequestDTO::class)
+                        ->setMarketId($validateData['market_id'])
+                        ->setSellerUserId(Auth::id())
+                        ->setBuyerUserId(config('bitexroom.bitexroom_user_id'))
+                        ->setQuantity($validateData['quantity'])
+                );
 
-        event(new OTCOrderCreated($responseDTO->getOtcOrderModel(), 'buy'));
+                event(new OTCOrderCreated($responseDTO->getOtcOrderModel(), 'sell'));
+
+                return response([
+                    'message' => __('otc.sell_order_submitted'),
+                ]);
+            } catch (Throwable $exception) {
+                $lock->release();
+                throw $exception;
+            } finally {
+                $lock->release();
+            }
+        }
 
         return response([
-            'message' => __('otc.sell_order_submitted'),
-        ]);
+            'message' => __('auth.too_many_attempts'),
+        ], Response::HTTP_TOO_MANY_REQUESTS);
     }
 }

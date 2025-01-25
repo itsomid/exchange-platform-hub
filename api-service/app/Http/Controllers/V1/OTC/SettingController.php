@@ -19,12 +19,16 @@ class SettingController extends Controller
      *     @OA\Response(
      *         response=200,
      *         description="Buy and Sell fees for OTC trades.",
+     *
      *         @OA\JsonContent(ref="#/components/schemas/FeeResource")
      *     ),
+     *
      *     @OA\Response(
      *         response=401,
      *         description="Unauthorized, user is not authenticated.",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="message", type="string", example="Unauthenticated.")
      *         )
      *     )

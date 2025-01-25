@@ -20,6 +20,8 @@ return new class extends Migration
             $table->decimal('fee', 18, 8)->nullable(); // Optional transaction fee
             $table->string('type'); // NEW: Indicates whether it’s a buy or sell
             $table->string('status')->default('pending');
+            $table->foreignIdFor(\App\Models\Exchange::class)->nullable()->constrained();
+            $table->text('ref_exchange_description')->nullable();
             $table->timestamps();
         });
     }

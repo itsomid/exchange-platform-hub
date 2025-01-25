@@ -18,4 +18,5 @@ enum TransactionSubTypeEnum: string
     case WITHDRAWAL_FEE = 'withdrawal_fee';
 
     case OTHER = 'other';
+    case COINEX = 'coinex';
 }

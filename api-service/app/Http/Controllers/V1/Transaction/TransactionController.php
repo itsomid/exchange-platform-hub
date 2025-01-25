@@ -21,20 +21,25 @@ class TransactionController extends Controller
      *     description="Retrieve a list of all deposit and withdrawal transactions for the authenticated user.",
      *     tags={"Transactions"},
      *     security={{"sanctum": {}}},
+     *
      *     @OA\Parameter(
      *        name="ccy",
      *        in="query",
      *        required=false,
      *        description="The currency symbol for filtering transactions.",
+     *
      *        @OA\Schema(type="string", example="BTC")
      *    ),
+     *
      *    @OA\Parameter(
      *        name="transaction_type",
      *        in="query",
      *        required=false,
      *        description="The type of transaction to filter (e.g., deposit, withdrawal).",
+     *
      *        @OA\Schema(type="string", enum={"deposit", "withdrawal"}, example="deposit")
      *    ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="List of deposit and withdrawal transactions.",

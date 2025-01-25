@@ -1,8 +1,6 @@
 <?php
 
-use App\Enums\UserFinancialBlockAction;
-use App\Services\User\DTO\FinancialBlock\SaveFinancialBlockRequestDTO;
-use App\Services\User\FinancialBlockService;
+use App\Services\Exchanges\Asset\DTO\BuyDTORequest;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Route;
 use Mews\Captcha\Facades\Captcha;
@@ -10,15 +8,16 @@ use Mews\Captcha\Facades\Captcha;
 Route::get('/mehdi', function () {
     \Illuminate\Support\Facades\Auth::loginUsingId(2);
 
-    $user = auth()->user();
-    resolve(FinancialBlockService::class)
-        ->saveOrUpdateState(
-            resolve(SaveFinancialBlockRequestDTO::class)
-                ->setUserId($user->id)
-                ->setAction(UserFinancialBlockAction::WITHDRAW)
-                ->setRestrictedUntil(now()->addDay())
-                ->setReason('Change Password')
-        );
+    $asset = \App\Services\Exchanges\Asset\AssetFactory::make('coinex');
+
+    $asset->placeOrder(
+        resolve(BuyDTORequest::class)
+            ->setSide('buy')
+            ->setMarket('DOGEUSDT')
+            ->setMarketType('SPOT')
+            ->setQuantity('1')
+            ->setOrderType('market')
+    );
 
     return view('welcome');
 });

@@ -7,7 +7,9 @@ use App\Enums\TransactionTypeEnum;
 class GetAllDepositWithdrawRequestDTO
 {
     private int $userId;
+
     private ?TransactionTypeEnum $transactionType = null;
+
     private ?string $currencySymbol = null;
 
     public function setUserId(int $userId): GetAllDepositWithdrawRequestDTO
@@ -25,6 +27,7 @@ class GetAllDepositWithdrawRequestDTO
     public function setTransactionType(?TransactionTypeEnum $transactionType): GetAllDepositWithdrawRequestDTO
     {
         $this->transactionType = $transactionType;
+
         return $this;
     }
 
@@ -36,6 +39,7 @@ class GetAllDepositWithdrawRequestDTO
     public function setCurrencySymbol(?string $currencySymbol): GetAllDepositWithdrawRequestDTO
     {
         $this->currencySymbol = $currencySymbol;
+
         return $this;
     }
 

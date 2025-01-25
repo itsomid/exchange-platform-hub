@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 /**
  * @property Carbon             $created_at
@@ -20,6 +21,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property OTCOrderStatusEnum $status
  * @property User               $user
  * @property int                $user_id
+ * @property string             $received_amount
+ * @property int                $market_id
  */
 class OTCOrder extends Model
 {
@@ -27,7 +30,7 @@ class OTCOrder extends Model
 
     protected $table = 'otc_orders';
 
-    protected $fillable = ['user_id', 'market_id', 'quantity', 'price', 'fee', 'type', 'status'];
+    protected $fillable = ['user_id', 'market_id', 'quantity', 'price', 'fee', 'type', 'status', 'exchange_id', 'ref_exchange_description'];
 
     public string $filterNameSpace = 'App\Filters\OTCOrderFilter';
 
@@ -52,5 +55,19 @@ class OTCOrder extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function getReceivedAmountAttribute(): string
+    {
+        return bcsub(
+            bcmul($this->quantity, $this->price, config('bitexroom.scale_precision')),
+            $this->fee,
+            config('bitexroom.scale_precision')
+        );
+    }
+
+    public function refExchangeTransactions(): MorphOne
+    {
+        return $this->morphOne(ExchangeTransaction::class, 'orderable');
     }
 }

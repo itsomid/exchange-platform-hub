@@ -13,8 +13,9 @@ class SavedAddress extends Model
     {
         return $this->belongsTo(User::class);
     }
-    public function currencyChain() : BelongsTo
+
+    public function currencyChain(): BelongsTo
     {
-        return $this->belongsTo(CurrencyChain::class,'chain','chain');
+        return $this->belongsTo(CurrencyChain::class, 'chain', 'chain');
     }
 }

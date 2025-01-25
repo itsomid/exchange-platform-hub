@@ -8,7 +8,7 @@ class OTCSellRequestDTO
 
     private int $sellerUserId;
 
-    private string $marketId;
+    private int $marketId;
 
     private string $quantity;
 
@@ -36,14 +36,14 @@ class OTCSellRequestDTO
         return $this->sellerUserId;
     }
 
-    public function setMarketId(string $marketId): self
+    public function setMarketId(int $marketId): self
     {
         $this->marketId = $marketId;
 
         return $this;
     }
 
-    public function getMarketId(): string
+    public function getMarketId(): int
     {
         return $this->marketId;
     }

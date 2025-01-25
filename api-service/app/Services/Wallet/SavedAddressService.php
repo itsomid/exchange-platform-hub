@@ -8,7 +8,7 @@ class SavedAddressService
 {
     public function listAddresses(int $userId, $chain = null)
     {
-        $query = SavedAddress::query()->with(['currencyChain','user'])->where('user_id', $userId);
+        $query = SavedAddress::query()->with(['currencyChain', 'user'])->where('user_id', $userId);
 
         if ($chain) {
             $query->where('chain', $chain);

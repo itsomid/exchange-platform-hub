@@ -230,5 +230,10 @@ return [
         'iban' => 'شماره شبا',
         'account_number' => 'شماره حساب',
         'introducer_code' => 'کد معرف',
+        'quantity' => 'مقدار ارز',
+        'currency' => 'ارز',
+        'currency_symbol' => 'ارز',
+        'currency_chain' => 'نام شبکه',
+        'market_id' => 'بازار',
     ],
 ];

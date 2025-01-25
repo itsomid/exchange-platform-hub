@@ -11,7 +11,9 @@ class CreateTransactionRequestDTO
     private int $userId;
 
     private int $walletId;
+
     private ?int $depositId = null;
+
     private ?int $withdrawalId = null;
 
     private ?int $otcOrderId = null;
@@ -139,6 +141,7 @@ class CreateTransactionRequestDTO
     public function setDepositId(?int $depositId): CreateTransactionRequestDTO
     {
         $this->depositId = $depositId;
+
         return $this;
     }
 
@@ -150,6 +153,7 @@ class CreateTransactionRequestDTO
     public function setWithdrawalId(?int $withdrawalId): CreateTransactionRequestDTO
     {
         $this->withdrawalId = $withdrawalId;
+
         return $this;
     }
 
