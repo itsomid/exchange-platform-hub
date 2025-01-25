@@ -58,7 +58,21 @@ use Illuminate\Http\Resources\Json\ResourceCollection;
  *         format="float",
  *         description="Maximum trade amount in base currency.",
  *         example=10.0
- *     )
+ *     ),
+ *     @OA\Property(
+ *          property="min_otc_amount",
+ *          type="number",
+ *          format="float",
+ *          description="Minimum trade amount in base currency.",
+ *          example=0.01
+ *      ),
+ *      @OA\Property(
+ *          property="max_otc_amount",
+ *          type="number",
+ *          format="float",
+ *          description="Maximum trade amount in base currency.",
+ *          example=10.0
+ *      )
  * )
  */
 class MarketCollection extends ResourceCollection
@@ -79,6 +93,8 @@ class MarketCollection extends ResourceCollection
             'buy_price' => $DTO->getBuyPrice(),
             'min_trade_amount' => $DTO->getMinTradeAmount(),
             'max_trade_amount' => $DTO->getMaxTradeAmount(),
+            'min_otc_amount' => $DTO->getMinOTCAmount(),
+            'max_otc_amount' => $DTO->getMaxOTCAmount(),
         ])->toArray();
     }
 }
