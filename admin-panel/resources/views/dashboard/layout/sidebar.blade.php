@@ -140,10 +140,21 @@
                     <div>مدیریت صرافی های مرجع</div>
                 </a>
             </li>
-            <li class="menu-item @if(request()->is('admin/exchange/wallets*')) active @endif">
-                <a href="{{route('admin.exchange.wallet')}}" class="menu-link">
+        @endcanany
+        @can(['wallet'])
+            <li class="menu-header small text-uppercase">
+                <span class="menu-header-text">مدیریت کیف پول‌ها</span>
+            </li>
+            <li class="menu-item @if(request()->is('admin/wallets*')) active @endif">
+                <a href="{{route('admin.wallet')}}" class="menu-link">
                     <i class="menu-icon fa-regular fa-wallet"></i>
                     <div>کیف پول های صرافی</div>
+                </a>
+            </li>
+            <li class="menu-item @if(request()->is('admin/wallets/assets-transfer*')) active @endif">
+                <a href="{{route('admin.wallet.assets_transfer')}}" class="menu-link">
+                    <i class="menu-icon fa-regular fa-wallet"></i>
+                    <div>تجمیع دارایی در HD Wallet</div>
                 </a>
             </li>
         @endcanany

@@ -35,4 +35,9 @@ class ExchangeWalletController extends Controller
         ]);
 
     }
+
+    public function assetsTransfer()
+    {
+
+    }
 }
