@@ -78,14 +78,31 @@
                     <div class="card-body">
                         <div class="d-flex align-items-start justify-content-between">
                             <div class="content-left">
-                                <span class="text-success">مجموع واریزها</span>
+                                <span class="">تعداد واریزها</span>
+                                <div class="d-flex align-items-center my-1">
+                                    <h4 class="mb-0 me-2">{{formatNumberTrimZeros($deposits->sum('total_transactions'))}}</h4>
+                                </div>
+                            </div>
+                            <span class="badge bg-label-success rounded">
+                                <i class="fa-regular fa-arrow-down-left fa-lg"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-12 col-xl-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start justify-content-between">
+                            <div class="content-left">
+                                <span class="">مجموع واریزها</span>
                                 <div class="d-flex align-items-center my-1">
                                     <h4 class="mb-0 me-2">{{formatNumberTrimZeros($deposits->sum('total_amount'))}}</h4>
                                     <small>{{request()->input('currency_symbol')}}</small>
                                 </div>
                             </div>
-                            <span class="badge bg-label-danger rounded">
-                                <i class="fa-regular fa-arrow-up-right fa-lg"></i>
+                            <span class="badge bg-label-success rounded">
+                                <i class="fa-regular fa-arrow-down-left fa-lg"></i>
                             </span>
                         </div>
                     </div>
@@ -97,7 +114,7 @@
                     <div class="card-body">
                         <div class="d-flex align-items-start justify-content-between">
                             <div class="content-left">
-                                <span class="text-success">ارزش واریزها</span>
+                                <span class="">ارزش واریزها</span>
                                 <div class="d-flex align-items-center my-1">
                                     <h4 class="mb-0 me-2">{{formatNumber($totalDepositsValue,2)}}</h4>
                                     <small>USDT</small>
