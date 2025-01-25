@@ -279,6 +279,7 @@ class OTCService
     public function sell(OTCSellRequestDTO $requestDTO): OTCBuyResponseDTO
     {
         try {
+            DB::beginTransaction();
             // Find Market
             $market = $this->marketRepository->getMarketById($requestDTO->getMarketId());
             $buyerWallet = $this->walletRepository
@@ -419,7 +420,10 @@ class OTCService
                 )
             );
 
+            DB::commit();
+
         } catch (Throwable $exception) {
+            DB::rollBack();
             report($exception);
 
             throw $exception;
