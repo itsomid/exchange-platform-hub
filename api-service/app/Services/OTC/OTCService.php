@@ -26,6 +26,7 @@ use App\Services\OTC\DTO\OTCBuyRequestDTO;
 use App\Services\OTC\DTO\OTCBuyResponseDTO;
 use App\Services\OTC\DTO\OTCSellRequestDTO;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
 class OTCService
@@ -203,6 +204,7 @@ class OTCService
     public function buy(OTCBuyRequestDTO $requestDTO): OTCBuyResponseDTO
     {
         try {
+            DB::beginTransaction();
             //Find Market
             $market = $this->marketRepository->getMarketById($requestDTO->getMarketId());
             $sellerWallet = $this->walletRepository
@@ -254,13 +256,15 @@ class OTCService
                         ->setBuyerUserId(Auth::id())
                         ->setSellerUserId(config('bitexroom.bitexroom_user_id'))
                 );
+                DB::commit();
             } else {
                 $otc_order->update(['status' => OTCOrderStatusEnum::CANCELED]);
+                DB::commit();
                 throw new TradeWasFiledException;
             }
         } catch (Throwable $exception) {
             report($exception);
-
+            DB::rollBack();
             throw $exception;
         }
 
