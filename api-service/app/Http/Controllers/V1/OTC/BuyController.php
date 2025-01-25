@@ -9,6 +9,7 @@ use App\Services\OTC\DTO\OTCBuyRequestDTO;
 use App\Services\OTC\OTCService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 class BuyController extends Controller
@@ -71,7 +72,7 @@ class BuyController extends Controller
     {
         $validateData = $request->validated();
 
-        $lock = Cache::lock('order:'.$validateData['market_id'].Auth::id(), 10);
+        $lock = Cache::lock('order-buy:'.$validateData['market_id'].Auth::id(), 10);
 
         if ($lock->get()) {
             try {
@@ -98,6 +99,6 @@ class BuyController extends Controller
 
         return response([
             'message' => __('auth.too_many_attempts'),
-        ]);
+        ], Response::HTTP_TOO_MANY_REQUESTS);
     }
 }
