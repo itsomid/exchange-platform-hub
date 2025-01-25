@@ -5,11 +5,11 @@ namespace App\Services\Exchanges;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
-use App\Models\OTCOrder;
-use App\Models\Wallet;
 use App\Repositories\DTO\Transaction\CreateTransactionRequestDTO;
 use App\Repositories\Interfaces\MarketRepositoryInterface;
+use App\Repositories\Interfaces\OTCOrderRepositoryInterface;
 use App\Repositories\Interfaces\TransactionRepositoryInterface;
+use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Services\Exchanges\Asset\AssetFactory;
 use App\Services\Exchanges\Asset\Contract\AssetInterface;
 use App\Services\Exchanges\Asset\DTO\BuyDTORequest;
@@ -19,8 +19,11 @@ class ExchangeService
 {
     private AssetInterface $asset;
 
-    public function __construct(private MarketRepositoryInterface $marketRepository,
+    public function __construct(
+        private MarketRepositoryInterface $marketRepository,
         private TransactionRepositoryInterface $transactionRepository,
+        private OTCOrderRepositoryInterface $otcOrderRepository,
+        private WalletRepositoryInterface $walletRepository,
     ) {
         $this->asset = AssetFactory::make('coinex');
     }
@@ -41,7 +44,7 @@ class ExchangeService
                 ->setCurrency($market->base_currency)
         );
         if ($response->isDone()) {
-            $otcOrder = OTCOrder::query()->find($requestDTO->getOtcId());
+            $otcOrder = $this->otcOrderRepository->getOneById($requestDTO->getOtcId());
             $otcOrder->refExchangeTransactions()->create([
                 'order_id' => $response->getOrderId(),
                 'market' => $response->getMarket(),
@@ -50,27 +53,22 @@ class ExchangeService
                 'side' => 'buy',
                 'response' => $response->getResponseBody(),
             ]);
-            $cetWallet = Wallet::query()
-                ->firstOrCreate([
-                    'currency_symbol' => 'CET',
-                    'user_id' => config('bitexroom.bitexroom_user_id'),
-                ], [
-                    'balance' => 0,
-                ]);
-            $usdtWallet = Wallet::query()
-                ->firstOrCreate([
-                    'currency_symbol' => 'USDT',
-                    'user_id' => config('bitexroom.bitexroom_user_id'),
-                ], [
-                    'balance' => 0,
-                ]);
-            $baseCurrencyWallet = Wallet::query()
-                ->firstOrCreate([
-                    'currency_symbol' => $market->base_currency,
-                    'user_id' => config('bitexroom.bitexroom_user_id'),
-                ], [
-                    'balance' => 0,
-                ]);
+
+            $cetWallet = $this->walletRepository
+                ->getOrCreateWallet(
+                    config('bitexroom.bitexroom_user_id'),
+                    'CET'
+                );
+            $usdtWallet = $this->walletRepository
+                ->getOrCreateWallet(
+                    config('bitexroom.bitexroom_user_id'),
+                    'USDT'
+                );
+            $baseCurrencyWallet = $this->walletRepository
+                ->getOneOrCreateByCurrencyWithLock(
+                    $market->base_currency,
+                    config('bitexroom.bitexroom_user_id')
+                );
             //CET
             $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
                 ->setUserId(config('bitexroom.bitexroom_user_id'))
@@ -99,7 +97,6 @@ class ExchangeService
                     number_format((float) $response->getFilledValue())
                 )
                 ));
-            //            $usdtWallet->decrement('balance', $response->getFilledValue());
             //BASE Currency
             $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
                 ->setUserId(config('bitexroom.bitexroom_user_id'))

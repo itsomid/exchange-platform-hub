@@ -34,4 +34,9 @@ class OTCOrderRepository implements OTCOrderRepositoryInterface
             ->filterBy($queryString)
             ->get();
     }
+
+    public function getOneById(int $id): OTCOrder
+    {
+        return OTCOrder::query()->find($id);
+    }
 }

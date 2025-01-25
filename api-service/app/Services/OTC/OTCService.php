@@ -10,7 +10,6 @@ use App\Enums\TransactionTypeEnum;
 use App\Exceptions\V1\OTC\InsufficientBalanceException;
 use App\Exceptions\V1\OTC\TradeWasFiledException;
 use App\Models\Market;
-use App\Models\OTCOrder;
 use App\Models\Setting;
 use App\Models\Transaction;
 use App\Repositories\DTO\OTCOrder\CreateOTCOrderRequestDTO;
@@ -68,7 +67,7 @@ class OTCService
 
     public function completeOrder(CompletedOrderRequestDTO $requestDTO): void
     {
-        $otc = OTCOrder::query()->find($requestDTO->getOtcId());
+        $otc = $this->otcOrderRepository->getOneById($requestDTO->getOtcId());
 
         $buyAmount = $otc->quantity;
         $amountInQuoteCurrency = bcmul($otc->market->exchangePrice->price, $otc->quantity, 8);
@@ -76,7 +75,7 @@ class OTCService
         $receivedAmount = bcsub($buyAmount, $fee, 8);
 
         //Find Market
-        $market = Market::query()->find($otc->market_id);
+        $market = $this->marketRepository->getMarketById($otc->market_id);
         $sellerWallet = $this->walletRepository
             ->getOneOrCreateByCurrencyWithLock(
                 $market->base_currency,
@@ -205,7 +204,7 @@ class OTCService
     {
         try {
             //Find Market
-            $market = Market::query()->find($requestDTO->getMarketId());
+            $market = $this->marketRepository->getMarketById($requestDTO->getMarketId());
             $sellerWallet = $this->walletRepository
                 ->getOneOrCreateByCurrencyWithLock(
                     $market->base_currency,
@@ -277,7 +276,7 @@ class OTCService
     {
         try {
             // Find Market
-            $market = Market::query()->find($requestDTO->getMarketId());
+            $market = $this->marketRepository->getMarketById($requestDTO->getMarketId());
             $buyerWallet = $this->walletRepository
                 ->getOneOrCreateByCurrencyWithLock(
                     $market->base_currency,

@@ -21,8 +21,8 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property OTCOrderStatusEnum $status
  * @property User               $user
  * @property int                $user_id
- *  @property string $received_amount
- *  @property int    $market_id
+ * @property string             $received_amount
+ * @property int                $market_id
  */
 class OTCOrder extends Model
 {
