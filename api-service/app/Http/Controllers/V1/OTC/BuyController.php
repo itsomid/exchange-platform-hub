@@ -8,6 +8,8 @@ use App\Http\Requests\V1\OTC\OTCBuyRequest;
 use App\Services\OTC\DTO\OTCBuyRequestDTO;
 use App\Services\OTC\OTCService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Throwable;
 
 class BuyController extends Controller
 {
@@ -69,18 +71,33 @@ class BuyController extends Controller
     {
         $validateData = $request->validated();
 
-        $responseDTO = $this->OTCService->buy(
-            resolve(OTCBuyRequestDTO::class)
-                ->setMarketId($validateData['market_id'])
-                ->setBuyerUserId(Auth::id())
-                ->setSellerUserId(config('bitexroom.bitexroom_user_id'))
-                ->setQuantity($validateData['quantity'])
-        );
+        $lock = Cache::lock('order:'.$validateData['market_id'].Auth::id(), 10);
 
-        event(new OTCOrderCreated($responseDTO->getOtcOrderModel(), 'buy'));
+        if ($lock->get()) {
+            try {
+                $responseDTO = $this->OTCService->buy(
+                    resolve(OTCBuyRequestDTO::class)
+                        ->setMarketId($validateData['market_id'])
+                        ->setBuyerUserId(Auth::id())
+                        ->setSellerUserId(config('bitexroom.bitexroom_user_id'))
+                        ->setQuantity($validateData['quantity'])
+                );
+
+                event(new OTCOrderCreated($responseDTO->getOtcOrderModel(), 'buy'));
+
+                return response([
+                    'message' => __('otc.buy_order_submitted'),
+                ]);
+            } catch (Throwable $exception) {
+                $lock->release();
+                throw $exception;
+            } finally {
+                $lock->release();
+            }
+        }
 
         return response([
-            'message' => __('otc.buy_order_submitted'),
+            'message' => __('auth.too_many_attempts'),
         ]);
     }
 }
