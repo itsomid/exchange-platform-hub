@@ -17,13 +17,13 @@ class CurrencySeeder extends Seeder
                 'name' => 'Bitcoin',
                 'symbol' => 'BTC',
                 'logo' => 'btc.svg',  // Replace with actual logo file path or URL\
-                'max_auto_withdraw_amount' => 0.1
+                'max_auto_withdraw_amount' => 0.25
             ],
             [
                 'name' => 'Ethereum',
                 'symbol' => 'ETH',
                 'logo' => 'eth.svg',  // Replace with actual logo file path or URL]
-                'max_auto_withdraw_amount' => 5
+                'max_auto_withdraw_amount' => 2
             ],
             [
                 'name' => 'Tether',
@@ -41,7 +41,7 @@ class CurrencySeeder extends Seeder
                 'name' => 'Binance Coin',
                 'symbol' => 'BNB',
                 'logo' => 'bnb.svg',  // Replace with actual logo file path or URL
-                'max_auto_withdraw_amount' => 50
+                'max_auto_withdraw_amount' => 3
             ],
             [
                 'name' => 'Dodge Coin',

@@ -147,6 +147,24 @@
                 </a>
             </li>
         @endcanany
+        @canany(['report'])
+            <li class="menu-header small text-uppercase">
+                <span class="menu-header-text">گزارشات</span>
+            </li>
+            <li class="menu-item @if(request()->is('admin/report/withdrawal*')) active @endif">
+                <a href="{{route('admin.report.withdrawal')}}" class="menu-link">
+                    <i class="menu-icon fa-solid fa-chart-line-up"></i>
+                    <div>گزارش برداشت</div>
+                </a>
+            </li>
+            <li class="menu-item @if(request()->is('admin/report/deposit*')) active @endif">
+                <a href="{{route('admin.report.deposit')}}" class="menu-link">
+                    <i class="menu-icon fa-solid fa-chart-line-down"></i>
+                    <div>گزارش واریز</div>
+                </a>
+            </li>
+
+        @endcanany
         @canany(['setting.int.index', 'setting.ext.index'])
             <li class="menu-header small text-uppercase">
                 <span class="menu-header-text">مدیریت سیستم</span>

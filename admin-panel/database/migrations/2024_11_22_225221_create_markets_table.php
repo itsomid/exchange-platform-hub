@@ -23,6 +23,9 @@ return new class extends Migration
             $table->decimal('min_trade_amount', 18, 8)->default(0);
             $table->decimal('max_trade_amount', 18, 8)->default(0);
 
+            $table->decimal('min_otc_amount', 18, 8)->default(0);
+            $table->decimal('max_otc_amount', 18, 8)->default(0);
+
             $table->boolean('is_active')->default(true);
             $table->timestamps();
 

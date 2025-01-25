@@ -18,8 +18,9 @@ return new class extends Migration
             $table->string('currency_chain'); // Blockchain (e.g., Ethereum, Binance Smart Chain)
             $table->string('currency_symbol'); // Token/Currency Symbol (e.g., BTC, ETH)
             $table->decimal('amount', 20, 8); // Withdrawal amount
-            $table->decimal('fee', 20, 8)->default(0); // Withdraw Total fee (optional)
+            $table->decimal('total_fee', 20, 8)->default(0); // Withdraw Total fee (optional)
             $table->decimal('exchange_fee', 20, 8)->default(0); // Exchange fee (optional)
+            $table->decimal('network_fee', 20, 8)->default(0); // Exchange fee (optional)
             $table->string('address')->nullable(); // Withdrawal address
             $table->string('transaction_hash', 96)->nullable()->unique();
             $table->string('status', 50)->default('pending'); // Status of withdrawal (e.g., pending, completed, failed)

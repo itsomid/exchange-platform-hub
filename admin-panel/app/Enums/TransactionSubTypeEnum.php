@@ -18,6 +18,10 @@ enum TransactionSubTypeEnum: string
     case WITHDRAWAL_FEE = 'withdrawal_fee';
     case COINEX = 'coinex';
 
+//    case NETWORK_WITHDRAWAL_FEE = 'exchange_withdrawal_fee';
+//    case HD_WALLET = 'hd_wallet';
+
+
     const array TYPE_LABEL = [
         self::MANUAL_ADMIN->value => 'ادمین',
         self::USER_INITIATED->value => 'کاربر',
@@ -26,8 +30,12 @@ enum TransactionSubTypeEnum: string
         self::REFERRAL_INTRODUCER->value => 'کارمزد معرفی کننده',
         self::REFERRAL_FRIEND->value => 'کارمزد معرفی شونده',
         self::WITHDRAWAL_FEE->value => 'کارمزد برداشت',
-
         //        self::ADMIN_CREDIT->value => 'اعتبار ادمین',
+        self::WITHDRAWAL_FEE->value => 'کارمزد برداشت صرافی',
+//        self::NETWORK_WITHDRAWAL_FEE->value => 'کارمزد برداشت شبکه',
+//        self::HD_WALLET->value => 'اچ دی ولت',
+//        self::ADMIN_CREDIT->value => 'اعتبار ادمین',
+
     ];
 
     const array TYPE_COLOR = [
@@ -38,7 +46,10 @@ enum TransactionSubTypeEnum: string
         self::REFERRAL_INTRODUCER->value => 'info',
         self::REFERRAL_FRIEND->value => 'info',
         self::WITHDRAWAL_FEE->value => 'info',
-        //        self::ADMIN_CREDIT->value => 'اعتبار ادمین',
+//        self::NETWORK_WITHDRAWAL_FEE->value => 'info',
+//        self::HD_WALLET->value => 'info',
+//        self::ADMIN_CREDIT->value => 'اعتبار ادمین',
+
     ];
 
     public function label(): string

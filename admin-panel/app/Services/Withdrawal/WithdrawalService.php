@@ -12,6 +12,7 @@ use App\Models\Wallet;
 use App\Models\Withdrawal;
 use App\Models\Transaction;
 use App\Services\Wallet\WalletService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class WithdrawalService
@@ -34,7 +35,8 @@ class WithdrawalService
      * @param string $currencySymbol
      * @param float $totalAmount
      * @param string $address
-     * @param string|null description
+     * @param string|null $description
+     * @param Carbon|null $date
      * @return Withdrawal
      * @throws \Exception
      */
@@ -45,7 +47,9 @@ class WithdrawalService
         string  $currencySymbol,
         float   $totalAmount,
         string  $address,
-        ?string $description = null
+        ?string $description = null,
+        ?Carbon $date = null // Optional date parameter
+
     ): Withdrawal
     {
         DB::beginTransaction();
@@ -60,10 +64,11 @@ class WithdrawalService
             }
 
             $currency = Currency::whereSymbol($currencySymbol)->first();
-            $fee = CurrencyChain::totalWithdrawalFee($currencyChain);
+            $total_fee = CurrencyChain::totalWithdrawalFee($currencyChain);
             $exchangeFee = CurrencyChain::whereChain($currencyChain)->value('exchange_withdrawal_fee');
+            $network_fee = CurrencyChain::whereChain($currencyChain)->value('network_fee');
 
-            $amountReceivedByUser = $totalAmount - $fee;
+            $amountReceivedByUser = $totalAmount - $total_fee;
 
             // Validate sufficient balance
             if ($wallet->balance < $totalAmount) {
@@ -74,6 +79,8 @@ class WithdrawalService
             $wallet->decrement('balance', $totalAmount);
             $wallet->increment('locked_balance', $totalAmount);
 
+            // Set timestamps
+            $timestamp = $date ?? now();
 
             // Create the withdrawal record
             $withdrawal = Withdrawal::create([
@@ -81,10 +88,13 @@ class WithdrawalService
                 'currency_chain' => $currencyChain,
                 'currency_symbol' => $currencySymbol,
                 'amount' => $totalAmount,
-                'fee' => $fee,
+                'total_fee' => $total_fee,
                 'exchange_fee' => $exchangeFee,
+                'network_fee' => $network_fee,
                 'address' => $address,
                 'status' => $totalAmount >= $currency->max_auto_withdraw_amount ? WithdrawalStatusEnum::AWAITING_APPROVAL : WithdrawalStatusEnum::PENDING,
+                'created_at' => $timestamp,
+                'updated_at' => $timestamp,
             ]);
             if ($totalAmount >= $currency->max_auto_withdraw_amount) {
                 $withdrawal->update([
@@ -138,7 +148,7 @@ class WithdrawalService
             ]);
 
             // Unlock funds and deduct locked balance
-            $wallet->decrement('locked_balance', $withdrawal->amount + $withdrawal->fee);
+            $wallet->decrement('locked_balance', $withdrawal->amount + $withdrawal->total_fee);
 
 
             // Create the transaction record
@@ -157,6 +167,7 @@ class WithdrawalService
 
 
             $this->createExchangeWithdrawalFee($withdrawal->currency_symbol,$withdrawal->currency_chain, $withdrawal);
+
 
             DB::commit();
 
@@ -221,7 +232,7 @@ class WithdrawalService
                 'description' => 'Withdraw canceled by admin (#' . $admin_id . ')'
             ]);
 
-            $withdrawal->wallet->decrement('locked_balance', $withdrawal->amount + $withdrawal->fee);
+            $withdrawal->wallet->decrement('locked_balance', $withdrawal->amount + $withdrawal->total_fee);
 
 
             DB::commit();
@@ -250,7 +261,7 @@ class WithdrawalService
                     'type' => TransactionTypeEnum::FEE,
                     'subtype' => TransactionSubTypeEnum::WITHDRAWAL_FEE,
                     'status' => TransactionStatusEnum::SUCCESS,
-                    'description' => "کارمزد برداشت  {$exchangeWallet->currency_symbol} کاربر  " . "(#{$withdrawal->user->id}) ". $withdrawal->user->username ,
+                    'description' => "کارمزد برداشت صرافی  {$exchangeWallet->currency_symbol} کاربر  " . "(#{$withdrawal->user->id}) ". $withdrawal->user->username ,
                 ]);
 
                 $exchangeWallet->increment('balance',$exchangeWithdrawalFee);

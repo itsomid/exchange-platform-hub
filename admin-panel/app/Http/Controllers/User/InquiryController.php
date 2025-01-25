@@ -24,4 +24,12 @@ class InquiryController extends Controller
             'user' => $user,
         ]);
     }
+
+    public function userDetails(User $user)
+    {
+
+        return view('dashboard.inquiry_user.full-report',[
+            'user' => $user
+        ]);
+    }
 }

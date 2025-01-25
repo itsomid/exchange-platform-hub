@@ -29,6 +29,8 @@ use App\Http\Controllers\OTCOrder\OTCOrderController;
 use App\Http\Controllers\Deposit\DepositController;
 use App\Http\Controllers\Withdrawal\WithdrawalController;
 use App\Http\Controllers\Exchange\ExchangeWalletController;
+use App\Http\Controllers\Withdrawal\WithdrawalReportController;
+use App\Http\Controllers\Deposit\DepositReportController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -87,6 +89,7 @@ Route::post('/users/financial-status/mass-block', [UserFinancialBlockController:
 
 Route::get('/users/{user}/wallets',[UserWalletController::class,'userWallets'])->name('wallet.index')->can('wallet');
 Route::get('/users/{user}/wallets/{wallet}/{type}',[UserWalletController::class,'walletDetails'])->name('wallet.detail')->can('wallet');
+Route::get('/users/{user}/inquiry',[InquiryController::class,'userDetails'])->name('inquiry.user-details')->can('admin.inquiry');
 
 //Route::get('/users/2fa', [UserSecurityController::class, ''])->name('profile.2fa.edit');
 //Route::get('/users/{user}/tokens', [UserTokenController::class, 'twoFAEdit'])->name('user.token.index')->can('user.edit');
@@ -173,4 +176,10 @@ Route::prefix('wallet')->group(function (){
     Route::post('{wallet}/block-balance', [WalletController::class, 'blockBalance'])->name('wallet.block-balance')->can('wallet');
     Route::get('{wallet}/user/{user}/unblock-balance', [WalletController::class, 'unblockBalanceForm'])->name('wallet.unblock-balance.form')->can('wallet');
     Route::post('{wallet}/unblock-balance', [WalletController::class, 'unblockBalance'])->name('wallet.unblock-balance')->can('wallet');
+});
+
+Route::prefix('report')->group(function (){
+    Route::get('deposit',[DepositReportController::class,'index'])->name('report.deposit')->can('report');
+    Route::get('withdrawal',[WithdrawalReportController::class,'index'])->name('report.withdrawal')->can('report');
+
 });

@@ -20,12 +20,12 @@
     }
     // Project Status - Line Chart
     // --------------------------------------------------------------------
-    const depositChartEl = document.querySelector('#depositAmountChart');
-    if (!depositChartEl) return;
+    const withdrawalChartEl = document.querySelector('#withdrawalAmountChart');
+    if (!withdrawalChartEl) return;
 
     // Extract JSON from data attributes
-    const chartDataStr = depositChartEl.getAttribute('data-chartdata');
-    const chartDatesStr = depositChartEl.getAttribute('data-dates');
+    const chartDataStr = withdrawalChartEl.getAttribute('data-chartdata');
+    const chartDatesStr = withdrawalChartEl.getAttribute('data-dates');
 
     if (!chartDataStr || !chartDatesStr) return;
 
@@ -34,7 +34,7 @@
     const realDataArray = Object.values(chartData);
     // [The rest is the same as above: define colors, config, etc.]
 
-    const depositChartOptions = {
+    const withdrawalChartOptions = {
         chart: {
             height: 350,
             type: 'line',
@@ -131,6 +131,6 @@
         },
     };
 
-    const chart = new ApexCharts(depositChartEl, depositChartOptions);
+    const chart = new ApexCharts(withdrawalChartEl, withdrawalChartOptions);
     chart.render();
 })();

@@ -174,16 +174,6 @@ class WalletService
                 echo "A deposit address for this currency chain already exists.\n";
             }
 
-            Deposit::create([
-                'user_id' => $userId,
-                'currency_symbol' => $currencySymbol,
-                'currency_chain' => $currencyChain,
-                'amount' => 0,
-                'address' => null,
-                'transaction_hash' => null,
-                'description' => $description ?? 'Awaiting deposit',
-                'status' => 'pending',
-            ]);
 
 
             DB::commit();

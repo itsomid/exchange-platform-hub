@@ -14,6 +14,8 @@ class Market extends Model
         'quote_currency',
         'min_trade_amount',
         'max_trade_amount',
+        'min_otc_amount',
+        'max_otc_amount',
         'is_active'
     ];
 
