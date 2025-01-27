@@ -25,6 +25,7 @@ use App\Services\OTC\DTO\MarketResponseDTO;
 use App\Services\OTC\DTO\OTCBuyRequestDTO;
 use App\Services\OTC\DTO\OTCBuyResponseDTO;
 use App\Services\OTC\DTO\OTCSellRequestDTO;
+use App\Services\ReferralCode\ReferralCommissionService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -35,7 +36,8 @@ class OTCService
         private readonly MarketRepositoryInterface $marketRepository,
         private readonly WalletRepositoryInterface $walletRepository,
         private readonly TransactionRepositoryInterface $transactionRepository,
-        private readonly OTCOrderRepositoryInterface $otcOrderRepository
+        private readonly OTCOrderRepositoryInterface $otcOrderRepository,
+        private readonly ReferralCommissionService $referralCommissionService,
     ) {}
 
     public function markets(): array
@@ -262,6 +264,9 @@ class OTCService
                         ->setBuyerUserId(Auth::id())
                         ->setSellerUserId(config('bitexroom.bitexroom_user_id'))
                 );
+                if ($otc_order->user->introducer_code) {
+                    $this->referralCommissionService->processReferralCommission($otc_order, $fee);
+                }
                 DB::commit();
             } else {
                 $otc_order->update(['status' => OTCOrderStatusEnum::CANCELED]);

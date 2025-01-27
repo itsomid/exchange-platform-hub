@@ -22,4 +22,6 @@ interface WalletRepositoryInterface
     public function getOneByCurrency(string $base_currency, int $userId): Wallet;
 
     public function getOneOrCreateByCurrencyWithLock(string $base_currency, int $userId): Wallet;
+
+    public function getBitexroomWallet(string $currency): Wallet;
 }
