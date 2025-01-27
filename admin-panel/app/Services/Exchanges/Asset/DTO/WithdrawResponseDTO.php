@@ -14,6 +14,8 @@ class WithdrawResponseDTO
     private string $chain;
     private string $amount;
     private string $actualAmount;
+    private string $fee;
+    private ?string $currencyFee = null;
     private WithdrawMethodEnum $withdrawMethod;
     private string $address;
     private int $confirmationCount;
@@ -139,5 +141,27 @@ class WithdrawResponseDTO
     public function getStatus(): WithdrawStatusEnum
     {
         return $this->status;
+    }
+
+    public function setFee(string $fee): WithdrawResponseDTO
+    {
+        $this->fee = $fee;
+        return $this;
+    }
+
+    public function getFee(): string
+    {
+        return $this->fee;
+    }
+
+    public function setCurrencyFee(?string $currencyFee): WithdrawResponseDTO
+    {
+        $this->currencyFee = $currencyFee;
+        return $this;
+    }
+
+    public function getCurrencyFee(): ?string
+    {
+        return $this->currencyFee;
     }
 }

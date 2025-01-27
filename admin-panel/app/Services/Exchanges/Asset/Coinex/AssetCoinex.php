@@ -29,6 +29,7 @@ class AssetCoinex implements AssetInterface
             'to_address' => $requestDTO->getAddress(),
             'withdraw_method' => $requestDTO->getWithdrawMethod()->value,
             'amount' => $requestDTO->getAmount(),
+            'fee_ccy' => 'CET',
         ];
         if($requestDTO->getChain()){
             $requestBody['chain'] = $requestDTO->getChain();
@@ -50,6 +51,8 @@ class AssetCoinex implements AssetInterface
                 ->setConfirmationCount($data['confirmations'])
                 ->setExploreAddress($data['explorer_address_url'])
                 ->setStatus($data['status'])
+                ->setFee($data['tx_fee'])
+                ->setCurrencyFee($data['fee_ccy'])
             ;
     }
 }
