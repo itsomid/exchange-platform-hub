@@ -90,7 +90,7 @@ class ReferralCommissionService
             'otc_order_id' => $otcOrder->id,
             'balance' => $wallet->balance,
             'amount' => $amount,
-            'type' => TransactionTypeEnum::FEE,
+            'type' => TransactionTypeEnum::REFERRAL,
             'subtype' => $role === 'introducer' ? TransactionSubTypeEnum::REFERRAL_INTRODUCER : TransactionSubTypeEnum::REFERRAL_FRIEND,
             'status' => TransactionStatusEnum::SUCCESS,
             'description' => "Referral commission ($role) from OTC order ID {$otcOrder->id}",
