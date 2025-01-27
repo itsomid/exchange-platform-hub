@@ -11,22 +11,17 @@ use App\Repositories\Interfaces\OTCOrderRepositoryInterface;
 use App\Repositories\Interfaces\TransactionRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Services\Exchanges\Asset\AssetFactory;
-use App\Services\Exchanges\Asset\Contract\AssetInterface;
 use App\Services\Exchanges\Asset\DTO\BuyDTORequest;
 use App\Services\Exchanges\DTO\ExchangeBuyRequestDTO;
 
 class ExchangeService
 {
-    private AssetInterface $asset;
-
     public function __construct(
-        private MarketRepositoryInterface $marketRepository,
-        private TransactionRepositoryInterface $transactionRepository,
-        private OTCOrderRepositoryInterface $otcOrderRepository,
-        private WalletRepositoryInterface $walletRepository,
-    ) {
-        $this->asset = AssetFactory::make('coinex');
-    }
+        private readonly MarketRepositoryInterface $marketRepository,
+        private readonly TransactionRepositoryInterface $transactionRepository,
+        private readonly OTCOrderRepositoryInterface $otcOrderRepository,
+        private readonly WalletRepositoryInterface $walletRepository,
+    ) {}
 
     public function buy(ExchangeBuyRequestDTO $requestDTO): bool
     {

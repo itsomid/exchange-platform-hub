@@ -51,6 +51,8 @@ class OTCService
             ->setBuyPrice(bcmul($market->exchangePrice->price, (string) ($market->exchangePrice->exchange_profit_buy + 1), 8))
             ->setMinTradeAmount($market->min_trade_amount)
             ->setMaxTradeAmount($market->max_trade_amount)
+            ->setMinOTCAmount($market->min_otc_amount)
+            ->setMaxOTCAmount($market->max_otc_amount)
         )->toArray();
     }
 
@@ -242,14 +244,18 @@ class OTCService
                 ->setStatus(OTCOrderStatusEnum::PENDING)
             );
 
-            $exchangeService = resolve(ExchangeService::class);
-            $isSucceed = $exchangeService->buy(
-                resolve(ExchangeBuyRequestDTO::class)
-                    ->setMarketId($requestDTO->getMarketId())
-                    ->setOtcId($otc_order->id)
-                    ->setQuantity($receivedAmount)
-            );
-            if ($isSucceed) {
+            $doComplete = true;
+            if (bccomp($sellerWallet->balance, $receivedAmount, config('bitexroom.scale_precision')) === -1) {
+                $exchangeService = resolve(ExchangeService::class);
+                $doComplete = $exchangeService->buy(
+                    resolve(ExchangeBuyRequestDTO::class)
+                        ->setMarketId($requestDTO->getMarketId())
+                        ->setOtcId($otc_order->id)
+                        ->setQuantity($receivedAmount)
+                );
+            }
+
+            if ($doComplete) {
                 $this->completeOrder(
                     resolve(CompletedOrderRequestDTO::class)
                         ->setOtcId($otc_order->id)

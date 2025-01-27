@@ -29,8 +29,6 @@ class PermissionList
             ['permission.index', 'مشاهده لیست مجوز ها'],
             ['permission.edit', 'ویرایش مجوز'],
 
-
-
             ['transaction.index', 'مشاهده لیست تراکنش ها'],
 
             ['session.index', 'مشاهده نشست های فعال'],

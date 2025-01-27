@@ -20,6 +20,10 @@ class MarketResponseDTO
 
     private string $maxTradeAmount;
 
+    private string $minOTCAmount;
+
+    private string $maxOTCAmount;
+
     public function setBaseCurrency(string $baseCurrency): self
     {
         $this->baseCurrency = $baseCurrency;
@@ -114,5 +118,29 @@ class MarketResponseDTO
     public function getMarketId(): int
     {
         return $this->marketId;
+    }
+
+    public function setMinOTCAmount(string $minOTCAmount): MarketResponseDTO
+    {
+        $this->minOTCAmount = $minOTCAmount;
+
+        return $this;
+    }
+
+    public function getMinOTCAmount(): string
+    {
+        return $this->minOTCAmount;
+    }
+
+    public function setMaxOTCAmount(string $maxOTCAmount): MarketResponseDTO
+    {
+        $this->maxOTCAmount = $maxOTCAmount;
+
+        return $this;
+    }
+
+    public function getMaxOTCAmount(): string
+    {
+        return $this->maxOTCAmount;
     }
 }
