@@ -1,5 +1,5 @@
 @extends('dashboard.layout.master')
-@section('title', 'مدیریت کیف پول ها')
+@section('title', 'مدیریت کیف پول های صرافی')
 @section('content')
     <div class="row g-6">
         <div class="col-12">

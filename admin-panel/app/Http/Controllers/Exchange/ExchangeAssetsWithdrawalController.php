@@ -27,7 +27,13 @@ class ExchangeAssetsWithdrawalController extends Controller
 
     public function create()
     {
+        $currencies = Currency::all();
+        $currencyChains = CurrencyChain::all();
 
+        return view('dashboard.exchange.wallet.exchange-assets-request-form',[
+            'currencies' => $currencies,
+            'currencyChains' => $currencyChains
+        ]);
     }
 
     public function store(Request $request)
