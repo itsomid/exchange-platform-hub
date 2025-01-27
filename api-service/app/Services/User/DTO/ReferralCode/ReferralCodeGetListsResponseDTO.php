@@ -18,7 +18,7 @@ class ReferralCodeGetListsResponseDTO
 
     private int $totalCountTransaction;
 
-    private int $totalAmountReceived;
+    private string $totalAmountReceived;
 
     private Carbon $createdAt;
 
@@ -82,14 +82,14 @@ class ReferralCodeGetListsResponseDTO
         return $this->totalCountTransaction;
     }
 
-    public function setTotalAmountReceived(int $totalAmountReceived): self
+    public function setTotalAmountReceived(string $totalAmountReceived): self
     {
         $this->totalAmountReceived = $totalAmountReceived;
 
         return $this;
     }
 
-    public function getTotalAmountReceived(): int
+    public function getTotalAmountReceived(): string
     {
         return $this->totalAmountReceived;
     }
