@@ -248,12 +248,16 @@ class OTCService
 
             $doComplete = true;
             if (bccomp($sellerWallet->balance, $receivedAmount, config('bitexroom.scale_precision')) === -1) {
+                $chain = $market->currency->chains[0];
+
+                // bitexroom_withdrawal_fee - network_fee + receivedAmount
+                $amountForBuy = bcadd($receivedAmount, bcsub($chain->exchange_withdrawal_fee, $chain->network_fee, 8), 8);
                 $exchangeService = resolve(ExchangeService::class);
                 $doComplete = $exchangeService->buy(
                     resolve(ExchangeBuyRequestDTO::class)
                         ->setMarketId($requestDTO->getMarketId())
                         ->setOtcId($otc_order->id)
-                        ->setQuantity($receivedAmount)
+                        ->setQuantity($amountForBuy)
                 );
             }
 

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
@@ -16,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property string        $market_name
  * @property string        $min_otc_amount
  * @property string        $max_otc_amount
+ * @property Currency      $currency
  */
 class Market extends Model
 {
@@ -26,6 +28,11 @@ class Market extends Model
     public function exchangePrice(): HasOne
     {
         return $this->hasOne(ExchangePrice::class);
+    }
+
+    public function currency(): BelongsTo
+    {
+        return $this->belongsTo(Currency::class, 'base_currency', 'symbol');
     }
 
     public function getMarketNameAttribute(): string

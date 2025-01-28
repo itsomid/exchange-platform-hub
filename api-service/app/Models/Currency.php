@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property string $max_auto_withdraw_amount
+ * @property array  $chains
  */
 class Currency extends Model
 {
