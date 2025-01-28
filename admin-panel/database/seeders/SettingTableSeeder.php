@@ -62,20 +62,25 @@ class SettingTableSeeder extends Seeder
                 'value' => 'DGvNZMe5TRmEojvaJj69Mv6hzL6TySKuuq',
             ],
             [
-                'key' => 'TRON_PUB_KEY',
+                'key' => 'TRX_PUB_KEY',
                 'name' => 'آدرس pubkey ولت BNB در HD Wallet',
                 'value' => 'TJ6vTNSJhhWsMai2M69YDwMQSyGfn75yXc',
             ],
             [
-                'key' => 'ETHEREUM_PUB_KEY',
+                'key' => 'ETH_PUB_KEY',
                 'name' => 'آدرس pubkey ولت BNB در HD Wallet',
                 'value' => '0x5b685Bb78B229B41C3E854D8719062FeebC2BA3b',
             ],
             [
-                'key' => 'BITCOIN_PUB_KEY',
+                'key' => 'BTC_PUB_KEY',
                 'name' => 'آدرس pubkey ولت BNB در HD Wallet',
                 'value' => 'bc1q48dxdvv92vytg3cjtvy66umq44gd06sr3h8757',
             ],
+            [
+                'key' => 'USDT_PUB_KEY',
+                'name' => 'آدرس pubkey ولت USDT در HD Wallet',
+                'value' => 'TJ6vTNSJhhWsMai2M69YDwMQSyGfn75yXc',
+            ]
         ]);
     }
 

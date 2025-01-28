@@ -119,12 +119,12 @@
 
                 </div>
                 <div class=" d-flex justify-content-center mt-3">
-                    <div class="col-md-1">
+
                         <button class="btn btn-primary w-100">
                             <i class="fa fa-save mx-2"></i>
                             ذخیره
                         </button>
-                    </div>
+
                 </div>
             </form>
         </div>
