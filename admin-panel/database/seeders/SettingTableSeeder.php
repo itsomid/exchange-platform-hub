@@ -32,6 +32,26 @@ class SettingTableSeeder extends Seeder
                 'value' => '30',
             ],
             [
+                'key' => 'exchange_withdrawal_period_time',
+                'name' => 'پارامتر زمان برای برداشت از صرافی مرجع',
+                'value' => '60',
+            ],
+            [
+                'key' => 'exchange_withdrawal_period_buy',
+                'name' => 'پارامتر تعداد خرید برای برداشت از صرافی مرجع',
+                'value' => '5',
+            ],
+            [
+                'key' => 'exchange_withdrawal_type',
+                'name' => '(زمان/تعداد) مدل تجمیع و برداشت از صرافی مرجع',
+                'value' => 'exchange_withdrawal_period_time',
+            ],
+            [
+                'key' => 'exchange_withdrawal_status',
+                'name' => '(فعال/غیرفعال) وضعیت سیستم تجمیع دارایی',
+                'value' => false,
+            ],
+            [
                 'key' => 'BNB_PUB_KEY',
                 'name' => 'آدرس pubkey ولت BNB در HD Wallet',
                 'value' => '0x5b685Bb78B229B41C3E854D8719062FeebC2BA3b',

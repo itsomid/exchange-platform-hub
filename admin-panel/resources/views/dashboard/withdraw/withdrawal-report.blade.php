@@ -7,7 +7,7 @@
 
             <h5 class="mb-0 card-title">گزارش برداشت {{request()->input('currency_symbol')}}</h5>
             @if(isset($completeWithdrawals))
-            <img src="{{$completeWithdrawals[0]->currency->coinLogo()}}" width="60">
+                <img src="{{$completeWithdrawals[0]->currency->coinLogo()}}" width="60">
             @endif
         </div>
         <div class="card-body">
@@ -59,12 +59,12 @@
                         </div>
                     </div>
                     <div class=" d-flex justify-content-start mt-5">
-                        <div class="col-md-1">
-                            <button class="btn btn-primary ">
-                                <i class="fa-regular fa-chart-area mx-2"></i>
-                                دریافت گزارش
-                            </button>
-                        </div>
+
+                        <button class="btn btn-primary ">
+                            <i class="fa-regular fa-chart-area mx-2"></i>
+                            دریافت گزارش
+                        </button>
+
                     </div>
 
                 </div>

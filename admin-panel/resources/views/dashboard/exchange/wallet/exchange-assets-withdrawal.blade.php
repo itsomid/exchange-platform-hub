@@ -2,18 +2,74 @@
 @section('title', 'مدیریت کیف پول ها')
 @section('content')
     <div class="row g-4 mb-4">
-        <div class="col-sm-12 col-xl-4">
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between">
+                    <div class="card-title mb-0">
+                        <h5 class="mb-1">مجموع برداشت های صرافی </h5>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-text-secondary rounded-pill text-muted border-0 p-2 me-n1" type="button"
+                                id="MonthlyCampaign" data-bs-toggle="dropdown" aria-haspopup="true"
+                                aria-expanded="false">
+                            <i class="fa-regular fa-grip-dots-vertical text-muted"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="MonthlyCampaign">
+                            <a class="dropdown-item" href="javascript:void(0);">امروز</a>
+                            <a class="dropdown-item" href="javascript:void(0);">ماه</a>
+                            <a class="dropdown-item" href="javascript:void(0);">سال</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <ul class="p-0 m-0">
+                        @foreach($withdrawalSums=[] as $withdraw)
+                            <li class="mb-6 d-flex justify-content-between align-items-center">
+
+                                <img src="{{asset($withdraw->currency->coinLogo())}}" class="img-fluid" width="45px">
+
+                                <div class="d-flex justify-content-between w-100 flex-wrap">
+                                    <h6 class="mb-0 ms-4">{{$withdraw->currency_symbol}}</h6>
+                                    <div class="d-flex ">
+                                        <small class="me-2 align-self-end">{{$withdraw->currency_symbol}}</small>
+                                        <h5 class="mb-0 font-number">{{formatNumberTrimZeros($withdraw->total_amount)}}</h5>
+                                    </div>
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 col-xl-3">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
-                            <span>تعداد درخواست های تجمیع در HD Wallet</span>
+                            <span>تعداد برداشت از صرافی مرجع</span>
                             <div class="d-flex align-items-center my-1">
                                 <h4 class="mb-0 me-2">{{$withdraws->count()}}</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-primary rounded p-2">
-                            <i class="fa-solid fa-users"></i>
+                            <i class="fa-solid fa-arrow-up-right"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 col-xl-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                            <span>مجموع کارمزد پرداخت شده به صرافی مرجع (کوین)</span>
+                            <div class="d-flex align-items-center my-1">
+                                <h4 class="mb-0 me-2">{{$withdraws->count()}}</h4>
+                            </div>
+                        </div>
+                        <span class="badge bg-label-info rounded p-2">
+                            <i class="fa-solid fa-hand-holding-dollar"></i>
                         </span>
                     </div>
                 </div>
@@ -21,30 +77,6 @@
         </div>
 
     </div>
-
-
-    <div class="card mb-3">
-        <div class="card-body">
-            <h5 class="card-title">جست و جو</h5>
-
-            <form class="row mt-3 d-flex align-items-end justify-content-between"
-                  action="{{route('admin.currency.index')}}" method="get">
-
-                <div class="col-md-4 user_status ">
-                    <label class="form-label" for="status">شبکه :</label>
-                    <select id="status" name="type" class="form-select text-capitalize mb-md-0 ">
-                        <option value="" {{ request('type') == '' ? 'selected' : '' }}>همه</option>
-                        @foreach(\App\Enums\CurrencyChainEnum::cases() as $chain)
-                            <option
-                                value="ERC20" {{ request('type') == 'ERC20' ? 'selected' : '' }}>{{$chain->value}}</option>
-                        @endforeach
-
-                    </select>
-                </div>
-            </form>
-        </div>
-    </div>
-
 
 
     <div class="card">
@@ -63,6 +95,7 @@
                     <thead>
                     <tr>
                         <th>#</th>
+                        <th>صرافی مرجع</th>
                         <th>کوین</th>
                         <th>شبکه</th>
                         <th>مقدار</th>

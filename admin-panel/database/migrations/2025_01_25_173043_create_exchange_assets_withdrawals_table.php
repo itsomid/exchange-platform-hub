@@ -15,17 +15,20 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('admin_id')->nullable();
             $table->unsignedBigInteger('withdrawal_id')->nullable();
-            $table->string('currency_fee')->nullable();
-            $table->integer('fee')->nullable();
+            $table->string('exchange')->nullable();
             $table->string('currency_symbol');
             $table->string('currency_chain');
             $table->decimal('amount', 20, 8);
             $table->decimal('actual_amount', 20, 8);
+            $table->integer('fee')->nullable();
+            $table->string('fee_currency')->nullable();
             $table->string('hd_wallet_address');
             $table->timestamp('withdrawal_date');
             $table->text('explore_address_url');
             $table->text('description')->nullable();
             $table->timestamps();
+
+            $table->foreign('admin_id')->references('id')->on('admins')->onDelete('cascade');
         });
     }
 
