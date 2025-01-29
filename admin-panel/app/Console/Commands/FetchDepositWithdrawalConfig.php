@@ -45,9 +45,6 @@ class FetchDepositWithdrawalConfig extends Command
         $foundNetwork = array_values(array_filter($feeData['networks'], function (array $value) use ($chainSymbol) {
             return $value['network'] === $chainSymbol;
         }));
-        if ($chainSymbol === 'BTC'){
-            dd($foundNetwork);
-        }
         if (count($foundNetwork)) {
             $chain->update([
                 'network_fee' => $foundNetwork[0]['withdrawal_fee'],
