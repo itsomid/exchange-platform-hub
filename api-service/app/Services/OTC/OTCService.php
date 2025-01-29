@@ -467,7 +467,7 @@ class OTCService
                     ->where('currency_id', $currency->id)
                     ->first();
 
-                // bitexroom_withdrawal_fee - network_fee + receivedAmount
+                // receivedAmount - bitexroom_withdrawal_fee
                 $amountForBuy = bcsub($receivedAmount, $chain->exchange_withdrawal_fee, 8);
 
                 $exchangeService = resolve(ExchangeService::class);
