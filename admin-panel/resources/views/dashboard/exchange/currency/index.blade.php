@@ -95,21 +95,22 @@
             <div class="table-responsive text-nowrap">
                 <table class="table">
                     <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>آواتار</th>
-                        <th>نام</th>
-                        <th>شبکه های موجود</th>
-                        <th>سیمبول</th>
-                        <th>کارمزد برداشت (صرافی + شبکه)</th>
-                        <th>وضعیت</th>
-                        <th>عملیات</th>
-                    </tr>
+                        <tr class="text-center">
+                            <th>#</th>
+                            <th>آواتار</th>
+                            <th>نام</th>
+                            <th>سیمبول</th>
+                            <th>شبکه های موجود</th>
+                            <th>کارمزد برداشت صرافی</th>
+                            <th>کارمزد برداشت شبکه</th>
+                            <th>وضعیت</th>
+                            <th>عملیات</th>
+                        </tr>
                     </thead>
                     <tbody class="table-border-bottom-0">
                     @foreach($currencies as $currency)
 
-                        <tr>
+                        <tr >
                             <td>{{$currency->id}}</td>
                             <td>
                                 <img src="{{asset($currency->coinLogo())}}" class="img-fluid" width="50px">
@@ -119,30 +120,47 @@
                                 {{$currency->name}}
                             </td>
                             <td>
-
-                                @if(count($currency->chains))
-                                    <div class="d-flex flex-column align-items-center mb-2">
-                                        @foreach($currency->chains as $chain)
-                                            <span class="badge bg-label-primary mb-2">{{$chain->chain}}</span>
-                                        @endforeach
-                                    </div>
-                                @else
-                                    <span class="badge bg-label-danger ms-2">بدون شبکه</span>
-                                @endif
-
-                            </td>
-                            <td>
                                 {{$currency->symbol}}
                             </td>
                             <td>
+                                <div class="d-flex flex-column align-items-center justify-content-center mb-2">
+                                @if(count($currency->chains))
+
+                                        @foreach($currency->chains as $chain)
+                                            <span class="badge bg-label-primary mb-2">{{$chain->chain}}</span>
+                                        @endforeach
+
+                                @else
+                                    <span class="badge bg-label-danger ms-2">بدون شبکه</span>
+                                @endif
+                                </div>
+                            </td>
+
+                            <td>
                                 @if(count($currency->chains))
                                     @foreach($currency->chains as $chain)
-                                        <div class="d-flex align-items-center mb-2">
+                                        <div class="d-flex align-items-center justify-content-center mb-2">
                                             <span class="badge bg-label-primary ms-2 font-number">
 
                                                 <smal>{{$chain->chain}} -> </smal>
 
-                                                <span class="fw-bold text-primary">{{formatNumberTrimZeros($chain->total_withdrawal_fee)}}</span>
+                                                <span class="fw-bold text-primary">{{formatNumberTrimZeros($chain->exchange_withdrawal_fee)}}</span>
+                                                <smal class="me-2">{{$currency->symbol}}</smal>
+                                            </span>
+
+                                        </div>
+                                    @endforeach
+                                @endif
+                            </td>
+                            <td>
+                                @if(count($currency->chains))
+                                    @foreach($currency->chains as $chain)
+                                        <div class="d-flex align-items-center justify-content-center mb-2">
+                                            <span class="badge bg-label-primary ms-2 font-number">
+
+                                                <smal>{{$chain->chain}} -> </smal>
+
+                                                <span class="fw-bold text-primary">{{formatNumberTrimZeros($chain->network_fee)}}</span>
                                                 <smal class="me-2">{{$currency->symbol}}</smal>
                                             </span>
 
@@ -171,7 +189,7 @@
                                 @endif
                             </td>
                             <td>
-                                <div class="d-flex align-items-center">
+                                <div class="d-flex justify-content-center">
 
                                     <a class="text-secondary me-3"
                                        href="{{ route('admin.currency.edit', ['currency' => $currency->id]) }}">

@@ -81,12 +81,12 @@
                             <hr class="my-6 mx-n4">
                         @endforeach
                         <div class=" d-flex justify-content-start mt-5">
-                            <div class="col-md-1">
+
                                 <button class="btn btn-primary ">
                                     <i class="fa fa-save mx-2"></i>
                                     ذخیره
                                 </button>
-                            </div>
+
                         </div>
 
                     </form>

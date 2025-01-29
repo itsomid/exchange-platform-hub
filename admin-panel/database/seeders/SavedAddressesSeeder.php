@@ -38,7 +38,7 @@ class SavedAddressesSeeder extends Seeder
             [
                 'user_id' => $userId,
                 'name' => 'Ethereum Wallet',
-                'chain' => CurrencyChainEnum::ETH,
+                'chain' => CurrencyChainEnum::ERC20,
                 'address' => '0xethwalletabcdef123456789abcdef123456789b',
             ],
             [

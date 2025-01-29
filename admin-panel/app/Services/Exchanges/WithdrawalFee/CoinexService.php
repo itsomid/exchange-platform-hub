@@ -34,7 +34,10 @@ class CoinexService implements ExchangeInterface
                 'network' => $chain['chain'],
                 'withdrawal_fee' => $chain['withdrawal_fee'],
                 'deposit_enabled' => $chain['deposit_enabled'],
-                'withdraw_enabled' => $chain['withdraw_enabled']
+                'withdraw_enabled' => $chain['withdraw_enabled'],
+                'min_deposit_amount' => $chain['min_deposit_amount'],
+                'min_withdraw_amount' => $chain['min_withdraw_amount'],
+                'safe_confirmations' => $chain['safe_confirmations'],
             ];
         }, $chains);
 

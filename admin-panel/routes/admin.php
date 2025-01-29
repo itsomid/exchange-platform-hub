@@ -145,7 +145,7 @@ Route::get('/exchange/ref-exchanges',[RefExchangeController::class,'index'])->na
 
 
 Route::get('/wallets',[ExchangeWalletController::class,'index'])->name('wallet');
-Route::get('/wallets/assets-gathering-to-hd-wallet/',[ExchangeAssetsWithdrawalController::class,'index'])->name('wallets.assets-gathering-to-hd-wallet.index');
+Route::get('/wallets/assets-gathering-to-hd-wallet',[ExchangeAssetsWithdrawalController::class,'index'])->name('wallets.assets-gathering-to-hd-wallet.index');
 Route::get('/wallets/assets-gathering-to-hd-wallet/create',[ExchangeAssetsWithdrawalController::class,'create'])->name('wallets.assets-gathering-to-hd-wallet.create');
 Route::post('/wallets/assets-gathering-to-hd-wallet/',[ExchangeAssetsWithdrawalController::class,'store'])->name('wallets.assets-gathering-to-hd-wallet.store');
 
