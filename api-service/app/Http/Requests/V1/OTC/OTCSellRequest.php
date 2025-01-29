@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\V1\OTC;
 
+use App\Models\Market;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -42,9 +43,14 @@ class OTCSellRequest extends FormRequest
      */
     public function rules(): array
     {
+        $market = Market::query()->find($this->input('market_id'));
+
         return [
             'market_id' => ['required', 'integer', 'exists:markets,id'],
-            'quantity' => ['required', 'numeric', 'min:0'],
+            'quantity' => array_merge(
+                ['required', 'numeric'],
+                //                $market ? ['min:'.$market->min_otc_amount, 'max:'.$market->max_otc_amount] : []
+            ),
         ];
     }
 }

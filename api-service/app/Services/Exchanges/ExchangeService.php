@@ -5,6 +5,7 @@ namespace App\Services\Exchanges;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
+use App\Models\ExchangeAssetsWithdrawal;
 use App\Repositories\DTO\Transaction\CreateTransactionRequestDTO;
 use App\Repositories\Interfaces\MarketRepositoryInterface;
 use App\Repositories\Interfaces\OTCOrderRepositoryInterface;
@@ -12,7 +13,11 @@ use App\Repositories\Interfaces\TransactionRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Services\Exchanges\Asset\AssetFactory;
 use App\Services\Exchanges\Asset\DTO\BuyDTORequest;
+use App\Services\Exchanges\Asset\DTO\WithdrawRequestDTO;
+use App\Services\Exchanges\Asset\Enum\WithdrawMethodEnum;
+use App\Services\Exchanges\DTO\ChargeUSDTRequestDTO;
 use App\Services\Exchanges\DTO\ExchangeBuyRequestDTO;
+use Throwable;
 
 class ExchangeService
 {
@@ -112,5 +117,94 @@ class ExchangeService
         }
 
         return $response->isDone();
+    }
+
+    public function chargeUSDT(ChargeUSDTRequestDTO $requestDTO): bool
+    {
+        //        $otcOrder->refExchangeTransactions()->create([
+        //            'market' => $response->getMarket(),
+        //            'amount' => $response->getAmount(),
+        //            'fee' => $response->getDiscountFee(),
+        //            'side' => 'buy',
+        //            'response' => $response->getResponseBody(),
+        //        ]);
+
+        try {
+            $asset = AssetFactory::make('coinex');
+
+            $bitexroomWallet = $this->walletRepository->getBitexroomWallet('USDT');
+            $chain = $bitexroomWallet->chains->where('currency_chain', $requestDTO->getCurrencyChain())->first();
+            $response = $asset->withdraw(
+                resolve(WithdrawRequestDTO::class)
+                    ->setAddress($chain->address)
+                    ->setChain($requestDTO->getCurrencyChain())
+                    ->setAmount($requestDTO->getQuantity())
+                    ->setWithdrawMethod(WithdrawMethodEnum::ON_CHAIN)
+                    ->setCurrency($bitexroomWallet->currency_symbol)
+            );
+
+            ExchangeAssetsWithdrawal::query()
+                ->create([
+                    'withdrawal_id' => $response->getWithdrawId(),
+                    'exchange' => 'coinex',
+                    'currency_symbol' => $bitexroomWallet->currency_symbol,
+                    'currency_chain' => $requestDTO->getCurrencyChain(),
+                    'fee_currency' => $response->getCurrencyFee(),
+                    'fee' => $response->getFee(),
+                    'amount' => $response->getAmount(),
+                    'actual_amount' => $response->getActualAmount(),
+                    'hd_wallet_address' => $response->getAddress(),
+                    'withdrawal_date' => $response->getCreatedAt(),
+                    'explore_address_url' => $response->getExploreAddress(),
+                ]);
+
+            $otcOrder = $this->otcOrderRepository->getOneById($requestDTO->getOtcId());
+            $cetWallet = $this->walletRepository
+                ->getOrCreateWallet(
+                    config('bitexroom.bitexroom_user_id'),
+                    'CET'
+                );
+            $usdtWallet = $this->walletRepository
+                ->getOrCreateWallet(
+                    config('bitexroom.bitexroom_user_id'),
+                    'USDT'
+                );
+            //CET
+            $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
+                ->setUserId(config('bitexroom.bitexroom_user_id'))
+                ->setWalletId($cetWallet->id)
+                ->setOtcOrderId($otcOrder->id)
+                ->setBalance($cetWallet->balance)
+                ->setAmount(-$response->getFee())
+                ->setType(TransactionTypeEnum::EXCHANGE)
+                ->setSubtype(TransactionSubTypeEnum::COINEX)
+                ->setStatus(TransactionStatusEnum::SUCCESS)
+                ->setDescription(sprintf('استفاده CET به مقدار %s',
+                    formatNumberTrimZeros((float) $response->getFee())
+                )
+                ));
+            //USDT
+            $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
+                ->setUserId(config('bitexroom.bitexroom_user_id'))
+                ->setWalletId($usdtWallet->id)
+                ->setOtcOrderId($otcOrder->id)
+                ->setAmount($response->getActualAmount())
+                ->setBalance($usdtWallet->balance)
+                ->setType(TransactionTypeEnum::EXCHANGE)
+                ->setSubtype(TransactionSubTypeEnum::COINEX)
+                ->setStatus(TransactionStatusEnum::SUCCESS)
+                ->setDescription(sprintf('خرید %s به مقدار %s',
+                    'USDT',
+                    formatNumberTrimZeros((float) $response->getActualAmount()),
+                )
+                ));
+            $usdtWallet->increment('balance', (float) $response->getActualAmount());
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return false;
+        }
+
+        return true;
     }
 }

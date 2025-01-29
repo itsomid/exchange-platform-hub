@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 /**
+ * @property int                $id
  * @property Carbon             $created_at
  * @property Market             $market
  * @property OTCOrderTypeEnum   $type
