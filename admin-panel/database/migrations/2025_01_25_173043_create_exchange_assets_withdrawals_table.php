@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('currency_chain');
             $table->decimal('amount', 20, 8);
             $table->decimal('actual_amount', 20, 8);
-            $table->integer('fee')->nullable();
+            $table->decimal('fee', 20, 8)->nullable();
             $table->string('fee_currency')->nullable();
             $table->string('hd_wallet_address');
             $table->timestamp('withdrawal_date');
