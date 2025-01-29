@@ -55,7 +55,7 @@ Route::prefix('/portfolio')->group(function () {
 //OTC
 Route::prefix('/otc')->group(function () {
     //get-markets
-    Route::get('/markets', [\App\Http\Controllers\V1\OTC\MarketController::class, 'lists'])->name('otc.markets');
+    Route::get('/markets', [\App\Http\Controllers\V1\OTC\MarketController::class, 'lists'])->name('otc.markets')->withoutMiddleware(['auth:sanctum', 'verified']);
     //get bitexroom available balance
     Route::get('/bitexroom-available-balance', [\App\Http\Controllers\V1\OTC\MarketController::class, 'bitexroomAvailableBalance'])->name('otc.bitexroom-available-balance');
     Route::post('/buy', [\App\Http\Controllers\V1\OTC\BuyController::class, 'create'])->name('otc.buy')->middleware(['throttle:1,1']);
