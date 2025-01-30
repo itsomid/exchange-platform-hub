@@ -1,5 +1,5 @@
 @extends('dashboard.layout.master')
-@section('title', 'مدیریت کیف پول ها')
+@section('title', 'مدیریت کیف پول های صرافی')
 @section('content')
     <div class="row g-6">
         <div class="col-12">
@@ -29,26 +29,38 @@
                         <div class="d-flex align-items-center mb-2">
                             <div class="avatar me-4">
                                 <div class="avatar flex-shrink-0 me-4">
-                                    <img src="http://127.0.0.1:8000/images/coins/usdt.svg" class="img-fluid" width="50px">
+                                    <img src="{{$asset->coinLogo}}" class="img-fluid" width="50px">
                                 </div>
                             </div>
-                            <h4 class="mb-0">کیف پول {{$asset->getCcy()}}</h4>
+                            <h4 class="mb-0">کیف پول {{$asset->ccy}}</h4>
                         </div>
-                        <h3 class="mt-4 mb-1 font-number">{{formatNumberTrimZeros($asset->getAvailable())}}
-                            <span class="text-muted h4">{{$asset->getCcy()}}</span>
+                        <h3 class="mt-4 mb-1 font-number">{{formatNumberTrimZeros($asset->available)}}
+                            <span class="text-muted h4">{{$asset->ccy}}</span>
                         </h3>
 
 
                         <p class="mb-0">
                             <small class="text-danger">موجودی مسدود شده:</small>
                             <small
-                                class="text-danger fw-bold ms-2 font-number">{{formatNumberTrimZeros($asset->getFrozen())}}
-                                <span class="text-danger ">{{$asset->getCcy()}}</span>
+                                class="text-danger fw-bold ms-2 font-number">{{$asset->frozen}}
+
                             </small>
+
                         </p>
 
-
                     </div>
+                    <div class="card-body border-top">
+
+                        @if(\App\Models\Currency::whereSymbol($asset->ccy)->first()->chains->isNotEmpty())
+                        <a href="{{route('admin.wallets.assets-gathering-to-hd-wallet.create',['currency_symbol'=>$asset->ccy,'amount'=>$asset->available])}}" class="btn btn-primary">
+                            <i class="fa-regular fa-arrow-up-right fa-xl mx-2"></i>
+                            برداشت دارایی
+                        </a>
+                        @else
+                            امکان برداشت موجود نیست
+                        @endif
+                    </div>
+
 
                 </div>
             </div>

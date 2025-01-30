@@ -14,14 +14,21 @@ return new class extends Migration
         Schema::create('exchange_assets_withdrawals', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('admin_id')->nullable();
-            $table->text('description')->nullable();
+            $table->unsignedBigInteger('withdrawal_id')->nullable();
+            $table->string('exchange')->nullable();
             $table->string('currency_symbol');
             $table->string('currency_chain');
             $table->decimal('amount', 20, 8);
-            $table->string('exchange_transaction_id')->nullable();
+            $table->decimal('actual_amount', 20, 8);
+            $table->decimal('fee', 20, 8)->nullable();
+            $table->string('fee_currency')->nullable();
             $table->string('hd_wallet_address');
             $table->timestamp('withdrawal_date');
+            $table->text('explore_address_url');
+            $table->text('description')->nullable();
             $table->timestamps();
+
+            $table->foreign('admin_id')->references('id')->on('admins')->onDelete('cascade');
         });
     }
 

@@ -39,7 +39,7 @@ class CurrencyChain extends Model
 
     public function getTotalWithdrawalFeeAttribute()
     {
-        return bcadd($this->network_fee, $this->exchange_withdrawal_fee, 8);
+        return $this->network_fee +$this->exchange_withdrawal_fee;
     }
 
     /**

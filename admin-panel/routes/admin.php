@@ -30,7 +30,9 @@ use App\Http\Controllers\Deposit\DepositController;
 use App\Http\Controllers\Withdrawal\WithdrawalController;
 use App\Http\Controllers\Exchange\ExchangeWalletController;
 use App\Http\Controllers\Withdrawal\WithdrawalReportController;
+use App\Http\Controllers\Exchange\ExchangeAssetsWithdrawalController;
 use App\Http\Controllers\Deposit\DepositReportController;
+
 use Illuminate\Support\Facades\Route;
 
 
@@ -143,8 +145,9 @@ Route::get('/exchange/ref-exchanges',[RefExchangeController::class,'index'])->na
 
 
 Route::get('/wallets',[ExchangeWalletController::class,'index'])->name('wallet');
-Route::get('/wallets/asset-gathering/',[ExchangeWalletController::class,'create'])->name('wallet.assets_transfer');
-Route::post('/wallets/asset-gathering/',[ExchangeWalletController::class,'store'])->name('wallet.assets_transfer');
+Route::get('/wallets/assets-gathering-to-hd-wallet',[ExchangeAssetsWithdrawalController::class,'index'])->name('wallets.assets-gathering-to-hd-wallet.index');
+Route::get('/wallets/assets-gathering-to-hd-wallet/create',[ExchangeAssetsWithdrawalController::class,'create'])->name('wallets.assets-gathering-to-hd-wallet.create');
+Route::post('/wallets/assets-gathering-to-hd-wallet/',[ExchangeAssetsWithdrawalController::class,'store'])->name('wallets.assets-gathering-to-hd-wallet.store');
 
 
 Route::prefix('transactions')->group(function (){
@@ -169,6 +172,7 @@ Route::get('/internal-settings', [InternalSettingController::class, 'index'])->n
 Route::post('/internal-settings/update-permissions', [InternalSettingController::class, 'updatePermissions'])->name('setting.int.update-permissions')->can('setting.int.index');
 Route::post('/internal-settings/update-otc-setting', [InternalSettingController::class, 'updateOTCSetting'])->name('setting.int.update-otc-setting')->can('setting.int.index');
 Route::post('/internal-settings/update-referral-setting', [InternalSettingController::class, 'updateReferralSetting'])->name('setting.int.update-referral-setting')->can('setting.int.index');
+Route::post('/internal-settings/update-exchange-withdrawal-setting', [InternalSettingController::class, 'updateExchangeWithdrawalSetting'])->name('setting.int.update-exchange-withdrawal-setting')->can('setting.int.index');
 
 Route::get('/external-settings', [ExternalSettingController::class, 'index'])->name('external-setting.index')->can('setting.ext.index');
 Route::post('/external-settings/update-ref-address', [ExternalSettingController::class, 'updateRefAddress'])->name('setting.ext.update-ref-address')->can('setting.ext.index');

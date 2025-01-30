@@ -49,6 +49,12 @@ class CurrencySeeder extends Seeder
                 'logo' => 'doge.svg',  // Replace with actual logo file path or URL
                 'max_auto_withdraw_amount' =>  100000
             ],
+            [
+                'name' => 'CET Coin',
+                'symbol' => 'CET',
+                'logo' => 'cet.svg',  // Replace with actual logo file path or URL
+                'max_auto_withdraw_amount' =>  1000000
+            ],
         ]);
     }
 

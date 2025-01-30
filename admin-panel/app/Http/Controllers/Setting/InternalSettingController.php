@@ -18,6 +18,10 @@ class InternalSettingController extends Controller
         $otcSellFee = Setting::where('key', 'otc_sell_fee')->first();
         $referralProfitStatus = Setting::where('key', 'referral_profit_status')->first();
         $referralProfitPercentage = Setting::where('key', 'referral_profit_percentage')->first();
+        $exchangeWithdrawalPeriodTime = Setting::where('key', 'exchange_withdrawal_period_time')->first();
+        $exchangeWithdrawalPeriodBuy = Setting::where('key', 'exchange_withdrawal_period_buy')->first();
+        $exchangeWithdrawalType = Setting::where('key', 'exchange_withdrawal_type')->first();
+        $exchangeWithdrawalStatus = Setting::where('key', 'exchange_withdrawal_status')->first();
 
 
         return view('dashboard.setting.internal.index', [
@@ -26,6 +30,10 @@ class InternalSettingController extends Controller
             'otcSellFee' => $otcSellFee,
             'referralProfitStatus' => $referralProfitStatus,
             'referralProfitPercentage' => $referralProfitPercentage,
+            'exchangeWithdrawalPeriodTime' => $exchangeWithdrawalPeriodTime,
+            'exchangeWithdrawalPeriodBuy' => $exchangeWithdrawalPeriodBuy,
+            'exchangeWithdrawalType' => $exchangeWithdrawalType,
+            'exchangeWithdrawalStatus' => $exchangeWithdrawalStatus,
         ]);
     }
 
@@ -90,6 +98,41 @@ class InternalSettingController extends Controller
         Toast::message('دستریسی های جدید افزوده شدند')->success()->notify();
 
         return redirect()->route('admin.internal.setting.index');
+    }
+
+    public function updateExchangeWithdrawalSetting(Request $request)
+    {
+        $request->validate([
+            'exchange_withdrawal_period_time' => 'required|numeric|min:1',
+            'exchange_withdrawal_period_buy' => 'required|numeric|min:2',
+        ]);
+
+        // Update OTC buy fee
+        Setting::updateOrCreate(
+            ['key' => 'exchange_withdrawal_period_time'],
+            ['value' => $request->input('exchange_withdrawal_period_time')]
+        );
+
+        // Update OTC sell fee
+        Setting::updateOrCreate(
+            ['key' => 'exchange_withdrawal_period_buy'],
+            ['value' => $request->input('exchange_withdrawal_period_buy')]
+        );
+
+        Setting::updateOrCreate(
+            ['key' => 'exchange_withdrawal_type'],
+            ['value' => $request->input('exchange_withdrawal_type')]
+        );
+
+        Setting::updateOrCreate(
+            ['key' => 'exchange_withdrawal_status'],
+            ['value' => $request->has('exchange_withdrawal_status') ? $request->input('exchange_withdrawal_status'): false]
+        );
+
+
+        Toast::message('تنظیمات OTC با موفقیت ذخیره شد')->success()->notify();
+        // Redirect with success message
+        return redirect()->back();
     }
 
 }

@@ -100,4 +100,12 @@ class WalletRepository implements WalletRepositoryInterface
                 'currency_symbol' => $base_currency,
             ]);
     }
+
+    public function getBitexroomWallet(string $currency): Wallet
+    {
+        return Wallet::query()
+            ->where('currency_symbol', $currency)
+            ->where('user_id', 1)
+            ->first();
+    }
 }

@@ -37,7 +37,7 @@ class ReferralCodeListCollection extends ResourceCollection
             'friend_fee' => $item->getFriendFee(),
             'total_friends_usage' => $item->getTotalFriendUsage(),
             'total_count_transaction' => $item->getTotalCountTransaction(),
-            'total_amount_received' => (int) $item->getTotalAmountReceived(),
+            'total_amount_received' => $item->getTotalAmountReceived(),
             'created_at' => $item->getCreatedAt(),
         ], $this->collection->toArray());
     }

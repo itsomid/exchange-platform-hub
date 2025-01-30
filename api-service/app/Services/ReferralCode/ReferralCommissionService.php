@@ -12,10 +12,13 @@ use App\Models\ReferralCodeUsage;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Repositories\Interfaces\WalletRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 
 class ReferralCommissionService
 {
+    public function __construct(private readonly WalletRepositoryInterface $walletRepository) {}
+
     public function processReferralCommission(OTCOrder $otcOrder, string $exchangeFee)
     {
         return DB::transaction(function () use ($otcOrder, $exchangeFee) {
@@ -87,7 +90,7 @@ class ReferralCommissionService
             'otc_order_id' => $otcOrder->id,
             'balance' => $wallet->balance,
             'amount' => $amount,
-            'type' => TransactionTypeEnum::FEE,
+            'type' => TransactionTypeEnum::REFERRAL,
             'subtype' => $role === 'introducer' ? TransactionSubTypeEnum::REFERRAL_INTRODUCER : TransactionSubTypeEnum::REFERRAL_FRIEND,
             'status' => TransactionStatusEnum::SUCCESS,
             'description' => "Referral commission ($role) from OTC order ID {$otcOrder->id}",
@@ -99,5 +102,22 @@ class ReferralCommissionService
             'transaction_id' => $transaction->id,
             'used_at' => now(),
         ]);
+
+        $exchangeWallet = $this->walletRepository->getBitexroomWallet('USDT');
+        if ($exchangeWallet) {
+            $exchangeWallet->decrement('balance', $amount);
+
+            Transaction::query()->create([
+                'user_id' => config('bitexroom.bitexroom_user_id'), // Admin or exchange user ID
+                'wallet_id' => $exchangeWallet->id,
+                'otc_order_id' => $otcOrder->id,
+                'balance' => $exchangeWallet->balance,
+                'amount' => -$amount,
+                'type' => TransactionTypeEnum::REFERRAL,
+                'subtype' => $role === 'introducer' ? TransactionSubTypeEnum::REFERRAL_INTRODUCER : TransactionSubTypeEnum::REFERRAL_FRIEND,
+                'status' => TransactionStatusEnum::SUCCESS,
+                'description' => "Referral commission ($role) expense from OTC order ID {$otcOrder->id}",
+            ]);
+        }
     }
 }

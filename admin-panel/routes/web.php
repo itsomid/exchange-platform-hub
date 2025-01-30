@@ -21,3 +21,17 @@ Route::get('test-omid', function () {
         echo 'currency:'.$balance->getCcy().' available:'.$balance->getAvailable().' frozen:'.$balance->getFrozen().'<br>'.PHP_EOL;
     }
 });
+
+Route::get('test-omid-withdraw', function () {
+
+    $asset = \App\Services\Exchanges\Asset\AssetFactory::make('coinex');
+    $res = $asset->withdraw(
+        resolve(\App\Services\Exchanges\Asset\DTO\WithdrawRequestDTO::class)
+        ->setCurrency('DOGE')
+//        ->setChain('TRX')
+        ->setAmount("1")
+        ->setWithdrawMethod(\App\Services\Exchanges\Asset\Enum\WithdrawMethodEnum::INTER_USER)
+        ->setAddress("o.shabani@hotmail.com")
+    );
+    dd($res);
+});
