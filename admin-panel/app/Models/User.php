@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\UserStatusEnum;
 use App\Filters\Filterable;
 use App\Notifications\ResetPasswordNotification;
 use Carbon\Carbon;
@@ -43,6 +44,9 @@ class User extends Authenticatable implements CanResetPassword
 
     protected $guarded = ['id'];
 
+    protected $casts = [
+      'status' => UserStatusEnum::class
+    ];
     /**
      * The attributes that should be cast.
      *
@@ -74,6 +78,11 @@ class User extends Authenticatable implements CanResetPassword
         return $this->hasMany(UserFinancialBlock::class,'user_id')->orderBy('restricted_until', 'desc');
     }
 
+    public function wallets()
+    {
+        return $this->hasMany(Wallet::class,'user_id');
+    }
+
     public function activeFinancialBlocks() : HasMany
     {
         return $this->hasMany(UserFinancialBlock::class,'user_id')->where('restricted_until', '>', Carbon::now())->orderBy('restricted_until', 'desc');
@@ -92,22 +101,25 @@ class User extends Authenticatable implements CanResetPassword
         return $query;
     }
 
-    public function wallets()
+    public function personalAccessTokens(): HasMany
     {
-        return $this->hasMany(Wallet::class,'user_id');
+        return $this->hasMany(PersonalAccessToken::class,'tokenable_id');
+    }
+
+    public function latestActiveToken()
+    {
+        return $this->hasOne(PersonalAccessToken::class,'tokenable_id')
+            ->whereNotNull('last_used_at')
+            ->latest('last_used_at'); // Orders by last_used_at DESC
+    }
+
+    public function savedAddresses()
+    {
+        return $this->hasMany(SavedAddress::class);
     }
     public function twoFAStatus()
     {
         return (bool)$this->two_factore_secret;
-    }
-    public function isLockedToSendToken(): bool
-    {
-        return $this->sms_lock_until && now()->lte($this->sms_lock_until) && ! app()->environment('local');
-    }
-
-    public function canGenerateToken(): bool
-    {
-        return empty($this->sms_token) || $this->sms_this_token_tries >= self::NEW_TOKEN_INTERVAL;
     }
 
     public function generateToken(): string
@@ -117,18 +129,6 @@ class User extends Authenticatable implements CanResetPassword
                 ? '11111'
                 : str_pad(random_int(10000, 99999), 5, '0', STR_PAD_LEFT);
     }
-
-    public function setDetailOnToken($token)
-    {
-        $agent = new Agent;
-        $device = $agent->platform().'-';
-        $device = $device.$agent->browser();
-
-        $token->accessToken->device = $device;
-        $token->accessToken->ip = request()->ip();
-        $token->accessToken->save();
-    }
-
     public static function generateUsername($email)
     {
         // Extract the part of the email before the '@'
@@ -150,6 +150,17 @@ class User extends Authenticatable implements CanResetPassword
 
         return $username;
     }
+    public function setDetailOnToken($token)
+    {
+        $agent = new Agent;
+        $device = $agent->platform().'-';
+        $device = $device.$agent->browser();
+
+        $token->accessToken->device = $device;
+        $token->accessToken->ip = request()->ip();
+        $token->accessToken->save();
+    }
+
 
     /**
      * Send a password reset notification to the user.
@@ -161,6 +172,18 @@ class User extends Authenticatable implements CanResetPassword
         $url = sprintf(config('frontend.reset-password-link'), $token);
         $this->notify(new ResetPasswordNotification($this, $url));
     }
+
+
+    //////////SCOPE/////////
+    public function scopeOnline($query)
+    {
+        return $query->whereHas('latestActiveToken', function ($q) {
+            $q->where('last_used_at', '>=', now()->subMinutes(10));
+        });
+
+    }
+
+    //////END SCOPE/////////
     public function getAvatarNameAttribute()
     {
         $firstName = $this->attributes['first_name'] ?? '';
@@ -175,21 +198,26 @@ class User extends Authenticatable implements CanResetPassword
 
         return strtoupper(substr($username, 0, 2)) ;
     }
-    public function personalAccessTokens(): HasMany
+
+
+    public function getActivityStatusAttribute()
     {
-        return $this->hasMany(PersonalAccessToken::class,'tokenable_id');
-    }
-    public function latestActiveToken()
-    {
-        return $this->personalAccessTokens()
-            ->whereNotNull('last_used_at') // Ensure the token has been used
-            ->orderByDesc('last_used_at') // Get the latest used token
-            ->first();
+        if (!$this->latestActiveToken) {
+            return 'offline';
+        }
+
+        return (now()->diffInMinutes($this->latestActiveToken->last_used_at) < 10)
+            ? 'online'
+            : 'away';
     }
 
-    public function savedAddresses()
+    public function getAvatarStatusAttribute()
     {
-        return $this->hasMany(SavedAddress::class);
+        return match ($this->activity_status) {
+            'online'  => 'success',
+            'away'    => 'warning',
+            'offline' => 'secondary',
+        };
     }
 
 }

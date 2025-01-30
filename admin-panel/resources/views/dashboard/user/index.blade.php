@@ -10,7 +10,7 @@
                             <span>همه ی کاربران</span>
                             <div class="d-flex align-items-center my-1">
                                 <h4 class="mb-0 me-2">{{$users->total()}}</h4>
-                                <p class="text-success mb-0">(+6%)</p>
+                                <p class="text-success mb-0"></p>
                             </div>
                         </div>
                         <span class="badge bg-label-primary rounded p-2">
@@ -25,14 +25,32 @@
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
-                            <span>سشن های فعال</span>
+                            <span>کاربران آنلاین</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">1</h4>
+                                <h4 class="mb-0 me-2">{{$onlineUserCount}}</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-primary rounded p-2">
                             <i class="fa-light fa-user-alt fa-lg"></i>
 
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 col-xl-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                            <span>مشتری های فعال (حداقل یک تراکنش در ماه)</span>
+                            <div class="d-flex align-items-center my-1">
+                                <h4 class="mb-0 me-2">1</h4>
+                                <p class="text-danger mb-0">(+6%)</p>
+                            </div>
+                        </div>
+                        <span class="badge bg-label-warning rounded p-2">
+                           <i class="fa-regular fa-user-clock fa-lg"></i>
                         </span>
                     </div>
                 </div>
@@ -177,23 +195,10 @@
 
                                 <td>
                                     <div class="d-flex">
-                                        @php
-                                            $lastUsed = optional($user->latestActiveToken())->last_used_at;
-
-                                              if (!$lastUsed) {
-                                                    $activityStatus = 'offline';
-                                                    $avatarStatus = 'secondary';
-                                                } elseif (abs(now()->diffInMinutes($lastUsed)) < 10) {
-                                                    $activityStatus = 'online';
-                                                    $avatarStatus = 'success';
-                                                } else {
-                                                    $activityStatus = 'away';
-                                                     $avatarStatus = 'warning';
-                                                }
-                                        @endphp
-                                        <div class="avatar me-2 avatar-{{ $activityStatus }}">
-                                            <span
-                                                class="avatar-initial rounded-circle bg-label-{{$avatarStatus}}">{{ $user->avatar_name }}</span>
+                                        <div class="avatar me-2 avatar-{{ $user->activity_status }}">
+                                            <span class="avatar-initial rounded-circle bg-label-{{ $user->avatar_status }}">
+                                                {{ $user->avatar_name }}
+                                            </span>
                                         </div>
 
                                         <div class="d-flex flex-column">
@@ -238,10 +243,10 @@
                                     @endif
                                 </td>
                                 <td class="font-number">
-                                    @if($user->latestActiveToken())
-                                        {{\App\Helpers\DateFormatter::convertToPersianDate($user->latestActiveToken()->last_used_at,'H:i:s %Y/%m/%d')}}
+                                    @if($user->latestActiveToken)
+                                        {{\App\Helpers\DateFormatter::convertToPersianDate($user->latestActiveToken->last_used_at,'H:i:s %Y/%m/%d')}}
                                     @else
-                                        <span>فعالیتی نداشته است</span>
+                                        <span>بدون فعالیت</span>
                                     @endif
                                 </td>
                                 <td>
@@ -257,7 +262,8 @@
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <div class="btn-group btn-group-sm" role="group">
-                                            <a class="btn btn-outline-secondary text-dark" href="{{route('admin.inquiry.user-details',['user'=>$user])}}">
+                                            <a class="btn btn-outline-secondary text-dark"
+                                               href="{{route('admin.inquiry.user-details',['user'=>$user])}}">
                                                 <i class="fa-light fa-eye"></i>
                                             </a>
                                             <a class="btn btn-outline-secondary text-dark"

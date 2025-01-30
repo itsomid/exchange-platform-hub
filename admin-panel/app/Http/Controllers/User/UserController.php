@@ -25,16 +25,18 @@ class UserController extends Controller
     {
         $users = User::with('introducerReferral.user','activeFinancialBlocks')->orderBy('id')->filterBy(request()->all())->paginate(20);
         $referral_codes = ReferralCode::all();
-
+        $onlineUserCount = User::online()->count();
         $supportDescriptions = User::select('support_description')
             ->whereNotNull('support_description')
             ->groupBy('support_description')
             ->get();
 
-        return view('dashboard.user.index')
-            ->with(['referral_codes' => $referral_codes])
-            ->with(['users' => $users])
-            ->with(['supportDescriptions' => $supportDescriptions]);
+        return view('dashboard.user.index',[
+            'users' => $users,
+            'referral_codes' => $referral_codes,
+            'onlineUserCount' => $onlineUserCount,
+            'supportDescriptions' => $supportDescriptions
+        ]);
     }
 
     public function create()
