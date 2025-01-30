@@ -42,8 +42,8 @@ class MarketController extends Controller
 
         // Update the market with the validated data
         $market->update([
-            'min_trade_amount' => $request->min_trade_amount,
-            'max_trade_amount' => $request->max_trade_amount,
+            'min_otc_amount' => $request->min_otc_amount,
+            'max_otc_amount' => $request->max_otc_amount,
             'is_active' => $request->has('is_active') ? $request->is_active : false,
         ]);
         $market->activeExchangePrice->exchange_profit_sell = $request->exchange_profit_sell;

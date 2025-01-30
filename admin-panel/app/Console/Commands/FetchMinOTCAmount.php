@@ -33,9 +33,9 @@ class FetchMinOTCAmount extends Command
         $fetchMarkets = collect($service->fetchMinTrade())->keyBy('base_ccy');
 
         $markets = Market::query()->get();
-        $otcFee = bcadd(bcdiv(Setting::getSetting('otc_buy_fee'), 100, 8), 1, 8);
+
         foreach ($markets as $market){
-            $minAmount = bcmul($fetchMarkets[$market->base_currency]['min_amount'], $otcFee, 8);
+            $minAmount = $fetchMarkets[$market->base_currency]['min_amount'];
             $market->update([
                 'min_otc_amount' => $minAmount
             ]);

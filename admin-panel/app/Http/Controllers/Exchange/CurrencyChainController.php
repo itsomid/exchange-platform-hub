@@ -101,11 +101,11 @@ class CurrencyChainController extends Controller
     public function updateChains(Request $request, Currency $currency)
     {
         $validated = $request->validate([
-            'chains.*.min_deposit_amount' => 'required|numeric',
-            'chains.*.min_withdraw_amount' => 'required|numeric',
-            'chains.*.deposit_delay_minutes' => 'required|integer',
-            'chains.*.safe_confirmations' => 'required|integer',
-            'chains.*.exchange_withdrawal_fee' => 'required|numeric',
+            'chains.*.min_deposit_amount' => 'required|numeric|min:0',
+            'chains.*.min_withdraw_amount' => 'required|numeric|min:0',
+            'chains.*.deposit_delay_minutes' => 'required|integer|min:0',
+            'chains.*.safe_confirmations' => 'required|integer|min:0',
+            'chains.*.exchange_withdrawal_fee' => 'required|numeric|min:0',
             'chains.*.deposit_enabled' => 'nullable|boolean',
             'chains.*.withdraw_enabled' => 'nullable|boolean',
         ]);

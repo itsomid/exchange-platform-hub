@@ -54,25 +54,25 @@
                         <div class="row mt-5">
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label class="form-label" for="min_trade_amount">حداقل مقدار معامله در این
+                                    <label class="form-label" for="min_otc_amount">حداقل مقدار معامله در این
                                         بازار</label>
-                                    <input name="min_trade_amount" id="min_trade_amount" class="form-control"
+                                    <input name="min_otc_amount" id="min_otc_amount" class="form-control"
                                            placeholder="حداقل مقدار معامله در این بازار."
-                                           value="{{old('min_trade_amount')}}"
+                                           value="{{old('min_otc_amount')}}"
                                            required>
-                                    @error('min_trade_amount')
+                                    @error('min_otc_amount')
                                     <small class="text-danger">{{$message}}</small>
                                     @enderror
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label class="form-label" for="max_trade_amount">حداکثر مقدار معامله در این
+                                    <label class="form-label" for="max_otc_amount">حداکثر مقدار معامله در این
                                         بازار</label>
-                                    <input name="max_trade_amount" id="max_trade_amount" class="form-control"
+                                    <input name="max_otc_amount" id="max_otc_amount" class="form-control"
                                            placeholder="حداکثر مقدار معامله در این بازار."
-                                           value="{{formatNumber(old('min_trade_amount'),2)}}" required>
-                                    @error('max_trade_amount')
+                                           value="{{formatNumber(old('min_otc_amount'),2)}}" required>
+                                    @error('max_otc_amountmax_otc_amount')
                                     <small class="text-danger">{{$message}}</small>
                                     @enderror
                                 </div>

@@ -135,7 +135,8 @@
                             <td class="">
                                 <h4 class="font-number text-heading h5">
 
-                                    <span class="ms-1">{{formatNumberTrimZeros($market->activeExchangePrice->price)}}</span>
+                                    <span
+                                        class="ms-1">{{formatNumberTrimZeros($market->activeExchangePrice->price)}}</span>
 
                                     <small class="text-muted">USDT</small>
                                 </h4>
@@ -145,35 +146,41 @@
                                 <div
                                     class="badge rounded bg-label-{{ $market->activeExchangePrice->price_change_percentage < 0 ? 'danger' : 'success' }}"
                                     dir="ltr">
-                                    {{ $market->activeExchangePrice->price_change_percentage > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->price_change_percentage, 2) }}
+                                    {{ $market->activeExchangePrice->price_change_percentage > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->price_change_percentage) }}
                                     %
                                 </div>
                             </td>
                             <td class="font-number text-heading">
-                                <div class="badge rounded bg-label-{{ $market->activeExchangePrice->exchange_profit_sell < 0 ? 'danger' : 'success' }} me-3"
-                                     dir="ltr">
-                                    {{ $market->activeExchangePrice->exchange_profit_sell > 0 ? '+' : '' }}{{$market->activeExchangePrice->exchange_profit_sell * 100 }}%
+                                <div
+                                    class="badge rounded bg-label-{{ $market->activeExchangePrice->exchange_profit_sell < 0 ? 'danger' : 'success' }} me-3"
+                                    dir="ltr">
+                                    {{ $market->activeExchangePrice->exchange_profit_sell > 0 ? '+' : '' }}{{formatNumber($market->activeExchangePrice->exchange_profit_sell )}}
+                                    %
                                 </div>
-                                <span class="ms-1 h5">{{formatNumberTrimZeros($market->activeExchangePrice->exchange_sell_price)}}</span>
+                                <span
+                                    class="ms-1 h5">{{formatNumberTrimZeros($market->activeExchangePrice->exchange_sell_price)}}</span>
                                 <small class="text-muted">USDT</small>
 
                             </td>
                             <td class="font-number text-heading ">
-                                <div class="badge rounded bg-label-{{ $market->activeExchangePrice->exchange_profit_buy < 0 ? 'danger' : 'success' }} me-3"
-                                     dir="ltr">
-                                    {{ $market->activeExchangePrice->exchange_profit_buy > 0 ? '+' : '' }}{{$market->activeExchangePrice->exchange_profit_buy * 100 }}%
+                                <div
+                                    class="badge rounded bg-label-{{ $market->activeExchangePrice->exchange_profit_buy < 0 ? 'danger' : 'success' }} me-3"
+                                    dir="ltr">
+                                    {{ $market->activeExchangePrice->exchange_profit_buy > 0 ? '+' : '' }}{{formatNumber($market->activeExchangePrice->exchange_profit_buy) }}
+                                    %
                                 </div>
-                                <span class="ms-1 h5">{{formatNumberTrimZeros($market->activeExchangePrice->exchange_buy_price)}}</span>
+                                <span
+                                    class="ms-1 h5">{{formatNumberTrimZeros($market->activeExchangePrice->exchange_buy_price)}}</span>
                                 <small class="text-muted">USDT</small>
                             </td>
                             <td class="fw-bold">
                                 {{ $market->activeExchangePrice->exchange->name }}
                             </td>
                             <td class="font-number ">
-                                {{formatNumberTrimZeros($market->min_trade_amount)}}
+                                {{formatNumberTrimZeros($market->min_otc_amount)}}
                             </td>
                             <td class="font-number">
-                                {{formatNumberTrimZeros($market->max_trade_amount)}}
+                                {{formatNumberTrimZeros($market->max_otc_amount)}}
                             </td>
                             <td>
                                 <span class="badge bg-label-{{$market->is_active?'success':'danger'}} me-1">
@@ -182,7 +189,8 @@
                             </td>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <a class="text-secondary me-3" href="{{ route('admin.market.edit', ['market' => $market->id]) }}">
+                                    <a class="text-secondary me-3"
+                                       href="{{ route('admin.market.edit', ['market' => $market->id]) }}">
                                         <i class="fa-light fa-pen-to-square fa-lg"></i>
                                     </a>
                                     <a class="text-secondary me-3" href="">

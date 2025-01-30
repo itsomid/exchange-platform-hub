@@ -22,8 +22,8 @@ class UpdateMarketRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'min_trade_amount' => ['required', 'numeric', 'min:0'],
-            'max_trade_amount' => ['required', 'numeric', 'gt:min_trade_amount'],
+            'min_otc_amount' => ['required', 'numeric', 'min:0'],
+            'max_otc_amount' => ['required', 'numeric', 'gt:min_otc_amount'],
             'exchange_profit_sell'   => ['required', 'numeric'],
             'exchange_profit_buy'   => ['required', 'numeric'],
             'is_active'        => ['nullable', 'boolean'],
@@ -33,8 +33,8 @@ class UpdateMarketRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'min_trade_amount' => str_replace(',', '', $this->min_trade_amount),
-            'max_trade_amount' => str_replace(',', '', $this->max_trade_amount),
+            'min_otc_amount' => str_replace(',', '', $this->min_otc_amount),
+            'max_otc_amount' => str_replace(',', '', $this->max_otc_amount),
         ]);
     }
 }
