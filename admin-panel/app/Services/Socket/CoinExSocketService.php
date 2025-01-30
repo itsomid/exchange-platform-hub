@@ -67,14 +67,14 @@ class CoinExSocketService
                             // Decode JSON data
                             $decodedData = json_decode($data, true);
                             if (json_last_error() !== JSON_ERROR_NONE) {
-                                echo 'Invalid JSON format: '.json_last_error_msg()."\n";
+                                echo 'Invalid JSON format: ' . json_last_error_msg() . "\n";
 
                                 return;
                             }
 
                             $this->processMessage($decodedData);
                         } catch (Throwable $e) {
-                            echo 'Error processing message: '.$e->getMessage()."\n";
+                            echo 'Error processing message: ' . $e->getMessage() . "\n";
                         }
                     });
 
@@ -129,19 +129,19 @@ class CoinExSocketService
         $baseCurrency = str_replace('USDT', '', $symbol);
 
         if (
-            ! isset($this->coinsPrice[$baseCurrency]) ||
+            !isset($this->coinsPrice[$baseCurrency]) ||
             $this->coinsPrice[$baseCurrency]['last'] !== $lastPrice ||
             $this->coinsPrice[$baseCurrency]['open'] !== $openPrice
         ) {
-            echo $baseCurrency.': last->'.$lastPrice.PHP_EOL;
-            echo $baseCurrency.': open->'.$openPrice.PHP_EOL;
+            echo $baseCurrency . ': last->' . $lastPrice . PHP_EOL;
+            echo $baseCurrency . ': open->' . $openPrice . PHP_EOL;
 
             // Update cached prices
             $this->coinsPrice[$baseCurrency] = [
                 'last' => $lastPrice,
                 'open' => $openPrice,
             ];
-            if (! isset($this->marketIds[$baseCurrency])) {
+            if (!isset($this->marketIds[$baseCurrency])) {
                 $market = Market::query()
                     ->where('base_currency', $baseCurrency)
                     ->first();
@@ -149,7 +149,7 @@ class CoinExSocketService
             }
 
             // Find the exchange price related to the market for CoinEx
-            if(! isset($this->exchangePrices[$this->marketIds[$baseCurrency]]) || time() - $this->exchangePrices[$this->marketIds[$baseCurrency]]['last_update'] > 60){
+            if (!isset($this->exchangePrices[$this->marketIds[$baseCurrency]]) || time() - $this->exchangePrices[$this->marketIds[$baseCurrency]]['last_update'] > 60) {
                 $exchangePriceModel = ExchangePrice::query()
                     ->where('market_id', $this->marketIds[$baseCurrency])
                     ->where('exchange_id', $this->coinexID)
@@ -169,11 +169,11 @@ class CoinExSocketService
                     'open_price' => $openPrice,
                 ]);
 
-            $sellPrice = bcmul($lastPrice, $this->exchangePrices[$this->marketIds[$baseCurrency]]['exchange_profit_sell'] / 100, 8);
-            $buyPrice = bcmul($lastPrice, $this->exchangePrices[$this->marketIds[$baseCurrency]]['exchange_profit_buy'] / 100, 8);
+            $sellPrice = bcmul($lastPrice, 12, 8);
+            $buyPrice = bcmul($lastPrice, ($this->exchangePrices[$this->marketIds[$baseCurrency]]['exchange_profit_buy'] / 100) + 1, 8);
 
-            $sellOpenPrice = bcmul($openPrice, $this->exchangePrices[$this->marketIds[$baseCurrency]]['exchange_profit_sell'] / 100, 8);
-            $buyOpenPrice = bcmul($openPrice, $this->exchangePrices[$this->marketIds[$baseCurrency]]['exchange_profit_buy'] / 100, 8);
+            $sellOpenPrice = bcmul($openPrice, ($this->exchangePrices[$this->marketIds[$baseCurrency]]['exchange_profit_sell'] / 100) + 1, 8);
+            $buyOpenPrice = bcmul($openPrice, ($this->exchangePrices[$this->marketIds[$baseCurrency]]['exchange_profit_buy'] / 100) + 1, 8);
 
             // Publish to Redis
             Redis::publish('market_prices', json_encode([
@@ -193,7 +193,7 @@ class CoinExSocketService
         return Market::query()
             ->whereHas('activeExchangePrice', function ($query) {
                 $query->where('exchange_id', $this->coinexID);
-            })->pluck('base_currency')->map(fn ($market) => $market.'USDT')
+            })->pluck('base_currency')->map(fn($market) => $market . 'USDT')
             ->toArray();
     }
 
@@ -211,7 +211,7 @@ class CoinExSocketService
             'id' => 1,
         ];
         $stream->send(json_encode($subscribeMessage));
-        echo 'Subscribed to markets: '.implode(', ', $markets)."\n";
+        echo 'Subscribed to markets: ' . implode(', ', $markets) . "\n";
     }
 
     private function checkForMarketChanges($stream): void
