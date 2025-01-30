@@ -170,10 +170,10 @@
                                 {{ $market->activeExchangePrice->exchange->name }}
                             </td>
                             <td class="font-number ">
-                                {{formatNumberTrimZeros($market->min_trade_amount,8)}}
+                                {{formatNumberTrimZeros($market->min_trade_amount)}}
                             </td>
                             <td class="font-number">
-                                {{formatNumberTrimZeros($market->max_trade_amount,2)}}
+                                {{formatNumberTrimZeros($market->max_trade_amount)}}
                             </td>
                             <td>
                                 <span class="badge bg-label-{{$market->is_active?'success':'danger'}} me-1">

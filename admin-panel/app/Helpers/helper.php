@@ -88,10 +88,9 @@ if (! function_exists('formatNumberTrimZeros')) {
         return $integerPart . $decimal . $decimalPart;
     }
 }
-//if (!function_exists('formatNumber')) {
-//    function formatNumber($number, $decimals = 2)
-//    {
-//        return number_format($number, $decimals);
-//    }
-//}
+if (!function_exists('shorten_hash')) {
+    function shorten_hash($hash, $prefix_length = 6, $suffix_length = 4) {
+        return substr($hash, 0, $prefix_length) . '...' . substr($hash, -$suffix_length);
+    }
+}
 

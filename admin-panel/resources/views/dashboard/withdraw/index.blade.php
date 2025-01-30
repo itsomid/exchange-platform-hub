@@ -204,9 +204,24 @@
                             $currentParams = request()->except('sortByCreatedAt');
                             $newSortDirection = request()->input('sortByCreatedAt') == 'asc' ? 'desc' : 'asc';
                         @endphp
-                        <a href="{{ route('admin.transaction.index', array_merge($currentParams, ['sortByCreatedAt' => $newSortDirection])) }}"
+                        <a href="{{ route('admin.withdrawal.index', array_merge($currentParams, ['sortByCreatedAt' => $newSortDirection])) }}"
                            class="text-black">
-                            تاریخ و زمان
+                            زمان درخواست
+                            @if( request()->input('sortByCreatedAt') == 'asc')
+                                <span>&uarr;</span>
+                            @else
+                                <span>&darr;</span>
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        @php
+                            $currentParams = request()->except('sortByCreatedAt');
+                            $newSortDirection = request()->input('sortByCreatedAt') == 'asc' ? 'desc' : 'asc';
+                        @endphp
+                        <a href="{{ route('admin.withdrawal.index', array_merge($currentParams, ['sortByCreatedAt' => $newSortDirection])) }}"
+                           class="text-black">
+                            زمان تکمیل برداشت
                             @if( request()->input('sortByCreatedAt') == 'asc')
                                 <span>&uarr;</span>
                             @else
@@ -242,7 +257,7 @@
                                      class="rounded-circle img-fluid" width="30">
                                 {{$withdraw->currency_symbol}}
                             </td>
-                            <td>{{$withdraw->currencyChainName->chain_name}}</td>
+                            <td>{{$withdraw->currencyChain->chain_name}}</td>
                             <td class="font-number" dir="ltr">
                                 <h6 class="mb-0">{{formatNumberTrimZeros($withdraw->amount)}}</h6>
                             </td>
@@ -251,89 +266,35 @@
                             </td>
                             <td class="font-number">
                                 <h6 class="mb-0">
-                                    @if($withdraw->address)
-
-                                        @php
-                                            $chain = $withdraw->currency_chain; // Assuming $deposit->chain holds the blockchain type (e.g., 'BTC', 'ERC20')
-                                            $address = $withdraw->address;
-
-                                            // Define node providers with their address URL patterns
-                                            $nodeProviderLinks = [
-                                                'BTC' => 'https://blockchair.com/bitcoin/address/{address}',
-                                                'ETH' => 'https://etherscan.io/address/{address}',
-                                                'ERC20' => 'https://etherscan.io/address/{address}',
-                                                'BEP20' => 'https://bscscan.com/address/{address}',
-                                                'TRC20' => 'https://tronscan.org/#/address/{address}',
-                                                'TRX' => 'https://tronscan.org/#/address/{address}',
-                                                'BSC' => 'https://bscscan.com/address/{address}',
-                                                'DOGE' => 'https://blockcypher.com/doge/address/{address}',
-                                            ];
-
-                                            // Get the appropriate link for the chain type
-                                            $targetLink = $nodeProviderLinks[$chain] ?? null;
-
-                                            // Replace placeholder with the actual address
-                                            if ($targetLink) {
-                                                $targetLink = str_replace('{address}', $address, $targetLink);
-                                            }
-                                        @endphp
-
-                                        @if($targetLink)
-                                            <a href="{{ $targetLink }}" target="_blank" class="me-1">
-                                                <i class="fa-regular fa-clone"></i>
-                                            </a>
-                                        @else
-                                            <span>Link not available</span>
-                                        @endif
-                                        <small>{{ $withdraw->address }}</small>
+                                    @if($withdraw->explorer_address_url)
+                                        <a href="{{ $withdraw->explorer_address_url }}" target="_blank" class="me-1">
+                                            <i class="fa-regular fa-clone"></i>
+                                        </a>
+                                        <small>{{ shorten_hash($withdraw->address) }}</small>
                                     @else
                                         <span>N/A Address</span>
                                     @endif
-
                                 </h6>
                             </td>
 
                             <td class="font-number">
-                                @if($withdraw->transaction_hash)
-                                    @php
-                                        $chain = $withdraw->currency_chain;
-                                        $transactionHash = $withdraw->transaction_hash;
-
-                                        // Define node providers with their URL patterns
-                                        $nodeProviderLinks = [
-                                            'BTC' => 'https://blockchair.com/bitcoin/transaction/{hash}',
-                                            'ETH' => 'https://etherscan.io/tx/{hash}',
-                                            'ERC20' => 'https://etherscan.io/tx/{hash}',
-                                            'BEP20' => 'https://bscscan.com/tx/{hash}',
-                                            'TRC20' => 'https://tronscan.org/#/transaction/{hash}',
-                                            'TRX' => 'https://tronscan.org/#/transaction/{hash}',
-                                            'BSC' => 'https://bscscan.com/tx/{hash}',
-                                            'DOGE' => 'https://blockcypher.com/doge/tx/{hash}',
-                                        ];
-
-                                        // Get the appropriate link for the chain type
-                                        $targetLink = $nodeProviderLinks[$chain] ?? null;
-
-                                        // Replace placeholder with the actual transaction hash
-                                        if ($targetLink) {
-                                            $targetLink = str_replace('{hash}', $transactionHash, $targetLink);
-                                        }
-                                    @endphp
-
-                                    @if($targetLink)
-                                        <a href="{{ $targetLink }}" target="_blank" class="me-1">
+                                <h6 class="mb-0">
+                                    @if($withdraw->explorer_tx_url && $withdraw->transaction_hash)
+                                        <a href="{{ $withdraw->explorer_tx_url }}" target="_blank" class="me-1">
                                             <i class="fa-regular fa-clone"></i>
                                         </a>
+                                        <small>{{ shorten_hash($withdraw->transaction_hash) }}</small>
                                     @else
-                                        <span>Link not available</span>
+                                        <span>N/A TxID</span>
                                     @endif
-                                @else
-                                    <span>بدون هش تراکنش</span>
-                                @endif
-                                <small>{{ $withdraw->transaction_hash }}</small>
+                                </h6>
+
                             </td>
                             <td class="font-number">
                                 {{\App\Helpers\DateFormatter::convertToPersianDate($withdraw->created_at,'H:i:s %Y/%m/%d')}}
+                            </td>
+                            <td class="font-number">
+                                {{\App\Helpers\DateFormatter::convertToPersianDate($withdraw->confirmed_at,'H:i:s %Y/%m/%d')}}
                             </td>
 
                             <td>
