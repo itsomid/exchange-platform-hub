@@ -19,8 +19,8 @@ class WithdrawalSeeder extends Seeder
 
     private array $currencies = [
         ['symbol' => 'BTC', 'chain' => 'BTC', 'address' => 'bc1qsl4egjdl8s3mw822mmakvzsup7sedkd4n5755d'],
-        ['symbol' => 'ETH', 'chain' => 'ETH', 'address' => '0x1234567890abcdef1234567890abcdef12345678'],
-        ['symbol' => 'TRX', 'chain' => 'TRX', 'address' => 'T1234567890abcdef1234567890abcdef12345678'],
+        ['symbol' => 'ETH', 'chain' => 'ERC20', 'address' => '0x1234567890abcdef1234567890abcdef12345678'],
+        ['symbol' => 'TRX', 'chain' => 'TRC20', 'address' => 'T1234567890abcdef1234567890abcdef12345678'],
         ['symbol' => 'DOGE', 'chain' => 'DOGE', 'address' => 'D1234567890abcdef1234567890abcdef12345678'],
         ['symbol' => 'BNB', 'chain' => 'BSC', 'address' => 'bnb1qsl4egjdl8s3mw822mmakvzsup7sedkd4n5755d'],
         ['symbol' => 'USDT', 'chain' => 'ERC20', 'address' => '0xabcdefabcdefabcdefabcdefabcdefabcdef'],
@@ -37,9 +37,9 @@ class WithdrawalSeeder extends Seeder
             for ($i = 1; $i < 6; $i++) {
                 $date = $startDate->copy()->addDays($i);
 
-                $this->processWithdrawals(0.22, 0, 3, true, $currency, $date);
+//                $this->processWithdrawals(0.14, 0, 3, true, $currency, $date);
                 $this->processWithdrawals($this->generateRealisticBalance($currency['symbol']), 3, 3, true, $currency, $date);
-                $this->processWithdrawals($this->generateAdminApprovalBalance($currency['symbol']), 3, 3, true, $currency, $date);
+//                $this->processWithdrawals($this->generateAdminApprovalBalance($currency['symbol']), 3, 3, true, $currency, $date);
 //                $this->processWithdrawals(0.2, 6, 3, false, $currency, $date);
             }
         }
@@ -88,13 +88,13 @@ class WithdrawalSeeder extends Seeder
             case 'ETH':
                 return $this->randomFloat(0.001, 2, 8);
             case 'DOGE':
-                return $this->randomFloat(10, 1000, 2);
+                return $this->randomFloat(50, 100, 2);
             case 'BNB':
                 return $this->randomFloat(0.5, 1, 8);
             case 'USDT':
-                return $this->randomFloat(50, 10000, 2);
+                return $this->randomFloat(50, 1000, 2);
             case 'TRX':
-                return $this->randomFloat(10, 1000, 2);
+                return $this->randomFloat(40, 100, 2);
             default:
                 return $this->randomFloat(0, 1000, 8); // Default range for other currencies
         }
