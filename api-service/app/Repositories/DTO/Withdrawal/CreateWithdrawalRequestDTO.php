@@ -3,6 +3,7 @@
 namespace App\Repositories\DTO\Withdrawal;
 
 use App\Enums\WithdrawalStatusEnum;
+use App\Services\Transaction\DTO\GetAllDepositWithdrawResponseDTO;
 
 class CreateWithdrawalRequestDTO
 {
@@ -102,5 +103,17 @@ class CreateWithdrawalRequestDTO
     public function getStatus(): WithdrawalStatusEnum
     {
         return $this->status;
+    }
+
+
+    public function setExplorerAddressUrl(string $explorerAddressUrl): CreateWithdrawalRequestDTO
+    {
+        $this->explorerAddressUrl = $explorerAddressUrl;
+        return $this;
+    }
+
+    public function getExplorerAddressUrl(): string
+    {
+        return $this->explorerAddressUrl;
     }
 }
