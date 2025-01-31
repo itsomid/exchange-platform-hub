@@ -186,6 +186,7 @@
                             @endif
                         </a>
                     </th>
+                    <th>ارزش</th>
                     <th>آدرس</th>
                     <th>(TxID) لینک تراکنش</th>
                     <th>
@@ -241,14 +242,24 @@
                                     <small>{{$deposit->user->username}}</small>
                                 </div>
                             </td>
+
                             <td class="text-heading fw-medium">
                                 <img src="{{asset($deposit->currency->coinLogo())}}"
                                      class="rounded-circle img-fluid" width="30">
                                 {{$deposit->currency_symbol}}
                             </td>
+
                             <td>{{$deposit->currencyChain->chain_name}}</td>
+
                             <td class="font-number" dir="ltr">
                                 <h6 class="mb-0">{{formatNumberTrimZeros($deposit->amount)}}</h6>
+                            </td>
+
+                            <td dir="ltr">
+                                <h6 class="font-number text-heading mb-0">
+                                    <span class="ms-1">{{formatNumberTrimZeros($deposit->usdt_value)}}</span>
+                                    <small class="text-muted">USDT</small>
+                                </h6>
                             </td>
 
                             <td class="font-number">

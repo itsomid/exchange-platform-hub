@@ -197,6 +197,7 @@
                             @endif
                         </a>
                     </th>
+                    <th>ارزش</th>
                     <th>آدرس</th>
                     <th>(TxID) لینک تراکنش</th>
                     <th>
@@ -263,6 +264,12 @@
                             </td>
                             <td class="font-number" dir="ltr">
                                 <h6 class="mb-0">{{formatNumberTrimZeros($withdraw->total_fee)}}</h6>
+                            </td>
+                            <td dir="ltr">
+                                <h6 class="font-number text-heading mb-0">
+                                    <span class="ms-1">{{formatNumberTrimZeros($withdraw->usdt_value)}}</span>
+                                    <small class="text-muted">USDT</small>
+                                </h6>
                             </td>
                             <td class="font-number">
                                 <h6 class="mb-0">

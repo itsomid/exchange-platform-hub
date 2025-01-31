@@ -16,7 +16,7 @@ class Withdrawal extends Model
     public $filterNameSpace = 'App\Filters\WithdrawalFilter';
 
     protected $fillable = [
-        'user_id', 'admin_id', 'wallet_id', 'currency_chain', 'currency_symbol', 'amount', 'total_fee', 'address', 'transaction_hash', 'status', 'description', 'confirmed_at',
+        'user_id', 'admin_id', 'wallet_id', 'currency_chain', 'currency_symbol', 'amount', 'total_fee','exchange_fee','network_fee','usdt_value', 'address', 'transaction_hash', 'status', 'description', 'confirmed_at',
     ];
 
     protected function casts(): array

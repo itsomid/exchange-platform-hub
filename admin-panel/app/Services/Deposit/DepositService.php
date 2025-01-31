@@ -28,6 +28,7 @@ class DepositService
             // Update deposit status
             $deposit->update([
                 'amount' => $amount,
+                'usdt_value' => $deposit->currency->exchangePrice * $amount,
                 'transaction_hash' => $transactionHash,
                 'status' => 'confirmed',
                 'description' => 'admin_test',

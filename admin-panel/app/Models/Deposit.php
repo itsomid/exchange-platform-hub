@@ -17,7 +17,7 @@ class Deposit extends Model
     public $filterNameSpace = 'App\Filters\DepositFilter';
 
     protected $fillable = [
-        'user_id', 'currency_chain', 'currency_symbol', 'amount', 'address', 'status', 'description', 'expiration_date',
+        'user_id', 'currency_chain', 'currency_symbol', 'amount','usdt_value', 'address', 'status', 'description', 'expiration_date',
     ];
     protected $casts = [
         'status' => DepositStatusEnum::class

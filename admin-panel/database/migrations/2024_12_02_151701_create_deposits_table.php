@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('currency_symbol');
             $table->string('currency_chain');
             $table->decimal('amount', 18, 8)->nullable();
+            $table->decimal('usdt_value', 20, 8)->nullable();
             $table->string('address')->nullable();
             $table->string('transaction_hash', 96)->nullable()->unique();
             $table->string('status')->default('pending');

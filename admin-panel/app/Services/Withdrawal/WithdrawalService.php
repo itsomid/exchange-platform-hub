@@ -68,6 +68,8 @@ class WithdrawalService
             $exchangeFee = CurrencyChain::whereChain($currencyChain)->value('exchange_withdrawal_fee');
             $network_fee = CurrencyChain::whereChain($currencyChain)->value('network_fee');
 
+            $value_in_usdt = $currency->exchangePrice * $totalAmount;
+
             $amountReceivedByUser = $totalAmount - $total_fee;
 
             // Validate sufficient balance
@@ -91,6 +93,7 @@ class WithdrawalService
                 'total_fee' => $total_fee,
                 'exchange_fee' => $exchangeFee,
                 'network_fee' => $network_fee,
+                'usdt_value' => $value_in_usdt,
                 'address' => $address,
                 'status' => $totalAmount >= $currency->max_auto_withdraw_amount ? WithdrawalStatusEnum::AWAITING_APPROVAL : WithdrawalStatusEnum::PENDING,
                 'created_at' => $timestamp,
