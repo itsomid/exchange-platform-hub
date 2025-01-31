@@ -14,7 +14,9 @@ class CreateWithdrawalRequestDTO
 
     private string $amount;
 
-    private string $fee;
+    private string $networkFee;
+
+    private string $exchangeFee;
 
     private string $address;
 
@@ -68,16 +70,16 @@ class CreateWithdrawalRequestDTO
         return $this->amount;
     }
 
-    public function setFee(string $fee): CreateWithdrawalRequestDTO
+    public function setNetworkFee(string $networkFee): CreateWithdrawalRequestDTO
     {
-        $this->fee = $fee;
+        $this->networkFee = $networkFee;
 
         return $this;
     }
 
-    public function getFee(): string
+    public function getNetworkFee(): string
     {
-        return $this->fee;
+        return $this->networkFee;
     }
 
     public function setAddress(string $address): CreateWithdrawalRequestDTO
@@ -102,5 +104,17 @@ class CreateWithdrawalRequestDTO
     public function getStatus(): WithdrawalStatusEnum
     {
         return $this->status;
+    }
+
+    public function setExchangeFee(string $exchangeFee): CreateWithdrawalRequestDTO
+    {
+        $this->exchangeFee = $exchangeFee;
+
+        return $this;
+    }
+
+    public function getExchangeFee(): string
+    {
+        return $this->exchangeFee;
     }
 }

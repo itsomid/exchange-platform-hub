@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Enums\WithdrawalStatusEnum;
 use App\Models\Withdrawal;
 use App\Repositories\DTO\Withdrawal\CreateWithdrawalRequestDTO;
 use App\Repositories\Interfaces\WithdrawalRepositoryInterface;
@@ -16,7 +17,9 @@ class WithdrawalRepository implements WithdrawalRepositoryInterface
             'status' => $requestDTO->getStatus(),
             'user_id' => $requestDTO->getUserId(),
             'address' => $requestDTO->getAddress(),
-            'fee' => $requestDTO->getFee(),
+            'network_fee' => $requestDTO->getNetworkFee(),
+            'exchange_fee' => $requestDTO->getExchangeFee(),
+            'total_fee' => bcadd(toDecimalString($requestDTO->getExchangeFee()), toDecimalString($requestDTO->getNetworkFee()), 8),
             'currency_chain' => $requestDTO->getCurrencyChain(),
             'currency_symbol' => $requestDTO->getCurrencySymbol(),
         ]);
@@ -28,6 +31,14 @@ class WithdrawalRepository implements WithdrawalRepositoryInterface
             ->where('user_id', $userId)
             ->when(! empty($currencySymbol), fn ($q) => $q->where('currency_symbol', $currencySymbol))
             ->latest()
+            ->get();
+    }
+
+    public function getAllPending(): Collection
+    {
+        return Withdrawal::query()
+            ->with('currency.chains', 'wallet', 'user')
+            ->where('status', WithdrawalStatusEnum::PENDING)
             ->get();
     }
 }

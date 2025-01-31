@@ -36,4 +36,9 @@ if (! function_exists('formatNumberTrimZeros')) {
         // Otherwise, recombine integer and decimal parts with the desired decimal separator
         return $integerPart.$decimal.$decimalPart;
     }
+
+    function toDecimalString($number, $precision = 8): string
+    {
+        return sprintf('%.'.$precision.'f', (float) $number);
+    }
 }

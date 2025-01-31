@@ -32,6 +32,11 @@ class Wallet extends Model
         return $this->belongsTo(Market::class, 'currency_symbol', 'base_currency');
     }
 
+    public function currency(): BelongsTo
+    {
+        return $this->belongsTo(Currency::class, 'currency_symbol', 'symbol');
+    }
+
     public function getAvailableAttribute(): string
     {
         return bcsub($this->balance, $this->locked_balance, 8);
