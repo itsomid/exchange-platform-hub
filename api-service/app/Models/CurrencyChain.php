@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\CurrencyBlockChainNameEnum;
 use App\Enums\CurrencyChainEnum;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -20,6 +21,11 @@ class CurrencyChain extends Model
         'chain' => CurrencyChainEnum::class,
         'blockchain_name' => CurrencyBlockChainNameEnum::class,
     ];
+
+    public function currency(): BelongsTo
+    {
+        return $this->belongsTo(Currency::class);
+    }
 
     public function scopeTotalWithdrawalFee($query, $currencyChain)
     {

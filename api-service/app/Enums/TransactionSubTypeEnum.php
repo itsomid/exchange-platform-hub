@@ -15,7 +15,9 @@ enum TransactionSubTypeEnum: string
     case REFERRAL_INTRODUCER = 'introducer';
     case REFERRAL_FRIEND = 'friend';
 
-    case WITHDRAWAL_FEE = 'withdrawal_fee';
+    case WITHDRAWAL_EXCHANGE_FEE = 'withdrawal_exchange_fee';
+    case WITHDRAWAL_NETWORK_FEE = 'withdrawal_network_fee';
+    case HD_WALLET_FEE = 'hd_wallet_fee';
 
     case OTHER = 'other';
     case COINEX = 'coinex';
