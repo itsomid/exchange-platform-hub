@@ -54,7 +54,12 @@ class DepositSeeder extends Seeder
                         ]
                     );
 
-                    $amount = rand(1, 100) / 100; // Random deposit amount between 0.01 and 1.00
+                    // Generate appropriate amount based on currency
+                    $amount = match($currency['symbol']) {
+                        'USDT', 'TRX', 'DOGE' => $this->generateAmount(100, 1000,2),
+                        default => $this->generateAmount(0.01, 0.3) // For BTC, ETH, BNB
+                    };
+
                     $transactionHash = 'txhash_' . bin2hex(random_bytes(10));
 
                     $depositService->confirmDeposit($deposit->id, $walletChain->wallet, $amount, $transactionHash);
@@ -67,5 +72,14 @@ class DepositSeeder extends Seeder
             }
         }
 
+
+    }
+
+    private function generateAmount(float $min, float $max, int $decimals  = 8): float
+    {
+        $scale = pow(10, $decimals);
+        $min = $min * $scale;
+        $max = $max * $scale;
+        return mt_rand($min, $max) / $scale;
     }
 }

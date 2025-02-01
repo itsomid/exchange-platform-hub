@@ -16,7 +16,7 @@ class Withdrawal extends Model
     public $filterNameSpace = 'App\Filters\WithdrawalFilter';
 
     protected $fillable = [
-        'user_id', 'admin_id', 'wallet_id', 'currency_chain', 'currency_symbol', 'amount', 'total_fee', 'address', 'transaction_hash', 'status', 'description', 'confirmed_at',
+        'user_id', 'admin_id', 'wallet_id', 'currency_chain', 'currency_symbol', 'amount', 'total_fee','exchange_fee','network_fee','usdt_value', 'address', 'transaction_hash', 'status', 'description', 'confirmed_at',
     ];
 
     protected function casts(): array
@@ -40,7 +40,7 @@ class Withdrawal extends Model
     {
         return $this->belongsTo(Currency::class, 'currency_symbol', 'symbol');
     }
-    public function currencyChainName()
+    public function currencyChain()
     {
         return $this->hasOneThrough(
             CurrencyChain::class,
@@ -72,6 +72,25 @@ class Withdrawal extends Model
             ->where(function ($query) {
                 $query->where('currency_symbol', $this->currency_symbol);
             });
+    }
+
+    // app/Models/Withdraw.php
+    public function getExplorerAddressUrlAttribute()
+    {
+        if (!$this->address || !$this->currencyChain?->explorer_address_url) {
+            return null;
+        }
+
+        return str_replace('{address}', $this->address, $this->currencyChain->explorer_address_url);
+    }
+
+    public function getExplorerTxUrlAttribute()
+    {
+        if (!$this->transaction_hash || !$this->currencyChain?->explorer_tx_url) {
+            return null;
+        }
+
+        return str_replace('{hash}', $this->transaction_hash, $this->currencyChain->explorer_tx_url);
     }
 
 }

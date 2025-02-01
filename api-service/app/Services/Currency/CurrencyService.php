@@ -18,6 +18,7 @@ class CurrencyService
         $model = $this->currencyRepository
             ->getCurrencyWithChains($requestDTO->getSymbol());
 
+
         return resolve(GetConfigResponseDTO::class)
             ->setName($model->name)
             ->setSymbol($model->symbol)
@@ -30,7 +31,7 @@ class CurrencyService
                 ->setWithdrawEnabled($item->withdraw_enabled)
                 ->setDepositDelayMinutes($item->deposit_delay_minutes)
                 ->setSafeConfirmations($item->safe_confirmations)
-                ->setWithdrawalFee(bcadd($item->exchange_fee, $item->network_fee, config('bitexroom.scale_precision')))
+                ->setWithdrawalFee(bcadd($item->exchange_withdrawal_fee, $item->network_fee, config('bitexroom.scale_precision')))
                 ->setWithdrawPrecision($item->withdrawal_precision)
                 ->setMemo($item->memo)
                 ->setIsMemoRequiredForDeposit($item->is_memo_required_for_deposit)
@@ -41,6 +42,7 @@ class CurrencyService
     {
         $allCurrencies = $this->currencyRepository
             ->getAllCurrencyWithChains();
+
 
         return $allCurrencies->map(fn (Currency $model) => resolve(GetConfigResponseDTO::class)
             ->setName($model->name)
@@ -56,7 +58,11 @@ class CurrencyService
                 ->setWithdrawEnabled($item->withdraw_enabled)
                 ->setDepositDelayMinutes($item->deposit_delay_minutes)
                 ->setSafeConfirmations($item->safe_confirmations)
-                ->setWithdrawalFee(bcadd($item->exchange_fee, $item->network_fee, config('bitexroom.scale_precision')))
+                ->setWithdrawalFee(bcadd(
+                    number_format((float) ($item->exchange_withdrawal_fee ?? 0), 8, '.', ''),
+                    number_format((float) ($item->network_fee ?? 0), 8, '.', ''),
+                    (int) (config('bitexroom.scale_precision') ?? 8)
+                ))
                 ->setWithdrawPrecision($item->withdrawal_precision)
                 ->setMemo($item->memo)
                 ->setIsMemoRequiredForDeposit($item->is_memo_required_for_deposit)

@@ -43,6 +43,8 @@ class DepositWithdrawCollection extends ResourceCollection
             'wallet_address' => $responseDTO->getAddress(),
             'type' => __('enum.transaction-type.'.$responseDTO->getType()->name),
             'status' => __('enum.deposit-withdrawal.'.$responseDTO->getStatus()),
+            'explorer_address_url'=> $responseDTO->getExplorerAddressUrl(),
+            'explorer_tx_url'=> $responseDTO->getExplorerTxUrl(),
             'confirmed_at' => $responseDTO->getConfirmedAt(),
             'created_at' => $responseDTO->getCreatedAt(),
         ])->toArray();

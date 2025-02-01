@@ -29,6 +29,15 @@ class MarketSeeder extends Seeder
         $binance = Exchange::where('slug', 'binance')->first();
         $coinex = Exchange::where('slug', 'coinex')->first();
 
+        // Define actual prices for each base currency (in USDT)
+        $priceMap = [
+            'BTC' => 104300.00,    // Bitcoin price
+            'ETH' => 3266.24,     // Ethereum price
+            'DOGE' => 0.3278,       // Dogecoin price
+            'TRX' => 0.2547,        // Tron price
+            'BNB' => 678.22,      // Binance Coin price
+        ];
+
         // Insert markets for each pair (without price and exchange_profit, as they are handled in ExchangePrice)
         $markets = [
             ['base_currency' => $btc->symbol, 'quote_currency' => $usdt->symbol, 'min_trade_amount' => 0.001, 'max_trade_amount' => 1000,  'min_otc_amount' => 0.00005000, 'max_otc_amount' => 1000],
@@ -51,16 +60,16 @@ class MarketSeeder extends Seeder
             ]);
 
 
-            ExchangePrice::query()->create(['market_id' => $market->id, 'exchange_id' => $coinex->id, 'price' => 45010.00, 'exchange_profit_sell' => 0.01, 'exchange_profit_buy' => -0.02]);
+            $currentPrice = $priceMap[$marketData['base_currency']];
 
-//            foreach ($exchangePrices as $exchangePriceData) {
-//                ExchangePrice::create([
-//                    'market_id' => $market->id,
-//                    'exchange_id' => $exchangePriceData['exchange_id'],
-//                    'price' => $exchangePriceData['price'],
-//                    'exchange_profit' => $exchangePriceData['exchange_profit'],
-//                ]);
-//            }
+            // Create exchange price entry with actual price
+            ExchangePrice::create([
+                'market_id' => $market->id,
+                'exchange_id' => $coinex->id,
+                'price' => $currentPrice,
+                'exchange_profit_sell' => 3,
+                'exchange_profit_buy' => -2
+            ]);
         }
     }
 }

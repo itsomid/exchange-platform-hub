@@ -21,6 +21,7 @@ return new class extends Migration
             $table->decimal('total_fee', 20, 8)->default(0); // Withdraw Total fee (optional)
             $table->decimal('exchange_fee', 20, 8)->default(0); // Exchange fee (optional)
             $table->decimal('network_fee', 20, 8)->default(0); // Exchange fee (optional)
+            $table->decimal('usdt_value', 20, 8)->nullable();
             $table->string('address')->nullable(); // Withdrawal address
             $table->string('transaction_hash', 96)->nullable()->unique();
             $table->string('status', 50)->default('pending'); // Status of withdrawal (e.g., pending, completed, failed)

@@ -26,6 +26,9 @@ class GetAllDepositWithdrawResponseDTO
 
     private ?Carbon $confirmedAt;
 
+    private ?string $explorerAddressUrl;
+    private ?string $explorerTxUrl;
+
     public function setCurrencySymbol(string $currencySymbol): self
     {
         $this->currencySymbol = $currencySymbol;
@@ -143,5 +146,27 @@ class GetAllDepositWithdrawResponseDTO
     public function getId(): int
     {
         return $this->id;
+    }
+
+    public function setExplorerAddressUrl(?string $explorerAddressUrl): self
+    {
+        $this->explorerAddressUrl = $explorerAddressUrl;
+        return $this;
+    }
+
+    public function getExplorerAddressUrl(): ?string
+    {
+        return $this->explorerAddressUrl;
+    }
+
+    public function setExplorerTxUrl(?string $explorerTxUrl): self
+    {
+        $this->explorerTxUrl = $explorerTxUrl;
+        return $this;
+    }
+
+    public function getExplorerTxUrl(): ?string
+    {
+        return $this->explorerTxUrl;
     }
 }

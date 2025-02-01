@@ -8,7 +8,7 @@
                 <div class="card-header pb-0">
 
                     <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-3 card-title">قیمت مرجع بازار </h5>
+                        <h5 class="mb-3 card-title">قیمت مرجع بازار ({{$market->activeExchange->name}})</h5>
                         <div class="avatar-group d-flex align-items-center assigned-avatar">
                             <div class="me-8">{{$market->base_currency}}/{{$market->quote_currency}}</div>
                             <div class="avatar avatar-md">
@@ -47,7 +47,7 @@
                             <div
                                 class="badge rounded bg-label-{{ $market->activeExchangePrice->exchange_profit_sell < 0 ? 'danger' : 'success' }}"
                                 dir="ltr">
-                                {{ $market->activeExchangePrice->exchange_profit_sell > 0 ? '+' : '' }}{{$market->activeExchangePrice->exchange_profit_sell * 100 }}%
+                                {{ $market->activeExchangePrice->exchange_profit_sell > 0 ? '+' : '' }}{{formatNumberTrimZeros($market->activeExchangePrice->exchange_profit_sell )}}%
                             </div>
                         </h5>
                         <div class="avatar-group d-flex align-items-center assigned-avatar">
@@ -88,7 +88,7 @@
                             <div
                                 class="badge rounded bg-label-{{ $market->activeExchangePrice->exchange_profit_buy < 0 ? 'danger' : 'success' }}"
                                 dir="ltr">
-                                {{ $market->activeExchangePrice->exchange_profit_buy > 0 ? '+' : '' }}{{$market->activeExchangePrice->exchange_profit_buy * 100 }}%
+                                {{ $market->activeExchangePrice->exchange_profit_buy > 0 ? '+' : '' }}{{formatNumberTrimZeros($market->activeExchangePrice->exchange_profit_buy)}}%
                             </div>
                         </h5>
                         <div class="avatar-group d-flex align-items-center assigned-avatar">
@@ -175,25 +175,25 @@
                         <div class="row mt-5">
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label class="form-label" for="min_trade_amount">حداقل مقدار معامله در این
+                                    <label class="form-label" for="min_otc_amount">حداقل مقدار معامله در این
                                         بازار</label>
-                                    <input name="min_trade_amount" id="min_trade_amount" class="form-control"
+                                    <input name="min_otc_amount" id="min_otc_amount" class="form-control"
                                            placeholder="حداقل مقدار معامله در این بازار."
-                                           value="{{$market->min_trade_amount}}"
+                                           value="{{formatNumberTrimZeros($market->min_otc_amount)}}"
                                            required>
-                                    @error('min_trade_amount')
+                                    @error('min_otc_amount')
                                     <small class="text-danger">{{$message}}</small>
                                     @enderror
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label class="form-label" for="max_trade_amount">حداکثر مقدار معامله در این
+                                    <label class="form-label" for="max_otc_amount">حداکثر مقدار معامله در این
                                         بازار</label>
-                                    <input name="max_trade_amount" id="max_trade_amount" class="form-control"
+                                    <input name="max_otc_amount" id="max_otc_amount" class="form-control"
                                            placeholder="حداکثر مقدار معامله در این بازار."
-                                           value="{{formatNumber($market->max_trade_amount,2)}}" required>
-                                    @error('max_trade_amount')
+                                           value="{{formatNumberTrimZeros($market->max_otc_amount)}}" required>
+                                    @error('max_otc_amount')
                                     <small class="text-danger">{{$message}}</small>
                                     @enderror
                                 </div>

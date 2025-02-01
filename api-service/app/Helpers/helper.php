@@ -19,22 +19,38 @@ if (! function_exists('formatNumberTrimZeros')) {
         // Split into integer and decimal parts
         $parts = explode('.', $numberString);
         $integerPart = $parts[0];
-        $decimalPart = $parts[1] ?? '';
+        $decimalPart = isset($parts[1]) ? $parts[1] : '';
 
-        // Trim trailing zeros from the decimal part
-        $decimalPart = rtrim($decimalPart, '0');
+        if ($number < 1) {
+            // Trim trailing zeros
+            $decimalPart = rtrim($decimalPart, '0');
+            // Count leading zeros in the decimal part
+            $leadingZeros = strspn($decimalPart, '0');
+
+            if ($leadingZeros >= 4) {
+                // Keep all digits (preserve significant digits after 4 zeros)
+                // No truncation needed since trailing zeros are already trimmed
+            } else {
+                // Truncate to 4 digits and trim any new trailing zeros
+                $decimalPart = substr($decimalPart, 0, 4);
+                $decimalPart = rtrim($decimalPart, '0');
+            }
+        } else {
+            // For numbers >= 1, truncate to 2 digits and trim trailing zeros
+            $decimalPart = substr($decimalPart, 0, 2);
+            $decimalPart = rtrim($decimalPart, '0');
+        }
 
         // Format the integer part with thousands separators
-        // (RegEx approach to insert $thousand every 3 digits from right to left)
         $integerPart = preg_replace('/\B(?=(\d{3})+(?!\d))/', $thousand, $integerPart);
 
-        // If decimal part is now empty, just return the integer part
+        // If decimal part is empty, return only the integer part
         if ($decimalPart === '') {
             return $integerPart;
         }
 
-        // Otherwise, recombine integer and decimal parts with the desired decimal separator
-        return $integerPart.$decimal.$decimalPart;
+        // Recombine parts with the decimal separator
+        return $integerPart . $decimal . $decimalPart;
     }
 
     function toDecimalString($number, $precision = 8): string

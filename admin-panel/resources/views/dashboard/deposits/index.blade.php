@@ -186,6 +186,7 @@
                             @endif
                         </a>
                     </th>
+                    <th>ارزش</th>
                     <th>آدرس</th>
                     <th>(TxID) لینک تراکنش</th>
                     <th>
@@ -241,99 +242,51 @@
                                     <small>{{$deposit->user->username}}</small>
                                 </div>
                             </td>
+
                             <td class="text-heading fw-medium">
                                 <img src="{{asset($deposit->currency->coinLogo())}}"
                                      class="rounded-circle img-fluid" width="30">
                                 {{$deposit->currency_symbol}}
                             </td>
-                            <td>{{$deposit->currencyChainName->chain_name}}</td>
+
+                            <td>{{$deposit->currencyChain->chain_name}}</td>
+
                             <td class="font-number" dir="ltr">
                                 <h6 class="mb-0">{{formatNumberTrimZeros($deposit->amount)}}</h6>
                             </td>
 
+                            <td dir="ltr">
+                                <h6 class="font-number text-heading mb-0">
+                                    <span class="ms-1">{{formatNumberTrimZeros($deposit->usdt_value)}}</span>
+                                    <small class="text-muted">USDT</small>
+                                </h6>
+                            </td>
+
                             <td class="font-number">
-
-                                @if($deposit->address)
-
-                                    @php
-                                        $chain = $deposit->currency_chain; // Assuming $deposit->chain holds the blockchain type (e.g., 'BTC', 'ERC20')
-                                        $address = $deposit->address;
-
-                                        // Define node providers with their address URL patterns
-                                        $nodeProviderLinks = [
-                                            'BTC' => 'https://blockchair.com/bitcoin/address/{address}',
-                                            'ETH' => 'https://etherscan.io/address/{address}',
-                                            'ERC20' => 'https://etherscan.io/address/{address}',
-                                            'BEP20' => 'https://bscscan.com/address/{address}',
-                                            'TRC20' => 'https://tronscan.org/#/address/{address}',
-                                            'TRX' => 'https://tronscan.org/#/address/{address}',
-                                            'BSC' => 'https://bscscan.com/address/{address}',
-                                            'DOGE' => 'https://blockcypher.com/doge/address/{address}',
-                                        ];
-
-                                        // Get the appropriate link for the chain type
-                                        $targetLink = $nodeProviderLinks[$chain] ?? null;
-
-                                        // Replace placeholder with the actual address
-                                        if ($targetLink) {
-                                            $targetLink = str_replace('{address}', $address, $targetLink);
-                                        }
-                                    @endphp
-                                    @if($targetLink)
-                                        <a href="{{ $targetLink }}" class="me-1" target="_blank">
+                                <h6 class="mb-0">
+                                    @if($deposit->explorer_address_url)
+                                        <a href="{{ $deposit->explorer_address_url }}" target="_blank" class="me-1">
                                             <i class="fa-regular fa-clone"></i>
                                         </a>
+                                        <small>{{ shorten_hash($deposit->address) }}</small>
                                     @else
-                                        <span>Link not available</span>
+                                        <span>N/A Address</span>
                                     @endif
-                                    <small class="mb-0 ">{{$deposit->address}}</small>
-                                @else
-                                    <span>N/A Address</span>
-                                @endif
-
-
+                                </h6>
                             </td>
 
                             <td class="font-number">
 
-                                @if($deposit->transaction_hash)
-
-                                    @php
-                                        $chain = $deposit->currency_chain;
-                                        $transactionHash = $deposit->transaction_hash;
-
-                                        // Define node providers with their URL patterns
-                                        $nodeProviderLinks = [
-                                            'BTC' => 'https://blockchair.com/bitcoin/transaction/{hash}',
-                                            'ETH' => 'https://etherscan.io/tx/{hash}',
-                                            'ERC20' => 'https://etherscan.io/tx/{hash}',
-                                            'BEP20' => 'https://bscscan.com/tx/{hash}',
-                                            'TRC20' => 'https://tronscan.org/#/transaction/{hash}',
-                                            'TRX' => 'https://tronscan.org/#/transaction/{hash}',
-                                            'BSC' => 'https://bscscan.com/tx/{hash}',
-                                            'DOGE' => 'https://blockcypher.com/doge/tx/{hash}',
-                                        ];
-
-                                        // Get the appropriate link for the chain type
-                                        $targetLink = $nodeProviderLinks[$chain] ?? null;
-
-                                        // Replace placeholder with the actual transaction hash
-                                        if ($targetLink) {
-                                            $targetLink = str_replace('{hash}', $transactionHash, $targetLink);
-                                        }
-                                    @endphp
-
-                                    @if($targetLink)
-                                        <a href="{{ $targetLink }}" target="_blank" class="me-1">
+                                <h6 class="mb-0">
+                                    @if($deposit->explorer_tx_url && $deposit->transaction_hash)
+                                        <a href="{{ $deposit->explorer_tx_url }}" target="_blank" class="me-1">
                                             <i class="fa-regular fa-clone"></i>
                                         </a>
+                                        <small>{{ shorten_hash($deposit->transaction_hash) }}</small>
                                     @else
-                                        <span>Link not available</span>
+                                        <span>N/A TxID</span>
                                     @endif
-                                    <small>{{ $deposit->transaction_hash }}</small>
-                                @else
-                                    <span>N/A TxId</span>
-                                @endif
+                                </h6>
 
                             </td>
                             <td class="font-number">

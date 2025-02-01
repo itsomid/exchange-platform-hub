@@ -17,7 +17,7 @@ class Deposit extends Model
     public $filterNameSpace = 'App\Filters\DepositFilter';
 
     protected $fillable = [
-        'user_id', 'currency_chain', 'currency_symbol', 'amount', 'address', 'status', 'description', 'expiration_date',
+        'user_id', 'currency_chain', 'currency_symbol', 'amount','usdt_value', 'address', 'status', 'description', 'expiration_date',
     ];
     protected $casts = [
         'status' => DepositStatusEnum::class
@@ -33,7 +33,7 @@ class Deposit extends Model
         return $this->belongsTo(Currency::class, 'currency_symbol', 'symbol');
     }
 
-    public function currencyChainName()
+    public function currencyChain()
     {
         return $this->hasOneThrough(
             CurrencyChain::class,
@@ -56,6 +56,24 @@ class Deposit extends Model
             ->where(function ($query) {
                 $query->where('currency_symbol', $this->currency_symbol);
             });
+    }
+
+    public function getExplorerAddressUrlAttribute()
+    {
+        if (!$this->address || !$this->currencyChain?->explorer_address_url) {
+            return null;
+        }
+
+        return str_replace('{address}', $this->address, $this->currencyChain->explorer_address_url);
+    }
+
+    public function getExplorerTxUrlAttribute()
+    {
+        if (!$this->transaction_hash || !$this->currencyChain?->explorer_tx_url) {
+            return null;
+        }
+
+        return str_replace('{hash}', $this->transaction_hash, $this->currencyChain->explorer_tx_url);
     }
 
 }

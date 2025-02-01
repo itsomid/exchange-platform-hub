@@ -23,12 +23,12 @@ class TransactionService
             $lists = $this->depositRepository->getDeposits($requestDTO->getUserId(), $requestDTO->getCurrencySymbol());
         } elseif ($requestDTO->getTransactionType() === TransactionTypeEnum::WITHDRAWAL) {
             $lists = $this->withdrawalRepository->getWithdrawals($requestDTO->getUserId(), $requestDTO->getCurrencySymbol());
-        } else {
-            $lists = $this->depositRepository->getDeposits($requestDTO->getUserId(), $requestDTO->getCurrencySymbol());
-            $withdrawalLists = $this->withdrawalRepository->getWithdrawals($requestDTO->getUserId(), $requestDTO->getCurrencySymbol());
-            $lists->merge($withdrawalLists);
-        }
 
+        } else {
+            $depositsList = $this->depositRepository->getDeposits($requestDTO->getUserId(), $requestDTO->getCurrencySymbol());
+            $withdrawalLists = $this->withdrawalRepository->getWithdrawals($requestDTO->getUserId(), $requestDTO->getCurrencySymbol());
+            $lists = $depositsList->merge($withdrawalLists);
+        }
         $lists = $lists->sortByDesc('created_at');
 
         return $lists->map(function (Withdrawal|Deposit $transaction) {
@@ -48,7 +48,10 @@ class TransactionService
                 ->setAddress($transaction->address)
                 ->setTransactionHashed($transaction->transaction_hash)
                 ->setConfirmedAt($transaction->confirmed_at)
+                ->setExplorerAddressUrl($transaction->explorer_address_url)
+                ->setExplorerTxUrl($transaction->explorer_tx_url)
                 ->setCurrencyChain($transaction->currency_chain);
+
         })->toArray();
     }
 }

@@ -29,6 +29,8 @@ return new class extends Migration
             $table->integer('withdrawal_precision')->default(8); // Precision for withdrawal (decimal places)
             $table->string('memo')->nullable(); // Memo required for deposit (if any)
             $table->boolean('is_memo_required_for_deposit')->default(false); // Is memo required for deposit
+            $table->string('explorer_address_url')->nullable(); // Add this column for blockchain explorer URL template
+            $table->string('explorer_tx_url')->nullable(); // Add this column for blockchain explorer URL template
             $table->timestamps();
         });
     }
