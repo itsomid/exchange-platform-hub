@@ -115,7 +115,6 @@ class WithdrawalService
             $chain = $withdrawal->currency->chains->where('chain', CurrencyChainEnum::tryFrom('BSC'))->first();
 
             try {
-                dd($withdrawal->currency->chains);
                 $responseDTO = $this->withdrawalService->getStatus(
                     resolve(GetWithdrawalStatusRequestDTO::class)
                         ->setWithdrawalId($withdrawal->id)
@@ -224,7 +223,7 @@ class WithdrawalService
                 'balance' => $exchangeWallet->balance,
                 'amount' => $exchangeWithdrawalFee,
                 'type' => TransactionTypeEnum::FEE,
-                'subtype' => TransactionSubTypeEnum::WITHDRAWAL_FEE,
+                'subtype' => TransactionSubTypeEnum::WITHDRAWAL_EXCHANGE_FEE,
                 'status' => TransactionStatusEnum::SUCCESS,
                 'description' => "کارمزد برداشت صرافی  {$exchangeWallet->currency_symbol} کاربر  "."(#{$withdrawal->user->id}) ".$withdrawal->user->username,
             ]);
@@ -234,7 +233,7 @@ class WithdrawalService
         if ($exchangeNetworkFee > 0) {
             // Exchange Network Fee
             Transaction::query()->create([
-                'user_id' => $withdrawal->user_id,
+                'user_id' => config('bitexroom.bitexroom_user_id'),
                 'wallet_id' => $exchangeWallet->id,
                 'withdrawal_id' => $withdrawal->id,
                 'amount' => $exchangeNetworkFee,
