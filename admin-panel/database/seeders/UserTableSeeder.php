@@ -29,7 +29,7 @@ class UserTableSeeder extends Seeder
             'last_name' => 'شبانی',
             'username' => 'o.shabani',
             'email' => 'o.shabani@hotmail.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('12345678'),
             'mobile' => '09121114113',
             'email_verified_at' => now()
         ]);
@@ -57,7 +57,7 @@ class UserTableSeeder extends Seeder
             'last_name' => 'عرب گل',
             'username' => 'a.arabgol',
             'email' => 'a.arabgol@vista-group.ir',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('12345678'),
             'mobile' => '09121110113',
             'email_verified_at' => now()
         ]);

@@ -135,7 +135,7 @@
                 </a>
             </li>
             <li class="menu-item @if(request()->is('admin/exchange/ref-exchanges*')) active @endif">
-                <a href="{{route('admin.market.index')}}" class="menu-link">
+                <a href="{{route('admin.exchange.index')}}" class="menu-link">
                     <i class="menu-icon fa-regular fa-display-chart-up-circle-dollar"></i>
                     <div>مدیریت صرافی های مرجع</div>
                 </a>
