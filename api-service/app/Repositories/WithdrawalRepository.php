@@ -14,6 +14,7 @@ class WithdrawalRepository implements WithdrawalRepositoryInterface
     {
         return Withdrawal::query()->create([
             'amount' => $requestDTO->getAmount(),
+            'usdt_value' => $requestDTO->getUSDTValue(),
             'status' => $requestDTO->getStatus(),
             'user_id' => $requestDTO->getUserId(),
             'address' => $requestDTO->getAddress(),

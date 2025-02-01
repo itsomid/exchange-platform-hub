@@ -22,6 +22,7 @@ class Withdrawal extends Model
         'currency_chain',
         'currency_symbol',
         'amount',
+        'usdt_value',
         'network_fee',
         'exchange_fee',
         'total_fee',
@@ -39,11 +40,14 @@ class Withdrawal extends Model
             'confirmed_at' => 'datetime',
         ];
     }
-    protected $appends = ['explorer_address_url' , 'explorer_tx_url'];
+
+    protected $appends = ['explorer_address_url', 'explorer_tx_url'];
+
     public function currency()
     {
         return $this->belongsTo(Currency::class, 'currency_symbol', 'symbol');
     }
+
     public function currencyChain()
     {
         return $this->hasOneThrough(
@@ -55,9 +59,10 @@ class Withdrawal extends Model
             'id' // Local key on Currency table
         );
     }
+
     public function getExplorerAddressUrlAttribute()
     {
-        if (!$this->address || !$this->currencyChain?->explorer_address_url) {
+        if (! $this->address || ! $this->currencyChain?->explorer_address_url) {
             return null;
         }
 
@@ -66,12 +71,13 @@ class Withdrawal extends Model
 
     public function getExplorerTxUrlAttribute()
     {
-        if (!$this->transaction_hash || !$this->currencyChain?->explorer_tx_url) {
+        if (! $this->transaction_hash || ! $this->currencyChain?->explorer_tx_url) {
             return null;
         }
 
         return str_replace('{hash}', $this->transaction_hash, $this->currencyChain->explorer_tx_url);
     }
+
     public function wallet(): BelongsTo
     {
         return $this->belongsTo(Wallet::class, 'currency_symbol', 'currency_symbol');

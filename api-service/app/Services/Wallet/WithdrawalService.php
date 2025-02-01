@@ -49,6 +49,7 @@ class WithdrawalService
             $fee = bcadd(toDecimalString($chain->network_fee), toDecimalString($chain->exchange_withdrawal_fee), 8);
             $amount = $requestDTO->getAmount();
             $receivedAmount = bcsub($amount, $fee, 8);
+            $value_in_usdt = $currency->exchangePrice * $amount;
 
             $withdrawalStatus = WithdrawalStatusEnum::PENDING;
             if (
@@ -69,6 +70,7 @@ class WithdrawalService
                     ->setCurrencyChain($requestDTO->getCurrencyChain())
                     ->setCurrencySymbol($requestDTO->getCurrencySymbol())
                     ->setAmount($amount)
+                    ->setUSDTValue($value_in_usdt)
                     ->setAddress($requestDTO->getAddress())
                     ->setNetworkFee($chain->network_fee)
                     ->setExchangeFee($chain->exchange_withdrawal_fee)

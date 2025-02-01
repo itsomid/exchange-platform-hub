@@ -14,6 +14,8 @@ class CreateWithdrawalRequestDTO
 
     private string $amount;
 
+    private string $USDTValue;
+
     private string $networkFee;
 
     private string $exchangeFee;
@@ -116,5 +118,17 @@ class CreateWithdrawalRequestDTO
     public function getExchangeFee(): string
     {
         return $this->exchangeFee;
+    }
+
+    public function setUSDTValue(string $USDTValue): CreateWithdrawalRequestDTO
+    {
+        $this->USDTValue = $USDTValue;
+
+        return $this;
+    }
+
+    public function getUSDTValue(): string
+    {
+        return $this->USDTValue;
     }
 }
