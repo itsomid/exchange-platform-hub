@@ -26,6 +26,12 @@ class UserController extends Controller
         $users = User::with('introducerReferral.user','activeFinancialBlocks')->orderBy('id')->filterBy(request()->all())->paginate(20);
         $referral_codes = ReferralCode::all();
         $onlineUserCount = User::online()->count();
+        $activeUsersCount = User::active()->count();
+        $inActiveUsersCount = User::inActive()->count();
+
+
+        $usersHasTransactionCount = User::has('transactions')->count();
+
         $supportDescriptions = User::select('support_description')
             ->whereNotNull('support_description')
             ->groupBy('support_description')
@@ -35,7 +41,10 @@ class UserController extends Controller
             'users' => $users,
             'referral_codes' => $referral_codes,
             'onlineUserCount' => $onlineUserCount,
-            'supportDescriptions' => $supportDescriptions
+            'supportDescriptions' => $supportDescriptions,
+            'usersHasTransactionCount' => $usersHasTransactionCount,
+            'activeUsersCount' => $activeUsersCount,
+            'inActiveUsersCount' => $inActiveUsersCount,
         ]);
     }
 

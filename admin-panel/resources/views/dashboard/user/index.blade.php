@@ -25,6 +25,42 @@
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
+                            <span>کاربران تایید شده</span>
+                            <div class="d-flex align-items-center my-1">
+                                <h4 class="mb-0 me-2">{{$activeUsersCount}}</h4>
+                                <p class="text-success mb-0">(+6%)</p>
+                            </div>
+                        </div>
+                        <span class="badge bg-label-success rounded p-2">
+                           <i class="fa-regular fa-user-check fa-xl"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 col-xl-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                            <span>کاربران تایید نشده</span>
+                            <div class="d-flex align-items-center my-1">
+                                <h4 class="mb-0 me-2">{{$inActiveUsersCount}}</h4>
+                                <p class="text-danger mb-0">(+6%)</p>
+                            </div>
+                        </div>
+                        <span class="badge bg-label-warning rounded p-2">
+                           <i class="fa-regular fa-user-clock fa-lg"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 col-xl-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
                             <span>کاربران آنلاین</span>
                             <div class="d-flex align-items-center my-1">
                                 <h4 class="mb-0 me-2">{{$onlineUserCount}}</h4>
@@ -45,8 +81,8 @@
                         <div class="content-left">
                             <span>مشتری های فعال (حداقل یک تراکنش در ماه)</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">1</h4>
-                                <p class="text-danger mb-0">(+6%)</p>
+                                <h4 class="mb-0 me-2">{{$usersHasTransactionCount}}</h4>
+                                <p class="text-danger mb-0"></p>
                             </div>
                         </div>
                         <span class="badge bg-label-warning rounded p-2">
@@ -56,42 +92,8 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-12 col-xl-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
-                        <div class="content-left">
-                            <span>کاربران تایید شده</span>
-                            <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{$users->total()}}</h4>
-                                <p class="text-success mb-0">(+6%)</p>
-                            </div>
-                        </div>
-                        <span class="badge bg-label-success rounded p-2">
-                           <i class="fa-regular fa-user-check fa-xl"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-12 col-xl-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
-                        <div class="content-left">
-                            <span>در انتظار تایید</span>
-                            <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">12</h4>
-                                <p class="text-danger mb-0">(+6%)</p>
-                            </div>
-                        </div>
-                        <span class="badge bg-label-warning rounded p-2">
-                           <i class="fa-regular fa-user-clock fa-lg"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+
+
     </div>
     <div class="card mb-3">
         <div class="card-body">
@@ -195,6 +197,7 @@
 
                                 <td>
                                     <div class="d-flex">
+
                                         <div class="avatar me-2 avatar-{{ $user->activity_status }}">
                                             <span class="avatar-initial rounded-circle bg-label-{{ $user->avatar_status }}">
                                                 {{ $user->avatar_name }}
