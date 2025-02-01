@@ -42,7 +42,8 @@ class CurrencyChainSeeder extends Seeder
                 'memo' => null,
                 'is_memo_required_for_deposit' => false,
                 'explorer_address_url' => 'https://blockchair.com/bitcoin/address/{address}',
-                'explorer_tx_url' => 'https://blockchair.com/bitcoin/transaction/{hash}'
+                'explorer_tx_url' => 'https://blockchair.com/bitcoin/transaction/{hash}',
+                'is_base_coin' => true,
             ],
             // ETH (ERC20) chains
             [
@@ -61,10 +62,10 @@ class CurrencyChainSeeder extends Seeder
                 'withdrawal_precision' => 18,
                 'memo' => null,
                 'is_memo_required_for_deposit' => false,
+                'is_base_coin' => true,
                 'explorer_address_url' => 'https://etherscan.io/address/{address}',
-                'explorer_tx_url' => 'https://etherscan.io/tx/{hash}'
+                'explorer_tx_url' => 'https://etherscan.io/tx/{hash}',
             ],
-
 
             // TRC20 chain for USDT
             [
@@ -83,8 +84,9 @@ class CurrencyChainSeeder extends Seeder
                 'withdrawal_precision' => 6,
                 'memo' => null,
                 'is_memo_required_for_deposit' => false,
+                'is_base_coin' => false,
                 'explorer_address_url' => 'https://tronscan.org/#/address/{address}',
-                'explorer_tx_url' => 'https://tronscan.org/#/transaction/{hash}'
+                'explorer_tx_url' => 'https://tronscan.org/#/transaction/{hash}',
             ],
             [
                 'currency_id' => $usdt->id,
@@ -103,7 +105,9 @@ class CurrencyChainSeeder extends Seeder
                 'memo' => null,
                 'is_memo_required_for_deposit' => false,
                 'explorer_address_url' => 'https://etherscan.io/address/{address}',
-                'explorer_tx_url' => 'https://etherscan.io/tx/{hash}'
+                'explorer_tx_url' => 'https://etherscan.io/tx/{hash}',
+                'is_base_coin' => false,
+
             ],
             [
                 'currency_id' => $usdt->id,
@@ -121,10 +125,10 @@ class CurrencyChainSeeder extends Seeder
                 'withdrawal_precision' => 6,
                 'memo' => null,
                 'is_memo_required_for_deposit' => false,
+                'is_base_coin' => false,
                 'explorer_address_url' => 'https://bscscan.com/address/{address}',
-                'explorer_tx_url' => 'https://bscscan.com/tx/{hash}'
+                'explorer_tx_url' => 'https://bscscan.com/tx/{hash}',
             ],
-
 
             // BNB (BSC) chain
             [
@@ -144,7 +148,9 @@ class CurrencyChainSeeder extends Seeder
                 'memo' => null,
                 'is_memo_required_for_deposit' => false,
                 'explorer_address_url' => 'https://bscscan.com/address/{address}',
-                'explorer_tx_url' => 'https://bscscan.com/tx/{hash}'
+                'explorer_tx_url' => 'https://bscscan.com/tx/{hash}',
+                'is_base_coin' => true,
+
             ],
             // TRX (TRC) chain
             [
@@ -163,8 +169,10 @@ class CurrencyChainSeeder extends Seeder
                 'withdrawal_precision' => 6,
                 'memo' => null,
                 'is_memo_required_for_deposit' => false,
+                'is_base_coin' => true,
+
                 'explorer_address_url' => 'https://tronscan.org/#/address/{address}',
-                'explorer_tx_url' => 'https://tronscan.org/#/transaction/{hash}'
+                'explorer_tx_url' => 'https://tronscan.org/#/transaction/{hash}',
             ],
             // DOGE chain
             [
@@ -183,8 +191,10 @@ class CurrencyChainSeeder extends Seeder
                 'withdrawal_precision' => 8,
                 'memo' => null,
                 'is_memo_required_for_deposit' => false,
+                'is_base_coin' => true,
+
                 'explorer_address_url' => 'https://blockcypher.com/doge/address/{address}',
-                'explorer_tx_url' => 'https://blockcypher.com/doge/tx/{hash}'
+                'explorer_tx_url' => 'https://blockcypher.com/doge/tx/{hash}',
             ],
         ];
 

@@ -37,7 +37,7 @@ class WithdrawalRepository implements WithdrawalRepositoryInterface
     public function getAllPending(): Collection
     {
         return Withdrawal::query()
-            ->with('currency.chains', 'wallet', 'user')
+            ->with('currency.chains', 'user')
             ->where('status', WithdrawalStatusEnum::PENDING)
             ->get();
     }

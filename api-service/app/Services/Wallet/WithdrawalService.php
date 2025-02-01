@@ -11,6 +11,7 @@ use App\Infrastructure\HDWallet\DTO\Withdrawal\GetWithdrawalStatusRequestDTO;
 use App\Infrastructure\HDWallet\DTO\Withdrawal\WithdrawRequestDTO;
 use App\Infrastructure\HDWallet\Exceptions\NotFoundException;
 use App\Infrastructure\HDWallet\HDWalletWithdrawalService;
+use App\Models\CurrencyChain;
 use App\Models\Transaction;
 use App\Models\Wallet;
 use App\Models\Withdrawal;
@@ -114,6 +115,7 @@ class WithdrawalService
             $chain = $withdrawal->currency->chains->where('chain', CurrencyChainEnum::tryFrom('BSC'))->first();
 
             try {
+                dd($withdrawal->currency->chains);
                 $responseDTO = $this->withdrawalService->getStatus(
                     resolve(GetWithdrawalStatusRequestDTO::class)
                         ->setWithdrawalId($withdrawal->id)
@@ -129,7 +131,7 @@ class WithdrawalService
                     continue;
                 }
                 if ($responseDTO->getStatus() === 'completed') {
-                    $this->confirmWithdrawal($withdrawal, $responseDTO->getTransactionHash());
+                    $this->confirmWithdrawal($withdrawal, $responseDTO->getTransactionHash(), $responseDTO->getFee());
                 }
 
             } catch (NotFoundException) {
@@ -146,12 +148,11 @@ class WithdrawalService
 
     }
 
-    private function confirmWithdrawal(Withdrawal $withdrawal, string $transactionHash): void
+    private function confirmWithdrawal(Withdrawal $withdrawal, string $transactionHash, string $hdWalletNetworkFee): void
     {
         try {
             DB::beginTransaction();
-
-            $wallet = $withdrawal->wallet;
+            $wallet = Wallet::query()->where('user_id', $withdrawal->user_id)->where('currency_symbol', $withdrawal->currency_symbol)->first();
 
             // Update withdrawal record
             $withdrawal->update([
@@ -177,8 +178,28 @@ class WithdrawalService
                 'description' => 'برداشت به آدرس: '.$withdrawal->address.' هش تراکنش: '.$transactionHash,
                 'admin_description' => '',
             ]);
-
-            $this->createExchangeWithdrawalFee($withdrawal);
+            $baseCoinChain = CurrencyChain::query()
+                ->where('chain', $withdrawal->currency_chain)
+                ->where('is_base_coin', 1)
+                ->first();
+            $wallet = Wallet::query()
+                ->where('currency_symbol', $baseCoinChain->currency->symbol)
+                ->where('user_id', config('bitexroom.bitexroom_user_id'))
+                ->first();
+            //HD Wallet Fee
+            Transaction::query()
+                ->create([
+                    'user_id' => config('bitexroom.bitexroom_user_id'),
+                    'wallet_id' => $wallet->id,
+                    'withdrawal_id' => $withdrawal->id,
+                    'amount' => -$hdWalletNetworkFee,
+                    'balance' => $wallet->balance,
+                    'type' => TransactionTypeEnum::FEE,
+                    'subtype' => TransactionSubTypeEnum::HD_WALLET_FEE,
+                    'status' => TransactionStatusEnum::SUCCESS,
+                    'description' => 'کارمزد شبکه برداشت به آدرس: '.$withdrawal->address.' هش تراکنش: '.$transactionHash,
+                ]);
+            $this->createExchangeWithdrawalFee($withdrawal, $hdWalletNetworkFee);
 
             DB::commit();
         } catch (Throwable $e) {
@@ -188,12 +209,13 @@ class WithdrawalService
         }
     }
 
-    private function createExchangeWithdrawalFee($withdrawal): void
+    private function createExchangeWithdrawalFee($withdrawal, $hdWalletNetworkFee): void
     {
 
         $exchangeWallet = $this->walletRepository->getBitexroomWalletWithLock($withdrawal->currency_symbol);
 
         $exchangeWithdrawalFee = $withdrawal->exchange_fee;
+        $exchangeNetworkFee = $withdrawal->network_fee;
         if ($exchangeWithdrawalFee > 0) {
             Transaction::query()->create([
                 'user_id' => config('bitexroom.bitexroom_user_id'),
@@ -208,6 +230,22 @@ class WithdrawalService
             ]);
 
             $exchangeWallet->increment('balance', $exchangeWithdrawalFee);
+        }
+        if ($exchangeNetworkFee > 0) {
+            // Exchange Network Fee
+            Transaction::query()->create([
+                'user_id' => $withdrawal->user_id,
+                'wallet_id' => $exchangeWallet->id,
+                'withdrawal_id' => $withdrawal->id,
+                'amount' => $exchangeNetworkFee,
+                'balance' => $exchangeWallet->balance,
+                'type' => TransactionTypeEnum::FEE,
+                'subtype' => TransactionSubTypeEnum::WITHDRAWAL_NETWORK_FEE,
+                'status' => TransactionStatusEnum::SUCCESS,
+                'description' => "کارمزد شبکه صرافی  {$exchangeWallet->currency_symbol} کاربر  "."(#{$withdrawal->user->id}) ".$withdrawal->user->username,
+                'admin_description' => '',
+            ]);
+            $exchangeWallet->increment('balance', bcsub(toDecimalString($exchangeNetworkFee), toDecimalString($hdWalletNetworkFee), 8));
         }
     }
 }
