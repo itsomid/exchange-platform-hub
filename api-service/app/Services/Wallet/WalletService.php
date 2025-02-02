@@ -54,10 +54,11 @@ class WalletService
             if (is_null($address)) {
                 //Generate Public Key
                 $hdWallet = resolve(Wallet::class);
+                $blockchainName = $chain->wallet->currency->chains->where('chain', $chain->currency_chain)->first()->blockchain_name->value; //TODO
                 try {
                     $address = $hdWallet->generateAddress(
                         $requestDTO->getUserId(),
-                        $chain->currencyChain->blockchain_name->value
+                        $blockchainName
                     );
                 } catch (HDWalletException $exception) {
                     report($exception);

@@ -15,7 +15,8 @@ class HDWalletDepositService
     public function getDepositLists(GetDepositListsRequestDTO $requestDTO)
     {
         try {
-            $response = Http::get(HDWallet::getBaseUrl()."/api/v1/wallet/deposits/{$requestDTO->getCurrencySymbol()}/{$requestDTO->getWalletAddress()}/all");
+            $route = DepositApiRoutes::get($requestDTO->getCurrencySymbol(), $requestDTO->getBlockchain(), $requestDTO->getWalletAddress());
+            $response = Http::get(HDWallet::getBaseUrl().$route);
         } catch (ConnectionException $exception) {
             report($exception);
             throw new HDDWalletUnavailable;
