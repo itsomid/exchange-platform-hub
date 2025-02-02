@@ -12,6 +12,14 @@ class AdminTableSeeder extends Seeder
 
     public function run(): void
     {
+        foreach ($this->superAdmin() as $admin) {
+            $admin = Admin::query()->create(array_merge($admin, [
+                'password' => Hash::make('12345678'),
+                'gender' => 'male',
+            ]));
+
+            $admin->assignRole('admin');
+        }
         foreach ($this->admin() as $admin) {
             $admin = Admin::query()->create(array_merge($admin, [
                 'password' => Hash::make('12345678'),
@@ -38,16 +46,15 @@ class AdminTableSeeder extends Seeder
         }
 
     }
-
-    private function admin(): array
+    private function superAdmin(): array
     {
         return [
             [
                 'id' => 1,
-                'first_name' => 'اشکان',
-                'last_name' => 'مهرگان',
-                'email' => 'a.mehregan@gmail.com',
-                'mobile' => '09124832327',
+                'first_name' => 'علی اکبر',
+                'last_name' => 'توسل',
+                'email' => 'a.tavasol@gmail.com',
+                'mobile' => '091212312312',
             ],
             [
                 'id' => 2,
@@ -56,6 +63,14 @@ class AdminTableSeeder extends Seeder
                 'email' => 'o.shabani@hotmail.com',
                 'mobile' => '09121990974',
             ],
+
+        ];
+    }
+    private function admin(): array
+    {
+
+
+        return [
             [
                 'id' => 3,
                 'first_name' => 'نریمان',
@@ -65,25 +80,32 @@ class AdminTableSeeder extends Seeder
             ],
             [
                 'id' => 4,
+                'first_name' => 'اشکان',
+                'last_name' => 'مهرگان',
+                'email' => 'a.mehregan@gmail.com',
+                'mobile' => '09124832327',
+            ],
+            [
+                'id' => 5,
                 'first_name' => 'مهدی',
                 'last_name' => 'رجبی',
                 'email' => 'mehdi@gmail.com',
                 'mobile' => '09107588958',
             ],
             [
-                'id' => 5,
-                'first_name' => 'حسن',
-                'last_name' => 'رضایی',
-                'email' => 'h.rezaei@gmail.com',
-                'mobile' => '09109529484',
+                'id' => 6,
+                'first_name' => 'حسین',
+                'last_name' => 'زکایی',
+                'email' => 'h.zokaei@gmail.com',
+                'mobile' => '09124063794',
             ],
             [
-                'id' => 6,
+                'id' => 7,
                 'first_name' => 'آریا',
                 'last_name' => 'عرب گل',
                 'email' => 'a.arabgol@vista-group.ir',
                 'mobile' => '09109529485',
-            ],
+            ]
         ];
     }
 
@@ -91,11 +113,11 @@ class AdminTableSeeder extends Seeder
     {
         return [
             [
-                'id' => 7,
-                'first_name' => 'حسین',
-                'last_name' => 'زکایی',
-                'email' => 'h.zokaei@gmail.com',
-                'mobile' => '09124063794',
+                'id' => 8,
+                'first_name' => 'فروزان',
+                'last_name' => 'عرب نیا',
+                'email' => 'f.arabnia@gmail.com',
+                'mobile' => '09124063795',
             ],
         ];
     }
@@ -104,13 +126,6 @@ class AdminTableSeeder extends Seeder
     {
         return [
 
-            [
-                'id' => 8,
-                'first_name' => 'آرین',
-                'last_name' => 'هاشمی',
-                'email' => 'fazeli@gmail.com',
-                'mobile' => '09913233751',
-            ],
             [
                 'id' => 9,
                 'first_name' => 'گلناز',

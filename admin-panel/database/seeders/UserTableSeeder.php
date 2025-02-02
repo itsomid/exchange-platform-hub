@@ -68,8 +68,8 @@ class UserTableSeeder extends Seeder
         $specificIntroducerReferralCode = ReferralCode::create([
             'code' => ReferralCode::generateReferralCode(),
             'user_id' => $specificIntroducer->id,
-            'introducer_fee' => 30,
-            'friend_fee' => 0,
+            'introducer_fee' => 25,
+            'friend_fee' => 5,
             'usage_limit' => 1000,
         ]);
         $specificUser->update([
