@@ -53,7 +53,7 @@ class AdminTableSeeder extends Seeder
                 'id' => 1,
                 'first_name' => 'علی اکبر',
                 'last_name' => 'توسل',
-                'email' => 'a.tavasol@gmail.com',
+                'email' => 'admin@bitexroom.com',
                 'mobile' => '091212312312',
             ],
             [
