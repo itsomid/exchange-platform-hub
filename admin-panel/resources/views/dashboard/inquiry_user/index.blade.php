@@ -9,8 +9,8 @@
                     <form action="{{route('admin.inquiry.submit')}}" class="row mt-3 d-flex align-items-end justify-content-between" method="post">
                         @csrf
                         <div class="col-md-4 user_role">
-                            <label class="form-label" for="UserRole">ایمیل یا ایدی کاربر:</label>
-                            <input type="number" name="mobile" class="form-control" placeholder="ایمیل/شناسه کاربری/تلفن">
+                            <label class="form-label" for="email">ایمیل یا ایدی کاربر:</label>
+                            <input type="text" id="email" name="email" class="form-control" placeholder="ایمیل/شناسه کاربری">
                         </div>
                         <div class="col-md-2 mt-2">
                             <button type="submit" class="btn btn-primary mt-2 text-white">

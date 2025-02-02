@@ -93,6 +93,8 @@ Route::get('/users/{user}/wallets',[UserWalletController::class,'userWallets'])-
 Route::get('/users/{user}/wallets/{wallet}/{type}',[UserWalletController::class,'walletDetails'])->name('wallet.detail')->can('wallet');
 Route::get('/users/{user}/inquiry',[InquiryController::class,'userDetails'])->name('inquiry.user-details')->can('admin.inquiry');
 
+Route::get('/inquiry', [InquiryController::class, 'index'])->name('inquiry.index')->can('admin.inquiry');
+Route::post('/inquiry', [InquiryController::class, 'submit'])->name('inquiry.submit')->can('admin.inquiry');
 //Route::get('/users/2fa', [UserSecurityController::class, ''])->name('profile.2fa.edit');
 //Route::get('/users/{user}/tokens', [UserTokenController::class, 'twoFAEdit'])->name('user.token.index')->can('user.edit');
 //Route::patch('/users/{user}/tokens/{token}/revoke', [UserTokenController::class, 'revoke'])->name('user.token.revoke')->can('user.edit');
@@ -117,8 +119,7 @@ Route::post('/referral-codes', [ReferralCodeController::class, 'store'])->name('
 Route::get('/referral-codes/{referral_code}/edit', [ReferralCodeController::class, 'edit'])->name('referral_code.edit')->can('referral_code.edit');
 Route::patch('/referral-codes/{referral_code}', [ReferralCodeController::class, 'update'])->name('referral_code.update')->can('referral_code.edit');
 
-Route::get('/inquiry', [InquiryController::class, 'index'])->name('inquiry.index')->can('admin.inquiry');
-Route::post('/inquiry', [InquiryController::class, 'submit'])->name('inquiry.submit')->can('admin.inquiry');
+
 
 Route::get('/exchange/currencies', [CurrencyController::class, 'index'])->name('currency.index')->can('currency');
 Route::get('/exchange/currencies/create', [CurrencyController::class, 'create'])->name('currency.create')->can('currency');

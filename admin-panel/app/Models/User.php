@@ -45,17 +45,8 @@ class User extends Authenticatable implements CanResetPassword
     protected $guarded = ['id'];
 
     protected $casts = [
-      'status' => UserStatusEnum::class
+        'status' => UserStatusEnum::class
     ];
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    public function fullname()
-    {
-        return $this->first_name.' '.$this->last_name;
-    }
 
     public function referralCodes(): HasMany
     {
@@ -69,23 +60,28 @@ class User extends Authenticatable implements CanResetPassword
 
     public function referralCodeUsage(): HasMany
     {
-        return $this->hasMany(ReferralCodeUsage::class,'used_by');
+        return $this->hasMany(ReferralCodeUsage::class, 'used_by');
     }
 
 
     public function financialBlocks(): HasMany
     {
-        return $this->hasMany(UserFinancialBlock::class,'user_id')->orderBy('restricted_until', 'desc');
+        return $this->hasMany(UserFinancialBlock::class, 'user_id')->orderBy('restricted_until', 'desc');
     }
 
     public function wallets()
     {
-        return $this->hasMany(Wallet::class,'user_id');
+        return $this->hasMany(Wallet::class, 'user_id');
     }
 
-    public function activeFinancialBlocks() : HasMany
+    public function activeFinancialBlocks(): HasMany
     {
-        return $this->hasMany(UserFinancialBlock::class,'user_id')->where('restricted_until', '>', Carbon::now())->orderBy('restricted_until', 'desc');
+        return $this->hasMany(UserFinancialBlock::class, 'user_id')->where('restricted_until', '>', Carbon::now())->orderBy('restricted_until', 'desc');
+    }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
     }
 
     public function financialBlocksFrom(string $action = null)
@@ -103,12 +99,12 @@ class User extends Authenticatable implements CanResetPassword
 
     public function personalAccessTokens(): HasMany
     {
-        return $this->hasMany(PersonalAccessToken::class,'tokenable_id');
+        return $this->hasMany(PersonalAccessToken::class, 'tokenable_id');
     }
 
     public function latestActiveToken()
     {
-        return $this->hasOne(PersonalAccessToken::class,'tokenable_id')
+        return $this->hasOne(PersonalAccessToken::class, 'tokenable_id')
             ->whereNotNull('last_used_at')
             ->latest('last_used_at'); // Orders by last_used_at DESC
     }
@@ -117,6 +113,12 @@ class User extends Authenticatable implements CanResetPassword
     {
         return $this->hasMany(SavedAddress::class);
     }
+
+    public function fullname()
+    {
+        return $this->first_name . ' ' . $this->last_name;
+    }
+
     public function twoFAStatus()
     {
         return (bool)$this->two_factore_secret;
@@ -129,6 +131,7 @@ class User extends Authenticatable implements CanResetPassword
                 ? '11111'
                 : str_pad(random_int(10000, 99999), 5, '0', STR_PAD_LEFT);
     }
+
     public static function generateUsername($email)
     {
         // Extract the part of the email before the '@'
@@ -144,17 +147,18 @@ class User extends Authenticatable implements CanResetPassword
         // Check for uniqueness
         $counter = 1;
         while (User::where('username', $username)->exists()) {
-            $username = $baseUsername.$counter; // Append a number if not unique
+            $username = $baseUsername . $counter; // Append a number if not unique
             $counter++;
         }
 
         return $username;
     }
+
     public function setDetailOnToken($token)
     {
         $agent = new Agent;
-        $device = $agent->platform().'-';
-        $device = $device.$agent->browser();
+        $device = $agent->platform() . '-';
+        $device = $device . $agent->browser();
 
         $token->accessToken->device = $device;
         $token->accessToken->ip = request()->ip();
@@ -183,11 +187,21 @@ class User extends Authenticatable implements CanResetPassword
 
     }
 
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
+    public function scopeInActive($query)
+    {
+        return $query->where('status', 'inactive');
+    }
+
+
     //////END SCOPE/////////
     public function getAvatarNameAttribute()
     {
         $firstName = $this->attributes['first_name'] ?? '';
-        $lastName  = $this->attributes['last_name'] ?? '';
+        $lastName = $this->attributes['last_name'] ?? '';
 
         return strtoupper(substr($firstName, 0, 2)) . ' ' . strtoupper(substr($lastName, 0, 2));
     }
@@ -196,7 +210,7 @@ class User extends Authenticatable implements CanResetPassword
     {
         $username = $this->attributes['username'] ?? '';
 
-        return strtoupper(substr($username, 0, 2)) ;
+        return strtoupper(substr($username, 0, 2));
     }
 
 
@@ -206,7 +220,11 @@ class User extends Authenticatable implements CanResetPassword
             return 'offline';
         }
 
-        return (now()->diffInMinutes($this->latestActiveToken->last_used_at) < 10)
+        if ($this->latestActiveToken->last_used_at > now()) {
+            return 'offline'; // or 'unknown'
+        }
+
+        return (abs(now()->diffInMinutes($this->latestActiveToken->last_used_at)) < 10)
             ? 'online'
             : 'away';
     }
@@ -214,8 +232,8 @@ class User extends Authenticatable implements CanResetPassword
     public function getAvatarStatusAttribute()
     {
         return match ($this->activity_status) {
-            'online'  => 'success',
-            'away'    => 'warning',
+            'online' => 'success',
+            'away' => 'warning',
             'offline' => 'secondary',
         };
     }
