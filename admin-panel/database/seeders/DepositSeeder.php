@@ -22,12 +22,12 @@ class DepositSeeder extends Seeder
         $depositService = new DepositService();
 
         $currencies = [
-            ['symbol' => 'BTC', 'chain' => CurrencyChainEnum::BTC],
-            ['symbol' => 'ETH', 'chain' => CurrencyChainEnum::ERC20],
-            ['symbol' => 'USDT', 'chain' => CurrencyChainEnum::ERC20],
-            ['symbol' => 'BNB', 'chain' => CurrencyChainEnum::BSC],
-            ['symbol' => 'TRX', 'chain' => CurrencyChainEnum::TRC20],
-            ['symbol' => 'DOGE', 'chain' => CurrencyChainEnum::DOGE],
+            ['symbol' => 'BTC', 'chain' => CurrencyChainEnum::BTC->value],
+            ['symbol' => 'ETH', 'chain' => CurrencyChainEnum::ERC20->value],
+            ['symbol' => 'USDT', 'chain' => CurrencyChainEnum::ERC20->value],
+            ['symbol' => 'BNB', 'chain' => CurrencyChainEnum::BSC->value],
+            ['symbol' => 'TRX', 'chain' => CurrencyChainEnum::TRC20->value],
+            ['symbol' => 'DOGE', 'chain' => CurrencyChainEnum::DOGE->value],
         ];
         $users = User::where('id', '>', 1)->skip(0)->take(3)->get();
 

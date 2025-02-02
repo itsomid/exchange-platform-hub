@@ -37,8 +37,8 @@ class WithdrawalSeeder extends Seeder
             for ($i = 1; $i < 6; $i++) {
                 $date = $startDate->copy()->addDays($i);
 
-                $this->processWithdrawals(0.03, 0, 3, true, $currency, $date);
-                $this->processWithdrawals($this->generateRealisticBalance($currency['symbol']), 0, 3, true, $currency, $date);
+                $this->processWithdrawals(0.03, 0, 1, true, $currency, $date);
+                $this->processWithdrawals($this->generateRealisticBalance($currency['symbol']), 2, 2, true, $currency, $date);
 //                $this->processWithdrawals($this->generateAdminApprovalBalance($currency['symbol']), 3, 3, true, $currency, $date);
 //                $this->processWithdrawals(0.2, 6, 3, false, $currency, $date);
             }
