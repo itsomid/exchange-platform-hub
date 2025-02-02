@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\CurrencyChainEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -16,8 +17,15 @@ class WalletChain extends Model
         'wallet_id', 'currency_chain', 'address',
     ];
 
-    public function currencyChain(): BelongsTo
+    protected function casts(): array
     {
-        return $this->belongsTo(CurrencyChain::class, 'currency_chain', 'chain');
+        return [
+            'currency_chain' => CurrencyChainEnum::class,
+        ];
+    }
+
+    public function wallet(): BelongsTo
+    {
+        return $this->belongsTo(Wallet::class);
     }
 }

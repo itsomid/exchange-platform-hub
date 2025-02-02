@@ -25,6 +25,7 @@ class Withdrawal extends Model
         'usdt_value',
         'network_fee',
         'exchange_fee',
+        'hd_wallet_network_fee',
         'total_fee',
         'address',
         'transaction_hash',

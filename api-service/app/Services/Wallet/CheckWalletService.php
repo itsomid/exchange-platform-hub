@@ -34,6 +34,7 @@ class CheckWalletService
     {
         $hasNewTransaction = false;
         $wallet = $this->walletRepository->getOneByCurrency($requestDTO->getCurrencySymbol(), $requestDTO->getUserId());
+        $wallet = $wallet->load('chains.wallet.currency.chains');
         $chains = $wallet->chains;
         if (! $chains->contains(fn ($chain) => ! empty($chain->address))) {
             throw new UserDoesNotHaveWalletAddress;
@@ -45,10 +46,13 @@ class CheckWalletService
             if (empty($chain->address)) {
                 continue;
             }
+
+            $blockchainName = $chain->wallet->currency->chains->where('chain', $chain->currency_chain)->first()->blockchain_name->value;
             $transactions = $hdDeposit->getDepositLists(
                 resolve(GetDepositListsRequestDTO::class)
                     ->setCurrencySymbol($wallet->currency_symbol)
                     ->setWalletAddress($chain->address)
+                    ->setBlockchain($blockchainName)
             );
             foreach ($transactions as $transaction) {
                 if ($this->depositRepository->isDepositExists($transaction->getTransactionHash())) {
