@@ -35,6 +35,8 @@ Route::prefix('/wallets')->group(function () {
     Route::get('/value-usdt', [WalletController::class, 'assetsUSDTValue'])->name('wallets.value-usdt');
     Route::get('/{currencySymbol}', [WalletController::class, 'show'])->name('wallets.show');
     Route::post('/withdrawal', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, '__invoke'])->name('wallets.withdraw');
+    Route::post('/check-withdrawal', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, 'checkWithdrawal'])->name('wallets.check-withdrawal')
+        ->middleware(['throttle:'.config('bitexroom.withdrawal.check_wallet_attempts.max_attempts').','.config('bitexroom.withdrawal.check_wallet_attempts.minutes')]);
 
 });
 Route::prefix('saved-addresses')->group(function () {

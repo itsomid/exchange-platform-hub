@@ -8,4 +8,10 @@ return [
         'minutes' => 2,
         'max_attempts' => 1,
     ],
+    'withdrawal' => [
+        'check_wallet_attempts' => [
+            'minutes' => 20,
+            'max_attempts' => 20,
+        ],
+    ],
 ];

@@ -108,10 +108,10 @@ class WithdrawalService
         }
     }
 
-    public function checkWithdrawal(): void
+    public function checkWithdrawal(int $userId): int
     {
-        $pending = $this->withdrawalRepository->getAllPending();
-
+        $withdrawalCompletedCount = 0;
+        $pending = $this->withdrawalRepository->getAllPending($userId);
         foreach ($pending as $withdrawal) {
 
             $chain = $withdrawal->currency->chains->where('chain', CurrencyChainEnum::tryFrom('BSC'))->first();
@@ -132,6 +132,7 @@ class WithdrawalService
                     continue;
                 }
                 if ($responseDTO->getStatus() === 'completed') {
+                    $withdrawalCompletedCount++;
                     $this->confirmWithdrawal($withdrawal, $responseDTO->getTransactionHash(), $responseDTO->getFee());
                 }
 
@@ -147,6 +148,7 @@ class WithdrawalService
 
         }
 
+        return $withdrawalCompletedCount;
     }
 
     private function confirmWithdrawal(Withdrawal $withdrawal, string $transactionHash, string $hdWalletNetworkFee): void

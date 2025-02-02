@@ -100,4 +100,80 @@ class WithdrawController extends Controller
 
         return new WithdrawalResource($withdrawResponse);
     }
+
+    /**
+     * @OA\Post(
+     *     path="/check-withdrawal",
+     *     summary="Check the status of a withdrawal",
+     *     description="This endpoint checks the status of a withdrawal from the HD wallet. The status can be pending, completed, or failed.",
+     *     operationId="checkWithdrawal",
+     *     tags={"Wallet"},
+     *     security={{"bearerAuth": {}}},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Withdrawal status checked successfully",
+     *
+     *         @OA\JsonContent(
+     *             type="object",
+     *
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="available_in",
+     *                     type="string",
+     *                     format="date-time",
+     *                     description="The time when the next withdrawal check will be available"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="has_new_transaction",
+     *                     type="integer",
+     *                     description="The number of completed transactions since the last check"
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized",
+     *
+     *         @OA\JsonContent(
+     *             type="object",
+     *
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Unauthorized"
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal Server Error",
+     *
+     *         @OA\JsonContent(
+     *             type="object",
+     *
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Internal Server Error"
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function checkWithdrawal()
+    {
+        $service = resolve(WithdrawalService::class);
+        $completedCount = $service->checkWithdrawal(Auth::id());
+
+        return response(['data' => [
+            'available_in' => now()->addMinutes(config('bitexroom.withdrawal.check_wallet_attempts'))->format('Y-m-d H:i:s'),
+            'has_new_transaction' => $completedCount > 0,
+        ]]);
+    }
 }

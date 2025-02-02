@@ -2697,6 +2697,81 @@
                 }
             }
         },
+        "/check-withdrawal": {
+            "post": {
+                "tags": [
+                    "Wallet"
+                ],
+                "summary": "Check the status of a withdrawal",
+                "description": "This endpoint checks the status of a withdrawal from the HD wallet. The status can be pending, completed, or failed.",
+                "operationId": "checkWithdrawal",
+                "responses": {
+                    "200": {
+                        "description": "Withdrawal status checked successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "available_in": {
+                                                    "description": "The time when the next withdrawal check will be available",
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "has_new_transaction": {
+                                                    "description": "The number of completed transactions since the last check",
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Internal Server Error"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/v1/authorization/otp-code/{action}": {
             "post": {
                 "tags": [
