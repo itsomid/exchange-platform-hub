@@ -16,13 +16,13 @@ import {createApp} from 'vue/dist/vue.esm-bundler';
 
 // import DynamicSelect from './components/miscellaneous/DynamicSelect.vue'
 import NoteModal from './components/miscellaneous/NoteModal.vue'
-import Filepond from "./components/libs/Filepond.vue";
+// import Filepond from "./components/libs/Filepond.vue";
 
 
 const app = createApp({});
 
 app.use()
-    .component('filepond', Filepond)
+    // .component('filepond', Filepond)
     .component("note-modal", NoteModal)
 
 const mountedApp = app.mount("#app");
