@@ -161,6 +161,7 @@ class WithdrawalService
             $withdrawal->update([
                 'transaction_hash' => $transactionHash,
                 'status' => WithdrawalStatusEnum::COMPLETED,
+                'hd_wallet_network_fee' => $hdWalletNetworkFee,
                 'confirmed_at' => now(),
                 'description' => 'Withdraw Completed',
             ]);
