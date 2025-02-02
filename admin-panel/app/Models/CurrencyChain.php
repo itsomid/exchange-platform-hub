@@ -21,6 +21,7 @@ class CurrencyChain extends Model
         'network_fee',
         'deposit_enabled',
         'withdraw_enabled',
+        'is_base_coin',
     ];
 
     protected $casts = [
@@ -39,7 +40,7 @@ class CurrencyChain extends Model
 
     public function getTotalWithdrawalFeeAttribute()
     {
-        return $this->network_fee +$this->exchange_withdrawal_fee;
+        return $this->network_fee + $this->exchange_withdrawal_fee;
     }
 
     /**

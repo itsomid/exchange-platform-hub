@@ -11,4 +11,6 @@ interface WithdrawalRepositoryInterface
     public function create(CreateWithdrawalRequestDTO $requestDTO): Withdrawal;
 
     public function getWithdrawals(int $userId, ?string $currencySymbol = null): Collection;
+
+    public function getAllPending(): Collection;
 }

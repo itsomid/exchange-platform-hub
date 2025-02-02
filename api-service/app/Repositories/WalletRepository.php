@@ -108,4 +108,13 @@ class WalletRepository implements WalletRepositoryInterface
             ->where('user_id', 1)
             ->first();
     }
+
+    public function getBitexroomWalletWithLock(string $currency): Wallet
+    {
+        return Wallet::query()
+            ->where('currency_symbol', $currency)
+            ->where('user_id', 1)
+            ->lockForUpdate()
+            ->first();
+    }
 }

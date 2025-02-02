@@ -10,7 +10,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class HDDepositService
+class HDWalletDepositService
 {
     public function getDepositLists(GetDepositListsRequestDTO $requestDTO)
     {

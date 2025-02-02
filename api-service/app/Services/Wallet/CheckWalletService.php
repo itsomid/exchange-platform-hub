@@ -9,7 +9,7 @@ use App\Enums\TransactionTypeEnum;
 use App\Exceptions\V1\Wallet\InternalWalletHasProblemException;
 use App\Exceptions\V1\Wallet\UserDoesNotHaveWalletAddress;
 use App\Infrastructure\HDWallet\DTO\HDDeposit\GetDepositListsRequestDTO;
-use App\Infrastructure\HDWallet\HDDepositService;
+use App\Infrastructure\HDWallet\HDWalletDepositService;
 use App\Repositories\DTO\Deposit\CreateDepositRequestDTO;
 use App\Repositories\DTO\Transaction\CreateTransactionRequestDTO;
 use App\Repositories\Interfaces\DepositRepositoryInterface;
@@ -39,7 +39,7 @@ class CheckWalletService
             throw new UserDoesNotHaveWalletAddress;
         }
 
-        $hdDeposit = resolve(HDDepositService::class);
+        $hdDeposit = resolve(HDWalletDepositService::class);
 
         foreach ($chains as $chain) {
             if (empty($chain->address)) {
@@ -98,7 +98,7 @@ class CheckWalletService
     {
         $pendingDeposits = $this->depositRepository->getPendingDeposits();
 
-        $hdDeposit = resolve(HDDepositService::class);
+        $hdDeposit = resolve(HDWalletDepositService::class);
         foreach ($pendingDeposits as $deposit) {
 
             $transactions = $hdDeposit->getDepositLists(

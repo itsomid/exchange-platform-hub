@@ -3,7 +3,6 @@
 namespace App\Repositories\DTO\Withdrawal;
 
 use App\Enums\WithdrawalStatusEnum;
-use App\Services\Transaction\DTO\GetAllDepositWithdrawResponseDTO;
 
 class CreateWithdrawalRequestDTO
 {
@@ -15,7 +14,11 @@ class CreateWithdrawalRequestDTO
 
     private string $amount;
 
-    private string $fee;
+    private string $USDTValue;
+
+    private string $networkFee;
+
+    private string $exchangeFee;
 
     private string $address;
 
@@ -69,16 +72,16 @@ class CreateWithdrawalRequestDTO
         return $this->amount;
     }
 
-    public function setFee(string $fee): CreateWithdrawalRequestDTO
+    public function setNetworkFee(string $networkFee): CreateWithdrawalRequestDTO
     {
-        $this->fee = $fee;
+        $this->networkFee = $networkFee;
 
         return $this;
     }
 
-    public function getFee(): string
+    public function getNetworkFee(): string
     {
-        return $this->fee;
+        return $this->networkFee;
     }
 
     public function setAddress(string $address): CreateWithdrawalRequestDTO
@@ -105,15 +108,27 @@ class CreateWithdrawalRequestDTO
         return $this->status;
     }
 
-
-    public function setExplorerAddressUrl(string $explorerAddressUrl): CreateWithdrawalRequestDTO
+    public function setExchangeFee(string $exchangeFee): CreateWithdrawalRequestDTO
     {
-        $this->explorerAddressUrl = $explorerAddressUrl;
+        $this->exchangeFee = $exchangeFee;
+
         return $this;
     }
 
-    public function getExplorerAddressUrl(): string
+    public function getExchangeFee(): string
     {
-        return $this->explorerAddressUrl;
+        return $this->exchangeFee;
+    }
+
+    public function setUSDTValue(string $USDTValue): CreateWithdrawalRequestDTO
+    {
+        $this->USDTValue = $USDTValue;
+
+        return $this;
+    }
+
+    public function getUSDTValue(): string
+    {
+        return $this->USDTValue;
     }
 }
