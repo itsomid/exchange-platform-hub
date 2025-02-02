@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\CurrencyChainEnum;
 use App\Models\Deposit;
 use App\Models\User;
 use App\Services\Deposit\DepositService;
@@ -21,12 +22,12 @@ class DepositSeeder extends Seeder
         $depositService = new DepositService();
 
         $currencies = [
-            ['symbol' => 'BTC', 'chain' => 'BTC'],
-            ['symbol' => 'ETH', 'chain' => 'ETH'],
-            ['symbol' => 'USDT', 'chain' => 'ERC20'],
-            ['symbol' => 'BNB', 'chain' => 'BSC'],
-            ['symbol' => 'TRX', 'chain' => 'TRX'],
-            ['symbol' => 'DOGE', 'chain' => 'DOGE'],
+            ['symbol' => 'BTC', 'chain' => CurrencyChainEnum::BTC],
+            ['symbol' => 'ETH', 'chain' => CurrencyChainEnum::ERC20],
+            ['symbol' => 'USDT', 'chain' => CurrencyChainEnum::ERC20],
+            ['symbol' => 'BNB', 'chain' => CurrencyChainEnum::BSC],
+            ['symbol' => 'TRX', 'chain' => CurrencyChainEnum::TRC20],
+            ['symbol' => 'DOGE', 'chain' => CurrencyChainEnum::DOGE],
         ];
         $users = User::where('id', '>', 1)->skip(0)->take(3)->get();
 
