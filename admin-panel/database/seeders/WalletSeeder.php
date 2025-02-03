@@ -15,13 +15,12 @@ class WalletSeeder extends Seeder
     public function run(): void
     {
         $currencies = Currency::pluck('symbol')->toArray();
-
         $user = User::find(1);
         foreach ($currencies as $currency) {
             \DB::table('wallets')->insert([
                 'user_id' => $user->id,
                 'currency_symbol' => $currency,
-                'balance' => $this->generateAdminRealisticBalance($currency),
+                'balance' => app()->environment('production') ? 0 : $this->generateAdminRealisticBalance($currency),
                 'locked_balance' => 0,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -36,8 +35,8 @@ class WalletSeeder extends Seeder
                 \DB::table('wallets')->insert([
                     'user_id' => $user->id,
                     'currency_symbol' => $currency,
-                    'balance' => $this->generateRealisticBalance($currency),
-                    'locked_balance' => $this->generateRealisticLockedBalance($currency),
+                    'balance' => app()->environment('production') ? 0 : $this->generateRealisticBalance($currency),
+                    'locked_balance' => app()->environment('production') ? 0 : $this->generateRealisticLockedBalance($currency),
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
