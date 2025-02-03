@@ -88,7 +88,7 @@ return [
 
     'api_middleware' => [
         \Opcodes\LogViewer\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-        \Opcodes\LogViewer\Http\Middleware\AuthorizeLogViewer::class,
+//        \Opcodes\LogViewer\Http\Middleware\AuthorizeLogViewer::class,
     ],
 
     'api_stateful_domains' => env('LOG_VIEWER_API_STATEFUL_DOMAINS') ? explode(',', env('LOG_VIEWER_API_STATEFUL_DOMAINS')) : null,
@@ -146,7 +146,7 @@ return [
         // This key => value pair can be used to rename and group multiple paths into one folder in the UI.
         '/var/log/httpd/*' => 'Apache',
         '/var/log/nginx/*' => 'Nginx',
-
+        '/home/projects/exchange-platform-hub/api-service/storage/logs/*.log',
         // MacOS Apple Silicon logs
         '/opt/homebrew/var/log/nginx/*',
         '/opt/homebrew/var/log/httpd/*',
