@@ -71,3 +71,9 @@ Route::prefix('/otc')->group(function () {
 Route::prefix('authorization')->group(function () {
     Route::post('/otp-code/{action}', [\App\Http\Controllers\V1\Authorization\EmailOTPController::class, 'send']);
 });
+
+//Notifications
+Route::prefix('notifications')->group(function () {
+    Route::get('/', [App\Http\Controllers\V1\User\NotificationController::class, 'index']);
+    Route::post('/{id}/mark-as-read', [App\Http\Controllers\V1\User\NotificationController::class, 'markAsRead']);
+});
