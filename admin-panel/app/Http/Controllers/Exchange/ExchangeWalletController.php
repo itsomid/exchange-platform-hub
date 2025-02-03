@@ -7,10 +7,16 @@ use App\Models\Currency;
 use App\Services\Exchanges\Asset\Coinex\Authentication\MethodEnum;
 use App\Services\Exchanges\Asset\Coinex\CoinexRequest;
 use App\Services\Exchanges\Asset\DTO\BalanceResponseDTO;
+use App\Services\Wallet\WalletService;
 use Illuminate\Http\Request;
 
 class ExchangeWalletController extends Controller
 {
+    protected $walletService;
+    public function __construct(WalletService $walletService)
+    {
+        $this->walletService = $walletService;
+    }
     public function index()
     {
         $response = CoinexRequest::send(MethodEnum::GET, "/v2/assets/spot/balance");
@@ -46,9 +52,11 @@ class ExchangeWalletController extends Controller
             return $asset;
         });
 
+        $exchangeWallets = $this->walletService->getExchangeAllWallet();
 
         return view('dashboard.exchange.wallet.exchange-wallets', [
             'coinexAssets' => $coinexAssets,
+            'exchangeWallets' => $exchangeWallets,
         ]);
 
     }

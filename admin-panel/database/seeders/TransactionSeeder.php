@@ -15,8 +15,6 @@ class TransactionSeeder extends Seeder
     {
         Transaction::factory(5)->withReferralCodeUsage()->create();
 
-
-
     }
 
 

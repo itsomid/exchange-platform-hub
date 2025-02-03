@@ -47,6 +47,11 @@ class WalletService
             ->where('currency_symbol', $currency)
             ->first();
     }
+
+    public function getExchangeAllWallet()
+    {
+        return Wallet::where('user_id', $this->exchangeUserId)->get();
+    }
     public function totalAssetsValue(User $user)
     {
         // Initialize the total assets value

@@ -29,7 +29,7 @@
     // --------------------------------------------------------------------
     const supportTrackerEl = document.querySelector('#supportTracker'),
         supportTrackerOptions = {
-            series: [85],
+            series: [0],
             labels: ['تیکت های کامل شده'],
             chart: {
                 height: 360,

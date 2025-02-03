@@ -98,7 +98,7 @@
                                     </li>
                                 @endforeach
                             @else
-                                بدون واریز
+                                بدون معامله
                             @endif
 
                         </ul>

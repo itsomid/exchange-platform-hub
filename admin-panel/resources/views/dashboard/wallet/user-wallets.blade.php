@@ -30,8 +30,8 @@
                                     <li class="list-inline-item d-flex gap-2 align-items-center">
                                         <i class="fa-regular fa-clock"></i>
                                         <span class="text-body">
-                                            @if($user->latestActiveToken())
-                                                {{\App\Helpers\DateFormatter::convertToPersianDate($user->latestActiveToken()->last_used_at,'H:i:s %Y/%m/%d')}}
+                                            @if($user->latestActiveToken)
+                                                {{\App\Helpers\DateFormatter::convertToPersianDate($user->latestActiveToken->last_used_at,'H:i:s %Y/%m/%d')}}
                                             @else
                                                 <span>فعالیتی نداشته است</span>
                                             @endif

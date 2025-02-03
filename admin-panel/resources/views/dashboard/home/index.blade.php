@@ -24,7 +24,8 @@
                 </div>
                 <div class="card-body">
                     <ul class="p-0 m-0">
-                        @foreach($withdrawalSums as $withdraw)
+
+                        @forelse($withdrawalSums as $withdraw)
                             <li class="mb-6 d-flex justify-content-between align-items-center">
 
                                 <img src="{{asset($withdraw->currency->coinLogo())}}" class="img-fluid" width="45px">
@@ -37,7 +38,9 @@
                                     </div>
                                 </div>
                             </li>
-                        @endforeach
+                        @empty
+                            <p class="text-right">برداشتی ثبت نشده است</p>
+                        @endforelse
                     </ul>
                 </div>
             </div>
@@ -63,20 +66,22 @@
                 </div>
                 <div class="card-body">
                     <ul class="p-0 m-0">
-                        @foreach($OTCFeeTransactionsByCurrency as $currency)
+                        @forelse($OTCFeeTransactionsByCurrency as $currency)
                             <li class="mb-6 d-flex justify-content-between align-items-center">
-
-                                <img src="{{asset($currency->wallet->currency->coinLogo())}}" class="img-fluid" width="45px">
-
+                                <img src="{{asset($currency->wallet->currency->coinLogo())}}" class="img-fluid"
+                                     width="45px">
                                 <div class="d-flex justify-content-between w-100 flex-wrap">
                                     <h6 class="mb-0 ms-4">{{$currency->wallet->currency_symbol}}</h6>
                                     <div class="d-flex ">
-                                        <small class="me-2 align-self-end">{{$currency->wallet->currency_symbol}}</small>
+                                        <small
+                                            class="me-2 align-self-end">{{$currency->wallet->currency_symbol}}</small>
                                         <h5 class="mb-0 font-number">{{formatNumberTrimZeros($currency->total_amount)}}</h5>
                                     </div>
                                 </div>
                             </li>
-                        @endforeach
+                        @empty
+                            <p class="text-right">معامله‌ای ثبت نشده است</p>
+                        @endforelse
                     </ul>
                 </div>
             </div>
@@ -103,20 +108,24 @@
                 </div>
                 <div class="card-body">
                     <ul class="p-0 m-0">
-                        @foreach($withdrawalFeeTransactionsByCurrency as $currency)
+                        @forelse($withdrawalFeeTransactionsByCurrency as $currency)
                             <li class="mb-6 d-flex justify-content-between align-items-center">
 
-                                <img src="{{asset($currency->wallet->currency->coinLogo())}}" class="img-fluid" width="45px">
+                                <img src="{{asset($currency->wallet->currency->coinLogo())}}" class="img-fluid"
+                                     width="45px">
 
                                 <div class="d-flex justify-content-between w-100 flex-wrap">
                                     <h6 class="mb-0 ms-4">{{$currency->wallet->currency_symbol}}</h6>
                                     <div class="d-flex ">
-                                        <small class="me-2 align-self-end">{{$currency->wallet->currency_symbol}}</small>
+                                        <small
+                                            class="me-2 align-self-end">{{$currency->wallet->currency_symbol}}</small>
                                         <h5 class="mb-0 font-number">{{formatNumberTrimZeros($currency->total_amount)}}</h5>
                                     </div>
                                 </div>
                             </li>
-                        @endforeach
+                        @empty
+                            <p class="text-right">برداشتی ثبت نشده است</p>
+                        @endforelse
                     </ul>
                 </div>
             </div>
@@ -161,9 +170,9 @@
                 <div class="card-header">
                     <div class="d-flex justify-content-between">
                         <h6 class="mb-0 text-body">درآمد از سود صرافی برحسب تتر (هفته اخیر)</h6>
-                        <div class="badge bg-label-success">+15%</div>
+                        <div class="badge bg-label-success">+0%</div>
                     </div>
-                    <h4 class="card-title mb-1">${{number_format(23234,2)}}</h4>
+                    <h4 class="card-title mb-1">$0</h4>
                 </div>
 
 
@@ -179,9 +188,9 @@
                 <div class="card-header">
                     <div class="d-flex justify-content-between">
                         <h6 class="mb-0 text-body">درآمد از کارمزد معاملات بر حسب تتر (هفته اخیر)</h6>
-                        <div class="badge bg-label-success">+15%</div>
+                        <div class="badge bg-label-success">+0%</div>
                     </div>
-                    <h4 class="card-title mb-1">${{number_format(23234,2)}}</h4>
+                    <h4 class="card-title mb-1">$0</h4>
                 </div>
 
 
@@ -214,7 +223,7 @@
                     <div class="row">
                         <div class="col-12 col-sm-4 col-md-12 col-lg-4">
                             <div class="mt-lg-4 mt-lg-2 mb-lg-4 mb-2 pt-1">
-                                <h1 class="mb-0">164</h1>
+                                <h1 class="mb-0">0</h1>
                                 <p class="mb-0">تعداد تیکت ها</p>
                             </div>
                             <ul class="p-0 m-0">
@@ -223,7 +232,7 @@
                                     </div>
                                     <div>
                                         <h6 class="mb-0 text-nowrap">تیکت های جدید</h6>
-                                        <small class="text-muted">142</small>
+                                        <small class="text-muted">0</small>
                                     </div>
                                 </li>
                                 <li class="d-flex gap-3 align-items-center mb-lg-3 pb-1">
@@ -231,7 +240,7 @@
                                             class="ti ti-circle-check ti-sm"></i></div>
                                     <div>
                                         <h6 class="mb-0 text-nowrap">تیکت های باز</h6>
-                                        <small class="text-muted">28</small>
+                                        <small class="text-muted">0</small>
                                     </div>
                                 </li>
                                 <li class="d-flex gap-3 align-items-center pb-1">
