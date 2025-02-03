@@ -35,8 +35,9 @@ class RegisterRequest extends FormRequest
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->whereNotNull('email_verified_at')],
             'password' => ['required', 'string', 'min:8'],
             'introducer_code' => ['sometimes', 'string', Rule::exists(ReferralCode::class, 'code')],
-            'key' => App::isProduction() ? ['required', 'string'] : ['nullable'],
-            'captcha' => App::isProduction() ? ['required', 'captcha_api:'.request('key').',flat'] : ['nullable'],
+            'captcha' => ['required', 'array'],
+            'captcha.key' => App::isProduction() ? ['required', 'string'] : ['nullable'],
+            'captcha.value' => App::isProduction() ? ['required', 'captcha_api:'.request('captcha.key').',flat'] : ['nullable'],
         ];
     }
 }

@@ -34,7 +34,9 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email', 'max:255', 'exists:users,email'],
             'password' => ['required', 'string', 'min:6'],
-            'captcha' => App::isProduction() ? ['required', 'captcha_api:'.request('key').',flat'] : ['nullable'],
+            'captcha' => ['required', 'array'],
+            'captcha.key' => App::isProduction() ? ['required', 'string'] : ['nullable'],
+            'captcha.value' => App::isProduction() ? ['required', 'captcha_api:'.request('captcha.key').',flat'] : ['nullable'],
         ];
     }
 }
