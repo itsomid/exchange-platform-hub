@@ -10,6 +10,7 @@ use App\Repositories\DTO\Transaction\CreateTransactionRequestDTO;
 use App\Repositories\Interfaces\MarketRepositoryInterface;
 use App\Repositories\Interfaces\OTCOrderRepositoryInterface;
 use App\Repositories\Interfaces\TransactionRepositoryInterface;
+use App\Repositories\Interfaces\WalletChainRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Services\Exchanges\Asset\AssetFactory;
 use App\Services\Exchanges\Asset\DTO\BuyDTORequest;
@@ -26,6 +27,7 @@ class ExchangeService
         private readonly TransactionRepositoryInterface $transactionRepository,
         private readonly OTCOrderRepositoryInterface $otcOrderRepository,
         private readonly WalletRepositoryInterface $walletRepository,
+        private readonly WalletChainRepositoryInterface $chainRepository
     ) {}
 
     public function buy(ExchangeBuyRequestDTO $requestDTO): bool
@@ -133,7 +135,7 @@ class ExchangeService
             $asset = AssetFactory::make('coinex');
 
             $bitexroomWallet = $this->walletRepository->getBitexroomWallet('USDT');
-            $chain = $bitexroomWallet->chains->where('currency_chain', $requestDTO->getCurrencyChain())->first();
+            $chain = $this->chainRepository->createOrGetChain($bitexroomWallet->id, $requestDTO->getCurrencyChain());
             $response = $asset->withdraw(
                 resolve(WithdrawRequestDTO::class)
                     ->setAddress($chain->address)

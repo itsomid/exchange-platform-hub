@@ -15,7 +15,9 @@ use App\Models\CurrencyChain;
 use App\Models\Transaction;
 use App\Models\Wallet;
 use App\Models\Withdrawal;
+use App\Notifications\WithdrawalSuccessful;
 use App\Repositories\Interfaces\CurrencyRepositoryInterface;
+use App\Repositories\Interfaces\UserRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Repositories\Interfaces\WithdrawalRepositoryInterface;
 use App\Services\Wallet\DTO\Withdrawal\CreateWithdrawalRequestDTO;
@@ -30,6 +32,7 @@ class WithdrawalService
         private readonly CurrencyRepositoryInterface $currencyRepository,
         private readonly WithdrawalRepositoryInterface $withdrawalRepository,
         private readonly HDWalletWithdrawalService $withdrawalService,
+        private readonly UserRepositoryInterface $userRepository,
 
     ) {}
 
@@ -111,6 +114,7 @@ class WithdrawalService
     public function checkWithdrawal(int $userId): int
     {
         $withdrawalCompletedCount = 0;
+        $user = $this->userRepository->getUserById($userId);
         $pending = $this->withdrawalRepository->getAllPending($userId);
         foreach ($pending as $withdrawal) {
 
@@ -134,6 +138,7 @@ class WithdrawalService
                 if ($responseDTO->getStatus() === 'completed') {
                     $withdrawalCompletedCount++;
                     $this->confirmWithdrawal($withdrawal, $responseDTO->getTransactionHash(), $responseDTO->getFee());
+                    $user->notify(new WithdrawalSuccessful($withdrawal->currency_symbol, $withdrawal->amount, $user->name, $withdrawal->currency_chain));
                 }
 
             } catch (NotFoundException) {

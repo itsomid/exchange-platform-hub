@@ -10,10 +10,12 @@ use App\Exceptions\V1\Wallet\InternalWalletHasProblemException;
 use App\Exceptions\V1\Wallet\UserDoesNotHaveWalletAddress;
 use App\Infrastructure\HDWallet\DTO\HDDeposit\GetDepositListsRequestDTO;
 use App\Infrastructure\HDWallet\HDWalletDepositService;
+use App\Notifications\DepositSuccessful;
 use App\Repositories\DTO\Deposit\CreateDepositRequestDTO;
 use App\Repositories\DTO\Transaction\CreateTransactionRequestDTO;
 use App\Repositories\Interfaces\DepositRepositoryInterface;
 use App\Repositories\Interfaces\TransactionRepositoryInterface;
+use App\Repositories\Interfaces\UserRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Services\Wallet\DTO\CheckWallet\CheckUserDepositRequestDTO;
 use Illuminate\Support\Facades\DB;
@@ -25,6 +27,7 @@ class CheckWalletService
         private readonly DepositRepositoryInterface $depositRepository,
         private readonly WalletRepositoryInterface $walletRepository,
         private readonly TransactionRepositoryInterface $transactionRepository,
+        private readonly UserRepositoryInterface $userRepository,
     ) {}
 
     /**
@@ -33,6 +36,7 @@ class CheckWalletService
     public function checkUserDeposit(CheckUserDepositRequestDTO $requestDTO): bool
     {
         $hasNewTransaction = false;
+        $user = $this->userRepository->getUserById($requestDTO->getUserId());
         $wallet = $this->walletRepository->getOneByCurrency($requestDTO->getCurrencySymbol(), $requestDTO->getUserId());
         $wallet = $wallet->load('chains.wallet.currency.chains');
         $chains = $wallet->chains;
@@ -84,6 +88,7 @@ class CheckWalletService
                         ->setDescription('واریز به آدرس: '.$deposit->address.' هش تراکنش: '.$transactionHash)
                     );
                     $wallet->increment('balance', $transaction->getAmount());
+                    $user->notify(new DepositSuccessful($transaction->getCryptocurrency(), $transaction->getAmount(), $user->name));
                     DB::commit();
                     $hasNewTransaction = true;
                 } catch (Throwable $exception) {
