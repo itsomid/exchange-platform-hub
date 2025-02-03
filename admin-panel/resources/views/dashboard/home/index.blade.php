@@ -136,7 +136,7 @@
                 <div class="card-header">
                     <div class="d-flex justify-content-between">
                         <h6 class="mb-0 text-body">واریز (هفته اخیر)</h6>
-                        <div class="badge bg-label-success">+15%</div>
+                        <div class="badge bg-label-success">+0%</div>
                     </div>
                     <h4 class="card-title mb-1">${{formatNumberTrimZeros($totalDepositsValue)}}</h4>
                 </div>
@@ -152,7 +152,7 @@
                 <div class="card-header">
                     <div class="d-flex justify-content-between">
                         <h6 class="mb-0 text-body">برداشت (هفته اخیر)</h6>
-                        <div class="badge bg-label-danger">+15%</div>
+                        <div class="badge bg-label-danger">+0%</div>
                     </div>
                     <h4 class="card-title mb-1">${{formatNumberTrimZeros($totalWithdrawalValue)}}</h4>
                 </div>
@@ -310,8 +310,8 @@
                 <div class="card-body">
                     <div id="OTCBuyLastWeek"></div>
                     <div class="d-flex justify-content-between align-items-center gap-3">
-                        <h4 class="mb-0">1,245</h4>
-                        <small class="text-success">+12.6%</small>
+                        <h4 class="mb-0">0</h4>
+                        <small class="text-success">+0%</small>
                     </div>
                 </div>
             </div>
@@ -325,8 +325,8 @@
                 <div class="card-body">
                     <div id="OTCSellLastWeek"></div>
                     <div class="d-flex justify-content-between align-items-center gap-3">
-                        <h4 class="mb-0">1,230</h4>
-                        <small class="text-success">+12.6%</small>
+                        <h4 class="mb-0">0</h4>
+                        <small class="text-success">+0%</small>
                     </div>
                 </div>
             </div>

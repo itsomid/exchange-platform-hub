@@ -6,7 +6,7 @@
         <div class="card-header d-flex justify-content-between">
 
             <h5 class="mb-0 card-title">گزارش واریز {{request()->input('currency_symbol')}}</h5>
-            @if(isset($deposits))
+            @if($deposits->isNotEmpty())
                 <img src="{{$deposits[0]->currency->coinLogo()}}" width="60">
             @endif
         </div>
@@ -60,10 +60,10 @@
                     </div>
                     <div class=" d-flex justify-content-start mt-5">
 
-                            <button class="btn btn-primary ">
-                                <i class="fa-regular fa-chart-area mx-2"></i>
-                                دریافت گزارش
-                            </button>
+                        <button class="btn btn-primary ">
+                            <i class="fa-regular fa-chart-area mx-2"></i>
+                            دریافت گزارش
+                        </button>
 
                     </div>
 
@@ -136,7 +136,9 @@
                 <div class="card h-100">
                     <div class="card-header d-flex justify-content-between">
                         <h5 class="mb-0 card-title">نمودار واریز ها ({{request()->input('currency_symbol')}})</h5>
-                        <img src="{{$deposits[0]->currency->coinLogo()}}" width="60">
+                        @if($deposits->isNotEmpty())
+                            <img src="{{$deposits[0]->currency->coinLogo()}}" width="60">
+                        @endif
                     </div>
                     <div class="card-body">
                         <div class="d-flex align-items-start">
@@ -155,7 +157,9 @@
                                     <div class="d-flex">
 
                                         <p class="mb-0 mx-2">{{$deposits->sum('total_amount')}}</p>
-                                        <p class="mb-0">({{$deposits[0]->currency->symbol}})</p>
+                                        @if($deposits->isNotEmpty())
+                                            <p class="mb-0">({{$deposits[0]->currency->symbol}})</p>
+                                        @endif
                                     </div>
                                 </div>
 

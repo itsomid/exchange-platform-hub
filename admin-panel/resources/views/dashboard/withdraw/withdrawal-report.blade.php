@@ -6,7 +6,7 @@
         <div class="card-header d-flex justify-content-between">
 
             <h5 class="mb-0 card-title">گزارش برداشت {{request()->input('currency_symbol')}}</h5>
-            @if(isset($completeWithdrawals))
+            @if($completeWithdrawals->isNotEmpty())
                 <img src="{{$completeWithdrawals[0]->currency->coinLogo()}}" width="60">
             @endif
         </div>
@@ -172,7 +172,9 @@
                 <div class="card h-100">
                     <div class="card-header d-flex justify-content-between">
                         <h5 class="mb-0 card-title">نمودار برداشت ها ({{request()->input('currency_symbol')}})</h5>
-                        <img src="{{$completeWithdrawals[0]->currency->coinLogo()}}" width="60">
+                        @if($completeWithdrawals->isNotEmpty())
+                            <img src="{{$completeWithdrawals[0]->currency->coinLogo()}}" width="60">
+                        @endif
                     </div>
                     <div class="card-body">
                         <div class="d-flex align-items-start">
@@ -191,7 +193,9 @@
                                     <div class="d-flex">
 
                                         <p class="mb-0 mx-2">{{$completeWithdrawals->sum('total_amount')}}</p>
-                                        <p class="mb-0">({{$completeWithdrawals[0]->currency->symbol}})</p>
+                                        @if($completeWithdrawals->isNotEmpty())
+                                            <p class="mb-0">({{$completeWithdrawals[0]->currency->symbol}})</p>
+                                        @endif
                                     </div>
                                 </div>
 
