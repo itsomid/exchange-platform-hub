@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Notifications\ResetPasswordNotification;
+use Carbon\Carbon;
 use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -22,6 +23,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string $google2fa_secret
  * @property int    $id
  * @property string $two_factor_secret
+ * @property Carbon $email_verified_at
  */
 class User extends Authenticatable implements CanResetPassword, MustVerifyEmail
 {

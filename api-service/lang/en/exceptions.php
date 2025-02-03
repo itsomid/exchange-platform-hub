@@ -13,4 +13,5 @@ return [
     \App\Exceptions\Auth\ResetTwoFactor\TokenInvalidException::class => 'Your entered token is invalid.',
     \App\Exceptions\V1\OTC\TradeWasFiledException::class => 'Your trade has failed.',
     \App\Exceptions\V1\Wallet\UserDoesNotHaveWalletAddress::class => 'You do not have an active wallet address. Please create a wallet address first.',
+    \App\Exceptions\V1\Auth\UserNotVerifiedException::class => 'Your account has not been verified.',
 ];

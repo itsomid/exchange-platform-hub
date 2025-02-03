@@ -3,6 +3,7 @@
 namespace App\Services\Auth;
 
 use App\Exceptions\Auth\InvalidUsernameOrPasswordException;
+use App\Exceptions\V1\Auth\UserNotVerifiedException;
 use App\Repositories\DTO\User\UpdateLastLoginRequestDTO;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 use App\Services\Auth\DTO\LoginRequestDTO;
@@ -22,6 +23,9 @@ readonly class LoginService
     {
         $user = $this->userRepository->getUserByEmail($loginRequestDTO->getEmail());
 
+        if (is_null($user->email_verified_at)) {
+            throw new UserNotVerifiedException;
+        }
         if (! Hash::check($loginRequestDTO->getPassword(), $user->password)) {
             throw new InvalidUsernameOrPasswordException;
         }
