@@ -27,6 +27,7 @@ class CurrencyRepository implements CurrencyRepositoryInterface
     {
         return Currency::query()
             ->with('chains')
+            ->has('chains')
             ->get();
     }
 }
