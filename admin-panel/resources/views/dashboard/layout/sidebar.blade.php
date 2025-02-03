@@ -76,14 +76,14 @@
         <li class="menu-header small text-uppercase">
             <span class="menu-header-text">مالی و خرید ها</span>
         </li>
-{{--        @can('order.index')--}}
-{{--            <li class="menu-item @if(request()->is('admin/exchange/market123123*')) active @endif">--}}
-{{--                <a href="{{route('admin.wallet.index')}}" class="menu-link">--}}
-{{--                    <i class="menu-icon fa-regular fa-wallet"></i>--}}
-{{--                    <div>مدیریت کیف پول ها</div>--}}
-{{--                </a>--}}
-{{--            </li>--}}
-{{--        @endcan--}}
+        {{--        @can('order.index')--}}
+        {{--            <li class="menu-item @if(request()->is('admin/exchange/market123123*')) active @endif">--}}
+        {{--                <a href="{{route('admin.wallet.index')}}" class="menu-link">--}}
+        {{--                    <i class="menu-icon fa-regular fa-wallet"></i>--}}
+        {{--                    <div>مدیریت کیف پول ها</div>--}}
+        {{--                </a>--}}
+        {{--            </li>--}}
+        {{--        @endcan--}}
         @can('transaction')
             <li class="menu-item @if(request()->is('admin/transactions*')) active @endif">
                 <a href="{{route('admin.transaction.index')}}" class="menu-link">
@@ -226,6 +226,8 @@
                     @endcan
                 </ul>
             </li>
+        @endcan
+        @can('view-logs')
             <li class="menu-item @if(request()->route()->getName() == 'telescope') active @endif">
                 <a href="{{route('telescope')}}" class="menu-link">
                     <i class="menu-icon fa-light fa-telescope fa-sm"></i>

@@ -27,7 +27,7 @@ class WithdrawalReportController extends Controller
         }
 
         if ($request->from_date xor $request->to_date) {
-            return redirect()->route('admin.report.withdrawal')->withErrors(['from_date' => 'یکی از تاریخ ها نمیتواند خالی باشد']);
+            return redirect()->route('dashboard.withdraw.withdrawal-report')->withErrors(['from_date' => 'یکی از تاریخ ها نمیتواند خالی باشد']);
         }
 
         $from_date = \App\Helpers\DateFormatter::convertPersianToCarbonDate($request->from_date);
