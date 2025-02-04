@@ -77,3 +77,10 @@ Route::prefix('notifications')->group(function () {
     Route::get('/', [App\Http\Controllers\V1\User\NotificationController::class, 'index']);
     Route::post('/{id}/mark-as-read', [App\Http\Controllers\V1\User\NotificationController::class, 'markAsRead']);
 });
+//Tickets
+Route::prefix('/tickets')->group(function () {
+    Route::post('/', [App\Http\Controllers\V1\User\TicketController::class, 'store']);
+    Route::get('/', [App\Http\Controllers\V1\User\TicketController::class, 'index']);
+    Route::get('/{ticket}', [App\Http\Controllers\V1\User\TicketController::class, 'show']);
+    Route::post('/{ticket}/reply', [App\Http\Controllers\V1\User\TicketController::class, 'reply']);
+});

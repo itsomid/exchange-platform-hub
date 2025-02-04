@@ -1781,13 +1781,13 @@
                 ]
             }
         },
-        "/api/notifications": {
+        "/api/v1/notifications": {
             "get": {
                 "tags": [
                     "Notifications"
                 ],
                 "summary": "Get user notifications",
-                "operationId": "feaf37d420fb0a13287ea070c1dc7b9d",
+                "operationId": "d428b1b97dd42a772477d71bec5fba56",
                 "responses": {
                     "200": {
                         "description": "List of user notifications",
@@ -1884,13 +1884,13 @@
                 ]
             }
         },
-        "/api/notifications/{id}/mark-as-read": {
+        "/api/v1/notifications/{id}/mark-as-read": {
             "post": {
                 "tags": [
                     "Notifications"
                 ],
                 "summary": "Mark a notification as read",
-                "operationId": "b5358f53d638351757ab7ff44977a84c",
+                "operationId": "2276ceaa64540bc771c1cd51c68bc975",
                 "parameters": [
                     {
                         "name": "id",
@@ -2224,6 +2224,181 @@
                 "security": [
                     {
                         "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/tickets": {
+            "post": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Create a new ticket",
+                "operationId": "a38e9e84d3c1995f2ed8db8218952308",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreTicketRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Ticket created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TicketResource"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request data"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/tickets": {
+            "get": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Get list of user tickets",
+                "operationId": "ffc5cfa8477c6edd730754ae97980539",
+                "responses": {
+                    "200": {
+                        "description": "List of tickets",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TicketResource"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/tickets/{ticket}": {
+            "get": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Get a single ticket",
+                "operationId": "c1a1e5b8e26042edbecc29c83cfbdcbe",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "description": "ID of the ticket",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ticket details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TicketResource"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Ticket not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/tickets/{ticket}/reply": {
+            "post": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Reply to a ticket",
+                "operationId": "8ef9dcdc78dbbf2aca3ad2732f1c854d",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "description": "ID of the ticket",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ReplyTicketRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Reply added successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TicketReplyResource"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Ticket not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
                     }
                 ]
             }
@@ -3389,6 +3564,59 @@
                 },
                 "type": "object"
             },
+            "ReplyTicketRequest": {
+                "required": [
+                    "message"
+                ],
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "We are looking into your issue."
+                    },
+                    "is_private": {
+                        "type": "boolean",
+                        "example": false
+                    }
+                },
+                "type": "object"
+            },
+            "StoreTicketRequest": {
+                "required": [
+                    "subject",
+                    "message",
+                    "priority",
+                    "ticketable_id",
+                    "ticketable_type"
+                ],
+                "properties": {
+                    "subject": {
+                        "type": "string",
+                        "example": "Withdrawal Issue"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "My withdrawal is stuck."
+                    },
+                    "priority": {
+                        "type": "string",
+                        "enum": [
+                            "low",
+                            "medium",
+                            "high"
+                        ],
+                        "example": "high"
+                    },
+                    "ticketable_id": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "ticketable_type": {
+                        "type": "string",
+                        "example": "App\\Models\\Withdrawal"
+                    }
+                },
+                "type": "object"
+            },
             "GenerateAddressRequest": {
                 "required": [
                     "currency",
@@ -4127,6 +4355,78 @@
                 },
                 "type": "object"
             },
+            "TicketReplyResource": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "We are looking into your issue."
+                    },
+                    "is_seen": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "TicketResource": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "ticket_number": {
+                        "type": "string",
+                        "example": "TCK-12345ABC"
+                    },
+                    "subject": {
+                        "type": "string",
+                        "example": "Withdrawal Issue"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "My withdrawal is stuck."
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "open"
+                    },
+                    "priority": {
+                        "type": "string",
+                        "example": "high"
+                    },
+                    "ticket_type": {
+                        "type": "string",
+                        "example": "withdrawal"
+                    },
+                    "ticketable_id": {
+                        "type": "string",
+                        "example": "1"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "replies": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TicketReplyResource"
+                        }
+                    }
+                },
+                "type": "object"
+            },
             "CoinAddressResponse": {
                 "properties": {
                     "address": {
@@ -4390,6 +4690,10 @@
         {
             "name": "Referral Code",
             "description": "Referral Code"
+        },
+        {
+            "name": "Tickets",
+            "description": "Tickets"
         },
         {
             "name": "Portfolio",
