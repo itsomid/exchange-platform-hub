@@ -28,7 +28,7 @@ class DepositReportController extends Controller
         }
 
         if ($request->from_date xor $request->to_date) {
-            return redirect()->route('admin.report.deposit')->withErrors(['from_date' => 'یکی از تاریخ ها نمیتواند خالی باشد']);
+            return redirect()->route('dashboard.deposits.deposit-report')->withErrors(['from_date' => 'یکی از تاریخ ها نمیتواند خالی باشد']);
         }
 
         $from_date = \App\Helpers\DateFormatter::convertPersianToCarbonDate($request->from_date);

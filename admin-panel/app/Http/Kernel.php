@@ -5,6 +5,7 @@ namespace App\Http;
 use App\Http\Middleware\CheckRegistrationCompletion;
 use App\Http\Middleware\CheckUserActivation;
 use App\Http\Middleware\JwtAuthenticator;
+use App\Http\Middleware\ViewLogs;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
@@ -69,5 +70,6 @@ class Kernel extends HttpKernel
         'check_registration' => CheckRegistrationCompletion::class,
         'is_active' => CheckUserActivation::class,
         'checkJWT' => JwtAuthenticator::class,
+        'view-logs' => ViewLogs::class,
     ];
 }

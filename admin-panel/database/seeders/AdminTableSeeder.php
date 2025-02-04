@@ -18,7 +18,7 @@ class AdminTableSeeder extends Seeder
                 'gender' => 'male',
             ]));
 
-            $admin->assignRole('admin');
+            $admin->assignRole('super_admin');
         }
         foreach ($this->admin() as $admin) {
             $admin = Admin::query()->create(array_merge($admin, [

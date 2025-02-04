@@ -61,7 +61,8 @@ class PermissionList
             ['deposit', 'مشاهده لیست واریزی ها'],
             ['withdrawal', 'مشاهده لیست برداشت ها'],
 
-            ['report','لیست گزارش ها']
+            ['report','لیست گزارش ها'],
+            ['view-logs','لیست گزارش ها'],
 
         ];
 

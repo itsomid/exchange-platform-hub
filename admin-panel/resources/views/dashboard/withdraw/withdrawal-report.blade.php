@@ -6,7 +6,7 @@
         <div class="card-header d-flex justify-content-between">
 
             <h5 class="mb-0 card-title">گزارش برداشت {{request()->input('currency_symbol')}}</h5>
-            @if($completeWithdrawals->isNotEmpty())
+            @if(isset($completeWithdrawals) && $completeWithdrawals->isNotEmpty())
                 <img src="{{$completeWithdrawals[0]->currency->coinLogo()}}" width="60">
             @endif
         </div>
