@@ -28,7 +28,7 @@ class ResetPasswordMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            from: new Address('mehdints@gmail.com', 'Mehdi Rajabi'),
+            from: new Address('info@bitexroom.com', 'BitexRoom'),
             to: [$this->user->email],
             subject: 'بازبابی رمز عبور',
         );
