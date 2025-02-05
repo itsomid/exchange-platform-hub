@@ -28,7 +28,7 @@ services:
     depends_on:
       - php-admin
       - database
-      - laravel-queue
+      - admin-queue
       - laravel-cron
 #      - phpmyadmin
     networks:
@@ -68,7 +68,7 @@ services:
     depends_on:
       - php-api
       - database
-      - laravel-queue
+      - api-queue
       - laravel-cron
     networks:
       - laravel
@@ -138,10 +138,10 @@ services:
         - UID=${UID:-1000}
         - GID=${GID:-1000}
         - USER=${USER:-laraveluser}
-    container_name: laravel-queue
+    container_name: admin-queue
     volumes:
-      - ./admin-panel:/var/www/html:delegated
-      - ./env/admin_panel.env:/var/www/html/.env
+      - "./admin-panel:/var/www/html:delegated"
+      - "./env/admin_panel.env:/var/www/html/.env"
     depends_on:
       - database
     working_dir: /var/www/html
@@ -157,10 +157,10 @@ services:
         - UID=${UID:-1000}
         - GID=${GID:-1000}
         - USER=${USER:-laraveluser}
-    container_name: laravel-queue
+    container_name: api-queue
     volumes:
-      - ./api-service:/var/www/html:delegated
-      - ./env/api-service.env:/var/www/html/.env
+      - "./api-service:/var/www/html:delegated"
+      - "./env/api_service.env:/var/www/html/.env"
     depends_on:
       - database
     working_dir: /var/www/html
