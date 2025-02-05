@@ -178,11 +178,11 @@ class WalletService
             ->setLockedBalance($wallet->locked_balance ?? 0)
             ->setUsdtBalance(
                 $wallet && $wallet->exchangePrice ?
-                    bcmul($wallet->exchangePrice->price, $wallet->balance, 8) : $wallet->balance
+                    bcmul($wallet->exchangePrice->price, $wallet->balance ?? 0, 8) : $wallet->balance
             )
             ->setUsdtLockedBalance(
                 $wallet && $wallet->exchangePrice ?
-                    bcmul($wallet->exchangePrice->price, $wallet->locked_balance, 8) : $wallet->locked_balance
+                    bcmul($wallet->exchangePrice->price, $wallet->locked_balance ?? 0, 8) : $wallet->locked_balance
             );
     }
 }
