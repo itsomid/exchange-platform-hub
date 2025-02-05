@@ -30,6 +30,11 @@ class WalletService
         private readonly MarketRepositoryInterface $marketRepository,
     ) {}
 
+    public function createWallet(int $userId, string $currencySymbol): void
+    {
+        $this->walletRepository->createOrGetWallet($currencySymbol, $userId);
+    }
+
     /**
      * @throws InternalWalletHasProblemException
      * @throws Throwable
