@@ -171,6 +171,17 @@ class WalletService
 
     public function SetWalletDTP(?\App\Models\Wallet $wallet, ?Market $market = null): WalletListsResponseDTO
     {
+        if (is_null($wallet)) {
+            return resolve(WalletListsResponseDTO::class)
+                ->setCurrency($market->base_currency)
+                ->setBalance('0')
+                ->setLockedBalance('0')
+                ->setUsdtLockedBalance('0')
+                ->setUsdtBalance('0')
+                ->setId(null);
+
+        }
+
         return resolve(WalletListsResponseDTO::class)
             ->setId($wallet->id ?? null)
             ->setCurrency($wallet->currency_symbol ?? $market->base_currency)
