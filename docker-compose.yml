@@ -130,7 +130,7 @@ services:
       - laravel
 
   # Laravel Queue Workers
-  laravel-queue:
+  admin-queue:
     build:
       context: ./dockerfiles
       dockerfile: php.dockerfile
@@ -142,6 +142,25 @@ services:
     volumes:
       - ./admin-panel:/var/www/html:delegated
       - ./env/admin_panel.env:/var/www/html/.env
+    depends_on:
+      - database
+    working_dir: /var/www/html
+    entrypoint: [ 'php', '/var/www/html/artisan', 'queue:work' ]
+    networks:
+      - laravel
+
+  api-queue:
+    build:
+      context: ./dockerfiles
+      dockerfile: php.dockerfile
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - USER=${USER:-laraveluser}
+    container_name: laravel-queue
+    volumes:
+      - ./api-service:/var/www/html:delegated
+      - ./env/api-service.env:/var/www/html/.env
     depends_on:
       - database
     working_dir: /var/www/html
