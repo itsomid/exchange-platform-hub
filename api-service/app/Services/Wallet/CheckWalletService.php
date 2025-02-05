@@ -38,6 +38,9 @@ class CheckWalletService
         $hasNewTransaction = false;
         $user = $this->userRepository->getUserById($requestDTO->getUserId());
         $wallet = $this->walletRepository->getOneByCurrency($requestDTO->getCurrencySymbol(), $requestDTO->getUserId());
+        if (is_null($wallet)) {
+            throw new UserDoesNotHaveWalletAddress;
+        }
         $wallet = $wallet->load('chains.wallet.currency.chains');
         $chains = $wallet->chains;
         if (! $chains->contains(fn ($chain) => ! empty($chain->address))) {

@@ -74,7 +74,7 @@ class WalletRepository implements WalletRepositoryInterface
             ]);
     }
 
-    public function getOneByCurrency(string $base_currency, int $userId): Wallet
+    public function getOneByCurrency(string $base_currency, int $userId): ?Wallet
     {
         return Wallet::query()
             ->where('currency_symbol', $base_currency)

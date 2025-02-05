@@ -19,7 +19,7 @@ interface WalletRepositoryInterface
 
     public function getOrCreateWallet(int $userId, string $symbol): Wallet;
 
-    public function getOneByCurrency(string $base_currency, int $userId): Wallet;
+    public function getOneByCurrency(string $base_currency, int $userId): ?Wallet;
 
     public function getOneOrCreateByCurrencyWithLock(string $base_currency, int $userId): Wallet;
 
