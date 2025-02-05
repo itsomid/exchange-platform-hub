@@ -51,7 +51,7 @@ readonly class ReferralCodeService
             ->setCreatedAt($code->created_at)
             ->setIntroducerFee($code->introducer_fee)
             ->setFriendFee($code->friend_fee)
-            ->setTotalAmountReceived($code->transactions_sum_amount)
+            ->setTotalAmountReceived($code->transactions_sum_amount ? $code->transactions_sum_amount : 0)
             ->setTotalCountTransaction($code->referral_code_usage_count)
             ->setTotalFriendUsage($code->registered_users_count)
             ->setCode($code->code)
