@@ -357,7 +357,7 @@
                                                             src="{{asset($transaction->wallet->currency->coinLogo())}}"
                                                             width="30"/>
                                                         <span
-                                                            class="font-number">{{formatNumberTrimZeros($transaction->balance - $transaction->amount)}}</span>
+                                                            class="font-number">{{formatNumberTrimZeros($transaction->balance)}}</span>
                                                     </div>
                                                 </div>
                                                 <div
@@ -368,7 +368,7 @@
                                                         <img src="{{asset($transaction->wallet->currency->coinLogo())}}"
                                                              width="30"/>
                                                         <span
-                                                            class="font-number text-primary">{{formatNumberTrimZeros($transaction->balance)}}</span>
+                                                            class="font-number text-primary">{{formatNumberTrimZeros($transaction->balance + $transaction->amount)}}</span>
                                                     </div>
                                                 </div>
 

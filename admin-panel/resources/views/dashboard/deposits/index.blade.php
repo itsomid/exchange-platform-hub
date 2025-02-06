@@ -305,7 +305,8 @@
                                        data-bs-target="#deposit-{{$deposit->id}}">
                                         <i class="fa-regular fa-eye fa-xl"></i>
                                     </a>
-                                    <div class="modal fade" id="deposit-{{$deposit->id}}" tabindex="-1" aria-model="true">
+                                    <div class="modal fade" id="deposit-{{$deposit->id}}" tabindex="-1"
+                                         aria-model="true">
                                         <div class="modal-dialog" role="document">
                                             <div class="modal-content">
                                                 <div class="modal-header" dir="ltr">
@@ -328,9 +329,8 @@
                                                             واریز</h6>
                                                         <div class="d-flex  gap-2 align-items-end">
                                                             <small> {{$deposit->currency_symbol}}</small>
-                                                            <span
-                                                                class="font-number">{{formatNumberTrimZeros($deposit->transaction->balance - $deposit->transaction->amount)}}</span>
 
+                                                                <span class="font-number">{{formatNumberTrimZeros($deposit->transaction->balance)}}</span>
                                                         </div>
                                                     </div>
                                                     <div
@@ -339,8 +339,9 @@
                                                         <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی کاربر پس از واریز</h6>
                                                         <div class="d-flex  gap-2 align-items-end">
                                                             <small> {{$deposit->currency_symbol}}</small>
+
                                                             <span
-                                                                class="font-number text-success">{{formatNumberTrimZeros($deposit->transaction->balance)}}</span>
+                                                                class="font-number text-success">{{formatNumberTrimZeros($deposit->transaction->balance + $deposit->transaction->amount)}}</span>
                                                         </div>
                                                     </div>
                                                     <div
