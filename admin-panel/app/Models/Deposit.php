@@ -35,14 +35,15 @@ class Deposit extends Model
 
     public function currencyChain()
     {
-        return $this->hasOneThrough(
-            CurrencyChain::class,
-            Currency::class,
-            'symbol', // Foreign key on Currency table
-            'currency_id', // Foreign key on CurrencyChain table
-            'currency_symbol', // Local key on Deposit table
-            'id' // Local key on Currency table
-        );
+        return $this->belongsTo(CurrencyChain::class,'currency_chain','chain');
+//        return $this->hasOneThrough(
+//            CurrencyChain::class,
+//            Currency::class,
+//            'symbol', // Foreign key on Currency table
+//            'currency_id', // Foreign key on CurrencyChain table
+//            'currency_symbol', // Local key on Deposit table
+//            'id' // Local key on Currency table
+//        );
     }
 
     public function transaction()
