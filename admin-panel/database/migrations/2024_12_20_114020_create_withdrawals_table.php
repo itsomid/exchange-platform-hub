@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id(); // Primary key
             $table->unsignedBigInteger('user_id'); // Foreign key
             $table->unsignedBigInteger('admin_id')->nullable(); // Foreign key
-            $table->string('currency_chain'); // Blockchain (e.g., Ethereum, Binance Smart Chain)
             $table->string('currency_symbol'); // Token/Currency Symbol (e.g., BTC, ETH)
+            $table->foreignId('currency_chain_id')->constrained('currency_chains')->cascadeOnDelete();
             $table->decimal('amount', 20, 8); // Withdrawal amount
             $table->decimal('total_fee', 20, 8)->default(0); // Withdraw Total fee (optional)
             $table->decimal('exchange_fee', 20, 8)->default(0); // Exchange fee (optional)

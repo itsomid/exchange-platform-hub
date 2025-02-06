@@ -88,7 +88,7 @@ class WalletController extends Controller
                     fromUserId: $fromUserId,
                     toUserId: $toUserId,
                     amount: $request->amount,
-                    currency: $request->currency,
+                    currency: $currency,
                     currencyChain: $request->chain,
                     type: $request->transaction_type,
                     adminId: Auth::user()->id,
