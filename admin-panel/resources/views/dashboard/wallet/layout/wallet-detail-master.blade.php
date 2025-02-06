@@ -13,7 +13,12 @@
                     <div
                         class="d-flex align-items-md-end align-items-sm-start align-items-center justify-content-md-between justify-content-start mx-5 flex-md-row flex-column gap-4">
                         <div class="user-profile-info">
-                            <h4 class="mb-0">کیف پول {{$wallet->currency->name}}</h4>
+                            <h4 class="mb-0">کیف پول {{$wallet->currency->name}}
+                                @if($wallet->walletChains->isNotEmpty())
+                                    <small class="text-primary fw-bolder text-decoration-underline">(دارای آدرس
+                                        واریز)</small>
+                                @endif
+                            </h4>
 
 
                             <ul class="list-inline mb-0 d-flex align-items-center flex-wrap justify-content-sm-start justify-content-center gap-4 my-2">
@@ -31,13 +36,35 @@
                                 </li>
                                 <li class="list-inline-item d-flex gap-2 align-items-center">
                                     <i class="fa-regular fa-clock"></i>
-                                    <small class="text-body">آخرین فعالیت در ۳ مهر ۱۴۰۳</small>
+                                    <small class="text-body">
+                                        @if($user->latestActiveToken)
+                                            {{\App\Helpers\DateFormatter::convertToPersianDate($user->latestActiveToken->last_used_at,'H:i:s %Y/%m/%d')}}
+                                        @else
+                                            <span>بدون فعالیت</span>
+                                        @endif
+                                    </small>
                                 </li>
 
                             </ul>
                         </div>
                     </div>
                 </div>
+                <div class="mb-0 d-flex flex-column align-items-end justify-content-between">
+                    @if($wallet->walletChains->isNotEmpty())
+
+                        @foreach($wallet->walletChains as $walletChain)
+                            <a href="{{ $walletChain->explorer_address_url }}" target="_blank" class="my-1">
+
+                                <span>{{ $walletChain->address }}</span>
+
+                                <span class="me-2">({{$walletChain->currency_chain}})</span>
+                                <i class="fa-regular fa-clone ms-1"></i>
+                            </a>
+                        @endforeach
+
+                    @endif
+                </div>
+
             </div>
 
         </div>
@@ -50,7 +77,7 @@
                     <div class="d-flex flex-column flex-md-row justify-content-between">
 
                         <div class="d-flex flex-column justify-content-center">
-                            <h5 class="mb-1">موجودی کیف پول</h5>
+
                             <h3 class="text-primary mt-4 mb-1 font-number">{{formatNumberTrimZeros($wallet->balance)}}
                                 <span class=" h5">{{$wallet->currency_symbol}}</span>
                             </h3>
@@ -60,20 +87,24 @@
                             </p>
 
                         </div>
-                        <div class="d-flex align-content-center flex-wrap gap-4">
-                            <div class="d-flex gap-4">
-                                <a href="{{route('admin.wallet.increase-credit.form',['user'=>$user,'currency'=>$wallet->currency_symbol])}}" class="btn btn-info">
-                                    <i class="fa-regular fa-plus me-1"></i> افزایش موجودی
-                                </a>
-                                <a href="{{route('admin.wallet.block-balance.form',['wallet'=>$wallet,'user'=>$user])}}" class="btn btn-google-plus">
-                                    <i class="fa-regular fa-ban me-1"></i> مسدود سازی موجودی
-                                </a>
-                                <a href="{{route('admin.wallet.block-balance.form',['wallet'=>$wallet,'user'=>$user])}}" class="btn btn-success">
-                                    <i class="fa-regular fa-lock-open me-1"></i> آزاد سازی موجودی
-                                </a>
-                            </div>
+
+
+                        <div class="d-flex flex-column gap-4">
+                            <a href="{{route('admin.wallet.increase-credit.form',['user'=>$user,'currency'=>$wallet->currency_symbol])}}"
+                               class="btn btn-info">
+                                <i class="fa-regular fa-plus me-1"></i> افزایش موجودی
+                            </a>
+                            <a href="{{route('admin.wallet.block-balance.form',['wallet'=>$wallet,'user'=>$user])}}"
+                               class="btn btn-success">
+                                <i class="fa-regular fa-lock-open me-1"></i> آزاد سازی موجودی
+                            </a>
+                            <a href="{{route('admin.wallet.block-balance.form',['wallet'=>$wallet,'user'=>$user])}}"
+                               class="btn btn-google-plus">
+                                <i class="fa-regular fa-ban me-1"></i> مسدود سازی موجودی
+                            </a>
 
                         </div>
+
 
                     </div>
                 </div>
@@ -126,7 +157,7 @@
                     </h3>
                     <p class="mb-5">
                         <small class="text-muted fw-light">USDT</small>
-                        <span class="text-muted  me-2">{{formatNumber($specificAssetValue,2)}}</span>
+                        <span class="text-muted  me-2">{{formatNumber($totalWithdrawValue,2)}}</span>
                     </p>
                     <p class="mb-0">
 

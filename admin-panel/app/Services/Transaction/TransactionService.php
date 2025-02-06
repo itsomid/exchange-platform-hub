@@ -53,7 +53,7 @@ class TransactionService
                 $deposit = Deposit::create([
                     'user_id' => $userId,
                     'currency_symbol' => $currency->symbol,
-                    'currency_chain' => $currencyChain->id,
+                    'currency_chain_id' => $currencyChain->id,
                     'amount' => $amount,
                     'usdt_value' => $amount * $currency->exchangePrice,
                     'address' => null,
@@ -169,6 +169,7 @@ class TransactionService
                 'currency_symbol' => $currency->symbol,
                 'currency_chain_id' => $currencyChain->id,
                 'amount' => $amount,
+                'usdt_value' => $amount * $currency->exchangePrice,
                 'address' => null,
                 'transaction_hash' => null,
                 'description' => 'manual transfer by admin: (#' . $adminId . ') to: (#' . User::find($toUserId)->username . ')',

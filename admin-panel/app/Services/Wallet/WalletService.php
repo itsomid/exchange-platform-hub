@@ -71,6 +71,44 @@ class WalletService
         return $totalAssetsValue;
     }
 
+    public function totalAvailableAssetsValue(User $user)
+    {
+        // Initialize the total assets value
+        $totalAssetsValue = 0;
+
+        // Loop through each wallet and calculate its value
+        foreach ($user->wallets as $wallet) {
+            // Get the current market price for the wallet's currency
+            $market = $wallet->currency->baseMarket; // Assuming you have a relationship in the Currency model
+
+            $currencyPrice = $market ? $market->activeExchangePrice->price : 1;
+
+            $totalAssetsValue += ($wallet->balance - $wallet->locked_balance) * $currencyPrice;
+//
+        }
+
+        return $totalAssetsValue;
+    }
+
+    public function totalBlockedAssetsValue(User $user)
+    {
+        // Initialize the total assets value
+        $totalAssetsValue = 0;
+
+        // Loop through each wallet and calculate its value
+        foreach ($user->wallets as $wallet) {
+            // Get the current market price for the wallet's currency
+            $market = $wallet->currency->baseMarket; // Assuming you have a relationship in the Currency model
+
+            $currencyPrice = $market ? $market->activeExchangePrice->price : 1;
+
+            $totalAssetsValue += $wallet->locked_balance * $currencyPrice;
+//
+        }
+
+        return $totalAssetsValue;
+    }
+
     public function specificAssetValue(User $user, string $currency_symbol)
     {
         // Initialize the specific asset value
@@ -93,10 +131,11 @@ class WalletService
         return $specificAssetValue;
     }
 
-    public function totalTransactionValueBasedType(string $currencySymbol, array $transactionTypes): float
+    public function totalTransactionValueBasedType(string $currencySymbol, array $transactionTypes, Int $userId): float
     {
         // Get the total amount of deposits for the given currency
-        $totalDeposits = Transaction::whereIn('type', $transactionTypes)
+        $totalTransactions = Transaction::whereIn('type', $transactionTypes)
+            ->whereUserId($userId)
             ->whereHas('wallet', function ($query) use ($currencySymbol) {
                 $query->where('currency_symbol', $currencySymbol);
             })
@@ -104,12 +143,9 @@ class WalletService
 
         // Fetch the exchange rate for the currency
         $currency = Currency::where('symbol', $currencySymbol)->first();
-        $exchangeRate = $currency && $currency->baseMarket
-            ? $currency->baseMarket->activeExchangePrice->price
-            : 1; // Default to 1 if no exchange rate found
 
         // Calculate the value in USDT
-        return $totalDeposits * $exchangeRate;
+        return $totalTransactions * $currency->exchangePrice;
     }
 
     public function updateBalance(UpdateBalanceRequestDTO $requestDTO): bool

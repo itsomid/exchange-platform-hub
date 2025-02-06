@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers\User;
 
+use App\Enums\OTCOrderTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Http\Controllers\Controller;
+use App\Models\Deposit;
+use App\Models\OTCOrder;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Models\Withdrawal;
 use App\Services\Wallet\WalletService;
 
 class UserWalletController extends Controller
@@ -22,21 +26,46 @@ class UserWalletController extends Controller
     {
         $user = User::findOrFail($user->id);
 
-        $wallets = $user->wallets;
+
+        $wallets = $user->wallets()->with('walletChains')->get();
 
         $totalAssetsValue = $this->walletService->totalAssetsValue($user);
+        $totalAvailableAssetsValue = $this->walletService->totalAvailableAssetsValue($user);
+        $totalBlockedAssetsValue = $this->walletService->totalBlockedAssetsValue($user);
 
         // Calculate the value of each wallet's currency
-         $walletsWithAssetsValues = $wallets->map(function ($wallet) {
+        $walletsWithAssetsValues = $wallets->map(function ($wallet) {
             $specificAssetValue = $this->walletService->specificAssetValue($wallet->user, $wallet->currency_symbol);
             $wallet->assetValue = $specificAssetValue; // Add the value to the wallet object
             return $wallet;
         })->sortByDesc('assetValue');
 
+        $totalDepositsValue = Deposit::with('currency')
+            ->whereUserId($user->id)
+            ->get()
+            ->sum('usdt_value');
+
+        $totalWithdrawalsValue = Withdrawal::with('currency')
+            ->whereUserId($user->id)
+            ->get()
+            ->sum('usdt_value');
+
+        $OTCOrderCount = OTCOrder::where('user_id', $user->id)->count();
+        $totalOTCOrderValue = OTCOrder::where('user_id', $user->id)
+            ->sum(\DB::raw('quantity * price'));
+
+
         return view('dashboard.wallet.user-wallets', [
             'wallets' => $walletsWithAssetsValues,
             'user' => $user,
-            'totalAssetsValue' => $totalAssetsValue
+            'totalAssetsValue' => $totalAssetsValue,
+            'totalAvailableAssetsValue' => $totalAvailableAssetsValue,
+            'totalBlockedAssetsValue' => $totalBlockedAssetsValue,
+            'totalDepositsValue' => $totalDepositsValue,
+            'totalWithdrawalsValue' => $totalWithdrawalsValue,
+            'OTCOrderCount' => $OTCOrderCount,
+            'totalOTCOrderValue' => $totalOTCOrderValue,
+
         ]);
     }
 
@@ -68,7 +97,7 @@ class UserWalletController extends Controller
             ->where('wallet_id', $wallet->id)
             ->sum('amount');
 
-        $totalDepositsValue = $this->walletService->totalTransactionValueBasedType($wallet->currency_symbol, [TransactionTypeEnum::DEPOSIT]);
+        $totalDepositsValue = $this->walletService->totalTransactionValueBasedType($wallet->currency_symbol, [TransactionTypeEnum::DEPOSIT],$user->id);
 
         $lastDeposit = Transaction::whereIn('type', [TransactionTypeEnum::DEPOSIT])
             ->where('wallet_id', $wallet->id)
@@ -83,7 +112,7 @@ class UserWalletController extends Controller
             ->where('wallet_id', $wallet->id)
             ->sum('amount');
 
-        $totalWithdrawValue = $this->walletService->totalTransactionValueBasedType($wallet->currency_symbol, [TransactionTypeEnum::WITHDRAWAL]);
+        $totalWithdrawValue = $this->walletService->totalTransactionValueBasedType($wallet->currency_symbol, [TransactionTypeEnum::WITHDRAWAL],$user->id);
 
         $lastWithdraw = Transaction::where('type', TransactionTypeEnum::WITHDRAWAL)
             ->where('wallet_id', $wallet->id)
@@ -93,11 +122,11 @@ class UserWalletController extends Controller
         $lastWithdrawDate = $lastWithdraw ? \App\Helpers\DateFormatter::convertToPersianDate($lastWithdraw->created_at, '%d %B %Y') : 'بدون برداشت';
 
         // Fetch the total OTC sell and buy amounts and last transaction dates
-        $totalOtcSell = Transaction::where('type', 'sell')
+        $totalOtcSell = Transaction::where('type', OTCOrderTypeEnum::SELL)
             ->where('wallet_id', $wallet->id)
             ->sum('amount');
 
-        $totalOtcSellValue = $this->walletService->totalTransactionValueBasedType($wallet->currency_symbol, [TransactionTypeEnum::SELL]);
+        $totalOtcSellValue = $this->walletService->totalTransactionValueBasedType($wallet->currency_symbol, [TransactionTypeEnum::SELL],$user->id);
 
         $lastOtcSell = Transaction::where('type', 'sell')
             ->where('wallet_id', $wallet->id)
@@ -106,7 +135,7 @@ class UserWalletController extends Controller
 
         $lastOtcSellDate = $lastOtcSell ? \App\Helpers\DateFormatter::convertToPersianDate($lastOtcSell->created_at, '%d %B %Y') : 'بدون فروش OTC';
 
-        $totalOtcBuyValue = $this->walletService->totalTransactionValueBasedType($wallet->currency_symbol, [TransactionTypeEnum::BUY]);
+        $totalOtcBuyValue = $this->walletService->totalTransactionValueBasedType($wallet->currency_symbol, [TransactionTypeEnum::BUY],$user->id);
 
         $totalOtcBuy = Transaction::where('type', 'buy')
             ->where('wallet_id', $wallet->id)

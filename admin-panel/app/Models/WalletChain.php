@@ -11,4 +11,20 @@ class WalletChain extends Model
     {
         return $this->belongsTo(Wallet::class);
     }
+
+    public function currencyChain()
+    {
+        return $this->belongsTo(CurrencyChain::class,'currency_chain','chain');
+    }
+
+    public function getExplorerAddressUrlAttribute()
+    {
+
+        if (!$this->address || !$this->currencyChain?->explorer_address_url) {
+            return $this->currencyChain;
+        }
+//        return $this->currencyChain;
+        return str_replace('{address}', $this->address, $this->currencyChain->explorer_address_url);
+    }
+
 }

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Wallet extends Model
 {
@@ -19,7 +20,14 @@ class Wallet extends Model
     {
         return $this->belongsTo(Currency::class, 'currency_symbol', 'symbol');
     }
-
+    public function currencyChain()
+    {
+        return $this->belongsTo(CurrencyChain::class, 'currency_chain');
+    }
+    public function walletChains() : HasMany
+    {
+        return $this->hasMany(WalletChain::class);
+    }
     public function coinLogo()
     {
         $logoPath = storage_path("app/public/coins/{$this->currency_symbol}");

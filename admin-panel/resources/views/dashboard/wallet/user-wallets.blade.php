@@ -76,7 +76,7 @@
                                 <h2 class="mb-0 font-number">{{formatNumber($totalAssetsValue,2)}}
                                     <small class="text-muted fw-light">USDT</small>
                                 </h2>
-                                <div class="badge rounded bg-label-success">+4.2%</div>
+                                <div class="badge rounded bg-label-success">0%</div>
                             </div>
 
                         </div>
@@ -88,59 +88,92 @@
                     </div>
                     <div class="border rounded p-5 mt-5">
                         <div class="row gap-4 gap-sm-0">
-                            <div class="col-12 col-sm-4">
+                            <div class="col-12 col-sm-3">
                                 <div class="d-flex gap-2 align-items-center">
                                     <div class="badge rounded bg-label-success p-2">
                                         <i class="fa-regular fa-wallet"></i>
                                     </div>
                                     <h6 class="mb-0 fw-normal">موجودی در دسترس</h6>
                                 </div>
-                                <h4 class="my-2">$545.69</h4>
+                                <h4 class="my-2">
+                                    <small>USDT</small>
+                                    {{formatNumberTrimZeros($totalAvailableAssetsValue)}}
+
+                                </h4>
                             </div>
-                            <div class="col-12 col-sm-4">
+                            <div class="col-12 col-sm-3">
+                                <div class="d-flex gap-2 align-items-center">
+                                    <div class="badge rounded bg-label-danger p-2">
+                                        <i class="fa-regular fa-ban"></i>
+                                    </div>
+                                    <h6 class="mb-0 fw-normal">موجودی مسدود شده</h6>
+                                </div>
+                                <h4 class="my-2">
+                                    <small>USDT</small>
+                                    {{$totalBlockedAssetsValue}}
+                                </h4>
+                            </div>
+                            <div class="col-12 col-sm-3">
                                 <div class="d-flex gap-2 align-items-center">
                                     <div class="badge rounded bg-label-info p-2">
                                         <i class="fa-regular fa-hourglass-clock"></i>
                                     </div>
                                     <h6 class="mb-0 fw-normal">موجودی در سفارش</h6>
                                 </div>
-                                <h4 class="my-2">$256.34</h4>
+                                <h4 class="my-2">0</h4>
                             </div>
-                            <div class="col-12 col-sm-4">
+
+                            <div class="col-12 col-sm-3">
                                 <div class="d-flex gap-2 align-items-center">
-                                    <div class="badge rounded bg-label-danger p-2">
-                                        <i class="fa-regular fa-ban"></i>
+                                    <div class="badge rounded bg-label-info p-2">
+                                        <i class="fa-regular  fa-swap"></i>
                                     </div>
-                                    <h6 class="mb-0 fw-normal">موجودی مسدود شده (به USDT)</h6>
+                                    <h6 class="mb-0 fw-normal">حجم معامله OTC</h6>
                                 </div>
-                                <h4 class="my-2">$74.19</h4>
+                                <h4 class="my-2">
+                                    <small>USDT</small>
+                                    {{formatNumberTrimZeros($totalOTCOrderValue)}}
+                                </h4>
                             </div>
-                            <div class="col-12 col-sm-4">
+                            <div class="col-12 col-sm-3">
                                 <div class="d-flex gap-2 align-items-center">
-                                    <div class="badge rounded bg-label-danger p-2">
+                                    <div class="badge rounded bg-label-info p-2">
                                         <i class="fa-solid fa-pallet-boxes"></i>
                                     </div>
                                     <h6 class="mb-0 fw-normal">تعداد کیف پول</h6>
                                 </div>
-                                <h4 class="my-2">5</h4>
+                                <h4 class="my-2">{{count($wallets)}}</h4>
                             </div>
-                            <div class="col-12 col-sm-4">
+                            <div class="col-12 col-sm-3">
                                 <div class="d-flex gap-2 align-items-center">
-                                    <div class="badge rounded bg-label-primary p-2">
+                                    <div class="badge rounded bg-label-success p-2">
                                         <i class="fa-regular fa-money-from-bracket"></i>
                                     </div>
-                                    <h6 class="mb-0 fw-normal">تعداد تراکنش ها</h6>
+                                    <h6 class="mb-0 fw-normal">ارزش واریزهای کاربر</h6>
                                 </div>
-                                <h4 class="my-2">28</h4>
+                                <h4 class="my-2">{{formatNumberTrimZeros($totalDepositsValue)}}
+                                    <small>USDT</small>
+                                </h4>
                             </div>
-                            <div class="col-12 col-sm-4">
+                            <div class="col-12 col-sm-3">
+                                <div class="d-flex gap-2 align-items-center">
+                                    <div class="badge rounded bg-label-danger p-2">
+                                        <i class="fa-regular fa-money-from-bracket"></i>
+                                    </div>
+                                    <h6 class="mb-0 fw-normal">ارزش برداشت های کاربر</h6>
+                                </div>
+                                <h4 class="my-2">{{formatNumberTrimZeros($totalWithdrawalsValue)}}
+                                    <small>USDT</small>
+                                </h4>
+                            </div>
+                            <div class="col-12 col-sm-3">
                                 <div class="d-flex gap-2 align-items-center">
                                     <div class="badge rounded bg-label-primary p-2">
                                         <i class="fa-regular fa-chart-line-up-down"></i>
                                     </div>
-                                    <h6 class="mb-0 fw-normal">سود و زیان دیروز</h6>
+                                    <h6 class="mb-0 fw-normal">تعداد معامله OTC</h6>
                                 </div>
-                                <h4 class="my-2">28</h4>
+                                <h4 class="my-2">{{$OTCOrderCount}}</h4>
                             </div>
                         </div>
                     </div>
@@ -153,14 +186,25 @@
             <div class="col-lg-3 col-sm-6">
                 <div class="card card-border-shadow-success">
                     <div class="card-body">
-                        <div class="d-flex align-items-center mb-2">
-                            <div class="avatar me-4">
-                                <div class="avatar flex-shrink-0 me-4">
-                                    <img src="{{$wallet->currency->coinLogo()}}" class="img-fluid" width="50px">
-                                    {{--                                <img src="http://127.0.0.1:8000/images/coins/btc.svg" class="img-fluid" width="50px">--}}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex">
+                                <div class="avatar me-4">
+                                    <div class="avatar flex-shrink-0 me-4">
+                                        <img src="{{$wallet->currency->coinLogo()}}" class="img-fluid" width="50px">
+                                    </div>
                                 </div>
+                                <h4 class="mb-0">کیف پول {{$wallet->currency->name}}</h4>
                             </div>
-                            <h4 class="mb-0">کیف پول {{$wallet->currency->name}}</h4>
+
+
+                            @if($wallet->walletChains->isNotEmpty())
+                                <div class="mb-0 d-flex flex-column align-items-end">
+                                    <small class="text-primary fw-bolder text-decoration-underline">دارای آدرس واریز</small>
+{{--                                    @foreach($wallet->walletChains as $walletChain)--}}
+{{--                                        <a href="" class="text-primary fw-medium mt-1">{{$walletChain->currency_chain}} </a>--}}
+{{--                                    @endforeach--}}
+                                </div>
+                            @endif
                         </div>
                         <h3 class="mt-4 mb-1 font-number">{{formatNumberTrimZeros($wallet->balance)}}
                             <span class="text-muted h4">{{$wallet->currency_symbol}}</span>
