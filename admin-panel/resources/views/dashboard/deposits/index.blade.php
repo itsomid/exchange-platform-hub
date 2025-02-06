@@ -257,8 +257,12 @@
 
                             <td dir="ltr">
                                 <h6 class="font-number text-heading mb-0">
-                                    <span class="ms-1">{{formatNumberTrimZeros($deposit->usdt_value)}}</span>
-                                    <small class="text-muted">USDT</small>
+                                    @if($deposit->usdt_value)
+                                        <span class="ms-1">{{formatNumberTrimZeros($deposit->usdt_value)}}</span>
+                                        <small class="text-muted">USDT</small>
+                                    @else
+                                        <span>N/A</span>
+                                    @endif
                                 </h6>
                             </td>
 

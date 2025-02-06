@@ -72,7 +72,7 @@ class WalletController extends Controller
                 $transactionService->increaseDecreaseAdminWalletCredit(
                     userId:  $this->exchangeUserId,
                     amount: $request->amount,
-                    currency: $request->currency,
+                    currency: $currency,
                     currencyChain: $request->chain,
                     type: $request->transaction_type === TransactionTypeEnum::DEPOSIT->value ?  TransactionTypeEnum::DEPOSIT->value : TransactionTypeEnum::WITHDRAWAL->value, // Always increasing
                     adminId: $admin->id,

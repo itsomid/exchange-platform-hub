@@ -26,10 +26,10 @@ class TransactionService
     {
         $this->walletService = $walletService;
     }
-    public function increaseDecreaseAdminWalletCredit(
+    public function     increaseDecreaseAdminWalletCredit(
         int     $userId,
         float   $amount,
-        string  $currency,
+        Currency  $currency,
         string  $currencyChain,
         string  $type, // INCREASE or DECREASE
         ?int    $adminId = null,
@@ -38,8 +38,7 @@ class TransactionService
     ): void {
         \DB::transaction(function () use ($userId, $amount, $currency, $currencyChain, $type, $adminId, $description, $admin_description) {
             // Fetch the wallet
-            $exchangeWallet = $this->walletService->getExchangeWallet($currency);
-
+            $exchangeWallet = $this->walletService->getExchangeWallet($currency->symbol);
             if (!$exchangeWallet) {
                 return redirect()->back()->withErrors(['wallet' => 'کیف پول مورد نظر یافت نشد.']);
             }
@@ -49,47 +48,58 @@ class TransactionService
             }
 
             if ($type === TransactionTypeEnum::DEPOSIT->value) {
-                $exchangeWallet->increment('balance', $amount);
-                $record = Deposit::create([
+
+                $deposit = Deposit::create([
                     'user_id' => $userId,
-                    'currency_symbol' => $currency,
+                    'currency_symbol' => $currency->symbol,
                     'currency_chain' => $currencyChain,
                     'amount' => $amount,
+                    'usdt_value' => $amount * $currency->exchangePrice,
                     'address' => null,
                     'transaction_hash' => null,
                     'description' => 'Exchange Wallet credit increase by admin: (#' . $adminId . ') '.Admin::find($adminId)->fullname(),
                     'status' => DepositStatusEnum::CONFIRMED,
                 ]);
-                $depositId = $record->id;
-                $withdrawalId = null;
+                $this->logTransaction(
+                    wallet: $exchangeWallet,
+                    amount: $amount,
+                    type: TransactionTypeEnum::DEPOSIT->value,
+                    adminId: $adminId,
+                    depositId: $deposit->id, // No deposit ID for admin direct actions
+                    description: 'Exchange Wallet credit increase',
+                    admin_description: $admin_description
+                );
+                $exchangeWallet->increment('balance', $amount);
+
             } else {
-                $exchangeWallet->decrement('balance', $amount);
-                $record = Withdrawal::create([
+
+                $withdraw = Withdrawal::create([
                     'user_id' => $userId,
-                    'currency_symbol' => $currency,
+                    'currency_symbol' => $currency->symbol,
                     'currency_chain' => $currencyChain,
                     'amount' => $amount,
+                    'usdt_value' => $amount * $currency->exchangePrice,
                     'address' => null,
                     'transaction_hash' => null,
                     'description' => 'Exchange Wallet deduction by admin: (#' . $adminId . ') '.Admin::find($adminId)->fullname(),
                     'status' => WithdrawalStatusEnum::COMPLETED,
                 ]);
-                $withdrawalId = $record->id;
-                $depositId = null;
+                $this->logTransaction(
+                    wallet: $exchangeWallet,
+                    amount: $amount,
+                    type: TransactionTypeEnum::DEPOSIT->value,
+                    adminId: $adminId,
+                    withdrawalId: $withdraw->id, // No deposit ID for admin direct actions
+                    description: 'Exchange Wallet credit decrease',
+                    admin_description: $admin_description
+                );
+
+                $exchangeWallet->decrement('balance', $amount);
             }
 
 
             // Log the transaction
-            $this->logTransaction(
-                wallet: $exchangeWallet,
-                amount: $type === TransactionTypeEnum::DEPOSIT->value ? $amount : -$amount,
-                type: $type === TransactionTypeEnum::DEPOSIT->value ? TransactionTypeEnum::DEPOSIT->value : TransactionTypeEnum::WITHDRAWAL->value,
-                adminId: $adminId,
-                depositId: $depositId, // No deposit ID for admin direct actions
-                withdrawalId: $withdrawalId, // No withdrawal ID for admin direct actions
-                description: $description ?? ($type === TransactionTypeEnum::DEPOSIT->value ? 'Exchange Wallet credit increase' : 'Exchange Wallet credit deduction'),
-                admin_description: $admin_description
-            );
+
         });
     }
     /**
@@ -110,7 +120,7 @@ class TransactionService
         int     $fromUserId,
         int     $toUserId,
         float   $amount,
-        string  $currency,
+        Currency  $currency,
         string  $currencyChain,
         string  $type,
         ?int    $adminId = null,
@@ -123,12 +133,12 @@ class TransactionService
             // Fetch wallets
 
             $fromWallet = Wallet::firstOrCreate(
-                ['user_id' => $fromUserId, 'currency_symbol' => $currency],
+                ['user_id' => $fromUserId, 'currency_symbol' => $currency->symbol],
                 ['balance' => 0]
             );
 
             $toWallet = Wallet::firstOrCreate(
-                ['user_id' => $toUserId, 'currency_symbol' => $currency],
+                ['user_id' => $toUserId, 'currency_symbol' => $currency->symbol],
                 ['balance' => 0]
             );
 
@@ -144,9 +154,10 @@ class TransactionService
 
             $deposit = Deposit::create([
                 'user_id' => $type === TransactionTypeEnum::DEPOSIT->value ? $toUserId : $fromUserId,
-                'currency_symbol' => $currency,
+                'currency_symbol' => $currency->symbol,
                 'currency_chain' => $currencyChain,
                 'amount' => $amount,
+                'usdt_value' => $amount * $currency->exchangePrice,
                 'address' => null,
                 'transaction_hash' => null,
                 'description' => 'manual transfer by admin: (#' . $adminId . ') to: (#' . User::find($toUserId)->username . ')',
@@ -154,7 +165,7 @@ class TransactionService
             ]);
             $withdrawal = Withdrawal::create([
                 'user_id' => $type === TransactionTypeEnum::WITHDRAWAL->value ? $toUserId : $fromUserId,
-                'currency_symbol' => $currency,
+                'currency_symbol' => $currency->symbol,
                 'currency_chain' => $currencyChain,
                 'amount' => $amount,
                 'address' => null,
@@ -162,49 +173,32 @@ class TransactionService
                 'description' => 'manual transfer by admin: (#' . $adminId . ') to: (#' . User::find($toUserId)->username . ')',
                 'status' => WithdrawalStatusEnum::COMPLETED,
             ]);
-            $depositId = $deposit->id;
-            $withdrawalId = $withdrawal->id;
 
 
-            // Update balances using WalletService
-            $this->walletService->updateBalance(
-                resolve(UpdateBalanceRequestDTO::class)
-                    ->setAmount($amount)
-                    ->setOperation(BalanceOperationEnum::DECREASE)
-                    ->setCurrencySymbol($currency)
-                    ->setUserId($fromUserId)
-            );
 
-            $fromWallet->refresh();
             $this->logTransaction(
-                $fromWallet,
-                -$amount,
-                TransactionTypeEnum::WITHDRAWAL->value,
-                $adminId,
-                null,
-                $withdrawalId,
-                $description ?? 'Funds withdrawn.',
-                $admin_description
+                wallet: $fromWallet,
+                amount: -$amount,
+                type:  TransactionTypeEnum::WITHDRAWAL->value,
+                adminId: $adminId,
+                withdrawalId: $withdrawal->id, // No deposit ID for admin direct actions
+                description: $description ?? 'Funds withdrawn.',
+                admin_description: $admin_description
             );
+            $fromWallet->decrement('balance',$amount);
 
-            $this->walletService->updateBalance(
-                resolve(UpdateBalanceRequestDTO::class)
-                    ->setAmount($amount)
-                    ->setOperation(BalanceOperationEnum::INCREASE)
-                    ->setCurrencySymbol($currency)
-                    ->setUserId($toUserId)
-            );
-            $toWallet->refresh();
+
             $this->logTransaction(
-                $toWallet,
-                $amount,
-                TransactionTypeEnum::DEPOSIT->value,
-                $adminId,
-                $depositId,
-                null,
-                $description ?? 'Funds deposited.',
-                $admin_description);
+                wallet: $toWallet,
+                amount: $amount,
+                type: TransactionTypeEnum::DEPOSIT->value,
+                adminId: $adminId,
+                depositId: $deposit->id, // No deposit ID for admin direct actions
+                description: $description ?? 'Funds deposited.',
+                admin_description: $admin_description
+            );
 
+            $toWallet->increment('balance',$amount);
         });
     }
 
