@@ -226,8 +226,12 @@
                             @endif
                         </a>
                     </th>
-                    <th>مقدار موجودی</th>
-                    <th class="text-wrap">توضیحات</th>
+                    <th>
+                        مقدار موجودی
+                        <br>
+                        <small>(قبل از تراکنش)</small>
+                    </th>
+                    <th class="text-wrap font-number w-25">توضیحات</th>
                     <th>
                         @php
                             $currentParams = request()->except('sortByCreatedAt');

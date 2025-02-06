@@ -17,7 +17,7 @@ class Deposit extends Model
     public $filterNameSpace = 'App\Filters\DepositFilter';
 
     protected $fillable = [
-        'user_id', 'currency_chain', 'currency_symbol', 'amount','usdt_value', 'address', 'status', 'description', 'expiration_date',
+        'user_id', 'currency_chain_id', 'currency_symbol', 'amount','usdt_value', 'address', 'status', 'description', 'expiration_date',
     ];
     protected $casts = [
         'status' => DepositStatusEnum::class
@@ -35,7 +35,7 @@ class Deposit extends Model
 
     public function currencyChain()
     {
-        return $this->belongsTo(CurrencyChain::class,'currency_chain','chain');
+        return $this->belongsTo(CurrencyChain::class,'currency_chain_id');
 //        return $this->hasOneThrough(
 //            CurrencyChain::class,
 //            Currency::class,

@@ -54,6 +54,7 @@ class WalletController extends Controller
             $admin = auth()->user(); // Assuming the admin is logged in.
 
             $currency = Currency::where('symbol', $request->currency)->first();
+            $currencyChain = CurrencyChain::where('chain', $request->chain)->first();
 
             if (!$currency) {
                 return redirect()->back()->withErrors(['currency' => 'ارز انتخاب شده معتبر نیست.']);
@@ -73,7 +74,7 @@ class WalletController extends Controller
                     userId:  $this->exchangeUserId,
                     amount: $request->amount,
                     currency: $currency,
-                    currencyChain: $request->chain,
+                    currencyChain: $currencyChain,
                     type: $request->transaction_type === TransactionTypeEnum::DEPOSIT->value ?  TransactionTypeEnum::DEPOSIT->value : TransactionTypeEnum::WITHDRAWAL->value, // Always increasing
                     adminId: $admin->id,
                     description: 'Manual credit increase by admin #' . $admin->id,
@@ -89,7 +90,7 @@ class WalletController extends Controller
                     toUserId: $toUserId,
                     amount: $request->amount,
                     currency: $currency,
-                    currencyChain: $request->chain,
+                    currencyChain: $currencyChain,
                     type: $request->transaction_type,
                     adminId: Auth::user()->id,
                     description: 'Manual transfer by admin #' . $admin->id,

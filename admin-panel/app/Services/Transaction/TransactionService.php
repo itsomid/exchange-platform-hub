@@ -10,6 +10,7 @@ use App\Enums\TransactionTypeEnum;
 use App\Enums\WithdrawalStatusEnum;
 use App\Models\Admin;
 use App\Models\Currency;
+use App\Models\CurrencyChain;
 use App\Models\Deposit;
 use App\Models\Transaction;
 use App\Models\User;
@@ -30,7 +31,7 @@ class TransactionService
         int     $userId,
         float   $amount,
         Currency  $currency,
-        string  $currencyChain,
+        CurrencyChain  $currencyChain,
         string  $type, // INCREASE or DECREASE
         ?int    $adminId = null,
         ?string $description = null,
@@ -52,7 +53,7 @@ class TransactionService
                 $deposit = Deposit::create([
                     'user_id' => $userId,
                     'currency_symbol' => $currency->symbol,
-                    'currency_chain' => $currencyChain,
+                    'currency_chain' => $currencyChain->id,
                     'amount' => $amount,
                     'usdt_value' => $amount * $currency->exchangePrice,
                     'address' => null,
@@ -76,7 +77,7 @@ class TransactionService
                 $withdraw = Withdrawal::create([
                     'user_id' => $userId,
                     'currency_symbol' => $currency->symbol,
-                    'currency_chain' => $currencyChain,
+                    'currency_chain_id' => $currencyChain->id,
                     'amount' => $amount,
                     'usdt_value' => $amount * $currency->exchangePrice,
                     'address' => null,
@@ -121,7 +122,7 @@ class TransactionService
         int     $toUserId,
         float   $amount,
         Currency  $currency,
-        string  $currencyChain,
+        CurrencyChain  $currencyChain,
         string  $type,
         ?int    $adminId = null,
         ?string $description = null,
@@ -155,7 +156,7 @@ class TransactionService
             $deposit = Deposit::create([
                 'user_id' => $type === TransactionTypeEnum::DEPOSIT->value ? $toUserId : $fromUserId,
                 'currency_symbol' => $currency->symbol,
-                'currency_chain' => $currencyChain,
+                'currency_chain_id' => $currencyChain->id,
                 'amount' => $amount,
                 'usdt_value' => $amount * $currency->exchangePrice,
                 'address' => null,
@@ -166,7 +167,7 @@ class TransactionService
             $withdrawal = Withdrawal::create([
                 'user_id' => $type === TransactionTypeEnum::WITHDRAWAL->value ? $toUserId : $fromUserId,
                 'currency_symbol' => $currency->symbol,
-                'currency_chain' => $currencyChain,
+                'currency_chain_id' => $currencyChain->id,
                 'amount' => $amount,
                 'address' => null,
                 'transaction_hash' => null,

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Deposit extends Model
 {
     protected $fillable = [
-        'user_id', 'currency_chain', 'currency_symbol', 'amount', 'address', 'status', 'expiration_date', 'confirmed_at', 'transaction_hash',
+        'user_id', 'currency_chain_id', 'currency_symbol', 'amount', 'address', 'status', 'expiration_date', 'confirmed_at', 'transaction_hash',
     ];
     protected $appends = ['explorer_address_url' , 'explorer_tx_url'];
     protected function casts(): array
@@ -26,7 +26,7 @@ class Deposit extends Model
 
     public function currencyChain()
     {
-        return $this->belongsTo(CurrencyChain::class,'currency_chain','chain');
+        return $this->belongsTo(CurrencyChain::class,'currency_chain_id','chain');
     }
 
     public function getExplorerAddressUrlAttribute()

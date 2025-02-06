@@ -16,7 +16,7 @@ class Withdrawal extends Model
     public $filterNameSpace = 'App\Filters\WithdrawalFilter';
 
     protected $fillable = [
-        'user_id', 'admin_id', 'wallet_id', 'currency_chain', 'currency_symbol', 'amount', 'total_fee','exchange_fee','network_fee','hd_wallet_network_fee','usdt_value', 'address', 'transaction_hash', 'status', 'description', 'confirmed_at',
+        'user_id', 'admin_id', 'wallet_id', 'currency_chain_id', 'currency_symbol', 'amount', 'total_fee','exchange_fee','network_fee','hd_wallet_network_fee','usdt_value', 'address', 'transaction_hash', 'status', 'description', 'confirmed_at',
     ];
 
     protected function casts(): array
@@ -42,14 +42,8 @@ class Withdrawal extends Model
     }
     public function currencyChain()
     {
-        return $this->hasOneThrough(
-            CurrencyChain::class,
-            Currency::class,
-            'symbol', // Foreign key on Currency table
-            'currency_id', // Foreign key on CurrencyChain table
-            'currency_symbol', // Local key on Deposit table
-            'id' // Local key on Currency table
-        );
+        return $this->belongsTo(CurrencyChain::class,'currency_chain_id');
+
     }
 
     public function transactions()

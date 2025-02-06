@@ -249,7 +249,9 @@
                                 {{$deposit->currency_symbol}}
                             </td>
 
-                            <td>{{$deposit->currencyChain->chain_name}}</td>
+                            <td>
+                                {{$deposit->currencyChain->chain_name}}
+                            </td>
 
                             <td class="font-number" dir="ltr">
                                 <h6 class="mb-0">{{formatNumberTrimZeros($deposit->amount)}}</h6>
