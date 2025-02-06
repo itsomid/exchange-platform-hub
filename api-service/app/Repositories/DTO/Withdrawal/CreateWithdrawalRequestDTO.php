@@ -8,7 +8,7 @@ class CreateWithdrawalRequestDTO
 {
     private int $user_id;
 
-    private string $currencyChain;
+    private int $currencyChainId;
 
     private string $currencySymbol;
 
@@ -36,16 +36,16 @@ class CreateWithdrawalRequestDTO
         return $this->user_id;
     }
 
-    public function setCurrencyChain(string $currencyChain): CreateWithdrawalRequestDTO
+    public function setCurrencyChainId(int $currencyChainId): CreateWithdrawalRequestDTO
     {
-        $this->currencyChain = $currencyChain;
+        $this->currencyChainId = $currencyChainId;
 
         return $this;
     }
 
-    public function getCurrencyChain(): string
+    public function getCurrencyChainId(): int
     {
-        return $this->currencyChain;
+        return $this->currencyChainId;
     }
 
     public function setCurrencySymbol(string $currencySymbol): CreateWithdrawalRequestDTO

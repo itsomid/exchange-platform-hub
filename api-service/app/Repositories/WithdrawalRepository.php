@@ -21,7 +21,7 @@ class WithdrawalRepository implements WithdrawalRepositoryInterface
             'network_fee' => $requestDTO->getNetworkFee(),
             'exchange_fee' => $requestDTO->getExchangeFee(),
             'total_fee' => bcadd(toDecimalString($requestDTO->getExchangeFee()), toDecimalString($requestDTO->getNetworkFee()), 8),
-            'currency_chain' => $requestDTO->getCurrencyChain(),
+            'currency_chain_id' => $requestDTO->getCurrencyChainId(),
             'currency_symbol' => $requestDTO->getCurrencySymbol(),
         ]);
     }

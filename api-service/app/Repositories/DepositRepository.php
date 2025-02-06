@@ -42,7 +42,7 @@ class DepositRepository implements DepositRepositoryInterface
             ->create([
                 'user_id' => $requestDTO->getUserId(),
                 'currency_symbol' => $requestDTO->getCurrencySymbol(),
-                'currency_chain' => $requestDTO->getCurrencyChain(),
+                'currency_chain_id' => $requestDTO->getCurrencyChainId(),
                 'amount' => $requestDTO->getAmount(),
                 'address' => $requestDTO->getAddress(),
                 'transaction_hash' => $requestDTO->getTransactionHash(),

@@ -70,7 +70,7 @@ class WithdrawalService
             $withdrawal = $this->withdrawalRepository->create(
                 resolve(\App\Repositories\DTO\Withdrawal\CreateWithdrawalRequestDTO::class)
                     ->setUserId($requestDTO->getUserId())
-                    ->setCurrencyChain($requestDTO->getCurrencyChain())
+                    ->setCurrencyChainId($chain->id)
                     ->setCurrencySymbol($requestDTO->getCurrencySymbol())
                     ->setAmount($amount)
                     ->setUSDTValue($value_in_usdt)
@@ -138,7 +138,7 @@ class WithdrawalService
                 if ($responseDTO->getStatus() === 'completed') {
                     $withdrawalCompletedCount++;
                     $this->confirmWithdrawal($withdrawal, $responseDTO->getTransactionHash(), $responseDTO->getFee());
-                    $user->notify(new WithdrawalSuccessful($withdrawal->currency_symbol, $withdrawal->amount, $user->name, $withdrawal->currency_chain));
+                    $user->notify(new WithdrawalSuccessful($withdrawal->currency_symbol, $withdrawal->amount, $user->name, $withdrawal->currencyChain->chain));
                 }
 
             } catch (NotFoundException) {
@@ -188,7 +188,7 @@ class WithdrawalService
                 'admin_description' => '',
             ]);
             $baseCoinChain = CurrencyChain::query()
-                ->where('chain', $withdrawal->currency_chain)
+                ->where('chain', $withdrawal->currencyChain->chain)
                 ->where('is_base_coin', 1)
                 ->first();
             $wallet = Wallet::query()

@@ -19,7 +19,7 @@ class Withdrawal extends Model
         'user_id',
         'admin_id',
         'wallet_id',
-        'currency_chain',
+        'currency_chain_id',
         'currency_symbol',
         'amount',
         'usdt_value',
@@ -49,16 +49,9 @@ class Withdrawal extends Model
         return $this->belongsTo(Currency::class, 'currency_symbol', 'symbol');
     }
 
-    public function currencyChain()
+    public function currencyChain(): BelongsTo
     {
-        return $this->hasOneThrough(
-            CurrencyChain::class,
-            Currency::class,
-            'symbol', // Foreign key on Currency table
-            'currency_id', // Foreign key on CurrencyChain table
-            'currency_symbol', // Local key on Deposit table
-            'id' // Local key on Currency table
-        );
+        return $this->belongsTo(CurrencyChain::class);
     }
 
     public function getExplorerAddressUrlAttribute()

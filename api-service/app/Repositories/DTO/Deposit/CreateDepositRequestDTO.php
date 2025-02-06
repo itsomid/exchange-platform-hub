@@ -11,7 +11,7 @@ class CreateDepositRequestDTO
 
     private string $currencySymbol;
 
-    private string $currencyChain;
+    private int $currencyChainId;
 
     private ?string $amount = null;
 
@@ -73,16 +73,16 @@ class CreateDepositRequestDTO
         return $this->status;
     }
 
-    public function setCurrencyChain(string $currencyChain): self
+    public function setCurrencyChainId(int $currencyChainId): self
     {
-        $this->currencyChain = $currencyChain;
+        $this->currencyChainId = $currencyChainId;
 
         return $this;
     }
 
-    public function getCurrencyChain(): string
+    public function getCurrencyChainId(): int
     {
-        return $this->currencyChain;
+        return $this->currencyChainId;
     }
 
     public function setAddress(string $address): self

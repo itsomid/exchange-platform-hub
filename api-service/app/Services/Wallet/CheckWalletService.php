@@ -53,13 +53,12 @@ class CheckWalletService
             if (empty($chain->address)) {
                 continue;
             }
-
-            $blockchainName = $chain->wallet->currency->chains->where('chain', $chain->currency_chain)->first()->blockchain_name->value;
+            $currencyChain = $chain->wallet->currency->chains->where('chain', $chain->currency_chain)->first();
             $transactions = $hdDeposit->getDepositLists(
                 resolve(GetDepositListsRequestDTO::class)
                     ->setCurrencySymbol($wallet->currency_symbol)
                     ->setWalletAddress($chain->address)
-                    ->setBlockchain($blockchainName)
+                    ->setBlockchain($currencyChain->blockchain_name->value)
             );
             foreach ($transactions as $transaction) {
                 if ($this->depositRepository->isDepositExists($transaction->getTransactionHash())) {
@@ -71,7 +70,7 @@ class CheckWalletService
                     $deposit = $this->depositRepository->create(resolve(CreateDepositRequestDTO::class)
                         ->setUserId($transaction->getUserId())
                         ->setCurrencySymbol($transaction->getCryptocurrency())
-                        ->setCurrencyChain($transaction->getBlockChain())
+                        ->setCurrencyChainId($currencyChain->id)
                         ->setAmount($transaction->getAmount())
                         ->setAddress($transaction->getWalletAddress())
                         ->setTransactionHash($transaction->getTransactionHash())
@@ -126,7 +125,7 @@ class CheckWalletService
                 $this->depositRepository->create(resolve(CreateDepositRequestDTO::class)
                     ->setUserId($transaction->getUserId())
                     ->setCurrencySymbol($transaction->getCryptocurrency())
-                    ->setCurrencyChain($transaction->getBlockChain())
+                    ->setCurrencyChainId($transaction->getBlockChain())
                     ->setAmount($transaction->getAmount())
                     ->setAddress($transaction->getWalletAddress())
                     ->setTransactionHash($transaction->getTransactionHash())

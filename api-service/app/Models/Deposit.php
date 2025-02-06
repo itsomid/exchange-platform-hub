@@ -4,13 +4,16 @@ namespace App\Models;
 
 use App\Enums\DepositStatusEnum;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Deposit extends Model
 {
     protected $fillable = [
         'user_id', 'currency_chain_id', 'currency_symbol', 'amount', 'address', 'status', 'expiration_date', 'confirmed_at', 'transaction_hash',
     ];
-    protected $appends = ['explorer_address_url' , 'explorer_tx_url'];
+
+    protected $appends = ['explorer_address_url', 'explorer_tx_url'];
+
     protected function casts(): array
     {
         return [
@@ -19,20 +22,21 @@ class Deposit extends Model
             'confirmed_at' => 'datetime',
         ];
     }
+
     public function currency()
     {
         return $this->belongsTo(Currency::class, 'currency_symbol', 'symbol');
     }
 
-    public function currencyChain()
+    public function currencyChain(): BelongsTo
     {
-        return $this->belongsTo(CurrencyChain::class,'currency_chain_id','chain');
+        return $this->belongsTo(CurrencyChain::class);
     }
 
     public function getExplorerAddressUrlAttribute()
     {
 
-        if (!$this->address || !$this->currencyChain?->explorer_address_url) {
+        if (! $this->address || ! $this->currencyChain?->explorer_address_url) {
             return null;
         }
 
@@ -41,7 +45,7 @@ class Deposit extends Model
 
     public function getExplorerTxUrlAttribute()
     {
-        if (!$this->transaction_hash || !$this->currencyChain?->explorer_tx_url) {
+        if (! $this->transaction_hash || ! $this->currencyChain?->explorer_tx_url) {
             return null;
         }
 
