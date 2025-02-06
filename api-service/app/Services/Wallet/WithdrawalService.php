@@ -117,14 +117,11 @@ class WithdrawalService
         $user = $this->userRepository->getUserById($userId);
         $pending = $this->withdrawalRepository->getAllPending($userId);
         foreach ($pending as $withdrawal) {
-
-            $chain = $withdrawal->currency->chains->where('chain', CurrencyChainEnum::tryFrom('BSC'))->first();
-
             try {
                 $responseDTO = $this->withdrawalService->getStatus(
                     resolve(GetWithdrawalStatusRequestDTO::class)
                         ->setWithdrawalId($withdrawal->id)
-                        ->setBlockchain($chain->blockchain_name->value)
+                        ->setBlockchain($withdrawal->currencyChain->blockchain_name->value)
                         ->setCurrencySymbol($withdrawal->currency_symbol)
                 );
 
