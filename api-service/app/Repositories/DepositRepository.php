@@ -62,6 +62,7 @@ class DepositRepository implements DepositRepositoryInterface
     public function getDeposits(int $userId, ?string $currencySymbol = null): Collection
     {
         return Deposit::query()
+            ->with('currencyChain')
             ->where('user_id', $userId)
             ->when(! empty($currencySymbol), fn ($q) => $q->where('currency_symbol', $currencySymbol))
             ->latest()

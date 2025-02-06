@@ -29,6 +29,7 @@ class WithdrawalRepository implements WithdrawalRepositoryInterface
     public function getWithdrawals(int $userId, ?string $currencySymbol = null): Collection
     {
         return Withdrawal::query()
+            ->with('currencyChain')
             ->where('user_id', $userId)
             ->when(! empty($currencySymbol), fn ($q) => $q->where('currency_symbol', $currencySymbol))
             ->latest()

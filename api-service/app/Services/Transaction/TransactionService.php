@@ -50,7 +50,7 @@ class TransactionService
                 ->setConfirmedAt($transaction->confirmed_at)
                 ->setExplorerAddressUrl($transaction->explorer_address_url)
                 ->setExplorerTxUrl($transaction->explorer_tx_url)
-                ->setCurrencyChain($transaction->currency_chain->value);
+                ->setCurrencyChain($transaction->currencyChain->chain_name);
 
         })->toArray();
     }
