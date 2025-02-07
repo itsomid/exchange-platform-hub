@@ -100,6 +100,11 @@ class AssetCoinex implements AssetInterface
             throw new CantResolveCoinexException("Can't Resolve https://api.coinex.com");
         }
 
+        //Balance Not Enough
+        if ($response->json('code') === 3109) {
+            report('Coinex Balance Not Enough In USDT');
+            AdminNotification::sendEnoughBalance('USDT', $requestDTO->getAmount());
+        }
         if (! $response->successful() || $response->json('code') !== 0) {
             report($response->body());
             throw new CoinexHasProblemException;
