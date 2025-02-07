@@ -2,6 +2,7 @@
 
 namespace App\Services\Wallet;
 
+use App\Helpers\Math;
 use App\Repositories\Interfaces\MarketHistoryRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Services\Wallet\DTO\Portfolio\PortfolioLast24HoursResponseDTO;
@@ -40,10 +41,9 @@ class PortfolioService
                 }
                 $marketHistory = $this->marketHistoryRepository->getByMarketIdWithDate($wallet->market->id, $date);
                 if ($marketHistory) {
-                    $totalBalance = bcadd(
-                        (float) $totalBalance,
-                        (float) bcmul((float) $wallet->balance, (float) $marketHistory->close, 8),
-                        8
+                    $totalBalance = Math::add(
+                        $totalBalance,
+                        Math::mul($wallet->balance, $marketHistory->close)
                     );
                 }
             }
@@ -94,7 +94,7 @@ class PortfolioService
             foreach ($wallets as $wallet) {
                 // USDT or any asset without a market should be skipped
                 if (is_null($wallet->market)) {
-                    $totalBalance = bcadd((float) $totalBalance, (float) $wallet->balance, 8);
+                    $totalBalance = Math::add($totalBalance, $wallet->balance, 8);
 
                     continue;
                 }
@@ -102,10 +102,9 @@ class PortfolioService
                 $marketHistory = $this->marketHistoryRepository->getByMarketIdWithDateTime($wallet->market->id, $hour);
 
                 if ($marketHistory) {
-                    $totalBalance = bcadd(
-                        (float) $totalBalance,
-                        (float) bcmul((float) $wallet->balance, (float) $marketHistory->close, 8),
-                        8
+                    $totalBalance = Math::add(
+                        $totalBalance,
+                        Math::mul($wallet->balance, $marketHistory->close)
                     );
                 }
             }

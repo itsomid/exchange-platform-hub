@@ -2,6 +2,7 @@
 
 namespace App\Rules;
 
+use App\Helpers\Math;
 use App\Models\Currency;
 use App\Models\CurrencyChain;
 use Closure;
@@ -26,7 +27,7 @@ class CheckMinAmount implements ValidationRule
             ->where('currency_id', $currency->id)
             ->first();
 
-        if ($currency && $chain && bccomp((float) $value, (float) $chain->min_withdraw_amount, config('bitexroom.scale_precision')) === -1) {
+        if ($currency && $chain && Math::comp($value, $chain->min_withdraw_amount) === -1) {
             $fail(__('validation.min_amount', [
                 'min' => $chain->min_withdraw_amount,
                 'currency' => $this->currency,

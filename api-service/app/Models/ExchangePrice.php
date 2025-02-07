@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Helpers\Math;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -26,11 +27,11 @@ class ExchangePrice extends Model
 
     public function getSellPriceAttribute(): string
     {
-        return bcmul((float) $this->price, (float) ($this->exchange_profit_sell + 1), 8);
+        return Math::mul($this->price, ($this->exchange_profit_sell + 1));
     }
 
     public function getBuyPriceAttribute(): string
     {
-        return bcmul((float) $this->price, (float) ($this->exchange_profit_sell + 1), 8);
+        return Math::mul($this->price, ($this->exchange_profit_sell + 1));
     }
 }

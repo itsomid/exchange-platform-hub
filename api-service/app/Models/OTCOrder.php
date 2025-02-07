@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\OTCOrderStatusEnum;
 use App\Enums\OTCOrderTypeEnum;
 use App\Filters\Filterable;
+use App\Helpers\Math;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -60,10 +61,9 @@ class OTCOrder extends Model
 
     public function getReceivedAmountAttribute(): string
     {
-        return bcsub(
-            (float) bcmul((float) $this->quantity, (float) $this->price, config('bitexroom.scale_precision')),
-            (float) $this->fee,
-            config('bitexroom.scale_precision')
+        return Math::sub(
+            Math::mul($this->quantity, $this->price),
+            $this->fee
         );
     }
 

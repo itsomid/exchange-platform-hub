@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Enums\WithdrawalStatusEnum;
+use App\Helpers\Math;
 use App\Models\Withdrawal;
 use App\Repositories\DTO\Withdrawal\CreateWithdrawalRequestDTO;
 use App\Repositories\Interfaces\WithdrawalRepositoryInterface;
@@ -20,7 +21,7 @@ class WithdrawalRepository implements WithdrawalRepositoryInterface
             'address' => $requestDTO->getAddress(),
             'network_fee' => $requestDTO->getNetworkFee(),
             'exchange_fee' => $requestDTO->getExchangeFee(),
-            'total_fee' => bcadd(toDecimalString($requestDTO->getExchangeFee()), toDecimalString($requestDTO->getNetworkFee()), 8),
+            'total_fee' => Math::add($requestDTO->getExchangeFee(), $requestDTO->getNetworkFee()),
             'currency_chain_id' => $requestDTO->getCurrencyChainId(),
             'currency_symbol' => $requestDTO->getCurrencySymbol(),
         ]);
