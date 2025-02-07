@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Enums\UserStatusEnum;
 use App\Models\User;
 use App\Repositories\DTO\User\UpdateLastLoginRequestDTO;
 use App\Repositories\DTO\User\UserRegisterRequestDTO;
@@ -24,6 +25,7 @@ class UserRepository implements UserRepositoryInterface
                     'last_name' => null,
                     'password' => $registerRequestDTO->getHashedPassword(),
                     'introducer_code' => $registerRequestDTO->getIntroducerId(),
+                    'status' => $registerRequestDTO->getUserStatus(),
                 ]
             );
     }
@@ -43,6 +45,7 @@ class UserRepository implements UserRepositoryInterface
         User::query()
             ->where('id', $userId)
             ->update([
+                'status' => UserStatusEnum::ACTIVE,
                 'email_verified_at' => now(),
             ]);
     }

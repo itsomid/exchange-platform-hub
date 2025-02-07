@@ -2,6 +2,7 @@
 
 namespace App\Services\Auth;
 
+use App\Enums\UserStatusEnum;
 use App\Repositories\DTO\User\UserRegisterRequestDTO;
 use App\Repositories\DTO\UserEmailVerification\EmailVerificationSaveTokenRequestDTO;
 use App\Repositories\Interfaces\UserEmailVerificationInterface;
@@ -36,6 +37,7 @@ readonly class RegisterService
                 ->setUsername($this->generateUsername($registerRequestDTO->getEmail()))
                 ->setEmail($registerRequestDTO->getEmail())
                 ->setIntroducerId($referralCodeModel?->id)
+                ->setUserStatus(UserStatusEnum::INACTIVE)
                 ->setHashedPassword(
                     Hash::make($registerRequestDTO->getPassword())
                 )

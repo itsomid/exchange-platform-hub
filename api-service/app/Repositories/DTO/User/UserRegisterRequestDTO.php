@@ -2,6 +2,8 @@
 
 namespace App\Repositories\DTO\User;
 
+use App\Enums\UserStatusEnum;
+
 class UserRegisterRequestDTO
 {
     private string $email;
@@ -11,6 +13,8 @@ class UserRegisterRequestDTO
     private ?int $introducerId;
 
     private string $hashedPassword;
+
+    private UserStatusEnum $userStatus;
 
     /**
      * @return $this
@@ -64,5 +68,17 @@ class UserRegisterRequestDTO
     public function getIntroducerId(): ?int
     {
         return $this->introducerId;
+    }
+
+    public function setUserStatus(UserStatusEnum $userStatus): UserRegisterRequestDTO
+    {
+        $this->userStatus = $userStatus;
+
+        return $this;
+    }
+
+    public function getUserStatus(): UserStatusEnum
+    {
+        return $this->userStatus;
     }
 }
