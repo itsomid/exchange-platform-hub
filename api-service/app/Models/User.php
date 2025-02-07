@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\UserStatusEnum;
 use App\Notifications\ResetPasswordNotification;
 use Carbon\Carbon;
 use Illuminate\Contracts\Auth\CanResetPassword;
@@ -43,6 +44,7 @@ class User extends Authenticatable implements CanResetPassword, MustVerifyEmail
         'introducer_code',
         'last_login',
         'last_ip_address',
+        'status',
         'password',
     ];
 
@@ -67,6 +69,7 @@ class User extends Authenticatable implements CanResetPassword, MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'last_login' => 'datetime',
+            'status' => UserStatusEnum::class,
         ];
     }
 
