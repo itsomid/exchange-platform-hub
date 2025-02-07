@@ -78,9 +78,9 @@ class DepositReportController extends Controller
 
 
 
-        $totalDepositsValue = Withdrawal::with('currency')
+        $totalDepositsValue = Deposit::with('currency')
             ->where('currency_symbol', $request->currency_symbol)
-            ->where('status', WithdrawalStatusEnum::COMPLETED)
+            ->where('status', DepositStatusEnum::CONFIRMED)
             ->when($from_date, function ($query) use ($from_date) {
                 $query->where('created_at', '>=', $from_date);
             })
@@ -88,9 +88,7 @@ class DepositReportController extends Controller
                 $query->where('created_at', '<=', $to_date);
             })
             ->get()
-            ->sum(function ($withdraw) {
-                return $withdraw->amount * $withdraw->currency->exchange_price; // Multiply amount by coin price
-            });
+            ->sum('usdt_value');
 
 
 //        dd($dates , $chartData) ;
