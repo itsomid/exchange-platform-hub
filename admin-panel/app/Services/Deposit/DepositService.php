@@ -13,7 +13,13 @@ use Illuminate\Support\Facades\DB;
 
 class DepositService
 {
-
+    public function totalDepositValueBasedCurrency(string $currencySymbol, Int $userId): float
+    {
+        // Get the total amount of deposits for the given currency
+        return Deposit::whereUserId($userId)
+            ->where('currency_symbol',$currencySymbol)
+            ->sum('usdt_value');
+    }
     public function confirmDeposit($depositId,$wallet, $amount, $transactionHash)
     {
         $deposit = Deposit::findOrFail($depositId);

@@ -131,22 +131,7 @@ class WalletService
         return $specificAssetValue;
     }
 
-    public function totalTransactionValueBasedType(string $currencySymbol, array $transactionTypes, Int $userId): float
-    {
-        // Get the total amount of deposits for the given currency
-        $totalTransactions = Transaction::whereIn('type', $transactionTypes)
-            ->whereUserId($userId)
-            ->whereHas('wallet', function ($query) use ($currencySymbol) {
-                $query->where('currency_symbol', $currencySymbol);
-            })
-            ->sum('amount');
 
-        // Fetch the exchange rate for the currency
-        $currency = Currency::where('symbol', $currencySymbol)->first();
-
-        // Calculate the value in USDT
-        return $totalTransactions * $currency->exchangePrice;
-    }
 
     public function updateBalance(UpdateBalanceRequestDTO $requestDTO): bool
     {

@@ -200,9 +200,6 @@
                             @if($wallet->walletChains->isNotEmpty())
                                 <div class="mb-0 d-flex flex-column align-items-end">
                                     <small class="text-primary fw-bolder text-decoration-underline">دارای آدرس واریز</small>
-{{--                                    @foreach($wallet->walletChains as $walletChain)--}}
-{{--                                        <a href="" class="text-primary fw-medium mt-1">{{$walletChain->currency_chain}} </a>--}}
-{{--                                    @endforeach--}}
                                 </div>
                             @endif
                         </div>

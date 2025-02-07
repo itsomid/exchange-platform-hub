@@ -37,6 +37,7 @@
                                 <li class="list-inline-item d-flex gap-2 align-items-center">
                                     <i class="fa-regular fa-clock"></i>
                                     <small class="text-body">
+                                        اخرین فعالیت:
                                         @if($user->latestActiveToken)
                                             {{\App\Helpers\DateFormatter::convertToPersianDate($user->latestActiveToken->last_used_at,'H:i:s %Y/%m/%d')}}
                                         @else
@@ -77,7 +78,7 @@
                     <div class="d-flex flex-column flex-md-row justify-content-between">
 
                         <div class="d-flex flex-column justify-content-center">
-
+                            <h4 class="mb-0">موجودی کیف پول  {{$wallet->currency->name}}</h4>
                             <h3 class="text-primary mt-4 mb-1 font-number">{{formatNumberTrimZeros($wallet->balance)}}
                                 <span class=" h5">{{$wallet->currency_symbol}}</span>
                             </h3>

@@ -28,7 +28,7 @@
                             <span>کاربران تایید شده</span>
                             <div class="d-flex align-items-center my-1">
                                 <h4 class="mb-0 me-2">{{$activeUsersCount}}</h4>
-                                <p class="text-success mb-0">(+6%)</p>
+                                <p class="text-success mb-0"></p>
                             </div>
                         </div>
                         <span class="badge bg-label-success rounded p-2">
@@ -46,7 +46,7 @@
                             <span>کاربران تایید نشده</span>
                             <div class="d-flex align-items-center my-1">
                                 <h4 class="mb-0 me-2">{{$inActiveUsersCount}}</h4>
-                                <p class="text-danger mb-0">(+6%)</p>
+                                <p class="text-danger mb-0"></p>
                             </div>
                         </div>
                         <span class="badge bg-label-warning rounded p-2">

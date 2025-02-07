@@ -275,4 +275,15 @@ class WithdrawalService
             throw $e;
         }
     }
+
+    ///report////
+
+    public function totalWithdrawalValueBasedCurrency(string $currencySymbol, Int $userId): float
+    {
+        // Get the total amount of deposits for the given currency
+        return $totalWithdrawalValue = Withdrawal::whereUserId($userId)
+            ->where('currency_symbol',$currencySymbol)
+            ->sum('usdt_value');
+
+    }
 }

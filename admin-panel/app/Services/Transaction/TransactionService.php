@@ -243,4 +243,35 @@ class TransactionService
         ]);
     }
 
+
+    //report////
+    public function totalTransactionsBasedType( Int $userId, string $currencySymbol, array $transactionTypes): float
+    {
+        // Get the total amount of deposits for the given currency
+        $totalTransactions = Transaction::whereIn('type', $transactionTypes)
+            ->whereUserId($userId)
+            ->whereHas('wallet', function ($query) use ($currencySymbol) {
+                $query->where('currency_symbol', $currencySymbol);
+            })
+            ->sum('amount');
+
+        return abs($totalTransactions);
+    }
+    public function totalTransactionsValueBasedType( Int $userId, string $currencySymbol, array $transactionTypes): float
+    {
+        // Get the total amount of deposits for the given currency
+        $totalTransactions = Transaction::whereIn('type', $transactionTypes)
+            ->whereUserId($userId)
+            ->whereHas('wallet', function ($query) use ($currencySymbol) {
+                $query->where('currency_symbol', $currencySymbol);
+            })
+            ->sum('amount');
+
+        // Fetch the exchange rate for the currency
+        $currency = Currency::where('symbol', $currencySymbol)->first();
+
+        // Calculate the value in USDT
+        return abs($totalTransactions * $currency->exchangePrice);
+    }
+
 }
