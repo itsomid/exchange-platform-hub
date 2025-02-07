@@ -29,9 +29,9 @@
                                 <span class="h6">ایمیل:</span>
                                 <span>{{$user->email}}</span>
                             </li>
-                            <li class="mt-2 d-flex justify-content-between">
+                            <li class="mt-2 d-flex justify-content-between ali">
                                 <span class="h6">وضعیت حساب:</span>
-                                <span>{{$user->status}}</span>
+                                <span class="badge bg-label-{{$user->status->color()}} align-self-baseline">{{$user->status->label()}}</span>
                             </li>
                             <li class="mt-2 d-flex justify-content-between">
                                 <span class="h6">شماره تماس:</span>

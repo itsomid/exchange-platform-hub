@@ -199,8 +199,9 @@
                                     <div class="d-flex">
 
                                         <div class="avatar me-2 avatar-{{ $user->activity_status }}">
-                                            <span class="avatar-initial rounded-circle bg-label-{{ $user->avatar_status }}">
-                                                {{ $user->avatar_name }}
+                                            <span
+                                                class="avatar-initial rounded-circle bg-label-{{ $user->avatar_status }}">
+                                            {{ trim($user->avatar_name) !== '' ?$user->avatar_name: $user->avatar_user_name }}
                                             </span>
                                         </div>
 
@@ -253,14 +254,8 @@
                                     @endif
                                 </td>
                                 <td>
-                                    @if($user->status === 'active')
-                                        <span class="badge bg-label-success">فعال</span>
-                                    @elseif($user->status === 'suspended')
-                                        <span class="badge bg-label-danger">تعلیق شده</span>
-                                    @else
-                                        <span class="badge bg-label-secondary">غیرفعال</span>
-                                    @endif
-
+                                    <span
+                                        class="badge bg-label-{{$user->status->color()}} align-self-baseline">{{$user->status->label()}}</span>
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center">

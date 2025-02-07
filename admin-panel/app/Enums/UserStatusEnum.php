@@ -17,13 +17,13 @@ enum UserStatusEnum: string
     const array TYPE_COLOR = [
         self::ACTIVE->value => 'success',
         self::SUSPEND->value => 'danger',
-        self::INACTIVE->value => 'secondary',
+        self::INACTIVE->value => 'warning',
     ];
 
     /**
      * Get label for the deposit status.
      *
-     * @return string
+     * @return string\App\Enums\UserStatusEnum::ACTIVE
      */
     public function label(): string
     {

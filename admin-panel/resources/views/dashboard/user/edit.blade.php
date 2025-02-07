@@ -78,10 +78,10 @@
                         <div class="form-group mt-3">
                             <label class="form-label" for="status">وضعیت کاربری:</label>
                             <select id="status" name="status" class="form-select text-capitalize mb-md-0 ">
-                                <option {{ $user->status == 'active' ? 'selected' : '' }} value="active">فعال</option>
-                                <option {{ $user->status == 'inactive' ? 'selected' : '' }} value="inactive">غیرفعال
+                                <option {{ $user->status === \App\Enums\UserStatusEnum::ACTIVE ? 'selected' : '' }} value="active">فعال</option>
+                                <option {{ $user->status === \App\Enums\UserStatusEnum::INACTIVE ? 'selected' : '' }} value="inactive">غیرفعال
                                 </option>
-                                <option {{ $user->status == 'suspended' ? 'selected' : '' }} value="suspended">تعلیق
+                                <option {{ $user->status === \App\Enums\UserStatusEnum::SUSPEND ? 'selected' : '' }} value="suspended">تعلیق
                                     شده
                                 </option>
                             </select>
