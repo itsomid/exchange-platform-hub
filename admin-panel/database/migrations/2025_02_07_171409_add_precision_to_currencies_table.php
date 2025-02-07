@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('currencies', function (Blueprint $table) {
-            $table->unsignedTinyInteger('precision')->default(8);
+            $table->unsignedTinyInteger('precision')->after('logo')->default(8);
         });
     }
 

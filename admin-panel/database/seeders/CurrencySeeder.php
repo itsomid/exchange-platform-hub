@@ -29,6 +29,7 @@ class CurrencySeeder extends Seeder
                 'name' => 'Tether',
                 'symbol' => 'USDT',
                 'logo' => 'usdt.svg',  // Replace with actual logo file path or URL
+                'precision' => 2,
                 'max_auto_withdraw_amount' => 10000
             ],
             [
