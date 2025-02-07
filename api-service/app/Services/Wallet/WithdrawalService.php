@@ -2,7 +2,6 @@
 
 namespace App\Services\Wallet;
 
-use App\Enums\CurrencyChainEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
@@ -51,13 +50,13 @@ class WithdrawalService
 
             $fee = bcadd(toDecimalString($chain->network_fee), toDecimalString($chain->exchange_withdrawal_fee), 8);
             $amount = $requestDTO->getAmount();
-            $receivedAmount = bcsub($amount, $fee, 8);
+            $receivedAmount = bcsub((float) $amount, (float) $fee, 8);
             $value_in_usdt = $currency->exchangePrice * $amount;
 
             $withdrawalStatus = WithdrawalStatusEnum::PENDING;
             if (
-                bccomp($requestDTO->getAmount(), $currency->max_auto_withdraw_amount, config('bitexroom.scale_precision')) === 0 ||
-                bccomp($requestDTO->getAmount(), $currency->max_auto_withdraw_amount, config('bitexroom.scale_precision')) === 1
+                bccomp((float) $requestDTO->getAmount(), (float) $currency->max_auto_withdraw_amount, config('bitexroom.scale_precision')) === 0 ||
+                bccomp((float) $requestDTO->getAmount(), (float) $currency->max_auto_withdraw_amount, config('bitexroom.scale_precision')) === 1
             ) {
                 $withdrawalStatus = WithdrawalStatusEnum::AWAITING_APPROVAL;
             }
@@ -102,7 +101,7 @@ class WithdrawalService
 
             return resolve(CreateWithdrawalResponseDTO::class)
                 ->setId($withdrawal->id)
-                ->setReceivedAmount(bcsub($amount, $fee, config('bitexroom.scale_precision')))
+                ->setReceivedAmount(bcsub((float) $amount, (float) $fee, config('bitexroom.scale_precision')))
                 ->setFee($fee)
                 ->setStatus($withdrawalStatus);
         } catch (\Exception $e) {

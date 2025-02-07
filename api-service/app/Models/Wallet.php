@@ -39,7 +39,7 @@ class Wallet extends Model
 
     public function getAvailableAttribute(): string
     {
-        return bcsub($this->balance, $this->locked_balance, 8);
+        return bcsub((float) $this->balance, (float) $this->locked_balance, 8);
     }
 
     public function chains(): HasMany

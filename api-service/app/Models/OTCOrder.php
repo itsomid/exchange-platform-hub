@@ -61,8 +61,8 @@ class OTCOrder extends Model
     public function getReceivedAmountAttribute(): string
     {
         return bcsub(
-            bcmul($this->quantity, $this->price, config('bitexroom.scale_precision')),
-            $this->fee,
+            (float) bcmul((float) $this->quantity, (float) $this->price, config('bitexroom.scale_precision')),
+            (float) $this->fee,
             config('bitexroom.scale_precision')
         );
     }

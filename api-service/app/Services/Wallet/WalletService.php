@@ -97,9 +97,9 @@ class WalletService
 
             $balance = $wallet->balance;
             if ($requestDTO->getOperation() === BalanceOperationEnum::Increase) {
-                $balance = bcadd($wallet->balance, $requestDTO->getAmount(), 8);
+                $balance = bcadd((float) $wallet->balance, (float) $requestDTO->getAmount(), 8);
             } elseif ($requestDTO->getOperation() === BalanceOperationEnum::Decrease) {
-                $balance = bcsub($wallet->balance, $requestDTO->getAmount(), 8);
+                $balance = bcsub((float) $wallet->balance, (float) $requestDTO->getAmount(), 8);
             }
 
             $this->walletRepository->updateBalance($requestDTO->getCurrencySymbol(), $requestDTO->getUserId(), $balance);
@@ -150,11 +150,11 @@ class WalletService
             ->setLockedBalance($wallet->locked_balance)
             ->setUsdtBalance(
                 $wallet->exchangePrice ?
-                    bcmul($wallet->exchangePrice->price, $wallet->balance, 8) : $wallet->balance
+                    bcmul((float) $wallet->exchangePrice->price, (float) $wallet->balance, 8) : $wallet->balance
             )
             ->setUsdtLockedBalance(
                 $wallet->exchangePrice ?
-                    bcmul($wallet->exchangePrice->price, $wallet->locked_balance, 8) : $wallet->locked_balance
+                    bcmul((float) $wallet->exchangePrice->price, (float) $wallet->locked_balance, 8) : $wallet->locked_balance
             );
     }
 
@@ -166,7 +166,7 @@ class WalletService
 
         $wallets->map(function ($wallet) use (&$sumAmount) {
             $sumAmount += $wallet->exchangePrice ?
-                bcmul($wallet->exchangePrice->price, $wallet->balance, 8) : $wallet->balance;
+                bcmul((float) $wallet->exchangePrice->price, (float) $wallet->balance, 8) : $wallet->balance;
 
         });
 
@@ -194,11 +194,11 @@ class WalletService
             ->setLockedBalance($wallet->locked_balance ?? 0)
             ->setUsdtBalance(
                 $wallet && $wallet->exchangePrice ?
-                    bcmul($wallet->exchangePrice->price, $wallet->balance ?? 0, 8) : $wallet->balance
+                    bcmul((float) $wallet->exchangePrice->price, (float) $wallet->balance ?? 0, 8) : $wallet->balance
             )
             ->setUsdtLockedBalance(
                 $wallet && $wallet->exchangePrice ?
-                    bcmul($wallet->exchangePrice->price, $wallet->locked_balance ?? 0, 8) : $wallet->locked_balance
+                    bcmul((float) $wallet->exchangePrice->price, (float) $wallet->locked_balance ?? 0, 8) : $wallet->locked_balance
             );
     }
 }
