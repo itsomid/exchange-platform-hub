@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
+use App\Enums\UserStatusEnum;
 use App\Enums\WithdrawalStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
@@ -63,20 +64,42 @@ class HomeController extends Controller
         // Get the end of the month safely
         $endOfMonth = $startOfMonth->copy()->addMonth()->subDay();
 
-        $registrations = User::query()
-            ->selectRaw('DAY(registration_date) as day, COUNT(*) as total')
+         $registrations = User::query()
             ->whereBetween('registration_date', [$startOfMonth, $endOfMonth])
-            ->groupBy('day')->orderBy('day')
-            ->get();
+            ->get()
+            ->map(function ($reg) {
+                return [
+                    'day' => Jalalian::fromDateTime($reg->registration_date)->getDay(),
+                    'total' => 1
+                ];
+            })
+            ->groupBy('day') // گروه‌بندی براساس روز شمسی
+            ->map(function ($items, $day) {
+                return [
+                    'day' => (int)$day,
+                    'total' => $items->sum('total')
+                ];
+            })
+            ->values(); // برای حذف کلیدهای عددی
 
-// Query for inactive users
-         $inactiveRegistrations = User::query()
-            ->selectRaw('DAY(registration_date) as day, COUNT(*) as total')
+        $inactiveRegistrations = User::query()
             ->whereBetween('registration_date', [$startOfMonth, $endOfMonth])
-            ->where('status', 'inactive') // Assuming 0 means inactive
-            ->groupBy('day')
-            ->orderBy('day')
-            ->get();
+            ->where('status', UserStatusEnum::INACTIVE->value)
+            ->get()
+            ->map(function ($reg) {
+                return [
+                    'day' => Jalalian::fromDateTime($reg->registration_date)->getDay(),
+                    'total' => 1
+                ];
+            })
+            ->groupBy('day') // گروه‌بندی براساس روز شمسی
+            ->map(function ($items, $day) {
+                return [
+                    'day' => (int)$day,
+                    'total' => $items->sum('total')
+                ];
+            })
+            ->values(); // برای حذف کلیدهای عددی
 
 
         $daysInMonth = 30; // Adjust based on the selected Persian month
@@ -84,11 +107,11 @@ class HomeController extends Controller
         $totalInActiveRegistrationData = array_fill(1, $daysInMonth, 0);
 
         foreach ($registrations as $reg) {
-            $totalRegistrationData[(int)$reg->day] = $reg->total;
+            $totalRegistrationData[(int)$reg['day']] = $reg['total'];
         }
 
         foreach ($inactiveRegistrations as $reg) {
-            $totalInActiveRegistrationData[(int)$reg->day] = $reg->total;
+            $totalInActiveRegistrationData[(int)$reg['day']] = $reg['total'];
         }
 
         return view('dashboard.home.index', [
