@@ -9,7 +9,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Deposit;
 use App\Models\Transaction;
 use App\Models\Withdrawal;
+use App\Models\User;
 use Carbon\Carbon;
+use Morilog\Jalali\CalendarUtils;
+use Morilog\Jalali\Jalalian;
 
 class HomeController extends Controller
 {
@@ -38,26 +41,65 @@ class HomeController extends Controller
             ->groupBy('currency_symbol')
             ->get();
 
-         $totalDepositsValue = Deposit::with('currency')
+        $totalDepositsValue = Deposit::with('currency')
             ->whereBetween('created_at', [now()->startOfWeek(Carbon::SATURDAY), now()->endOfWeek(Carbon::FRIDAY)])
             ->get()
             ->sum(function ($deposit) {
                 return $deposit->amount * $deposit->currency->exchange_price;
             });
 
-         $totalWithdrawalValue = Withdrawal::with('currency')
+        $totalWithdrawalValue = Withdrawal::with('currency')
             ->whereBetween('created_at', [now()->startOfWeek(Carbon::SATURDAY), now()->endOfWeek(Carbon::FRIDAY)])
             ->get()
             ->sum(function ($withdraw) {
                 return $withdraw->amount * $withdraw->currency->exchange_price;
             });
 
+        $year = Jalalian::now()->getYear(); // Get current Jalali year
+        $month = Jalalian::now()->getMonth(); // Get current Jalali year
+
+        $startOfMonth = Jalalian::fromFormat('Y-m-d', "$year-$month-01")->toCarbon();
+
+        // Get the end of the month safely
+        $endOfMonth = $startOfMonth->copy()->addMonth()->subDay();
+
+        $registrations = User::query()
+            ->selectRaw('DAY(registration_date) as day, COUNT(*) as total')
+            ->whereBetween('registration_date', [$startOfMonth, $endOfMonth])
+            ->groupBy('day')->orderBy('day')
+            ->get();
+
+// Query for inactive users
+         $inactiveRegistrations = User::query()
+            ->selectRaw('DAY(registration_date) as day, COUNT(*) as total')
+            ->whereBetween('registration_date', [$startOfMonth, $endOfMonth])
+            ->where('status', 'inactive') // Assuming 0 means inactive
+            ->groupBy('day')
+            ->orderBy('day')
+            ->get();
+
+
+        $daysInMonth = 30; // Adjust based on the selected Persian month
+        $totalRegistrationData = array_fill(1, $daysInMonth, 0);
+        $totalInActiveRegistrationData = array_fill(1, $daysInMonth, 0);
+
+        foreach ($registrations as $reg) {
+            $totalRegistrationData[(int)$reg->day] = $reg->total;
+        }
+
+        foreach ($inactiveRegistrations as $reg) {
+            $totalInActiveRegistrationData[(int)$reg->day] = $reg->total;
+        }
+
         return view('dashboard.home.index', [
             'OTCFeeTransactionsByCurrency' => $OTCFeeTransactionsByCurrency,
             'withdrawalFeeTransactionsByCurrency' => $withdrawalFeeTransactionsByCurrency,
             'withdrawalSums' => $withdrawalSums,
-            'totalDepositsValue' =>$totalDepositsValue,
-            'totalWithdrawalValue' =>$totalWithdrawalValue
+            'totalDepositsValue' => $totalDepositsValue,
+            'totalWithdrawalValue' => $totalWithdrawalValue,
+            'totalRegistrationData' => $totalRegistrationData,
+            'totalInActiveRegistrationData' => $totalInActiveRegistrationData,
         ]);
     }
+
 }
