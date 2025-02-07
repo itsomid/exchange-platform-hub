@@ -45,6 +45,7 @@ class CurrencyService
 
         return $allCurrencies->map(fn (Currency $model) => resolve(GetConfigResponseDTO::class)
             ->setName($model->name)
+            ->setPrecision($model->precision)
             ->setSymbol($model->symbol)
             ->setMaxAutoWithdrawAmount($model->max_auto_withdraw_amount)
             ->setInterTransferEnabled($model->inter_transfer_enabled)

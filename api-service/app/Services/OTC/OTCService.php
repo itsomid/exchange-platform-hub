@@ -55,6 +55,7 @@ class OTCService
         return $markets->map(fn (Market $market) => resolve(MarketResponseDTO::class)
             ->setMarketId($market->id)
             ->setBaseCurrency($market->base_currency)
+            ->setPrecision($market->currency->precision)
             ->setQuoteCurrency($market->quote_currency)
             ->setIsActive($market->is_active)
             ->setSellPrice(Math::mul($market->exchangePrice->price, (($market->exchangePrice->exchange_profit_sell / 100) + 1)))

@@ -12,6 +12,8 @@ class GetConfigResponseDTO
 
     private bool $interTransferEnabled;
 
+    private int $precision;
+
     private array $chains;
 
     public function setName(string $name): self
@@ -72,5 +74,17 @@ class GetConfigResponseDTO
     public function getMaxAutoWithdrawAmount(): string
     {
         return $this->maxAutoWithdrawAmount;
+    }
+
+    public function setPrecision(int $precision): GetConfigResponseDTO
+    {
+        $this->precision = $precision;
+
+        return $this;
+    }
+
+    public function getPrecision(): int
+    {
+        return $this->precision;
     }
 }
