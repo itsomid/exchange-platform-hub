@@ -99,13 +99,13 @@ Route::post('/inquiry', [InquiryController::class, 'submit'])->name('inquiry.sub
 //Route::get('/users/{user}/tokens', [UserTokenController::class, 'twoFAEdit'])->name('user.token.index')->can('user.edit');
 //Route::patch('/users/{user}/tokens/{token}/revoke', [UserTokenController::class, 'revoke'])->name('user.token.revoke')->can('user.edit');
 
-Route::get('/role/{admin}', [AdminRoleController::class, 'edit'])->name('role.user.edit')->can('role.admin.edit');
-Route::patch('/role/{admin}', [AdminRoleController::class, 'update'])->name('role.user.update')->can('role.admin.edit');
-Route::get('/roles', [RoleController::class, 'index'])->name('role.index')->can('role.index');
-Route::get('/roles/create', [RoleController::class, 'create'])->name('role.create')->can('role.create');
-Route::post('/roles', [RoleController::class, 'store'])->name('role.store')->can('role.create');
-Route::get('/roles/{role}/edit', [RoleController::class, 'edit'])->name('role.edit')->can('role.edit');
-Route::patch('/roles/{role}', [RoleController::class, 'update'])->name('role.update')->can('role.edit');
+Route::get('/role/{admin}', [AdminRoleController::class, 'edit'])->name('role.user.edit')->can('roles.permissions');
+Route::patch('/role/{admin}', [AdminRoleController::class, 'update'])->name('role.user.update')->can('roles.permissions');
+Route::get('/roles', [RoleController::class, 'index'])->name('role.index')->can('roles.permissions');
+Route::get('/roles/create', [RoleController::class, 'create'])->name('role.create')->can('roles.permissions');
+Route::post('/roles', [RoleController::class, 'store'])->name('role.store')->can('roles.permissions');
+Route::get('/roles/{role}/edit', [RoleController::class, 'edit'])->name('role.edit')->can('roles.permissions');
+Route::patch('/roles/{role}', [RoleController::class, 'update'])->name('role.update')->can('roles.permissions');
 
 Route::get('/permissions', [PermissionController::class, 'index'])->name('permission.index')->can('permission.index');
 Route::get('/permissions/{permission}/edit', [PermissionController::class, 'edit'])->name('permission.edit')->can('permission.edit');

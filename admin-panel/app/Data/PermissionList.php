@@ -21,13 +21,7 @@ class PermissionList
             ['admin.login-as-admin', 'ورود به عنوان ادمین'],
             ['admin.inquiry', 'استعلام شماره تماس'],
 
-            ['role.admin.edit', 'ویرایش نقش پرسنل'],
-            ['role.index', 'لیست نقش ها'],
-            ['role.create', 'افزودن نقش'],
-            ['role.edit', 'ویرایش نقش'],
-            ['role.destroy', 'حذف نقش'],
-            ['permission.index', 'مشاهده لیست مجوز ها'],
-            ['permission.edit', 'ویرایش مجوز'],
+            ['roles.permissions', 'مدیریت نقش ها و مجوز ها'],
 
             ['transaction.index', 'مشاهده لیست تراکنش ها'],
 
