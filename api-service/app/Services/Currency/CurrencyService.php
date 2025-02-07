@@ -18,7 +18,6 @@ class CurrencyService
         $model = $this->currencyRepository
             ->getCurrencyWithChains($requestDTO->getSymbol());
 
-
         return resolve(GetConfigResponseDTO::class)
             ->setName($model->name)
             ->setSymbol($model->symbol)
@@ -31,7 +30,7 @@ class CurrencyService
                 ->setWithdrawEnabled($item->withdraw_enabled)
                 ->setDepositDelayMinutes($item->deposit_delay_minutes)
                 ->setSafeConfirmations($item->safe_confirmations)
-                ->setWithdrawalFee(bcadd($item->exchange_withdrawal_fee, $item->network_fee, config('bitexroom.scale_precision')))
+                ->setWithdrawalFee(bcadd((float) $item->exchange_withdrawal_fee, (float) $item->network_fee, config('bitexroom.scale_precision')))
                 ->setWithdrawPrecision($item->withdrawal_precision)
                 ->setMemo($item->memo)
                 ->setIsMemoRequiredForDeposit($item->is_memo_required_for_deposit)
@@ -42,7 +41,6 @@ class CurrencyService
     {
         $allCurrencies = $this->currencyRepository
             ->getAllCurrencyWithChains();
-
 
         return $allCurrencies->map(fn (Currency $model) => resolve(GetConfigResponseDTO::class)
             ->setName($model->name)

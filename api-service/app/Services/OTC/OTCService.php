@@ -56,8 +56,8 @@ class OTCService
             ->setBaseCurrency($market->base_currency)
             ->setQuoteCurrency($market->quote_currency)
             ->setIsActive($market->is_active)
-            ->setSellPrice(bcmul($market->exchangePrice->price, (string) (($market->exchangePrice->exchange_profit_sell / 100) + 1), 8))
-            ->setBuyPrice(bcmul($market->exchangePrice->price, (string) (($market->exchangePrice->exchange_profit_buy / 100) + 1), 8))
+            ->setSellPrice(bcmul((float) $market->exchangePrice->price, (float) (($market->exchangePrice->exchange_profit_sell / 100) + 1), 8))
+            ->setBuyPrice(bcmul((float) $market->exchangePrice->price, (float) (($market->exchangePrice->exchange_profit_buy / 100) + 1), 8))
             ->setMinTradeAmount($market->min_trade_amount)
             ->setMaxTradeAmount($market->max_trade_amount)
             ->setMinOTCAmount($market->min_otc_amount)
@@ -82,9 +82,9 @@ class OTCService
         $otc = $this->otcOrderRepository->getOneById($requestDTO->getOtcId());
 
         $buyAmount = $otc->quantity;
-        $amountInQuoteCurrency = bcmul($otc->market->exchangePrice->price, $otc->quantity, 8);
-        $fee = bcmul($buyAmount, bcdiv(Setting::getSetting('otc_buy_fee'), 100, 8), 8);
-        $receivedAmount = bcsub($buyAmount, $fee, 8);
+        $amountInQuoteCurrency = bcmul((float) $otc->market->exchangePrice->price, (float) $otc->quantity, 8);
+        $fee = bcmul((float) $buyAmount, (float) bcdiv(Setting::getSetting('otc_buy_fee'), 100, 8), 8);
+        $receivedAmount = bcsub((float) $buyAmount, (float) $fee, 8);
 
         //Find Market
         $market = $this->marketRepository->getMarketById($otc->market_id);
@@ -231,11 +231,11 @@ class OTCService
                 );
 
             $buyAmount = $requestDTO->getQuantity();
-            $amountInQuoteCurrency = bcmul($market->exchangePrice->price, $requestDTO->getQuantity(), 8);
-            $fee = bcmul($buyAmount, bcdiv(Setting::getSetting('otc_buy_fee'), 100, 8), 8);
-            $receivedAmount = bcsub($buyAmount, $fee, 8);
+            $amountInQuoteCurrency = bcmul((float) $market->exchangePrice->price, (float) $requestDTO->getQuantity(), 8);
+            $fee = bcmul((float) $buyAmount, (float) bcdiv(Setting::getSetting('otc_buy_fee'), 100, 8), 8);
+            $receivedAmount = bcsub((float) $buyAmount, (float) $fee, 8);
 
-            if (bccomp($buyerQuoteWallet->balance, $amountInQuoteCurrency, 8) === -1) {
+            if (bccomp((float) $buyerQuoteWallet->balance, (float) $amountInQuoteCurrency, 8) === -1) {
                 throw new InsufficientBalanceException(__('otc.buyer_insufficient_balance', ['currency' => $market->quote_currency]));
             }
 
@@ -251,11 +251,11 @@ class OTCService
             );
 
             $doComplete = true;
-            if (bccomp($sellerWallet->balance, $receivedAmount, config('bitexroom.scale_precision')) === -1) {
+            if (bccomp((float) $sellerWallet->balance, (float) $receivedAmount, config('bitexroom.scale_precision')) === -1) {
                 $chain = $market->currency->chains[0];
 
                 // bitexroom_withdrawal_fee - network_fee + receivedAmount
-                $amountForBuy = bcadd($receivedAmount, bcsub($chain->exchange_withdrawal_fee, $chain->network_fee, 8), 8);
+                $amountForBuy = bcadd((float) $receivedAmount, (float) bcsub((float) $chain->exchange_withdrawal_fee, (float) $chain->network_fee, 8), 8);
                 $exchangeService = resolve(ExchangeService::class);
                 $doComplete = $exchangeService->buy(
                     resolve(ExchangeBuyRequestDTO::class)
@@ -297,9 +297,9 @@ class OTCService
         $otc = $this->otcOrderRepository->getOneById($requestDTO->getOtcId());
         $market = $otc->market;
         $sellAmount = $otc->quantity;
-        $amountInQuoteCurrency = bcmul($market->exchangePrice->price, $sellAmount, 8);
-        $fee = bcmul($sellAmount, bcdiv(Setting::getSetting('otc_sell_fee'), '100', 8), 8);
-        $receivedAmount = bcsub($amountInQuoteCurrency, $fee, 8);
+        $amountInQuoteCurrency = bcmul((float) $market->exchangePrice->price, (float) $sellAmount, 8);
+        $fee = bcmul((float) $sellAmount, (float) bcdiv(Setting::getSetting('otc_sell_fee'), '100', 8), 8);
+        $receivedAmount = bcsub((float) $amountInQuoteCurrency, (float) $fee, 8);
 
         $buyerWallet = $this->walletRepository
             ->getOneOrCreateByCurrencyWithLock(
@@ -444,11 +444,11 @@ class OTCService
                 );
 
             $sellAmount = $requestDTO->getQuantity();
-            $amountInQuoteCurrency = bcmul($market->exchangePrice->price, $sellAmount, 8);
-            $fee = bcmul($sellAmount, bcdiv(Setting::getSetting('otc_sell_fee'), 100, 8), 8);
-            $receivedAmount = bcsub($amountInQuoteCurrency, $fee, 8);
+            $amountInQuoteCurrency = bcmul((float) $market->exchangePrice->price, (float) $sellAmount, 8);
+            $fee = bcmul((float) $sellAmount, bcdiv(Setting::getSetting('otc_sell_fee'), 100, 8), 8);
+            $receivedAmount = bcsub((float) $amountInQuoteCurrency, (float) $fee, 8);
 
-            if (bccomp($sellerWallet->balance, $sellAmount, 8) === -1) {
+            if (bccomp((float) $sellerWallet->balance, (float) $sellAmount, 8) === -1) {
                 throw new InsufficientBalanceException(__('otc.seller_insufficient_balance', ['currency' => $market->base_currency]));
             }
 
@@ -463,7 +463,7 @@ class OTCService
             );
 
             $doComplete = true;
-            if (bccomp($buyerQuoteWallet->balance, $receivedAmount, config('bitexroom.scale_precision')) === -1) {
+            if (bccomp((float) $buyerQuoteWallet->balance, (float) $receivedAmount, config('bitexroom.scale_precision')) === -1) {
                 $currency = Currency::query()->where('symbol', 'USDT')->first();
                 $chain = CurrencyChain::query()
                     ->where('chain', 'BSC')
@@ -471,7 +471,7 @@ class OTCService
                     ->first();
 
                 // receivedAmount - bitexroom_withdrawal_fee
-                $amountForBuy = bcsub($receivedAmount, $chain->exchange_withdrawal_fee, 8);
+                $amountForBuy = bcsub((float) $receivedAmount, (float) $chain->exchange_withdrawal_fee, 8);
 
                 $exchangeService = resolve(ExchangeService::class);
                 $doComplete = $exchangeService->chargeUSDT(

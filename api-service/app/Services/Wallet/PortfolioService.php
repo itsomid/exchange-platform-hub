@@ -41,8 +41,8 @@ class PortfolioService
                 $marketHistory = $this->marketHistoryRepository->getByMarketIdWithDate($wallet->market->id, $date);
                 if ($marketHistory) {
                     $totalBalance = bcadd(
-                        $totalBalance,
-                        bcmul($wallet->balance, $marketHistory->close, 8),
+                        (float) $totalBalance,
+                        (float) bcmul((float) $wallet->balance, (float) $marketHistory->close, 8),
                         8
                     );
                 }
@@ -94,7 +94,7 @@ class PortfolioService
             foreach ($wallets as $wallet) {
                 // USDT or any asset without a market should be skipped
                 if (is_null($wallet->market)) {
-                    $totalBalance = bcadd($totalBalance, $wallet->balance, 8);
+                    $totalBalance = bcadd((float) $totalBalance, (float) $wallet->balance, 8);
 
                     continue;
                 }
@@ -103,8 +103,8 @@ class PortfolioService
 
                 if ($marketHistory) {
                     $totalBalance = bcadd(
-                        $totalBalance,
-                        bcmul($wallet->balance, $marketHistory->close, 8),
+                        (float) $totalBalance,
+                        (float) bcmul((float) $wallet->balance, (float) $marketHistory->close, 8),
                         8
                     );
                 }

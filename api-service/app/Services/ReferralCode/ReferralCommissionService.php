@@ -41,13 +41,13 @@ class ReferralCommissionService
             $introducerFeeRate = $referralCode->introducer_fee / 100;
             $friendFeeRate = $referralCode->friend_fee / 100;
 
-            $introducerCommission = bcmul($exchangeFee, (string) $introducerFeeRate, 8);
-            $friendCommission = bcmul($exchangeFee, (string) $friendFeeRate, 8);
+            $introducerCommission = bcmul((float) $exchangeFee, (float) $introducerFeeRate, 8);
+            $friendCommission = bcmul((float) $exchangeFee, (float) $friendFeeRate, 8);
 
             // convert commission from base currency to usdt
             if ($otcOrder->type === OTCOrderTypeEnum::BUY) {
-                $introducerCommissionToUSDT = bcmul($introducerCommission, $otcOrder->price, 8);
-                $friendCommissionToUSDT = bcmul($friendCommission, $otcOrder->price, 8);
+                $introducerCommissionToUSDT = bcmul((float) $introducerCommission, (float) $otcOrder->price, 8);
+                $friendCommissionToUSDT = bcmul((float) $friendCommission, (float) $otcOrder->price, 8);
                 if ($introducerCommission > 0) {
                     $this->applyCommission($introducer, $introducerCommissionToUSDT, $otcOrder, $referralCode, 'introducer');
                 }
@@ -66,7 +66,7 @@ class ReferralCommissionService
                 }
             }
 
-            return bcsub($exchangeFee, bcadd($introducerCommission, $friendCommission, 8), 8);
+            return bcsub((float) $exchangeFee, (float) bcadd((float) $introducerCommission, (float) $friendCommission, 8), 8);
         });
     }
 

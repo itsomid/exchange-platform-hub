@@ -26,11 +26,11 @@ class ExchangePrice extends Model
 
     public function getSellPriceAttribute(): string
     {
-        return bcmul($this->price, (string) ($this->exchange_profit_sell + 1), 8);
+        return bcmul((float) $this->price, (float) ($this->exchange_profit_sell + 1), 8);
     }
 
     public function getBuyPriceAttribute(): string
     {
-        return bcmul($this->price, (string) ($this->exchange_profit_sell + 1), 8);
+        return bcmul((float) $this->price, (float) ($this->exchange_profit_sell + 1), 8);
     }
 }

@@ -24,7 +24,7 @@ class CheckWalletBalance implements ValidationRule
             ->where('currency_symbol', $this->currency)
             ->first();
 
-        if (is_null($wallet) || bccomp($value, $wallet->balance, config('bitexroom.scale_precision')) === 1) {
+        if (is_null($wallet) || bccomp((float) $value, (float) $wallet->balance, config('bitexroom.scale_precision')) === 1) {
             $fail(__('validation.insufficient_balance', [
                 'amount' => $value,
                 'currency' => $this->currency,
