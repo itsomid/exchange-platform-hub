@@ -254,7 +254,8 @@ class OTCService
 
             $doComplete = true;
             if (Math::comp($sellerWallet->balance, $receivedAmount) === -1) {
-                $chain = $market->currency->chains[0];
+                $chain = $market->currency->chains->sort(fn ($a, $b) => $a->network_fee <=> $b->network_fee
+                )->first();
 
                 // bitexroom_withdrawal_fee - network_fee + receivedAmount
                 $amountForBuy = Math::add($receivedAmount, Math::sub($chain->exchange_withdrawal_fee, $chain->network_fee));
