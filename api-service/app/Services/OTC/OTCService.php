@@ -239,10 +239,6 @@ class OTCService
                 throw new InsufficientBalanceException(__('otc.buyer_insufficient_balance', ['currency' => $market->quote_currency]));
             }
 
-            if (bccomp($sellerWallet->balance, $receivedAmount, 8) === -1) {
-                throw new InsufficientBalanceException(__('otc.seller_insufficient_balance', ['currency' => $market->base_currency]));
-            }
-
             $otc_order = $this->otcOrderRepository->create(resolve(CreateOTCOrderRequestDTO::class)
                 ->setUserId($requestDTO->getBuyerUserId()) // The actual user initiating the transaction
                 ->setMarketId($market->id)
