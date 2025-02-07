@@ -4,6 +4,7 @@ namespace App\Services\Wallet;
 
 use App\Enums\BalanceOperationEnum;
 use App\Exceptions\V1\Wallet\InternalWalletHasProblemException;
+use App\Helpers\Math;
 use App\Infrastructure\HDWallet\Exceptions\HDDWalletUnavailable;
 use App\Infrastructure\HDWallet\Exceptions\HDWalletException;
 use App\Infrastructure\HDWallet\Wallet;
@@ -97,9 +98,9 @@ class WalletService
 
             $balance = $wallet->balance;
             if ($requestDTO->getOperation() === BalanceOperationEnum::Increase) {
-                $balance = bcadd((float) $wallet->balance, (float) $requestDTO->getAmount(), 8);
+                $balance = Math::add($wallet->balance, $requestDTO->getAmount());
             } elseif ($requestDTO->getOperation() === BalanceOperationEnum::Decrease) {
-                $balance = bcsub((float) $wallet->balance, (float) $requestDTO->getAmount(), 8);
+                $balance = Math::sub($wallet->balance, $requestDTO->getAmount());
             }
 
             $this->walletRepository->updateBalance($requestDTO->getCurrencySymbol(), $requestDTO->getUserId(), $balance);
@@ -150,11 +151,11 @@ class WalletService
             ->setLockedBalance($wallet->locked_balance)
             ->setUsdtBalance(
                 $wallet->exchangePrice ?
-                    bcmul((float) $wallet->exchangePrice->price, (float) $wallet->balance, 8) : $wallet->balance
+                    Math::mul($wallet->exchangePrice->price, $wallet->balance) : $wallet->balance
             )
             ->setUsdtLockedBalance(
                 $wallet->exchangePrice ?
-                    bcmul((float) $wallet->exchangePrice->price, (float) $wallet->locked_balance, 8) : $wallet->locked_balance
+                    Math::mul($wallet->exchangePrice->price, $wallet->locked_balance) : $wallet->locked_balance
             );
     }
 
@@ -166,7 +167,7 @@ class WalletService
 
         $wallets->map(function ($wallet) use (&$sumAmount) {
             $sumAmount += $wallet->exchangePrice ?
-                bcmul((float) $wallet->exchangePrice->price, (float) $wallet->balance, 8) : $wallet->balance;
+                Math::mul($wallet->exchangePrice->price, $wallet->balance, 8) : $wallet->balance;
 
         });
 
@@ -194,11 +195,11 @@ class WalletService
             ->setLockedBalance($wallet->locked_balance ?? 0)
             ->setUsdtBalance(
                 $wallet && $wallet->exchangePrice ?
-                    bcmul((float) $wallet->exchangePrice->price, (float) $wallet->balance ?? 0, 8) : $wallet->balance
+                    Math::mul($wallet->exchangePrice->price, $wallet->balance ?? 0) : $wallet->balance
             )
             ->setUsdtLockedBalance(
                 $wallet && $wallet->exchangePrice ?
-                    bcmul((float) $wallet->exchangePrice->price, (float) $wallet->locked_balance ?? 0, 8) : $wallet->locked_balance
+                    Math::mul($wallet->exchangePrice->price, $wallet->locked_balance ?? 0) : $wallet->locked_balance
             );
     }
 }

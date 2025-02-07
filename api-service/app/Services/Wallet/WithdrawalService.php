@@ -6,6 +6,7 @@ use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Enums\WithdrawalStatusEnum;
+use App\Helpers\Math;
 use App\Infrastructure\HDWallet\DTO\Withdrawal\GetWithdrawalStatusRequestDTO;
 use App\Infrastructure\HDWallet\DTO\Withdrawal\WithdrawRequestDTO;
 use App\Infrastructure\HDWallet\Exceptions\NotFoundException;
@@ -48,15 +49,15 @@ class WithdrawalService
             $currency = $this->currencyRepository->getOne($requestDTO->getCurrencySymbol());
             $chain = $currency->chains()->where('chain', $requestDTO->getCurrencyChain())->first();
 
-            $fee = bcadd(toDecimalString($chain->network_fee), toDecimalString($chain->exchange_withdrawal_fee), 8);
+            $fee = Math::add($chain->network_fee, $chain->exchange_withdrawal_fee);
             $amount = $requestDTO->getAmount();
-            $receivedAmount = bcsub((float) $amount, (float) $fee, 8);
+            $receivedAmount = Math::sub($amount, $fee);
             $value_in_usdt = $currency->exchangePrice * $amount;
 
             $withdrawalStatus = WithdrawalStatusEnum::PENDING;
             if (
-                bccomp((float) $requestDTO->getAmount(), (float) $currency->max_auto_withdraw_amount, config('bitexroom.scale_precision')) === 0 ||
-                bccomp((float) $requestDTO->getAmount(), (float) $currency->max_auto_withdraw_amount, config('bitexroom.scale_precision')) === 1
+                Math::comp($requestDTO->getAmount(), $currency->max_auto_withdraw_amount) === 0 ||
+                Math::comp($requestDTO->getAmount(), $currency->max_auto_withdraw_amount) === 1
             ) {
                 $withdrawalStatus = WithdrawalStatusEnum::AWAITING_APPROVAL;
             }
@@ -101,7 +102,7 @@ class WithdrawalService
 
             return resolve(CreateWithdrawalResponseDTO::class)
                 ->setId($withdrawal->id)
-                ->setReceivedAmount(bcsub((float) $amount, (float) $fee, config('bitexroom.scale_precision')))
+                ->setReceivedAmount(Math::sub($amount, $fee))
                 ->setFee($fee)
                 ->setStatus($withdrawalStatus);
         } catch (\Exception $e) {
@@ -250,7 +251,7 @@ class WithdrawalService
                 'description' => "کارمزد شبکه صرافی  {$exchangeWallet->currency_symbol} کاربر  "."(#{$withdrawal->user->id}) ".$withdrawal->user->username,
                 'admin_description' => '',
             ]);
-            $exchangeWallet->increment('balance', bcsub(toDecimalString($exchangeNetworkFee), toDecimalString($hdWalletNetworkFee), 8));
+            $exchangeWallet->increment('balance', Math::sub($exchangeNetworkFee, $hdWalletNetworkFee));
         }
     }
 }

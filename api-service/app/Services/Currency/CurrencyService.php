@@ -2,6 +2,7 @@
 
 namespace App\Services\Currency;
 
+use App\Helpers\Math;
 use App\Models\Currency;
 use App\Models\CurrencyChain;
 use App\Repositories\DTO\Currency\ChainResponseDTO;
@@ -30,7 +31,7 @@ class CurrencyService
                 ->setWithdrawEnabled($item->withdraw_enabled)
                 ->setDepositDelayMinutes($item->deposit_delay_minutes)
                 ->setSafeConfirmations($item->safe_confirmations)
-                ->setWithdrawalFee(bcadd((float) $item->exchange_withdrawal_fee, (float) $item->network_fee, config('bitexroom.scale_precision')))
+                ->setWithdrawalFee(Math::add($item->exchange_withdrawal_fee, $item->network_fee))
                 ->setWithdrawPrecision($item->withdrawal_precision)
                 ->setMemo($item->memo)
                 ->setIsMemoRequiredForDeposit($item->is_memo_required_for_deposit)
@@ -56,11 +57,7 @@ class CurrencyService
                 ->setWithdrawEnabled($item->withdraw_enabled)
                 ->setDepositDelayMinutes($item->deposit_delay_minutes)
                 ->setSafeConfirmations($item->safe_confirmations)
-                ->setWithdrawalFee(bcadd(
-                    number_format((float) ($item->exchange_withdrawal_fee ?? 0), 8, '.', ''),
-                    number_format((float) ($item->network_fee ?? 0), 8, '.', ''),
-                    (int) (config('bitexroom.scale_precision') ?? 8)
-                ))
+                ->setWithdrawalFee(Math::add($item->exchange_withdrawal_fee ?? 0, $item->network_fee ?? 0))
                 ->setWithdrawPrecision($item->withdrawal_precision)
                 ->setMemo($item->memo)
                 ->setIsMemoRequiredForDeposit($item->is_memo_required_for_deposit)

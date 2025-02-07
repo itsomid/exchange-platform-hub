@@ -6,6 +6,7 @@ use App\Enums\OTCOrderTypeEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
+use App\Helpers\Math;
 use App\Models\OTCOrder;
 use App\Models\ReferralCode;
 use App\Models\ReferralCodeUsage;
@@ -41,13 +42,13 @@ class ReferralCommissionService
             $introducerFeeRate = $referralCode->introducer_fee / 100;
             $friendFeeRate = $referralCode->friend_fee / 100;
 
-            $introducerCommission = bcmul((float) $exchangeFee, (float) $introducerFeeRate, 8);
-            $friendCommission = bcmul((float) $exchangeFee, (float) $friendFeeRate, 8);
+            $introducerCommission = Math::mul($exchangeFee, $introducerFeeRate);
+            $friendCommission = Math::mul($exchangeFee, $friendFeeRate);
 
             // convert commission from base currency to usdt
             if ($otcOrder->type === OTCOrderTypeEnum::BUY) {
-                $introducerCommissionToUSDT = bcmul((float) $introducerCommission, (float) $otcOrder->price, 8);
-                $friendCommissionToUSDT = bcmul((float) $friendCommission, (float) $otcOrder->price, 8);
+                $introducerCommissionToUSDT = Math::mul($introducerCommission, $otcOrder->price);
+                $friendCommissionToUSDT = Math::mul($friendCommission, $otcOrder->price);
                 if ($introducerCommission > 0) {
                     $this->applyCommission($introducer, $introducerCommissionToUSDT, $otcOrder, $referralCode, 'introducer');
                 }
@@ -66,7 +67,7 @@ class ReferralCommissionService
                 }
             }
 
-            return bcsub((float) $exchangeFee, (float) bcadd((float) $introducerCommission, (float) $friendCommission, 8), 8);
+            return Math::sub($exchangeFee, Math::add($introducerCommission, $friendCommission));
         });
     }
 
