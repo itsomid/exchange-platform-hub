@@ -10,6 +10,10 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 /**
  * @property string     $max_auto_withdraw_amount
  * @property Collection $chains
+ * @property int        $precision
+ * @property string     $symbol
+ * @property string     $name
+ * @property bool       $inter_transfer_enabled
  */
 class Currency extends Model
 {

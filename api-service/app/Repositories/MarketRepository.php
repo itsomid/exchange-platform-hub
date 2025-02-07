@@ -12,7 +12,7 @@ class MarketRepository implements MarketRepositoryInterface
     public function getOTCMarkets(): Collection
     {
         return Cache::remember(__CLASS__.'getOTCMarkets', 60, function () {
-            return Market::query()->get();
+            return Market::query()->with('currency')->get();
         });
     }
 

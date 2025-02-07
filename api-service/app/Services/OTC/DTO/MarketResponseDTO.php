@@ -24,6 +24,8 @@ class MarketResponseDTO
 
     private string $maxOTCAmount;
 
+    private int $precision;
+
     public function setBaseCurrency(string $baseCurrency): self
     {
         $this->baseCurrency = $baseCurrency;
@@ -142,5 +144,17 @@ class MarketResponseDTO
     public function getMaxOTCAmount(): string
     {
         return $this->maxOTCAmount;
+    }
+
+    public function setPrecision(int $precision): MarketResponseDTO
+    {
+        $this->precision = $precision;
+
+        return $this;
+    }
+
+    public function getPrecision(): int
+    {
+        return $this->precision;
     }
 }

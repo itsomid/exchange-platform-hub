@@ -59,6 +59,7 @@ class ConfigCollection extends ResourceCollection
                 'ccy' => $configResponseDTO->getSymbol(),
                 'inter_transfer_enabled' => $configResponseDTO->getInterTransferEnabled(),
                 'max_auto_withdraw_amount' => $configResponseDTO->getMaxAutoWithdrawAmount(),
+                'precision' => $configResponseDTO->getPrecision(),
             ],
             'chains' => array_map(function (ChainResponseDTO $chain) {
                 return [

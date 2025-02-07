@@ -55,6 +55,7 @@ class OTCService
         return $markets->map(fn (Market $market) => resolve(MarketResponseDTO::class)
             ->setMarketId($market->id)
             ->setBaseCurrency($market->base_currency)
+            ->setPrecision($market->currency->precision)
             ->setQuoteCurrency($market->quote_currency)
             ->setIsActive($market->is_active)
             ->setSellPrice(Math::mul($market->exchangePrice->price, (($market->exchangePrice->exchange_profit_sell / 100) + 1)))
@@ -253,7 +254,8 @@ class OTCService
 
             $doComplete = true;
             if (Math::comp($sellerWallet->balance, $receivedAmount) === -1) {
-                $chain = $market->currency->chains[0];
+                $chain = $market->currency->chains->sort(fn ($a, $b) => $a->network_fee <=> $b->network_fee
+                )->first();
 
                 // bitexroom_withdrawal_fee - network_fee + receivedAmount
                 $amountForBuy = Math::add($receivedAmount, Math::sub($chain->exchange_withdrawal_fee, $chain->network_fee));
