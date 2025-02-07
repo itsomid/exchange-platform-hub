@@ -4,6 +4,7 @@ namespace App\Services\Exchanges\Asset\Coinex;
 
 use App\Exceptions\Exchange\CantResolveCoinexException;
 use App\Exceptions\Exchange\CoinexHasProblemException;
+use App\Services\Exchanges\AdminNotification;
 use App\Services\Exchanges\Asset\Coinex\Authentication\MethodEnum;
 use App\Services\Exchanges\Asset\Contract\AssetInterface;
 use App\Services\Exchanges\Asset\DTO\BalanceResponseDTO;
@@ -49,6 +50,7 @@ class AssetCoinex implements AssetInterface
         //Balance Not Enough
         if ($response->json('code') === 3109) {
             report('Coinex Balance Not Enough In USDT');
+            AdminNotification::sendEnoughBalance($request->getMarket(), $request->getQuantity());
         }
         if (! $response->ok() || $response->json('code') !== 0) {
             report($response->body());
