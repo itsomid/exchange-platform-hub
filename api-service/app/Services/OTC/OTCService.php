@@ -121,9 +121,9 @@ class OTCService
             ->setSubtype(TransactionSubTypeEnum::OTC)
             ->setStatus(TransactionStatusEnum::SUCCESS)
             ->setDescription(sprintf('خرید %s %s به قیمت %s %s',
-                number_format((float) $buyAmount),
+                formatNumberTrimZeros((float) $buyAmount),
                 $market->base_currency,
-                number_format((float) $market->exchangePrice->price),
+                formatNumberTrimZeros((float) $market->exchangePrice->price),
                 $market->quote_currency))
         );
 
@@ -140,9 +140,9 @@ class OTCService
             ->setSubtype(TransactionSubTypeEnum::OTC)
             ->setStatus(TransactionStatusEnum::SUCCESS)
             ->setDescription(sprintf('فروش %s %s به قیمت %s %s',
-                number_format((float) $amountInQuoteCurrency),
+                formatNumberTrimZeros((float) $amountInQuoteCurrency),
                 $market->base_currency,
-                number_format((float) $market->exchangePrice->price),
+                formatNumberTrimZeros((float) $market->exchangePrice->price),
                 $market->quote_currency)
             )
         );
@@ -159,9 +159,9 @@ class OTCService
             ->setSubtype(TransactionSubTypeEnum::OTC)
             ->setStatus(TransactionStatusEnum::SUCCESS)
             ->setDescription(sprintf('فروش %s %s به قیمت %s %s',
-                number_format((float) $buyAmount),
+                formatNumberTrimZeros((float) $buyAmount),
                 $market->base_currency,
-                number_format((float) $market->exchangePrice->price),
+                formatNumberTrimZeros((float) $market->exchangePrice->price),
                 $market->quote_currency)
             )
         );
@@ -179,9 +179,9 @@ class OTCService
             ->setStatus(TransactionStatusEnum::SUCCESS)
             ->setDescription(
                 sprintf('خرید %s %s به قیمت %s %s',
-                    number_format((float) $amountInQuoteCurrency),
+                    formatNumberTrimZeros((float) $amountInQuoteCurrency),
                     $market->base_currency,
-                    number_format((float) $market->exchangePrice->price),
+                    formatNumberTrimZeros((float) $market->exchangePrice->price),
                     $market->quote_currency)
             )
         );
@@ -199,9 +199,9 @@ class OTCService
             ->setSubtype(TransactionSubTypeEnum::OTC)
             ->setStatus(TransactionStatusEnum::SUCCESS)
             ->setDescription(sprintf('کارمزد معامله %s %s به ارزش %s %s',
-                number_format((float) $buyAmount),
+                formatNumberTrimZeros((float) $buyAmount),
                 $market->base_currency,
-                number_format((float) $otc->fee),
+                formatNumberTrimZeros((float) $otc->fee),
                 $market->base_currency)
             ));
 
