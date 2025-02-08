@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,5 +25,17 @@ class AppServiceProvider extends ServiceProvider
         //        });
         //
         Paginator::defaultView('dashboard.layout.vendor.vuexy_pagination');
+
+        View::composer('dashboard.layout.sidebar', function ($view) {
+            $admin = Auth::guard('admin')->user();
+            $unreadCount = $admin ? $admin->unreadNotifications->count() : 0;
+            $view->with('unreadCount', $unreadCount);
+        });
+        View::composer('dashboard.layout.navbar', function ($view) {
+            $admin = auth()->user(); // Get authenticated admin
+            $notifications = $admin->notifications;
+            $unreadCount = $admin ? $admin->unreadNotifications->count() : 0;
+            $view->with(['unreadCount' => $unreadCount, 'notifications' => $notifications]);
+        });
     }
 }

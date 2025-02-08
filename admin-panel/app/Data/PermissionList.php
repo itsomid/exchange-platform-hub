@@ -58,6 +58,8 @@ class PermissionList
             ['report','لیست گزارش ها'],
             ['view-logs','لیست گزارش ها'],
 
+            ['notifications','لیست اعلان های مدیریت'],
+
         ];
 
         return array_map(fn($permission) => [$permission[0], $permission[1]], $permissions);

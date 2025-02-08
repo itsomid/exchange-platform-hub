@@ -32,7 +32,7 @@ class CoinexNotEnoughBalance extends Notification implements ShouldQueue
     public function toDatabase($notifiable): array
     {
         return [
-            'message' => 'صرافی ما برای خرید '.$this->marketName.' به مقدار '.$this->amount.' موجودی کافی کوینکس ندارد. ',
+            'message' => 'صرافی ما برای انجام معامله '.$this->marketName.' به مقدار '.formatNumberTrimZeros($this->amount).' تتر در کوینکس نیاز دارد.',
             'url' => '/transactions', // Optional: URL to redirect to
         ];
     }
@@ -43,8 +43,8 @@ class CoinexNotEnoughBalance extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('به علت عدم موجودی به مشکل خورده ایم')
-            ->line('صرافی ما برای خرید '.$this->marketName.' به مقدار '.$this->amount.' موجودی کافی روی کوینکس ندارد. ')
+            ->subject('به علت عدم موجودی کوینکس به مشکل خورده‌ایم')
+            ->line('صرافی ما برای انجام معامله '.$this->marketName.' به مقدار '.formatNumberTrimZeros($this->amount).'تتر در کوینکس نیاز دارد. ')
             ->greeting('سلام مدیر عزیز');
     }
 

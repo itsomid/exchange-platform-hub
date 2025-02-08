@@ -26,7 +26,7 @@
             <span class="menu-header-text">افراد و دپارتمان ها</span>
         </li>
         @can('admin.index')
-            <li class="menu-item @if(request()->is('admin/admin*')) active @endif">
+            <li class="menu-item @if(request()->is('admin/admins')) active @endif">
                 <a href="{{route('admin.admin.index')}}" class="menu-link">
                     {{--                    <i class=" tf-icons ti ti-users"></i>--}}
 
@@ -181,7 +181,18 @@
                 <span class="menu-header-text">مدیریت سیستم</span>
             </li>
 
-            @can('role.index')
+            <li class="menu-item @if(request()->is('admin/admins/notification*')) active @endif">
+                <a href="{{route('admin.admin.notifications.index')}}" class="menu-link">
+                    <i class="menu-icon fa-regular fa-bell"></i>
+                    <div>اعلان های مدیریت</div>
+                    @if($unreadCount > 0)
+                        <div class="badge bg-danger rounded-pill ms-auto">{{$unreadCount}}</div>
+                    @endif
+
+                </a>
+            </li>
+
+            @can('roles.permissions')
                 <li class="menu-item @if(request()->is(['admin/roles*','admin/permissions*'])) active open @endif">
                     <a href="javascript:void(0);" class="menu-link menu-toggle">
                         <i class="menu-icon fa-regular fa-user-group fa-sm"></i>

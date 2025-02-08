@@ -15,6 +15,14 @@ class DateFormatter
         }
         return Jalalian::forge($timestamp)->format($format);
     }
+
+    public static function ago($timestamp)
+    {
+        if (!$timestamp) {
+            return 'N/A'; // Return an empty state instead of current time
+        }
+        return Jalalian::forge($timestamp)->ago();
+    }
     public static function convertUnixTimeToPersianDate($timestamp, $addMinutes = 0, $format = '%A, %d %B %Y  H:i:s')
     {
          $date = Carbon::createFromTimestamp($timestamp, 'UTC') // Start in UTC
