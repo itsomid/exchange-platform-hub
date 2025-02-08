@@ -9,7 +9,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Deposit extends Model
 {
     protected $fillable = [
-        'user_id', 'currency_chain_id', 'currency_symbol', 'amount', 'address', 'status', 'expiration_date', 'confirmed_at', 'transaction_hash',
+        'user_id',
+        'currency_chain_id',
+        'currency_symbol',
+        'amount',
+        'address',
+        'status',
+        'expiration_date',
+        'confirmed_at',
+        'transaction_hash',
+        'usdt_value',
     ];
 
     protected $appends = ['explorer_address_url', 'explorer_tx_url'];

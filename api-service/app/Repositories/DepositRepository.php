@@ -49,6 +49,7 @@ class DepositRepository implements DepositRepositoryInterface
                 'confirmed_at' => $requestDTO->getConfirmedAt(),
                 'expiration_date' => $requestDTO->getExpirationDate(),
                 'status' => $requestDTO->getStatus(),
+                'usdt_value' => $requestDTO->getUsdtValue(),
             ]);
     }
 

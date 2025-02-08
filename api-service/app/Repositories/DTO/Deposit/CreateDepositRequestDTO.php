@@ -25,6 +25,8 @@ class CreateDepositRequestDTO
 
     private DepositStatusEnum $status;
 
+    private string $usdtValue;
+
     public function setUserId(int $userId): self
     {
         $this->userId = $userId;
@@ -131,5 +133,17 @@ class CreateDepositRequestDTO
     public function getConfirmedAt(): Carbon
     {
         return $this->confirmedAt;
+    }
+
+    public function setUsdtValue(string $usdtValue): CreateDepositRequestDTO
+    {
+        $this->usdtValue = $usdtValue;
+
+        return $this;
+    }
+
+    public function getUsdtValue(): string
+    {
+        return $this->usdtValue;
     }
 }

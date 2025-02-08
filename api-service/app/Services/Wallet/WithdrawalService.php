@@ -52,7 +52,7 @@ class WithdrawalService
             $fee = Math::add($chain->network_fee, $chain->exchange_withdrawal_fee);
             $amount = $requestDTO->getAmount();
             $receivedAmount = Math::sub($amount, $fee);
-            $value_in_usdt = $currency->exchangePrice * $amount;
+            $value_in_usdt = Math::mul($currency->exchangePrice, $amount);
 
             $withdrawalStatus = WithdrawalStatusEnum::PENDING;
             if (
