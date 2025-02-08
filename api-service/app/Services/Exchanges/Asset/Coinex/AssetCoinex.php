@@ -14,6 +14,7 @@ use App\Services\Exchanges\Asset\DTO\WithdrawRequestDTO;
 use App\Services\Exchanges\Asset\DTO\WithdrawResponseDTO;
 use Carbon\Carbon;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class AssetCoinex implements AssetInterface
@@ -49,7 +50,7 @@ class AssetCoinex implements AssetInterface
         }
         //Balance Not Enough
         if ($response->json('code') === 3109) {
-            report('Coinex Balance Not Enough In USDT');
+            Log::channel('ref-exchange')->info('Coinex Balance Not Enough In USDT');
             AdminNotification::sendEnoughBalance($request->getMarket(), $request->getQuantity());
         }
         if (! $response->ok() || $response->json('code') !== 0) {
@@ -88,7 +89,7 @@ class AssetCoinex implements AssetInterface
             'to_address' => $requestDTO->getAddress(),
             'withdraw_method' => $requestDTO->getWithdrawMethod()->value,
             'amount' => $requestDTO->getAmount(),
-            //            'fee_ccy' => 'CET',
+            'fee_ccy' => 'CET',
         ];
         if ($requestDTO->getChain()) {
             $requestBody['chain'] = $requestDTO->getChain();
@@ -102,7 +103,7 @@ class AssetCoinex implements AssetInterface
 
         //Balance Not Enough
         if ($response->json('code') === 3109) {
-            report('Coinex Balance Not Enough In USDT');
+            Log::channel('ref-exchange')->info('Coinex Balance Not Enough In USDT');
             AdminNotification::sendEnoughBalance('USDT', $requestDTO->getAmount());
         }
         if (! $response->successful() || $response->json('code') !== 0) {

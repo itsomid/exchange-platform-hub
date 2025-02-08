@@ -3,8 +3,9 @@
 namespace App\Exceptions;
 
 use Exception;
+use Illuminate\Contracts\Debug\ShouldntReport;
 
-class ServiceException extends Exception
+class ServiceException extends Exception implements ShouldntReport
 {
     protected $message;
 
