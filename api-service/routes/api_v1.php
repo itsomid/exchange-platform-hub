@@ -75,7 +75,10 @@ Route::prefix('authorization')->group(function () {
 //Notifications
 Route::prefix('notifications')->group(function () {
     Route::get('/', [App\Http\Controllers\V1\User\NotificationController::class, 'index']);
+    Route::post('/mark-as-read/all', [App\Http\Controllers\V1\User\NotificationController::class, 'markAsReadAll']);
     Route::post('/{id}/mark-as-read', [App\Http\Controllers\V1\User\NotificationController::class, 'markAsRead']);
+    Route::get('/unread', [App\Http\Controllers\V1\User\NotificationController::class, 'unread']);
+    Route::get('/count-unread', [App\Http\Controllers\V1\User\NotificationController::class, 'countUnread']);
 });
 //Tickets
 Route::prefix('/tickets')->group(function () {
