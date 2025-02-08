@@ -98,7 +98,11 @@ class WalletRepository implements WalletRepositoryInterface
             ->firstOrCreate([
                 'user_id' => $userId,
                 'currency_symbol' => $base_currency,
-            ]);
+            ],
+                [
+                    'balance' => 0,
+                    'locked_balance' => 0,
+                ]);
     }
 
     public function getBitexroomWallet(string $currency): Wallet
