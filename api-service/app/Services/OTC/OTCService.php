@@ -7,8 +7,9 @@ use App\Enums\OTCOrderTypeEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
+use App\Exceptions\V1\OTC\BuyTradeWasFiledException;
 use App\Exceptions\V1\OTC\InsufficientBalanceException;
-use App\Exceptions\V1\OTC\TradeWasFiledException;
+use App\Exceptions\V1\OTC\SellTradeWasFiledException;
 use App\Helpers\Math;
 use App\Models\Currency;
 use App\Models\CurrencyChain;
@@ -283,7 +284,7 @@ class OTCService
             } else {
                 $otc_order->update(['status' => OTCOrderStatusEnum::CANCELED]);
                 DB::commit();
-                throw new TradeWasFiledException;
+                throw new BuyTradeWasFiledException(marketName: $market->base_currency.$market->quote_currency);
             }
         } catch (Throwable $exception) {
             report($exception);
@@ -502,7 +503,7 @@ class OTCService
             } else {
                 $otc_order->update(['status' => OTCOrderStatusEnum::CANCELED]);
                 DB::commit();
-                throw new TradeWasFiledException;
+                throw new SellTradeWasFiledException(marketName: $market->base_currency.$market->quote_currency);
             }
 
             DB::commit();
