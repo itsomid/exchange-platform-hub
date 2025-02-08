@@ -6,5 +6,5 @@ use App\Exceptions\ServiceException;
 
 class TradeWasFiledException extends ServiceException
 {
-    protected $code = 500;
+    protected $code = 400;
 }
