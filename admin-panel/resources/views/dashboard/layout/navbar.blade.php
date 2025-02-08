@@ -16,8 +16,66 @@
             </a>
         </div>
 
+
         <ul class="navbar-nav flex-row align-items-center ms-auto">
             <!-- Style Switcher -->
+            <!-- Notification -->
+            <li class="nav-item dropdown-notifications navbar-dropdown dropdown me-3 me-xl-2">
+                <a class="nav-link btn btn-text-secondary btn-icon rounded-pill dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+              <span class="">
+                <i class="fa-regular fa-bell fa-xl"></i>
+                  <span class="badge rounded-pill bg-danger text-white badge-notifications">{{$unreadCount}}</span>
+
+              </span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end p-0">
+                    <li class="dropdown-menu-header border-bottom">
+                        <div class="dropdown-header d-flex align-items-center py-3">
+                            <h6 class="mb-0 me-auto">اعلان‌ها</h6>
+                            <div class="d-flex align-items-center h6 mb-0">
+                                <span class="badge bg-label-primary me-2">{{$unreadCount}} جدید </span>
+                                <a href="javascript:void(0)" class="btn btn-text-secondary rounded-pill btn-icon dropdown-notifications-all" data-bs-toggle="tooltip" data-bs-placement="top" title="Mark all as read">
+                                    <i class="fa-regular fa-envelope-open text-heading"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="dropdown-notifications-list scrollable-container">
+                        <ul class="list-group list-group-flush">
+                            @foreach($notifications as $notification)
+                                <li class="list-group-item list-group-item-action dropdown-notifications-item">
+                                    <div class="d-flex">
+                                        <div class="flex-grow-1">
+                                            <h6 class="small mb-1"><span class="badge bg-label-primary">{{ \App\Enums\NotificationType::getLabel($notification->type) }}</span></h6>
+                                            <small class="mb-1 d-block text-body">{{ $notification->data['message'] }}</small>
+                                            <small class="text-muted">{{\App\Helpers\DateFormatter::ago($notification->created_at)}}</small>
+                                        </div>
+                                        <div class="flex-shrink-0 dropdown-notifications-actions">
+                                            <a href="javascript:void(0)" class="dropdown-notifications-read">
+                                                @if ($notification->read_at == null)
+                                                    <span class="badge badge-dot"></span>
+                                                @endif
+                                            </a>
+                                            <a href="javascript:void(0)" class="dropdown-notifications-archive">
+                                                <span class="fa-regular fa-x"></span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </li>
+                            @endforeach
+
+                        </ul>
+                    </li>
+                    <li class="border-top">
+                        <div class="d-grid p-4">
+                            <a class="btn btn-primary btn-sm d-flex" href="javascript:void(0);">
+                                <small class="align-middle">View all notifications</small>
+                            </a>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!--/ Notification -->
             <li class="nav-item dropdown-style-switcher dropdown me-2 me-xl-0">
                 <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
                     <i @class(['fa-light', 'fa-xl' ,'fa-moon-stars' => session('theme') === 'dark','fa-sun-bright' => session('theme','light') === 'light'])></i>
