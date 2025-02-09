@@ -164,43 +164,6 @@
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-12">
-            <div class="card h-100">
-
-
-                <div class="card-header">
-                    <div class="d-flex justify-content-between">
-                        <h6 class="mb-0 text-body">درآمد از سود صرافی برحسب تتر (هفته اخیر)</h6>
-                        <div class="badge bg-label-success">+0%</div>
-                    </div>
-                    <h4 class="card-title mb-1">$0</h4>
-                </div>
-
-
-                <div class="card-body px-0">
-                    <div id="exchangeProfitIncome"></div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-12">
-            <div class="card h-100">
-
-
-                <div class="card-header">
-                    <div class="d-flex justify-content-between">
-                        <h6 class="mb-0 text-body">درآمد از کارمزد معاملات بر حسب تتر (هفته اخیر)</h6>
-                        <div class="badge bg-label-success">+0%</div>
-                    </div>
-                    <h4 class="card-title mb-1">$0</h4>
-                </div>
-
-
-                <div class="card-body px-0">
-                    <div id="exchangeFeeIncome"></div>
-                </div>
-            </div>
-        </div>
-        <!-- Project Status -->
 
         <!-- Support Tracker -->
         <div class="col-sm-12 col-xl-4">

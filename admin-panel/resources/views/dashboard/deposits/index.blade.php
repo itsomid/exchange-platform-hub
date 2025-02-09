@@ -8,11 +8,31 @@
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
                             <span>تعداد واریزی ها</span>
+
                             <div class="d-flex align-items-center my-1">
                                 <h4 class="mb-0 me-2">{{$deposits->total()}}</h4>
                             </div>
                         </div>
-                        <span class="badge bg-label-danger rounded p-2">
+                        <span class="badge bg-label-success rounded p-2">
+                            <i class="fa-light fa-money-bill-wave fa-lg"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 col-xl-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                            <span>ارزش واریزی ها</span>
+                            <div class="d-flex align-items-center my-1">
+                                <h4 class="mb-0 me-2">{{formatNumberTrimZeros($totalDepositsValue)}}
+                                    <small>USDT</small>
+                                </h4>
+                            </div>
+                        </div>
+                        <span class="badge bg-label-success rounded p-2">
                             <i class="fa-light fa-money-bill-wave fa-lg"></i>
                         </span>
                     </div>
@@ -25,6 +45,7 @@
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
                             <span>تعداد واریزی های امروز</span>
+                            <span class="ms-2">({{\App\Helpers\DateFormatter::convertToPersianDate(now(),'%d %B')}})</span>
                             <div class="d-flex align-items-center my-1">
                                 <h4 class="mb-0 me-2">{{$todayDepositsCount}}</h4>
                             </div>
@@ -42,8 +63,9 @@
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
                             <span>ارزش واریزی های امروز</span>
+                            <span class="ms-2">({{\App\Helpers\DateFormatter::convertToPersianDate(now(),'%d %B')}})</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{formatNumberTrimZeros($totalDepositsValue)}}</h4>
+                                <h4 class="mb-0 me-2">{{formatNumberTrimZeros($todayDepositsValue)}}</h4>
                                 <small>USDT</small>
                             </div>
                         </div>
@@ -59,7 +81,7 @@
                 <div class="card-body bg-success">
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
-                            <span class="text-white">کاربران با بیشترین واریزی امروز</span>
+                            <span class="text-white">کاربران با بیشترین واریزی</span>
                             <div class="d-flex align-items-baseline my-1">
                                 <small class="text-white mx-2">مجموع: </small>
                                 <h4 class="mb-0 me-2 text-primary">{{formatNumber($totalTopUsersDeposit,2)}}</h4>
@@ -206,13 +228,13 @@
                     </th>
                     <th>
                         @php
-                            $currentParams = request()->except('sortByCreatedAt');
-                            $newSortDirection = request()->input('sortByCreatedAt') == 'asc' ? 'desc' : 'asc';
+                            $currentParams = request()->except('sortByConfirmedAt');
+                            $newSortDirection = request()->input('sortByConfirmedAt') == 'asc' ? 'desc' : 'asc';
                         @endphp
-                        <a href="{{ route('admin.deposit.index', array_merge($currentParams, ['sortByCreatedAt' => $newSortDirection])) }}"
+                        <a href="{{ route('admin.deposit.index', array_merge($currentParams, ['sortByConfirmedAt' => $newSortDirection])) }}"
                            class="text-black">
                             تاریخ تایید
-                            @if( request()->input('sortByCreatedAt') == 'asc')
+                            @if( request()->input('sortByConfirmedAt') == 'asc')
                                 <span>&uarr;</span>
                             @else
                                 <span>&darr;</span>
