@@ -57,7 +57,7 @@ class AssetCoinex implements AssetInterface
                 ->setIsDone(false);
         }
         if (! $response->ok() || $response->json('code') !== 0) {
-            report($response->body());
+            Log::channel('ref-exchange')->info($response->body());
             AdminNotification::logError($request->getMarket(), $request->getQuantity(), $response->body());
 
             return resolve(BuyDTOResponse::class)
@@ -111,7 +111,7 @@ class AssetCoinex implements AssetInterface
             AdminNotification::sendEnoughBalance('USDT', $requestDTO->getAmount());
         }
         if (! $response->successful() || $response->json('code') !== 0) {
-            report($response->body());
+            Log::channel('ref-exchange')->info($response->body());
             throw new CoinexHasProblemException;
         }
 
