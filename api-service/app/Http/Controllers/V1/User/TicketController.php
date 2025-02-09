@@ -36,15 +36,30 @@ class TicketController extends Controller
     {
         $validateData = $request->validated();
 
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('ticket_replies', 'public');
+            $imagePath = 'storage/'.$path;
+        }
+
         $ticket = Ticket::query()->create([
             'ticket_number' => Ticket::generateTicketNumber(),
             'user_id' => Auth::id(),
             'subject' => $validateData['subject'],
-            'message' => $validateData['message'],
             'priority' => $validateData['priority'],
             'ticketable_id' => $validateData['ticketable_id'],
             'ticketable_type' => TicketType::getTypeClass($validateData['ticketable_type']),
         ]);
+
+        $ticket->replies()->create([
+            'repliable_id' => auth()->id(),
+            'repliable_type' => User::class,
+            'message' => $validateData['message'],
+            'is_private' => false,
+            'image' => $imagePath,
+        ]);
+
+        $ticket = $ticket->load('replies');
 
         return response()->json(new TicketResource($ticket), 201);
     }
@@ -132,6 +147,12 @@ class TicketController extends Controller
         if ($ticket->user_id !== auth()->id()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('ticket_replies', 'public');
+            $imagePath = 'storage/'.$path;
+        }
+
         $validateData = $request->validated();
 
         $reply = $ticket->replies()->create([
@@ -139,6 +160,7 @@ class TicketController extends Controller
             'repliable_type' => User::class,
             'message' => $validateData['message'],
             'is_private' => false,
+            'image' => $imagePath,
         ]);
 
         return new TicketReplyResource($reply);

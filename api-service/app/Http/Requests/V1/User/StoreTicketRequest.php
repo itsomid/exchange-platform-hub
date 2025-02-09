@@ -15,7 +15,8 @@ use Illuminate\Validation\Rule;
  *     @OA\Property(property="message", type="string", example="My withdrawal is stuck."),
  *     @OA\Property(property="priority", type="string", enum={"low", "medium", "high"}, example="high"),
  *     @OA\Property(property="ticketable_id", type="integer", example=123),
- *     @OA\Property(property="ticketable_type", type="string", example="App\Models\Withdrawal")
+ *     @OA\Property(property="ticketable_type", type="string", example="App\Models\Withdrawal"),
+ *     @OA\Property(property="image", type="string", nullable=true, example="file_content")
  * )
  */
 class StoreTicketRequest extends FormRequest
@@ -33,6 +34,7 @@ class StoreTicketRequest extends FormRequest
             'priority' => ['required', 'string', 'in:low,medium,high'],
             'ticketable_id' => ['required', 'integer'],
             'ticketable_type' => ['required', Rule::enum(TicketType::class)],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
         ];
     }
 }

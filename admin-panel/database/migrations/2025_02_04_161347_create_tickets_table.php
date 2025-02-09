@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('ticket_number')->unique();
             $table->foreignIdFor(User::class)->constrained();
             $table->string('subject');
-            $table->text('message');
             $table->string('status')->default('open');
             $table->string('priority')->default('low');
             $table->timestamp('closed_at')->nullable();
@@ -33,6 +32,7 @@ return new class extends Migration
         Schema::create('ticket_replies', function (Blueprint $table) {
             $table->id();
             $table->morphs('repliable'); // User or Admin
+            $table->string('image')->nullable();
             $table->foreignId('ticket_id')->constrained()->onDelete('cascade');
             $table->text('message');
             $table->boolean('is_private')->default(false);
