@@ -21,13 +21,12 @@ class HomeController extends Controller
 
         $today = now()->toDateString(); // Get today's date
 
-
-        $OTCFeeTransactionsByCurrency = Transaction::where('type', TransactionTypeEnum::FEE)
-            ->where('subtype', TransactionSubTypeEnum::OTC)
-            ->selectRaw('wallet_id, SUM(amount) as total_amount')
-            ->groupBy('wallet_id')
-            ->with('wallet.currency')
-            ->get();
+           $OTCFeeTransactionsByCurrency = Transaction::where('type', TransactionTypeEnum::FEE)
+             ->where('subtype', TransactionSubTypeEnum::OTC)
+             ->join('wallets', 'wallets.id', '=', 'transactions.wallet_id')
+             ->selectRaw('wallets.currency_symbol, SUM(transactions.amount) as total_amount, COUNT(transactions.id) as transaction_count')
+             ->groupBy('wallets.currency_symbol')
+             ->get();
 
         $withdrawalFeeTransactionsByCurrency = Transaction::where('type', TransactionTypeEnum::FEE)
             ->where('subtype', TransactionSubTypeEnum::WITHDRAWAL_FEE)
