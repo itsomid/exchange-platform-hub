@@ -12,7 +12,6 @@ use App\Models\Transaction;
 use App\Models\Withdrawal;
 use App\Models\User;
 use Carbon\Carbon;
-use Morilog\Jalali\CalendarUtils;
 use Morilog\Jalali\Jalalian;
 
 class HomeController extends Controller
@@ -56,63 +55,6 @@ class HomeController extends Controller
                 return $withdraw->amount * $withdraw->currency->exchange_price;
             });
 
-        $year = Jalalian::now()->getYear(); // Get current Jalali year
-        $month = Jalalian::now()->getMonth(); // Get current Jalali year
-
-        $startOfMonth = Jalalian::fromFormat('Y-m-d', "$year-$month-01")->toCarbon();
-
-        // Get the end of the month safely
-        $endOfMonth = $startOfMonth->copy()->addMonth()->subDay();
-
-         $registrations = User::query()
-            ->whereBetween('registration_date', [$startOfMonth, $endOfMonth])
-            ->get()
-            ->map(function ($reg) {
-                return [
-                    'day' => Jalalian::fromDateTime($reg->registration_date)->getDay(),
-                    'total' => 1
-                ];
-            })
-            ->groupBy('day') // گروه‌بندی براساس روز شمسی
-            ->map(function ($items, $day) {
-                return [
-                    'day' => (int)$day,
-                    'total' => $items->sum('total')
-                ];
-            })
-            ->values(); // برای حذف کلیدهای عددی
-
-        $inactiveRegistrations = User::query()
-            ->whereBetween('registration_date', [$startOfMonth, $endOfMonth])
-            ->where('status', UserStatusEnum::INACTIVE->value)
-            ->get()
-            ->map(function ($reg) {
-                return [
-                    'day' => Jalalian::fromDateTime($reg->registration_date)->getDay(),
-                    'total' => 1
-                ];
-            })
-            ->groupBy('day') // گروه‌بندی براساس روز شمسی
-            ->map(function ($items, $day) {
-                return [
-                    'day' => (int)$day,
-                    'total' => $items->sum('total')
-                ];
-            })
-            ->values(); // برای حذف کلیدهای عددی
-
-
-        $daysInMonth = 30; // Adjust based on the selected Persian month
-        $totalRegistrationData = array_fill(1, $daysInMonth, 0);
-        $totalInActiveRegistrationData = array_fill(1, $daysInMonth, 0);
-
-        foreach ($registrations as $reg) {
-            $totalRegistrationData[(int)$reg['day']] = $reg['total'];
-        }
-
-        foreach ($inactiveRegistrations as $reg) {
-            $totalInActiveRegistrationData[(int)$reg['day']] = $reg['total'];
-        }
 
         return view('dashboard.home.index', [
             'OTCFeeTransactionsByCurrency' => $OTCFeeTransactionsByCurrency,
@@ -120,9 +62,8 @@ class HomeController extends Controller
             'withdrawalSums' => $withdrawalSums,
             'totalDepositsValue' => $totalDepositsValue,
             'totalWithdrawalValue' => $totalWithdrawalValue,
-            'totalRegistrationData' => $totalRegistrationData,
-            'totalInActiveRegistrationData' => $totalInActiveRegistrationData,
         ]);
     }
+
 
 }

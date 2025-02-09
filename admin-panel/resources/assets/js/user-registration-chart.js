@@ -48,32 +48,39 @@
         }
         return days;
     }
+
+// Get the selected month element
     const selectedMonthEl = document.querySelector('#selectedMonth');
-
-    const initialPersianDays = generatePersianDays(selectedMonthEl.innerText, 30);
-
-    const monthDropdown = document.querySelector('#monthDropdown');
-
     const registrationEl = document.querySelector('#userRegistrationChart');
-    const totalRegistrationStr = registrationEl.getAttribute('data-totalRegistration');
-    const totalInActiveRegistrationStr = registrationEl.getAttribute('data-totalInActiveRegistration');
+
+    if (!registrationEl) {
+        console.error("Chart container not found!");
+    }
+
+// Parse initial data from attributes
+    const totalRegistrationStr = registrationEl.getAttribute('data-totalRegistration') || '[]';
+    const totalInActiveRegistrationStr = registrationEl.getAttribute('data-totalInActiveRegistration') || '[]';
+
     const totalRegistration = JSON.parse(totalRegistrationStr);
     const totalInActiveRegistration = JSON.parse(totalInActiveRegistrationStr);
 
-    console.log(totalRegistration)
-    const   registrationChartConfig = {
+// Initialize Persian Days
+    const initialPersianDays = generatePersianDays(selectedMonthEl.innerText, 30);
+    const maxValue = Math.max(...totalRegistration, ...totalInActiveRegistration); // Find the max value
+    const tickAmount = Math.ceil(maxValue / 5); // Divide into 5 steps dynamically
+// Declare chart instance globally
+    let shipment;
 
+// Function to initialize or re-create the chart
+    function renderChart(registrationData, inactiveRegistrationData, persianDays) {
+        if (shipment) {
+            shipment.destroy(); // Destroy previous instance if exists
+        }
+
+        shipment = new ApexCharts(registrationEl, {
             series: [
-                {
-                    name: 'ثبت نام',
-                    type: 'column',
-                    data: totalRegistration // Replace with actual data
-                },
-                {
-                    name: 'تایید شده',
-                    type: 'line',
-                    data: totalInActiveRegistration // Replace with actual data
-                }
+                { name: 'ثبت نام', type: 'column', data: registrationData },
+                { name: 'تایید نشده', type: 'line', data: inactiveRegistrationData }
             ],
             chart: {
                 height: 320,
@@ -98,45 +105,25 @@
             legend: {
                 show: true,
                 position: 'bottom',
-                markers: {
-                    width: 8,
-                    height: 8,
-                    offsetX: -3
-                },
+                markers: { width: 8, height: 8, offsetX: -3 },
                 height: 40,
-                itemMargin: {
-                    horizontal: 10,
-                    vertical: 0
-                },
+                itemMargin: { horizontal: 10, vertical: 0 },
                 fontSize: '14px',
                 fontFamily: 'FarsiNumeral',
                 fontWeight: 400,
-                labels: {
-                    colors: headingColor,
-                    useSeriesColors: false
-                },
+                labels: { colors: headingColor, useSeriesColors: false },
                 offsetY: 10
             },
-            grid: {
-                strokeDashArray: 8,
-                borderColor
-            },
+            grid: { strokeDashArray: 8, borderColor },
             colors: [chartColors.line.series1, chartColors.line.series2],
-            fill: {
-                opacity: [1, 1]
-            },
+            fill: { opacity: [1, 1] },
             plotOptions: {
-                bar: {
-                    columnWidth: '30%',
-                    startingShape: 'rounded',
-                    endingShape: 'rounded',
-                    borderRadius: 4
-                }
+                bar: { columnWidth: '30%', startingShape: 'rounded', endingShape: 'rounded', borderRadius: 4 }
             },
             dataLabels: { enabled: false },
             xaxis: {
                 tickAmount: 30,
-                categories: initialPersianDays,
+                categories: persianDays,
                 labels: {
                     style: {
                         colors: labelColor,
@@ -149,8 +136,9 @@
                 axisTicks: { show: true }
             },
             yaxis: {
-                tickAmount: 5,
+                tickAmount: tickAmount,
                 min: 0,
+                forceNiceScale: true,
 
                 labels: {
                     style: {
@@ -159,9 +147,7 @@
                         fontFamily: 'FarsiNumeral',
                         fontWeight: 400
                     },
-                    formatter: function (val) {
-                        return val ;
-                    }
+                    formatter: (val) => Math.round(val) // اطمینان از نمایش اعداد صحیح
                 }
             },
             responsive: [
@@ -170,22 +156,12 @@
                     options: {
                         chart: { height: 320 },
                         xaxis: { labels: { style: { fontSize: '10px' } } },
-                        legend: {
-                            itemMargin: {
-                                vertical: 0,
-                                horizontal: 10
-                            },
-                            fontSize: '13px',
-                            offsetY: 12
-                        }
+                        legend: { itemMargin: { vertical: 0, horizontal: 10 }, fontSize: '13px', offsetY: 12 }
                     }
                 },
                 {
                     breakpoint: 1025,
-                    options: {
-                        chart: { height: 415 },
-                        plotOptions: { bar: { columnWidth: '50%' } }
-                    }
+                    options: { chart: { height: 415 }, plotOptions: { bar: { columnWidth: '50%' } } }
                 },
                 {
                     breakpoint: 982,
@@ -193,56 +169,48 @@
                 },
                 {
                     breakpoint: 480,
-                    options: {
-                        chart: { height: 250 },
-                        legend: { offsetY: 7 }
-                    }
+                    options: { chart: { height: 250 }, legend: { offsetY: 7 } }
                 }
             ]
-        };
-    if (typeof registrationEl !== undefined && registrationEl !== null) {
-        const shipment = new ApexCharts(registrationEl, registrationChartConfig);
-        shipment.render();
-        monthDropdown.addEventListener('click', (event) => {
-            const target = event.target;
-            if (target.tagName === 'A') {
-                const selectedMonth = target.getAttribute('data-month'); // Get the month from the dropdown
-                selectedMonthEl.textContent = selectedMonth; // Update the button text
-
-                // Determine the number of days in the selected month (example logic)
-                const daysInMonth = selectedMonth === 'اسفند' ? 29 : 30; // Adjust for different months if necessary
-
-                // Generate Persian days for the selected month
-                const persianDays = generatePersianDays(selectedMonth, daysInMonth);
-
-                // Update chart data (example random data, replace with actual data as needed)
-                const newSeriesData = Array.from({ length: daysInMonth }, () => Math.floor(Math.random() * 100));
-
-                // Update the chart
-                shipment.updateOptions({
-                    xaxis: {
-                        categories: persianDays, // Update X-axis with Persian days
-
-                        axisBorder: { show: false },
-                        axisTicks: { show: false }
-                    },
-                    series: [
-                        {
-                            name: 'ثبت نام',
-                            type: 'column',
-                            data: newSeriesData // Update data for selected month
-                        },
-                        {
-                            name: 'تایید شده',
-                            type: 'line',
-                            data: newSeriesData.map(val => val - 6) // Example transformation
-                        }
-                    ]
-                });
-            }
         });
+
+        shipment.render();
     }
 
+// Initial chart render
+    renderChart(totalRegistration, totalInActiveRegistration, initialPersianDays);
+
+// Handle month selection change
+    document.querySelector('#monthDropdown').addEventListener('click', async (event) => {
+        const target = event.target;
+        if (target.tagName === 'A') {
+            const selectedMonth = target.getAttribute('data-month');
+            document.querySelector('#selectedMonth').textContent = selectedMonth;
+
+            try {
+                // Fetch new data from Laravel
+                const response = await fetch(`/admin/report/user-registration-report/month?month=${selectedMonth}`);
+                const data = await response.json();
+
+                if (!data.totalRegistrations || !data.totalInactiveRegistrations) {
+                    console.error("Invalid response structure:", data);
+                    return;
+                }
+
+                // Generate updated Persian days
+                const updatedPersianDays = generatePersianDays(selectedMonth, 30);
+
+                // Re-render chart with new data
+                renderChart(
+                    Object.values(data.totalRegistrations),
+                    Object.values(data.totalInactiveRegistrations),
+                    updatedPersianDays
+                );
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+        }
+    });
 
 })();
 

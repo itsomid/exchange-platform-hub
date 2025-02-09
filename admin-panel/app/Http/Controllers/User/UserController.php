@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\User;
 
+use App\Enums\UserStatusEnum;
 use App\Exports\UserExport;
 use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
@@ -18,6 +19,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
+use Morilog\Jalali\Jalalian;
 
 class UserController extends Controller
 {
@@ -223,27 +225,6 @@ class UserController extends Controller
             .'&route=dashboard');
     }
 
-    public function destroy($id)
-    {
-        try {
-            // Find the user by ID
-            $user = User::findOrFail($id);
-            if ($user->orders->count()) {
-                return response()->json(['message' => 'USer has Order'], 200);
-            }
-            Account::where('user_id', $id)->delete();
-            // Delete the user
-            $user->delete();
 
-            // Return a success response
-            return response()->json(['message' => 'User deleted successfully.'], 200);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            // Return an error response if the user was not found
-            return response()->json(['error' => 'User not found.'], 404);
-        } catch (\Exception $e) {
-            // Return a general error response
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
 
-    }
 }

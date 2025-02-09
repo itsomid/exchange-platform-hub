@@ -34,7 +34,7 @@
                             <h6 class="mb-0 me-auto">اعلان‌ها</h6>
                             <div class="d-flex align-items-center h6 mb-0">
                                 <span class="badge bg-label-primary me-2">{{$unreadCount}} جدید </span>
-                                <a href="javascript:void(0)" class="btn btn-text-secondary rounded-pill btn-icon dropdown-notifications-all" data-bs-toggle="tooltip" data-bs-placement="top" title="Mark all as read">
+                                <a href="" class="btn btn-text-secondary rounded-pill btn-icon dropdown-notifications-all" data-bs-toggle="tooltip" data-bs-placement="top" title="تغییر همه به خوانده شده">
                                     <i class="fa-regular fa-envelope-open text-heading"></i>
                                 </a>
                             </div>
@@ -68,8 +68,8 @@
                     </li>
                     <li class="border-top">
                         <div class="d-grid p-4">
-                            <a class="btn btn-primary btn-sm d-flex" href="javascript:void(0);">
-                                <small class="align-middle">View all notifications</small>
+                            <a class="btn btn-primary btn-sm d-flex" href="{{route('admin.admin.notifications.index')}}">
+                                <small class="align-middle">مشاهده تمام اعلان ها</small>
                             </a>
                         </div>
                     </li>

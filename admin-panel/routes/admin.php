@@ -33,6 +33,7 @@ use App\Http\Controllers\Withdrawal\WithdrawalReportController;
 use App\Http\Controllers\Exchange\ExchangeAssetsWithdrawalController;
 use App\Http\Controllers\Deposit\DepositReportController;
 use App\Http\Controllers\Admin\AdminNotificationController;
+use App\Http\Controllers\User\UserRegistrationReportController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -79,6 +80,7 @@ Route::get('/users/create', [UserController::class, 'create'])->name('user.creat
 Route::post('/users', [UserController::class, 'store'])->name('user.store')->can('user.create');
 Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('user.edit')->can('user.edit');
 Route::patch('/users/{user}/update', [UserController::class, 'update'])->name('user.update')->can('user.edit');
+
 Route::get('/users/{user}/update-password', [UserSecurityController::class, 'passwordEdit'])->name('user.password.edit');
 Route::patch('/users/{user}/update-password', [UserSecurityController::class, 'passwordUpdate'])->name('user.password.update');
 Route::get('/users/{user}/security', [UserSecurityController::class, 'index'])->name('user.security');
@@ -96,6 +98,7 @@ Route::post('/users/financial-status/mass-block', [UserFinancialBlockController:
 Route::get('/users/{user}/wallets',[UserWalletController::class,'userWallets'])->name('wallet.index')->can('wallet');
 Route::get('/users/{user}/wallets/{wallet}/{type}',[UserWalletController::class,'walletDetails'])->name('wallet.detail')->can('wallet');
 Route::get('/users/{user}/inquiry',[InquiryController::class,'userDetails'])->name('inquiry.user-details')->can('admin.inquiry');
+
 
 Route::get('/inquiry', [InquiryController::class, 'index'])->name('inquiry.index')->can('admin.inquiry');
 Route::post('/inquiry', [InquiryController::class, 'submit'])->name('inquiry.submit')->can('admin.inquiry');
@@ -194,5 +197,8 @@ Route::prefix('wallet')->group(function (){
 Route::prefix('report')->group(function (){
     Route::get('deposit',[DepositReportController::class,'index'])->name('report.deposit')->can('report');
     Route::get('withdrawal',[WithdrawalReportController::class,'index'])->name('report.withdrawal')->can('report');
+
+    Route::get('user-registration-report', [UserRegistrationReportController::class, 'index'])->name('report.getUserRegistrationState')->can('user.index');
+    Route::get('user-registration-report/month', [UserRegistrationReportController::class, 'getUserRegistrationState'])->name('report.getUserRegistrationState.month')->can('user.index');
 
 });
