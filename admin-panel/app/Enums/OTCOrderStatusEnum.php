@@ -25,4 +25,9 @@ enum OTCOrderStatusEnum: string
         return self::TYPE_LABEL[$this->value] ?? '';
     }
 
+    public function color(): string
+    {
+        return self::TYPE_COLOR[$this->value] ?? '';
+    }
+
 }
