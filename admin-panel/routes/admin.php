@@ -80,6 +80,7 @@ Route::get('/users/create', [UserController::class, 'create'])->name('user.creat
 Route::post('/users', [UserController::class, 'store'])->name('user.store')->can('user.create');
 Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('user.edit')->can('user.edit');
 Route::patch('/users/{user}/update', [UserController::class, 'update'])->name('user.update')->can('user.edit');
+Route::patch('/users/{user}/toggle-status', [UserController::class, 'suspendUser'])->name('user.toggle-status')->can('user.index');
 
 Route::get('/users/{user}/update-password', [UserSecurityController::class, 'passwordEdit'])->name('user.password.edit');
 Route::patch('/users/{user}/update-password', [UserSecurityController::class, 'passwordUpdate'])->name('user.password.update');

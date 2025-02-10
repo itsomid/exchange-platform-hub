@@ -225,6 +225,21 @@ class UserController extends Controller
             .'&route=dashboard');
     }
 
+    public function suspendUser(User $user)
+    {
+        $user = User::find($user->id);
 
+        if (!$user) {
+            Toast::message('کاربر یافت نشد.')->danger();
+            return redirect()->back();
+        }
 
+        // Toggle status
+        $newStatus = $user->status === UserStatusEnum::SUSPEND ? UserStatusEnum::ACTIVE : UserStatusEnum::SUSPEND;
+        $user->status = $newStatus;
+        $user->save();
+
+        Toast::message('وضعیت کاربر با موفقیت تغییر کرد')->success();
+        return redirect()->back();
+    }
 }
