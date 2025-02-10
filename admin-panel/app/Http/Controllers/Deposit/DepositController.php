@@ -45,9 +45,7 @@ class DepositController extends Controller
         $totalTopUsersDeposit = $topUsers->sum('totalDeposit');
 //        return $topUsers;
 
-        $deposits = Deposit::filterBy(request()->all())->with(['user','currency','currencyChain', 'transaction'])
-
-            ->paginate(20);
+        $deposits = Deposit::filterBy(request()->all())->with(['user','currency','currencyChain', 'transaction'])->paginate(20);
 
 
         return view('dashboard.deposits.index', [
@@ -55,8 +53,8 @@ class DepositController extends Controller
             'todayDepositsValue' => $todayDepositsValue,
             'totalDepositsValue' => $totalDepositsValue,
             'todayDepositsCount' => $todayDepositsCount,
+            'totalTopUsersDeposit' => $totalTopUsersDeposit,
             'topUsers' => $topUsers,
-            'totalTopUsersDeposit' => $totalTopUsersDeposit
         ]);
     }
 }

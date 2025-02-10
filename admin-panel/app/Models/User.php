@@ -124,14 +124,6 @@ class User extends Authenticatable implements CanResetPassword
         return (bool)$this->two_factore_secret;
     }
 
-    public function generateToken(): string
-    {
-        return
-            config('app.env') === 'local'
-                ? '11111'
-                : str_pad(random_int(10000, 99999), 5, '0', STR_PAD_LEFT);
-    }
-
     public static function generateUsername($email)
     {
         // Extract the part of the email before the '@'
