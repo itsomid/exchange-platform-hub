@@ -104,7 +104,7 @@
         @can('deposit')
             <li class="menu-item @if(request()->is('admin/deposits*')) active @endif">
                 <a href="{{route('admin.deposit.index')}}" class="menu-link">
-                    <i class="menu-icon fa-regular fa-money-from-bracket"></i>
+                    <i class="menu-icon fa-regular fa-square-arrow-down-left"></i>
                     <div>لیست واریزی ها</div>
                 </a>
             </li>
@@ -112,7 +112,7 @@
         @can('withdrawal')
             <li class="menu-item @if(request()->is('admin/withdrawal*')) active @endif">
                 <a href="{{route('admin.withdrawal.index')}}" class="menu-link">
-                    <i class="menu-icon fa-regular fa-money-bill-wave"></i>
+                    <i class="menu-icon fa-regular fa-square-arrow-up-right"></i>
                     <div>لیست برداشت ها</div>
                 </a>
             </li>

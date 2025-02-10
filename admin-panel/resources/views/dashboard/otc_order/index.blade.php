@@ -267,7 +267,7 @@
                             </td>
 
                             <td>
-                                <span class="badge bg-label-success">{{$order->status->label()}}</span>
+                                <span class="badge bg-label-{{$order->status->color()}}">{{$order->status->label()}}</span>
                             </td>
                             <td>
                                 <a href="" class="btn btn-icon btn-text-secondary" data-bs-toggle="modal"

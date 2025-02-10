@@ -29,10 +29,10 @@
                                 <span class="h6">ایمیل:</span>
                                 <span>{{$user->email}}</span>
                             </li>
-                            <li class="mt-2 d-flex justify-content-between">
-                                <span class="h6">وضعیت حساب:</span>
+                            <li class="mt-2 d-flex justify-content-between ali">
+                                <span class="h6">وضعیت پنل کاربری:</span>
                                 <span
-                                    class="badge bg-label-{{\App\Enums\UserStatusEnum::TYPE_COLOR[$user->status->value]}} ms-1 align-self-baseline">{{$user->status->label()}}</span>
+                                    class="badge bg-label-{{$user->status->color()}} align-self-baseline">{{$user->status->label()}}</span>
                             </li>
                             <li class="mt-2 d-flex justify-content-between">
                                 <span class="h6">شماره تماس:</span>
@@ -41,14 +41,21 @@
                             <li class="mt-2 d-flex justify-content-between">
                                 <span class="h6">معرف:</span>
                                 @if($user->introducerReferral)
-                                    <span>{{$user->introducerReferral?->user->username}}</span>
-                                @else
-                                    <span>ندارد</span>
+                                    <a class="btn btn-primary font-number p-1" data-bs-html='true'
+                                       data-bs-toggle="tooltip" data-bs-placement="top"
+                                       data-bs-custom-class="tooltip-dark"
+                                       title="<span class='fw-medium'>نام:</span>
+                                                    {{ $user->introducerReferral->user->fullname()}}</span>
+                                                    <br> <span class='fw-medium'>شناسه کاربری:</span>
+                                                    <span class='fw-medium font-monospace'>({{ $user->introducerReferral->user->id }}#)</span>"
+                                    >
+                                        <span>{{$user->introducerReferral?->user->username}}</span>
+                                    </a>
                                 @endif
 
                             </li>
-                            <li class="mt-2 d-flex justify-content-between">
-                                <span class="h6">وضعیت حساب</span>
+                            <li class="mt-3 d-flex justify-content-between">
+                                <span class="h6">محدودیت‌های حساب:</span>
 
                                 @if($user->activeFinancialBlocks->isEmpty())
                                     <span class="badge bg-label-success align-self-baseline">بدون محدودیت</span>
@@ -56,7 +63,7 @@
                                     <div class="text-end">
                                         @foreach($user->activeFinancialBlocks as $block)
                                             <span
-                                                class="badge bg-label-danger ms-1 align-self-baseline">    {{\App\Enums\UserFinancialBlockAction::TYPE_LABEL[$block->action] }}</span>
+                                                class="badge bg-label-danger ms-1 align-self-baseline">{{\App\Enums\UserFinancialBlockAction::TYPE_LABEL[$block->action] }}</span>
                                         @endforeach
                                     </div>
                                 @endif
@@ -68,16 +75,35 @@
                             </li>
                             <li class="mt-2 d-flex justify-content-between">
                                 <span class="h6">تاریح ایجاد حساب:</span>
-                                <span>{{\App\Helpers\DateFormatter::convertToPersianDate($user->created_at,'H:i:s %Y-%m-%d')}}</span>
+                                <span>{{\App\Helpers\DateFormatter::convertToPersianDate($user->created_at,'%d %B %Y - H:i:s')}}</span>
 
                             </li>
                             <li class="mt-2 d-flex justify-content-between">
-                                <span class="h6">کشور:</span>
-                                <span>{{$user->country}}</span>
+                                <span class="h6">آخرین فعالیت:</span>
+                                @if($user->latestActiveToken)
+                                    {{\App\Helpers\DateFormatter::convertToPersianDate($user->latestActiveToken->last_used_at,'H:i:s %Y/%m/%d')}}
+                                @else
+                                    <span>بدون فعالیت</span>
+                                @endif
+                            </li>
+                            <li class="mt-2 d-flex justify-content-between">
+                                <span class="h6">مکان:</span>
+                                {{$user->latestActiveToken->ip}}
+                                <td class="text-truncate">{{ App\Helpers\LocationFinder::getCountryAndCity($user->latestActiveToken->ip) }}</td>
                             </li>
                         </ul>
                         <div class="d-flex justify-content-center">
-                            <a href="javascript:;" class="btn btn-label-danger suspend-user">تعلیق کاربر</a>
+
+                            <form action="{{ route('admin.user.toggle-status', $user->id) }}" method="POST">
+                                @csrf
+                                @method('PATCH')
+
+                                <button
+                                    class="btn btn-{{ $user->status === \App\Enums\UserStatusEnum::SUSPEND? 'success':'danger'}}"
+                                    onclick="return confirm('آیا مطمئن هستید؟')">
+                                    {{ $user->status === \App\Enums\UserStatusEnum::SUSPEND ? 'فعالسازی کاربر' : 'تعلیق کاربر' }}
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -94,7 +120,7 @@
 
         <div class="col">
             <div class="card mb-6">
-                <div class="card-header px-0 pt-0">
+                <div class="card-header px-0 pt-0 pb-3">
                     <div class="nav-align-top">
                         <ul class="nav nav-tabs" role="tablist">
                             <li class="nav-item">
@@ -103,7 +129,8 @@
                                         role="tab" aria-selected="true">
                                     <span class="ti ti-user ti-lg d-sm-none"></span>
                                     <span class="d-none d-sm-block">آخرین معاملات کاربر</span>
-                                    <span class="badge badge-center rounded-pill bg-{{$totalOtcOrdersCount ? 'success':'danger'}} bg-glow ms-2">{{$totalOtcOrdersCount}}</span>
+                                    <span
+                                        class="badge badge-center rounded-pill bg-{{$totalOtcOrdersCount ? 'success':'danger'}} bg-glow ms-2">{{$totalOtcOrdersCount}}</span>
                                 </button>
                             </li>
                             <li class="nav-item">
@@ -112,7 +139,8 @@
                                         role="tab" aria-selected="false">
                                     <span class="ti ti-user-cog ti-lg d-sm-none"></span>
                                     <span class="d-none d-sm-block">برداشت های اخیر کاربر</span>
-                                    <span class="badge badge-center rounded-pill bg-{{$totalWithdrawsCount ? 'success':'danger'}} bg-glow ms-2">{{$totalWithdrawsCount}}</span>
+                                    <span
+                                        class="badge badge-center rounded-pill bg-{{$totalWithdrawsCount ? 'success':'danger'}} bg-glow ms-2">{{$totalWithdrawsCount}}</span>
                                 </button>
                             </li>
                             <li class="nav-item">
@@ -121,7 +149,8 @@
                                         role="tab" aria-selected="false">
                                     <span class="ti ti-link ti-lg d-sm-none"></span>
                                     <span class="d-none d-sm-block">واریز های اخیر کاربر</span>
-                                    <span class="badge badge-center rounded-pill bg-{{$totalDepositsCount ? 'success':'danger'}} bg-glow ms-2">{{$totalDepositsCount}}</span>
+                                    <span
+                                        class="badge badge-center rounded-pill bg-{{$totalDepositsCount ? 'success':'danger'}} bg-glow ms-2">{{$totalDepositsCount}}</span>
                                 </button>
                             </li>
                         </ul>
@@ -135,7 +164,11 @@
                         @if($otcOrders->isEmpty())
                             <p class="text-center h4">معامله ای یافت نشد🙄</p>
                         @else
-
+                            <div class="ms-5 mb-3">
+                                <a class="btn btn-sm btn-primary"
+                                   href="{{route('admin.otc_orders.index',['user'=>$user->id])}}">مشاهده تمام معامله
+                                    ها</a>
+                            </div>
                             <div class="table-responsive text-nowrap">
                                 <table class="table table-striped">
                                     <thead>
@@ -164,7 +197,8 @@
                                                 {{$order->market->name}}
                                             </td>
                                             <td>
-                                                <span class="badge bg-label-{{$order->type->color()}}">{{$order->type->label()}}</span>
+                                                <span
+                                                    class="badge bg-label-{{$order->type->color()}}">{{$order->type->label()}}</span>
                                             </td>
 
                                             <td class="font-number" dir="ltr">
@@ -345,6 +379,11 @@
                         @if($withdraws->isEmpty())
                             <p class="text-center h4">برداشتی یافت نشد🙄</p>
                         @else
+                            <div class="ms-5 mb-3">
+                                <a class="btn btn-sm btn-primary"
+                                   href="{{route('admin.withdrawal.index',['user'=>$user->id])}}">مشاهده تمام برداشت
+                                    ها</a>
+                            </div>
                             <div class="table-responsive text-nowrap">
                                 <table class="table table-striped">
                                     <thead>
@@ -383,7 +422,8 @@
                                             <td class="font-number">
                                                 <h6 class="mb-0">
                                                     @if($withdraw->explorer_address_url)
-                                                        <a href="{{ $withdraw->explorer_address_url }}" target="_blank" class="me-1">
+                                                        <a href="{{ $withdraw->explorer_address_url }}" target="_blank"
+                                                           class="me-1">
                                                             <i class="fa-regular fa-clone"></i>
                                                         </a>
                                                         <small>{{ shorten_hash($withdraw->address) }}</small>
@@ -396,7 +436,8 @@
                                             <td class="font-number">
                                                 <h6 class="mb-0">
                                                     @if($withdraw->explorer_tx_url && $withdraw->transaction_hash)
-                                                        <a href="{{ $withdraw->explorer_tx_url }}" target="_blank" class="me-1">
+                                                        <a href="{{ $withdraw->explorer_tx_url }}" target="_blank"
+                                                           class="me-1">
                                                             <i class="fa-regular fa-clone"></i>
                                                         </a>
                                                         <small>{{ shorten_hash($withdraw->transaction_hash) }}</small>
@@ -410,7 +451,8 @@
                                                 {{\App\Helpers\DateFormatter::convertToPersianDate($withdraw->created_at,'H:i:s %Y/%m/%d')}}
                                             </td>
                                             <td>
-                                                <span class="badge bg-label-{{$withdraw->status->color()}}">{{$withdraw->status->label()}}</span>
+                                                <span
+                                                    class="badge bg-label-{{$withdraw->status->color()}}">{{$withdraw->status->label()}}</span>
                                             </td>
                                             <td>
 
@@ -613,6 +655,10 @@
                         @if($deposits->isEmpty())
                             <p class="text-center h4">واریزی یافت نشد🙄</p>
                         @else
+                            <div class="ms-5 mb-3">
+                                <a class="btn btn-sm btn-primary"
+                                   href="{{route('admin.deposit.index',['user' => $user->id])}}">مشاهده تمام واریزها</a>
+                            </div>
                             <div class="table-responsive text-nowrap">
                                 <table class="table table-striped">
                                     <thead>
