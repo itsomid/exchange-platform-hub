@@ -51,6 +51,8 @@
                                     >
                                         <span>{{$user->introducerReferral?->user->username}}</span>
                                     </a>
+                                @else
+                                    <span>بدون معرف</span>
                                 @endif
 
                             </li>
@@ -88,9 +90,15 @@
                             </li>
                             <li class="mt-2 d-flex justify-content-between">
                                 <span class="h6">مکان:</span>
-                                {{$user->latestActiveToken->ip}}
-                                <td class="text-truncate">{{ App\Helpers\LocationFinder::getCountryAndCity($user->latestActiveToken->ip) }}</td>
+                                @if($user->latestActiveToken)
+                                    {{$user->latestActiveToken->ip}}
+                                    <td class="text-truncate">{{ App\Helpers\LocationFinder::getCountryAndCity($user->latestActiveToken->ip) }}</td>
+                                @else
+                                    <span>بدون فعالیت</span>
+                                @endif
                             </li>
+
+
                         </ul>
                         <div class="d-flex justify-content-center">
 
