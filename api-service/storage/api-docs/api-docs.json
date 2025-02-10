@@ -3769,6 +3769,11 @@
                     "is_private": {
                         "type": "boolean",
                         "example": false
+                    },
+                    "image": {
+                        "type": "string",
+                        "example": "file_content",
+                        "nullable": true
                     }
                 },
                 "type": "object"
@@ -3806,6 +3811,11 @@
                     "ticketable_type": {
                         "type": "string",
                         "example": "App\\Models\\Withdrawal"
+                    },
+                    "image": {
+                        "type": "string",
+                        "example": "file_content",
+                        "nullable": true
                     }
                 },
                 "type": "object"
@@ -4561,6 +4571,32 @@
                     "is_seen": {
                         "type": "boolean",
                         "example": true
+                    },
+                    "replied_by": {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": "1"
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "mehdi"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "admin",
+                                    "user"
+                                ],
+                                "example": "admin"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "image": {
+                        "type": "string",
+                        "example": "https://yourdomain.com/storage/tickets/image1.jpg",
+                        "nullable": true
                     },
                     "created_at": {
                         "type": "string",

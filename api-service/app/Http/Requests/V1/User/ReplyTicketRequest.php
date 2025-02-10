@@ -10,7 +10,8 @@ use Illuminate\Foundation\Http\FormRequest;
  *     required={"message"},
  *
  *     @OA\Property(property="message", type="string", example="We are looking into your issue."),
- *     @OA\Property(property="is_private", type="boolean", example=false)
+ *     @OA\Property(property="is_private", type="boolean", example=false),
+ *    @OA\Property(property="image", type="string", nullable=true, example="file_content")
  * )
  */
 class ReplyTicketRequest extends FormRequest
@@ -32,6 +33,7 @@ class ReplyTicketRequest extends FormRequest
     {
         return [
             'message' => ['required', 'string'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
         ];
     }
 }

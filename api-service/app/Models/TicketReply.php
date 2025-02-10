@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class TicketReply extends Model
 {
-    protected $fillable = ['ticket_id', 'repliable_id', 'repliable_type', 'message', 'is_private', 'is_seen'];
+    protected $fillable = ['ticket_id', 'repliable_id', 'repliable_type', 'message', 'is_private', 'is_seen', 'image'];
 
     public function ticket(): BelongsTo
     {
@@ -18,5 +18,10 @@ class TicketReply extends Model
     public function repliable(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    public function getImageUrl(): string
+    {
+        return asset($this->image);
     }
 }

@@ -11,7 +11,7 @@ class Ticket extends Model
 {
     protected $fillable = [
         'ticket_number', 'user_id', 'subject', 'message', 'status',
-        'priority', 'closed_at', 'reopened_at', 'resolved_at', 'ticketable_id', 'ticketable_type',
+        'priority', 'closed_at', 'reopened_at', 'resolved_at', 'ticketable_id', 'ticketable_type', 'image',
     ];
 
     public function user(): BelongsTo
