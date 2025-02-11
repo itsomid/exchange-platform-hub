@@ -29,7 +29,7 @@ class ReferralCodeCreateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'friend_fee' => ['required', 'integer', 'min:1', 'max:'.config('user.referral-code.max-fee')],
+            'friend_fee' => ['required', 'integer', 'min:0', 'max:'.config('user.referral-code.max-fee')],
         ];
     }
 }
