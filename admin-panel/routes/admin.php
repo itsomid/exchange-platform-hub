@@ -34,6 +34,8 @@ use App\Http\Controllers\Exchange\ExchangeAssetsWithdrawalController;
 use App\Http\Controllers\Deposit\DepositReportController;
 use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Controllers\User\UserRegistrationReportController;
+use App\Http\Controllers\Ticket\TicketController;
+use App\Http\Controllers\Ticket\TicketReplyController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -67,6 +69,10 @@ Route::prefix('admins')->group(function () {
     Route::get('/notifications', [AdminNotificationController::class, 'index'])->name('admin.notifications.index');
     Route::patch('/notifications/mark-read/{id}', [AdminNotificationController::class, 'markAsRead'])->name('admin.notifications.mark-read');
 });
+
+Route::resource('tickets', TicketController::class)->except(['ticket']);
+Route::post('tickets/{ticket}/replies', [TicketReplyController::class, 'ticket'])->name('tickets.replies.store');
+Route::delete('replies/{reply}', [TicketReplyController::class, 'ticket'])->name('replies.destroy');
 
 
 Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

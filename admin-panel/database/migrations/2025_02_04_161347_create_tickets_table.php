@@ -5,6 +5,8 @@ use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use App\Enums\TicketStatusEnum;
+use App\Enums\TicketPriorityEnum;
 
 return new class extends Migration
 {
@@ -18,8 +20,8 @@ return new class extends Migration
             $table->string('ticket_number')->unique();
             $table->foreignIdFor(User::class)->constrained();
             $table->string('subject');
-            $table->string('status')->default('open');
-            $table->string('priority')->default('low');
+            $table->string('status')->default(TicketStatusEnum::OPEN->value);
+            $table->string('priority')->default(TicketPriorityEnum::LOW->value);
             $table->timestamp('closed_at')->nullable();
             $table->timestamp('reopened_at')->nullable();
             $table->timestamp('resolved_at')->nullable();

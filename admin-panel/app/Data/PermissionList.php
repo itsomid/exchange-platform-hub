@@ -59,6 +59,7 @@ class PermissionList
             ['view-logs','لیست گزارش ها'],
 
             ['notifications','لیست اعلان های مدیریت'],
+            ['support','پشتیبانی کاربر'],
 
         ];
 

@@ -3,51 +3,112 @@
 // *******************************************************************************
 
 @each $color, $value in $theme-colors {
-  @if $color != primary and $color != light {
-    @include bg-glow-variant('.bg-#{$color}', $value);
-  }
+    @if $color != primary and $color != light {
+        @include bg-glow-variant('.bg-#{$color}', $value);
+    }
 }
 
 // Badge Center Style
 
 .badge-center {
-  padding: 3px;
-  line-height: 1.375;
-  @include badge-size($badge-height, $badge-width, $badge-center-font-size);
-  i {
-    font-size: 0.875rem;
-  }
+    padding: 3px;
+    line-height: 1.375;
+    @include badge-size($badge-height, $badge-width, $badge-center-font-size);
+
+    i {
+        font-size: 0.875rem;
+    }
 }
 
 // Dots Style
 
 .badge.badge-dot {
-  display: inline-block;
-  margin: 0;
-  padding: 0;
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  vertical-align: middle;
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    vertical-align: middle;
 }
 
 // Notifications
+.badge {
+    &.badge-notifications {
+        position: absolute;
+        top: auto;
+        display: inline-block;
+        margin: 0;
+        transform: translate(-50%, -45%);
 
-.badge.badge-notifications {
-  position: absolute;
-  top: auto;
-  display: inline-block;
-  margin: 0;
-  transform: translate(-50%, -45%);
+        @include rtl-style {
+            transform: translate(50%, -45%);
+        }
 
-  @include rtl-style {
-    transform: translate(50%, -45%);
-  }
+        &:not(.badge-dot) {
+            padding: 0.063rem 0.112rem;
+            font-size: 0.75rem;
+            line-height: 0.875rem;
+            @include border-radius(50rem);
+        }
+    }
 
-  &:not(.badge-dot) {
-    padding: 0.063rem 0.112rem;
-    font-size: 0.75rem;
-    line-height: 0.875rem;
-    @include border-radius(50rem);
-  }
+    &.badge-bling {
+        &:before {
+            position: absolute;
+            content: "";
+            right: 1px;
+            top: 1px;
+            width: 75%;
+            height: 75%;
+            opacity: 0.15;
+            background: rgb(167, 144, 144) !important;
+            border-radius: 50%;
+            animation: 2000ms linear 0s infinite normal none running inner-ripple;
+        }
+
+        &:after {
+            position: absolute;
+            content: "";
+            right: 1px;
+            top: 1px;
+            width: 75%;
+            height: 75%;
+            opacity: 0.15;
+            background: rgb(167, 144, 144) !important;
+            border-radius: 50%;
+            animation: 2000ms linear 0s infinite normal none running outer-ripple;
+        }
+    }
 }
+
+@keyframes inner-ripple {
+    0% {
+        opacity: 0.5;
+        transform: scale(1);
+    }
+    30% {
+        opacity: 0.5;
+        transform: scale(2);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(2.5);
+    }
+}
+
+@keyframes outer-ripple {
+    0% {
+        opacity: 0.5;
+        transform: scale(1);
+    }
+    80% {
+        opacity: 0;
+        transform: scale(2.5);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(3.5);
+    }
+}
+

@@ -141,6 +141,43 @@
                 </a>
             </li>
         @endcanany
+        @can(['support'])
+            <li class="menu-header small text-uppercase">
+                <span class="menu-header-text">بخش ارتباط با کاربر</span>
+            </li>
+            <li class="menu-item @if(request()->is('admin/tickets*')) active open @endif">
+                <a  href="javascript:void(0);" class="menu-link menu-toggle">
+                    <div class="d-inline-flex position-relative">
+                        <i class="menu-icon  fa-regular fa-headset "></i>
+
+                        <span class="badge rounded-pill bg-danger badge-dot badge-notifications badge-bling" ></span>
+                    </div>
+
+                    <div>مدیریت تیکت ها</div>
+
+                </a>
+                <ul class="menu-sub">
+                    <li class="menu-item @if(request()->is('admin/tickets?status=pending*')) active @endif">
+                        <a href="{{route('admin.role.index')}}" class="menu-link">
+                            <i class="menu-icon fa-light fa-user fa-sm"></i>
+                            <div>در انتظار پاسخ</div>
+                        </a>
+                    </li>
+                    <li class="menu-item @if(request()->is('admin/tickets/*')) active @endif">
+                        <a href="{{route('admin.permission.index')}}" class="menu-link">
+                            <i class="menu-icon fa-light fa-key fa-sm"></i>
+                            <div>پاسخ داده شده</div>
+                        </a>
+                    </li>
+                    <li class="menu-item @if(request()->is('admin/tickets*')) active @endif">
+                        <a href="{{route('admin.tickets.index')}}" class="menu-link">
+                            <i class="menu-icon fa-light fa-ticket"></i>
+                            <div>همه تیکت ها</div>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+        @endcanany
         @can(['wallet'])
             <li class="menu-header small text-uppercase">
                 <span class="menu-header-text">مدیریت کیف پول‌ها</span>
@@ -271,3 +308,5 @@
 
     </ul>
 </aside>
+
+
