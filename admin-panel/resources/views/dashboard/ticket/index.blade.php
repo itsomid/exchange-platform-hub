@@ -128,7 +128,7 @@
                                        data-bs-target="#deposit-{{$ticket->id}}">
                                         <i class="fa-light fa-eye fa-lg"></i>
                                     </a>
-                                    <form action="{{route('admin.tickets.destroy',['ticket'=>$ticket])}}" method="post">
+                                    <form action="{{route('admin.tickets.destroy',['ticket' => $ticket])}}" method="post">
                                         @csrf
                                         @method('DELETE')
                                         <button class="btn btn-icon btn-danger ">
