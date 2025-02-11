@@ -8,22 +8,31 @@ use App\Models\Withdrawal;
 
 enum TicketStatusEnum: string
 {
-    case OPEN = 'open';
-    case CLOSED = 'closed';
-    case RESOLVED = 'resolved';
-    case REOPENED = 'reopened';
+    case OPEN = 'open'; // باز
+    case  CLOSED= 'closed';  // بسته شده
+    case InProgress = 'in_progress'; // در حال بررسی
+    case WaitingForCustomer = 'waiting_for_customer'; // در انتظار پاسخ مشتری
+    case WaitingForSupport = 'waiting_for_support'; // در انتظار پاسخ پشتیبانی
+    case RESOLVED = 'resolved';// حل شده
+    case REOPENED = 'reopened'; // مجدداً باز شده
     // get type class
     const array TYPE_LABEL = [
-        self::OPEN->value => 'باز شده',
-        self::CLOSED->value => 'بسته شده',
+        self::OPEN->value => 'باز',
+        self::InProgress->value => 'در حال بررسی',
+        self::WaitingForCustomer->value => 'در انتظار پاسخ مشتری',
+        self::WaitingForSupport->value => 'در انتظار پاسخ پشتیبانی',
         self::RESOLVED->value => 'حل شده',
-        self::REOPENED->value => 'بازگشایی شده',
+        self::CLOSED->value => 'بسته شده',
+        self::REOPENED->value => 'مجدداً باز شده',
     ];
 
     const array TYPE_COLOR = [
         self::OPEN->value => 'primary',
-        self::CLOSED->value => 'secondary',
+        self::InProgress->value => 'warning',
+        self::WaitingForCustomer->value => 'success',
+        self::WaitingForSupport->value => 'warning',
         self::RESOLVED->value => 'success',
+        self::CLOSED->value => 'secondary',
         self::REOPENED->value => 'warning',
     ];
 

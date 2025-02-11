@@ -121,9 +121,9 @@ Route::post('/roles', [RoleController::class, 'store'])->name('role.store')->can
 Route::get('/roles/{role}/edit', [RoleController::class, 'edit'])->name('role.edit')->can('roles.permissions');
 Route::patch('/roles/{role}', [RoleController::class, 'update'])->name('role.update')->can('roles.permissions');
 
-Route::get('/permissions', [PermissionController::class, 'index'])->name('permission.index')->can('permission.index');
-Route::get('/permissions/{permission}/edit', [PermissionController::class, 'edit'])->name('permission.edit')->can('permission.edit');
-Route::patch('/permissions/{permission}', [PermissionController::class, 'update'])->name('permission.update')->can('permission.edit');
+Route::get('/permissions', [PermissionController::class, 'index'])->name('permission.index')->can('roles.permissions');
+Route::get('/permissions/{permission}/edit', [PermissionController::class, 'edit'])->name('permission.edit')->can('roles.permissions');
+Route::patch('/permissions/{permission}', [PermissionController::class, 'update'])->name('permission.update')->can('roles.permissions');
 
 Route::get('/referral-codes', [ReferralCodeController::class, 'index'])->name('referral_code.index')->can('referral_code.index');
 Route::get('/referral-codes/create', [ReferralCodeController::class, 'create'])->name('referral_code.create')->can('referral_code.create');
@@ -132,7 +132,6 @@ Route::get('/referral-codes/referred-user/{user}/transactions', [ReferralCodeCon
 Route::post('/referral-codes', [ReferralCodeController::class, 'store'])->name('referral_code.store')->can('referral_code.create');
 Route::get('/referral-codes/{referral_code}/edit', [ReferralCodeController::class, 'edit'])->name('referral_code.edit')->can('referral_code.edit');
 Route::patch('/referral-codes/{referral_code}', [ReferralCodeController::class, 'update'])->name('referral_code.update')->can('referral_code.edit');
-
 
 
 Route::get('/exchange/currencies', [CurrencyController::class, 'index'])->name('currency.index')->can('currency');

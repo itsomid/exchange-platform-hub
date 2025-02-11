@@ -131,7 +131,7 @@
                                     <form action="{{route('admin.tickets.destroy',['ticket'=>$ticket])}}" method="post">
                                         @csrf
                                         @method('DELETE')
-                                        <button class="btn btn-icon btn-sm btn-danger">
+                                        <button class="btn btn-icon btn-danger ">
                                             <i class="fa-light fa-trash-alt fa-lg"></i>
                                         </button>
                                     </form>

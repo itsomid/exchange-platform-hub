@@ -23,9 +23,7 @@
                             <th>نام نقش</th>
                             <th>گارد</th>
                             <th>آخرین ویرایش</th>
-                            @canany(['role.edit'])
-                                <th>عملیات</th>
-                            @endcanany
+                            <th>عملیات</th>
 
                         </tr>
                         </thead>
@@ -36,13 +34,14 @@
                                 <td class="w-50">{{$role->name}}</td>
                                 <td class="w-25">{{$role->guard_name}}</td>
                                 <td class="w-25">{{\Morilog\Jalali\Jalalian::forge($role->updated_at)->format('%A, %d %B %Y')}}</td>
-                                @canany(['role.edit'])
+
                                 <td>
-                                    <a href="{{route('admin.role.edit', ['role' => $role->id])}}" class="btn btn-info rounded">
-                                        <i class="fa fa-pen mx-2"></i>                                ویرایش
+                                    <a href="{{route('admin.role.edit', ['role' => $role->id])}}"
+                                       class="btn btn-info rounded">
+                                        <i class="fa fa-pen mx-2"></i> ویرایش
                                     </a>
                                 </td>
-                                @endcanany
+
                             </tr>
                         @endforeach
                         </tbody>
