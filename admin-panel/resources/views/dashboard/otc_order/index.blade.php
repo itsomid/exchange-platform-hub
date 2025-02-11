@@ -195,7 +195,7 @@
                             $currentParams = request()->except('sortByCreatedAt');
                             $newSortDirection = request()->input('sortByCreatedAt') == 'asc' ? 'desc' : 'asc';
                         @endphp
-                        <a href="{{ route('admin.transaction.index', array_merge($currentParams, ['sortByCreatedAt' => $newSortDirection])) }}"
+                        <a href="{{ route('admin.otc_orders.index', array_merge($currentParams, ['sortByCreatedAt' => $newSortDirection])) }}"
                            class="text-black">
                             تاریخ و زمان
                             @if( request()->input('sortByCreatedAt') == 'asc')
