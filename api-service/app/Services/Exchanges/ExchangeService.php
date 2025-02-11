@@ -79,13 +79,12 @@ class ExchangeService
                 ->setUserId(config('bitexroom.bitexroom_user_id'))
                 ->setWalletId($cetWallet->id)
                 ->setOtcOrderId($otcOrder->id)
-                ->setBalance($cetWallet->balance)
                 ->setAmount(-$response->getDiscountFee())
                 ->setType(TransactionTypeEnum::EXCHANGE)
                 ->setSubtype(TransactionSubTypeEnum::COINEX)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
                 ->setDescription(sprintf('استفاده CET به مقدار %s',
-                    number_format((float) $response->getDiscountFee())
+                    formatNumberTrimZeros((float) $response->getDiscountFee())
                 )
                 ));
             //USDT
@@ -93,13 +92,12 @@ class ExchangeService
                 ->setUserId(config('bitexroom.bitexroom_user_id'))
                 ->setWalletId($usdtWallet->id)
                 ->setOtcOrderId($otcOrder->id)
-                ->setBalance($usdtWallet->balance)
                 ->setAmount(-$response->getFilledValue())
                 ->setType(TransactionTypeEnum::EXCHANGE)
                 ->setSubtype(TransactionSubTypeEnum::COINEX)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
                 ->setDescription(sprintf('استفاده USDT به مقدار %s',
-                    number_format((float) $response->getFilledValue())
+                    formatNumberTrimZeros((float) $response->getFilledValue())
                 )
                 ));
             //BASE Currency
@@ -108,13 +106,12 @@ class ExchangeService
                 ->setWalletId($baseCurrencyWallet->id)
                 ->setOtcOrderId($otcOrder->id)
                 ->setAmount($response->getAmount())
-                ->setBalance($baseCurrencyWallet->balance)
                 ->setType(TransactionTypeEnum::EXCHANGE)
                 ->setSubtype(TransactionSubTypeEnum::COINEX)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
                 ->setDescription(sprintf('خرید %s به مقدار %s',
                     $market->base_currency,
-                    number_format((float) $response->getAmount()),
+                    formatNumberTrimZeros((float) $response->getAmount()),
                 )
                 ));
             $baseCurrencyWallet->increment('balance', (float) $response->getAmount());
@@ -182,7 +179,6 @@ class ExchangeService
                 ->setUserId(config('bitexroom.bitexroom_user_id'))
                 ->setWalletId($cetWallet->id)
                 ->setOtcOrderId($otcOrder->id)
-                ->setBalance($cetWallet->balance)
                 ->setAmount(-$response->getFee())
                 ->setType(TransactionTypeEnum::EXCHANGE)
                 ->setSubtype(TransactionSubTypeEnum::COINEX)
@@ -197,7 +193,6 @@ class ExchangeService
                 ->setWalletId($usdtWallet->id)
                 ->setOtcOrderId($otcOrder->id)
                 ->setAmount($response->getActualAmount())
-                ->setBalance($usdtWallet->balance)
                 ->setType(TransactionTypeEnum::EXCHANGE)
                 ->setSubtype(TransactionSubTypeEnum::COINEX)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
