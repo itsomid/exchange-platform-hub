@@ -18,7 +18,7 @@ class CreateTransactionRequestDTO
 
     private ?int $otcOrderId = null;
 
-    private string $balance;
+    private ?string $balance = null;
 
     private string $amount;
 
@@ -66,14 +66,14 @@ class CreateTransactionRequestDTO
         return $this->otcOrderId;
     }
 
-    public function setBalance(string $balance): CreateTransactionRequestDTO
+    public function setBalance(?string $balance): CreateTransactionRequestDTO
     {
         $this->balance = $balance;
 
         return $this;
     }
 
-    public function getBalance(): string
+    public function getBalance(): ?string
     {
         return $this->balance;
     }
