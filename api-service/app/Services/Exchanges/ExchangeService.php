@@ -85,7 +85,7 @@ class ExchangeService
                 ->setSubtype(TransactionSubTypeEnum::COINEX)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
                 ->setDescription(sprintf('استفاده CET به مقدار %s',
-                    number_format((float) $response->getDiscountFee())
+                    formatNumberTrimZeros((float) $response->getDiscountFee())
                 )
                 ));
             //USDT
@@ -99,7 +99,7 @@ class ExchangeService
                 ->setSubtype(TransactionSubTypeEnum::COINEX)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
                 ->setDescription(sprintf('استفاده USDT به مقدار %s',
-                    number_format((float) $response->getFilledValue())
+                    formatNumberTrimZeros((float) $response->getFilledValue())
                 )
                 ));
             //BASE Currency
@@ -114,7 +114,7 @@ class ExchangeService
                 ->setStatus(TransactionStatusEnum::SUCCESS)
                 ->setDescription(sprintf('خرید %s به مقدار %s',
                     $market->base_currency,
-                    number_format((float) $response->getAmount()),
+                    formatNumberTrimZeros((float) $response->getAmount()),
                 )
                 ));
             $baseCurrencyWallet->increment('balance', (float) $response->getAmount());
