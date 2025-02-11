@@ -258,8 +258,8 @@ class OTCService
                 $chain = $market->currency->chains->sort(fn ($a, $b) => $a->network_fee <=> $b->network_fee
                 )->first();
 
-                // bitexroom_withdrawal_fee - network_fee + receivedAmount
-                $amountForBuy = Math::add($receivedAmount, Math::sub($chain->exchange_withdrawal_fee, $chain->network_fee));
+                // amountForBuy = (receivedAmount - exchange_withdrawal_fee) + network_fee
+                $amountForBuy = Math::add(Math::sub($receivedAmount, $chain->exchange_withdrawal_fee), $chain->network_fee);
                 $exchangeService = resolve(ExchangeService::class);
                 $doComplete = $exchangeService->buy(
                     resolve(ExchangeBuyRequestDTO::class)
