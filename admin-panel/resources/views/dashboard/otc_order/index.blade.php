@@ -394,7 +394,11 @@
                 </tbody>
             </table>
         </div>
-        {{--            {{$transactions->appends()->links()}}--}}
+        <div class="row mt-4">
+            <div class="col-md-12">
+                {{$otcOrders->appends(request()->all())->links()}}
+            </div>
+        </div>
     </div>
 
 @endsection
