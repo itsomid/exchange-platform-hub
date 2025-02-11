@@ -246,13 +246,13 @@
                         <li class="menu-item @if(request()->is('admin/roles*')) active @endif">
                             <a href="{{route('admin.role.index')}}" class="menu-link">
                                 <i class="menu-icon fa-light fa-user fa-sm"></i>
-                                <div> نقش ها</div>
+                                <div>نقش ها</div>
                             </a>
                         </li>
                         <li class="menu-item @if(request()->is('admin/permissions*')) active @endif">
                             <a href="{{route('admin.permission.index')}}" class="menu-link">
                                 <i class="menu-icon fa-light fa-key fa-sm"></i>
-                                <div> مجوزها</div>
+                                <div>مجوزها</div>
                             </a>
                         </li>
                     </ul>
