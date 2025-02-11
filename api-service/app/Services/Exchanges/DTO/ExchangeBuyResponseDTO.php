@@ -2,9 +2,15 @@
 
 namespace App\Services\Exchanges\DTO;
 
+use App\Enums\SpotStatusEnum;
+
 class ExchangeBuyResponseDTO
 {
     private bool $isDone;
+
+    private SpotStatusEnum $spotStatus;
+
+    private int $errorCode;
 
     public function setIsDone(bool $isDone): ExchangeBuyResponseDTO
     {
@@ -16,5 +22,29 @@ class ExchangeBuyResponseDTO
     public function isDone(): bool
     {
         return $this->isDone;
+    }
+
+    public function setSpotStatus(SpotStatusEnum $spotStatus): ExchangeBuyResponseDTO
+    {
+        $this->spotStatus = $spotStatus;
+
+        return $this;
+    }
+
+    public function getSpotStatus(): SpotStatusEnum
+    {
+        return $this->spotStatus;
+    }
+
+    public function setErrorCode(int $errorCode): ExchangeBuyResponseDTO
+    {
+        $this->errorCode = $errorCode;
+
+        return $this;
+    }
+
+    public function getErrorCode(): int
+    {
+        return $this->errorCode;
     }
 }

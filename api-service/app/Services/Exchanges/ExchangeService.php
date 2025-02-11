@@ -16,8 +16,11 @@ use App\Services\Exchanges\Asset\AssetFactory;
 use App\Services\Exchanges\Asset\DTO\BuyDTORequest;
 use App\Services\Exchanges\Asset\DTO\WithdrawRequestDTO;
 use App\Services\Exchanges\Asset\Enum\WithdrawMethodEnum;
+use App\Services\Exchanges\Asset\Enum\WithdrawStatusEnum;
 use App\Services\Exchanges\DTO\ChargeUSDTRequestDTO;
+use App\Services\Exchanges\DTO\ChargeUSDTResponse;
 use App\Services\Exchanges\DTO\ExchangeBuyRequestDTO;
+use App\Services\Exchanges\DTO\ExchangeBuyResponseDTO;
 use Throwable;
 
 class ExchangeService
@@ -30,7 +33,7 @@ class ExchangeService
         private readonly WalletChainRepositoryInterface $chainRepository
     ) {}
 
-    public function buy(ExchangeBuyRequestDTO $requestDTO): bool
+    public function buy(ExchangeBuyRequestDTO $requestDTO): ExchangeBuyResponseDTO
     {
         $market = $this->marketRepository->getMarketById($requestDTO->getMarketId());
         $exchangeName = $market->exchangePrice->exchange->slug;
@@ -118,10 +121,13 @@ class ExchangeService
 
         }
 
-        return $response->isDone();
+        return resolve(ExchangeBuyResponseDTO::class)
+            ->setIsDone($response->isDone())
+            ->setErrorCode($response->getErrorCode())
+            ->setSpotStatus($response->getSpotStatus());
     }
 
-    public function chargeUSDT(ChargeUSDTRequestDTO $requestDTO): bool
+    public function chargeUSDT(ChargeUSDTRequestDTO $requestDTO): ChargeUSDTResponse
     {
         //        $otcOrder->refExchangeTransactions()->create([
         //            'market' => $response->getMarket(),
@@ -204,9 +210,11 @@ class ExchangeService
         } catch (Throwable $exception) {
             report($exception);
 
-            return false;
+            return resolve(ChargeUSDTResponse::class)
+                ->setWithdrawStatus(WithdrawStatusEnum::FAILED);
         }
 
-        return true;
+        return resolve(ChargeUSDTResponse::class)
+            ->setWithdrawStatus($response->getStatus());
     }
 }

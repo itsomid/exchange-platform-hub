@@ -71,4 +71,9 @@ class OTCOrder extends Model
     {
         return $this->morphOne(ExchangeTransaction::class, 'orderable');
     }
+
+    public function exchange(): BelongsTo
+    {
+        return $this->belongsTo(Exchange::class);
+    }
 }

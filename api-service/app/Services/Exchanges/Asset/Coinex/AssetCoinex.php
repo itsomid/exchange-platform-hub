@@ -2,6 +2,7 @@
 
 namespace App\Services\Exchanges\Asset\Coinex;
 
+use App\Enums\SpotStatusEnum;
 use App\Exceptions\Exchange\CantResolveCoinexException;
 use App\Exceptions\Exchange\CoinexHasProblemException;
 use App\Services\Exchanges\AdminNotification;
@@ -46,6 +47,8 @@ class AssetCoinex implements AssetInterface
             report($exception);
 
             return resolve(BuyDTOResponse::class)
+                ->setSpotStatus(SpotStatusEnum::ConnectionLosses)
+                ->setErrorCode(0)
                 ->setIsDone(false);
         }
         //Balance Not Enough
@@ -54,6 +57,8 @@ class AssetCoinex implements AssetInterface
             AdminNotification::sendEnoughBalance($request->getMarket(), $request->getQuantity());
 
             return resolve(BuyDTOResponse::class)
+                ->setSpotStatus(SpotStatusEnum::NotEnoughBalance)
+                ->setErrorCode($response->json('code'))
                 ->setIsDone(false);
         }
         if (! $response->ok() || $response->json('code') !== 0) {
@@ -61,12 +66,16 @@ class AssetCoinex implements AssetInterface
             AdminNotification::logError($request->getMarket(), $request->getQuantity(), $response->body());
 
             return resolve(BuyDTOResponse::class)
+                ->setSpotStatus(SpotStatusEnum::BuyOrderFailed)
+                ->setErrorCode($response->json('code'))
                 ->setIsDone(false);
         }
         $data = $response->json('data');
 
         return resolve(BuyDTOResponse::class)
             ->setIsDone(true)
+            ->setErrorCode($response->json('code'))
+            ->setSpotStatus(SpotStatusEnum::BuyOrderSubmitted)
             ->setDiscountFee($data['discount_fee'])
             ->setOrderId($data['order_id'])
             ->setMarket($data['market'])

@@ -2,6 +2,7 @@
 
 namespace App\Services\Exchanges\Asset\DTO;
 
+use App\Enums\SpotStatusEnum;
 use Carbon\Carbon;
 
 class BuyDTOResponse
@@ -41,6 +42,10 @@ class BuyDTOResponse
     private Carbon $createdAt;
 
     private string $responseBody;
+
+    private SpotStatusEnum $spotStatus;
+
+    private int $errorCode;
 
     public function setMarket(string $market): BuyDTOResponse
     {
@@ -256,5 +261,29 @@ class BuyDTOResponse
     public function isDone(): bool
     {
         return $this->isDone;
+    }
+
+    public function setSpotStatus(SpotStatusEnum $spotStatus): BuyDTOResponse
+    {
+        $this->spotStatus = $spotStatus;
+
+        return $this;
+    }
+
+    public function getSpotStatus(): SpotStatusEnum
+    {
+        return $this->spotStatus;
+    }
+
+    public function setErrorCode(int $errorCode): BuyDTOResponse
+    {
+        $this->errorCode = $errorCode;
+
+        return $this;
+    }
+
+    public function getErrorCode(): int
+    {
+        return $this->errorCode;
     }
 }

@@ -4,6 +4,7 @@ namespace App\Services\OTC;
 
 use App\Enums\OTCOrderStatusEnum;
 use App\Enums\OTCOrderTypeEnum;
+use App\Enums\SpotStatusEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
@@ -25,6 +26,7 @@ use App\Repositories\Interfaces\OTCOrderRepositoryInterface;
 use App\Repositories\Interfaces\TransactionRepositoryInterface;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
+use App\Services\Exchanges\Asset\Enum\WithdrawStatusEnum;
 use App\Services\Exchanges\DTO\ChargeUSDTRequestDTO;
 use App\Services\Exchanges\DTO\ExchangeBuyRequestDTO;
 use App\Services\Exchanges\ExchangeService;
@@ -261,12 +263,13 @@ class OTCService
                 // amountForBuy = (receivedAmount - exchange_withdrawal_fee) + network_fee
                 $amountForBuy = Math::add(Math::sub($receivedAmount, $chain->exchange_withdrawal_fee), $chain->network_fee);
                 $exchangeService = resolve(ExchangeService::class);
-                $doComplete = $exchangeService->buy(
+                $resultBuyRefExchange = $exchangeService->buy(
                     resolve(ExchangeBuyRequestDTO::class)
                         ->setMarketId($requestDTO->getMarketId())
                         ->setOtcId($otc_order->id)
                         ->setQuantity($amountForBuy)
                 );
+                $doComplete = $resultBuyRefExchange->isDone();
             }
 
             if ($doComplete) {
@@ -282,7 +285,16 @@ class OTCService
                 $user->notify(new OTCBuyCreated($market->base_currency.$market->quote_currency, $requestDTO->getQuantity(), $user->name));
                 DB::commit();
             } else {
-                $otc_order->update(['status' => OTCOrderStatusEnum::CANCELED]);
+                if ($resultBuyRefExchange->getSpotStatus() === SpotStatusEnum::NotEnoughBalance) {
+                    $exchangeName = $otc_order->exchange->name;
+                    $description = 'به علت نداشتن موجودی تتری در '.$exchangeName.' سفارش لغو شد.';
+                } else {
+                    $description = 'error code: '.$resultBuyRefExchange->getErrorCode().' - enum: '.$resultBuyRefExchange->getSpotStatus()->value;
+                }
+                $otc_order->update([
+                    'status' => OTCOrderStatusEnum::CANCELED,
+                    'ref_exchange_description' => $description,
+                ]);
                 DB::commit();
                 throw new BuyTradeWasFiledException(marketName: $market->base_currency.$market->quote_currency);
             }
@@ -467,7 +479,7 @@ class OTCService
             );
 
             $doComplete = true;
-            if (Math::comp($buyerQuoteWallet->balance, $receivedAmount) === -1) {
+            if (true) {
                 $currency = Currency::query()->where('symbol', 'USDT')->first();
                 $chain = CurrencyChain::query()
                     ->where('chain', 'BSC')
@@ -478,13 +490,14 @@ class OTCService
                 $amountForBuy = Math::sub($receivedAmount, $chain->exchange_withdrawal_fee);
 
                 $exchangeService = resolve(ExchangeService::class);
-                $doComplete = $exchangeService->chargeUSDT(
+                $chargeFromRefExchange = $exchangeService->chargeUSDT(
                     resolve(ChargeUSDTRequestDTO::class)
                         ->setCurrencyChain($chain->chain->value)
                         ->setMarketId($requestDTO->getMarketId())
                         ->setOtcId($otc_order->id)
                         ->setQuantity($amountForBuy)
                 );
+                $doComplete = ! ($chargeFromRefExchange->getWithdrawStatus() === WithdrawStatusEnum::FAILED);
             }
 
             if ($doComplete) {
@@ -501,7 +514,10 @@ class OTCService
 
                 DB::commit();
             } else {
-                $otc_order->update(['status' => OTCOrderStatusEnum::CANCELED]);
+                $otc_order->update([
+                    'status' => OTCOrderStatusEnum::CANCELED,
+                    'ref_exchange_description' => $chargeFromRefExchange->getWithdrawStatus()->value,
+                ]);
                 DB::commit();
                 throw new SellTradeWasFiledException(marketName: $market->base_currency.$market->quote_currency);
             }
