@@ -398,10 +398,3 @@
     </div>
 
 @endsection
-@section('vendor-script')
-    @vite([
-          ])
-@endsection
-@section('vendor-style')
-    @vite([])
-@endsection

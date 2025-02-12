@@ -70,9 +70,13 @@ Route::prefix('admins')->group(function () {
     Route::patch('/notifications/mark-read/{id}', [AdminNotificationController::class, 'markAsRead'])->name('admin.notifications.mark-read');
 });
 
-Route::resource('tickets', TicketController::class)->except(['ticket']);
-Route::post('tickets/{ticket}/replies', [TicketReplyController::class, 'ticket'])->name('tickets.replies.store');
-Route::delete('replies/{reply}', [TicketReplyController::class, 'ticket'])->name('replies.destroy');
+Route::resource('/tickets', TicketController::class)->except(['ticket']);
+Route::prefix('tickets')->name('ticket.')->group(function () {
+    Route::get('/{ticket}/replies', [TicketReplyController::class,'index'])->name('replies.index')->can('replies.index');
+    Route::post('/{ticket}/replies', [TicketReplyController::class, 'store'])->name('replies.store');
+    Route::delete('/replies/{reply}', [TicketReplyController::class, 'destroy'])->name('replies.destroy');
+});
+
 
 
 Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -158,6 +162,7 @@ Route::patch('/exchange/markets/{market}',[MarketController::class,'update'])->n
 Route::get('/exchange/ref-exchanges',[RefExchangeController::class,'index'])->name('exchange.index')->can('ref-exchanges');
 
 
+
 Route::get('/wallets',[ExchangeWalletController::class,'index'])->name('wallet');
 Route::get('/wallets/assets-gathering-to-hd-wallet',[ExchangeAssetsWithdrawalController::class,'index'])->name('wallets.assets-gathering-to-hd-wallet.index');
 Route::get('/wallets/assets-gathering-to-hd-wallet/create',[ExchangeAssetsWithdrawalController::class,'create'])->name('wallets.assets-gathering-to-hd-wallet.create');
@@ -206,5 +211,5 @@ Route::prefix('report')->group(function (){
 
     Route::get('user-registration-report', [UserRegistrationReportController::class, 'index'])->name('report.getUserRegistrationState')->can('user.index');
     Route::get('user-registration-report/month', [UserRegistrationReportController::class, 'getUserRegistrationState'])->name('report.getUserRegistrationState.month')->can('user.index');
-
+    Route::get('admin/report/ref-exchange/bought-history',[RefExchangeController::class,'boughtHistory'])->name('report.ref-exchange.bought-history')->can('report');
 });
