@@ -12,7 +12,7 @@ class OTCOrderController extends Controller
     public function index()
     {
         $today = now()->toDateString(); // Get today's date
-        $otcOrders = OTCOrder::with(['market', 'transactions'])->filterBy(request()->all())->paginate(50);
+        $otcOrders = OTCOrder::with(['market', 'transactions'])->filterBy(request()->all())->orderBy('created_at','desc')->paginate(50);
 
         $totalOrdersValue = OTCOrder::with('market')
             ->whereDate('created_at', $today)// Assuming `currency` has the price
