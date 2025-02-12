@@ -126,10 +126,8 @@
                                                  class="rounded-circle  ">
                                         </div>
                                     </div>
-                                    {{--                                    <img src="{{asset($market->baseCurrency->coinLogo())}}" class="img-fluid me-3"--}}
-                                    {{--                                         width="50px">--}}
-                                    <div class="ms-3">{{$market->base_currency}}/{{$market->quote_currency}}</div>
                                 </div>
+                                <div class="ms-3">{{$market->base_currency}}/{{$market->quote_currency}}</div>
                             </td>
 
                             <td class="">
