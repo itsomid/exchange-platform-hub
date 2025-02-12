@@ -218,7 +218,12 @@
                     <div>گزارش ثبت نام کاربران</div>
                 </a>
             </li>
-
+            <li class="menu-item @if(request()->is('admin/report/ref-exchange/bought-history*')) active @endif">
+                <a href="{{route('admin.report.ref-exchange.bought-history')}}" class="menu-link">
+                    <i class="menu-icon fa-regular fa-display-chart-up-circle-dollar"></i>
+                    <div>گزارش خرید از صرافی‌ مرجع</div>
+                </a>
+            </li>
         @endcanany
         @canany(['setting.int.index', 'setting.ext.index'])
             <li class="menu-header small text-uppercase">
