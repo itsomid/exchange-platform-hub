@@ -23,7 +23,7 @@
                 </div>
                 <div class="card-body">
                     <ul class="p-0 m-0">
-                        @foreach($withdrawalSums=[] as $withdraw)
+                        @foreach($withdrawalSums as $withdraw)
                             <li class="mb-6 d-flex justify-content-between align-items-center">
 
                                 <img src="{{asset($withdraw->currency->coinLogo())}}" class="img-fluid" width="45px">
@@ -58,6 +58,8 @@
                 </div>
             </div>
         </div>
+
+
         <div class="col-sm-12 col-xl-3">
             <div class="card">
                 <div class="card-body">
@@ -65,7 +67,9 @@
                         <div class="content-left">
                             <span>مجموع کارمزد پرداخت شده به صرافی مرجع (کوین)</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{$withdraws->count()}}</h4>
+                                <h4 class="mb-0 me-2">{{formatNumberTrimZeros($withdrawalFeeSum)}}
+                                    <small>CET</small>
+                                </h4>
                             </div>
                         </div>
                         <span class="badge bg-label-info rounded p-2">
@@ -99,11 +103,10 @@
                         <th>کوین</th>
                         <th>شبکه</th>
                         <th>مقدار</th>
-                        <th>آی دی تراکنش در کوینکس</th>
-                        <th>آدرس برداشت</th>
+                        <th>فی برداشت</th>
+                        <th>آدرس برداشت (HD Wallet)</th>
                         <th>تاریخ برداشت</th>
                         <th>توضیحات</th>
-                        <th>عملیات</th>
                     </tr>
                     </thead>
                     <tbody class="table-border-bottom-0">
@@ -111,6 +114,7 @@
 
                         <tr>
                             <td>{{$withdraw->id}}</td>
+                            <td>{{$withdraw->exchange}}</td>
                             <td>
                                 {{$withdraw->currency_symbol}}
                             </td>
@@ -118,11 +122,19 @@
                             <td>
                                 {{$withdraw->currency_chain}}
                             </td>
+                            <td>{{$withdraw->amount}}</td>
+                            <td>{{formatNumberTrimZeros($withdraw->fee)}} ({{$withdraw->fee_currency}})</td>
                             <td>
-                                {{$withdraw->amount}}
-                            </td>
-                            <td>
-                                {{$withdraw->hd_wallet_address}}
+                                <h6 class="mb-0">
+                                    @if($withdraw->explore_address_url)
+                                        <a href="{{ $withdraw->explore_address_url }}" target="_blank" class="me-1">
+                                            <i class="fa-regular fa-clone"></i>
+                                        </a>
+                                        <small class="font-number">{{ shorten_hash($withdraw->hd_wallet_address) }}</small>
+                                    @else
+                                        <span>N/A Address</span>
+                                    @endif
+                                </h6>
                             </td>
                             <td>
                                 {{$withdraw->withdrawal_date}}
@@ -130,19 +142,7 @@
                             <td>
                                 {{$withdraw->description}}
                             </td>
-                            <td>
-                                <div class="d-flex align-items-center">
 
-                                    <a class="text-secondary me-3"
-                                       href="{{ route('admin.currency.edit', ['currency' => $withdraw->id]) }}">
-                                        <i class="fa-light fa-pen-to-square fa-lg"></i>
-                                    </a>
-                                    <a class="text-secondary me-3" href="">
-                                        <i class="fa-light fa-eye fa-lg"></i>
-                                    </a>
-
-                                </div>
-                            </td>
                         </tr>
                     @endforeach
                     </tbody>

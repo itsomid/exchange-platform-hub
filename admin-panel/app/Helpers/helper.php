@@ -105,7 +105,7 @@ if (! function_exists('formatNumberTrimZeros')) {
     }
 }
 if (!function_exists('shorten_hash')) {
-    function shorten_hash($hash, $prefix_length = 6, $suffix_length = 4) {
+    function shorten_hash($hash, $prefix_length = 8, $suffix_length = 6) {
         return substr($hash, 0, $prefix_length) . '...' . substr($hash, -$suffix_length);
     }
 }
