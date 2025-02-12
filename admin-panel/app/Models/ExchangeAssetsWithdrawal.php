@@ -8,8 +8,9 @@ class ExchangeAssetsWithdrawal extends Model
 {
     protected $fillable = [
         'admin_id',
+        'exchange',
         'withdrawal_id',
-        'currency_fee',
+        'fee_currency',
         'fee',
         'currency_symbol',
         'currency_chain',
@@ -20,4 +21,16 @@ class ExchangeAssetsWithdrawal extends Model
         'explore_address_url',
         'description',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'withdrawal_date' => 'datetime',
+        ];
+    }
+
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class, 'currency_symbol','symbol');
+    }
 }

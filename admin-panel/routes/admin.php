@@ -208,8 +208,7 @@ Route::prefix('wallet')->group(function (){
 Route::prefix('report')->group(function (){
     Route::get('deposit',[DepositReportController::class,'index'])->name('report.deposit')->can('report');
     Route::get('withdrawal',[WithdrawalReportController::class,'index'])->name('report.withdrawal')->can('report');
-
     Route::get('user-registration-report', [UserRegistrationReportController::class, 'index'])->name('report.getUserRegistrationState')->can('user.index');
     Route::get('user-registration-report/month', [UserRegistrationReportController::class, 'getUserRegistrationState'])->name('report.getUserRegistrationState.month')->can('user.index');
-    Route::get('admin/report/ref-exchange/bought-history',[RefExchangeController::class,'boughtHistory'])->name('report.ref-exchange.bought-history')->can('report');
+    Route::get('ref-exchange/bought-history',[RefExchangeController::class,'boughtHistory'])->name('report.ref-exchange.bought-history')->can('report');
 });

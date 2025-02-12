@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Exchange;
 
+use App\Enums\WithdrawalStatusEnum;
 use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
 use App\Models\Currency;
 use App\Models\CurrencyChain;
 use App\Models\ExchangeAssetsWithdrawal;
 use App\Models\Setting;
+use App\Models\Withdrawal;
 use App\Services\Exchanges\Asset\AssetFactory;
 use App\Services\Exchanges\Asset\DTO\WithdrawRequestDTO;
 use App\Services\Exchanges\Asset\Enum\WithdrawMethodEnum;
@@ -18,10 +20,16 @@ class ExchangeAssetsWithdrawalController extends Controller
 {
     public function index()
     {
-        $withdraws = ExchangeAssetsWithdrawal::all();
+        $withdraws = ExchangeAssetsWithdrawal::with('currency')->get();
 
+         $withdrawalFeeSum = ExchangeAssetsWithdrawal::sum('fee');
+         $withdrawalSums = ExchangeAssetsWithdrawal::selectRaw('currency_symbol, SUM(amount) as total_amount')
+            ->groupBy('currency_symbol')
+            ->get();
         return view('dashboard.exchange.wallet.exchange-assets-withdrawal', [
-            'withdraws' => $withdraws
+            'withdraws' => $withdraws,
+            'withdrawalFeeSum' => $withdrawalFeeSum,
+            'withdrawalSums' => $withdrawalSums,
         ]);
     }
 
@@ -29,7 +37,7 @@ class ExchangeAssetsWithdrawalController extends Controller
     public function create()
     {
 
-        $currency = Currency::whereSymbol(\request()->currency_symbol)->first();
+        $currency = Currency::whereSymbol('USDT')->first();
 
         $currencyChains = $currency->chains;
 

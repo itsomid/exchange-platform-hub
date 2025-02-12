@@ -5,6 +5,7 @@ namespace App\Services\Exchanges\Asset\Coinex;
 use App\Enums\SpotStatusEnum;
 use App\Exceptions\Exchange\CantResolveCoinexException;
 use App\Exceptions\Exchange\CoinexHasProblemException;
+use App\Models\Exchange;
 use App\Services\Exchanges\AdminNotification;
 use App\Services\Exchanges\Asset\Coinex\Authentication\MethodEnum;
 use App\Services\Exchanges\Asset\Contract\AssetInterface;
@@ -116,18 +117,21 @@ class AssetCoinex implements AssetInterface
 
         //Balance Not Enough
         if ($response->json('code') === 3109) {
-            Log::channel('ref-exchange')->info('Coinex Balance Not Enough In USDT');
+            Log::channel('ref-exchange')->warning('Coinex Balance Not Enough In USDT');
             AdminNotification::sendEnoughBalance('USDT', $requestDTO->getAmount());
         }
         if (! $response->successful() || $response->json('code') !== 0) {
-            Log::channel('ref-exchange')->info($response->body());
+            Log::channel('ref-exchange')->warning($response->body());
             throw new CoinexHasProblemException;
         }
-
+        Log::channel('ref-exchange')->info($response->json('data'));
         $data = $response->json('data');
+
+        $activeExchange = Exchange::where('is_active', true)->first();
 
         return resolve(WithdrawResponseDTO::class)
             ->setWithdrawId($data['withdraw_id'])
+            ->setExchange($activeExchange?->slug ?? 'Unknown')
             ->setCreatedAt($data['created_at'])
             ->setCurrency($data['ccy'])
             ->setChain($data['chain'])

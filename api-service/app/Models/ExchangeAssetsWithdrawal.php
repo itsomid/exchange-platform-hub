@@ -9,7 +9,8 @@ class ExchangeAssetsWithdrawal extends Model
     protected $fillable = [
         'admin_id',
         'withdrawal_id',
-        'currency_fee',
+        'exchange',
+        'fee_currency',
         'fee',
         'currency_symbol',
         'currency_chain',
