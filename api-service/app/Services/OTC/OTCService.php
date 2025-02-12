@@ -479,7 +479,7 @@ class OTCService
             );
 
             $doComplete = true;
-            if (true) {
+            if (Math::comp($buyerQuoteWallet->balance, $receivedAmount) === -1) {
                 $currency = Currency::query()->where('symbol', 'USDT')->first();
                 $chain = CurrencyChain::query()
                     ->where('chain', 'BSC')
