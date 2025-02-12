@@ -20,6 +20,11 @@ class CoinexNotEnoughBalance extends Notification implements ShouldQueue
      */
     public function __construct(private string $marketName, private string $amount)
     {
+        if ($this->marketName === 'USDT') {
+            $this->usdtValue = $this->amount;
+
+            return;
+        }
         $this->marketName = str_replace('USDT', '', $this->marketName);
         $market = Market::query()
             ->where('base_currency', $this->marketName)
@@ -38,10 +43,22 @@ class CoinexNotEnoughBalance extends Notification implements ShouldQueue
         return ['mail', 'database'];
     }
 
+    private function getMessage(): string
+    {
+        if ($this->marketName === 'USDT') {
+            $message = 'صرافی ما برای انجام معامله '.$this->amount.' '.$this->marketName.' در کوینکس نیاز دارد.';
+        } else {
+            $message = 'صرافی ما برای انجام معامله '.$this->amount.' '.$this->marketName.' به مقدار تقریبی '.formatNumberTrimZeros($this->usdtValue).' تتر در کوینکس نیاز دارد.';
+        }
+
+        return $message;
+    }
+
     public function toDatabase($notifiable): array
     {
+
         return [
-            'message' => 'صرافی ما برای انجام معامله '.$this->amount.' '.$this->marketName.' به مقدار تقریبی '.formatNumberTrimZeros($this->usdtValue).' تتر در کوینکس نیاز دارد.',
+            'message' => $this->getMessage(),
             'url' => '/transactions', // Optional: URL to redirect to
         ];
     }
@@ -53,7 +70,7 @@ class CoinexNotEnoughBalance extends Notification implements ShouldQueue
     {
         return (new MailMessage)
             ->subject('به علت عدم موجودی کوینکس به مشکل خورده‌ایم')
-            ->line('صرافی ما برای انجام معامله '.$this->amount.' '.$this->marketName.' به مقدار تقریبی '.formatNumberTrimZeros($this->usdtValue).' تتر در کوینکس نیاز دارد.')
+            ->line($this->getMessage())
             ->greeting('سلام مدیر عزیز');
     }
 
