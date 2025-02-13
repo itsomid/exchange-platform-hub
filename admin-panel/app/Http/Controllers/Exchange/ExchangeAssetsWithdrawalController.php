@@ -23,13 +23,10 @@ class ExchangeAssetsWithdrawalController extends Controller
         $withdraws = ExchangeAssetsWithdrawal::with('currency')->get();
 
          $withdrawalFeeSum = ExchangeAssetsWithdrawal::sum('fee');
-         $withdrawalSums = ExchangeAssetsWithdrawal::selectRaw('currency_symbol, SUM(amount) as total_amount')
-            ->groupBy('currency_symbol')
-            ->get();
+
         return view('dashboard.exchange.wallet.exchange-assets-withdrawal', [
             'withdraws' => $withdraws,
             'withdrawalFeeSum' => $withdrawalFeeSum,
-            'withdrawalSums' => $withdrawalSums,
         ]);
     }
 
@@ -46,7 +43,7 @@ class ExchangeAssetsWithdrawalController extends Controller
         return view('dashboard.exchange.wallet.exchange-assets-request-form', [
             'currency' => $currency,
             'currencyChains' => $currencyChains,
-            'withdrawalAddress' => $withdrawalAddress
+            'withdrawalAddress' => $withdrawalAddress,
         ]);
     }
 

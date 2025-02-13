@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Exchange;
 
 use App\Http\Controllers\Controller;
 use App\Models\Exchange;
+use App\Models\ExchangeAssetsWithdrawal;
 use App\Models\ExchangeTransaction;
 
 class RefExchangeController extends Controller
@@ -21,17 +22,25 @@ class RefExchangeController extends Controller
 
     public function boughtHistory()
     {
-        $boughtHistoryByCurrency = ExchangeTransaction::all()->groupBy('currency')->map(function ($items) {
-            return [
-                'currency' => $items->first()['currency'],
-                'total_amount' => $items->sum(fn ($item) => (float) $item['amount']),
-                'total_fee' => $items->sum(fn ($item) => (float) $item['fee']),
-            ];
+        $boughtHistoryByCurrency = ExchangeTransaction::selectRaw('market, SUM(amount) as total_amount, SUM(fee) as total_fee')
+            ->groupBy('market')
+            ->get();
+
+        $totalExchangeBoughtFee = ExchangeTransaction::sum('fee');
+        $totalExchangeBoughtValue = ExchangeTransaction::all()->sum(function ($transaction) {
+            return (float) data_get($transaction, 'response.data.filled_value', 0);
         });
-         $transaction = ExchangeTransaction::orderBy('created_at','desc')->get();
-        return view('dashboard.exchange.ref_exchange.bought-history',
-            ['transactions' => $transaction]
-        );
+
+
+        $transaction = ExchangeTransaction::with(['exchangeMarket','currency'])->orderBy('created_at', 'desc')->get();
+
+
+        return view('dashboard.exchange.ref_exchange.bought-history', [
+            'transactions' => $transaction,
+            'boughtHistoryByCurrency' => $boughtHistoryByCurrency,
+            'totalExchangeBoughtFee' => $totalExchangeBoughtFee,
+            'totalExchangeBoughtValue' => $totalExchangeBoughtValue,
+        ]);
 
     }
 }

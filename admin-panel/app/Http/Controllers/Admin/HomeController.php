@@ -7,6 +7,8 @@ use App\Enums\TransactionTypeEnum;
 use App\Enums\WithdrawalStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
+use App\Models\ExchangeAssetsWithdrawal;
+use App\Models\ExchangeTransaction;
 use App\Models\Transaction;
 use App\Models\Withdrawal;
 use Carbon\Carbon;
@@ -52,6 +54,28 @@ class HomeController extends Controller
             ->groupBy('wallets.currency_symbol')
             ->get();
 
+        //مجموع خرید از صرافی مرجع
+
+         $boughtHistoryByCurrency = ExchangeTransaction::with('currency')
+            ->selectRaw('currency_symbol, SUM(amount) as total_amount')
+            ->groupBy('currency_symbol')
+            ->get()
+            ->map(function ($transaction) {
+                $transaction->total_filled_value = ExchangeTransaction::where('currency_symbol', $transaction->currency_symbol)
+                    ->get()
+                    ->sum(function ($t) {
+                        return (float) data_get($t, 'response.data.filled_value', 0);
+                    });
+
+                return $transaction;
+            });
+
+
+        //مجموع برداشت از صرافی مرجع
+        $refExchangeWithdrawalSum = ExchangeAssetsWithdrawal::selectRaw('currency_symbol, SUM(amount) as total_amount')
+            ->groupBy('currency_symbol')
+            ->get();
+
 
         $totalDepositsValue = Deposit::with('currency')
             ->whereBetween('created_at', [now()->startOfWeek(Carbon::SATURDAY), now()->endOfWeek()])
@@ -72,8 +96,11 @@ class HomeController extends Controller
             'OTCFeeTransactionsByCurrency' => $OTCFeeTransactionsByCurrency,
             'withdrawalFeeTransactionsByCurrency' => $withdrawalFeeTransactionsByCurrency,
             'withdrawalSums' => $withdrawalSums,
+            'boughtHistoryByCurrency' => $boughtHistoryByCurrency,
             'totalDepositsValue' => $totalDepositsValue,
             'totalWithdrawalValue' => $totalWithdrawalValue,
+            'refExchangeWithdrawalSum' => $refExchangeWithdrawalSum
+
         ]);
     }
 

@@ -2,7 +2,7 @@
 @section('title', 'مدیریت کدهای معرف')
 @section('content')
     <div class="row g-4 mb-4">
-        <div class="col-sm-12 col-xl-4">
+        <div class="col-sm-12 col-xl-3">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between">
@@ -11,13 +11,42 @@
                             <small>تعداد خریدها از صرافی مرجع</small>
                         </div>
                         <span class="badge bg-label-danger rounded-circle p-3">
-                            <i class="fa-light fa-users fa-xl"></i>
+                            <i class="fa-light fa-basket-shopping-minus fa-xl"></i>
                         </span>
                     </div>
                 </div>
             </div>
         </div>
-
+        <div class="col-sm-12 col-xl-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="content-left">
+                            <h5 class="mb-1">(CET) {{formatNumber($totalExchangeBoughtFee,4)}} </h5>
+                            <small>مجموع فی پرداخت شده برای خرید از صرافی مرجع</small>
+                        </div>
+                        <span class="badge bg-label-danger rounded-circle p-3">
+                            <i class="fa-light fa-cedi-sign fa-xl"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 col-xl-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="content-left">
+                            <h5 class="mb-1">(USDT) {{formatNumber($totalExchangeBoughtValue,4)}} </h5>
+                            <small>ارزش دلاری خریداری شده از صرافی مرجع</small>
+                        </div>
+                        <span class="badge bg-label-danger rounded-circle p-3">
+                            <i class="fa-light fa-dollar fa-xl"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="card">
@@ -33,10 +62,10 @@
                         <th>ID</th>
                         <th>شماره سفارش</th>
                         <th>بازار</th>
-                        <th>Side</th>
                         <th>مقدار</th>
                         <th>فی</th>
                         <th>میانگین قیمت (USDT)</th>
+                        <th>ارزش (USDT)</th>
                         <th>زمان ایجاد</th>
                         <th>عملیات</th>
                     </tr>
@@ -62,11 +91,12 @@
                                     <div class="ms-3">{{$transaction->market}}</div>
                                 </div>
                             </td>
-                            <td>{{$transaction->side}}</td>
-                            <td class="font-number">{{$transaction->amount}} ({{$transaction->currency->symbol}})</td>
-                            <td class="font-number">{{$transaction->fee}} (CET)</td>
+
+                            <td class="font-number">{{formatNumberTrimZeros($transaction->amount)}} ({{$transaction->currency->symbol}})</td>
+                            <td class="font-number">{{formatNumber($transaction->fee,4)}} (CET)</td>
                             <td class="font-number">{{$transaction->response->data->last_fill_price}}</td>
-                            <td>{{$transaction->created_at}}</td>
+                            <td class="font-number">{{formatNumberTrimZeros($transaction->response->data->filled_value)}}</td>
+                            <td>{{$transaction->created_at->format('H:i:s Y/m/d')}}</td>
                             <td>
                                 <a href="" class="btn btn-icon btn-text-secondary" data-bs-toggle="modal"
                                    data-bs-target="#transaction-{{$transaction->id}}">
@@ -104,6 +134,11 @@
                                                     <h6 class="m-0 mb-2 mb-md-0 me-12">unfilled amount</h6>
                                                     <span
                                                         class="font-number text-primary">{{formatNumberTrimZeros($transaction->response->data->unfilled_amount)}}</span>
+                                                </div>
+                                                <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">SIDE</h6>
+                                                    <span
+                                                        class="font-number text-primary">{{$transaction->side}}</span>
                                                 </div>
 
                                             </div>

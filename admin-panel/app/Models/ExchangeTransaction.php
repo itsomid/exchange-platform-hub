@@ -12,10 +12,6 @@ class ExchangeTransaction extends Model {
         return json_decode(json_decode($value, true)); // Decode twice
     }
 
-    public function getCurrencySymbolAttribute()
-    {
-        return $this->response->data->ccy ?? null;
-    }
     public function currency()
     {
         return $this->belongsTo(Currency::class, 'currency_symbol','symbol');
