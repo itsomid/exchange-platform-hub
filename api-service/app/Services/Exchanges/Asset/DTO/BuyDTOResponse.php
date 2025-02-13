@@ -12,6 +12,7 @@ class BuyDTOResponse
     private int $orderId;
 
     private string $market;
+    private string $currencySymbol;
 
     private string $side;
 
@@ -57,6 +58,18 @@ class BuyDTOResponse
     public function getMarket(): string
     {
         return $this->market;
+    }
+
+    public function setCurrencySymbol(string $currencySymbol): BuyDTOResponse
+    {
+        $this->currencySymbol = $currencySymbol;
+
+        return $this;
+    }
+
+    public function getCurrencySymbol(): string
+    {
+        return $this->currencySymbol;
     }
 
     public function setSide(string $side): BuyDTOResponse

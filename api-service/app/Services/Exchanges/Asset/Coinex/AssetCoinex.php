@@ -80,6 +80,7 @@ class AssetCoinex implements AssetInterface
             ->setDiscountFee($data['discount_fee'])
             ->setOrderId($data['order_id'])
             ->setMarket($data['market'])
+            ->setCurrencySymbol($data['ccy'])
             ->setSide($data['side'])
             ->setAmount($data['amount'])
             ->setPrice($data['price'])

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->morphs('orderable');
             $table->unsignedBigInteger('order_id');
             $table->string('market');
+            $table->string('currency_symbol')->nullable();
             $table->decimal('amount', 18, 8);
             $table->decimal('fee', 18, 8);
             $table->string('side');

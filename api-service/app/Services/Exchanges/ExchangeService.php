@@ -53,6 +53,7 @@ class ExchangeService
             $otcOrder->refExchangeTransactions()->create([
                 'order_id' => $response->getOrderId(),
                 'market' => $response->getMarket(),
+                'currency_symbol' => $response->getCurrencySymbol(),
                 'amount' => $response->getAmount(),
                 'fee' => $response->getDiscountFee(),
                 'side' => 'buy',
