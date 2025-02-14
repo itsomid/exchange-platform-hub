@@ -4,9 +4,11 @@ namespace Database\Seeders;
 
 use App\Enums\TicketTypeEnum;
 use App\Models\Admin;
+use App\Models\Deposit;
 use App\Models\Ticket;
 use App\Models\TicketReply;
 use App\Models\User;
+use App\Models\Withdrawal;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -37,7 +39,7 @@ class TicketSeeder extends Seeder
                 'status' => 'open',
                 'priority' => 'high',
                 'ticketable_id' => 2,
-                'ticketable_type' =>  TicketTypeEnum::DEPOSIT->model(),
+                'ticketable_type' =>  Deposit::class,
             ]);
 
             TicketReply::create([
@@ -66,7 +68,7 @@ class TicketSeeder extends Seeder
                 'status' => 'open',
                 'priority' => 'high',
                 'ticketable_id' => 1,
-                'ticketable_type' =>  TicketTypeEnum::WITHDRAWAL->model(),
+                'ticketable_type' =>  Withdrawal::class,
             ]);
 
             TicketReply::create([
