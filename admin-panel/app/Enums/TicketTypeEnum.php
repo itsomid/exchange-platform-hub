@@ -12,28 +12,21 @@ enum TicketTypeEnum: string
     case DEPOSIT = 'deposit';
     case OTC_ORDER = 'otc_order';
 
-    // Define the morph types for each ticket type
     /**
-     * Get the model class associated with each enum case.
+     * Get the corresponding model class for each type.
      */
 
-    public function model(): string
+    public static function fromModelClass(string $modelClass): ?self
     {
-        return match ($this) {
-            self::WITHDRAWAL => Withdrawal::class,
-            self::DEPOSIT => Deposit::class,
-            self::OTC_ORDER => OTCOrder::class,
-        };
+        $classToEnumMap = [
+            Withdrawal::class => self::WITHDRAWAL,
+            Deposit::class => self::DEPOSIT,
+            OTCOrder::class => self::OTC_ORDER,
+        ];
+
+        return $classToEnumMap[$modelClass] ?? null;
     }
 
-    public static function getTypeClass(string $type): string
-    {
-        return match ($type) {
-            self::WITHDRAWAL->value => Withdrawal::class,
-            self::DEPOSIT->value => Deposit::class,
-            self::OTC_ORDER->value => OTCOrder::class,
-        };
-    }
     /**
      * Get all enum values as an array.
      */
@@ -42,44 +35,34 @@ enum TicketTypeEnum: string
         return array_column(self::cases(), 'value');
     }
 
-    /**
-     * Find an enum case by value.
-     */
-    public static function fromValue(string $value): ?self
-    {
-        foreach (self::cases() as $case) {
-            if ($case->value === $value) {
-                return $case;
-            }
-        }
-        return null;
-    }
     // get type class
-//    const array TYPE_LABEL = [
-//        self::Withdrawal->value => 'برداشت',
-//        self::Deposit->value => 'واریز',
-//        self::OTC->value => 'معامله',
-//    ];
-//
-//    const array TYPE_COLOR = [
-//        self::Withdrawal->value => 'danger',
-//        self::Deposit->value => 'success',
-//        self::OTC->value => 'info',
-//    ];
+    // Mapping arrays for labels and colors
+    const array TYPE_LABEL = [
+        self::WITHDRAWAL->value => 'برداشت',
+        self::DEPOSIT->value => 'واریز',
+        self::OTC_ORDER->value => 'معامله',
+    ];
 
-//    public function label(): string
-//    {
-//        return self::TYPE_LABEL[$this->value] ?? '';
-//    }
-//
-//    /**
-//     * Get color for the deposit status.
-//     *
-//     * @return string
-//     */
-//    public function color(): string
-//    {
-//        return self::TYPE_COLOR[$this->value] ?? '';
-//    }
+    const array TYPE_COLOR = [
+        self::WITHDRAWAL->value => 'danger',
+        self::DEPOSIT->value => 'success',
+        self::OTC_ORDER->value => 'info',
+    ];
+
+    /**
+     * Get the corresponding label for the enum value.
+     */
+    public function label(): string
+    {
+        return self::TYPE_LABEL[$this->value] ?? '';
+    }
+
+    /**
+     * Get the corresponding color for the enum value.
+     */
+    public function color(): string
+    {
+        return self::TYPE_COLOR[$this->value] ?? '';
+    }
 
 }

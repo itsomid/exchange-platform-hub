@@ -87,6 +87,10 @@
                     </thead>
                     <tbody class="table-border-bottom-0">
                     @foreach($tickets as $ticket)
+                        @php
+                            // Convert the string value to the actual enum instance
+                          $ticketTypeEnum = $ticket->ticketable_type ? App\Enums\TicketTypeEnum::fromModelClass($ticket->ticketable_type) : null;
+                        @endphp
                         <tr>
                             <td>
                                 {{$ticket->ticket_number}}
@@ -108,7 +112,7 @@
                             </td>
                             <td>
                                 <span
-                                    class="badge bg-label-{{$ticket->ticketable_type->color()}}">{{$ticket->ticketable_type->label()}}</span>
+                                    class="badge bg-label-{{$ticketTypeEnum?->color()}}">{{$ticketTypeEnum?->label()}}</span>
                             </td>
                             <td>
                                   <span

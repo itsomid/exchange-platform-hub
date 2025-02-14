@@ -12,13 +12,40 @@ enum TicketTypeEnum: string
     case DEPOSIT = 'deposit';
     case OTC_ORDER = 'otc_order';
 
-    // get type class
-    public static function getTypeClass(string $type): string
+
+
+    /**
+     * Get the corresponding model class based on the enum value.
+     */
+    public function model(): string
     {
-        return match ($type) {
-            self::WITHDRAWAL->value => Withdrawal::class,
-            self::DEPOSIT->value => Deposit::class,
-            self::OTC_ORDER->value => OTCOrder::class,
+        return match ($this) {
+            self::WITHDRAWAL => Withdrawal::class,
+            self::DEPOSIT => Deposit::class,
+            self::OTC_ORDER => OTCOrder::class,
         };
     }
+
+    /**
+     * Convert the model string (e.g., "deposit") to the corresponding enum value.
+     */
+    public static function fromString(string $ticketableType): ?self
+    {
+        return match ($ticketableType) {
+            'withdrawal' => self::WITHDRAWAL,
+            'deposit' => self::DEPOSIT,
+            'otc_order' => self::OTC_ORDER,
+            default => null,
+        };
+    }
+
+    /**
+     * Get all enum values as an array.
+     */
+    public static function values(): array
+    {
+        return array_column(self::cases(), 'value');
+    }
+
+
 }

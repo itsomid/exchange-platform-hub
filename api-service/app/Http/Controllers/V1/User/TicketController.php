@@ -45,7 +45,7 @@ class TicketController extends Controller
         // Ensure ticketable_id and ticketable_type are nullable
         $ticketableId = $validateData['ticketable_id'] ?? null;
         $ticketableType = isset($validateData['ticketable_type'])
-            ? TicketTypeEnum::getTypeClass($validateData['ticketable_type'])
+            ? TicketTypeEnum::fromString($validateData['ticketable_type'])->model()
             : null;
 
 
