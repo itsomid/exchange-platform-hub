@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\V1\User;
 
-use App\Enums\TicketType;
+use App\Enums\TicketTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\User\ReplyTicketRequest;
 use App\Http\Requests\V1\User\StoreTicketRequest;
@@ -42,13 +42,20 @@ class TicketController extends Controller
             $imagePath = 'storage/'.$path;
         }
 
+        // Ensure ticketable_id and ticketable_type are nullable
+        $ticketableId = $validateData['ticketable_id'] ?? null;
+        $ticketableType = isset($validateData['ticketable_type'])
+            ? TicketTypeEnum::getTypeClass($validateData['ticketable_type'])
+            : null;
+
+
         $ticket = Ticket::query()->create([
             'ticket_number' => Ticket::generateTicketNumber(),
             'user_id' => Auth::id(),
             'subject' => $validateData['subject'],
             'priority' => $validateData['priority'],
-            'ticketable_id' => $validateData['ticketable_id'],
-            'ticketable_type' => TicketType::getTypeClass($validateData['ticketable_type']),
+            'ticketable_id' => $ticketableId,
+            'ticketable_type' => $ticketableType,
         ]);
 
         $ticket->replies()->create([

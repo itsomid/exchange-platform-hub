@@ -6,7 +6,7 @@ use App\Models\Deposit;
 use App\Models\OTCOrder;
 use App\Models\Withdrawal;
 
-enum TicketType: string
+enum TicketTypeEnum: string
 {
     case Withdrawal = 'withdrawal';
     case Deposit = 'deposit';

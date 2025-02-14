@@ -26,7 +26,7 @@ return new class extends Migration
             $table->timestamp('reopened_at')->nullable();
             $table->timestamp('resolved_at')->nullable();
 
-            $table->morphs('ticketable');
+            $table->nullableMorphs('ticketable');
 
             $table->timestamps();
         });
