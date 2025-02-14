@@ -8,17 +8,17 @@ use App\Models\Withdrawal;
 
 enum TicketTypeEnum: string
 {
-    case Withdrawal = 'withdrawal';
-    case Deposit = 'deposit';
-    case OTC = 'otc';
+    case WITHDRAWAL = 'withdrawal';
+    case DEPOSIT = 'deposit';
+    case OTC_ORDER = 'otc_order';
 
     // get type class
     public static function getTypeClass(string $type): string
     {
         return match ($type) {
-            self::Withdrawal->value => Withdrawal::class,
-            self::Deposit->value => Deposit::class,
-            self::OTC->value => OTCOrder::class,
+            self::WITHDRAWAL->value => Withdrawal::class,
+            self::DEPOSIT->value => Deposit::class,
+            self::OTC_ORDER->value => OTCOrder::class,
         };
     }
 }
