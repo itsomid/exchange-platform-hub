@@ -23,13 +23,13 @@ readonly class LoginService
     {
         $user = $this->userRepository->getUserByEmail($loginRequestDTO->getEmail());
 
-        if (is_null($user->email_verified_at)) {
-            throw new UserNotVerifiedException;
-        }
-        if (! Hash::check($loginRequestDTO->getPassword(), $user->password)) {
+        if (! $user || ! Hash::check($loginRequestDTO->getPassword(), $user->password)) {
             throw new InvalidUsernameOrPasswordException;
         }
 
+        if (is_null($user->email_verified_at)) {
+            throw new UserNotVerifiedException;
+        }
         //Update last login
         $this->userRepository->updateLastLogin(
             resolve(UpdateLastLoginRequestDTO::class)

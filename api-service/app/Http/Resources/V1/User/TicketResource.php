@@ -12,7 +12,6 @@ use Illuminate\Http\Resources\Json\JsonResource;
  *     @OA\Property(property="id", type="integer", example=1),
  *     @OA\Property(property="ticket_number", type="string", example="TCK-12345ABC"),
  *     @OA\Property(property="subject", type="string", example="Withdrawal Issue"),
- *     @OA\Property(property="message", type="string", example="My withdrawal is stuck."),
  *     @OA\Property(property="status", type="string", example="open"),
  *     @OA\Property(property="priority", type="string", example="high"),
  *     @OA\Property(property="ticket_type", type="string", example="withdrawal"),
@@ -35,7 +34,6 @@ class TicketResource extends JsonResource
             'id' => $this->id,
             'ticket_number' => $this->ticket_number,
             'subject' => $this->subject,
-            'message' => $this->message,
             'status' => $this->status,
             'priority' => $this->priority,
             'ticket_type' => $this->getTicketType(), // ✅ Normalized type

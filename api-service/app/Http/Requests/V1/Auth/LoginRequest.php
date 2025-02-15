@@ -32,9 +32,9 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email', 'max:255', 'exists:users,email'],
+            'email' => ['required', 'string', 'email', 'max:255'],
             'password' => ['required', 'string', 'min:6'],
-            'captcha' => App::isProduction() ?['required', 'array'] : ['nullable'],
+            'captcha' => App::isProduction() ? ['required', 'array'] : ['nullable'],
             'captcha.key' => App::isProduction() ? ['required', 'string'] : ['nullable'],
             'captcha.value' => App::isProduction() ? ['required', 'captcha_api:'.request('captcha.key').',flat'] : ['nullable'],
         ];
