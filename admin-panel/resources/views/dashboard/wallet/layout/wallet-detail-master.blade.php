@@ -93,7 +93,7 @@
                                class="btn btn-info">
                                 <i class="fa-regular fa-plus me-1"></i> افزایش موجودی
                             </a>
-                            <a href="{{route('admin.wallet.block-balance.form',['wallet'=>$wallet,'user'=>$user])}}"
+                            <a href="{{route('admin.wallet.unblock-balance.form',['wallet'=>$wallet,'user'=>$user])}}"
                                class="btn btn-success">
                                 <i class="fa-regular fa-lock-open me-1"></i> آزاد سازی موجودی
                             </a>
