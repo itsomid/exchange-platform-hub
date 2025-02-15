@@ -73,6 +73,8 @@ class HDWalletWithdrawalService
             throw new InternalWalletHasProblemException;
         }
 
+        Log::channel('hd-wallet')->info($response->body());
+
         return resolve(GetWithdrawalStatusResponseDTO::class)
             ->setWithdrawalId($data['withdrawal_id'])
             ->setUserId($data['user_id'])
