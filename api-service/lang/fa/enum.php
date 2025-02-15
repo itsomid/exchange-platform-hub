@@ -16,7 +16,7 @@ return [
     ],
     'deposit-withdrawal' => [
         \App\Enums\WithdrawalStatusEnum::PENDING->name => 'در حال انجام',
-        \App\Enums\WithdrawalStatusEnum::FAILED->name => 'خطا',
+        \App\Enums\WithdrawalStatusEnum::FAILED->name => 'ناموفق',
         \App\Enums\WithdrawalStatusEnum::AWAITING_APPROVAL->name => 'در انتظار تایید مدیریت',
         \App\Enums\WithdrawalStatusEnum::COMPLETED->name => 'انجام شده',
         \App\Enums\DepositStatusEnum::PENDING->name => 'در حال انجام',
