@@ -147,7 +147,7 @@ class AssetCoinex implements AssetInterface
             ->setConfirmationCount($data['confirmations'])
             ->setExploreAddress($data['explorer_address_url'])
             ->setStatus($data['status'])
-            ->setFee($data['tx_fee'])
+            ->setFee($data['tx_fee'] > 0 ? $data['tx_fee'] : $data['fee_amount'])
             ->setCurrencyFee($data['fee_ccy']);
     }
 }
