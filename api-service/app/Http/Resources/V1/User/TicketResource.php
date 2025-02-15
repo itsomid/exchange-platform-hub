@@ -35,7 +35,6 @@ class TicketResource extends JsonResource
             'id' => $this->id,
             'ticket_number' => $this->ticket_number,
             'subject' => $this->subject,
-            'message' => $this->message,
             'status' => $this->status,
             'priority' => $this->priority,
             'ticket_type' => $this->getTicketType(), // ✅ Normalized type
