@@ -121,6 +121,7 @@ class ExchangeService
 
         return resolve(ExchangeBuyResponseDTO::class)
             ->setIsDone($response->isDone())
+            ->setErrorMessage($response->getErrorMessage())
             ->setErrorCode($response->getErrorCode())
             ->setSpotStatus($response->getSpotStatus());
     }

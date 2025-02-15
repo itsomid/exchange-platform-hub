@@ -5,7 +5,6 @@ namespace App\Services\Exchanges\Asset\Coinex;
 use App\Enums\SpotStatusEnum;
 use App\Exceptions\Exchange\CantResolveCoinexException;
 use App\Exceptions\Exchange\CoinexHasProblemException;
-use App\Models\Exchange;
 use App\Services\Exchanges\AdminNotification;
 use App\Services\Exchanges\Asset\Coinex\Authentication\MethodEnum;
 use App\Services\Exchanges\Asset\Contract\AssetInterface;
@@ -69,6 +68,13 @@ class AssetCoinex implements AssetInterface
             return resolve(BuyDTOResponse::class)
                 ->setSpotStatus(SpotStatusEnum::BuyOrderFailed)
                 ->setErrorCode($response->json('code'))
+                ->setErrorMessage(
+                    CoinexError::mapErrorToResponse(
+                        CoinexError::tryFrom(
+                            $response->json('code')
+                        )
+                    )
+                )
                 ->setIsDone(false);
         }
         $data = $response->json('data');
@@ -128,11 +134,9 @@ class AssetCoinex implements AssetInterface
         Log::channel('ref-exchange')->info($response->json('data'));
         $data = $response->json('data');
 
-        $activeExchange = Exchange::where('is_active', true)->first();
-
         return resolve(WithdrawResponseDTO::class)
             ->setWithdrawId($data['withdraw_id'])
-            ->setExchange($activeExchange?->slug ?? 'Unknown')
+            ->setExchange('coinex')
             ->setCreatedAt($data['created_at'])
             ->setCurrency($data['ccy'])
             ->setChain($data['chain'])

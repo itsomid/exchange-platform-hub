@@ -12,6 +12,8 @@ class ExchangeBuyResponseDTO
 
     private int $errorCode;
 
+    private ?string $errorMessage = null;
+
     public function setIsDone(bool $isDone): ExchangeBuyResponseDTO
     {
         $this->isDone = $isDone;
@@ -46,5 +48,17 @@ class ExchangeBuyResponseDTO
     public function getErrorCode(): int
     {
         return $this->errorCode;
+    }
+
+    public function setErrorMessage(?string $errorMessage): ExchangeBuyResponseDTO
+    {
+        $this->errorMessage = $errorMessage;
+
+        return $this;
+    }
+
+    public function getErrorMessage(): ?string
+    {
+        return $this->errorMessage;
     }
 }

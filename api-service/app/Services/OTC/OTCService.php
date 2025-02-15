@@ -289,7 +289,7 @@ class OTCService
                     $exchangeName = $otc_order->exchange->name;
                     $description = 'به علت نداشتن موجودی تتری در '.$exchangeName.' سفارش لغو شد.';
                 } else {
-                    $description = 'error code: '.$resultBuyRefExchange->getErrorCode().' - enum: '.$resultBuyRefExchange->getSpotStatus()->value;
+                    $description = $resultBuyRefExchange->getErrorMessage();
                 }
                 $otc_order->update([
                     'status' => OTCOrderStatusEnum::CANCELED,
