@@ -94,10 +94,10 @@ class OrdersListsCollection extends ResourceCollection
             'quantity' => $responseDTO->getQuantity(),
             'price' => $responseDTO->getPrice(),
             'fee' => $responseDTO->getFee(),
-            'received_amount' => Math::sub(
+            'received_amount' => Math::mul(Math::sub(
                 $responseDTO->getQuantity(),
                 $responseDTO->getFee()
-            ),
+            ), $responseDTO->getPrice()),
             'market_name' => $responseDTO->getMarket(),
             'base_currency' => $responseDTO->getBaseCurrency(),
             'quote_currency' => $responseDTO->getQuoteCurrency(),
