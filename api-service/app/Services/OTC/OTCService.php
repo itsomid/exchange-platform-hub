@@ -314,7 +314,7 @@ class OTCService
         $market = $otc->market;
         $sellAmount = $otc->quantity;
         $amountInQuoteCurrency = Math::mul($market->exchangePrice->price, $sellAmount);
-        $fee = Math::mul($sellAmount, Math::div(Setting::getSetting('otc_sell_fee'), '100'));
+        $fee = Math::mul($amountInQuoteCurrency, Math::div(Setting::getSetting('otc_sell_fee'), '100'));
         $receivedAmount = Math::sub($amountInQuoteCurrency, $fee);
 
         $buyerWallet = $this->walletRepository
@@ -462,7 +462,7 @@ class OTCService
 
             $sellAmount = $requestDTO->getQuantity();
             $amountInQuoteCurrency = Math::mul($market->exchangePrice->price, $sellAmount);
-            $fee = Math::mul($sellAmount, Math::div(Setting::getSetting('otc_sell_fee'), 100));
+            $fee = Math::mul($amountInQuoteCurrency, Math::div(Setting::getSetting('otc_sell_fee'), 100));
             $receivedAmount = Math::sub($amountInQuoteCurrency, $fee);
 
             if (Math::comp($sellerWallet->balance, $sellAmount) === -1) {
