@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources\V1\OTC;
 
-use App\Helpers\Math;
 use App\Services\OTC\DTO\Order\OTCOrderListsResponseDTO;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
@@ -94,10 +93,7 @@ class OrdersListsCollection extends ResourceCollection
             'quantity' => $responseDTO->getQuantity(),
             'price' => $responseDTO->getPrice(),
             'fee' => $responseDTO->getFee(),
-            'received_amount' => Math::mul(Math::sub(
-                $responseDTO->getQuantity(),
-                $responseDTO->getFee()
-            ), $responseDTO->getPrice()),
+            'received_amount' => $responseDTO->getReceivedAmount(),
             'market_name' => $responseDTO->getMarket(),
             'base_currency' => $responseDTO->getBaseCurrency(),
             'quote_currency' => $responseDTO->getQuoteCurrency(),
