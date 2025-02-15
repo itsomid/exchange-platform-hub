@@ -52,6 +52,11 @@ use Illuminate\Http\Resources\Json\ResourceCollection;
  *         type="string",
  *         description="The fee charged for the order.",
  *         example="0.001"
+ *     ), *     @OA\Property(
+ *         property="received_amount",
+ *         type="string",
+ *         description="The actual received amount.",
+ *         example="0.001"
  *     ),
  *     @OA\Property(
  *         property="market_name",
