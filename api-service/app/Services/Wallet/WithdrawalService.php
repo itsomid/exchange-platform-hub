@@ -129,6 +129,7 @@ class WithdrawalService
                     $withdrawal->update([
                         'status' => WithdrawalStatusEnum::FAILED,
                     ]);
+                    $this->fialedWithdrawalAndUnlockBalance($withdrawal);
 
                     continue;
                 }
@@ -153,11 +154,35 @@ class WithdrawalService
         return $withdrawalCompletedCount;
     }
 
+    private function fialedWithdrawalAndUnlockBalance(Withdrawal $withdrawal)
+    {
+        try {
+            DB::beginTransaction();
+            $wallet = Wallet::query()
+                ->where('user_id', $withdrawal->user_id)
+                ->where('currency_symbol', $withdrawal->currency_symbol)
+                ->lockForUpdate()
+                ->first();
+            $wallet->decrement('locked_balance', $withdrawal->amount);
+            $wallet->increment('balance', $withdrawal->amount);
+
+            DB::commit();
+        } catch (Throwable $e) {
+            DB::rollBack();
+            report($e);
+            throw $e;
+        }
+    }
+
     private function confirmWithdrawal(Withdrawal $withdrawal, string $transactionHash, string $hdWalletNetworkFee): void
     {
         try {
             DB::beginTransaction();
-            $wallet = Wallet::query()->where('user_id', $withdrawal->user_id)->where('currency_symbol', $withdrawal->currency_symbol)->first();
+            $wallet = Wallet::query()
+                ->where('user_id', $withdrawal->user_id)
+                ->where('currency_symbol', $withdrawal->currency_symbol)
+                ->lockForUpdate()
+                ->first();
 
             // Update withdrawal record
             $withdrawal->update([
