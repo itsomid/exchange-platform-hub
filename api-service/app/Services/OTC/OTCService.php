@@ -479,49 +479,49 @@ class OTCService
                 ->setStatus(OTCOrderStatusEnum::SUCCESS)
             );
 
-            $doComplete = true;
-            if (Math::comp($buyerQuoteWallet->balance, $receivedAmount) === -1) {
-                $currency = Currency::query()->where('symbol', 'USDT')->first();
-                $chain = CurrencyChain::query()
-                    ->where('chain', 'BSC')
-                    ->where('currency_id', $currency->id)
-                    ->first();
+            //            $doComplete = true;
+            //            if (Math::comp($buyerQuoteWallet->balance, $receivedAmount) === -1) {
+            //                $currency = Currency::query()->where('symbol', 'USDT')->first();
+            //                $chain = CurrencyChain::query()
+            //                    ->where('chain', 'BSC')
+            //                    ->where('currency_id', $currency->id)
+            //                    ->first();
+            //
+            //                // receivedAmount - bitexroom_withdrawal_fee
+            //                $amountForBuy = Math::sub($receivedAmount, $chain->exchange_withdrawal_fee);
+            //
+            //                $exchangeService = resolve(ExchangeService::class);
+            //                $chargeFromRefExchange = $exchangeService->chargeUSDT(
+            //                    resolve(ChargeUSDTRequestDTO::class)
+            //                        ->setCurrencyChain($chain->chain->value)
+            //                        ->setMarketId($requestDTO->getMarketId())
+            //                        ->setOtcId($otc_order->id)
+            //                        ->setQuantity($amountForBuy)
+            //                );
+            //                $doComplete = ! ($chargeFromRefExchange->getWithdrawStatus() === WithdrawStatusEnum::FAILED);
+            //            }
 
-                // receivedAmount - bitexroom_withdrawal_fee
-                $amountForBuy = Math::sub($receivedAmount, $chain->exchange_withdrawal_fee);
-
-                $exchangeService = resolve(ExchangeService::class);
-                $chargeFromRefExchange = $exchangeService->chargeUSDT(
-                    resolve(ChargeUSDTRequestDTO::class)
-                        ->setCurrencyChain($chain->chain->value)
-                        ->setMarketId($requestDTO->getMarketId())
-                        ->setOtcId($otc_order->id)
-                        ->setQuantity($amountForBuy)
-                );
-                $doComplete = ! ($chargeFromRefExchange->getWithdrawStatus() === WithdrawStatusEnum::FAILED);
+            //            if ($doComplete) {
+            $this->completeSellOrder(
+                resolve(CompletedOrderRequestDTO::class)
+                    ->setOtcId($otc_order->id)
+                    ->setBuyerUserId(config('bitexroom.bitexroom_user_id'))
+                    ->setSellerUserId(Auth::id())
+            );
+            if ($otc_order->user->introducer_code) {
+                $this->referralCommissionService->processReferralCommission($otc_order, $fee);
             }
+            $user->notify(new OTCSellCreated($market->base_currency.$market->quote_currency, $requestDTO->getQuantity(), $user->name));
 
-            if ($doComplete) {
-                $this->completeSellOrder(
-                    resolve(CompletedOrderRequestDTO::class)
-                        ->setOtcId($otc_order->id)
-                        ->setBuyerUserId(config('bitexroom.bitexroom_user_id'))
-                        ->setSellerUserId(Auth::id())
-                );
-                if ($otc_order->user->introducer_code) {
-                    $this->referralCommissionService->processReferralCommission($otc_order, $fee);
-                }
-                $user->notify(new OTCSellCreated($market->base_currency.$market->quote_currency, $requestDTO->getQuantity(), $user->name));
-
-                DB::commit();
-            } else {
-                $otc_order->update([
-                    'status' => OTCOrderStatusEnum::CANCELED,
-                    'ref_exchange_description' => $chargeFromRefExchange->getWithdrawStatus()->value,
-                ]);
-                DB::commit();
-                throw new SellTradeWasFiledException(marketName: $market->base_currency.$market->quote_currency);
-            }
+            //            DB::commit();
+            //            } else {
+            //                $otc_order->update([
+            //                    'status' => OTCOrderStatusEnum::CANCELED,
+            //                    'ref_exchange_description' => $chargeFromRefExchange->getWithdrawStatus()->value,
+            //                ]);
+            //                DB::commit();
+            //                throw new SellTradeWasFiledException(marketName: $market->base_currency.$market->quote_currency);
+            //            }
 
             DB::commit();
 
