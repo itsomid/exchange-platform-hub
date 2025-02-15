@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class WalletChain extends Model
 {
+
+    protected $fillable = ['wallet_id','currency_chain','address'];
     public function wallet(): BelongsTo
     {
         return $this->belongsTo(Wallet::class);

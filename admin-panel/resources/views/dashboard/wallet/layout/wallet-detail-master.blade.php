@@ -2,73 +2,71 @@
 @section('title', 'مدیریت کیف پول')
 @section('content')
 
-    <div class="row">
-        <div class="col-12 mb-6">
+    <div class="user-profile-header d-flex flex-column flex-lg-row text-sm-start text-center m-2">
+        <div class="d-flex align-items-center">
+            <img src="{{$wallet->currency->coinLogo()}}" class="img-fluid" width="50px">
+        </div>
+        <div class="flex-grow-1">
+            <div
+                class="d-flex align-items-md-end align-items-sm-start align-items-center justify-content-md-between justify-content-start mx-5 flex-md-row flex-column gap-4">
+                <div class="user-profile-info">
+                    <h4 class="mb-0">کیف پول {{$wallet->currency->name}}
+                        @if($wallet->walletChains->isNotEmpty())
+                            <small class="text-primary fw-bolder text-decoration-underline">(دارای آدرس
+                                واریز)</small>
+                        @endif
+                    </h4>
 
-            <div class="user-profile-header d-flex flex-column flex-lg-row text-sm-start text-center m-2">
-                <div class="d-flex align-items-center">
-                    <img src="{{$wallet->currency->coinLogo()}}" class="img-fluid" width="50px">
-                </div>
-                <div class="flex-grow-1">
-                    <div
-                        class="d-flex align-items-md-end align-items-sm-start align-items-center justify-content-md-between justify-content-start mx-5 flex-md-row flex-column gap-4">
-                        <div class="user-profile-info">
-                            <h4 class="mb-0">کیف پول {{$wallet->currency->name}}
-                                @if($wallet->walletChains->isNotEmpty())
-                                    <small class="text-primary fw-bolder text-decoration-underline">(دارای آدرس
-                                        واریز)</small>
+
+                    <ul class="list-inline mb-0 d-flex align-items-center flex-wrap justify-content-sm-start justify-content-center gap-4 my-2">
+                        <li class="list-inline-item d-flex gap-1 align-items-center">
+                            <i class="fa-regular fa-hashtag"></i>
+                            <span class="font-number">{{$user->id}}</span>
+                        </li>
+                        <li class="list-inline-item d-flex gap-2 align-items-center">
+                            <i class="fa-regular fa-user-check"></i>
+                            <small class="text-body">{{$user->username}}</small>
+                        </li>
+                        <li class="list-inline-item d-flex gap-2 align-items-center">
+                            <i class="fa-regular fa-envelope"></i>
+                            <small class="text-body">{{$user->email}}</small>
+                        </li>
+                        <li class="list-inline-item d-flex gap-2 align-items-center">
+                            <i class="fa-regular fa-clock"></i>
+                            <small class="text-body">
+                                اخرین فعالیت:
+                                @if($user->latestActiveToken)
+                                    {{\App\Helpers\DateFormatter::convertToPersianDate($user->latestActiveToken->last_used_at,'H:i:s %Y/%m/%d')}}
+                                @else
+                                    <span>بدون فعالیت</span>
                                 @endif
-                            </h4>
+                            </small>
+                        </li>
 
-
-                            <ul class="list-inline mb-0 d-flex align-items-center flex-wrap justify-content-sm-start justify-content-center gap-4 my-2">
-                                <li class="list-inline-item d-flex gap-1 align-items-center">
-                                    <i class="fa-regular fa-hashtag"></i>
-                                    <span class="font-number">{{$user->id}}</span>
-                                </li>
-                                <li class="list-inline-item d-flex gap-2 align-items-center">
-                                    <i class="fa-regular fa-user-check"></i>
-                                    <small class="text-body">{{$user->username}}</small>
-                                </li>
-                                <li class="list-inline-item d-flex gap-2 align-items-center">
-                                    <i class="fa-regular fa-envelope"></i>
-                                    <small class="text-body">{{$user->email}}</small>
-                                </li>
-                                <li class="list-inline-item d-flex gap-2 align-items-center">
-                                    <i class="fa-regular fa-clock"></i>
-                                    <small class="text-body">
-                                        اخرین فعالیت:
-                                        @if($user->latestActiveToken)
-                                            {{\App\Helpers\DateFormatter::convertToPersianDate($user->latestActiveToken->last_used_at,'H:i:s %Y/%m/%d')}}
-                                        @else
-                                            <span>بدون فعالیت</span>
-                                        @endif
-                                    </small>
-                                </li>
-
-                            </ul>
-                        </div>
-                    </div>
+                    </ul>
                 </div>
-                <div class="mb-0 d-flex flex-column align-items-end justify-content-between">
-                    @if($wallet->walletChains->isNotEmpty())
+            </div>
+        </div>
+        <div class="mb-0 d-flex flex-column align-items-end justify-content-between">
+            @if($wallet->walletChains->isNotEmpty())
 
-                        @foreach($wallet->walletChains as $walletChain)
-                            <a href="{{ $walletChain->explorer_address_url }}" target="_blank" class="my-1">
+                @foreach($wallet->walletChains as $walletChain)
+                    @if($wallet->user_id !== 1)
+                        <a href="{{ $walletChain->explorer_address_url }}" target="_blank" class="my-1">
 
-                                <span>{{ $walletChain->address }}</span>
+                            <span>{{ $walletChain->address }}</span>
 
-                                <span class="me-2">({{$walletChain->currency_chain}})</span>
-                                <i class="fa-regular fa-clone ms-1"></i>
-                            </a>
-                        @endforeach
+                            <span class="me-2">({{$walletChain->currency_chain}})</span>
+                            <i class="fa-regular fa-clone ms-1"></i>
+                        </a>
+                    @else
 
                     @endif
-                </div>
+                @endforeach
 
-            </div>
-
+            @endif
         </div>
+
     </div>
 
     <div class="row">
@@ -78,7 +76,7 @@
                     <div class="d-flex flex-column flex-md-row justify-content-between">
 
                         <div class="d-flex flex-column justify-content-center">
-                            <h4 class="mb-0">موجودی کیف پول  {{$wallet->currency->name}}</h4>
+                            <h4 class="mb-0">موجودی کیف پول {{$wallet->currency->name}}</h4>
                             <h3 class="text-primary mt-4 mb-1 font-number">{{formatNumberTrimZeros($wallet->balance)}}
                                 <span class=" h5">{{$wallet->currency_symbol}}</span>
                             </h3>
@@ -112,6 +110,58 @@
             </div>
         </div>
     </div>
+
+    @if($wallet->user_id === 1)
+
+        <div class="card mb-3">
+            <div class="card-body">
+                @foreach($wallet->currency->chains as $chain)
+                    {{--                    {{$wallet->walletChains}}--}}
+                    @php
+                        $walletChain = $wallet->walletChains ? $wallet->walletChains->where('currency_chain',$chain->chain)->first(): null;
+                    @endphp
+                    @if($walletChain)
+                        <form
+                            action="{{route('admin.wallet.update-chain-address',['wallet_chain'=>$walletChain])}}"
+                            method="post">
+                            @csrf
+                            <div class="row mb-3">
+                                <div class="col-md-5">
+                                    <div class="input-group col-5">
+                                        <button type="submit" class="btn btn-outline-success">تغییر</button>
+                                        <input type="text" class="form-control font-number" name="address"
+                                               value="{{$walletChain->address}}">
+                                        <span class="input-group-text">{{$chain->chain_name}} </span>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </form>
+                    @else
+                        <form
+                            action="{{route('admin.wallet.create-chain-address',['wallet' => $wallet,'chain_name'=>$chain->chain])}}"
+                            method="post">
+                            @csrf
+                            <div class="row mb-3">
+                                <div class="col-md-5">
+                                    <div class="input-group col-5">
+                                        <button type="submit" class="btn btn-outline-primary">ایجاد آدرس</button>
+                                        <input type="text" class="form-control font-number" name="address"
+                                               value="">
+                                        <span class="input-group-text">{{$chain->chain_name}} </span>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </form>
+                    @endif
+
+                @endforeach
+            </div>
+        </div>
+    @endif
     <div class="row">
         <div class="col-md-3 col-sm-6">
             <div class="card card-border-shadow-success h-100">

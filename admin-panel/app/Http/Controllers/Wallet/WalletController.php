@@ -13,6 +13,7 @@ use App\Models\CurrencyChain;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Models\WalletChain;
 use App\Services\Transaction\TransactionService;
 use App\Services\Wallet\DTO\UpdateBalanceRequestDTO;
 use App\Services\Wallet\WalletService;
@@ -165,5 +166,25 @@ class WalletController extends Controller
         $wallet->save();
 
         return redirect()->back()->with('success', 'موجودی کاربر با موفقیت بروزسانی شد.');
+    }
+
+    public function updateExchangeWalletChain(WalletChain $walletChain, Request $request)
+    {
+        $walletChain->address = $request->address;
+        $walletChain->save();
+
+        Toast::message('آدرس با موفقیت به روز شد.')->success()->notify();
+        return redirect()->back();
+    }
+
+    public function createExchangeWalletChain(Wallet $wallet,$chainName, Request $request)
+    {
+        $walletChains = $wallet->walletChains()->create([
+            'address' => $request->address,
+            'currency_chain' => $chainName,
+        ]);
+        Toast::message('آدرس با موفقیت به روز شد.')->success()->notify();
+        return redirect()->back();
+
     }
 }
