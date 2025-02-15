@@ -367,11 +367,11 @@ class OTCService
             ->setType(TransactionTypeEnum::BUY)
             ->setSubtype(TransactionSubTypeEnum::OTC)
             ->setStatus(TransactionStatusEnum::SUCCESS)
-            ->setDescription(sprintf('فروش %s %s به قیمت %s %s',
-                formatNumberTrimZeros((float) $receivedAmount),
-                $market->base_currency,
+            ->setDescription(sprintf('خرید %s %s معادل %s %s',
                 formatNumberTrimZeros((float) $market->exchangePrice->price),
-                $market->quote_currency)
+                $market->quote_currency,
+                formatNumberTrimZeros((float) $receivedAmount),
+                $market->base_currency)
             )
         );
         $sellerQuoteWallet->increment('balance', (float) $receivedAmount);
@@ -386,11 +386,12 @@ class OTCService
             ->setType(TransactionTypeEnum::BUY)
             ->setSubtype(TransactionSubTypeEnum::OTC)
             ->setStatus(TransactionStatusEnum::SUCCESS)
-            ->setDescription(sprintf('خرید %s %s به قیمت %s %s',
+            ->setDescription(sprintf('فروش %s %s معادل %s %s',
+                formatNumberTrimZeros((float) $market->exchangePrice->price),
+                $market->quote_currency,
                 formatNumberTrimZeros((float) $sellAmount),
                 $market->base_currency,
-                formatNumberTrimZeros((float) $market->exchangePrice->price),
-                $market->quote_currency)
+            )
             )
         );
         $buyerWallet->increment('balance', (float) $sellAmount);
