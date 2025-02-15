@@ -4285,6 +4285,11 @@
                         "type": "string",
                         "example": "0.001"
                     },
+                    "received_amount": {
+                        "description": "The actual received amount.",
+                        "type": "string",
+                        "example": "0.001"
+                    },
                     "market_name": {
                         "description": "The market in which the OTC order was placed.",
                         "type": "string",
@@ -4618,10 +4623,6 @@
                     "subject": {
                         "type": "string",
                         "example": "Withdrawal Issue"
-                    },
-                    "message": {
-                        "type": "string",
-                        "example": "My withdrawal is stuck."
                     },
                     "status": {
                         "type": "string",

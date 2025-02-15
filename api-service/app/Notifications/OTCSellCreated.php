@@ -26,7 +26,7 @@ class OTCSellCreated extends Notification implements ShouldQueue
     public function toDatabase($notifiable): array
     {
         return [
-            'message' => 'درخواست خرید سریع '.$this->currencySymbol.' به مقدار '.$this->amount.' با موفقیت انجام شد.',
+            'message' => 'درخواست فروش سریع '.$this->currencySymbol.' به مقدار '.$this->amount.' با موفقیت انجام شد.',
             'url' => '/transactions', // Optional: URL to redirect to
         ];
     }
@@ -34,8 +34,8 @@ class OTCSellCreated extends Notification implements ShouldQueue
     public function toMail($notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('درخواست خرید سریع')
-            ->line('درخواست خرید سریع '.$this->currencySymbol.' به مقدار '.$this->amount.' با موفقیت انجام شد.')
+            ->subject('درخواست فروش سریع')
+            ->line('درخواست فروش سریع '.$this->currencySymbol.' به مقدار '.$this->amount.' با موفقیت انجام شد.')
             ->line('متشکریم که از پلتفرم ما استفاده می کنید!')
             ->action('مشاهده تراکنش', url('/transactions'))
             ->greeting("سلام {$this->name} عزیز");
