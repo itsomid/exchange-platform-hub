@@ -36,6 +36,7 @@ class HDWalletWithdrawalService
         if (! $response->successful()) {
             report($response->body());
             Log::channel('hd-wallet')->error('HD Wallet Response Changed:'.$response->body());
+            Log::channel('hd-wallet')->error('HD Wallet Request Body Changed:'.$requestDTO);
             throw new InternalWalletHasProblemException;
         }
 
