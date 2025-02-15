@@ -12,6 +12,7 @@ class BuyDTOResponse
     private int $orderId;
 
     private string $market;
+
     private string $currencySymbol;
 
     private string $side;
@@ -47,6 +48,8 @@ class BuyDTOResponse
     private SpotStatusEnum $spotStatus;
 
     private int $errorCode;
+
+    private ?string $errorMessage = null;
 
     public function setMarket(string $market): BuyDTOResponse
     {
@@ -298,5 +301,17 @@ class BuyDTOResponse
     public function getErrorCode(): int
     {
         return $this->errorCode;
+    }
+
+    public function setErrorMessage(?string $errorMessage): BuyDTOResponse
+    {
+        $this->errorMessage = $errorMessage;
+
+        return $this;
+    }
+
+    public function getErrorMessage(): ?string
+    {
+        return $this->errorMessage;
     }
 }
