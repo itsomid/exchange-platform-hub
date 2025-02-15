@@ -2,6 +2,8 @@
 
 namespace App\Services\OTC;
 
+use App\Enums\OTCOrderTypeEnum;
+use App\Helpers\Math;
 use App\Models\OTCOrder;
 use App\Repositories\Interfaces\OTCOrderRepositoryInterface;
 use App\Services\OTC\DTO\Order\OTCOrderListsRequestDTO;
@@ -15,16 +17,27 @@ class OTCOrderService
     {
         $orders = $this->orderRepository->lists($requestDTO->getUserId(), $requestDTO->getFilterQueryString());
 
-        return $orders->map(fn (OTCOrder $order) => resolve(OTCOrderListsResponseDTO::class)
-            ->setCreatedAt($order->created_at)
-            ->setMarket($order->market->market_name)
-            ->setType($order->type)
-            ->setQuantity($order->quantity)
-            ->setPrice($order->price)
-            ->setFee($order->fee)
-            ->setStatus($order->status)
-            ->setBaseCurrency($order->market->base_currency)
-            ->setQuoteCurrency($order->market->quote_currency)
-        )->toArray();
+        return $orders->map(function (OTCOrder $order) {
+            if ($order->type === OTCOrderTypeEnum::BUY) {
+                $receivedAmount = Math::sub($order->quantity, $order->fee);
+            } else {
+                $receivedAmount = Math::mul(Math::sub(
+                    $order->quantity,
+                    $order->fee
+                ), $order->price);
+            }
+
+            return resolve(OTCOrderListsResponseDTO::class)
+                ->setCreatedAt($order->created_at)
+                ->setMarket($order->market->market_name)
+                ->setType($order->type)
+                ->setQuantity($order->quantity)
+                ->setPrice($order->price)
+                ->setReceivedAmount($receivedAmount)
+                ->setFee($order->fee)
+                ->setStatus($order->status)
+                ->setBaseCurrency($order->market->base_currency)
+                ->setQuoteCurrency($order->market->quote_currency);
+        })->toArray();
     }
 }
