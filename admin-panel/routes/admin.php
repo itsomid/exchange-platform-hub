@@ -73,7 +73,7 @@ Route::prefix('admins')->group(function () {
 
 Route::resource('/tickets', TicketController::class)->except(['ticket']);
 Route::prefix('tickets')->name('ticket.')->group(function () {
-    Route::get('/{ticket}/replies', [TicketReplyController::class,'index'])->name('replies.index')->can('replies.index');
+    Route::get('/{ticket}/replies', [TicketReplyController::class,'index'])->name('replies.index');
     Route::post('/{ticket}/replies', [TicketReplyController::class, 'store'])->name('replies.store');
     Route::delete('/replies/{reply}', [TicketReplyController::class, 'destroy'])->name('replies.destroy');
 });
