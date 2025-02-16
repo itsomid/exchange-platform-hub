@@ -199,6 +199,40 @@
                 </div>
             </div>
         </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title header-elements">
+                        <h5 class="m-0 me-2">آدرس های صرافی (HOT Wallet)</h5>
+                    </div>
+                    @foreach($exchangeWalletChains as $walletChain)
+                        {{--                    {{$wallet->walletChains}}--}}
+
+
+                            <form
+                                action="{{route('admin.wallet.update-chain-address',['wallet_chain'=>$walletChain])}}"
+                                method="post">
+                                @csrf
+                                <div class="row mb-3">
+                                    <div class="col-md-12">
+                                        <div class="input-group col-5">
+                                            <button type="submit" class="btn btn-outline-success">تغییر</button>
+                                            <input type="text" class="form-control font-number " dir="ltr" name="address"
+                                                   value="{{$walletChain->address}}">
+                                            <span class="input-group-text">{{$walletChain->currency_chain}} </span>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                            </form>
+
+                    @endforeach
+
+                </div>
+            </div>
+        </div>
     </div>
     <div class="row">
 

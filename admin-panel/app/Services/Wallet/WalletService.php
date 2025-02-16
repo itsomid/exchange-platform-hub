@@ -52,6 +52,14 @@ class WalletService
     {
         return Wallet::where('user_id', $this->exchangeUserId)->get();
     }
+
+    public function getExchangeAllWalletChain()
+    {
+        $allExchangeWallet = $this->getExchangeAllWallet();
+        $walletIds = $allExchangeWallet->pluck('id')->toArray();
+        return WalletChain::whereIn('wallet_id', $walletIds)->get();
+
+    }
     public function totalAssetsValue(User $user)
     {
         // Initialize the total assets value
