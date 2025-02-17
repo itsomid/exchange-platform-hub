@@ -11,6 +11,7 @@ use App\Repositories\Interfaces\EmailOTPRepositoryInterface;
 use App\Repositories\Interfaces\MarketHistoryRepositoryInterface;
 use App\Repositories\Interfaces\MarketRepositoryInterface;
 use App\Repositories\Interfaces\OTCOrderRepositoryInterface;
+use App\Repositories\Interfaces\OTCRefExchangeWithdrawalInterface;
 use App\Repositories\Interfaces\ReferralCodeRepositoryInterface;
 use App\Repositories\Interfaces\ReferralCodeUsageRepositoryInterface;
 use App\Repositories\Interfaces\TransactionRepositoryInterface;
@@ -22,6 +23,7 @@ use App\Repositories\Interfaces\WithdrawalRepositoryInterface;
 use App\Repositories\MarketHistoryRepository;
 use App\Repositories\MarketRepository;
 use App\Repositories\OTCOrderRepository;
+use App\Repositories\OTCRefExchangeWithdrawalRepository;
 use App\Repositories\ReferralCodeRepository;
 use App\Repositories\ReferralCodeUsageRepository;
 use App\Repositories\TransactionRepository;
@@ -54,6 +56,7 @@ class RepositoryServiceProvider extends ServiceProvider
         app()->bind(TransactionRepositoryInterface::class, TransactionRepository::class);
         app()->bind(OTCOrderRepositoryInterface::class, OTCOrderRepository::class);
         app()->bind(WithdrawalRepositoryInterface::class, WithdrawalRepository::class);
+        app()->bind(OTCRefExchangeWithdrawalInterface::class, OTCRefExchangeWithdrawalRepository::class);
 
     }
 
