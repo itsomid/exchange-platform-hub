@@ -128,14 +128,6 @@ class ExchangeService
 
     public function chargeUSDT(ChargeUSDTRequestDTO $requestDTO): ChargeUSDTResponse
     {
-        //        $otcOrder->refExchangeTransactions()->create([
-        //            'market' => $response->getMarket(),
-        //            'amount' => $response->getAmount(),
-        //            'fee' => $response->getDiscountFee(),
-        //            'side' => 'buy',
-        //            'response' => $response->getResponseBody(),
-        //        ]);
-
         try {
             $asset = AssetFactory::make('coinex');
 
@@ -165,7 +157,6 @@ class ExchangeService
                     'explore_address_url' => $response->getExploreAddress(),
                 ]);
 
-            $otcOrder = $this->otcOrderRepository->getOneById($requestDTO->getOtcId());
             $cetWallet = $this->walletRepository
                 ->getOrCreateWallet(
                     config('bitexroom.bitexroom_user_id'),
@@ -180,7 +171,6 @@ class ExchangeService
             $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
                 ->setUserId(config('bitexroom.bitexroom_user_id'))
                 ->setWalletId($cetWallet->id)
-                ->setOtcOrderId($otcOrder->id)
                 ->setAmount(-$response->getFee())
                 ->setType(TransactionTypeEnum::EXCHANGE)
                 ->setSubtype(TransactionSubTypeEnum::COINEX)
@@ -190,19 +180,6 @@ class ExchangeService
                 )
                 ));
             //USDT
-            $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
-                ->setUserId(config('bitexroom.bitexroom_user_id'))
-                ->setWalletId($usdtWallet->id)
-                ->setOtcOrderId($otcOrder->id)
-                ->setAmount($response->getActualAmount())
-                ->setType(TransactionTypeEnum::EXCHANGE)
-                ->setSubtype(TransactionSubTypeEnum::COINEX)
-                ->setStatus(TransactionStatusEnum::SUCCESS)
-                ->setDescription(sprintf('خرید %s به مقدار %s',
-                    'USDT',
-                    formatNumberTrimZeros((float) $response->getActualAmount()),
-                )
-                ));
             $usdtWallet->increment('balance', (float) $response->getActualAmount());
         } catch (Throwable $exception) {
             report($exception);
