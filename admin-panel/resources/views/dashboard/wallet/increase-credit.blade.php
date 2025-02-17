@@ -41,7 +41,7 @@
                                     data-placeholder="لطفا کوین  مورد نظر را انتخاب کنید.">
                                 @foreach($currencies as $currency)
                                     <option
-                                        {{$selectedCurrency->symbol === $currency->symbol ? 'selected' : ''}} value="{{$currency->symbol}}">{{$currency->name}}</option>
+                                        {{$selectedCurrency?->symbol === $currency->symbol ? 'selected' : ''}} value="{{$currency->symbol}}">{{$currency->name}}</option>
                                 @endforeach
                             </select>
                             @error('currency')<small class="text-danger">{{$message}}</small>@enderror

@@ -39,7 +39,7 @@ class TransactionService
         ?int          $adminId = null,
         ?string       $description = null,
         ?string       $admin_description = null
-    ): void
+    )
     {
         \DB::transaction(function () use ($userId, $amount, $transactionHash, $currency, $currencyChain, $type, $adminId, $description, $admin_description) {
             // Fetch the wallet
@@ -95,7 +95,7 @@ class TransactionService
                     type: TransactionTypeEnum::DEPOSIT->value,
                     adminId: $adminId,
                     withdrawalId: $withdraw->id, // No deposit ID for admin direct actions
-                    description: 'Exchange Wallet credit decrease',
+                    description: 'Exchange Wallet credit decrease by',
                     admin_description: $admin_description
                 );
 
