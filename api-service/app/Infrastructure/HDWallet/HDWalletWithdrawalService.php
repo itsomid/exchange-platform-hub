@@ -18,25 +18,31 @@ class HDWalletWithdrawalService
     public function withdraw(WithdrawRequestDTO $requestDTO)
     {
         try {
-            $response = Http::post(HDWallet::getBaseUrl()."/api/v1/wallet/withdrawals?symbol={$requestDTO->getCurrencySymbol()}&blockchain={$requestDTO->getBlockchain()}", $a = [
+            $requestBody = [
                 'withdrawal_id' => (string) $requestDTO->getWithdrawalId(),
                 'user_id' => $requestDTO->getUserId(),
                 'cryptocurrency' => $requestDTO->getCurrencySymbol(),
                 'blockchain' => $requestDTO->getBlockchain(),
                 'received_amount' => $requestDTO->getAmount(),
                 'withdrawal_address' => $requestDTO->getWithdrawAddress(),
-                //                'memo' => $requestDTO->getWithdrawalId(),
-                //                'remarks' => $requestDTO->getWithdrawalId(),
-            ]);
+                // 'memo' => $requestDTO->getWithdrawalId(),
+                // 'remarks' => $requestDTO->getWithdrawalId(),
+            ];
+
+            $response = Http::post(HDWallet::getBaseUrl()."/api/v1/wallet/withdrawals?symbol={$requestDTO->getCurrencySymbol()}&blockchain={$requestDTO->getBlockchain()}", $requestBody);
         } catch (ConnectionException $exception) {
             report($exception);
             throw new HDDWalletUnavailable;
         }
         $data = $response->json();
         if (! $response->successful()) {
-            report($response->body());
-            Log::channel('hd-wallet')->error('HD Wallet Response Changed:'.$response->body());
-            Log::channel('hd-wallet')->error('HD Wallet Request Body Changed:'.$requestDTO);
+            $logMessage = [
+                'request_body' => $requestBody,
+                'response_body' => $response->body(),
+            ];
+
+            report(json_encode($logMessage));
+            Log::channel('hd-wallet')->error('HD Wallet Request and Response:', $logMessage);
             throw new InternalWalletHasProblemException;
         }
 
