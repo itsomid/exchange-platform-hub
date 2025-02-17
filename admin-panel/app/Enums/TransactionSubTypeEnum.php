@@ -14,7 +14,9 @@ enum TransactionSubTypeEnum: string
     case COINEX = 'coinex';
     case HOT_WALLET = 'hot_wallet';
     case COLD_WALLET = 'cold_wallet';
-
+    case HD_WALLET_FEE = 'hd_wallet_fee';
+    case WITHDRAWAL_EXCHANGE_FEE = 'withdrawal_exchange_fee';
+    case WITHDRAWAL_NETWORK_FEE = 'withdrawal_network_fee';
 
     const array TYPE_LABEL = [
         self::MANUAL_ADMIN->value => 'ادمین',
@@ -28,6 +30,9 @@ enum TransactionSubTypeEnum: string
         self::COINEX->value => 'کلد ولت',
         self::HOT_WALLET->value => 'هات ولت',
         self::COLD_WALLET->value => 'کلد ولت',
+        self::HD_WALLET_FEE->value => 'فی HD wallet',
+        self::WITHDRAWAL_EXCHANGE_FEE->value => 'فی برداشت صرافی',
+        self::WITHDRAWAL_NETWORK_FEE->value => 'فی برداشت شبکه'
     ];
 
     const array TYPE_COLOR = [
@@ -41,6 +46,9 @@ enum TransactionSubTypeEnum: string
         self::COINEX->value => 'info',
         self::HOT_WALLET->value => 'info',
         self::COLD_WALLET->value => 'info',
+        self::HD_WALLET_FEE->value => 'info',
+        self::WITHDRAWAL_EXCHANGE_FEE->value => 'info',
+        self::WITHDRAWAL_NETWORK_FEE->value => 'info'
     ];
 
     public function label(): string
