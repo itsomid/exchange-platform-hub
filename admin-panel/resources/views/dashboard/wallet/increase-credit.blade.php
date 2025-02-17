@@ -41,7 +41,7 @@
                                     data-placeholder="لطفا کوین  مورد نظر را انتخاب کنید.">
                                 @foreach($currencies as $currency)
                                     <option
-                                        {{$selectedCurrency === $currency->symbol ? 'selected' : ''}} value="{{$currency->symbol}}">{{$currency->name}}</option>
+                                        {{$selectedCurrency->symbol === $currency->symbol ? 'selected' : ''}} value="{{$currency->symbol}}">{{$currency->name}}</option>
                                 @endforeach
                             </select>
                             @error('currency')<small class="text-danger">{{$message}}</small>@enderror
@@ -67,6 +67,15 @@
                                step="0.01"
                                id="" class="form-control"
                                placeholder="میزان کوین مورد نظر را وارد کنید">
+                        @error('amount')<small class="text-danger">{{$message}}</small>@enderror
+                    </div>
+                    <div class="w-100"></div>
+                    <div class="col-md-4 mb-3">
+                        <label for="numeral-mask" class="form-label "> هش تراکنش (TxID) (اختیاری)</label>
+                        <input type="text"
+                               name="transaction_hash"
+                               class="form-control"
+                               placeholder="هش تراکنش را وارد کنید (اختیاری)">
                         @error('amount')<small class="text-danger">{{$message}}</small>@enderror
                     </div>
                     <div class="w-100"></div>

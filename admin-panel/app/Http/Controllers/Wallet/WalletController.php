@@ -33,13 +33,26 @@ class WalletController extends Controller
     public function increaseCreditForm(Request $request)
     {
 
+
+        // Initialize variables to avoid undefined variable warnings
         $currencies = Currency::all();
         $currencyChains = CurrencyChain::all();
+        $selectedCurrency = null;
+        $selectedUser = null;
 
-        $selectedUser = $request->has('user')
-            ? User::find($request->user)
-            : null;
-        $selectedCurrency = $request->get('currency');
+        // Check if a specific currency is selected
+        if ($request->has('currency')) {
+            $selectedCurrency = Currency::where('symbol', $request->get('currency'))->first();
+            if ($selectedCurrency) {
+                $currencyChains = $selectedCurrency->chains;
+            }
+        }
+
+        // Check if a specific user is selected
+        if ($request->has('user')) {
+            $selectedUser = User::find($request->user);
+        }
+
         return view('dashboard.wallet.increase-credit', [
             'currencies' => $currencies,
             'selectedUser' => $selectedUser,
@@ -74,6 +87,7 @@ class WalletController extends Controller
                 $transactionService->increaseDecreaseAdminWalletCredit(
                     userId:  $this->exchangeUserId,
                     amount: $request->amount,
+                    transactionHash: $request->transaction_hash,
                     currency: $currency,
                     currencyChain: $currencyChain,
                     type: $request->transaction_type === TransactionTypeEnum::DEPOSIT->value ?  TransactionTypeEnum::DEPOSIT->value : TransactionTypeEnum::WITHDRAWAL->value, // Always increasing
@@ -90,6 +104,7 @@ class WalletController extends Controller
                     fromUserId: $fromUserId,
                     toUserId: $toUserId,
                     amount: $request->amount,
+                    transactionHash: $request->transaction_hash,
                     currency: $currency,
                     currencyChain: $currencyChain,
                     type: $request->transaction_type,

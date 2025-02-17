@@ -470,6 +470,11 @@ class OTCService
     {
 
         $market = Market::where('base_currency',$currencySymbol)->first();
+
+        if (!$market) {
+            return 0; // or handle it differently
+        }
+
         return OTCOrder::where('user_id', $userId)
             ->where('market_id', $market->id)
             ->where('type', $type)
@@ -479,6 +484,10 @@ class OTCService
     public function totalOTCOrderValue(int $userId, string $currencySymbol, OTCOrderTypeEnum $type)
     {
         $market = Market::where('base_currency',$currencySymbol)->first();
+
+        if (!$market) {
+            return 0; // or handle it differently
+        }
         return OTCOrder::where('user_id', $userId)
             ->where('market_id', $market->id)
             ->where('type', $type)
