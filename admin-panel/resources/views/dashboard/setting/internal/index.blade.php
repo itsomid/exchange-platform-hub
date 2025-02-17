@@ -207,8 +207,6 @@
                         <h5 class="m-0 me-2">آدرس های صرافی (HOT Wallet)</h5>
                     </div>
                     @foreach($exchangeWalletChains as $walletChain)
-                        {{--                    {{$wallet->walletChains}}--}}
-
 
                             <form
                                 action="{{route('admin.wallet.update-chain-address',['wallet_chain'=>$walletChain])}}"
@@ -225,11 +223,9 @@
                                     </div>
 
                                 </div>
-
                             </form>
 
                     @endforeach
-
                 </div>
             </div>
         </div>
