@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
@@ -24,5 +25,14 @@ class AdminNotificationController extends Controller
         $notification->markAsRead();
 
         return back()->with('success', 'Notification marked as read');
+    }
+
+    public function markAllAsRead()
+    {
+        $admin = auth()->user();
+        $admin->unreadNotifications->markAsRead();
+
+        Toast::message('تمام اعلان ها به خوانده شده تغییر یافت.');
+        return back();
     }
 }

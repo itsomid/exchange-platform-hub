@@ -34,7 +34,7 @@
                             <h6 class="mb-0 me-auto">اعلان‌ها</h6>
                             <div class="d-flex align-items-center h6 mb-0">
                                 <span class="badge bg-label-primary me-2">{{$unreadCount}} جدید </span>
-                                <a href="" class="btn btn-text-secondary rounded-pill btn-icon dropdown-notifications-all" data-bs-toggle="tooltip" data-bs-placement="top" title="تغییر همه به خوانده شده">
+                                <a href="{{route('admin.admin.notifications.mark-all-read')}}" class="btn btn-text-secondary rounded-pill btn-icon dropdown-notifications-all" data-bs-toggle="tooltip" data-bs-placement="top" title="تغییر همه به خوانده شده">
                                     <i class="fa-regular fa-envelope-open text-heading"></i>
                                 </a>
                             </div>
@@ -42,7 +42,7 @@
                     </li>
                     <li class="dropdown-notifications-list scrollable-container">
                         <ul class="list-group list-group-flush">
-                            @foreach($notifications as $notification)
+                            @forelse($notifications as $notification)
                                 <li class="list-group-item list-group-item-action dropdown-notifications-item">
                                     <div class="d-flex">
                                         <div class="flex-grow-1">
@@ -62,7 +62,11 @@
                                         </div>
                                     </div>
                                 </li>
-                            @endforeach
+                            @empty
+
+                                <div class="my-4 mx-auto">پیام تازه ای وجود ندارد</div>
+
+                            @endforelse
 
                         </ul>
                     </li>

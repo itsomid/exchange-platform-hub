@@ -89,6 +89,7 @@
 </div>
 <!-- / Layout wrapper -->
 
+<script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
 <!-- Core JS -->
 @include('dashboard.layout.sections.scripts')
 
