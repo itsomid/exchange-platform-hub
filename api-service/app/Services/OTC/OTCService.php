@@ -4,30 +4,29 @@ namespace App\Services\OTC;
 
 use App\Enums\OTCOrderStatusEnum;
 use App\Enums\OTCOrderTypeEnum;
+use App\Enums\OTCRefExchangeWithdrawalStatusEnum;
 use App\Enums\SpotStatusEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Exceptions\V1\OTC\BuyTradeWasFiledException;
 use App\Exceptions\V1\OTC\InsufficientBalanceException;
-use App\Exceptions\V1\OTC\SellTradeWasFiledException;
 use App\Helpers\Math;
 use App\Models\Currency;
-use App\Models\CurrencyChain;
 use App\Models\Market;
 use App\Models\Setting;
 use App\Models\Transaction;
 use App\Notifications\OTCBuyCreated;
 use App\Notifications\OTCSellCreated;
 use App\Repositories\DTO\OTCOrder\CreateOTCOrderRequestDTO;
+use App\Repositories\DTO\OTCRefExchangeWithdrawal\CreateOTCRefExchangeWithdrawalRequestDTO;
 use App\Repositories\DTO\Transaction\CreateTransactionRequestDTO;
 use App\Repositories\Interfaces\MarketRepositoryInterface;
 use App\Repositories\Interfaces\OTCOrderRepositoryInterface;
+use App\Repositories\Interfaces\OTCRefExchangeWithdrawalInterface;
 use App\Repositories\Interfaces\TransactionRepositoryInterface;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
-use App\Services\Exchanges\Asset\Enum\WithdrawStatusEnum;
-use App\Services\Exchanges\DTO\ChargeUSDTRequestDTO;
 use App\Services\Exchanges\DTO\ExchangeBuyRequestDTO;
 use App\Services\Exchanges\ExchangeService;
 use App\Services\OTC\DTO\CompletedOrderRequestDTO;
@@ -49,6 +48,7 @@ class OTCService
         private readonly OTCOrderRepositoryInterface $otcOrderRepository,
         private readonly ReferralCommissionService $referralCommissionService,
         private readonly UserRepositoryInterface $userRepository,
+        private readonly OTCRefExchangeWithdrawalInterface $refExchangeWithdrawalRepository,
     ) {}
 
     public function markets(): array
@@ -479,29 +479,31 @@ class OTCService
                 ->setStatus(OTCOrderStatusEnum::SUCCESS)
             );
 
-            //            $doComplete = true;
-            //            if (Math::comp($buyerQuoteWallet->balance, $receivedAmount) === -1) {
-            //                $currency = Currency::query()->where('symbol', 'USDT')->first();
-            //                $chain = CurrencyChain::query()
-            //                    ->where('chain', 'BSC')
-            //                    ->where('currency_id', $currency->id)
-            //                    ->first();
-            //
-            //                // receivedAmount - bitexroom_withdrawal_fee
-            //                $amountForBuy = Math::sub($receivedAmount, $chain->exchange_withdrawal_fee);
-            //
-            //                $exchangeService = resolve(ExchangeService::class);
-            //                $chargeFromRefExchange = $exchangeService->chargeUSDT(
-            //                    resolve(ChargeUSDTRequestDTO::class)
-            //                        ->setCurrencyChain($chain->chain->value)
-            //                        ->setMarketId($requestDTO->getMarketId())
-            //                        ->setOtcId($otc_order->id)
-            //                        ->setQuantity($amountForBuy)
-            //                );
-            //                $doComplete = ! ($chargeFromRefExchange->getWithdrawStatus() === WithdrawStatusEnum::FAILED);
-            //            }
+            if (Math::comp($buyerQuoteWallet->balance, $receivedAmount) === -1) {
+                $usdtWallet = $this->walletRepository
+                    ->getBitexroomWallet(
+                        'USDT'
+                    );
+                $chargeUSDTTransaction = $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
+                    ->setUserId(config('bitexroom.bitexroom_user_id'))
+                    ->setWalletId($usdtWallet->id)
+                    ->setOtcOrderId($otc_order->id)
+                    ->setAmount(-$receivedAmount)
+                    ->setType(TransactionTypeEnum::WITHDRAWAL)
+                    ->setSubtype(TransactionSubTypeEnum::COINEX)
+                    ->setStatus(TransactionStatusEnum::SUCCESS)
+                    ->setDescription(sprintf('استفاده USDT به مقدار %s',
+                        formatNumberTrimZeros((float) $receivedAmount)
+                    )
+                    ));
 
-            //            if ($doComplete) {
+                $this->refExchangeWithdrawalRepository->create(
+                    resolve(CreateOTCRefExchangeWithdrawalRequestDTO::class)
+                        ->setTransactionId($chargeUSDTTransaction->id)
+                        ->setStatus(OTCRefExchangeWithdrawalStatusEnum::PENDING)
+                );
+            }
+
             $this->completeSellOrder(
                 resolve(CompletedOrderRequestDTO::class)
                     ->setOtcId($otc_order->id)
@@ -512,16 +514,6 @@ class OTCService
                 $this->referralCommissionService->processReferralCommission($otc_order, $fee);
             }
             $user->notify(new OTCSellCreated($market->base_currency.$market->quote_currency, $requestDTO->getQuantity(), $user->name));
-
-            //            DB::commit();
-            //            } else {
-            //                $otc_order->update([
-            //                    'status' => OTCOrderStatusEnum::CANCELED,
-            //                    'ref_exchange_description' => $chargeFromRefExchange->getWithdrawStatus()->value,
-            //                ]);
-            //                DB::commit();
-            //                throw new SellTradeWasFiledException(marketName: $market->base_currency.$market->quote_currency);
-            //            }
 
             DB::commit();
 
