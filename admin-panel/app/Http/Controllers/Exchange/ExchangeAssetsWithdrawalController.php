@@ -88,7 +88,7 @@ class ExchangeAssetsWithdrawalController extends Controller
                 ->setChain($request->input('currency_chain'))
                 ->setAmount($request->input('amount'))
                 ->setWithdrawMethod(WithdrawMethodEnum::ON_CHAIN)
-                ->setAddress($request->input('address'))
+                ->setAddress($request->input('withdrawal_address'))
         );
 
         ExchangeAssetsWithdrawal::query()

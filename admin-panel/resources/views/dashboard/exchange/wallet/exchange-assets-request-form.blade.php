@@ -69,11 +69,11 @@
                     <div class="w-100"></div>
                     @foreach($walletChains as $chain)
                         <div class="col-xl-4 mb-3">
-                            <label for="withdraw_address" class="form-label">
+                            <label for="withdrawal_address" class="form-label">
                                 <span>آدرس برداشت</span>
                                 <span class="mx-2">({{$chain->currency_chain}})</span>
                             </label>
-                            <input type="text" name="withdraw_address" id="withdraw_address" class="form-control"
+                            <input type="text" name="withdrawal_address" id="withdrawal_address" class="form-control"
                                    value="{{$chain->address}}" placeholder="آدرس برداشت">
                         </div>
                         <div class="w-100"></div>
