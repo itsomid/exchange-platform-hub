@@ -122,6 +122,7 @@ class EmailOTPService
         if (is_null($model)) {
             return false;
         }
+        $model->delete();
 
         return
             $model->code === $requestDTO->getCode()
