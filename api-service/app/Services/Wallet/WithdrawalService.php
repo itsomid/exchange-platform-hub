@@ -20,6 +20,7 @@ use App\Repositories\Interfaces\CurrencyRepositoryInterface;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Repositories\Interfaces\WithdrawalRepositoryInterface;
+use App\Services\Wallet\DTO\Withdrawal\CheckWithdrawalResponseDTO;
 use App\Services\Wallet\DTO\Withdrawal\CreateWithdrawalRequestDTO;
 use App\Services\Wallet\DTO\Withdrawal\CreateWithdrawalResponseDTO;
 use Illuminate\Support\Facades\DB;
@@ -111,9 +112,11 @@ class WithdrawalService
         }
     }
 
-    public function checkWithdrawal(int $userId): int
+    public function checkWithdrawal(int $userId): CheckWithdrawalResponseDTO
     {
-        $withdrawalCompletedCount = 0;
+        $checkWithdrawalResponseDTO = resolve(CheckWithdrawalResponseDTO::class);
+        $checkWithdrawalResponseDTO->setStatus(WithdrawalStatusEnum::PENDING);
+
         $user = $this->userRepository->getUserById($userId);
         $pending = $this->withdrawalRepository->getAllPending($userId);
         foreach ($pending as $withdrawal) {
@@ -130,13 +133,16 @@ class WithdrawalService
                         'status' => WithdrawalStatusEnum::FAILED,
                     ]);
                     $this->fialedWithdrawalAndUnlockBalance($withdrawal);
+                    $checkWithdrawalResponseDTO->setStatus(WithdrawalStatusEnum::FAILED);
 
                     continue;
                 }
                 if ($responseDTO->getStatus() === 'completed') {
-                    $withdrawalCompletedCount++;
+
                     $this->confirmWithdrawal($withdrawal, $responseDTO->getTransactionHash(), $responseDTO->getFee());
                     $user->notify(new WithdrawalSuccessful($withdrawal->currency_symbol, $withdrawal->amount, $user->name, $withdrawal->currencyChain->chain));
+                    $checkWithdrawalResponseDTO->setStatus(WithdrawalStatusEnum::COMPLETED);
+
                 }
 
             } catch (NotFoundException) {
@@ -151,7 +157,7 @@ class WithdrawalService
 
         }
 
-        return $withdrawalCompletedCount;
+        return $checkWithdrawalResponseDTO;
     }
 
     private function fialedWithdrawalAndUnlockBalance(Withdrawal $withdrawal)

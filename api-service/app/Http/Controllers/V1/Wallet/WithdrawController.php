@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\V1\Wallet;
 
+use App\Enums\WithdrawalStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Wallet\WithdrawRequest;
 use App\Http\Resources\V1\Wallet\WithdrawalResource;
@@ -117,6 +118,13 @@ class WithdrawController extends Controller
      *         @OA\JsonContent(
      *             type="object",
      *
+     *     @OA\Property(
+     *                  property="message",
+     *                  type="object",
+     *                  format="string",
+     *                  description="The message indicate withdraw status",
+     *                  example="Your withdrawal request has been successfully processed"
+     *          ),
      *             @OA\Property(
      *                 property="data",
      *                 type="object",
@@ -169,11 +177,21 @@ class WithdrawController extends Controller
     public function checkWithdrawal()
     {
         $service = resolve(WithdrawalService::class);
-        $completedCount = $service->checkWithdrawal(Auth::id());
+        $response = $service->checkWithdrawal(Auth::id());
 
-        return response(['data' => [
-            'available_in' => now()->addMinutes(config('bitexroom.withdrawal.check_wallet_attempts'))->format('Y-m-d H:i:s'),
-            'has_new_transaction' => $completedCount > 0,
-        ]]);
+        $message = __('messages.withdrawals.check_withdrawal_started');
+        if ($response->getStatus() === WithdrawalStatusEnum::COMPLETED) {
+            $message = __('messages.withdrawals.check_withdrawal_success');
+        } elseif ($response->getStatus() === WithdrawalStatusEnum::FAILED) {
+            $message = __('messages.withdrawals.check_withdrawal_error');
+        }
+
+        return response([
+            'message' => $message,
+            'data' => [
+                'available_in' => now()->addMinutes(config('bitexroom.withdrawal.check_wallet_attempts'))->format('Y-m-d H:i:s'),
+                'has_new_transaction' => $response->getStatus() === WithdrawalStatusEnum::COMPLETED,
+            ]]);
+
     }
 }

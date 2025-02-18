@@ -7,4 +7,9 @@ return [
     'wallet_refresh' => 'فرآیند به‌روزرسانی کیف پول آغاز شد.',
     'wallet_refresh_succeed' => 'تراکنش واریز شما با موفقیت به کیف پول شما انتقال یافت.',
     'not_found' => 'مورد درخواستی یافت نشد.',
+    'withdrawals' => [
+        'check_withdrawal_success' => 'برداشت شما با موفقیت انجام شد.',
+        'check_withdrawal_started' => 'فرآیند برداشت شما شروع شده است.',
+        'check_withdrawal_error' => 'برداشت شما با شکست مواجه شد.',
+    ],
 ];
