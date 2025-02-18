@@ -65,7 +65,7 @@ class ExchangeAssetsWithdrawalController extends Controller
             'currency_symbol' => ['required', Rule::exists(Currency::class, 'symbol')],
             'currency_chain' => ['required', Rule::exists(CurrencyChain::class, 'chain')],
             'amount' => ['required', 'numeric'],
-            'withdraw_address' => 'required',
+            'withdrawal_address' => 'required',
         ]);
 
         $currency = Currency::where('symbol', $request->currency_symbol)->first();
