@@ -111,14 +111,13 @@
                         @forelse($withdrawalFeeTransactionsByCurrency as $currency)
                             <li class="mb-6 d-flex justify-content-between align-items-center">
 
-                                <img src="{{asset($currency->wallet->currency->coinLogo())}}" class="img-fluid"
-                                     width="45px">
+                                <img src="{{asset(\App\Models\Currency::whereSymbol($currency->currency_symbol)->first()->coinLogo())}}" class="img-fluid" width="45px">
 
                                 <div class="d-flex justify-content-between w-100 flex-wrap">
-                                    <h6 class="mb-0 ms-4">{{$currency->wallet->currency_symbol}}</h6>
+                                    <h6 class="mb-0 ms-4">{{$currency->currency_symbol}}</h6>
                                     <div class="d-flex ">
                                         <small
-                                            class="me-2 align-self-end">{{$currency->wallet->currency_symbol}}</small>
+                                            class="me-2 align-self-end">{{$currency->currency_symbol}}</small>
                                         <h5 class="mb-0 font-number">{{formatNumberTrimZeros($currency->total_amount)}}</h5>
                                     </div>
                                 </div>
