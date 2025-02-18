@@ -28,8 +28,8 @@ class Currency extends Model
 
     public function getExchangePriceAttribute()
     {
-        return $this->baseMarket && $this->baseMarket->activeExchangePrice
-            ? $this->baseMarket->activeExchangePrice->price
+        return $this->baseMarket && $this->baseMarket->exchangePrice
+            ? $this->baseMarket->exchangePrice->price
             : 1; // Default to 1 if no exchange rate is found
     }
 
