@@ -287,10 +287,6 @@ if (document.getElementById('layout-menu')) {
     // --------------------
 
     // Init BS Tooltip
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
 
     // Accordion active class
     const accordionActiveFunction = function (e) {

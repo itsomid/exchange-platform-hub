@@ -88,9 +88,9 @@
     <div class="drag-target"></div>
 </div>
 <!-- / Layout wrapper -->
-
-{{--<script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>--}}
 <!-- Core JS -->
+<script src="{{ asset('js/jquery-3.7.1.min.js') }}"></script>
+{{--<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>--}}
 @include('dashboard.layout.sections.scripts')
 
 
