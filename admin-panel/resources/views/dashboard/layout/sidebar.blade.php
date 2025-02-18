@@ -277,13 +277,13 @@
                             </a>
                         </li>
                     @endcan
-                    @can('setting.ext.index')
-                        <li class="menu-item  @if(request()->is('admin/external-settings*')) active @endif">
-                            <a href="{{route('admin.external-setting.index')}}" class="menu-link">
-                                <div>تنظیمات خارجی</div>
-                            </a>
-                        </li>
-                    @endcan
+{{--                    @can('setting.ext.index')--}}
+{{--                        <li class="menu-item  @if(request()->is('admin/external-settings*')) active @endif">--}}
+{{--                            <a href="{{route('admin.external-setting.index')}}" disabled="disabled" class="menu-link">--}}
+{{--                                <div>تنظیمات خارجی</div>--}}
+{{--                            </a>--}}
+{{--                        </li>--}}
+{{--                    @endcan--}}
                 </ul>
             </li>
         @endcan

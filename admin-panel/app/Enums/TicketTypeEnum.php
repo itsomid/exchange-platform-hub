@@ -8,36 +8,61 @@ use App\Models\Withdrawal;
 
 enum TicketTypeEnum: string
 {
-    case Withdrawal = 'withdrawal';
-    case Deposit = 'deposit';
-    case OTC = 'otc';
+    case WITHDRAWAL = 'withdrawal';
+    case DEPOSIT = 'deposit';
+    case OTC_ORDER = 'otc_order';
+
+    /**
+     * Get the corresponding model class for each type.
+     */
+
+    public static function fromModelClass(string $modelClass): ?self
+    {
+        $classToEnumMap = [
+            Withdrawal::class => self::WITHDRAWAL,
+            Deposit::class => self::DEPOSIT,
+            OTCOrder::class => self::OTC_ORDER,
+        ];
+
+        return $classToEnumMap[$modelClass] ?? null;
+    }
+
+    /**
+     * Get all enum values as an array.
+     */
+    public static function values(): array
+    {
+        return array_column(self::cases(), 'value');
+    }
 
     // get type class
+    // Mapping arrays for labels and colors
     const array TYPE_LABEL = [
-        self::Withdrawal->value => 'برداشت',
-        self::Deposit->value => 'واریز',
-        self::OTC->value => 'معامله',
-
+        self::WITHDRAWAL->value => 'برداشت',
+        self::DEPOSIT->value => 'واریز',
+        self::OTC_ORDER->value => 'معامله',
     ];
 
     const array TYPE_COLOR = [
-        self::Withdrawal->value => 'danger',
-        self::Deposit->value => 'success',
-        self::OTC->value => 'info',
+        self::WITHDRAWAL->value => 'danger',
+        self::DEPOSIT->value => 'success',
+        self::OTC_ORDER->value => 'info',
     ];
 
+    /**
+     * Get the corresponding label for the enum value.
+     */
     public function label(): string
     {
         return self::TYPE_LABEL[$this->value] ?? '';
     }
 
     /**
-     * Get color for the deposit status.
-     *
-     * @return string
+     * Get the corresponding color for the enum value.
      */
     public function color(): string
     {
         return self::TYPE_COLOR[$this->value] ?? '';
     }
+
 }

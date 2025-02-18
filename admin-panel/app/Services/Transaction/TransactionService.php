@@ -23,21 +23,25 @@ use App\Services\Wallet\WalletService;
 class TransactionService
 {
     protected $walletService;
+
     public function __construct(WalletService $walletService)
     {
         $this->walletService = $walletService;
     }
-    public function     increaseDecreaseAdminWalletCredit(
-        int     $userId,
-        float   $amount,
-        Currency  $currency,
-        CurrencyChain  $currencyChain,
-        string  $type, // INCREASE or DECREASE
-        ?int    $adminId = null,
-        ?string $description = null,
-        ?string $admin_description = null
-    ): void {
-        \DB::transaction(function () use ($userId, $amount, $currency, $currencyChain, $type, $adminId, $description, $admin_description) {
+
+    public function increaseDecreaseAdminWalletCredit(
+        int           $userId,
+        float         $amount,
+        Currency      $currency,
+        CurrencyChain $currencyChain,
+        string        $type, // INCREASE or DECREASE
+        ?string       $transactionHash,
+        ?int          $adminId = null,
+        ?string       $description = null,
+        ?string       $admin_description = null
+    )
+    {
+        \DB::transaction(function () use ($userId, $amount, $transactionHash, $currency, $currencyChain, $type, $adminId, $description, $admin_description) {
             // Fetch the wallet
             $exchangeWallet = $this->walletService->getExchangeWallet($currency->symbol);
             if (!$exchangeWallet) {
@@ -57,8 +61,8 @@ class TransactionService
                     'amount' => $amount,
                     'usdt_value' => $amount * $currency->exchangePrice,
                     'address' => null,
-                    'transaction_hash' => null,
-                    'description' => 'Exchange Wallet credit increase by admin: (#' . $adminId . ') '.Admin::find($adminId)->fullname(),
+                    'transaction_hash' => $transactionHash,
+                    'description' => 'Exchange Wallet credit increase by admin: (#' . $adminId . ') ' . Admin::find($adminId)->fullname(),
                     'status' => DepositStatusEnum::CONFIRMED,
                 ]);
                 $this->logTransaction(
@@ -82,7 +86,7 @@ class TransactionService
                     'usdt_value' => $amount * $currency->exchangePrice,
                     'address' => null,
                     'transaction_hash' => null,
-                    'description' => 'Exchange Wallet deduction by admin: (#' . $adminId . ') '.Admin::find($adminId)->fullname(),
+                    'description' => 'Exchange Wallet deduction by admin: (#' . $adminId . ') ' . Admin::find($adminId)->fullname(),
                     'status' => WithdrawalStatusEnum::COMPLETED,
                 ]);
                 $this->logTransaction(
@@ -91,7 +95,7 @@ class TransactionService
                     type: TransactionTypeEnum::DEPOSIT->value,
                     adminId: $adminId,
                     withdrawalId: $withdraw->id, // No deposit ID for admin direct actions
-                    description: 'Exchange Wallet credit decrease',
+                    description: 'Exchange Wallet credit decrease by',
                     admin_description: $admin_description
                 );
 
@@ -103,6 +107,7 @@ class TransactionService
 
         });
     }
+
     /**
      * Transfer funds between exchange wallet and user wallet.
      *
@@ -118,19 +123,20 @@ class TransactionService
      * @throws \Exception
      */
     public function transferBetweenWallets(
-        int     $fromUserId,
-        int     $toUserId,
-        float   $amount,
-        Currency  $currency,
-        CurrencyChain  $currencyChain,
-        string  $type,
-        ?int    $adminId = null,
-        ?string $description = null,
-        ?string $admin_description = null
+        int           $fromUserId,
+        int           $toUserId,
+        float         $amount,
+        ?string       $transactionHash,
+        Currency      $currency,
+        CurrencyChain $currencyChain,
+        string        $type,
+        ?int          $adminId = null,
+        ?string       $description = null,
+        ?string       $admin_description = null
     ): void
     {
 
-        \DB::transaction(function () use ($fromUserId, $toUserId, $amount, $currency, $currencyChain, $type, $adminId, $description, $admin_description) {
+        \DB::transaction(function () use ($fromUserId, $toUserId, $amount, $transactionHash, $currency, $currencyChain, $type, $adminId, $description, $admin_description) {
             // Fetch wallets
 
             $fromWallet = Wallet::firstOrCreate(
@@ -160,7 +166,7 @@ class TransactionService
                 'amount' => $amount,
                 'usdt_value' => $amount * $currency->exchangePrice,
                 'address' => null,
-                'transaction_hash' => null,
+                'transaction_hash' => $transactionHash,
                 'description' => 'manual transfer by admin: (#' . $adminId . ') to: (#' . User::find($toUserId)->username . ')',
                 'status' => DepositStatusEnum::CONFIRMED,
             ]);
@@ -171,23 +177,22 @@ class TransactionService
                 'amount' => $amount,
                 'usdt_value' => $amount * $currency->exchangePrice,
                 'address' => null,
-                'transaction_hash' => null,
+                'transaction_hash' => $transactionHash,
                 'description' => 'manual transfer by admin: (#' . $adminId . ') to: (#' . User::find($toUserId)->username . ')',
                 'status' => WithdrawalStatusEnum::COMPLETED,
             ]);
 
 
-
             $this->logTransaction(
                 wallet: $fromWallet,
                 amount: -$amount,
-                type:  TransactionTypeEnum::WITHDRAWAL->value,
+                type: TransactionTypeEnum::WITHDRAWAL->value,
                 adminId: $adminId,
                 withdrawalId: $withdrawal->id, // No deposit ID for admin direct actions
                 description: $description ?? 'Funds withdrawn.',
                 admin_description: $admin_description
             );
-            $fromWallet->decrement('balance',$amount);
+            $fromWallet->decrement('balance', $amount);
 
 
             $this->logTransaction(
@@ -200,7 +205,7 @@ class TransactionService
                 admin_description: $admin_description
             );
 
-            $toWallet->increment('balance',$amount);
+            $toWallet->increment('balance', $amount);
         });
     }
 
@@ -211,18 +216,17 @@ class TransactionService
      * @param Wallet $wallet
      * @param float $amount
      * @param string $type
-
      * @param string|null $description
      * @param string|null $admin_description
      * @return void
      */
     private function logTransaction(
-        Wallet $wallet,
-        float $amount,
-        string $type,
-        ?int $adminId,
-        ?int $depositId = null,
-        ?int $withdrawalId = null,
+        Wallet  $wallet,
+        float   $amount,
+        string  $type,
+        ?int    $adminId,
+        ?int    $depositId = null,
+        ?int    $withdrawalId = null,
         ?string $description = null,
         ?string $admin_description = null
     ): void
@@ -245,7 +249,7 @@ class TransactionService
 
 
     //report////
-    public function totalTransactionsBasedType( Int $userId, string $currencySymbol, array $transactionTypes): float
+    public function totalTransactionsBasedType(int $userId, string $currencySymbol, array $transactionTypes): float
     {
         // Get the total amount of deposits for the given currency
         $totalTransactions = Transaction::whereIn('type', $transactionTypes)
@@ -257,7 +261,8 @@ class TransactionService
 
         return abs($totalTransactions);
     }
-    public function totalTransactionsValueBasedType( Int $userId, string $currencySymbol, array $transactionTypes): float
+
+    public function totalTransactionsValueBasedType(int $userId, string $currencySymbol, array $transactionTypes): float
     {
         // Get the total amount of deposits for the given currency
         $totalTransactions = Transaction::whereIn('type', $transactionTypes)

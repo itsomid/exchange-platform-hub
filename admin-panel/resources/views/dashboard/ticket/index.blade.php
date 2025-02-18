@@ -87,6 +87,10 @@
                     </thead>
                     <tbody class="table-border-bottom-0">
                     @foreach($tickets as $ticket)
+                        @php
+                            // Convert the string value to the actual enum instance
+                          $ticketTypeEnum = $ticket->ticketable_type ? App\Enums\TicketTypeEnum::fromModelClass($ticket->ticketable_type) : null;
+                        @endphp
                         <tr>
                             <td>
                                 {{$ticket->ticket_number}}
@@ -108,7 +112,7 @@
                             </td>
                             <td>
                                 <span
-                                    class="badge bg-label-{{$ticket->ticketable_type->color()}}">{{$ticket->ticketable_type->label()}}</span>
+                                    class="badge bg-label-{{$ticketTypeEnum?->color()}}">{{$ticketTypeEnum?->label()}}</span>
                             </td>
                             <td>
                                   <span
@@ -124,14 +128,13 @@
                                     <a href="" class="text-secondary me-3">
                                         <i class="fa-light fa-pen-to-square fa-lg"></i>
                                     </a>
-                                    <a href="" class="btn btn-icon btn-text-secondary" data-bs-toggle="modal"
-                                       data-bs-target="#deposit-{{$ticket->id}}">
+                                    <a href="{{route('admin.ticket.replies.index',['ticket'=>$ticket])}}" class="btn btn-icon btn-text-secondary">
                                         <i class="fa-light fa-eye fa-lg"></i>
                                     </a>
                                     <form action="{{route('admin.tickets.destroy',['ticket' => $ticket])}}" method="post">
                                         @csrf
                                         @method('DELETE')
-                                        <button class="btn btn-icon btn-danger ">
+                                        <button class="btn btn-icon btn-text-danger">
                                             <i class="fa-light fa-trash-alt fa-lg"></i>
                                         </button>
                                     </form>

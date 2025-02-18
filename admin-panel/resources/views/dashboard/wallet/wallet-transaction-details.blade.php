@@ -11,7 +11,7 @@
                         <thead>
                         <tr>
                             <th>شناسه</th>
-                            <th>نوع تراکنش</th>
+                            <th>کوین</th>
                             <th>کاربر</th>
                             <th>رمز ارز</th>
                             <th>
@@ -29,7 +29,7 @@
                                     @endif
                                 </a>
                             </th>
-                            <th>مقدار موجودی</th>
+                            <th>ارزش</th>
                             <th>توضیحات</th>
                             <th>
                                 @php
@@ -50,73 +50,95 @@
                         </tr>
                         </thead>
                         <tbody class="table-border-bottom-0">
-                        @if($transactions->isEmpty())
-                            <tr>
-                                <td colspan="9" class="text-center">تراکنشی موجود نیست</td>
-                            </tr>
-                        @else
-                            @foreach($transactions as $transaction)
+                        @if( (isset($deposits) && $deposits->isNotEmpty()) )
+                            @foreach($deposits as $deposit)
                                 <tr>
-                                    <td>{{$transaction->id}}</td>
+                                    <td>{{ $deposit->id }}</td>
                                     <td class="text-heading fw-medium">
-                                        <div class="d-flex justify-content-start align-items-center">
-                                            <div class="trans-avatar-group d-flex align-items-center assigned-avatar">
-
-                                                <div class="avatar avatar-md ">
-                                                    <img src="{{asset($transaction->wallet->currency->coinLogo())}}"
-                                                         class="rounded-circle  ">
-                                                </div>
-                                                <div class="avatar avatar-md">
-                                                <span
-                                                    class="avatar-initial rounded-circle bg-label-{{\App\Enums\TransactionTypeEnum::TYPE_COLOR[$transaction->type->value]}}">
-                                                    <i class="fa-regular fa-{{\App\Enums\TransactionTypeEnum::TYPE_ICON[$transaction->type->value]}} mx-3"></i>
-                                                </span>
-                                                </div>
-                                            </div>
-
-                                            <span
-                                                class="badge bg-label-{{\App\Enums\TransactionTypeEnum::TYPE_COLOR[$transaction->type->value]}} ms-2">
-                                           {{$transaction->type->value}}
-                                        </span>
+                                        <div class="avatar avatar-sm">
+                                            <img src="{{ asset($deposit->currency->coinLogo()) }}"
+                                                 class="rounded-circle">
                                         </div>
+                                    </td>
+                                    <td>
 
+                                        <div class="d-flex flex-column">
+                                            <a href="" class="text-heading text-truncate">
+                                                <span class="fw-medium">{{ $deposit->user->email }}</span>
+                                            </a>
+                                            <small>{{ $deposit->user->username }}</small>
+                                        </div>
+                                    </td>
+                                    <td>{{ $deposit->currency_symbol }}</td>
+                                    <td class="font-number">
+                                        <h6>{{ formatNumber($deposit->amount) }}</h6>
+                                    </td>
+                                    <td class="font-number">
+                                        <h6>{{ formatNumber($deposit->usdt_value) }}</h6>
+                                    </td>
+                                    <td>
+                                        {{ $deposit->description }}
+                                    </td>
+                                    <td class="font-number">
+                                        {{ \App\Helpers\DateFormatter::convertToPersianDate($deposit->created_at, 'H:i:s %Y/%m/%d') }}
+                                    </td>
+                                    <td>
+
+                                        <a href=""
+                                           class="btn btn-{{ \App\Enums\DepositStatusEnum::TYPE_COLOR[$deposit->status->value] }} btn-sm">
+                                            {{ $deposit->status->label() }}
+                                        </a>
+
+                                    </td>
+                                </tr>
+                            @endforeach
+
+                        @elseif( (isset($withdrawals) && $withdrawals->isNotEmpty()) )
+                            @foreach($withdrawals as $withdrawal)
+                                <tr>
+                                    <td>{{ $withdrawal->id }}</td>
+                                    <td class="text-heading fw-medium">
+                                        <div class="avatar avatar-sm">
+                                            <img src="{{ asset($withdrawal->currency->coinLogo()) }}"
+                                                 class="rounded-circle">
+                                        </div>
                                     </td>
                                     <td>
                                         <div class="d-flex flex-column">
                                             <a href="" class="text-heading text-truncate">
-                                                <span class="fw-medium">{{$transaction->user->email}}</span>
+                                                <span class="fw-medium">{{ $withdrawal->user->email }}</span>
                                             </a>
-                                            <small>{{$transaction->user->username}}</small>
+                                            <small>{{ $withdrawal->user->username }}</small>
                                         </div>
                                     </td>
-
-                                    <td>{{$transaction->wallet->currency_symbol}}</td>
+                                    <td>{{ $withdrawal->currency_symbol }}</td>
                                     <td class="font-number">
-                                        <h6>{{formatNumber($transaction->amount)}}</h6>
+                                        <h6>{{ formatNumber($withdrawal->amount) }}</h6>
                                     </td>
                                     <td class="font-number">
-                                        <h6>{{formatNumber($transaction->balance)}}</h6>
+                                        <h6>{{ formatNumber($withdrawal->usdt_value) }}</h6>
                                     </td>
                                     <td>
-                                        {{$transaction->description}}
+                                        {{ $withdrawal->description }}
                                     </td>
                                     <td class="font-number">
-                                        {{\App\Helpers\DateFormatter::convertToPersianDate($transaction->created_at,'H:i:s %Y/%m/%d')}}
+                                        {{ \App\Helpers\DateFormatter::convertToPersianDate($withdrawal->created_at, 'H:i:s %Y/%m/%d') }}
                                     </td>
-
                                     <td>
-                                        @if($transaction->deposit)
 
-                                            <a href=""
-                                               class="btn btn-{{\App\Enums\DepositStatusEnum::TYPE_COLOR[$transaction->deposit->status->value]}} btn-sm">
-                                                {{$transaction->deposit->status->label()}}
-                                            </a>
-                                        @endif
+                                        <a href=""
+                                           class="btn btn-{{ \App\Enums\WithdrawalStatusEnum::TYPE_COLOR[$withdrawal->status->value] }} btn-sm">
+                                            {{ $withdrawal->status->label() }}
+                                        </a>
 
                                     </td>
                                 </tr>
-
                             @endforeach
+
+                        @else
+                            <tr>
+                                <td colspan="9" class="text-center">تراکنشی موجود نیست</td>
+                            </tr>
                         @endif
                         </tbody>
                     </table>

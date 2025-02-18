@@ -334,6 +334,12 @@
     </div>
 
 @endsection
+
 @section('vendor-script')
-    @vite(['resources/assets/js/ui-popover.js'])
+    <script>
+        $(document).ready(function () {
+            $('[data-bs-toggle="tooltip"]').tooltip();
+        });
+    </script>
 @endsection
+

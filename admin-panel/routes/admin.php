@@ -68,11 +68,12 @@ Route::prefix('admins')->group(function () {
 
     Route::get('/notifications', [AdminNotificationController::class, 'index'])->name('admin.notifications.index');
     Route::patch('/notifications/mark-read/{id}', [AdminNotificationController::class, 'markAsRead'])->name('admin.notifications.mark-read');
+    Route::get('/notifications/mark-all-read', [AdminNotificationController::class, 'markAllAsRead'])->name('admin.notifications.mark-all-read');
 });
 
 Route::resource('/tickets', TicketController::class)->except(['ticket']);
 Route::prefix('tickets')->name('ticket.')->group(function () {
-    Route::get('/{ticket}/replies', [TicketReplyController::class,'index'])->name('replies.index')->can('replies.index');
+    Route::get('/{ticket}/replies', [TicketReplyController::class,'index'])->name('replies.index');
     Route::post('/{ticket}/replies', [TicketReplyController::class, 'store'])->name('replies.store');
     Route::delete('/replies/{reply}', [TicketReplyController::class, 'destroy'])->name('replies.destroy');
 });
@@ -162,7 +163,6 @@ Route::patch('/exchange/markets/{market}',[MarketController::class,'update'])->n
 Route::get('/exchange/ref-exchanges',[RefExchangeController::class,'index'])->name('exchange.index')->can('ref-exchanges');
 
 
-
 Route::get('/wallets',[ExchangeWalletController::class,'index'])->name('wallet');
 Route::get('/wallets/assets-gathering-to-hd-wallet',[ExchangeAssetsWithdrawalController::class,'index'])->name('wallets.assets-gathering-to-hd-wallet.index');
 Route::get('/wallets/assets-gathering-to-hd-wallet/create',[ExchangeAssetsWithdrawalController::class,'create'])->name('wallets.assets-gathering-to-hd-wallet.create');
@@ -203,6 +203,9 @@ Route::prefix('wallet')->group(function (){
     Route::post('{wallet}/block-balance', [WalletController::class, 'blockBalance'])->name('wallet.block-balance')->can('wallet');
     Route::get('{wallet}/user/{user}/unblock-balance', [WalletController::class, 'unblockBalanceForm'])->name('wallet.unblock-balance.form')->can('wallet');
     Route::post('{wallet}/unblock-balance', [WalletController::class, 'unblockBalance'])->name('wallet.unblock-balance')->can('wallet');
+    Route::post('{wallet}/create-chain-address/{chain_name}', [WalletController::class, 'createExchangeWalletChain'])->name('wallet.create-chain-address');
+    Route::post('update-chain-address/{wallet_chain}', [WalletController::class, 'updateExchangeWalletChain'])->name('wallet.update-chain-address');
+
 });
 
 Route::prefix('report')->group(function (){

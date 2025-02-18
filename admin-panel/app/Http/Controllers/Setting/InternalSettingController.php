@@ -6,11 +6,19 @@ use App\Data\PermissionList;
 use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Services\Wallet\WalletService;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 
 class InternalSettingController extends Controller
 {
+
+    protected $exchangeUserId;
+    public function __construct(WalletService $walletService)
+    {
+        $this->exchangeUserId = config('exchange.exchange_user_id', 1);
+        $this->walletService = $walletService;
+    }
     public function index()
     {
         $last3permissions = Permission::query()->latest()->take(3)->get();
@@ -23,6 +31,7 @@ class InternalSettingController extends Controller
         $exchangeWithdrawalType = Setting::where('key', 'exchange_withdrawal_type')->first();
         $exchangeWithdrawalStatus = Setting::where('key', 'exchange_withdrawal_status')->first();
 
+        $exchangeWalletChains = $this->walletService->getExchangeAllWalletChain();
 
         return view('dashboard.setting.internal.index', [
             'last3permissions' => $last3permissions,
@@ -34,6 +43,8 @@ class InternalSettingController extends Controller
             'exchangeWithdrawalPeriodBuy' => $exchangeWithdrawalPeriodBuy,
             'exchangeWithdrawalType' => $exchangeWithdrawalType,
             'exchangeWithdrawalStatus' => $exchangeWithdrawalStatus,
+            'exchangeWalletChains' => $exchangeWalletChains,
+
         ]);
     }
 

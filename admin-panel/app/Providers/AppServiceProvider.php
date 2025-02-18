@@ -33,7 +33,7 @@ class AppServiceProvider extends ServiceProvider
         });
         View::composer('dashboard.layout.navbar', function ($view) {
             $admin = auth()->user(); // Get authenticated admin
-            $notifications = $admin->notifications;
+            $notifications = $admin->unreadNotifications;
             $unreadCount = $admin ? $admin->unreadNotifications->count() : 0;
             $view->with(['unreadCount' => $unreadCount, 'notifications' => $notifications]);
         });

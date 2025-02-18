@@ -20,7 +20,8 @@
                         <dd class="col-sm-7">
                             <div class="input-group">
 
-                                <input type="text" class="form-control font-number fw-bold" readonly="readonly" dir="ltr"
+                                <input type="text" class="form-control font-number fw-bold" readonly="readonly"
+                                       dir="ltr"
                                        value="{{formatNumberTrimZeros($chain->network_fee)}} {{$currency->symbol}} ≈ {{$chain->network_fee * $chain->currency->exchangePrice}} USD ">
                                 <span class="input-group-text text-primary fw-bold "> {{$chain->chain}}</span>
                             </div>
@@ -66,11 +67,18 @@
                                min="0" placeholder="میزان کوین مورد نظر را وارد کنید">
                     </div>
                     <div class="w-100"></div>
-                    <div class="col-xl-4 mb-3">
-                        <label for="withdraw_address" class="form-label">آدرس برداشت</label>
-                        <input type="text" name="withdraw_address" id="withdraw_address" class="form-control"
-                               value="{{$withdrawalAddress}}" placeholder="آدرس برداشت">
-                    </div>
+                    @foreach($walletChains as $chain)
+                        <div class="col-xl-4 mb-3">
+                            <label for="withdrawal_address" class="form-label">
+                                <span>آدرس برداشت</span>
+                                <span class="mx-2">({{$chain->currency_chain}})</span>
+                            </label>
+                            <input type="text" name="withdrawal_address" id="withdrawal_address" class="form-control"
+                                   value="{{$chain->address}}" placeholder="آدرس برداشت">
+                        </div>
+                        <div class="w-100"></div>
+                    @endforeach
+
                     <div class=" d-flex justify-content-start mt-5">
 
                         <button class="btn btn-primary ">

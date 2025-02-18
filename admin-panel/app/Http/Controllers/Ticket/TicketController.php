@@ -11,7 +11,7 @@ class TicketController extends Controller
 {
     public function index()
     {
-        $tickets = Ticket::all();
+         $tickets = Ticket::all();
         return view('dashboard.ticket.index', compact('tickets'));
     }
 

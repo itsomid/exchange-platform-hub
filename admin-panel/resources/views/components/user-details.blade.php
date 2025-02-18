@@ -69,7 +69,7 @@
                         class="text-{{auth('admin')->user()->twoFAStatus()?'success':'danger'}}">{{auth('admin')->user()->twoFAStatus()?'فعال':'غیرفعال'}}</span>
                 </li>
                 <li class="mt-2 d-flex justify-content-between">
-                    <span class="h6">تاریح ایجاد حساب:</span>
+                    <span class="h6">تاریخ ایجاد حساب:</span>
                     <span>{{\App\Helpers\DateFormatter::convertToPersianDate($user->created_at,'%d %B %Y - H:i:s')}}</span>
 
                 </li>

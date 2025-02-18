@@ -88,11 +88,9 @@
     <div class="drag-target"></div>
 </div>
 <!-- / Layout wrapper -->
-
 <!-- Core JS -->
+<script src="{{ asset('js/jquery-3.7.1.min.js') }}"></script>
 @include('dashboard.layout.sections.scripts')
-
-
 
 @include('dashboard.layout.vendor.flash_message')
 

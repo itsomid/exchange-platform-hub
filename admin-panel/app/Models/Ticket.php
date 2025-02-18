@@ -19,7 +19,7 @@ class Ticket extends Model
     ];
     protected $casts = [
         'status' => TicketStatusEnum::class, // Cast the status to the enum
-        'ticketable_type' => TicketTypeEnum::class, // Cast the status to the enum
+
         'priority' => TicketPriorityEnum::class, // Cast the status to the enum
     ];
     public function user(): BelongsTo
@@ -32,10 +32,11 @@ class Ticket extends Model
         return $this->hasMany(TicketReply::class);
     }
 
-    public function ticketable(): MorphTo
+    public function ticketable()
     {
-        return $this->morphTo();
+        return $this->morphTo(__FUNCTION__, 'ticketable_type', 'ticketable_id');
     }
+
 
     public static function generateTicketNumber(): string
     {

@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\V1\User;
 
-use App\Enums\TicketType;
+use App\Enums\TicketTypeEnum;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -32,8 +32,8 @@ class StoreTicketRequest extends FormRequest
             'subject' => ['required', 'string', 'max:255'],
             'message' => ['required', 'string'],
             'priority' => ['required', 'string', 'in:low,medium,high'],
-            'ticketable_id' => ['required', 'integer'],
-            'ticketable_type' => ['required', Rule::enum(TicketType::class)],
+            'ticketable_id' => ['integer'],
+            'ticketable_type' => [Rule::enum(TicketTypeEnum::class)],
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
         ];
     }

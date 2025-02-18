@@ -9,6 +9,8 @@ use App\Models\Currency;
 use App\Models\CurrencyChain;
 use App\Models\ExchangeAssetsWithdrawal;
 use App\Models\Setting;
+use App\Models\Wallet;
+use App\Models\WalletChain;
 use App\Models\Withdrawal;
 use App\Services\Exchanges\Asset\AssetFactory;
 use App\Services\Exchanges\Asset\DTO\WithdrawRequestDTO;
@@ -22,7 +24,7 @@ class ExchangeAssetsWithdrawalController extends Controller
     {
         $withdraws = ExchangeAssetsWithdrawal::with('currency')->get();
 
-         $withdrawalFeeSum = ExchangeAssetsWithdrawal::sum('fee');
+        $withdrawalFeeSum = ExchangeAssetsWithdrawal::sum('fee');
 
         return view('dashboard.exchange.wallet.exchange-assets-withdrawal', [
             'withdraws' => $withdraws,
@@ -31,19 +33,28 @@ class ExchangeAssetsWithdrawalController extends Controller
     }
 
 
-    public function create()
+    public function create(Request $request)
     {
-
-        $currency = Currency::whereSymbol('USDT')->first();
+        if ($request->has('currency_symbol')) {
+            $currency_symbol = $request->currency_symbol;
+        } else {
+            $currency_symbol = 'USDT';
+        }
+        $currency = Currency::whereSymbol($currency_symbol)->first();
 
         $currencyChains = $currency->chains;
+        $wallet = Wallet::where('currency_symbol', $currency->symbol)->first();
 
-        $withdrawalAddress = Setting::where('key', $currency->symbol . '_PUB_KEY')->first()->value;
+
+        $walletChains = $wallet->walletChains;
+
+
+        ///TODO: complete Withdrawal
 
         return view('dashboard.exchange.wallet.exchange-assets-request-form', [
             'currency' => $currency,
             'currencyChains' => $currencyChains,
-            'withdrawalAddress' => $withdrawalAddress,
+            'walletChains' => $walletChains,
         ]);
     }
 
@@ -54,7 +65,7 @@ class ExchangeAssetsWithdrawalController extends Controller
             'currency_symbol' => ['required', Rule::exists(Currency::class, 'symbol')],
             'currency_chain' => ['required', Rule::exists(CurrencyChain::class, 'chain')],
             'amount' => ['required', 'numeric'],
-            'withdraw_address' => 'required',
+            'withdrawal_address' => 'required',
         ]);
 
         $currency = Currency::where('symbol', $request->currency_symbol)->first();
@@ -77,7 +88,7 @@ class ExchangeAssetsWithdrawalController extends Controller
                 ->setChain($request->input('currency_chain'))
                 ->setAmount($request->input('amount'))
                 ->setWithdrawMethod(WithdrawMethodEnum::ON_CHAIN)
-                ->setAddress($request->input('address'))
+                ->setAddress($request->input('withdrawal_address'))
         );
 
         ExchangeAssetsWithdrawal::query()

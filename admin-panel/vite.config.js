@@ -46,7 +46,6 @@ export default defineConfig({
                 ...LibsScssFiles,
                 ...LibsCssFiles,
                 ...LibsScssNFiles
-                // ...CoreScssFiles
             ],
             refresh: true,
         }),

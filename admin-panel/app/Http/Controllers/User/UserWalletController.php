@@ -98,14 +98,16 @@ class UserWalletController extends Controller
         $transactionTitle = $transactionTypes[$type]['title'] ?? 'Transactions';
         // Fetch transactions based on type
         if ($type === 'deposit') {
-            $transactions = Transaction::whereIn('type', [TransactionTypeEnum::DEPOSIT])
-                ->where('wallet_id', $wallet->id)
-                ->get();
+             $deposits = Deposit::where('currency_symbol',$wallet->currency_symbol)->where('user_id', $user->id)->get();
+
+            // Optionally create an empty collection for withdrawals:
+            $withdrawals = collect([]);
 
         } else {
-            $transactions = Transaction::where('type', $type)
-                ->where('wallet_id', $wallet->id)
+            $withdrawals = Withdrawal::where('currency_symbol', $wallet->currency_symbol)->where('user_id', $user->id)
                 ->get();
+
+            $deposits = collect([]);
         }
 
         // Fetch the total deposit amount and the last deposit date
@@ -172,7 +174,8 @@ class UserWalletController extends Controller
             'wallet' => $wallet,
             'specificAssetValue' => $specificAssetValue,
             'transactionTitle' => $transactionTitle,
-            'transactions' => $transactions,
+            'deposits' => $deposits,
+            'withdrawals' => $withdrawals,
             'totalDeposits' => $totalDeposits,
             'totalDepositsValue' => $totalDepositsValue,
             'lastDepositDate' => $lastDepositDate,

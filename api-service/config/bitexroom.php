@@ -6,7 +6,7 @@ return [
     'bitexroom_user_id' => env('BITEXROOM_USER_ID', 1),
     'wallet_refresh' => [
         'minutes' => 2,
-        'max_attempts' => 1,
+        'max_attempts' => 5,
     ],
     'withdrawal' => [
         'check_wallet_attempts' => [
