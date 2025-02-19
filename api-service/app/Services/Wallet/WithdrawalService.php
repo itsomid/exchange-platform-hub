@@ -140,7 +140,7 @@ class WithdrawalService
                 if ($responseDTO->getStatus() === 'completed') {
 
                     $this->confirmWithdrawal($withdrawal, $responseDTO->getTransactionHash(), $responseDTO->getFee());
-                    $user->notify(new WithdrawalSuccessful($withdrawal->currency_symbol, $withdrawal->amount, $user->name, $withdrawal->currencyChain->chain));
+                    $user->notify(new WithdrawalSuccessful($withdrawal->currency_symbol, $withdrawal->amount, $user->name, $withdrawal->currencyChain->chain->value));
                     $checkWithdrawalResponseDTO->setStatus(WithdrawalStatusEnum::COMPLETED)
                         ->setWithdrawId($withdrawal->id)
                         ->setTransactionHash($responseDTO->getTransactionHash())
