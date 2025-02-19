@@ -141,7 +141,14 @@ class WithdrawalService
 
                     $this->confirmWithdrawal($withdrawal, $responseDTO->getTransactionHash(), $responseDTO->getFee());
                     $user->notify(new WithdrawalSuccessful($withdrawal->currency_symbol, $withdrawal->amount, $user->name, $withdrawal->currencyChain->chain));
-                    $checkWithdrawalResponseDTO->setStatus(WithdrawalStatusEnum::COMPLETED);
+                    $checkWithdrawalResponseDTO->setStatus(WithdrawalStatusEnum::COMPLETED)
+                        ->setWithdrawId($withdrawal->id)
+                        ->setTransactionHash($responseDTO->getTransactionHash())
+                        ->setCurrencyChain($withdrawal->currencyChain->chain->value)
+                        ->setWalletAddress($withdrawal->address)
+                        ->setAmount($withdrawal->amount)
+                        ->setCurrencySymbol($withdrawal->currency_symbol)
+                        ->setConfirmedAt($responseDTO->getTimestamp());
 
                 }
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\V1\Wallet;
 use App\Enums\WithdrawalStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Wallet\WithdrawRequest;
+use App\Http\Resources\V1\Wallet\CheckWithdrawalResource;
 use App\Http\Resources\V1\Wallet\WithdrawalResource;
 use App\Services\Wallet\DTO\Withdrawal\CreateWithdrawalRequestDTO;
 use App\Services\Wallet\WithdrawalService;
@@ -186,12 +187,17 @@ class WithdrawController extends Controller
             $message = __('messages.withdrawals.check_withdrawal_error');
         }
 
+        $data = [
+            'available_in' => now()->addMinutes(config('bitexroom.withdrawal.check_wallet_attempts'))->format('Y-m-d H:i:s'),
+            'has_new_transaction' => $response->getStatus() === WithdrawalStatusEnum::COMPLETED,
+        ];
+        if ($response->getStatus() === WithdrawalStatusEnum::COMPLETED) {
+            $data['withdrawal_details'] = new CheckWithdrawalResource($response);
+        }
+
         return response([
             'message' => $message,
-            'data' => [
-                'available_in' => now()->addMinutes(config('bitexroom.withdrawal.check_wallet_attempts'))->format('Y-m-d H:i:s'),
-                'has_new_transaction' => $response->getStatus() === WithdrawalStatusEnum::COMPLETED,
-            ]]);
-
+            'data' => $data,
+        ]);
     }
 }
