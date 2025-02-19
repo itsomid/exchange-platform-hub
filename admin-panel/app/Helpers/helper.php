@@ -88,7 +88,7 @@ if (! function_exists('formatNumberTrimZeros')) {
             }
         } else {
             // For numbers >= 1, truncate to 2 digits and trim trailing zeros
-            $decimalPart = substr($decimalPart, 0, 2);
+            $decimalPart = substr($decimalPart, 0, 3);
             $decimalPart = rtrim($decimalPart, '0');
         }
 
