@@ -3244,7 +3244,7 @@
                 }
             }
         },
-        "/check-withdrawal": {
+        "/api/v1/wallets/check-withdrawal": {
             "post": {
                 "tags": [
                     "Wallet"
@@ -3259,16 +3259,31 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "message": {
+                                            "description": "The message indicating withdrawal status",
+                                            "type": "string",
+                                            "example": "Your withdrawal request has been successfully processed"
+                                        },
                                         "data": {
                                             "properties": {
                                                 "available_in": {
                                                     "description": "The time when the next withdrawal check will be available",
                                                     "type": "string",
-                                                    "format": "date-time"
+                                                    "format": "date-time",
+                                                    "example": "2025-02-19 15:30:00"
                                                 },
                                                 "has_new_transaction": {
-                                                    "description": "The number of completed transactions since the last check",
-                                                    "type": "integer"
+                                                    "description": "Indicates if a new transaction has been completed (1 = yes, 0 = no)",
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "withdrawal_details": {
+                                                    "oneOf": [
+                                                        {
+                                                            "$ref": "#/components/schemas/CheckWithdrawalResource"
+                                                        }
+                                                    ],
+                                                    "nullable": true
                                                 }
                                             },
                                             "type": "object"
@@ -4653,6 +4668,55 @@
                         "items": {
                             "$ref": "#/components/schemas/TicketReplyResource"
                         }
+                    }
+                },
+                "type": "object"
+            },
+            "CheckWithdrawalResource": {
+                "title": "Check Withdrawal Resource",
+                "description": "Details of the completed withdrawal",
+                "properties": {
+                    "withdraw_id": {
+                        "type": "string",
+                        "example": "123456"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 0.5
+                    },
+                    "currency_symbol": {
+                        "type": "string",
+                        "example": "BTC"
+                    },
+                    "currency_chain": {
+                        "type": "string",
+                        "example": "Bitcoin"
+                    },
+                    "transaction_hash": {
+                        "type": "string",
+                        "example": "a1b2c3d4e5f6"
+                    },
+                    "wallet_address": {
+                        "type": "string",
+                        "example": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "COMPLETED"
+                    },
+                    "status_lang": {
+                        "type": "string",
+                        "example": "Completed"
+                    },
+                    "explorer_address_url": {
+                        "type": "string",
+                        "example": "https://blockchain.com/btc/address/1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+                    },
+                    "confirmed_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-02-19 14:00:00"
                     }
                 },
                 "type": "object"
