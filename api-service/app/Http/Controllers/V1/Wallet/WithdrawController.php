@@ -105,7 +105,7 @@ class WithdrawController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/check-withdrawal",
+     *     path="/api/v1/wallets/check-withdrawal",
      *     summary="Check the status of a withdrawal",
      *     description="This endpoint checks the status of a withdrawal from the HD wallet. The status can be pending, completed, or failed.",
      *     operationId="checkWithdrawal",
@@ -119,13 +119,12 @@ class WithdrawController extends Controller
      *         @OA\JsonContent(
      *             type="object",
      *
-     *     @OA\Property(
-     *                  property="message",
-     *                  type="object",
-     *                  format="string",
-     *                  description="The message indicate withdraw status",
-     *                  example="Your withdrawal request has been successfully processed"
-     *          ),
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 description="The message indicating withdrawal status",
+     *                 example="Your withdrawal request has been successfully processed"
+     *             ),
      *             @OA\Property(
      *                 property="data",
      *                 type="object",
@@ -133,12 +132,19 @@ class WithdrawController extends Controller
      *                     property="available_in",
      *                     type="string",
      *                     format="date-time",
-     *                     description="The time when the next withdrawal check will be available"
+     *                     description="The time when the next withdrawal check will be available",
+     *                     example="2025-02-19 15:30:00"
      *                 ),
      *                 @OA\Property(
      *                     property="has_new_transaction",
      *                     type="integer",
-     *                     description="The number of completed transactions since the last check"
+     *                     description="Indicates if a new transaction has been completed (1 = yes, 0 = no)",
+     *                     example=1
+     *                 ),
+     *                 @OA\Property(
+     *                     property="withdrawal_details",
+     *                     ref="#/components/schemas/CheckWithdrawalResource",
+     *                     nullable=true
      *                 )
      *             )
      *         )
