@@ -293,10 +293,21 @@
                             <td class="font-number">
                                 <h6 class="mb-0">
                                     @if($deposit->explorer_address_url)
-                                        <a href="{{ $deposit->explorer_address_url }}" target="_blank" class="me-1">
+                                        <a  href="javascript:void(0);" class="clipboard-btn mx-1" data-clipboard-action="copy"
+                                            data-clipboard-target="#deposit{{$deposit->address}}">
                                             <i class="fa-regular fa-clone"></i>
                                         </a>
-                                        <small>{{ shorten_hash($deposit->address) }}</small>
+                                        <input type="hidden"
+                                               value="{{$deposit->address}}"
+                                               id="deposit{{$deposit->address}}"
+                                               class="form-control text-left" placeholder="کد معرف شما"
+                                               aria-label="Username"
+                                               readonly>
+
+                                        <a href="{{ $deposit->explorer_address_url }}" target="_blank">
+                                            <small>{{ shorten_hash($deposit->address) }}</small>
+                                        </a>
+
                                     @else
                                         <span>N/A Address</span>
                                     @endif
@@ -307,10 +318,19 @@
 
                                 <h6 class="mb-0">
                                     @if($deposit->explorer_tx_url && $deposit->transaction_hash)
-                                        <a href="{{ $deposit->explorer_tx_url }}" target="_blank" class="me-1">
+                                        <a  href="javascript:void(0);" class="clipboard-btn mx-1" data-clipboard-action="copy"
+                                            data-clipboard-target="#deposit{{$deposit->transaction_hash}}">
                                             <i class="fa-regular fa-clone"></i>
                                         </a>
-                                        <small>{{ shorten_hash($deposit->transaction_hash) }}</small>
+                                        <input type="hidden"
+                                               value="{{$deposit->transaction_hash}}"
+                                               id="deposit{{$deposit->transaction_hash}}"
+                                               class="form-control text-left" placeholder="کد معرف شما"
+                                               aria-label="Username"
+                                               readonly>
+                                        <a href="{{ $deposit->explorer_tx_url }}" target="_blank" class="me-1">
+                                            <small>{{ shorten_hash($deposit->transaction_hash) }}</small>
+                                        </a>
                                     @else
                                         <span>N/A TxID</span>
                                     @endif
@@ -424,8 +444,6 @@
 
 @endsection
 @section('vendor-script')
-    @vite([])
-@endsection
-@section('vendor-style')
-    @vite([])
+    @vite(['resources/assets/vendor/libs/clipboard/clipboard.js',
+            'resources/assets/js/extended-ui-misc-clipboardjs.js'])
 @endsection
