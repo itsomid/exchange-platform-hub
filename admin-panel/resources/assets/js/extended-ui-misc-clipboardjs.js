@@ -11,6 +11,7 @@
       const clipboard = new ClipboardJS(clipboardEl);
       clipboard.on('success', function (e) {
         if (e.action == 'copy') {
+            alert('Copied to Clipboard!!')
           // toastr['success']('', 'Copied to Clipboard!!');
         }
       });
