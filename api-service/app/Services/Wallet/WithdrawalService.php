@@ -148,7 +148,7 @@ class WithdrawalService
                         ->setWalletAddress($withdrawal->address)
                         ->setAmount($withdrawal->amount)
                         ->setCurrencySymbol($withdrawal->currency_symbol)
-                        ->setConfirmedAt($responseDTO->getTimestamp());
+                        ->setConfirmedAt($withdrawal->confirmed_at);
 
                 }
 
