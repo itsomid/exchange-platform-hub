@@ -2,6 +2,7 @@
 
 namespace App\Services\Exchanges\Asset\Coinex;
 
+use App\Functions\FlashMessages\Toast;
 use App\Services\Exchanges\Asset\Coinex\Authentication\MethodEnum;
 use App\Services\Exchanges\Asset\Contract\AssetInterface;
 use App\Services\Exchanges\Asset\DTO\BalanceResponseDTO;
@@ -14,7 +15,7 @@ class AssetCoinex implements AssetInterface
     {
         $response = CoinexRequest::send(MethodEnum::GET, "/v2/assets/spot/balance");
 
-        return array_map(function ($item){
+        return array_map(function ($item) {
             return resolve(BalanceResponseDTO::class)
                 ->setCcy($item['ccy'])
                 ->setFrozen($item['frozen'])
@@ -24,6 +25,7 @@ class AssetCoinex implements AssetInterface
 
     public function withdraw(WithdrawRequestDTO $requestDTO): WithdrawResponseDTO
     {
+
         $requestBody = [
             'ccy' => $requestDTO->getCurrency(),
             'to_address' => $requestDTO->getAddress(),
@@ -31,7 +33,7 @@ class AssetCoinex implements AssetInterface
             'amount' => $requestDTO->getAmount(),
             'fee_ccy' => 'CET',
         ];
-        if($requestDTO->getChain()){
+        if ($requestDTO->getChain()) {
             $requestBody['chain'] = $requestDTO->getChain();
         }
 
@@ -40,19 +42,19 @@ class AssetCoinex implements AssetInterface
         $data = $response->json('data');
 
         return resolve(WithdrawResponseDTO::class)
-                ->setWithdrawId($data['withdraw_id'])
-                ->setCreatedAt($data['created_at'])
-                ->setCurrency($data['ccy'])
-                ->setChain($data['chain'])
-                ->setAmount($data['amount'])
-                ->setActualAmount($data['actual_amount'])
-                ->setWithdrawMethod($data['withdraw_method'])
-                ->setAddress($data['to_address'])
-                ->setConfirmationCount($data['confirmations'])
-                ->setExploreAddress($data['explorer_address_url'])
-                ->setStatus($data['status'])
-                ->setFee($data['tx_fee'])
-                ->setCurrencyFee($data['fee_ccy'])
-            ;
+            ->setWithdrawId($data['withdraw_id'])
+            ->setCreatedAt($data['created_at'])
+            ->setCurrency($data['ccy'])
+            ->setChain($data['chain'])
+            ->setAmount($data['amount'])
+            ->setActualAmount($data['actual_amount'])
+            ->setWithdrawMethod($data['withdraw_method'])
+            ->setAddress($data['to_address'])
+            ->setConfirmationCount($data['confirmations'])
+            ->setExploreAddress($data['explorer_address_url'])
+            ->setStatus($data['status'])
+            ->setFee($data['tx_fee'])
+            ->setCurrencyFee($data['fee_ccy']);
+
     }
 }

@@ -193,8 +193,8 @@ class CurrencyChainSeeder extends Seeder
                 'is_memo_required_for_deposit' => false,
                 'is_base_coin' => true,
 
-                'explorer_address_url' => 'https://blockcypher.com/doge/address/{address}',
-                'explorer_tx_url' => 'https://blockcypher.com/doge/tx/{hash}',
+                'explorer_address_url' => 'https://blockchair.com/dogecoin/address/{address}',
+                'explorer_tx_url' => 'https://blockchair.com/dogecoin/transaction/{hash}',
             ],
         ];
 

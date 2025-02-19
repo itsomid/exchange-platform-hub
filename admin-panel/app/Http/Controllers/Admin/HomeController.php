@@ -30,9 +30,9 @@ class HomeController extends Controller
 
 
         //مجموع برداشت های کاربران
-        $withdrawalSums = Withdrawal::selectRaw('currency_symbol, SUM(amount) as total_amount')
+         $withdrawalSums = Withdrawal::selectRaw('currency_symbol, SUM(amount) as total_amount')
             ->where('status', WithdrawalStatusEnum::COMPLETED)
-            ->where('user_id', '=', $this->exchangeUserId)
+            ->where('user_id', '!=', $this->exchangeUserId)
             ->groupBy('currency_symbol')
             ->get();
 
@@ -47,15 +47,14 @@ class HomeController extends Controller
 
 
         //سود صرافی از محل کارمزدهای برداشت
-        $withdrawalFeeTransactionsByCurrency = Transaction::where('type', TransactionTypeEnum::FEE)
-            ->where('subtype', TransactionSubTypeEnum::WITHDRAWAL_FEE)
+          $withdrawalFeeTransactionsByCurrency = Transaction::where('type', TransactionTypeEnum::FEE)
+            ->where('subtype', TransactionSubTypeEnum::WITHDRAWAL_EXCHANGE_FEE)
             ->join('wallets', 'wallets.id', '=', 'transactions.wallet_id')
             ->selectRaw('wallets.currency_symbol, SUM(transactions.amount) as total_amount, COUNT(transactions.id) as transaction_count')
             ->groupBy('wallets.currency_symbol')
             ->get();
 
         //مجموع خرید از صرافی مرجع
-
          $boughtHistoryByCurrency = ExchangeTransaction::with('currency')
             ->selectRaw('currency_symbol, SUM(amount) as total_amount')
             ->groupBy('currency_symbol')

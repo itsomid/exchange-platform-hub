@@ -54,7 +54,7 @@ class WithdrawalController extends Controller
             ->take(5);
         $totalTopUsersWithdrawals = $topUsers->sum('totalWithdraw');
 
-        $withdraws = Withdrawal::filterBy(request()->all())->with(['user', 'currency', 'transaction'])->paginate(20);
+        $withdraws = Withdrawal::filterBy(request()->all())->with(['user', 'currency', 'transaction'])->orderBy('created_at','desc')->paginate(20);
 
 
         return view('dashboard.withdraw.index', [
