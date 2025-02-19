@@ -2,18 +2,20 @@
 
 namespace App\Services\Exchanges\Asset\Coinex;
 
-use App\Functions\FlashMessages\Toast;
+use App\Exceptions\Coinex\CoinexWithdrawalException;
+use App\Services\Exchanges\Asset\AdminNotification;
 use App\Services\Exchanges\Asset\Coinex\Authentication\MethodEnum;
 use App\Services\Exchanges\Asset\Contract\AssetInterface;
 use App\Services\Exchanges\Asset\DTO\BalanceResponseDTO;
 use App\Services\Exchanges\Asset\DTO\WithdrawRequestDTO;
 use App\Services\Exchanges\Asset\DTO\WithdrawResponseDTO;
+use Illuminate\Support\Facades\Log;
 
 class AssetCoinex implements AssetInterface
 {
     public function getBalance(): array
     {
-        $response = CoinexRequest::send(MethodEnum::GET, "/v2/assets/spot/balance");
+        $response = CoinexRequest::send(MethodEnum::GET, '/v2/assets/spot/balance');
 
         return array_map(function ($item) {
             return resolve(BalanceResponseDTO::class)
@@ -38,6 +40,15 @@ class AssetCoinex implements AssetInterface
         }
 
         $response = CoinexRequest::send(MethodEnum::POST, '/v2/assets/withdraw', $requestBody);
+
+        if ($response->json('code') === 11022) {
+
+        }
+        if ($response->json('code') !== 0) {
+            Log::channel('ref-exchange')->info($response->body());
+            AdminNotification::dispatchCoinexHasProblem($response->json('message'), $requestDTO->getCurrency(), $requestDTO->getAmount());
+            throw new CoinexWithdrawalException;
+        }
 
         $data = $response->json('data');
 

@@ -64,7 +64,10 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
             'replace_placeholders' => true,
         ],
-
+        'ref-exchange' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/ref-exchange.log'),
+        ],
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
