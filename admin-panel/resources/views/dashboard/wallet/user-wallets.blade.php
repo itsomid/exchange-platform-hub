@@ -226,18 +226,23 @@
                     <div class="card-body border-top">
                         <a href="{{route('admin.wallet.detail',['user'=>$user->id,'wallet'=>$wallet->id,'type'=>'deposit'])}}"
                            class="btn btn-label-primary me-2">مشاهده جزئیات</a>
-                        <a class="btn btn-icon btn-primary"
+                        <a class="btn btn-icon btn-success"
                            href="{{route('admin.wallet.increase-credit.form',['currency'=>$wallet->currency_symbol , 'user'=>$user])}}">
-                            <i class="fa-regular fa-plus fa-xl"></i>
+                            <i class="fa-regular fa-arrow-down-left fa-xl"></i>
                         </a>
-                        <a class="btn btn-icon btn-danger ms-2"
-                           href="{{route('admin.wallet.block-balance.form',['wallet'=>$wallet , 'user'=>$user])}}">
-                            <i class="fa-regular fa-ban fa-xl"></i>
+                        <a class="btn btn-icon btn-google-plus ms-2"
+                           href="{{route('admin.wallet.decrease-credit.form',['currency'=>$wallet->currency_symbol , 'user'=>$user])}}">
+                            <i class="fa-regular fa-arrow-up-right fa-xl"></i>
                         </a>
-                        <a class="btn btn-icon btn-success ms-2"
+                        <a class="btn btn-icon btn-outline-success ms-2"
                            href="{{route('admin.wallet.unblock-balance.form',['wallet'=>$wallet , 'user'=>$user])}}">
                             <i class="fa-regular fa-lock-open fa-xl"></i>
                         </a>
+                        <a class="btn btn-icon btn-outline-danger ms-2"
+                           href="{{route('admin.wallet.block-balance.form',['wallet'=>$wallet , 'user'=>$user])}}">
+                            <i class="fa-regular fa-ban fa-xl"></i>
+                        </a>
+
 
                     </div>
                 </div>

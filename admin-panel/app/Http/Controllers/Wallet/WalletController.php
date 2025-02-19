@@ -32,8 +32,17 @@ class WalletController extends Controller
     }
     public function increaseCreditForm(Request $request)
     {
+        $data = $this->getCreditFormData($request);
+        return view('dashboard.wallet.increase-credit', $data);
+    }
 
-
+    public function decreaseCreditForm(Request $request)
+    {
+        $data = $this->getCreditFormData($request);
+        return view('dashboard.wallet.decrease-credit', $data);
+    }
+    private function getCreditFormData(Request $request)
+    {
         // Initialize variables to avoid undefined variable warnings
         $currencies = Currency::all();
         $currencyChains = CurrencyChain::all();
@@ -53,14 +62,13 @@ class WalletController extends Controller
             $selectedUser = User::find($request->user);
         }
 
-        return view('dashboard.wallet.increase-credit', [
+        return [
             'currencies' => $currencies,
             'selectedUser' => $selectedUser,
             'selectedCurrency' => $selectedCurrency,
             'currencyChains' => $currencyChains,
-        ]);
+        ];
     }
-
     public function increaseCredit(IncreaseCreditRequest $request, TransactionService $transactionService)
     {
 
@@ -85,16 +93,25 @@ class WalletController extends Controller
             if ($request->user == $this->exchangeUserId) {
 
                 $transactionService->increaseDecreaseAdminWalletCredit(
-                    userId:  $this->exchangeUserId,
+                    userId: $this->exchangeUserId,
                     amount: $request->amount,
-                    transactionHash: $request->transaction_hash,
                     currency: $currency,
                     currencyChain: $currencyChain,
-                    type: $request->transaction_type === TransactionTypeEnum::DEPOSIT->value ?  TransactionTypeEnum::DEPOSIT->value : TransactionTypeEnum::WITHDRAWAL->value, // Always increasing
+                    type: $request->transaction_type === TransactionTypeEnum::DEPOSIT->value ?  TransactionTypeEnum::DEPOSIT->value : TransactionTypeEnum::WITHDRAWAL->value,
+                    transactionHash: $request->transaction_hash, // Always increasing
                     adminId: $admin->id,
                     description: 'Manual credit increase by admin #' . $admin->id,
                     admin_description: $request->admin_description
                 );
+
+                if ($request->transaction_type === TransactionTypeEnum::WITHDRAWAL->value){
+                    Toast::message('برداشت اعتبار با موفقیت انجام شد.')->success()->notify();
+                    return redirect()->route('admin.wallet.index',['user'=>$this->exchangeUserId]);
+                }else{
+                    Toast::message('واریز اعتبار با موفقیت انجام شد.')->success()->notify();
+                    return redirect()->route('admin.wallet.index',['user'=>$this->exchangeUserId]);
+
+                }
             }else{
                 // Check if the wallet for the specified currency exists
                 $fromUserId = $request->transaction_type === TransactionTypeEnum::WITHDRAWAL->value ? $request->user : $this->exchangeUserId;
@@ -112,10 +129,17 @@ class WalletController extends Controller
                     description: 'Manual transfer by admin #' . $admin->id,
                     admin_description: $request->admin_description
                 );
+
+                if ($request->transaction_type === TransactionTypeEnum::WITHDRAWAL->value){
+                    Toast::message('برداشت اعتبار با موفقیت انجام شد.')->success()->notify();
+                    return redirect()->route('admin.wallet.index',['user'=>$fromUserId]);
+                }else{
+                    Toast::message('واریز اعتبار با موفقیت انجام شد.')->success()->notify();
+                    return redirect()->route('admin.wallet.index',['user'=>$toUserId]);
+
+                }
             }
 
-            Toast::message('.افزایش اعتبار با موفقیت انجام شد')->success()->notify();
-            return redirect()->back();
 
         } catch (\Throwable $exception) {
             report($exception);

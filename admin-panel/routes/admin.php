@@ -199,6 +199,8 @@ Route::post('/external-settings/update-ref-address', [ExternalSettingController:
 Route::prefix('wallet')->group(function (){
     Route::get('increase-credit',[WalletController::class,'increaseCreditForm'])->name('wallet.increase-credit.form')->can('wallet');
     Route::post('increase-credit',[WalletController::class,'increaseCredit'])->name('wallet.increase-credit')->can('wallet');
+    Route::get('decrease-credit',[WalletController::class,'decreaseCreditForm'])->name('wallet.decrease-credit.form')->can('wallet');
+    Route::post('decrease-credit',[WalletController::class,'decreaseCredit'])->name('wallet.decrease-credit')->can('wallet');
     Route::get('{wallet}/user/{user}/block-balance', [WalletController::class, 'blockBalanceForm'])->name('wallet.block-balance.form')->can('wallet');
     Route::post('{wallet}/block-balance', [WalletController::class, 'blockBalance'])->name('wallet.block-balance')->can('wallet');
     Route::get('{wallet}/user/{user}/unblock-balance', [WalletController::class, 'unblockBalanceForm'])->name('wallet.unblock-balance.form')->can('wallet');

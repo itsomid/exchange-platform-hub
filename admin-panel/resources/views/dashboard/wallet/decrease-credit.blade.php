@@ -1,18 +1,23 @@
 @extends('dashboard.layout.master')
-@section('title', 'فرم افزایش اعتبار')
+@section('title', 'فرم برداشت اعتبار')
 @section('content')
     <section class="form-control-repeater">
         <div class="card">
 
             <div class="card-body">
-                <h5 class="card-title">فرم واریز اعتبار</h5>
+                <h5 class="card-title">فرم برداشت اعتبار</h5>
                 <form class="row" method="post" action="{{route('admin.wallet.increase-credit')}}" id="chargeForm">
                     @csrf
                     <div class="col mt-2">
+{{--                        <div class="form-check form-check-inline">--}}
+{{--                            <input name="transaction_type" class="form-check-input" type="radio" value="deposit"--}}
+{{--                                   id="transaction-type-deposit" checked="">--}}
+{{--                            <label class="form-check-label" for="transaction-type-deposit">واریز</label>--}}
+{{--                        </div>--}}
                         <div class="form-check form-check-inline">
-                            <input name="transaction_type" class="form-check-input" type="radio" value="deposit"
-                                   id="transaction-type-deposit" checked="">
-                            <label class="form-check-label" for="transaction-type-deposit">واریز</label>
+                            <input name="transaction_type" class="form-check-input" type="radio" value="withdrawal"
+                                   id="transaction-type-withdraw" checked="">
+                            <label class="form-check-label" for="transaction-type-withdraw">برداشت</label>
                         </div>
                     </div>
                     <div class="w-100"></div>
