@@ -127,11 +127,11 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
         'hd-wallet' => [
-            'driver' => 'daily',
+            'driver' => 'single',
             'path' => storage_path('logs/hd-wallet.log'),
         ],
         'ref-exchange' => [
-            'driver' => 'daily',
+            'driver' => 'single',
             'path' => storage_path('logs/ref-exchange.log'),
         ],
 
