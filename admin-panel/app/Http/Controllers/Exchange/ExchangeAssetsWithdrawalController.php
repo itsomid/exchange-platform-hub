@@ -112,7 +112,7 @@ class ExchangeAssetsWithdrawalController extends Controller
                 ->success()
                 ->notify();
 
-            return redirect()->route('exchange-assets-withdrawal.index');
+            return redirect()->route('admin.wallets.assets-gathering-to-hd-wallet.index');
         } catch (\Throwable $e) {
             report($e);
             Toast::message('فرآیند برداشت با شکست مواجه شد. لطفا دوباره تلاش کنید.')

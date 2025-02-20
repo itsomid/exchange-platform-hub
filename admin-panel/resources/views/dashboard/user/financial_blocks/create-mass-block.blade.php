@@ -11,7 +11,7 @@
 
                     <div class="col-md-6 mb-1">
                         <div class="form-group mt-3">
-                            <label class="form-label" for="action">دلیل بلاکی</label>
+                            <label class="form-label" for="action">دلیل محدودیت</label>
                             <select id="action" name="action" class="form-select text-capitalize mb-md-0 ">
                                 @foreach($userFinancialBlockActions as $action)
                                     <option
