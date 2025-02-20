@@ -23,6 +23,9 @@ class CheckWithdrawalResponseDTO
     private ?string $walletAddress = null;
 
     private ?Carbon $confirmedAt = null;
+    private ?string $explorerAddressUrl;
+    private ?string $explorerTxUrl;
+
 
     public function setStatus(WithdrawalStatusEnum $status): CheckWithdrawalResponseDTO
     {
@@ -129,5 +132,27 @@ class CheckWithdrawalResponseDTO
     public function getConfirmedAt(): ?Carbon
     {
         return $this->confirmedAt;
+    }
+
+    public function setExplorerAddressUrl(?string $explorerAddressUrl): self
+    {
+        $this->explorerAddressUrl = $explorerAddressUrl;
+        return $this;
+    }
+
+    public function getExplorerAddressUrl(): ?string
+    {
+        return $this->explorerAddressUrl;
+    }
+
+    public function setExplorerTxUrl(?string $explorerTxUrl): self
+    {
+        $this->explorerTxUrl = $explorerTxUrl;
+        return $this;
+    }
+
+    public function getExplorerTxUrl(): ?string
+    {
+        return $this->explorerTxUrl;
     }
 }

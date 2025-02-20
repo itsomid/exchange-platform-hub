@@ -116,12 +116,18 @@ class WithdrawalService
     public function checkWithdrawal(int $userId): CheckWithdrawalResponseDTO
     {
         $checkWithdrawalResponseDTO = resolve(CheckWithdrawalResponseDTO::class);
+
+
         $checkWithdrawalResponseDTO->setStatus(WithdrawalStatusEnum::PENDING);
 
         $user = $this->userRepository->getUserById($userId);
-        $pending = $this->withdrawalRepository->getAllPending($userId);
-        foreach ($pending as $withdrawal) {
+
+        $pendingWithdrawal = $this->withdrawalRepository->getAllPending($userId);
+
+
+        foreach ($pendingWithdrawal as $withdrawal) {
             try {
+
                 $responseDTO = $this->withdrawalService->getStatus(
                     resolve(GetWithdrawalStatusRequestDTO::class)
                         ->setWithdrawalId($withdrawal->id)
@@ -130,19 +136,37 @@ class WithdrawalService
                 );
 
                 if ($responseDTO->getStatus() === 'failed') {
+
                     $withdrawal->update([
                         'status' => WithdrawalStatusEnum::FAILED,
                         'description' =>$responseDTO->getDescription(),
                     ]);
+
                     $this->fialedWithdrawalAndUnlockBalance($withdrawal);
-                    $checkWithdrawalResponseDTO->setStatus(WithdrawalStatusEnum::FAILED);
+
+                    $checkWithdrawalResponseDTO->setStatus(WithdrawalStatusEnum::FAILED)
+                        ->setWithdrawId($withdrawal->id)
+                        ->setTransactionHash($responseDTO->getTransactionHash())
+                        ->setCurrencyChain($withdrawal->currencyChain->chain->value)
+                        ->setWalletAddress($withdrawal->address)
+                        ->setAmount($withdrawal->amount)
+                        ->setTotalFee($withdrawal->total_fee)
+                        ->setCurrencySymbol($withdrawal->currency_symbol)
+                        ->setConfirmedAt($withdrawal->confirmed_at)
+                        ->setExplorerAddressUrl($withdrawal->explorer_address_url)
+                        ->setExplorerTxUrl($withdrawal->explorer_tx_url);
+
                     AdminNotification::sendHotWalletNotEnoughBalance($responseDTO->getCurrencySymbol(), $responseDTO->getAmount());
+
                     continue;
                 }
+
                 if ($responseDTO->getStatus() === 'completed') {
 
                     $this->confirmWithdrawal($withdrawal, $responseDTO->getTransactionHash(), $responseDTO->getFee());
+
                     $user->notify(new WithdrawalSuccessful($withdrawal->currency_symbol, $withdrawal->amount, $user->name, $withdrawal->currencyChain->chain->value));
+
                     $checkWithdrawalResponseDTO->setStatus(WithdrawalStatusEnum::COMPLETED)
                         ->setWithdrawId($withdrawal->id)
                         ->setTransactionHash($responseDTO->getTransactionHash())
@@ -151,7 +175,9 @@ class WithdrawalService
                         ->setAmount($withdrawal->amount)
                         ->setTotalFee($withdrawal->total_fee)
                         ->setCurrencySymbol($withdrawal->currency_symbol)
-                        ->setConfirmedAt($withdrawal->confirmed_at);
+                        ->setConfirmedAt($withdrawal->confirmed_at)
+                        ->setExplorerAddressUrl($withdrawal->explorer_address_url)
+                        ->setExplorerTxUrl($withdrawal->explorer_tx_url);
 
                 }
 
@@ -172,7 +198,9 @@ class WithdrawalService
 
     private function fialedWithdrawalAndUnlockBalance(Withdrawal $withdrawal)
     {
+
         try {
+
             DB::beginTransaction();
             $wallet = Wallet::query()
                 ->where('user_id', $withdrawal->user_id)
@@ -192,6 +220,7 @@ class WithdrawalService
 
     private function confirmWithdrawal(Withdrawal $withdrawal, string $transactionHash, string $hdWalletNetworkFee): void
     {
+
         try {
             DB::beginTransaction();
             $wallet = Wallet::query()
@@ -250,6 +279,7 @@ class WithdrawalService
 
             DB::commit();
         } catch (Throwable $e) {
+
             DB::rollBack();
             report($e);
             throw $e;

@@ -10,6 +10,6 @@ return [
     'withdrawals' => [
         'check_withdrawal_success' => 'Your withdrawal request has been successfully processed.',
         'check_withdrawal_started' => 'Your withdrawal request has been processed.',
-        'check_withdrawal_error' => 'Your withdrawal request could not be processed.',
+        'check_withdrawal_error' => 'Your withdrawal request has been Failed',
     ],
 ];

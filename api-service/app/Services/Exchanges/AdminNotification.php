@@ -18,7 +18,7 @@ class AdminNotification
     }
     public static function sendHotWalletNotEnoughBalance(string $currencyName, string $amount): void
     {
-        Admin::query()->role(['super_admin','admin'])->get()->each(function ($admin) use ($currencyName, $amount) {
+        Admin::query()->role('super_admin')->get()->each(function ($admin) use ($currencyName, $amount) {
             $admin->notify(new HotWalletNotEnoughBalance($currencyName, $amount));
         });
     }

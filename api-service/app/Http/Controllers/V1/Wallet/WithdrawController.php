@@ -186,7 +186,7 @@ class WithdrawController extends Controller
     {
         $service = resolve(WithdrawalService::class);
         $response = $service->checkWithdrawal(Auth::id());
-        Log::channel('hd-wallet')->info("javab: ".$response->getStatus());
+
         $message = __('messages.withdrawals.check_withdrawal_started');
         if ($response->getStatus() === WithdrawalStatusEnum::COMPLETED) {
             $message = __('messages.withdrawals.check_withdrawal_success');
@@ -196,14 +196,19 @@ class WithdrawController extends Controller
 
         $data = [
             'available_in' => now()->addMinutes(config('bitexroom.withdrawal.check_wallet_attempts'))->format('Y-m-d H:i:s'),
-            'has_new_transaction' => $response->getStatus() === WithdrawalStatusEnum::COMPLETED,
+            'has_new_transaction' => $response->getStatus() === WithdrawalStatusEnum::COMPLETED ||  $response->getStatus() === WithdrawalStatusEnum::FAILED,
         ];
+        if ($response->getStatus() === WithdrawalStatusEnum::FAILED) {
+            $data['withdrawal_details'] = new CheckWithdrawalResource($response);
+        }
         if ($response->getStatus() === WithdrawalStatusEnum::COMPLETED) {
+
             $data['withdrawal_details'] = new CheckWithdrawalResource($response);
         }
 
         return response([
             'message' => $message,
+            'status' => $response->getStatus(),
             'data' => $data,
         ]);
     }
