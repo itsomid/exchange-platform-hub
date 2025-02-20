@@ -94,7 +94,6 @@
                                             <span
                                                 class="avatar-initial rounded-circle bg-label-{{$randomColor}}">{{$topUser['user']->avatar_user_name}}</span>
                                         </div>
-                                        {{--                                        <img class="rounded-circle" src="{{ $topUser['user']->avatar_url ?? 'http://127.0.0.1:8000/images/avatars/male/2.png' }}">--}}
                                     </li>
                                 @endforeach
                             @else
@@ -434,4 +433,11 @@
         </div>
     </div>
 
+@endsection
+@section('vendor-script')
+    <script>
+        $(document).ready(function () {
+            $('[data-bs-toggle="tooltip"]').tooltip();
+        });
+    </script>
 @endsection
