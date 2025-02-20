@@ -186,7 +186,7 @@ class WithdrawController extends Controller
     {
         $service = resolve(WithdrawalService::class);
         $response = $service->checkWithdrawal(Auth::id());
-        Log::channel('hd-wallet')->info($response);
+        Log::channel('hd-wallet')->info($response->getStatus());
         $message = __('messages.withdrawals.check_withdrawal_started');
         if ($response->getStatus() === WithdrawalStatusEnum::COMPLETED) {
             $message = __('messages.withdrawals.check_withdrawal_success');
