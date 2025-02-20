@@ -20,6 +20,7 @@ use App\Repositories\Interfaces\CurrencyRepositoryInterface;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Repositories\Interfaces\WithdrawalRepositoryInterface;
+use App\Services\Exchanges\AdminNotification;
 use App\Services\Wallet\DTO\Withdrawal\CheckWithdrawalResponseDTO;
 use App\Services\Wallet\DTO\Withdrawal\CreateWithdrawalRequestDTO;
 use App\Services\Wallet\DTO\Withdrawal\CreateWithdrawalResponseDTO;
@@ -131,10 +132,11 @@ class WithdrawalService
                 if ($responseDTO->getStatus() === 'failed') {
                     $withdrawal->update([
                         'status' => WithdrawalStatusEnum::FAILED,
+                        'description' =>$responseDTO->getDescription(),
                     ]);
                     $this->fialedWithdrawalAndUnlockBalance($withdrawal);
                     $checkWithdrawalResponseDTO->setStatus(WithdrawalStatusEnum::FAILED);
-
+                    AdminNotification::sendHotWalletNotEnoughBalance($responseDTO->getCurrencySymbol(), $responseDTO->getAmount());
                     continue;
                 }
                 if ($responseDTO->getStatus() === 'completed') {
@@ -147,6 +149,7 @@ class WithdrawalService
                         ->setCurrencyChain($withdrawal->currencyChain->chain->value)
                         ->setWalletAddress($withdrawal->address)
                         ->setAmount($withdrawal->amount)
+                        ->setTotalFee($withdrawal->total_fee)
                         ->setCurrencySymbol($withdrawal->currency_symbol)
                         ->setConfirmedAt($withdrawal->confirmed_at);
 

@@ -61,6 +61,15 @@ class AssetCoinex implements AssetInterface
                 ->setErrorCode($response->json('code'))
                 ->setIsDone(false);
         }
+        if ($response->json('code') === 3127) {
+            Log::channel('ref-exchange')->info('Coinex SPOT is too small');
+            AdminNotification::sendSpotTradingIsTooSmall($request->getMarket(), $request->getQuantity());
+
+            return resolve(BuyDTOResponse::class)
+                ->setSpotStatus(SpotStatusEnum::AmountTooSmall)
+                ->setErrorCode($response->json('code'))
+                ->setIsDone(false);
+        }
         if (! $response->ok() || $response->json('code') !== 0) {
             Log::channel('ref-exchange')->info($response->body());
             AdminNotification::logError($request->getMarket(), $request->getQuantity(), $response->body());

@@ -41,6 +41,7 @@ class CheckWithdrawalResource extends JsonResource
             'currency_chain' => $this->resource->getCurrencyChain(),
             'transaction_hash' => $this->resource->getTransactionHash(),
             'wallet_address' => $this->resource->getWalletAddress(),
+            'fee' => $this->resource->get(),
             'status' => $this->resource->getStatus(),
             'status_lang' => __('enum.deposit-withdrawal.'.$this->resource->getStatus()->name),
             'explorer_address_url' => CryptoExplorerService::getExplorerUrl($this->resource->getCurrencyChain(), $this->resource->getWalletAddress()),

@@ -12,6 +12,7 @@ class CheckWithdrawalResponseDTO
     private ?int $withdrawId = null;
 
     private ?string $amount = null;
+    private ?string $totalFee = null;
 
     private ?string $currencySymbol = null;
 
@@ -57,6 +58,17 @@ class CheckWithdrawalResponseDTO
     public function getAmount(): ?string
     {
         return $this->amount;
+    }
+    public function setTotalFee(?string $total_fee): CheckWithdrawalResponseDTO
+    {
+        $this->totalFee = $total_fee;
+
+        return $this;
+    }
+
+    public function getTotalFee(): ?string
+    {
+        return $this->totalFee;
     }
 
     public function setCurrencySymbol(?string $currencySymbol): CheckWithdrawalResponseDTO

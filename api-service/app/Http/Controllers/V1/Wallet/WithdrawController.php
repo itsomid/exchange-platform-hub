@@ -10,6 +10,7 @@ use App\Http\Resources\V1\Wallet\WithdrawalResource;
 use App\Services\Wallet\DTO\Withdrawal\CreateWithdrawalRequestDTO;
 use App\Services\Wallet\WithdrawalService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class WithdrawController extends Controller
 {
@@ -185,7 +186,7 @@ class WithdrawController extends Controller
     {
         $service = resolve(WithdrawalService::class);
         $response = $service->checkWithdrawal(Auth::id());
-
+        Log::channel('hd-wallet')->info($response);
         $message = __('messages.withdrawals.check_withdrawal_started');
         if ($response->getStatus() === WithdrawalStatusEnum::COMPLETED) {
             $message = __('messages.withdrawals.check_withdrawal_success');
