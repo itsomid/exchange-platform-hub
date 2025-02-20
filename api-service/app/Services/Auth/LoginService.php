@@ -2,7 +2,9 @@
 
 namespace App\Services\Auth;
 
+use App\Enums\UserStatusEnum;
 use App\Exceptions\Auth\InvalidUsernameOrPasswordException;
+use App\Exceptions\V1\Auth\UserIsSuspendException;
 use App\Exceptions\V1\Auth\UserNotVerifiedException;
 use App\Repositories\DTO\User\UpdateLastLoginRequestDTO;
 use App\Repositories\Interfaces\UserRepositoryInterface;
@@ -26,8 +28,10 @@ readonly class LoginService
         if (! $user || ! Hash::check($loginRequestDTO->getPassword(), $user->password)) {
             throw new InvalidUsernameOrPasswordException;
         }
-
-        if (is_null($user->email_verified_at)) {
+        if ($user->status === UserStatusEnum::SUSPEND){
+            throw new UserIsSuspendException;
+        }
+        if (is_null($user->email_verified_at) && $user->status !== UserStatusEnum::ACTIVE) {
             throw new UserNotVerifiedException;
         }
         //Update last login

@@ -7,4 +7,5 @@ use App\Exceptions\ServiceException;
 class UserNotVerifiedException extends ServiceException
 {
     protected $code = 403;
+    protected $message = 'حساب کاربری شما تایید نشده است';
 }

@@ -15,4 +15,5 @@ return [
     \App\Exceptions\V1\OTC\SellTradeWasFiledException::class => 'در حال حاضر فروش روی :marketName ممکن نیست.',
     \App\Exceptions\V1\Wallet\UserDoesNotHaveWalletAddress::class => 'شما آدرس ولت فعالی ندارید. لطفاً ابتدا یک آدرس ولت ایجاد کنید.',
     \App\Exceptions\V1\Auth\UserNotVerifiedException::class => 'حساب کاربری شما تایید نشده است.',
+    \App\Exceptions\V1\Auth\UserIsSuspendException::class => 'حساب کاربری شما تعلیق شده است.',
 ];
