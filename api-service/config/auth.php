@@ -117,7 +117,7 @@ return [
         'expire' => 60, // Expiration time in minutes
     ],
     'rate-limiter' => [
-        'too-many' => env('APP_RATE_LIMITER_TOO_MANY', 3),
+        'too-many' => env('APP_RATE_LIMITER_TOO_MANY', 5),
     ],
     'two-factor' => [
         'reset-two-factor-expiration' => 10, //per minutes

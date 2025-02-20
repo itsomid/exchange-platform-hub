@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>فعال‌سازی حساب کاربری</title>
-    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
     <style>
         body {
-            font-family: Vazirmatn;
+            font-family: -apple-system,BlinkMacSystemFont,segoe ui,Roboto,Helvetica,Arial,sans-serif;
+            direction: rtl;
             background-color: #f7f7f7;
             color: #333;
             line-height: 1.6;
@@ -31,6 +31,7 @@
         }
         .email-body {
             padding: 20px;
+            text-align: right;
         }
         .activation-code {
             font-size: 22px;

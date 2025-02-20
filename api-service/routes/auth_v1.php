@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\Route;
 Route::post('/register', [\App\Http\Controllers\V1\Auth\RegisterController::class, 'register'])->name('register')->middleware(['throttle:auth-actions']);
 Route::post('/email/resend', [\App\Http\Controllers\V1\Auth\RegisterController::class, 'resend'])->name('resend')->middleware(['auth:sanctum', 'throttle:1,1']);
 Route::post('/email/verify', [\App\Http\Controllers\V1\Auth\EmailVerificationController::class, '__invoke'])->name('email.verify')->middleware(['auth:sanctum', 'throttle:3,1']);
+Route::get('/email/verify/{id}/{hash}', [\App\Http\Controllers\V1\Auth\EmailVerificationController::class, 'verify'])
+    ->middleware(['signed'])
+    ->name('verification.verify');
 //Login Routes
 Route::post('/login', [\App\Http\Controllers\V1\Auth\LoginController::class, 'login'])->name('login')->middleware(['throttle:auth-actions']);
 Route::post('/2fa/verify-login', [\App\Http\Controllers\V1\Auth\TwoFactorController::class, 'verifyLogin'])->name('2fa.verify-login')
