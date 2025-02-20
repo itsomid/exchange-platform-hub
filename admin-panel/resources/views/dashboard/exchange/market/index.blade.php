@@ -119,15 +119,15 @@
 
                                         <div class="avatar avatar-md">
                                             <img src="{{asset($market->quoteCurrency->coinLogo())}}"
-                                                 class="rounded-circle ">
+                                                 class="rounded-circle">
                                         </div>
-                                        <div class="avatar avatar-md ">
+                                        <div class="avatar avatar-md">
                                             <img src="{{asset($market->baseCurrency->coinLogo())}}"
                                                  class="rounded-circle  ">
                                         </div>
                                     </div>
+                                    <div class="ms-3">{{$market->base_currency}}/{{$market->quote_currency}}</div>
                                 </div>
-                                <div class="ms-3">{{$market->base_currency}}/{{$market->quote_currency}}</div>
                             </td>
 
                             <td class="">

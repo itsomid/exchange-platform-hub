@@ -18,6 +18,7 @@ class Currency extends Model
         'name',
         'symbol',
         'logo',
+        'precision',
         'inter_transfer_enabled',
         'max_auto_withdraw_amount'
     ];

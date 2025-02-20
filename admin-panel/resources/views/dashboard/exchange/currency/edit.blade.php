@@ -14,7 +14,7 @@
                         @csrf
                         <h6>1. اطلاعات کوین</h6>
                         <div class="row">
-                            <div class="col-md-4 mt-5">
+                            <div class="col-lg-4 mt-5">
                                 <div class="form-group">
                                     <label class="form-label"  for="name">نام</label>
                                     <input name="name"
@@ -28,7 +28,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-4 mt-5">
+                            <div class="col-lg-4 mt-5">
                                 <div class="form-group">
                                     <label class="form-label"  for="symbol">Symbol</label>
                                     <input name="symbol" id="symbol" class="form-control"
@@ -40,13 +40,25 @@
                             </div>
 
                             <div class="w-100"></div>
-                            <div class="col-md-3 mt-5">
+                            <div class="col-lg-3 mt-5">
                                 <div class="form-group">
                                     <label class="form-label" for="max_auto_withdraw_amount">حداکثر مقدار قابل برداشت بدون نیاز به تایید ادمین</label>
                                     <input  name="max_auto_withdraw_amount" class="form-control font-number"
                                             placeholder="حداکثر مقدار قابل برداشت"
                                             value="{{formatNumberTrimZeros($currency->max_auto_withdraw_amount)}}" required>
                                     @error('min_deposit_amount')
+                                    <small class="text-danger">{{$message}}</small>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="w-100"></div>
+                            <div class="col-lg-3 mt-5">
+                                <div class="form-group">
+                                    <label class="form-label" for="precision">مقدار اعشار کوین</label>
+                                    <input  type="number" name="precision" id="precision" class="form-control"
+                                            placeholder="مقدار اعشار کوین"
+                                            value="{{$currency->precision}}" required>
+                                    @error('precision')
                                     <small class="text-danger">{{$message}}</small>
                                     @enderror
                                 </div>

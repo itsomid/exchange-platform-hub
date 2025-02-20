@@ -73,7 +73,7 @@
                                     </div>
                                     <div class="col-md-3">
                                         <div class="form-group">
-                                            <label class="form-label" for="safe_confirmations_{{$chain->id}}">حدافل تعداد تایید شبکه برای واریز</label>
+                                            <label class="form-label" for="safe_confirmations_{{$chain->id}}">حداقل تعداد تایید شبکه برای واریز</label>
                                             <input  name="chains[{{$chain->id}}][safe_confirmations]" id="safe_confirmations_{{$chain->id}}" class="form-control"
                                                     placeholder="زمان را وارد کنید." value="{{$chain->safe_confirmations}}" required>
                                             @error('safe_confirmations')
@@ -87,8 +87,8 @@
                                     <div class="col-md-3 ">
                                         <div class="form-group">
                                             <label class="form-label" for="exchange_withdrawal_fee_{{$chain->id}}">فی صرافی برای برداشت (واحد)</label>
-                                            <input  name="chains[{{$chain->id}}][exchange_withdrawal_fee]" id="exchange_withdrawal_fee_{{$chain->id}}" class="form-control font-number"
-                                                    placeholder="فی صرافیی را وارد کنید." value="{{$chain->exchange_withdrawal_fee}}" required>
+                                            <input  type="number" name="chains[{{$chain->id}}][exchange_withdrawal_fee]" id="exchange_withdrawal_fee_{{$chain->id}}" class="form-control font-number"
+                                                    placeholder="فی صرافیی را وارد کنید." value="{{formatNumber($chain->exchange_withdrawal_fee,$currency->precision)}}" required>
                                             @error('exchange_withdrawal_fee')
                                             <small class="text-danger">{{$message}}</small>
                                             @enderror
