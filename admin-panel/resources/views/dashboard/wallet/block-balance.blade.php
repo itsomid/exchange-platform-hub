@@ -1,5 +1,5 @@
 @extends('dashboard.layout.master')
-@section('title', 'فرم بلاک موجودی کاربر')
+@section('title', 'فرم مسدودسازی موجودی کاربر')
 @section('content')
     <section class="form-control-repeater">
         <div class="card">
@@ -14,7 +14,7 @@
                                 <div
                                     class="d-flex align-items-md-end align-items-sm-start align-items-center justify-content-md-between justify-content-start mx-5 flex-md-row flex-column gap-4">
                                     <div class="user-profile-info">
-                                        <h4 class="mb-0">بلاک موجودی کاربر روی شبکه {{$wallet->currency_symbol}}</h4>
+                                        <h4 class="mb-0">مسدود سازی موجودی کاربر روی کوین  {{$wallet->currency_symbol}}</h4>
                                         <ul class="list-inline mb-0 d-flex align-items-center flex-wrap justify-content-sm-start justify-content-center gap-4 my-2">
                                             <li class="list-inline-item d-flex gap-1 align-items-center">
                                                 <i class="fa-regular fa-hashtag"></i>
@@ -30,7 +30,13 @@
                                             </li>
                                             <li class="list-inline-item d-flex gap-2 align-items-center">
                                                 <i class="fa-regular fa-clock"></i>
-                                                <span class="text-body">آخرین فعالیت در ۳ مهر ۱۴۰۳</span>
+                                                <span class="text-body">آخرین فعالیت
+                                                @if($user->latestActiveToken)
+                                                        {{\App\Helpers\DateFormatter::convertToPersianDate($user->latestActiveToken->last_used_at,'H:i:s %Y/%m/%d')}}
+                                                    @else
+                                                        <span>بدون فعالیت</span>
+                                                    @endif
+                                                </span>
                                             </li>
                                         </ul>
                                     </div>

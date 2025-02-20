@@ -30,7 +30,13 @@
                                             </li>
                                             <li class="list-inline-item d-flex gap-2 align-items-center">
                                                 <i class="fa-regular fa-clock"></i>
-                                                <span class="text-body">آخرین فعالیت در ۳ مهر ۱۴۰۳</span>
+                                                <span class="text-body">آخرین فعالیت
+                                                @if($user->latestActiveToken)
+                                                        {{\App\Helpers\DateFormatter::convertToPersianDate($user->latestActiveToken->last_used_at,'H:i:s %Y/%m/%d')}}
+                                                    @else
+                                                        <span>بدون فعالیت</span>
+                                                    @endif
+                                                </span>
                                             </li>
                                         </ul>
                                     </div>
