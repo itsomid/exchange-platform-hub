@@ -9,11 +9,11 @@
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left"><span>تعداد معاملات</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{count($otcOrders)}}</h4>
+                                <h4 class="mb-0 me-2">{{$otcOrders->total()}}</h4>
                             </div>
                         </div>
-                        <span class="badge bg-label-danger rounded p-2">
-                            <i class="fa-light fa-money-bill-wave fa-lg"></i>
+                        <span class="badge bg-label-success rounded p-2">
+                            <i class="fa-light fa-swap fa-lg"></i>
                         </span>
                     </div>
                 </div>
@@ -26,11 +26,11 @@
                         <div class="content-left">
                             <span>تعداد معاملات امروز</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{count($otcOrders)}}</h4>
+                                <h4 class="mb-0 me-2">{{$todayOrderCount}}</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-warning rounded">
-                            <i class="fa-light fa-money-bill-wave"></i>
+                            <i class="fa-light fa-swap"></i>
                         </span>
                     </div>
                 </div>
@@ -43,7 +43,43 @@
                         <div class="content-left">
                             <span>تعداد معاملات خرید</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{count($otcOrders)}}</h4>
+                                <h4 class="mb-0 me-2">{{$totalBuyOrderCount}}</h4>
+                            </div>
+                        </div>
+                        <span class="badge bg-label-primary rounded p-2">
+                            <i class="fa-regular fa-user-tag"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 col-xl-3">
+            <div class="card">
+                <div class="card-body ">
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                            <span>تعداد معاملات فروش</span>
+                            <div class="d-flex align-items-center my-1">
+                                <h4 class="mb-0 me-2">{{$totalSellOrderCount}}</h4>
+                            </div>
+                        </div>
+                        <span class="badge bg-label-primary rounded p-2">
+                            <i class="fa-regular fa-user-tag"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 col-xl-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                            <span>حجم معاملات</span>
+                            <div class="d-flex align-items-center my-1">
+                                <h4 class="mb-0 me-2">{{formatNumber($totalOrdersValue)}}
+                                <small>USDT</small>
+                                </h4>
                             </div>
                         </div>
                         <span class="badge bg-label-primary rounded p-2">
@@ -61,7 +97,7 @@
                             <span class="text-white">کاربران با بیشترین معامله امروز</span>
                             <div class="d-flex align-items-baseline my-1">
                                 <small class="text-white mx-2"> حجم معاملات امروز: </small>
-                                <h4 class="mb-0 me-2 text-primary">{{formatNumber($totalOrdersValue,2)}}</h4>
+                                <h4 class="mb-0 me-2 text-primary">{{formatNumber($totalTodayOrdersValue,2)}}</h4>
                                 <small class="text-primary">USDT</small>
                             </div>
                         </div>
@@ -163,7 +199,7 @@
             </div>
         </div>
         <div class="table-responsive text-nowrap">
-            <table class="table table-striped">
+            <table class="table ">
                 <thead>
                 <tr>
                     <th>
@@ -183,7 +219,7 @@
                         </a>
                     </th>
                     <th>بازار</th>
-                    <th>نوع معامله</th>
+                    <th>نوع</th>
                     <th>کاربر</th>
                     <th>
                         @php
@@ -201,7 +237,7 @@
                             @endif
                         </a>
                     </th>
-                    <th>قیمت</th>
+                    <th>قیمت واحد</th>
                     <th>
                         @php
                             $currentParams = request()->except('sortByTotalValue');
@@ -210,7 +246,7 @@
                         @endphp
                         <a href="{{ route('admin.otc_orders.index', array_merge($currentParams, ['sortByTotalValue' => $newSortDirection])) }}"
                            class="text-black">
-                            ارزش
+                            مبلغ کل
                             @if($currentSortDirection === 'asc')
                                 <span><i class="fa-solid fa-arrow-up"></i></span>
                             @else
@@ -249,12 +285,13 @@
                 @else
 
                     @foreach($otcOrders as $order)
-                        <tr>
+                        <tr class="table-{{$order->status->color()}}">
                             <td>{{$order->id}}</td>
                             <td class="text-heading fw-medium">
                                 <img src="{{asset($order->market->baseCurrency->coinLogo())}}"
                                      class="rounded-circle" width="32px">
-                                {{$order->market->name}}
+                                <small>  {{$order->market->name}}</small>
+
                             </td>
                             <td>
                                 <span class="badge bg-label-{{$order->type->color()}}">{{$order->type->label()}}</span>
@@ -262,7 +299,7 @@
                             <td>
                                 <div class="d-flex flex-column">
                                     <a href="" class="text-heading text-truncate">
-                                        <span class="fw-medium">{{$order->user->email}}</span>
+                                        <small class="fw-medium">{{$order->user->email}}</small>
                                     </a>
                                     <small>{{$order->user->username}}</small>
                                 </div>
@@ -273,11 +310,11 @@
                                 <small>{{$order->market->baseCurrency->symbol}}</small>
                             </td>
                             <td class="font-number" dir="ltr">
-                                <span class="ms-2">{{formatNumberTrimZeros($order->price)}}</span>
+                                <span class="ms-2">{{formatNumber($order->price)}}</span>
                                 <small>{{$order->market->quoteCurrency->symbol}}</small>
                             </td>
                             <td class="font-number" dir="ltr">
-                                {{formatNumberTrimZeros($order->total_value)}}
+                                {{formatNumber($order->total_value,3)}}
                                 <small>USDT</small>
                             </td>
                             <td class="font-number" dir="ltr">
@@ -299,7 +336,7 @@
                             </td>
 
                             <td>
-                                <span class="badge bg-label-{{$order->status->color()}}">{{$order->status->label()}}</span>
+                                <span class="badge bg-{{$order->status->color()}}">{{$order->status->label()}}</span>
                             </td>
                             <td>
                                 <a href="" class="btn btn-icon btn-text-secondary" data-bs-toggle="modal"

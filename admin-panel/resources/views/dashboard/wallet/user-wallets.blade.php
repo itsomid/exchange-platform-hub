@@ -54,18 +54,7 @@
                     <div class="card-title mb-0">
                         <h5 class="mb-0 card-title">ارزش کل موجودی‌ها به USDT</h5>
                     </div>
-                    <div class="dropdown">
-                        <button
-                            class="btn btn-text-secondary rounded-pill text-muted border-0 p-2 me-n1 "
-                            type="button" id="earningReportsId" data-bs-toggle="dropdown" aria-haspopup="true"
-                            aria-expanded="false">
-                            <i class="fa-regular fa-grip-dots-vertical ti-md text-muted"></i>
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="earningReportsId">
-                            <a class="dropdown-item " href="javascript:void(0);">View More</a>
-                            <a class="dropdown-item " href="javascript:void(0);">Delete</a>
-                        </div>
-                    </div>
+
                     <!-- </div> -->
                 </div>
                 <div class="card-body">

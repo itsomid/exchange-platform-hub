@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\OTCOrder;
 
+use App\Enums\OTCOrderTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
 use App\Models\OTCOrder;
@@ -16,12 +17,18 @@ class OTCOrderController extends Controller
             ->orderBy('id', request()->input('sortById', 'desc'))
             ->paginate(50);
 
+        $todayOrderCount =  OTCOrder::whereDate('created_at', $today)->count();
+        $totalSellOrderCount =  OTCOrder::whereType(OTCOrderTypeEnum::SELL)->count();
+        $totalBuyOrderCount =  OTCOrder::whereType(OTCOrderTypeEnum::BUY)->count();
+
         $totalOrdersValue = OTCOrder::with('market')
-            ->whereDate('created_at', $today)// Assuming `currency` has the price
             ->get()
-            ->sum(function ($order) {
-                return $order->quantity * $order->price; // Multiply amount by coin price
-            });
+            ->sum('total_value');
+
+        $totalTodayOrdersValue = OTCOrder::with('market')
+            ->whereDate('created_at', $today)
+            ->get()
+            ->sum('total_value');
 
 
         $topUsers = OTCOrder::with(['market', 'user'])
@@ -29,9 +36,7 @@ class OTCOrderController extends Controller
             ->get()
             ->groupBy('user_id')
             ->map(function ($orders, $userId) {
-                $totalOrders = $orders->sum(function ($order) {
-                    return $order->quantity * $order->price;
-                });
+                $totalOrders = $orders->sum('total_value');
                 return [
                     'user' => $orders->first()->user,
                     'totalOrders' => $totalOrders,
@@ -43,8 +48,12 @@ class OTCOrderController extends Controller
 
         return view('dashboard.otc_order.index', [
             'otcOrders' => $otcOrders,
+            'todayOrderCount' => $todayOrderCount,
             'topUsers' => $topUsers,
-            'totalOrdersValue' => $totalOrdersValue
+            'totalTodayOrdersValue' => $totalTodayOrdersValue,
+            'totalOrdersValue' => $totalOrdersValue,
+            'totalSellOrderCount' => $totalSellOrderCount,
+            'totalBuyOrderCount' => $totalBuyOrderCount,
         ]);
     }
 }
