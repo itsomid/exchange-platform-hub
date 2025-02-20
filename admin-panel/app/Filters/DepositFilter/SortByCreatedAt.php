@@ -15,8 +15,12 @@ class SortByCreatedAt implements FilterContract
 
     public function handle($value = null): void
     {
-        $value == 'desc'
-            ? $this->query->latest()
-            : $this->query->oldest();
+        if ($value == 'desc') {
+            $this->query->orderBy('created_at', $value);
+        }
+
+        if ($value == 'asc') {
+            $this->query->orderBy('created_at', $value);
+        }
     }
 }

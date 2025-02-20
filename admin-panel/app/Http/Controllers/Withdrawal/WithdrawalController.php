@@ -39,11 +39,12 @@ class WithdrawalController extends Controller
 
          $topUsers = Withdrawal::with(['currency', 'user'])
              ->where('status',WithdrawalStatusEnum::COMPLETED)
+             ->whereDate('created_at', $today)
             ->get()
             ->groupBy('user_id')
             ->map(function ($withdraws, $userId) {
-                $totalWithdraws = $withdraws->sum(function ($deposit) {
-                    return $deposit->amount * $deposit->currency->exchange_price;
+                $totalWithdraws = $withdraws->sum(function ($withdraw) {
+                    return $withdraw->amount * $withdraw->currency->exchange_price;
                 });
                 return [
                     'user' => $withdraws->first()->user,
@@ -54,7 +55,9 @@ class WithdrawalController extends Controller
             ->take(5);
         $totalTopUsersWithdrawals = $topUsers->sum('totalWithdraw');
 
-        $withdraws = Withdrawal::filterBy(request()->all())->with(['user', 'currency', 'transaction'])->orderBy('created_at','desc')->paginate(20);
+        $withdraws = Withdrawal::filterBy(request()->all())->with(['user', 'currency', 'transaction'])
+            ->orderBy('id', request()->input('sortById', 'desc'))
+            ->paginate(20);
 
 
         return view('dashboard.withdraw.index', [

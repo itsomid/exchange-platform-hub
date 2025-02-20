@@ -17,7 +17,7 @@ class UserFinancialBlockController extends Controller
 {
     public function index()
     {
-        $blockedUsers = User::has('activeFinancialBlocks')->paginate(50);
+        $blockedUsers = User::has('activeFinancialBlocks')->filterBy(request()->all())->paginate(50);
         $withdrawBlockedUsers = User::whereHas('financialBlocksFrom', function ($query) {
             $query->where('action', 'withdraw');
         })->count();

@@ -96,25 +96,14 @@
     <div class="card">
         <div class="card-body border-bottom">
             <h5 class="card-title">فیلتر کاربر</h5>
-            <form class="row" action="{{route('admin.user.index')}}" method="get">
+            <form class="row" action="{{route('admin.user.financial-status')}}" method="get">
                 <div class="col-md-4 user_role">
                     <label class="form-label" for="search">جستجو متن :</label>
-                    <input id="search" type="text" name="search_key" placeholder="ایمیل٫ شناسه کاربری٫ شماره تلفن٫..."
+                    <input id="search" type="text" name="search_key" value="{{request('search_key')}}" placeholder="ایمیل٫ شناسه کاربری٫ شماره تلفن٫..."
                            class="form-control">
                 </div>
 
-                <div class="col-md-4 user_status ">
-                    <label class="form-label" for="status">وضعیت کاربری :</label>
-                    <select id="status" name="status"
-                            class="form-select text-capitalize mb-md-0 ">
-                        <option value="" {{ request('status') == '' ? 'selected' : '' }}>همه</option>
-                        <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>فعال</option>
-                        <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>غیر فعال
-                        </option>
-                        <option value="suspended" {{ request('status') == 'suspended' ? 'selected' : '' }}>مسدود شده
-                        </option>
-                    </select>
-                </div>
+
 
 
                 <div class="col-md-12 mt-2">
@@ -144,7 +133,22 @@
                     <table class="table">
                         <thead>
                         <tr>
-                            <th>ID</th>
+                            <th>
+                                @php
+                                    $currentParams = request()->except('sortById');
+                                    $currentSortDirection = request()->input('sortById', 'asc');
+                                    $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
+                                @endphp
+                                <a href="{{ route('admin.user.financial-status', array_merge($currentParams, ['sortById' => $newSortDirection])) }}"
+                                   class="text-black">
+                                    ID
+                                    @if($currentSortDirection === 'asc')
+                                        <span><i class="fa-solid fa-arrow-up"></i></span>
+                                    @else
+                                        <span><i class="fa-solid fa-arrow-down"></i></span>
+                                    @endif
+                                </a>
+                            </th>
                             <th>نام کاربری</th>
                             <th>نام</th>
                             <th>وضعیت اکانت</th>
@@ -204,59 +208,13 @@
                                     فعالیتی نداشته است
                                 </td>
                                 <td >
-                                    <div class="d-flex align-items-center">
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <a class="btn btn-outline-secondary text-dark" href="">
-                                                <i class="fa-light fa-eye"></i>
-                                            </a>
-                                            @can('user.edit-note')
-                                                <a class="btn {{$user->support_description ? 'btn-primary' :'btn-outline-secondary text-dark'}}"
-                                                   href="#"
-                                                   data-bs-toggle="modal"
-                                                   data-bs-target="#noteModal{{$user->id}}">
-                                                    <i class="fa-regular fa-user-pen"></i>
-                                                </a>
-                                            @endcan
-                                        </div>
-
-{{--                                        TODO: add Country--}}
-                                        <div class="dropdown mx-3">
-
-                                            <button type="button" class="btn p-0 dropdown-toggle hide-arrow"
-                                                    data-bs-toggle="dropdown">
-                                                <i class="fa-solid fa-ellipsis-vertical"></i>
-                                            </button>
-                                            <div class="dropdown-menu">
-                                                <a class="dropdown-item"
-                                                   href="{{route('admin.user.edit', ['user'=>$user->id])}}">
-                                                    <i class="fa-light fa-pen"></i>
-                                                    ویرایش کاربر
-                                                </a>
-                                                <a class="dropdown-item" href="{{route('admin.user.password.edit', ['user'=>$user->id])}}">
-                                                    <i class="fa-regular fa-unlock"></i>
-                                                    تغییر رمز عبور
-                                                </a>
-                                                <a class="dropdown-item" href="{{route('admin.user.financial-block.getBlocks', ['user'=>$user->id])}}">
-                                                    <i class="fa-regular fa-unlock"></i>
-                                                    محدودیت های مالی
-                                                </a>
-                                                @can('user.login-as-customer')
-                                                    <a class="dropdown-item" href="#">
-                                                        <i class="fa-light fa-right-to-bracket"></i>
-                                                        ورود به عنوان کاربر
-                                                    </a>
-                                                @endcan
-
-                                            </div>
-                                        </div>
-                                        @can('user.edit-note')
-                                            <note-modal
-                                                :id="'noteModal' + {{$user->id}}"
-                                                :url="'{{route('api.user.update-note', ['user'=>$user->id])}}'"
-                                                :support_description="'{{$user->support_description}}'"
-                                            ></note-modal>
-                                        @endcan
-                                    </div>
+                                    <form action="{{route('admin.user.financial-block.deleteBlock',['user'=>$user,'financialBlock'=>$block->id])}}" method="post">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="btn btn-icon btn-danger ">
+                                            <i class="fa-light fa-trash-alt fa-lg"></i>
+                                        </button>
+                                    </form>
 
                                 </td>
                             </tr>
@@ -265,7 +223,7 @@
                     </table>
                 </div>
             @else
-                <p class="text-center h4 mt-5">کاربری موجود نیست🙄</p>
+                <p class="text-center h4 mt-5">فرد مورد نظر در لیست بلاکی ها نیست 🙄</p>
             @endif
         </div>
         <div class="row justify-content-center">

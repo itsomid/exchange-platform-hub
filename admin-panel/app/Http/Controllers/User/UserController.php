@@ -25,7 +25,11 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::with('introducerReferral.user','activeFinancialBlocks')->orderBy('id')->filterBy(request()->all())->paginate(20);
+//        return \request()->all();
+
+        $users = User::with('introducerReferral.user','activeFinancialBlocks')
+            ->filterBy(request()->all())
+            ->paginate(20);
         $referral_codes = ReferralCode::all();
         $onlineUserCount = User::online()->count();
         $activeUsersCount = User::active()->count();

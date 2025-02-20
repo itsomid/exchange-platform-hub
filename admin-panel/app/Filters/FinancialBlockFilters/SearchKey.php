@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filters\UserFilter;
+namespace App\Filters\FinancialBlockFilters;
 
 class SearchKey implements \App\Filters\FilterContract
 {
@@ -14,8 +14,7 @@ class SearchKey implements \App\Filters\FilterContract
     public function handle($value = null): void
     {
         if (! is_null($value)) {
-            $this->query->where('username', 'LIKE', '%'.$value.'%')->orWhere('email', 'LIKE', '%'.$value.'%')->orWhere('last_name', 'LIKE', '%'.$value.'%');
+            $this->query->where('id', $value)->orWhere('first_name', 'LIKE', '%'.$value.'%')->orWhere('last_name', 'LIKE', '%'.$value.'%');
         }
-
     }
 }

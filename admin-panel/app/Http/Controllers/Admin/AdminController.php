@@ -17,8 +17,7 @@ class AdminController extends Controller
     {
 
         $admins = Admin::query()
-            ->orderBy('id')
-            ->search(request()->input('key'))
+//            ->search(request()->input('key'))
             ->filterBy(request()->all())
             ->paginate(100);
 

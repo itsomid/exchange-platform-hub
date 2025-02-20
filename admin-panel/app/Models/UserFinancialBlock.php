@@ -4,13 +4,14 @@ namespace App\Models;
 
 use App\Enums\FinancialBlockReasonsEnum;
 
+use App\Filters\Filterable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
 class UserFinancialBlock extends Model
 {
-
-
+    use Filterable;
+    public $filterNameSpace = 'App\Filters\FinancialBlockFilters';
     protected $fillable = [
         'user_id',
         'action',

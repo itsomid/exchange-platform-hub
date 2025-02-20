@@ -21,6 +21,12 @@ class OTCOrder extends Model
         'type' => OTCOrderTypeEnum::class,
         'status' => OTCOrderStatusEnum::class,
     ];
+    protected static function booted()
+    {
+        static::addGlobalScope('withTotalValue', function ($query) {
+            $query->selectRaw('*, (price * quantity) as total_value');
+        });
+    }
     public function transactions()
     {
         return $this->hasMany(Transaction::class,'otc_order_id');
@@ -35,5 +41,10 @@ class OTCOrder extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+//    public function getTotalValueAttribute()
+//    {
+//        return $this->price * $this->quantity;
+//    }
 
 }

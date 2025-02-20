@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Filters\OTCOrderFilter;
+namespace App\Filters\DepositFilter;
 
 use App\Filters\FilterContract;
 
-class SortByAmount implements FilterContract
+class SortById implements FilterContract
 {
     protected $query;
 
@@ -16,11 +16,11 @@ class SortByAmount implements FilterContract
     public function handle($value = null): void
     {
         if ($value == 'desc') {
-            $this->query->orderBy('quantity', $value);
+            $this->query->orderBy('id', $value);
         }
 
         if ($value == 'asc') {
-            $this->query->orderBy('quantity', $value);
+            $this->query->orderBy('id', $value);
         }
     }
 }

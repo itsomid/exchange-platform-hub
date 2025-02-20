@@ -64,8 +64,8 @@
                   action="{{route('admin.admin.index')}}" method="get">
 
                 <div class="col-md-10 user_role">
-                    <label class="form-label" for="key">نام یا شماره تماس یا ایمیل یا ID</label>
-                    <input type="text" class="form-control" name="key" placeholder="دنبال چی میگردی؟">
+                    <label class="form-label" for="search_key">نام یا شماره تماس یا ایمیل یا ID</label>
+                    <input type="text" class="form-control" name="search_key" value="{{request()->input('search_key')}}" placeholder="دنبال چی میگردی؟">
                 </div>
                 <div class="col-md-2 mt-2 text-center">
                     <button class="btn btn-success">
@@ -96,7 +96,22 @@
                 <table class="table">
                     <thead>
                     <tr>
-                        <th>#</th>
+                        <th>
+                            @php
+                                $currentParams = request()->except('sortById');
+                                $currentSortDirection = request()->input('sortById', 'asc');
+                                $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
+                            @endphp
+                            <a href="{{ route('admin.admin.index', array_merge($currentParams, ['sortById' => $newSortDirection])) }}"
+                               class="text-black">
+                                ID
+                                @if($currentSortDirection === 'asc')
+                                    <span><i class="fa-solid fa-arrow-up"></i></span>
+                                @else
+                                    <span><i class="fa-solid fa-arrow-down"></i></span>
+                                @endif
+                            </a>
+                        </th>
                         <th>آواتار</th>
                         <th>نام</th>
                         @can('admin.index.table.mobile')

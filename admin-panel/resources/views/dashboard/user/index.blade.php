@@ -119,8 +119,8 @@
             <form class="row" action="{{route('admin.user.index')}}" method="get">
                 <div class="col-md-4 user_role">
                     <label class="form-label" for="search">جستجو متن :</label>
-                    <input id="search" type="text" name="search_key" placeholder="ایمیل٫ شناسه کاربری٫ شماره تلفن٫..."
-                           class="form-control">
+                    <input id="search" type="text" name="search_key" placeholder="ایمیل٫ شناسه کاربری٫..."
+                           value="{{request()->input('search_key')}}" class="form-control">
                 </div>
 
                 <div class="col-md-4 user_status ">
@@ -175,8 +175,25 @@
                 <div class="table-responsive text-nowrap">
                     <table class="table">
                         <thead>
+
                         <tr>
-                            <th>ID</th>
+                            <th>
+                                @php
+                                    $currentParams = request()->except('sortById');
+                                    $currentSortDirection = request()->input('sortById', 'asc');
+                                    $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
+                                @endphp
+                                <a href="{{ route('admin.user.index', array_merge($currentParams, ['sortById' => $newSortDirection])) }}"
+                                   class="text-black">
+                                    ID
+                                    @if($currentSortDirection === 'asc')
+                                        <span><i class="fa-solid fa-arrow-up"></i></span>
+                                    @else
+                                        <span><i class="fa-solid fa-arrow-down"></i></span>
+                                    @endif
+                                </a>
+                            </th>
+
                             <th>نام کاربری</th>
                             <th>نام</th>
                             <th>کد معرف ثبت نامی</th>

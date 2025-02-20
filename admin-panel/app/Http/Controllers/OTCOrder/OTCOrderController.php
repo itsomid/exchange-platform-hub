@@ -12,7 +12,9 @@ class OTCOrderController extends Controller
     public function index()
     {
         $today = now()->toDateString(); // Get today's date
-        $otcOrders = OTCOrder::with(['market', 'transactions'])->filterBy(request()->all())->orderBy('created_at','desc')->paginate(50);
+        $otcOrders = OTCOrder::filterBy(request()->all())->with(['market', 'transactions'])
+            ->orderBy('id', request()->input('sortById', 'desc'))
+            ->paginate(50);
 
         $totalOrdersValue = OTCOrder::with('market')
             ->whereDate('created_at', $today)// Assuming `currency` has the price
@@ -22,8 +24,8 @@ class OTCOrderController extends Controller
             });
 
 
-         $topUsers = OTCOrder::with(['market', 'user'])
-             ->whereDate('created_at', $today)
+        $topUsers = OTCOrder::with(['market', 'user'])
+            ->whereDate('created_at', $today)
             ->get()
             ->groupBy('user_id')
             ->map(function ($orders, $userId) {

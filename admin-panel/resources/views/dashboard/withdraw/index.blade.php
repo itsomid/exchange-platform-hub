@@ -163,7 +163,22 @@
             <table class="table table-striped">
                 <thead>
                 <tr>
-                    <th>شناسه</th>
+                    <th>
+                        @php
+                            $currentParams = request()->except('sortById');
+                            $currentSortDirection = request()->input('sortById', 'desc');
+                            $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
+                        @endphp
+                        <a href="{{ route('admin.withdrawal.index', array_merge($currentParams, ['sortById' => $newSortDirection])) }}"
+                           class="text-black">
+                            ID
+                            @if($currentSortDirection === 'asc')
+                                <span><i class="fa-solid fa-arrow-up"></i></span>
+                            @else
+                                <span><i class="fa-solid fa-arrow-down"></i></span>
+                            @endif
+                        </a>
+                    </th>
                     <th>کاربر</th>
                     <th>Coin</th>
                     <th>شبکه</th>
@@ -184,18 +199,20 @@
                     </th>
                     <th>
                         @php
-                            $currentParams = request()->except('sortByAmount');
-                            $newSortDirection = request()->input('sortByAmount') == 'asc' ? 'desc' : 'asc';
+                            $currentParams = request()->except('sortByTotalFee');
+                            $currentSortDirection = request()->input('sortByTotalFee', 'desc');
+                            $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
                         @endphp
-                        <a href="{{ route('admin.withdrawal.index', array_merge($currentParams, ['sortByAmount' => $newSortDirection])) }}"
+                        <a href="{{ route('admin.withdrawal.index', array_merge($currentParams, ['sortByTotalFee' => $newSortDirection])) }}"
                            class="text-black">
                             کارمزد برداشت <br> (فی شبکه + صرافی)
-                            @if( request()->input('sortByAmount') == 'asc')
-                                <span>&uarr;</span>
+                            @if($currentSortDirection === 'asc')
+                                <span><i class="fa-solid fa-arrow-up"></i></span>
                             @else
-                                <span>&darr;</span>
+                                <span><i class="fa-solid fa-arrow-down"></i></span>
                             @endif
                         </a>
+
                     </th>
                     <th>ارزش</th>
                     <th>آدرس</th>
@@ -203,30 +220,32 @@
                     <th>
                         @php
                             $currentParams = request()->except('sortByCreatedAt');
-                            $newSortDirection = request()->input('sortByCreatedAt') == 'asc' ? 'desc' : 'asc';
+                            $currentSortDirection = request()->input('sortByCreatedAt', 'desc');
+                            $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
                         @endphp
                         <a href="{{ route('admin.withdrawal.index', array_merge($currentParams, ['sortByCreatedAt' => $newSortDirection])) }}"
                            class="text-black">
                             زمان درخواست
-                            @if( request()->input('sortByCreatedAt') == 'asc')
-                                <span>&uarr;</span>
+                            @if($currentSortDirection === 'asc')
+                                <span><i class="fa-solid fa-arrow-up"></i></span>
                             @else
-                                <span>&darr;</span>
+                                <span><i class="fa-solid fa-arrow-down"></i></span>
                             @endif
                         </a>
                     </th>
                     <th>
                         @php
-                            $currentParams = request()->except('sortByCreatedAt');
-                            $newSortDirection = request()->input('sortByCreatedAt') == 'asc' ? 'desc' : 'asc';
+                            $currentParams = request()->except('sortByConfirmedAt');
+                            $currentSortDirection = request()->input('sortByConfirmedAt', 'desc');
+                            $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
                         @endphp
-                        <a href="{{ route('admin.withdrawal.index', array_merge($currentParams, ['sortByCreatedAt' => $newSortDirection])) }}"
+                        <a href="{{ route('admin.withdrawal.index', array_merge($currentParams, ['sortByConfirmedAt' => $newSortDirection])) }}"
                            class="text-black">
                             زمان تکمیل برداشت
-                            @if( request()->input('sortByCreatedAt') == 'asc')
-                                <span>&uarr;</span>
+                            @if($currentSortDirection === 'asc')
+                                <span><i class="fa-solid fa-arrow-up"></i></span>
                             @else
-                                <span>&darr;</span>
+                                <span><i class="fa-solid fa-arrow-down"></i></span>
                             @endif
                         </a>
                     </th>
@@ -255,10 +274,13 @@
                             </td>
                             <td class="text-heading fw-medium">
                                 <img src="{{asset($withdraw->currency->coinLogo())}}"
-                                     class="rounded-circle img-fluid" width="30">
-                                {{$withdraw->currency_symbol}}
+                                     class="rounded-circle img-fluid" width="25">
+                                <small class="ms-1">{{$withdraw->currency_symbol}}</small>
+
                             </td>
-                            <td>{{$withdraw->currencyChain->chain_name}}</td>
+                            <td>
+                                <smal>{{$withdraw->currencyChain->chain}}</smal>
+                            </td>
                             <td class="font-number" dir="ltr">
                                 <h6 class="mb-0">{{formatNumberTrimZeros($withdraw->amount)}}</h6>
                             </td>
@@ -286,10 +308,11 @@
                                                aria-label="Username"
                                                readonly>
 
-                                        <a href="{{ $withdraw->explorer_address_url }}"
-                                           target="_blank">{{ shorten_hash($withdraw->address) }}</a>
+                                        <a href="{{ $withdraw->explorer_address_url }}" target="_blank">
+                                            <small>{{ shorten_hash($withdraw->address) }}</small>
+                                        </a>
                                     @else
-                                        <span>N/A Address</span>
+                                        <small>N/A Address</small>
                                     @endif
                                 </h6>
                             </td>
@@ -311,7 +334,7 @@
                                             <small>{{ shorten_hash($withdraw->transaction_hash) }}</small>
                                         </a>
                                     @else
-                                        <span>N/A TxID</span>
+                                        <small>N/A TxID</small>
                                     @endif
                                 </h6>
 
@@ -516,6 +539,9 @@
 
 @endsection
 @section('vendor-script')
-    @vite(['resources/assets/vendor/libs/clipboard/clipboard.js',
-            'resources/assets/js/extended-ui-misc-clipboardjs.js'])
+    <script>
+        $(document).ready(function () {
+            $('[data-bs-toggle="tooltip"]').tooltip();
+        });
+    </script>
 @endsection

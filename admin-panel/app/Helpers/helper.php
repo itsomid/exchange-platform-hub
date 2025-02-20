@@ -83,12 +83,12 @@ if (! function_exists('formatNumberTrimZeros')) {
                 // No truncation needed since trailing zeros are already trimmed
             } else {
                 // Truncate to 4 digits and trim any new trailing zeros
-                $decimalPart = substr($decimalPart, 0, 4);
+                $decimalPart = substr($decimalPart, 0, 8);
                 $decimalPart = rtrim($decimalPart, '0');
             }
         } else {
             // For numbers >= 1, truncate to 2 digits and trim trailing zeros
-            $decimalPart = substr($decimalPart, 0, 3);
+            $decimalPart = substr($decimalPart, 0, 8);
             $decimalPart = rtrim($decimalPart, '0');
         }
 

@@ -189,22 +189,39 @@
             <table class="table table-striped">
                 <thead>
                 <tr>
-                    <th>شناسه</th>
+                    <th>
+                        @php
+                            $currentParams = request()->except('sortById');
+                            $currentSortDirection = request()->input('sortById', 'desc');
+
+                            $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
+                        @endphp
+                        <a href="{{ route('admin.deposit.index', array_merge($currentParams, ['sortById' => $newSortDirection])) }}"
+                           class="text-black">
+                            ID
+                            @if($currentSortDirection === 'asc')
+                                <span><i class="fa-solid fa-arrow-up"></i></span>
+                            @else
+                                <span><i class="fa-solid fa-arrow-down"></i></span>
+                            @endif
+                        </a>
+                    </th>
                     <th>کاربر</th>
                     <th>Coin</th>
                     <th>شبکه</th>
                     <th>
                         @php
                             $currentParams = request()->except('sortByAmount');
-                            $newSortDirection = request()->input('sortByAmount') == 'asc' ? 'desc' : 'asc';
+                            $currentSortDirection = request()->input('sortByAmount', 'asc');
+                            $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
                         @endphp
                         <a href="{{ route('admin.deposit.index', array_merge($currentParams, ['sortByAmount' => $newSortDirection])) }}"
                            class="text-black">
                             مقدار
-                            @if( request()->input('sortByAmount') == 'asc')
-                                <span>&uarr;</span>
+                            @if($currentSortDirection === 'asc')
+                                <span><i class="fa-solid fa-arrow-up"></i></span>
                             @else
-                                <span>&darr;</span>
+                                <span><i class="fa-solid fa-arrow-down"></i></span>
                             @endif
                         </a>
                     </th>
@@ -214,32 +231,35 @@
                     <th>
                         @php
                             $currentParams = request()->except('sortByCreatedAt');
-                            $newSortDirection = request()->input('sortByCreatedAt') == 'asc' ? 'desc' : 'asc';
+                            $currentSortDirection = request()->input('sortByCreatedAt', 'asc');
+                            $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
                         @endphp
                         <a href="{{ route('admin.deposit.index', array_merge($currentParams, ['sortByCreatedAt' => $newSortDirection])) }}"
                            class="text-black">
                             تاریخ ایجاد
-                            @if( request()->input('sortByCreatedAt') == 'asc')
-                                <span>&uarr;</span>
+                            @if($currentSortDirection === 'asc')
+                                <span><i class="fa-solid fa-arrow-up"></i></span>
                             @else
-                                <span>&darr;</span>
+                                <span><i class="fa-solid fa-arrow-down"></i></span>
                             @endif
                         </a>
                     </th>
                     <th>
                         @php
                             $currentParams = request()->except('sortByConfirmedAt');
-                            $newSortDirection = request()->input('sortByConfirmedAt') == 'asc' ? 'desc' : 'asc';
+                            $currentSortDirection = request()->input('sortByConfirmedAt', 'asc');
+                            $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
                         @endphp
                         <a href="{{ route('admin.deposit.index', array_merge($currentParams, ['sortByConfirmedAt' => $newSortDirection])) }}"
                            class="text-black">
                             تاریخ تایید
-                            @if( request()->input('sortByConfirmedAt') == 'asc')
-                                <span>&uarr;</span>
+                            @if($currentSortDirection === 'asc')
+                                <span><i class="fa-solid fa-arrow-up"></i></span>
                             @else
-                                <span>&darr;</span>
+                                <span><i class="fa-solid fa-arrow-down"></i></span>
                             @endif
                         </a>
+
                     </th>
                     <th>وضعیت</th>
                     <th>عملیات</th>
@@ -328,7 +348,7 @@
                                                class="form-control text-left" placeholder="کد معرف شما"
                                                aria-label="Username"
                                                readonly>
-                                        <a href="{{ $deposit->explorer_tx_url }}" target="_blank" class="me-1">
+                                        <a href="{{ $deposit->explorer_tx_url }}" target="_blank">
                                             <small>{{ shorten_hash($deposit->transaction_hash) }}</small>
                                         </a>
                                     @else

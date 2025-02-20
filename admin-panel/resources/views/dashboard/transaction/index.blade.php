@@ -207,22 +207,38 @@
             <table class="table table-striped">
                 <thead>
                 <tr>
-                    <th>شناسه</th>
+                    <th>
+                        @php
+                            $currentParams = request()->except('sortById');
+                            $currentSortDirection = request()->input('sortById', 'asc');
+                            $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
+                        @endphp
+                        <a href="{{ route('admin.transaction.index', array_merge($currentParams, ['sortById' => $newSortDirection])) }}"
+                           class="text-black">
+                            ID
+                            @if($currentSortDirection === 'asc')
+                                <span><i class="fa-solid fa-arrow-up"></i></span>
+                            @else
+                                <span><i class="fa-solid fa-arrow-down"></i></span>
+                            @endif
+                        </a>
+                    </th>
                     <th>نوع تراکنش</th>
                     <th>کاربر</th>
                     <th>رمز ارز</th>
                     <th>
                         @php
                             $currentParams = request()->except('sortByAmount');
-                            $newSortDirection = request()->input('sortByAmount') == 'asc' ? 'desc' : 'asc';
+                            $currentSortDirection = request()->input('sortByAmount', 'asc');
+                            $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
                         @endphp
                         <a href="{{ route('admin.transaction.index', array_merge($currentParams, ['sortByAmount' => $newSortDirection])) }}"
                            class="text-black">
                             مقدار
-                            @if( request()->input('sortByAmount') == 'asc')
-                                <span>&uarr;</span>
+                            @if($currentSortDirection === 'asc')
+                                <span><i class="fa-solid fa-arrow-up"></i></span>
                             @else
-                                <span>&darr;</span>
+                                <span><i class="fa-solid fa-arrow-down"></i></span>
                             @endif
                         </a>
                     </th>
@@ -235,18 +251,20 @@
                     <th>
                         @php
                             $currentParams = request()->except('sortByCreatedAt');
-                            $newSortDirection = request()->input('sortByCreatedAt') == 'asc' ? 'desc' : 'asc';
+                            $currentSortDirection = request()->input('sortByCreatedAt', 'asc');
+                            $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
                         @endphp
                         <a href="{{ route('admin.transaction.index', array_merge($currentParams, ['sortByCreatedAt' => $newSortDirection])) }}"
                            class="text-black">
-                            تاریخ و زمان
-                            @if( request()->input('sortByCreatedAt') == 'asc')
-                                <span>&uarr;</span>
+                            زمان
+                            @if($currentSortDirection === 'asc')
+                                <span><i class="fa-solid fa-arrow-up"></i></span>
                             @else
-                                <span>&darr;</span>
+                                <span><i class="fa-solid fa-arrow-down"></i></span>
                             @endif
                         </a>
                     </th>
+
                     <th>وضعیت</th>
                     <th>عملیات</th>
                 </tr>

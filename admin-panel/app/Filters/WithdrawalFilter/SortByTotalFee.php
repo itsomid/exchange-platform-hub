@@ -4,7 +4,7 @@ namespace App\Filters\WithdrawalFilter;
 
 use App\Filters\FilterContract;
 
-class SortByCreatedAt implements FilterContract
+class SortByTotalFee implements FilterContract
 {
     protected $query;
 
@@ -16,11 +16,11 @@ class SortByCreatedAt implements FilterContract
     public function handle($value = null): void
     {
         if ($value == 'desc') {
-            $this->query->orderBy('created_at', $value);
+            $this->query->orderBy('total_fee', $value);
         }
 
         if ($value == 'asc') {
-            $this->query->orderBy('created_at', $value);
+            $this->query->orderBy('total_fee', $value);
         }
     }
 }

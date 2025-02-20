@@ -86,6 +86,8 @@ class CurrencyController extends Controller
      */
     public function update(UpdateCurrencyRequest $request, Currency $currency)
     {
+
+
         $oldImage = $currency->logo;
         if ($request->hasFile('logo')) {
             $timestamp = now()->timestamp;
@@ -96,7 +98,10 @@ class CurrencyController extends Controller
         $currency->update([
             'name' => $request->name,
             'symbol' => $request->symbol,
-            'is_active' => $request->is_active
+            'precision' => $request->precision,
+            'inter_transfer_enabled' =>isset($request->inter_transfer_enabled) && $request->inter_transfer_enabled == '1' ,
+            'max_auto_withdraw_amount' => $request->max_auto_withdraw_amount,
+
         ]);
         // Check if the old image exists and delete it
         if ($request->hasFile('logo')) {

@@ -167,43 +167,76 @@
             <table class="table table-striped">
                 <thead>
                 <tr>
-                    <th>شناسه</th>
+                    <th>
+                        @php
+                            $currentParams = request()->except('sortById');
+                            $currentSortDirection = request()->input('sortById', 'desc');
+                            $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
+                        @endphp
+                        <a href="{{ route('admin.otc_orders.index', array_merge($currentParams, ['sortById' => $newSortDirection])) }}"
+                           class="text-black">
+                            ID
+                            @if($currentSortDirection === 'asc')
+                                <span><i class="fa-solid fa-arrow-up"></i></span>
+                            @else
+                                <span><i class="fa-solid fa-arrow-down"></i></span>
+                            @endif
+                        </a>
+                    </th>
                     <th>بازار</th>
                     <th>نوع معامله</th>
                     <th>کاربر</th>
                     <th>
                         @php
-                            $currentParams = request()->except('sortByAmount');
-                            $newSortDirection = request()->input('sortByAmount') == 'asc' ? 'desc' : 'asc';
+                            $currentParams = request()->except('sortByQuantity');
+                            $currentSortDirection = request()->input('sortByQuantity', 'desc');
+                            $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
                         @endphp
-                        <a href="{{ route('admin.transaction.index', array_merge($currentParams, ['sortByAmount' => $newSortDirection])) }}"
+                        <a href="{{ route('admin.otc_orders.index', array_merge($currentParams, ['sortByQuantity' => $newSortDirection])) }}"
                            class="text-black">
                             مقدار
-                            @if( request()->input('sortByAmount') == 'asc')
-                                <span>&uarr;</span>
+                            @if($currentSortDirection === 'asc')
+                                <span><i class="fa-solid fa-arrow-up"></i></span>
                             @else
-                                <span>&darr;</span>
+                                <span><i class="fa-solid fa-arrow-down"></i></span>
                             @endif
                         </a>
                     </th>
                     <th>قیمت</th>
-                    <th>ارزش</th>
+                    <th>
+                        @php
+                            $currentParams = request()->except('sortByTotalValue');
+                            $currentSortDirection = request()->input('sortByTotalValue', 'desc');
+                            $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
+                        @endphp
+                        <a href="{{ route('admin.otc_orders.index', array_merge($currentParams, ['sortByTotalValue' => $newSortDirection])) }}"
+                           class="text-black">
+                            ارزش
+                            @if($currentSortDirection === 'asc')
+                                <span><i class="fa-solid fa-arrow-up"></i></span>
+                            @else
+                                <span><i class="fa-solid fa-arrow-down"></i></span>
+                            @endif
+                        </a>
+                    </th>
                     <th>کارمزد</th>
                     <th>دریافتی</th>
                     <th>
                         @php
                             $currentParams = request()->except('sortByCreatedAt');
-                            $newSortDirection = request()->input('sortByCreatedAt') == 'asc' ? 'desc' : 'asc';
+                            $currentSortDirection = request()->input('sortByCreatedAt', 'desc');
+                            $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
                         @endphp
                         <a href="{{ route('admin.otc_orders.index', array_merge($currentParams, ['sortByCreatedAt' => $newSortDirection])) }}"
                            class="text-black">
                             تاریخ و زمان
-                            @if( request()->input('sortByCreatedAt') == 'asc')
-                                <span>&uarr;</span>
+                            @if($currentSortDirection === 'asc')
+                                <span><i class="fa-solid fa-arrow-up"></i></span>
                             @else
-                                <span>&darr;</span>
+                                <span><i class="fa-solid fa-arrow-down"></i></span>
                             @endif
                         </a>
+
                     </th>
                     <th>وضعیت</th>
                     <th>عملیات</th>
@@ -245,7 +278,7 @@
                                 <small>{{$order->market->quoteCurrency->symbol}}</small>
                             </td>
                             <td class="font-number" dir="ltr">
-                                {{formatNumberTrimZeros($order->price * $order->quantity)}}
+                                {{formatNumberTrimZeros($order->total_value)}}
                                 <small>USDT</small>
                             </td>
                             <td class="font-number" dir="ltr">
@@ -255,7 +288,7 @@
                             </td>
                             <td class="font-number" dir="ltr">
                                 @if($order->type === \App\Enums\OTCOrderTypeEnum::BUY)
-                                    {{formatNumberTrimZeros($order->quantity -  $order->fee)}}
+                                    {{$order->quantity -  $order->fee}}
                                     <small>{{$order->market->baseCurrency->symbol}}</small>
                                 @else
                                     {{formatNumberTrimZeros(($order->price * $order->quantity) -  $order->fee)}}
