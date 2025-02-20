@@ -77,7 +77,8 @@
                                 <div class="input-group">
 
                                     <input type="text" class="form-control font-number text-success" readonly="readonly"
-                                           value="{{formatNumberTrimZeros($wallet->balance - $wallet->locked_balance )}}">
+                                           value="{{formatNumberTrimZeros(bcsub($wallet->balance , $wallet->locked_balance,8) )}}">
+
                                     <span class="input-group-text"> {{$wallet->currency->symbol}}</span>
                                 </div>
                             </dd>
@@ -98,8 +99,7 @@
                         <input type="number"
                                name="unblock_amount"
                                id="unblock_amount"
-                               step="0.000000001"
-                               value="0"
+                               step="0.00000001"
                                class="form-control font-number"
 
                                placeholder="میزان کوین مورد نظر را وارد کنید">
@@ -108,7 +108,7 @@
                     <div class="w-100 my-3"></div>
                     <div class="col-md-6" dir="ltr" >
 
-                        <input type="range"  class="form-range" value="0" min="0" max="{{$wallet->locked_balance}}" step="0.000000001"  id="amount_range">
+                        <input type="range"  class="form-range" value="0" min="0" max="{{$wallet->locked_balance}}" step="0.00000001"  id="amount_range">
                     </div>
                     <div class="w-100"></div>
                     <div class="col-md-6 mt-5">
