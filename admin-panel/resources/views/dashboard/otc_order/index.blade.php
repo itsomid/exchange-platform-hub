@@ -310,7 +310,7 @@
                                 <small>{{$order->market->baseCurrency->symbol}}</small>
                             </td>
                             <td class="font-number" dir="ltr">
-                                <span class="ms-2">{{formatNumber($order->price)}}</span>
+                                <span class="ms-2">{{formatNumberTrimZeros($order->price)}}</span>
                                 <small>{{$order->market->quoteCurrency->symbol}}</small>
                             </td>
                             <td class="font-number" dir="ltr">
