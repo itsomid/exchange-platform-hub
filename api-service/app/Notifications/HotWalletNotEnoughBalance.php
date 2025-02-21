@@ -50,7 +50,7 @@ class HotWalletNotEnoughBalance extends Notification implements ShouldQueue
     {
         return (new MailMessage)
             ->subject('به علت عدم موجودی هات ولت به مشکل خورده‌ایم')
-            ->line($this->getMessage())
+            ->line('صرافی ما برای برداشت '.$this->currencyName.' به مقدار '.formatNumberTrimZeros($this->amount).' از هات ولت به علت عدم موجودی دچار خطا شد.')
             ->greeting('سلام مدیر عزیز');
     }
 
