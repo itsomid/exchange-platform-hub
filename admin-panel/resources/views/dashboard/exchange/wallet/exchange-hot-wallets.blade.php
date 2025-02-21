@@ -2,7 +2,6 @@
 @section('title', 'مدیریت کیف پول های صرافی')
 @section('content')
 
-
     {{-- EXCHANGE LOCAL WALLET--}}
     <div class="card mt-6">
         <div class="card-body">
@@ -25,7 +24,12 @@
                         <h3 class="mt-4 mb-1 font-number">{{$wallet->hot_balance['amount']}}
                             <span class="text-muted h4">{{$wallet->wallet->currency_symbol}}</span>
                         </h3>
-
+                        <div class="mb-0 d-flex flex-column align-items-end">
+                            <a href="{{$wallet->explorer_address_url}}" target="_blank" class="text-primary font-number fw-bolder text-decoration-underline">
+                                {{$wallet->address}}
+                                <i class="fa-regular fa-clone"></i>
+                            </a>
+                        </div>
                     </div>
 
                 </div>
