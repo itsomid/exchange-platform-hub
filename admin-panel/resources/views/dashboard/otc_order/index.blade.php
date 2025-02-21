@@ -314,7 +314,7 @@
                                 <small>{{$order->market->quoteCurrency->symbol}}</small>
                             </td>
                             <td class="font-number" dir="ltr">
-                                {{formatNumber($order->total_value,3)}}
+                                {{formatNumberTrimZeros($order->total_value)}}
                                 <small>USDT</small>
                             </td>
                             <td class="font-number" dir="ltr">
@@ -324,10 +324,10 @@
                             </td>
                             <td class="font-number" dir="ltr">
                                 @if($order->type === \App\Enums\OTCOrderTypeEnum::BUY)
-                                    {{$order->quantity -  $order->fee}}
+                                    {{formatNumberTrimZeros(bcsub($order->quantity ,  $order->fee,8))}}
                                     <small>{{$order->market->baseCurrency->symbol}}</small>
                                 @else
-                                    {{formatNumberTrimZeros(($order->price * $order->quantity) -  $order->fee)}}
+                                    {{formatNumberTrimZeros(bcsub(bcmul($order->price , $order->quantity,5) ,  $order->fee,5))}}
                                     <small>{{$order->market->quoteCurrency->symbol}}</small>
                                 @endif
                             </td>
