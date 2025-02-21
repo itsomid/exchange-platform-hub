@@ -38,7 +38,7 @@ class HotWalletNotEnoughBalance extends Notification implements ShouldQueue
     {
 
         return [
-            'message' => 'صرافی ما برای برداشت '.$this->currencyName.' به مقدار '.formatNumberTrimZeros($this->amount).' دچار خطا شد. ',
+            'message' => 'صرافی ما برای برداشت '.$this->currencyName.' به مقدار '.formatNumberTrimZeros($this->amount).' از هات ولت به علت عدم موجودی دچار خطا شد.',
             'url' => '/transactions', // Optional: URL to redirect to
         ];
     }

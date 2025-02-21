@@ -220,10 +220,12 @@ class OTCService
     public function buy(OTCBuyRequestDTO $requestDTO): OTCBuyResponseDTO
     {
         try {
+
             $user = $this->userRepository->getUserById($requestDTO->getBuyerUserId());
             DB::beginTransaction();
             //Find Market
             $market = $this->marketRepository->getMarketById($requestDTO->getMarketId());
+
             $sellerWallet = $this->walletRepository
                 ->getOneOrCreateByCurrencyWithLock(
                     $market->base_currency,
@@ -236,7 +238,7 @@ class OTCService
                 );
 
             $buyAmount = $requestDTO->getQuantity();
-            $amountInQuoteCurrency = Math::mul($market->exchangePrice->price, $requestDTO->getQuantity());
+            $amountInQuoteCurrency = Math::mul($market->exchangePrice->buy_price, $requestDTO->getQuantity());
             $fee = Math::mul($buyAmount, Math::div(Setting::getSetting('otc_buy_fee'), 100));
             $receivedAmount = Math::sub($buyAmount, $fee);
 
@@ -248,7 +250,7 @@ class OTCService
                 ->setUserId($requestDTO->getBuyerUserId()) // The actual user initiating the transaction
                 ->setMarketId($market->id)
                 ->setQuantity($buyAmount)
-                ->setPrice($market->exchangePrice->price)
+                ->setPrice($market->exchangePrice->buy_price)
                 ->setExchangeId($market->exchangePrice->exchange_id)
                 ->setFee($fee)
                 ->setType(OTCOrderTypeEnum::BUY)
@@ -461,7 +463,7 @@ class OTCService
                 );
 
             $sellAmount = $requestDTO->getQuantity();
-            $amountInQuoteCurrency = Math::mul($market->exchangePrice->price, $sellAmount);
+            $amountInQuoteCurrency = Math::mul($market->exchangePrice->sell_price, $sellAmount);
             $fee = Math::mul($amountInQuoteCurrency, Math::div(Setting::getSetting('otc_sell_fee'), 100));
             $receivedAmount = Math::sub($amountInQuoteCurrency, $fee);
 
@@ -473,7 +475,7 @@ class OTCService
                 ->setUserId($requestDTO->getSellerUserId())
                 ->setMarketId($market->id)
                 ->setQuantity($sellAmount)
-                ->setPrice($market->exchangePrice->price)
+                ->setPrice($market->exchangePrice->sell_price)
                 ->setFee($fee)
                 ->setType(OTCOrderTypeEnum::SELL)
                 ->setStatus(OTCOrderStatusEnum::SUCCESS)
