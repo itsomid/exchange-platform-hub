@@ -155,18 +155,23 @@ Route::patch('/exchange/currencies/{currency}/chains', [CurrencyChainController:
 Route::get('/exchange/currencies/{currency}/nodeprovider', [NodeProviderController::class, 'edit'])->name('currency.nodeprovider.edit')->can('currency');
 Route::patch('/exchange/currencies/{currency}/nodeprovider', [NodeProviderController::class, 'update'])->name('currency.nodeprovider.update')->can('currency');
 
-Route::get('/exchange/markets',[MarketController::class,'index'])->name('market.index')->can('market');
-Route::get('/exchange/markets/create',[MarketController::class,'create'])->name('market.create')->can('market');
-Route::post('/exchange/markets',[MarketController::class,'store'])->name('market.store')->can('market');
-Route::get('/exchange/markets/{market}/edit',[MarketController::class,'edit'])->name('market.edit')->can('market');
-Route::patch('/exchange/markets/{market}',[MarketController::class,'update'])->name('market.update')->can('market');
-Route::get('/exchange/ref-exchanges',[RefExchangeController::class,'index'])->name('exchange.index')->can('ref-exchanges');
+Route::prefix('exchange')->group(function (){
+    Route::get('/markets',[MarketController::class,'index'])->name('market.index')->can('market');
+    Route::get('/markets/create',[MarketController::class,'create'])->name('market.create')->can('market');
+    Route::post('/markets',[MarketController::class,'store'])->name('market.store')->can('market');
+    Route::get('/markets/{market}/edit',[MarketController::class,'edit'])->name('market.edit')->can('market');
+    Route::patch('/markets/{market}',[MarketController::class,'update'])->name('market.update')->can('market');
+    Route::get('/ref-exchanges',[RefExchangeController::class,'index'])->name('exchange.index')->can('ref-exchanges');
+
+    Route::get('/wallets/localWallets',[ExchangeWalletController::class,'localWallets'])->name('exchange.local-wallet');
+    Route::get('/wallets/coinexWallets',[ExchangeWalletController::class,'coinexWallets'])->name('exchange.coinex-wallet');
+    Route::get('/wallets/hotWallets',[ExchangeWalletController::class,'hotWallets'])->name('exchange.hot-wallet');
+    Route::get('/wallets/assets-gathering-to-hd-wallet',[ExchangeAssetsWithdrawalController::class,'index'])->name('wallets.assets-gathering-to-hd-wallet.index');
+    Route::get('/wallets/assets-gathering-to-hd-wallet/create',[ExchangeAssetsWithdrawalController::class,'create'])->name('wallets.assets-gathering-to-hd-wallet.create');
+    Route::post('/wallets/assets-gathering-to-hd-wallet/',[ExchangeAssetsWithdrawalController::class,'store'])->name('wallets.assets-gathering-to-hd-wallet.store');
+});
 
 
-Route::get('/wallets',[ExchangeWalletController::class,'index'])->name('wallet');
-Route::get('/wallets/assets-gathering-to-hd-wallet',[ExchangeAssetsWithdrawalController::class,'index'])->name('wallets.assets-gathering-to-hd-wallet.index');
-Route::get('/wallets/assets-gathering-to-hd-wallet/create',[ExchangeAssetsWithdrawalController::class,'create'])->name('wallets.assets-gathering-to-hd-wallet.create');
-Route::post('/wallets/assets-gathering-to-hd-wallet/',[ExchangeAssetsWithdrawalController::class,'store'])->name('wallets.assets-gathering-to-hd-wallet.store');
 
 
 Route::prefix('transactions')->group(function (){

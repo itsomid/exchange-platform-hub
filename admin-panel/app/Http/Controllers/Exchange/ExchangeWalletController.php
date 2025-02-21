@@ -4,20 +4,24 @@ namespace App\Http\Controllers\Exchange;
 
 use App\Http\Controllers\Controller;
 use App\Models\Currency;
+use App\Services\NodeProviders\CryptoAPIService;
 use App\Services\Exchanges\Asset\Coinex\Authentication\MethodEnum;
 use App\Services\Exchanges\Asset\Coinex\CoinexRequest;
-use App\Services\Exchanges\Asset\DTO\BalanceResponseDTO;
 use App\Services\Wallet\WalletService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Config;
 
 class ExchangeWalletController extends Controller
 {
     protected $walletService;
-    public function __construct(WalletService $walletService)
+
+    protected $cryptoApi;
+    public function __construct(WalletService $walletService, CryptoAPIService $cryptoApi)
     {
         $this->walletService = $walletService;
+        $this->cryptoApi = $cryptoApi;
     }
-    public function index()
+    public function coinexWallets()
     {
         $response = CoinexRequest::send(MethodEnum::GET, "/v2/assets/spot/balance");
         if ($response->json('code') !== 0) {
@@ -52,11 +56,45 @@ class ExchangeWalletController extends Controller
             return $asset;
         });
 
-        $exchangeWallets = $this->walletService->getExchangeAllWallet();
 
-        return view('dashboard.exchange.wallet.exchange-wallets', [
+        return view('dashboard.exchange.wallet.exchange-coinex-wallets', [
             'coinexAssets' => $coinexAssets,
+        ]);
+
+    }
+
+    public function localWallets()
+    {
+        $exchangeWallets = $this->walletService->getExchangeAllWallet();
+        return view('dashboard.exchange.wallet.exchange-local-wallets', [
             'exchangeWallets' => $exchangeWallets,
+        ]);
+
+    }
+
+    public function hotWallets()
+    {
+        $exchangeWalletChains = $this->walletService->getExchangeAllWalletChainExceptUSDT();
+
+
+        $exchangeHotWallets =  $exchangeWalletChains->map(function ($walletChain) {
+            $chainConfig = $this->cryptoApi->getCoinConfig($walletChain->wallet->currency_symbol);
+
+            if (!$chainConfig) {
+                return $walletChain;
+            }
+
+            $balance = $this->cryptoApi->getBalance(
+                currency_symbol: $walletChain->wallet->currency_symbol,
+                address: $walletChain->address
+            );
+
+
+            return $this->cryptoApi->enrichWalletData($walletChain, $balance);
+        });
+
+        return view('dashboard.exchange.wallet.exchange-hot-wallets', [
+            'exchangeHotWallets' => $exchangeHotWallets,
         ]);
 
     }

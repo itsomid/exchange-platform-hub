@@ -37,11 +37,13 @@ class OTCBuyCreated extends Notification implements ShouldQueue
     public function toMail($notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('درخواست خرید سریع')
-            ->line('درخواست خرید سریع '.$this->currencySymbol.' به مقدار '.$this->amount.' با موفقیت انجام شد.')
-            ->line('متشکریم که از پلتفرم ما استفاده می کنید!')
-            ->action('مشاهده تراکنش', url('/transactions'))
-            ->greeting("سلام {$this->name} عزیز");
+            ->subject('سفارش خرید شما تکمیل شد')
+            ->view('mail.otc.buy', [
+                'name' => $this->name,
+                'currencySymbol' => $this->currencySymbol,
+                'amount' => $this->amount,
+                'transactionUrl' => url('/transactions'),
+            ]);
     }
 
     /**

@@ -52,12 +52,23 @@ class WalletService
     {
         return Wallet::where('user_id', $this->exchangeUserId)->get();
     }
+    public function getExchangeAllWalletExceptUSDT()
+    {
+        return Wallet::where('user_id', $this->exchangeUserId)->where('currency_symbol','!=','USDT')->get();
+    }
 
     public function getExchangeAllWalletChain()
     {
         $allExchangeWallet = $this->getExchangeAllWallet();
         $walletIds = $allExchangeWallet->pluck('id')->toArray();
-        return WalletChain::whereIn('wallet_id', $walletIds)->get();
+        return WalletChain::with('wallet')->whereIn('wallet_id', $walletIds)->get();
+
+    }
+    public function getExchangeAllWalletChainExceptUSDT()
+    {
+        $allExchangeWallet = $this->getExchangeAllWalletExceptUSDT();
+        $walletIds = $allExchangeWallet->pluck('id')->toArray();
+        return WalletChain::with(['wallet','wallet.currency'])->whereIn('wallet_id', $walletIds)->get();
 
     }
     public function totalAssetsValue(User $user)

@@ -182,11 +182,33 @@
             <li class="menu-header small text-uppercase">
                 <span class="menu-header-text">مدیریت کیف پول‌ها</span>
             </li>
-            <li class="menu-item @if(request()->is('admin/wallets')) active @endif">
-                <a href="{{route('admin.wallet')}}" class="menu-link">
+
+            <li class="menu-item @if(request()->is('admin/exchange/wallets*')) active open @endif">
+                <a href="javascript:void(0);" class="menu-link menu-toggle">
                     <i class="menu-icon fa-regular fa-wallet"></i>
                     <div>کیف پول های صرافی</div>
                 </a>
+                <ul class="menu-sub">
+                    <li class="menu-item @if(request()->is('admin/exchange/wallets/localWallets')) active @endif">
+                        <a href="{{route('admin.exchange.local-wallet')}}" class="menu-link">
+                            <i class="menu-icon fa-light fa-key fa-sm"></i>
+                            <div>داخلی</div>
+                        </a>
+                    </li>
+                    <li class="menu-item @if(request()->is('admin/exchange/wallets/coinexWallets*')) active @endif">
+                        <a href="{{route('admin.exchange.coinex-wallet')}}" class="menu-link">
+                            <i class="menu-icon fa-light fa-user fa-sm"></i>
+                            <div>صرافی مرجع (Coinex)</div>
+                        </a>
+                    </li>
+                    <li class="menu-item @if(request()->is('admin/exchange/wallets/hotWallets*')) active @endif">
+                        <a href="{{route('admin.exchange.hot-wallet')}}" class="menu-link">
+                            <i class="menu-icon fa-light fa-key fa-sm"></i>
+                            <div>Hot Wallet</div>
+                        </a>
+                    </li>
+                </ul>
+
             </li>
             <li class="menu-item @if(request()->is('admin/wallets/assets-gathering-to-hd-wallet*')) active @endif">
                 <a href="{{route('admin.wallets.assets-gathering-to-hd-wallet.index')}}" class="menu-link">
