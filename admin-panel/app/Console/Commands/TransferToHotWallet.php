@@ -3,24 +3,16 @@
 namespace App\Console\Commands;
 
 use App\Enums\OTCRefExchangeWithdrawalStatusEnum;
-use App\Exceptions\Coinex\CoinexWithdrawalException;
 use App\Helpers\Math;
 use App\Models\Currency;
-use App\Models\CurrencyChain;
-use App\Models\ExchangeAssetsWithdrawal;
-use App\Models\ExchangeTransaction;
 use App\Models\OTCRefExchangeWithdrawal;
 use App\Models\Setting;
-use App\Services\Exchanges\Asset\AssetFactory;
-use App\Services\Exchanges\Asset\DTO\WithdrawRequestDTO;
-use App\Services\Exchanges\Asset\Enum\WithdrawMethodEnum;
 use App\Services\Exchanges\Asset\Enum\WithdrawStatusEnum;
 use App\Services\Exchanges\DTO\ChargeUSDTRequestDTO;
 use App\Services\Exchanges\ExchangeService;
 use App\Services\Wallet\WalletService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class TransferToHotWallet extends Command
@@ -63,7 +55,7 @@ class TransferToHotWallet extends Command
 
     private function processTimeBased(): void
     {
-        $periodTime = Setting::getSetting('exchange_withdrawal_period_time');
+        $periodTime = (int) Setting::getSetting('exchange_withdrawal_period_time');
         $cacheKey = 'exchange_withdrawal_period_time_last_hit';
         $lastHit = Cache::get($cacheKey, 0);
         if ($lastHit && $lastHit->diffInMinutes() < $periodTime) {
@@ -72,10 +64,15 @@ class TransferToHotWallet extends Command
             return;
         }
 
-        $this->transferUSDT();
-        $this->transferCoins();
+        $currencies = Currency::query()
+            ->with('chains')
+            ->has('chains')
+            ->get();
+        foreach ($currencies as $currency) {
+            $this->transferCurrency($currency);
+        }
 
-        Cache::put($cacheKey, now(), now()->addMinutes((int) $periodTime));
+        Cache::put($cacheKey, now(), now()->addMinutes($periodTime));
 
     }
 
@@ -83,60 +80,48 @@ class TransferToHotWallet extends Command
     {
         $countBuy = Setting::getSetting('exchange_withdrawal_period_buy');
 
-        if (OTCRefExchangeWithdrawal::query()->where('status', OTCRefExchangeWithdrawalStatusEnum::PENDING)->count() >= $countBuy) {
-            $this->transferUSDT();
-        }
+        $currencies = Currency::query()
+            ->with('chains')
+            ->has('chains')
+            ->get();
 
-        $refExchangeTransactionCount = ExchangeTransaction::query()
-            ->whereBetween('created_at', [now()->subHour(), now()])
-            ->count();
-
-        if ($refExchangeTransactionCount < $countBuy) {
-            return;
+        foreach ($currencies as $currency) {
+            if (OTCRefExchangeWithdrawal::query()
+                ->where('currency_id', $currency->id)
+                ->where('status', OTCRefExchangeWithdrawalStatusEnum::PENDING)
+                ->count() >= $countBuy) {
+                $this->transferCurrency($currency);
+            }
         }
-        $this->transferCoins();
     }
 
-    private function getBalance(): array
+    public function transferCurrency(Currency $currency): void
     {
-        $asset = AssetFactory::make('coinex');
-
-        $exchangeBalance = [];
-        foreach ($asset->getBalance() as $balance) {
-            $exchangeBalance[$balance->getCcy()] = $balance->getAvailable();
-        }
-
-        return $exchangeBalance;
-    }
-
-    public function transferUSDT(): void
-    {
-        $currency = Currency::query()->where('symbol', 'USDT')->first();
-        $chain = CurrencyChain::query()
-            ->where('chain', 'BSC')
-            ->where('currency_id', $currency->id)
-            ->first();
+        $chain = $currency->chains->sortBy('min_withdraw_amount')->first();
 
         $pendingLists = OTCRefExchangeWithdrawal::query()
             ->where('status', OTCRefExchangeWithdrawalStatusEnum::PENDING)
+            ->where('currency_id', $currency->id)
             ->get();
+
         if ($pendingLists->count() === 0) {
-            $this->info('Bitexroom does not have need to charge USDT.');
+            $this->info('Bitexroom does not have need to charge '.$currency->name);
 
             return;
         }
 
-        $usdtNeeded = 0;
+        $quantityNeeded = 0;
         foreach ($pendingLists as $data) {
-            $usdtNeeded = Math::add($usdtNeeded, $data->transaction->amount);
+            $quantityNeeded = Math::add($quantityNeeded, $data->transaction->amount);
         }
-        $usdtNeeded = abs($usdtNeeded);
+        $quantityNeeded = abs($quantityNeeded);
         try {
             $exchangeService = resolve(ExchangeService::class);
-            $chargeFromRefExchange = $exchangeService->chargeUSDT(
+            $chargeFromRefExchange = $exchangeService->chargeCurrency(
                 resolve(ChargeUSDTRequestDTO::class)
+                    ->setCurrency($currency->symbol)
                     ->setCurrencyChain($chain->chain->value)
-                    ->setQuantity($usdtNeeded)
+                    ->setQuantity($quantityNeeded)
             );
 
             if ($chargeFromRefExchange->getWithdrawStatus() !== WithdrawStatusEnum::FAILED) {
@@ -145,75 +130,14 @@ class TransferToHotWallet extends Command
                     ->update([
                         'status' => OTCRefExchangeWithdrawalStatusEnum::COMPLETED,
                     ]);
-                $this->info('USDT Withdrawal successful. status : '.$chargeFromRefExchange->getWithdrawStatus()->value);
+                $this->info($currency->symbol.' Withdrawal successful. status : '.$chargeFromRefExchange->getWithdrawStatus()->value);
             } else {
-                $this->error('USDT Withdrawal failed. status : '.$chargeFromRefExchange->getWithdrawStatus()->value);
+                $this->error($currency->symbol.' Withdrawal failed. status : '.$chargeFromRefExchange->getWithdrawStatus()->value);
             }
         } catch (Throwable $exception) {
             report($exception);
             $this->error($exception->getMessage());
         }
 
-    }
-
-    public function transferCoins(): void
-    {
-        $currenciesBalanceInRefExchange = $this->getBalance();
-
-        $currencies = Currency::query()
-            ->with('chains')
-            ->has('chains')
-            ->get();
-
-        $bitexroomChains = $this->walletService->getExchangeAllWalletChain();
-        $addresses = [
-            'BTC' => $bitexroomChains->where('currency_chain', 'BTC')->first()->address,
-            'BNB' => $bitexroomChains->where('currency_chain', 'BSC')->first()->address,
-            'DOGE' => $bitexroomChains->where('currency_chain', 'DOGE')->first()->address,
-            'TRX' => $bitexroomChains->where('currency_chain', 'TRC20')->first()->address,
-            'ETH' => $bitexroomChains->where('currency_chain', 'ERC20')->first()->address,
-        ];
-
-        foreach ($currencies as $currency) {
-            // If balance is zero
-            if (! array_key_exists($currency->symbol, $currenciesBalanceInRefExchange)) {
-                continue;
-            }
-            $amountForWithdraw = $currenciesBalanceInRefExchange[$currency->symbol];
-            $destinationAddress = $addresses[$currency->symbol];
-            $chain = $currency->chains->sortBy('min_withdraw_amount')->first();
-
-            $asset = AssetFactory::make('coinex');
-            try {
-                $res = $asset->withdraw(
-                    resolve(WithdrawRequestDTO::class)
-                        ->setCurrency($currency->symbol)
-                        ->setChain($chain->chain->value)
-                        ->setAmount($amountForWithdraw)
-                        ->setWithdrawMethod(WithdrawMethodEnum::ON_CHAIN)
-                        ->setAddress($destinationAddress)
-                );
-                ExchangeAssetsWithdrawal::query()
-                    ->create([
-                        'admin_id' => null,
-                        'withdrawal_id' => $res->getWithdrawId(),
-                        'exchange' => 'coinex',
-                        'currency_symbol' => $currency->symbol,
-                        'currency_chain' => $chain->chain,
-                        'fee_currency' => $res->getCurrencyFee(),
-                        'fee' => $res->getFee(),
-                        'amount' => $res->getAmount(),
-                        'actual_amount' => $res->getActualAmount(),
-                        'hd_wallet_address' => $res->getAddress(),
-                        'withdrawal_date' => $res->getCreatedAt(),
-                        'explore_address_url' => $res->getExploreAddress(),
-                        'description' => 'Withdraw in command line',
-                    ]);
-            } catch (CoinexWithdrawalException $exception) {
-                report($exception);
-                Log::channel('ref-exchange')->info($currency->symbol.' network:'.$chain->chain->value.' amount:'.$amountForWithdraw);
-                $this->error("Withdraw {$currency->symbol} is failed with amount: ".$amountForWithdraw);
-            }
-        }
     }
 }

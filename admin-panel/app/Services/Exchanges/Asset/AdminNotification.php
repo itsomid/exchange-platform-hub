@@ -9,7 +9,7 @@ class AdminNotification
 {
     public static function dispatchCoinexHasProblem(string $message, string $currency, string $amount): void
     {
-        Admin::query()->role('super_admin', 'admin')->get()->each(function ($admin) use ($message, $currency, $amount) {
+        Admin::query()->role(['super_admin', 'admin'])->get()->each(function ($admin) use ($message, $currency, $amount) {
             $admin->notify(new CoinexWithdrawalProblem($message, $currency, $amount));
         });
     }

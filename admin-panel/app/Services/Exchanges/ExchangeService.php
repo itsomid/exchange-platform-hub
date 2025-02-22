@@ -21,12 +21,13 @@ class ExchangeService
 {
     public function __construct(private readonly WalletService $walletService) {}
 
-    public function chargeUSDT(ChargeUSDTRequestDTO $requestDTO): ChargeUSDTResponse
+    public function chargeCurrency(ChargeUSDTRequestDTO $requestDTO): ChargeUSDTResponse
     {
         try {
             $asset = AssetFactory::make('coinex');
 
-            $bitexroomWallet = $this->walletService->getExchangeWallet('USDT');
+            $bitexroomWallet = $this->walletService->getExchangeWallet($requestDTO->getCurrency());
+
             $chain = WalletChain::query()
                 ->firstOrCreate(
                     [
@@ -59,10 +60,9 @@ class ExchangeService
                 ]);
 
             $cetWallet = $this->walletService->getExchangeWallet('CET');
-            $usdtWallet = $this->walletService->getExchangeWallet('USDT');
             // CET
             Transaction::query()->create([
-                'user_id' => config('bitexroom.bitexroom_user_id'),
+                'user_id' => config('exchange.exchange_user_id'),
                 'wallet_id' => $cetWallet->id,
                 'amount' => -$response->getFee(),
                 'type' => TransactionTypeEnum::EXCHANGE,
@@ -72,8 +72,12 @@ class ExchangeService
                     formatNumberTrimZeros((float) $response->getFee())
                 ),
             ]);
-            // USDT
-            $usdtWallet->increment('balance', (float) $response->getActualAmount());
+            if ($requestDTO->getCurrency() === 'USDT') {
+                $currencyWallet = $this->walletService->getExchangeWallet($requestDTO->getCurrency());
+                // USDT
+                $currencyWallet->increment('balance', (float) $response->getActualAmount());
+            }
+
         } catch (Throwable $exception) {
             report($exception);
 
