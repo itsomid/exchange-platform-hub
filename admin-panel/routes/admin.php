@@ -52,7 +52,7 @@ Route::prefix('admins')->group(function () {
     Route::get('/create', [AdminController::class, 'create'])->name('admin.create')->can('admin.create');
     Route::post('/', [AdminController::class, 'store'])->name('admin.store')->can('admin.create');
     Route::get('/{admin}/edit', [AdminController::class, 'edit'])->name('admin.edit')->can('admin.edit');
-    Route::patch('/{admin}', [AdminController::class, 'update'])->name('admin.update')->can('admin.edit');
+    Route::patch('/{admin}', [AdminController::class, 'update'])->name('admin.update')->can('admin.update');
     Route::get('/{admin}/toggle', [AdminController::class, 'toggle'])->name('admin.toggle')->can('admin.toggle');
     Route::get('/{admin}/update-password', [AdminSecurityController::class, 'passwordEdit'])->name('admin.password.edit')->can('admin.edit');
     Route::patch('/{admin}/update-password', [AdminSecurityController::class, 'passwordUpdate'])->name('admin.password.update')->can('admin.edit');

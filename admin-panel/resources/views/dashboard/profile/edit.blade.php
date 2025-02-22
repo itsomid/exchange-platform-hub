@@ -4,7 +4,7 @@
     <div class="card">
         <h5 class="card-header">اطلاعات کاربری</h5>
         <div class="card-body">
-            <form action="{{route('admin.profile.update' ,['admin'=>$admin])}}" method="post">
+            <form action="{{route('admin.profile.update')}}" method="post">
                 @csrf
                 @method('PATCH')
                 <div class="row">

@@ -14,27 +14,22 @@ class ProfileController extends Controller
     public function edit()
     {
         $admin = Auth::guard('admin')->user();
-        return view('dashboard.profile.edit',['admin'=>$admin]);
+        return view('dashboard.profile.edit', ['admin' => $admin]);
     }
 
-    public function update(Admin $admin,Request $request)
+    public function update(Request $request)
     {
-
+        $admin = Auth::guard('admin')->user();
         $this->validate($request, [
-            'first_name'    =>  ['required', 'max:30'],
-            'last_name'     =>  ['required', 'max:30'],
-            'mobile'     =>  ['required', 'max:30'],
+            'first_name' => ['required', 'max:30'],
+            'last_name' => ['required', 'max:30'],
+            'mobile' => ['required', 'max:30'],
         ]);
 
-        $admin->first_name  = $request->first_name;
-        $admin->last_name   = $request->last_name;
-        $admin->gender      = $request->gender;
-        $admin->email       = $request->email;
-        $admin->instagram   = $request->instagram;
-        $admin->telegram    = $request->telegram;
-        $admin->whatsapp    = $request->whatsapp;
+        $admin->update($request->only([
+            'first_name', 'last_name', 'mobile', 'gender', 'email', 'instagram', 'telegram', 'whatsapp'
+        ]));
 
-        $admin->save();
         Toast::message('اطلاعات شما با موفقیت ویرایش شد.')->success()->notify();
         return redirect()->back();
     }
@@ -42,13 +37,13 @@ class ProfileController extends Controller
     public function passwordEdit()
     {
         $admin = Auth::guard('admin')->user();
-        return view('dashboard.profile.edit_password',['admin'=>$admin]);
+        return view('dashboard.profile.edit_password', ['admin' => $admin]);
     }
 
     public function passwordUpdate(Request $request)
     {
         $this->validate($request, [
-            'password' => ['required','confirmed','min:8']
+            'password' => ['required', 'confirmed', 'min:8']
         ]);
 
         $admin = Auth::guard('admin')->user();
