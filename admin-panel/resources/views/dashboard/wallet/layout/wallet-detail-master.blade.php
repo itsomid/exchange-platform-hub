@@ -77,7 +77,7 @@
 
                         <div class="d-flex flex-column justify-content-center">
                             <h4 class="mb-0">موجودی کیف پول {{$wallet->currency->name}}</h4>
-                            <h3 class="text-primary mt-4 mb-1 font-number">{{formatNumber($wallet->balance,4)}}
+                            <h3 class="text-primary mt-4 mb-1 font-number">{{formatNumberTrimZeros($wallet->balance)}}
                                 <span class=" h5">{{$wallet->currency_symbol}}</span>
                             </h3>
                             <p class="mb-5">
