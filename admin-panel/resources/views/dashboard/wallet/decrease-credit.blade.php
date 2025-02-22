@@ -64,7 +64,7 @@
                         <label for="numeral-mask" class="form-label ">میزان اعتبار مورد نظر:</label>
                         <input type="number"
                                name="amount"
-                               step="0.01"
+                               step="0.0000001"
                                id="" class="form-control"
                                placeholder="میزان کوین مورد نظر را وارد کنید">
                         @error('amount')<small class="text-danger">{{$message}}</small>@enderror
@@ -91,7 +91,7 @@
                         <div class="col text-center">
                             <button type="submit" id="submitButton" class="btn btn-primary text-white ">
                                 <span class="fa-regular fa-dollar-square me-2"></span>
-                                شارژ اکانت
+                                ثبت برداشت
                             </button>
                         </div>
                     </div>
