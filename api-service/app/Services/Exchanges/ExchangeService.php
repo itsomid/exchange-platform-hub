@@ -110,7 +110,7 @@ class ExchangeService
                 ->setUserId(config('bitexroom.bitexroom_user_id'))
                 ->setWalletId($baseCurrencyWallet->id)
                 ->setOtcOrderId($otcOrder->id)
-                ->setAmount($response->getAmount())
+                ->setAmount($response->getFilledAmount())
                 ->setType(TransactionTypeEnum::EXCHANGE)
                 ->setSubtype(TransactionSubTypeEnum::COINEX)
                 ->setStatus(TransactionStatusEnum::SUCCESS)

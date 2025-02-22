@@ -141,7 +141,7 @@ class InternalSettingController extends Controller
         );
 
 
-        Toast::message('تنظیمات OTC با موفقیت ذخیره شد')->success()->notify();
+        Toast::message('تنظیمات فرآیند تجمیع با موفقیت ذخیره شد.')->success()->notify();
         // Redirect with success message
         return redirect()->back();
     }
