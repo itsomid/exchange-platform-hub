@@ -162,7 +162,7 @@ class TransferToHotWallet extends Command
 
         $currencies = Currency::query()
             ->with('chains')
-            ->where('symbol', 'BNB')
+            ->has('chains')
             ->get();
 
         $bitexroomChains = $this->walletService->getExchangeAllWalletChain();
