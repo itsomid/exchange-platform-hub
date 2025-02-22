@@ -66,8 +66,9 @@
                         <th>مقدار</th>
                         <th>فی برداشت</th>
                         <th>آدرس برداشت (HD Wallet)</th>
+                        <th>نوع برداشت</th>
                         <th>تاریخ برداشت</th>
-{{--                        <th>توضیحات</th>--}}
+                        {{--                        <th>توضیحات</th>--}}
                     </tr>
                     </thead>
                     <tbody class="table-border-bottom-0">
@@ -84,25 +85,36 @@
                                 {{$withdraw->currency_chain}}
                             </td>
                             <td class="font-number">{{$withdraw->amount}}</td>
-                            <td class="font-number"> ({{$withdraw->fee_currency}}) {{formatNumberTrimZeros($withdraw->fee)}}</td>
+                            <td class="font-number"> ({{$withdraw->fee_currency}}
+                                ) {{formatNumberTrimZeros($withdraw->fee)}}</td>
                             <td>
                                 <h6 class="mb-0">
                                     @if($withdraw->explore_address_url)
                                         <a href="{{ $withdraw->explore_address_url }}" target="_blank" class="me-1">
                                             <i class="fa-regular fa-clone"></i>
                                         </a>
-                                        <small class="font-number">{{ shorten_hash($withdraw->hd_wallet_address) }}</small>
+                                        <small
+                                            class="font-number">{{ shorten_hash($withdraw->hd_wallet_address) }}</small>
                                     @else
                                         <span>N/A Address</span>
                                     @endif
                                 </h6>
                             </td>
                             <td>
+                                @if($withdraw->admin_id)
+                                    <span class="mx-2">برداشت توسط ادمین </span>
+                                    <span class="font-number">({{$withdraw->admin->fullname()}} #{{$withdraw->admin->id}})</span>
+                                @else
+                                    برداشت توسط سیستم
+                                @endif
+
+                            </td>
+                            <td>
                                 {{$withdraw->withdrawal_date}}
                             </td>
-{{--                            <td>--}}
-{{--                                {{$withdraw->description}}--}}
-{{--                            </td>--}}
+                            {{--                            <td>--}}
+                            {{--                                {{$withdraw->description}}--}}
+                            {{--                            </td>--}}
 
                         </tr>
                     @endforeach
@@ -112,17 +124,4 @@
         </div>
     </div>
 
-@endsection
-@section('vendor-script')
-    @vite([
-            'resources/assets/vendor/libs/apex-charts/apexcharts.js',
-             'resources/assets/js/config.js',
-            'resources/assets/js/wallet.js'
-         ])
-@endsection
-
-@section('vendor-style')
-    @vite([
-    'resources/assets/vendor/libs/apex-charts/apex-charts.scss',
-])
 @endsection

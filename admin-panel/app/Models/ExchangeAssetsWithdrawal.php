@@ -33,4 +33,9 @@ class ExchangeAssetsWithdrawal extends Model
     {
         return $this->belongsTo(Currency::class, 'currency_symbol','symbol');
     }
+
+    public function admin()
+    {
+        return $this->belongsTo(Admin::class, 'admin_id','id');
+    }
 }
