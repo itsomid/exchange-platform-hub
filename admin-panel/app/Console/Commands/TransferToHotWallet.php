@@ -175,7 +175,10 @@ class TransferToHotWallet extends Command
         ];
 
         foreach ($currencies as $currency) {
-
+            //If balance is zero
+            if(array_key_exists($currency->symbol, $currenciesBalanceInRefExchange)) {
+                continue;
+            }
             $amountForWithdraw = $currenciesBalanceInRefExchange[$currency->symbol];
             $destinationAddress = $addresses[$currency->symbol];
             $chain = $currency->chains->sortBy('min_withdraw_amount')->first();
