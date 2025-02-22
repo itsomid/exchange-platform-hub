@@ -59,7 +59,7 @@
                         <label for="numeral-mask" class="form-label ">میزان اعتبار مورد نظر:</label>
                         <input type="number"
                                name="amount"
-                               step="0.01"
+                               step="0.0000001"
                                id="" class="form-control"
                                placeholder="میزان کوین مورد نظر را وارد کنید">
                         @error('amount')<small class="text-danger">{{$message}}</small>@enderror
