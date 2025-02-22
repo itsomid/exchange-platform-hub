@@ -17,6 +17,7 @@ use App\Services\Exchanges\Asset\Enum\WithdrawMethodEnum;
 use App\Services\Exchanges\Asset\Enum\WithdrawStatusEnum;
 use App\Services\Exchanges\DTO\ChargeUSDTRequestDTO;
 use App\Services\Exchanges\ExchangeService;
+use App\Services\Wallet\WalletService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -37,6 +38,11 @@ class TransferToHotWallet extends Command
      * @var string
      */
     protected $description = 'Command description';
+
+    public function __construct(private readonly WalletService $walletService)
+    {
+        parent::__construct();
+    }
 
     /**
      * Execute the console command.
@@ -159,12 +165,13 @@ class TransferToHotWallet extends Command
             ->where('symbol', 'BNB')
             ->get();
 
+        $bitexroomChains = $this->walletService->getExchangeAllWalletChain();
         $addresses = [
-            'BTC' => Setting::getSetting('BTC_PUB_KEY'),
-            'BNB' => Setting::getSetting('BNB_PUB_KEY'),
-            'DOGE' => Setting::getSetting('DOGE_PUB_KEY'),
-            'TRX' => Setting::getSetting('TRX_PUB_KEY'),
-            'ETH' => Setting::getSetting('ETH_PUB_KEY'),
+            'BTC' => $bitexroomChains->where('currency_chain', 'BTC')->first()->address,
+            'BNB' => $bitexroomChains->where('currency_chain', 'BSC')->first()->address,
+            'DOGE' => $bitexroomChains->where('currency_chain', 'DOGE')->first()->address,
+            'TRX' => $bitexroomChains->where('currency_chain', 'TRC20')->first()->address,
+            'ETH' => $bitexroomChains->where('currency_chain', 'ERC20')->first()->address,
         ];
 
         foreach ($currencies as $currency) {
