@@ -97,6 +97,7 @@ Route::get('/users/{user}/update-password', [UserSecurityController::class, 'pas
 Route::patch('/users/{user}/update-password', [UserSecurityController::class, 'passwordUpdate'])->name('user.password.update');
 Route::get('/users/{user}/security', [UserSecurityController::class, 'index'])->name('user.security');
 Route::get('/users/{user}/reset-password', [UserSecurityController::class, 'sendResetLinkEmail'])->name('user.reset-password-email');
+Route::post('/users/{user}/disable-user-two-factor', [UserSecurityController::class, 'disableTwoFactor'])->name('users.disable-user-two-factor');
 
 
 Route::get('/users/financial-status',[UserFinancialBlockController::class, 'index'])->name('user.financial-status');

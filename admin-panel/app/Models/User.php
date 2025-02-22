@@ -40,6 +40,7 @@ class User extends Authenticatable implements CanResetPassword
         'kyc_status',
         'description',
         'support_description',
+        'two_factor_secret'
     ];
 
     protected $guarded = ['id'];
@@ -119,9 +120,9 @@ class User extends Authenticatable implements CanResetPassword
         return $this->first_name . ' ' . $this->last_name;
     }
 
-    public function twoFAStatus()
+    public function twoFAStatus(): bool
     {
-        return (bool)$this->two_factore_secret;
+        return !! $this->two_factor_secret;
     }
 
     public static function generateUsername($email)

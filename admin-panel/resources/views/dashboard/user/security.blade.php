@@ -7,9 +7,16 @@
     <!-- Two-steps verification -->
     <div class="card mb-6">
         <div class="card-body">
-            <h5 class="mb-6">ارسال لینک بازیابی رمز عبور به ایمیل کاربر</h5>
-
+            <h5 class="mb-6"><i class="fa fa-firewall"></i>
+                تنظیمات امنیتی کاربر
+            </h5>
             <a href="{{route('admin.user.reset-password-email',['user'=>$user->id])}}" class="btn btn-primary mt-2">ارسال لینک بازیابی رمز عبور</a>
+            @if($user->twoFAStatus())
+                <form action="{{ route('admin.users.disable-user-two-factor', ['user'=>$user->id]) }}" method="post">
+                    @csrf
+                    <button class="btn btn-warning mt-2">غیرفعال سازی ورود دومرحله ایی </button>
+                </form>
+            @endif
         </div>
     </div>
 

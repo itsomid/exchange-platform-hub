@@ -32,6 +32,17 @@ class UserSecurityController extends Controller
 
         return redirect()->back();
     }
+
+    public function disableTwoFactor(User $user)
+    {
+        $user->update([
+            'two_factor_secret' => null,
+        ]);
+
+        Toast::message('ورود دومرحله ایی کاربر با موفقیت غیر فعال شد.')->success()->notify();
+
+        return redirect()->back();
+    }
     public function passwordEdit(User $user)
     {
 
