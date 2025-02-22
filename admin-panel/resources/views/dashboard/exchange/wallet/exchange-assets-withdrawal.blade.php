@@ -49,7 +49,7 @@
             <div class="card-title header-elements">
                 <h5 class="m-0 me-2">لیست درخواست های برداشت به HD Wallet</h5>
                 <div class="card-title-elements ms-auto">
-                    <a href="{{route('admin.wallets.assets-gathering-to-hd-wallet.create')}}" class="btn btn-primary">
+                    <a href="{{route('admin.ref-exchange.assets-gathering-to-hd-wallet.create')}}" class="btn btn-primary">
                         <i class="fa fa-plus mx-2"></i>
                         درخواست برداشت جدید
                     </a>

@@ -27,9 +27,13 @@ class OTCRefExchangeWithdrawal extends Model
     {
         return $this->belongsTo(Transaction::class);
     }
-
+    public function currency(): BelongsTo
+    {
+        return $this->belongsTo(currency::class);
+    }
     public function exchangeAssetWithdrawal(): BelongsTo
     {
         return $this->belongsTo(ExchangeAssetsWithdrawal::class);
     }
+
 }

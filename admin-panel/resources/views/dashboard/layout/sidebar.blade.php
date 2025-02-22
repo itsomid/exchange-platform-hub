@@ -134,7 +134,7 @@
                     <div>Market</div>
                 </a>
             </li>
-            <li class="menu-item @if(request()->is('admin/exchange/ref-exchanges*')) active @endif">
+            <li class="menu-item @if(request()->is('admin/ref-exchanges')) active @endif">
                 <a href="{{route('admin.exchange.index')}}" class="menu-link">
                     <i class="menu-icon fa-regular fa-display-chart-up-circle-dollar"></i>
                     <div>مدیریت صرافی های مرجع</div>
@@ -146,11 +146,11 @@
                 <span class="menu-header-text">بخش ارتباط با کاربر</span>
             </li>
             <li class="menu-item @if(request()->is('admin/tickets*')) active open @endif">
-                <a  href="javascript:void(0);" class="menu-link menu-toggle">
+                <a href="javascript:void(0);" class="menu-link menu-toggle">
                     <div class="d-inline-flex position-relative">
                         <i class="menu-icon  fa-regular fa-headset "></i>
 
-                        <span class="badge rounded-pill bg-danger badge-dot badge-notifications badge-bling" ></span>
+                        <span class="badge rounded-pill bg-danger badge-dot badge-notifications badge-bling"></span>
                     </div>
 
                     <div>مدیریت تیکت ها</div>
@@ -210,11 +210,25 @@
                 </ul>
 
             </li>
-            <li class="menu-item @if(request()->is('admin/wallets/assets-gathering-to-hd-wallet*')) active @endif">
-                <a href="{{route('admin.wallets.assets-gathering-to-hd-wallet.index')}}" class="menu-link">
+            <li class="menu-item @if(request()->is('admin/ref-exchanges/assets-gathering-to-hd-wallet')) active open @endif">
+                <a href="javascript:void(0);" class="menu-link menu-toggle">
                     <i class="menu-icon fa-regular fa-wallet"></i>
-                    <div>تجمیع دارایی در HD Wallet</div>
+                    <div>تجمیع دارایی</div>
                 </a>
+                <ul class="menu-sub">
+                    <li class="menu-item @if(request()->is('admin/ref-exchanges/assets-gathering-to-hd-wallet')) active @endif">
+                        <a href="{{route('admin.ref-exchange.assets-gathering-to-hd-wallet.index')}}" class="menu-link">
+                            <i class="menu-icon fa-regular fa-wallet"></i>
+                            <div>سابقه تجمیع HDWallet</div>
+                        </a>
+                    </li>
+                    <li class="menu-item @if(request()->is('admin/ref-exchanges/assets-gathering-to-hd-wallet/pending-withdrawal/')) active @endif">
+                        <a href="{{route('admin.ref-exchange.assets-gathering-to-hd-wallet.pending-withdrawal')}}" class="menu-link">
+                            <i class="menu-icon fa-regular fa-wallet"></i>
+                            <div>تجمیع های تکمیل نشده</div>
+                        </a>
+                    </li>
+                </ul>
             </li>
         @endcanany
         @canany(['report'])
@@ -299,13 +313,13 @@
                             </a>
                         </li>
                     @endcan
-{{--                    @can('setting.ext.index')--}}
-{{--                        <li class="menu-item  @if(request()->is('admin/external-settings*')) active @endif">--}}
-{{--                            <a href="{{route('admin.external-setting.index')}}" disabled="disabled" class="menu-link">--}}
-{{--                                <div>تنظیمات خارجی</div>--}}
-{{--                            </a>--}}
-{{--                        </li>--}}
-{{--                    @endcan--}}
+                    {{--                    @can('setting.ext.index')--}}
+                    {{--                        <li class="menu-item  @if(request()->is('admin/external-settings*')) active @endif">--}}
+                    {{--                            <a href="{{route('admin.external-setting.index')}}" disabled="disabled" class="menu-link">--}}
+                    {{--                                <div>تنظیمات خارجی</div>--}}
+                    {{--                            </a>--}}
+                    {{--                        </li>--}}
+                    {{--                    @endcan--}}
                 </ul>
             </li>
         @endcan

@@ -33,7 +33,7 @@
             </div>
         </div>
         <div class="card-body">
-            <form action="{{route('admin.wallets.assets-gathering-to-hd-wallet.store')}}" method="post">
+            <form action="{{route('admin.ref-exchange.assets-gathering-to-hd-wallet.store')}}" method="post">
                 @csrf
                 <div class="row">
 

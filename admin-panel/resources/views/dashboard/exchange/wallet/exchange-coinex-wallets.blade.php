@@ -34,7 +34,7 @@
                     <div class="card-body border-top">
 
                         @if(\App\Models\Currency::whereSymbol($asset->ccy)->first()->chains->isNotEmpty())
-                            <a href="{{route('admin.wallets.assets-gathering-to-hd-wallet.create',['currency_symbol'=>$asset->ccy,'amount'=>$asset->available])}}"
+                            <a href="{{route('admin.ref-exchange.assets-gathering-to-hd-wallet.create',['currency_symbol'=>$asset->ccy,'amount'=>$asset->available])}}"
                                class="btn btn-primary">
                                 <i class="fa-regular fa-arrow-up-right fa-xl mx-2"></i>
                                 برداشت دارایی

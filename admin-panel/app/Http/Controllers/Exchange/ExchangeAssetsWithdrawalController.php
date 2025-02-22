@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Currency;
 use App\Models\CurrencyChain;
 use App\Models\ExchangeAssetsWithdrawal;
+use App\Models\OTCRefExchangeWithdrawal;
 use App\Models\Setting;
 use App\Models\Wallet;
 use App\Models\WalletChain;
@@ -112,7 +113,7 @@ class ExchangeAssetsWithdrawalController extends Controller
                 ->success()
                 ->notify();
 
-            return redirect()->route('admin.wallets.assets-gathering-to-hd-wallet.index');
+            return redirect()->route('admin.ref-exchange.assets-gathering-to-hd-wallet.index');
         } catch (\Throwable $e) {
             report($e);
             Toast::message('فرآیند برداشت با شکست مواجه شد. لطفا دوباره تلاش کنید.')
@@ -120,6 +121,11 @@ class ExchangeAssetsWithdrawalController extends Controller
                 ->notify();
             return redirect()->back()->withInput();
         }
+    }
+
+    public function getPendingRefExchangeWithdrawal()
+    {
+        return OTCRefExchangeWithdrawal::with(['currency','transaction'])->get();
     }
 
 }
