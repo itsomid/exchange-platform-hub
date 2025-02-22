@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('currency_symbol')->nullable();
             $table->decimal('amount', 18, 8);
             $table->decimal('fee', 18, 8);
+            $table->decimal('filled_amount', 18, 8);
             $table->string('side');
             $table->json('response');
             $table->timestamps();

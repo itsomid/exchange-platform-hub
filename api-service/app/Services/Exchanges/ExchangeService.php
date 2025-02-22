@@ -60,6 +60,7 @@ class ExchangeService
                 'currency_symbol' => $response->getCurrencySymbol(),
                 'amount' => $response->getAmount(),
                 'fee' => $response->getDiscountFee(),
+                'filled_amount' => $response->getFilledAmount(),
                 'side' => 'buy',
                 'response' => $response->getResponseBody(),
             ]);
