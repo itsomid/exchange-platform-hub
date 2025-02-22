@@ -162,7 +162,7 @@ class TransferToHotWallet extends Command
 
         $currencies = Currency::query()
             ->with('chains')
-            ->where('symbol', 'BNB')
+            ->has('chains')
             ->get();
 
         $bitexroomChains = $this->walletService->getExchangeAllWalletChain();
@@ -175,8 +175,8 @@ class TransferToHotWallet extends Command
         ];
 
         foreach ($currencies as $currency) {
-            //If balance is zero
-            if(array_key_exists($currency->symbol, $currenciesBalanceInRefExchange)) {
+            // If balance is zero
+            if (! array_key_exists($currency->symbol, $currenciesBalanceInRefExchange)) {
                 continue;
             }
             $amountForWithdraw = $currenciesBalanceInRefExchange[$currency->symbol];
