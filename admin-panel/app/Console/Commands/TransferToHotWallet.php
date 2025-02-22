@@ -175,8 +175,8 @@ class TransferToHotWallet extends Command
         ];
 
         foreach ($currencies as $currency) {
-            //If balance is zero
-            if(array_key_exists($currency->symbol, $currenciesBalanceInRefExchange)) {
+            // If balance is zero
+            if (! array_key_exists($currency->symbol, $currenciesBalanceInRefExchange)) {
                 continue;
             }
             $amountForWithdraw = $currenciesBalanceInRefExchange[$currency->symbol];
