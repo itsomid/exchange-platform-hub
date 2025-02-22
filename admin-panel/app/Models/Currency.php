@@ -3,11 +3,15 @@
 namespace App\Models;
 
 use App\Filters\Filterable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * @property Collection $chains
+ */
 class Currency extends Model
 {
     use filterable, HasFactory;
@@ -20,39 +24,43 @@ class Currency extends Model
         'logo',
         'precision',
         'inter_transfer_enabled',
-        'max_auto_withdraw_amount'
+        'max_auto_withdraw_amount',
     ];
 
-    public function chains() : HasMany
+    public function chains(): HasMany
     {
-        return $this->hasMany(CurrencyChain::class,'currency_id');
+        return $this->hasMany(CurrencyChain::class, 'currency_id');
     }
+
     public function baseMarket(): HasOne
     {
         return $this->hasOne(Market::class, 'base_currency', 'symbol');
     }
-// In your Currency model
+
+    // In your Currency model
     public function getExchangePriceAttribute()
     {
         return $this->baseMarket && $this->baseMarket->activeExchangePrice
             ? $this->baseMarket->activeExchangePrice->price
             : 1; // Default to 1 if no exchange rate is found
     }
+
     // Relationship: A currency can have many markets where it is the quote currency
     public function quoteMarket(): HasOne
     {
         return $this->hasOne(Market::class, 'quote_currency', 'symbol');
     }
 
-    public function NodeProviders() : HasMany
+    public function NodeProviders(): HasMany
     {
-        return $this->hasMany(NodeProvider::class,'currency_id');
+        return $this->hasMany(NodeProvider::class, 'currency_id');
     }
 
     public function wallets()
     {
-        return $this->hasMany(Wallet::class,'currency_symbol');
+        return $this->hasMany(Wallet::class, 'currency_symbol');
     }
+
     public function coinLogo(): string
     {
         $logoPath = storage_path("app/public/coins/{$this->logo}");
@@ -65,7 +73,6 @@ class Currency extends Model
 
     public function interTransferStatus()
     {
-        return (bool)$this->inter_transfer_enabled;
+        return (bool) $this->inter_transfer_enabled;
     }
-
 }

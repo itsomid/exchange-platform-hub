@@ -14,6 +14,7 @@ class OTCRefExchangeWithdrawalRepository implements OTCRefExchangeWithdrawalInte
     {
         return OTCRefExchangeWithdrawal::query()
             ->create([
+                'currency_id' => $requestDTO->getCurrencyId(),
                 'transaction_id' => $requestDTO->getTransactionId(),
                 'status' => $requestDTO->getStatus(),
             ]);

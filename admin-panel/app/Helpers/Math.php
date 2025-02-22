@@ -9,7 +9,7 @@ class Math
         return bcadd(
             self::toDecimalString($number1),
             self::toDecimalString($number2),
-            config('bitexroom.scale_precision')
+            config('exchange.scale_precision')
         );
     }
 
@@ -18,7 +18,7 @@ class Math
         return bcsub(
             self::toDecimalString($number1),
             self::toDecimalString($number2),
-            config('bitexroom.scale_precision')
+            config('exchange.scale_precision')
         );
     }
 
@@ -27,7 +27,7 @@ class Math
         return bcmul(
             self::toDecimalString($number1),
             self::toDecimalString($number2),
-            config('bitexroom.scale_precision')
+            config('exchange.scale_precision')
         );
     }
 
@@ -36,7 +36,7 @@ class Math
         return bcdiv(
             self::toDecimalString($number1),
             self::toDecimalString($number2),
-            config('bitexroom.scale_precision')
+            config('exchange.scale_precision')
         );
     }
 
@@ -45,7 +45,7 @@ class Math
         return bccomp(
             self::toDecimalString($number1),
             self::toDecimalString($number2),
-            config('bitexroom.scale_precision')
+            config('exchange.scale_precision')
         );
     }
 

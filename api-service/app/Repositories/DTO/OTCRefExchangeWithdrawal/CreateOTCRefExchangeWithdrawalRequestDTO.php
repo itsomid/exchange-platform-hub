@@ -10,6 +10,8 @@ class CreateOTCRefExchangeWithdrawalRequestDTO
 
     private OTCRefExchangeWithdrawalStatusEnum $status;
 
+    private int $currencyId;
+
     public function setTransactionId(int $transactionId): CreateOTCRefExchangeWithdrawalRequestDTO
     {
         $this->transactionId = $transactionId;
@@ -32,5 +34,17 @@ class CreateOTCRefExchangeWithdrawalRequestDTO
     public function getStatus(): OTCRefExchangeWithdrawalStatusEnum
     {
         return $this->status;
+    }
+
+    public function setCurrencyId(int $currencyId): CreateOTCRefExchangeWithdrawalRequestDTO
+    {
+        $this->currencyId = $currencyId;
+
+        return $this;
+    }
+
+    public function getCurrencyId(): int
+    {
+        return $this->currencyId;
     }
 }

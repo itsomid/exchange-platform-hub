@@ -11,6 +11,7 @@ class OTCRefExchangeWithdrawal extends Model
     protected $table = 'otc_ref_exchange_withdrawals';
 
     protected $fillable = [
+        'currency_id',
         'transaction_id',
         'exchange_assets_withdrawal_id',
         'status',

@@ -9,6 +9,7 @@ use App\Services\Exchanges\Asset\Contract\AssetInterface;
 use App\Services\Exchanges\Asset\DTO\BalanceResponseDTO;
 use App\Services\Exchanges\Asset\DTO\WithdrawRequestDTO;
 use App\Services\Exchanges\Asset\DTO\WithdrawResponseDTO;
+use App\Services\Exchanges\Enums\CoinexWithdrawalError;
 use Illuminate\Support\Facades\Log;
 
 class AssetCoinex implements AssetInterface
@@ -41,12 +42,15 @@ class AssetCoinex implements AssetInterface
 
         $response = CoinexRequest::send(MethodEnum::POST, '/v2/assets/withdraw', $requestBody);
 
-        if ($response->json('code') === 11022) {
-
-        }
         if ($response->json('code') !== 0) {
             Log::channel('ref-exchange')->info($response->body());
-            AdminNotification::dispatchCoinexHasProblem($response->json('message'), $requestDTO->getCurrency(), $requestDTO->getAmount());
+            AdminNotification::dispatchCoinexHasProblem(
+                CoinexWithdrawalError::mapErrorToResponse(
+                    CoinexWithdrawalError::tryFrom($response->json('code'))
+                ),
+                $requestDTO->getCurrency(),
+                $requestDTO->getAmount()
+            );
             throw new CoinexWithdrawalException;
         }
 
@@ -64,7 +68,7 @@ class AssetCoinex implements AssetInterface
             ->setConfirmationCount($data['confirmations'])
             ->setExploreAddress($data['explorer_address_url'])
             ->setStatus($data['status'])
-            ->setFee($data['tx_fee'])
+            ->setFee($data['tx_fee'] > 0 ? $data['tx_fee'] : $data['fee_amount'])
             ->setCurrencyFee($data['fee_ccy']);
 
     }

@@ -2,13 +2,16 @@
 
 namespace App\Services\Exchanges;
 
+use App\Enums\OTCRefExchangeWithdrawalStatusEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Models\ExchangeAssetsWithdrawal;
+use App\Repositories\DTO\OTCRefExchangeWithdrawal\CreateOTCRefExchangeWithdrawalRequestDTO;
 use App\Repositories\DTO\Transaction\CreateTransactionRequestDTO;
 use App\Repositories\Interfaces\MarketRepositoryInterface;
 use App\Repositories\Interfaces\OTCOrderRepositoryInterface;
+use App\Repositories\Interfaces\OTCRefExchangeWithdrawalInterface;
 use App\Repositories\Interfaces\TransactionRepositoryInterface;
 use App\Repositories\Interfaces\WalletChainRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
@@ -30,7 +33,8 @@ class ExchangeService
         private readonly TransactionRepositoryInterface $transactionRepository,
         private readonly OTCOrderRepositoryInterface $otcOrderRepository,
         private readonly WalletRepositoryInterface $walletRepository,
-        private readonly WalletChainRepositoryInterface $chainRepository
+        private readonly WalletChainRepositoryInterface $chainRepository,
+        private readonly OTCRefExchangeWithdrawalInterface $refExchangeWithdrawalRepository,
     ) {}
 
     public function buy(ExchangeBuyRequestDTO $requestDTO): ExchangeBuyResponseDTO
@@ -102,7 +106,7 @@ class ExchangeService
                 )
                 ));
             //BASE Currency
-            $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
+            $baseCurrencyTransaction = $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
                 ->setUserId(config('bitexroom.bitexroom_user_id'))
                 ->setWalletId($baseCurrencyWallet->id)
                 ->setOtcOrderId($otcOrder->id)
@@ -116,6 +120,13 @@ class ExchangeService
                 )
                 ));
             $baseCurrencyWallet->increment('balance', (float) $response->getAmount());
+
+            $this->refExchangeWithdrawalRepository->create(
+                resolve(CreateOTCRefExchangeWithdrawalRequestDTO::class)
+                    ->setCurrencyId($market->currency->id)
+                    ->setTransactionId($baseCurrencyTransaction->id)
+                    ->setStatus(OTCRefExchangeWithdrawalStatusEnum::PENDING)
+            );
 
         }
 

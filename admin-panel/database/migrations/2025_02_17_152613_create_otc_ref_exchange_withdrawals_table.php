@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Currency;
 use App\Models\ExchangeAssetsWithdrawal;
 use App\Models\Transaction;
 use Illuminate\Database\Migrations\Migration;
@@ -15,6 +16,7 @@ return new class extends Migration
     {
         Schema::create('otc_ref_exchange_withdrawals', function (Blueprint $table) {
             $table->id();
+            $table->foreignIdFor(Currency::class);
             $table->foreignIdFor(Transaction::class)
                 ->constrained()
                 ->cascadeOnDelete();

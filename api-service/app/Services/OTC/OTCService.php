@@ -501,6 +501,7 @@ class OTCService
 
                 $this->refExchangeWithdrawalRepository->create(
                     resolve(CreateOTCRefExchangeWithdrawalRequestDTO::class)
+                        ->setCurrencyId($market->currency->id)
                         ->setTransactionId($chargeUSDTTransaction->id)
                         ->setStatus(OTCRefExchangeWithdrawalStatusEnum::PENDING)
                 );
