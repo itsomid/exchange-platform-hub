@@ -210,7 +210,7 @@
                 </ul>
 
             </li>
-            <li class="menu-item @if(request()->is('admin/ref-exchanges/assets-gathering-to-hd-wallet')) active open @endif">
+            <li class="menu-item @if(request()->is('admin/ref-exchanges/assets-gathering-to-hd-wallet*')) active open @endif">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">
                     <i class="menu-icon fa-regular fa-wallet"></i>
                     <div>تجمیع دارایی</div>
@@ -222,7 +222,7 @@
                             <div>سابقه تجمیع HDWallet</div>
                         </a>
                     </li>
-                    <li class="menu-item @if(request()->is('admin/ref-exchanges/assets-gathering-to-hd-wallet/pending-withdrawal/')) active @endif">
+                    <li class="menu-item @if(request()->is('admin/ref-exchanges/assets-gathering-to-hd-wallet/pending-withdrawal')) active @endif">
                         <a href="{{route('admin.ref-exchange.assets-gathering-to-hd-wallet.pending-withdrawal')}}" class="menu-link">
                             <i class="menu-icon fa-regular fa-wallet"></i>
                             <div>تجمیع های تکمیل نشده</div>
