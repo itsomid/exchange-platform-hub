@@ -28,7 +28,7 @@ class ExchangeAssetsWithdrawalController extends Controller
 
         $withdrawalFeeSum = ExchangeAssetsWithdrawal::sum('fee');
 
-        return view('dashboard.exchange.wallet.exchange-assets-withdrawal', [
+        return view('dashboard.exchange.ref_exchange.assets-withdrawal-history', [
             'withdraws' => $withdraws,
             'withdrawalFeeSum' => $withdrawalFeeSum,
         ]);
@@ -141,7 +141,7 @@ class ExchangeAssetsWithdrawalController extends Controller
             ->get();
 
 
-        return view('dashboard.exchange.wallet.exchange-assets-withdrawal', [
+        return view('dashboard.exchange.ref_exchange.pending-assets-withdrawal-history', [
             'withdrawals' => $withdrawals,
             'sumOfPendingWithdrawals' => $sumOfPendingWithdrawals,
         ]);

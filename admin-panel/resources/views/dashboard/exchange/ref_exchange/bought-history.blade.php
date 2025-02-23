@@ -93,7 +93,15 @@
                             </td>
 
                             <td class="font-number">{{formatNumberTrimZeros($transaction->amount)}} ({{$transaction->currency->symbol}})</td>
-                            <td class="font-number">{{formatNumber($transaction->fee,4)}} (CET)</td>
+                            <td class="font-number">
+
+                                @if($transaction->fee > 0)
+                                    {{formatNumber($transaction->fee,4)}} (CET)
+                                @else
+                                    {{formatNumber($transaction->response->data->quote_fee,4)}} (USDT)
+                                @endif
+
+                            </td>
                             <td class="font-number">{{$transaction->response->data->last_fill_price}}</td>
                             <td class="font-number">{{formatNumberTrimZeros($transaction->response->data->filled_value)}}</td>
                             <td>{{$transaction->created_at->format('H:i:s Y/m/d')}}</td>
