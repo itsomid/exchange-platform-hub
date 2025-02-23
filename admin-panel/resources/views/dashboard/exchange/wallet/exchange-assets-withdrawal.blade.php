@@ -7,9 +7,9 @@
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
-                            <span>تعداد برداشت از صرافی مرجع</span>
+                            <span>برداشت های در انتظار تکمیل</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{$withdraws->count()}}</h4>
+                                <h4 class="mb-0 me-2">{{$withdrawals->count()}}</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-primary rounded p-2">
@@ -19,99 +19,98 @@
                 </div>
             </div>
         </div>
-
-
-        <div class="col-sm-12 col-xl-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
-                        <div class="content-left">
-                            <span>مجموع کارمزد پرداخت شده به صرافی مرجع (Coinex)</span>
-                            <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{formatNumberTrimZeros($withdrawalFeeSum)}}
-                                    <small>CET</small>
-                                </h4>
-                            </div>
-                        </div>
-                        <span class="badge bg-label-info rounded p-2">
-                            <i class="fa-solid fa-hand-holding-dollar"></i>
-                        </span>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between">
+                    <div class="card-title mb-0">
+                        <h5 class="mb-1">مجموع برداشت های در انتظار تکمیل</h5>
                     </div>
+                    <div class="dropdown">
+                        <button class="btn btn-text-secondary rounded-pill text-muted border-0 p-2 me-n1" type="button"
+                                id="MonthlyCampaign" data-bs-toggle="dropdown" aria-haspopup="true"
+                                aria-expanded="false">
+                            <i class="fa-regular fa-grip-dots-vertical text-muted"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="MonthlyCampaign">
+                            <a class="dropdown-item" href="javascript:void(0);">امروز</a>
+                            <a class="dropdown-item" href="javascript:void(0);">ماه</a>
+                            <a class="dropdown-item" href="javascript:void(0);">سال</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <ul class="p-0 m-0">
+
+                        @forelse($sumOfPendingWithdrawals as $withdraw)
+                            <li class="mb-6 d-flex justify-content-between align-items-center">
+
+                                <img src="{{asset($withdraw->currency->coinLogo())}}" class="img-fluid" width="45px">
+
+                                <div class="d-flex justify-content-between w-100 flex-wrap">
+                                    <h6 class="mb-0 ms-4">{{$withdraw->currency->symbol}}</h6>
+                                    <div class="d-flex ">
+                                        <small class="me-2 align-self-end">{{$withdraw->currency->symbol}}</small>
+                                        <h5 class="mb-0 font-number">{{formatNumberTrimZeros($withdraw->total_withdraw_amount)}}</h5>
+                                    </div>
+                                </div>
+                            </li>
+                        @empty
+                            <p class="text-right">برداشتی ثبت نشده است</p>
+                        @endforelse
+                    </ul>
                 </div>
             </div>
         </div>
-
     </div>
 
 
     <div class="card">
         <div class="card-body">
             <div class="card-title header-elements">
-                <h5 class="m-0 me-2">لیست درخواست های برداشت به HD Wallet</h5>
-                <div class="card-title-elements ms-auto">
-                    <a href="{{route('admin.ref-exchange.assets-gathering-to-hd-wallet.create')}}" class="btn btn-primary">
-                        <i class="fa fa-plus mx-2"></i>
-                        درخواست برداشت جدید
-                    </a>
-                </div>
+                <h5 class="m-0 me-2">لیست درخواست های تجمیع در انتظار تکمیل</h5>
+
             </div>
             <div class="table-responsive text-nowrap">
                 <table class="table">
                     <thead>
                     <tr>
                         <th>#</th>
-                        <th>صرافی مرجع</th>
                         <th>کوین</th>
-                        <th>شبکه</th>
+                        <th>تراکنش</th>
                         <th>مقدار</th>
-                        <th>فی برداشت</th>
-                        <th>آدرس برداشت (HD Wallet)</th>
-                        <th>نوع برداشت</th>
-                        <th>تاریخ برداشت</th>
-                        {{--                        <th>توضیحات</th>--}}
+                        <th>تاریخ شروع</th>
+                        <th>تاریخ تکمیل</th>
+                        <th>وضعیت</th>
                     </tr>
                     </thead>
                     <tbody class="table-border-bottom-0">
-                    @foreach($withdraws as $withdraw)
+                    @foreach($withdrawals as $withdraw)
 
                         <tr>
                             <td>{{$withdraw->id}}</td>
-                            <td>{{$withdraw->exchange}}</td>
-                            <td>
-                                {{$withdraw->currency_symbol}}
+                            <td class="text-heading fw-medium">
+                                <img src="{{asset($withdraw->currency->coinLogo())}}"
+                                     class="rounded-circle img-fluid" width="30">
+                                {{$withdraw->currency->name}}
                             </td>
-
-                            <td>
-                                {{$withdraw->currency_chain}}
+                            <td class="font-number">Transaction #{{$withdraw->transaction->id}}</td>
+                            <td class="font-number">{{$withdraw->transaction->amount}}</td>
+                            <td class="font-number">
+                                {{\App\Helpers\DateFormatter::convertToPersianDate($withdraw->created_at,'H:i:s %Y/%m/%d')}}
                             </td>
-                            <td class="font-number">{{$withdraw->amount}}</td>
-                            <td class="font-number"> ({{$withdraw->fee_currency}}
-                                ) {{formatNumberTrimZeros($withdraw->fee)}}</td>
-                            <td>
-                                <h6 class="mb-0">
-                                    @if($withdraw->explore_address_url)
-                                        <a href="{{ $withdraw->explore_address_url }}" target="_blank" class="me-1">
-                                            <i class="fa-regular fa-clone"></i>
-                                        </a>
-                                        <small
-                                            class="font-number">{{ shorten_hash($withdraw->hd_wallet_address) }}</small>
-                                    @else
-                                        <span>N/A Address</span>
-                                    @endif
-                                </h6>
-                            </td>
-                            <td>
-                                @if($withdraw->admin_id)
-                                    <span class="mx-2">برداشت توسط ادمین </span>
-                                    <span class="font-number">({{$withdraw->admin->fullname()}} #{{$withdraw->admin->id}})</span>
+                            <td class="font-number">
+                                @if($withdraw->status === \App\Enums\OTCRefExchangeWithdrawalStatusEnum::COMPLETED || $withdraw->status === \App\Enums\OTCRefExchangeWithdrawalStatusEnum::CANCELLED)
+                                    {{\App\Helpers\DateFormatter::convertToPersianDate($withdraw->updated_at,'H:i:s %Y/%m/%d')}}
                                 @else
-                                    برداشت توسط سیستم
+                                    در انتظار تکمیل
                                 @endif
 
                             </td>
                             <td>
-                                {{$withdraw->withdrawal_date}}
+                                <span
+                                    class="badge bg-label-{{$withdraw->status->color()}} align-self-baseline">{{$withdraw->status->label()}}</span>
                             </td>
+
                             {{--                            <td>--}}
                             {{--                                {{$withdraw->description}}--}}
                             {{--                            </td>--}}

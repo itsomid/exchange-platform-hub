@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Exchange;
 
+use App\Enums\OTCRefExchangeWithdrawalStatusEnum;
 use App\Enums\WithdrawalStatusEnum;
 use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
@@ -125,7 +126,25 @@ class ExchangeAssetsWithdrawalController extends Controller
 
     public function getPendingRefExchangeWithdrawal()
     {
-        return OTCRefExchangeWithdrawal::with(['currency','transaction'])->get();
+        $withdrawals = OTCRefExchangeWithdrawal::with(['currency', 'transaction'])
+            ->orderByRaw("status = ? DESC", [OTCRefExchangeWithdrawalStatusEnum::PENDING->value])
+            ->get();
+
+        $sumOfPendingWithdrawals = OTCRefExchangeWithdrawal::select(
+            'otc_ref_exchange_withdrawals.currency_id',
+            \DB::raw('SUM(transactions.amount) as total_withdraw_amount')
+        )
+            ->join('transactions', 'transactions.id', '=', 'otc_ref_exchange_withdrawals.transaction_id')
+            ->where('otc_ref_exchange_withdrawals.status', OTCRefExchangeWithdrawalStatusEnum::PENDING->value)
+            ->groupBy('otc_ref_exchange_withdrawals.currency_id')
+            ->with('currency') // To get currency details
+            ->get();
+
+
+        return view('dashboard.exchange.wallet.exchange-assets-withdrawal', [
+            'withdrawals' => $withdrawals,
+            'sumOfPendingWithdrawals' => $sumOfPendingWithdrawals,
+        ]);
     }
 
 }
