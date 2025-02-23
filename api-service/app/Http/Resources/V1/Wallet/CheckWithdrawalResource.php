@@ -2,7 +2,7 @@
 
 namespace App\Http\Resources\V1\Wallet;
 
-use App\Helpers\CryptoExplorerService;
+use App\Helpers\Math;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -15,10 +15,12 @@ use Illuminate\Http\Resources\Json\JsonResource;
  *
  *     @OA\Property(property="withdraw_id", type="string", example="123456"),
  *     @OA\Property(property="amount", type="number", format="float", example=0.5),
+ *     @OA\Property(property="user_received_amount", type="number", format="float", example=0.3),
  *     @OA\Property(property="currency_symbol", type="string", example="BTC"),
  *     @OA\Property(property="currency_chain", type="string", example="Bitcoin"),
  *     @OA\Property(property="transaction_hash", type="string", example="a1b2c3d4e5f6"),
  *     @OA\Property(property="wallet_address", type="string", example="1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"),
+ *     @OA\Property(property="fee", type="number", example=0.2),
  *     @OA\Property(property="status", type="string", example="COMPLETED"),
  *     @OA\Property(property="status_lang", type="string", example="Completed"),
  *     @OA\Property(property="explorer_address_url", type="string", example="https://blockchain.com/btc/address/1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"),
@@ -37,6 +39,7 @@ class CheckWithdrawalResource extends JsonResource
         return [
             'withdraw_id' => $this->resource->getWithdrawId(),
             'amount' => $this->resource->getAmount(),
+            'user_received_amount' => Math::sub($this->resource->getAmount(), $this->resource->getTotalFee()),
             'currency_symbol' => $this->resource->getCurrencySymbol(),
             'currency_chain' => $this->resource->getCurrencyChain(),
             'transaction_hash' => $this->resource->getTransactionHash(),
