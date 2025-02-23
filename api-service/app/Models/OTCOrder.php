@@ -32,7 +32,7 @@ class OTCOrder extends Model
 
     protected $table = 'otc_orders';
 
-    protected $fillable = ['user_id', 'market_id', 'quantity', 'price', 'fee','filled_amount', 'type', 'status', 'exchange_id', 'ref_exchange_description'];
+    protected $fillable = ['user_id', 'market_id', 'quantity', 'price', 'fee', 'type', 'status', 'exchange_id', 'ref_exchange_description'];
 
     public string $filterNameSpace = 'App\Filters\OTCOrderFilter';
 
