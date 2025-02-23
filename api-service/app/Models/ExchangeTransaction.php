@@ -15,6 +15,7 @@ class ExchangeTransaction extends Model
         'fee',
         'side',
         'response',
+        'filled_amount',
     ];
 
     protected function casts(): array
