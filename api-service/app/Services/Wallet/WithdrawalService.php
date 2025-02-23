@@ -117,9 +117,6 @@ class WithdrawalService
     {
         $checkWithdrawalResponseDTO = resolve(CheckWithdrawalResponseDTO::class);
 
-
-        $checkWithdrawalResponseDTO->setStatus(WithdrawalStatusEnum::PENDING);
-
         $user = $this->userRepository->getUserById($userId);
 
         $pendingWithdrawal = $this->withdrawalRepository->getAllPending($userId);
@@ -134,27 +131,28 @@ class WithdrawalService
                         ->setBlockchain($withdrawal->currencyChain->blockchain_name->value)
                         ->setCurrencySymbol($withdrawal->currency_symbol)
                 );
+                $checkWithdrawalResponseDTO
+                    ->setWithdrawId($withdrawal->id)
+                    ->setCurrencyChain($withdrawal->currencyChain->chain->value)
+                    ->setWalletAddress($withdrawal->address)
+                    ->setAmount($withdrawal->amount)
+                    ->setTotalFee($withdrawal->total_fee)
+                    ->setCurrencySymbol($withdrawal->currency_symbol)
+                    ->setExplorerAddressUrl($withdrawal->explorer_address_url)
+                    ->setExplorerTxUrl($withdrawal->explorer_tx_url);
 
                 if ($responseDTO->getStatus() === 'failed') {
 
                     $withdrawal->update([
                         'status' => WithdrawalStatusEnum::FAILED,
-                        'description' =>$responseDTO->getDescription(),
+                        'description' => $responseDTO->getDescription(),
                     ]);
 
                     $this->fialedWithdrawalAndUnlockBalance($withdrawal);
 
                     $checkWithdrawalResponseDTO->setStatus(WithdrawalStatusEnum::FAILED)
-                        ->setWithdrawId($withdrawal->id)
-                        ->setTransactionHash($responseDTO->getTransactionHash())
-                        ->setCurrencyChain($withdrawal->currencyChain->chain->value)
-                        ->setWalletAddress($withdrawal->address)
-                        ->setAmount($withdrawal->amount)
-                        ->setTotalFee($withdrawal->total_fee)
-                        ->setCurrencySymbol($withdrawal->currency_symbol)
                         ->setConfirmedAt($withdrawal->confirmed_at)
-                        ->setExplorerAddressUrl($withdrawal->explorer_address_url)
-                        ->setExplorerTxUrl($withdrawal->explorer_tx_url);
+                        ->setTransactionHash($responseDTO->getTransactionHash());
 
                     AdminNotification::sendHotWalletNotEnoughBalance($responseDTO->getCurrencySymbol(), $responseDTO->getAmount());
 
@@ -168,17 +166,8 @@ class WithdrawalService
                     $user->notify(new WithdrawalSuccessful($withdrawal->currency_symbol, $withdrawal->amount, $user->name, $withdrawal->currencyChain->chain->value));
 
                     $checkWithdrawalResponseDTO->setStatus(WithdrawalStatusEnum::COMPLETED)
-                        ->setWithdrawId($withdrawal->id)
                         ->setTransactionHash($responseDTO->getTransactionHash())
-                        ->setCurrencyChain($withdrawal->currencyChain->chain->value)
-                        ->setWalletAddress($withdrawal->address)
-                        ->setAmount($withdrawal->amount)
-                        ->setTotalFee($withdrawal->total_fee)
-                        ->setCurrencySymbol($withdrawal->currency_symbol)
-                        ->setConfirmedAt($withdrawal->confirmed_at)
-                        ->setExplorerAddressUrl($withdrawal->explorer_address_url)
-                        ->setExplorerTxUrl($withdrawal->explorer_tx_url);
-
+                        ->setConfirmedAt($withdrawal->confirmed_at);
                 }
 
             } catch (NotFoundException) {

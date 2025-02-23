@@ -4685,6 +4685,11 @@
                         "format": "float",
                         "example": 0.5
                     },
+                    "user_received_amount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 0.3
+                    },
                     "currency_symbol": {
                         "type": "string",
                         "example": "BTC"
@@ -4700,6 +4705,10 @@
                     "wallet_address": {
                         "type": "string",
                         "example": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+                    },
+                    "fee": {
+                        "type": "number",
+                        "example": 0.2
                     },
                     "status": {
                         "type": "string",

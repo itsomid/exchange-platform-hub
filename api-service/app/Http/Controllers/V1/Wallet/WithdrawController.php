@@ -10,6 +10,7 @@ use App\Http\Resources\V1\Wallet\WithdrawalResource;
 use App\Services\Wallet\DTO\Withdrawal\CreateWithdrawalRequestDTO;
 use App\Services\Wallet\WithdrawalService;
 use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response;
 
 class WithdrawController extends Controller
 {
@@ -186,6 +187,10 @@ class WithdrawController extends Controller
         $service = resolve(WithdrawalService::class);
         $response = $service->checkWithdrawal(Auth::id());
 
+        if($response->getStatus() === null){
+            return response([], Response::HTTP_NO_CONTENT);
+        }
+
         $message = __('messages.withdrawals.check_withdrawal_started');
         if ($response->getStatus() === WithdrawalStatusEnum::COMPLETED) {
             $message = __('messages.withdrawals.check_withdrawal_success');
@@ -197,13 +202,7 @@ class WithdrawController extends Controller
             'available_in' => now()->addMinutes(config('bitexroom.withdrawal.check_wallet_attempts'))->format('Y-m-d H:i:s'),
             'has_new_transaction' => $response->getStatus() === WithdrawalStatusEnum::COMPLETED || $response->getStatus() === WithdrawalStatusEnum::FAILED,
         ];
-        if ($response->getStatus() === WithdrawalStatusEnum::FAILED) {
-            $data['withdrawal_details'] = new CheckWithdrawalResource($response);
-        }
-        if ($response->getStatus() === WithdrawalStatusEnum::COMPLETED) {
-
-            $data['withdrawal_details'] = new CheckWithdrawalResource($response);
-        }
+        $data['withdrawal_details'] = new CheckWithdrawalResource($response);
 
         return response([
             'message' => $message,

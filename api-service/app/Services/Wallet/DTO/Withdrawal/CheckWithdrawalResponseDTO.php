@@ -7,7 +7,7 @@ use Carbon\Carbon;
 
 class CheckWithdrawalResponseDTO
 {
-    private WithdrawalStatusEnum $status;
+    private ?WithdrawalStatusEnum $status = null;
 
     private ?int $withdrawId = null;
 
@@ -34,7 +34,7 @@ class CheckWithdrawalResponseDTO
         return $this;
     }
 
-    public function getStatus(): WithdrawalStatusEnum
+    public function getStatus(): ?WithdrawalStatusEnum
     {
         return $this->status;
     }
