@@ -2,15 +2,12 @@
 
 namespace App\Http\Controllers\Withdrawal;
 
-use App\Enums\TransactionTypeEnum;
 use App\Enums\WithdrawalStatusEnum;
 use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
-use App\Models\Deposit;
-use App\Models\Wallet;
 use App\Models\Withdrawal;
+use App\Services\APIService\APIService;
 use App\Services\Withdrawal\WithdrawalService;
-use Illuminate\Http\Request;
 
 class WithdrawalController extends Controller
 {
@@ -36,16 +33,16 @@ class WithdrawalController extends Controller
 
         // First 5 users with the most deposits (considering currency prices)
 
-
-         $topUsers = Withdrawal::with(['currency', 'user'])
-             ->where('status',WithdrawalStatusEnum::COMPLETED)
-             ->whereDate('created_at', $today)
+        $topUsers = Withdrawal::with(['currency', 'user'])
+            ->where('status', WithdrawalStatusEnum::COMPLETED)
+            ->whereDate('created_at', $today)
             ->get()
             ->groupBy('user_id')
             ->map(function ($withdraws, $userId) {
                 $totalWithdraws = $withdraws->sum(function ($withdraw) {
                     return $withdraw->amount * $withdraw->currency->exchange_price;
                 });
+
                 return [
                     'user' => $withdraws->first()->user,
                     'totalWithdraw' => $totalWithdraws,
@@ -59,13 +56,12 @@ class WithdrawalController extends Controller
             ->orderBy('id', request()->input('sortById', 'desc'))
             ->paginate(20);
 
-
         return view('dashboard.withdraw.index', [
             'withdraws' => $withdraws,
             'todayWithdrawalsCount' => $todayWithdrawalsCount,
             'totalWithdrawalsValue' => $totalWithdrawalsValue,
             'topUsers' => $topUsers,
-            'totalTopUsersWithdrawals' => $totalTopUsersWithdrawals
+            'totalTopUsersWithdrawals' => $totalTopUsersWithdrawals,
         ]);
     }
 
@@ -79,6 +75,7 @@ class WithdrawalController extends Controller
             $this->withdrawalService->adminApproveWithdrawal($withdraw->id, $admin_id);
 
             Toast::message('.تایید برداشت با موفقیت انجام شد')->success()->notify();
+
             return redirect()->back();
         } catch (\Throwable $exception) {
             report($exception);
@@ -94,6 +91,7 @@ class WithdrawalController extends Controller
             $this->withdrawalService->adminCancelWithdrawal($withdraw->id, $admin_id);
 
             Toast::message('.وضعیت برداشت به مورد تایید نیست تغییر کرد')->success()->notify();
+
             return redirect()->back();
         } catch (\Throwable $exception) {
             report($exception);
@@ -102,8 +100,13 @@ class WithdrawalController extends Controller
         }
     }
 
-    public function checkWithdrawal()
+    public function checkWithdrawal(Withdrawal $withdrawal)
     {
+        $apiService = resolve(APIService::class);
+        $apiService->checkWithdrawal($withdrawal->user_id);
 
+        Toast::message('فرآیند چک برداشت آغاز شد.')->success()->notify();
+
+        return redirect()->back();
     }
 }

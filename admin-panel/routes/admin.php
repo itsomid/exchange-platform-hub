@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Controllers\Admin\AdminRoleController;
 use App\Http\Controllers\Admin\AdminSecurityController;
 use App\Http\Controllers\Admin\HomeController;
@@ -8,37 +9,34 @@ use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ReferralCodeController;
 use App\Http\Controllers\Admin\SelectsApiController;
 use App\Http\Controllers\Admin\SessionController;
+use App\Http\Controllers\Deposit\DepositController;
+use App\Http\Controllers\Deposit\DepositReportController;
 use App\Http\Controllers\Exchange\CurrencyChainController;
 use App\Http\Controllers\Exchange\CurrencyController;
+use App\Http\Controllers\Exchange\ExchangeAssetsWithdrawalController;
+use App\Http\Controllers\Exchange\ExchangeWalletController;
 use App\Http\Controllers\Exchange\MarketController;
 use App\Http\Controllers\Exchange\NodeProviderController;
 use App\Http\Controllers\Exchange\RefExchangeController;
+use App\Http\Controllers\OTCOrder\OTCOrderController;
 use App\Http\Controllers\RolePermission\PermissionController;
 use App\Http\Controllers\RolePermission\RoleController;
 use App\Http\Controllers\Setting\ExternalSettingController;
 use App\Http\Controllers\Setting\InternalSettingController;
 use App\Http\Controllers\Setting\ThemeController;
+use App\Http\Controllers\Ticket\TicketController;
+use App\Http\Controllers\Ticket\TicketReplyController;
+use App\Http\Controllers\Transaction\TransactionController;
 use App\Http\Controllers\User\InquiryController;
 use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\User\UserFinancialBlockController;
+use App\Http\Controllers\User\UserRegistrationReportController;
 use App\Http\Controllers\User\UserSecurityController;
 use App\Http\Controllers\User\UserWalletController;
-use App\Http\Controllers\Transaction\TransactionController;
 use App\Http\Controllers\Wallet\WalletController;
-use App\Http\Controllers\OTCOrder\OTCOrderController;
-use App\Http\Controllers\Deposit\DepositController;
 use App\Http\Controllers\Withdrawal\WithdrawalController;
-use App\Http\Controllers\Exchange\ExchangeWalletController;
 use App\Http\Controllers\Withdrawal\WithdrawalReportController;
-use App\Http\Controllers\Exchange\ExchangeAssetsWithdrawalController;
-use App\Http\Controllers\Deposit\DepositReportController;
-use App\Http\Controllers\Admin\AdminNotificationController;
-use App\Http\Controllers\User\UserRegistrationReportController;
-use App\Http\Controllers\Ticket\TicketController;
-use App\Http\Controllers\Ticket\TicketReplyController;
-
 use Illuminate\Support\Facades\Route;
-
 
 Route::get('/users_select', [SelectsApiController::class, 'users'])->name('users.select.index');
 Route::get('/admins_select', [SelectsApiController::class, 'admins'])->name('admins.select.index');
@@ -46,7 +44,7 @@ Route::get('/admins_select', [SelectsApiController::class, 'admins'])->name('adm
 Route::post('/set-theme', [ThemeController::class, 'setTheme'])->name('set-theme');
 Route::get('/', [HomeController::class, 'index'])->name('dashboard');
 
-//*********ADMIN*********//
+// *********ADMIN*********//
 Route::prefix('admins')->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('admin.index')->can('admin.index');
     Route::get('/create', [AdminController::class, 'create'])->name('admin.create')->can('admin.create');
@@ -73,12 +71,10 @@ Route::prefix('admins')->group(function () {
 
 Route::resource('/tickets', TicketController::class)->except(['ticket']);
 Route::prefix('tickets')->name('ticket.')->group(function () {
-    Route::get('/{ticket}/replies', [TicketReplyController::class,'index'])->name('replies.index');
+    Route::get('/{ticket}/replies', [TicketReplyController::class, 'index'])->name('replies.index');
     Route::post('/{ticket}/replies', [TicketReplyController::class, 'store'])->name('replies.store');
     Route::delete('/replies/{reply}', [TicketReplyController::class, 'destroy'])->name('replies.destroy');
 });
-
-
 
 Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
 Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -99,8 +95,7 @@ Route::get('/users/{user}/security', [UserSecurityController::class, 'index'])->
 Route::get('/users/{user}/reset-password', [UserSecurityController::class, 'sendResetLinkEmail'])->name('user.reset-password-email');
 Route::post('/users/{user}/disable-user-two-factor', [UserSecurityController::class, 'disableTwoFactor'])->name('users.disable-user-two-factor');
 
-
-Route::get('/users/financial-status',[UserFinancialBlockController::class, 'index'])->name('user.financial-status');
+Route::get('/users/financial-status', [UserFinancialBlockController::class, 'index'])->name('user.financial-status');
 Route::get('/users/{user}/financial-status', [UserFinancialBlockController::class, 'getBlocks'])->name('user.financial-block.getBlocks');
 Route::post('/users/{user}/financial-status', [UserFinancialBlockController::class, 'addBlock'])->name('user.financial-block.addBlock');
 Route::delete('/users/{user}/financial-status/{financialBlock}', [UserFinancialBlockController::class, 'removeBlock'])->name('user.financial-block.deleteBlock');
@@ -108,16 +103,15 @@ Route::delete('/users/{user}/financial-status/{financialBlock}', [UserFinancialB
 Route::get('/users/financial-status/mass-block', [UserFinancialBlockController::class, 'createMassBlock'])->name('user.financial-block.create-mass-block');
 Route::post('/users/financial-status/mass-block', [UserFinancialBlockController::class, 'storeMassBlock'])->name('user.financial-block.store-mass-block');
 
-Route::get('/users/{user}/wallets',[UserWalletController::class,'userWallets'])->name('wallet.index')->can('wallet');
-Route::get('/users/{user}/wallets/{wallet}/{type}',[UserWalletController::class,'walletDetails'])->name('wallet.detail')->can('wallet');
-Route::get('/users/{user}/inquiry',[InquiryController::class,'userDetails'])->name('inquiry.user-details')->can('admin.inquiry');
-
+Route::get('/users/{user}/wallets', [UserWalletController::class, 'userWallets'])->name('wallet.index')->can('wallet');
+Route::get('/users/{user}/wallets/{wallet}/{type}', [UserWalletController::class, 'walletDetails'])->name('wallet.detail')->can('wallet');
+Route::get('/users/{user}/inquiry', [InquiryController::class, 'userDetails'])->name('inquiry.user-details')->can('admin.inquiry');
 
 Route::get('/inquiry', [InquiryController::class, 'index'])->name('inquiry.index')->can('admin.inquiry');
 Route::post('/inquiry', [InquiryController::class, 'submit'])->name('inquiry.submit')->can('admin.inquiry');
-//Route::get('/users/2fa', [UserSecurityController::class, ''])->name('profile.2fa.edit');
-//Route::get('/users/{user}/tokens', [UserTokenController::class, 'twoFAEdit'])->name('user.token.index')->can('user.edit');
-//Route::patch('/users/{user}/tokens/{token}/revoke', [UserTokenController::class, 'revoke'])->name('user.token.revoke')->can('user.edit');
+// Route::get('/users/2fa', [UserSecurityController::class, ''])->name('profile.2fa.edit');
+// Route::get('/users/{user}/tokens', [UserTokenController::class, 'twoFAEdit'])->name('user.token.index')->can('user.edit');
+// Route::patch('/users/{user}/tokens/{token}/revoke', [UserTokenController::class, 'revoke'])->name('user.token.revoke')->can('user.edit');
 
 Route::get('/role/{admin}', [AdminRoleController::class, 'edit'])->name('role.user.edit')->can('roles.permissions');
 Route::patch('/role/{admin}', [AdminRoleController::class, 'update'])->name('role.user.update')->can('roles.permissions');
@@ -139,7 +133,6 @@ Route::post('/referral-codes', [ReferralCodeController::class, 'store'])->name('
 Route::get('/referral-codes/{referral_code}/edit', [ReferralCodeController::class, 'edit'])->name('referral_code.edit')->can('referral_code.edit');
 Route::patch('/referral-codes/{referral_code}', [ReferralCodeController::class, 'update'])->name('referral_code.update')->can('referral_code.edit');
 
-
 Route::get('/exchange/currencies', [CurrencyController::class, 'index'])->name('currency.index')->can('currency');
 Route::get('/exchange/currencies/create', [CurrencyController::class, 'create'])->name('currency.create')->can('currency');
 Route::post('/exchange/currencies', [CurrencyController::class, 'store'])->name('currency.store')->can('currency');
@@ -156,47 +149,43 @@ Route::patch('/exchange/currencies/{currency}/chains', [CurrencyChainController:
 Route::get('/exchange/currencies/{currency}/nodeprovider', [NodeProviderController::class, 'edit'])->name('currency.nodeprovider.edit')->can('currency');
 Route::patch('/exchange/currencies/{currency}/nodeprovider', [NodeProviderController::class, 'update'])->name('currency.nodeprovider.update')->can('currency');
 
-Route::prefix('exchange')->group(function (){
-    Route::get('/markets',[MarketController::class,'index'])->name('market.index')->can('market');
-    Route::get('/markets/create',[MarketController::class,'create'])->name('market.create')->can('market');
-    Route::post('/markets',[MarketController::class,'store'])->name('market.store')->can('market');
-    Route::get('/markets/{market}/edit',[MarketController::class,'edit'])->name('market.edit')->can('market');
-    Route::patch('/markets/{market}',[MarketController::class,'update'])->name('market.update')->can('market');
+Route::prefix('exchange')->group(function () {
+    Route::get('/markets', [MarketController::class, 'index'])->name('market.index')->can('market');
+    Route::get('/markets/create', [MarketController::class, 'create'])->name('market.create')->can('market');
+    Route::post('/markets', [MarketController::class, 'store'])->name('market.store')->can('market');
+    Route::get('/markets/{market}/edit', [MarketController::class, 'edit'])->name('market.edit')->can('market');
+    Route::patch('/markets/{market}', [MarketController::class, 'update'])->name('market.update')->can('market');
 
-
-    Route::get('/wallets/localWallets',[ExchangeWalletController::class,'localWallets'])->name('exchange.local-wallet');
-    Route::get('/wallets/coinexWallets',[ExchangeWalletController::class,'coinexWallets'])->name('exchange.coinex-wallet');
-    Route::get('/wallets/hotWallets',[ExchangeWalletController::class,'hotWallets'])->name('exchange.hot-wallet');
+    Route::get('/wallets/localWallets', [ExchangeWalletController::class, 'localWallets'])->name('exchange.local-wallet');
+    Route::get('/wallets/coinexWallets', [ExchangeWalletController::class, 'coinexWallets'])->name('exchange.coinex-wallet');
+    Route::get('/wallets/hotWallets', [ExchangeWalletController::class, 'hotWallets'])->name('exchange.hot-wallet');
 });
 
-Route::prefix('ref-exchanges')->group(function (){
-    Route::get('/',[RefExchangeController::class,'index'])->name('exchange.index')->can('ref-exchanges');
-    Route::get('/assets-gathering-to-hd-wallet',[ExchangeAssetsWithdrawalController::class,'index'])->name('ref-exchange.assets-gathering-to-hd-wallet.index');
-    Route::get('/assets-gathering-to-hd-wallet/create',[ExchangeAssetsWithdrawalController::class,'create'])->name('ref-exchange.assets-gathering-to-hd-wallet.create');
-    Route::post('/assets-gathering-to-hd-wallet/',[ExchangeAssetsWithdrawalController::class,'store'])->name('ref-exchange.assets-gathering-to-hd-wallet.store');
-    Route::get('/assets-gathering-to-hd-wallet/pending-withdrawal/',[ExchangeAssetsWithdrawalController::class,'getPendingRefExchangeWithdrawal'])->name('ref-exchange.assets-gathering-to-hd-wallet.pending-withdrawal');
+Route::prefix('ref-exchanges')->group(function () {
+    Route::get('/', [RefExchangeController::class, 'index'])->name('exchange.index')->can('ref-exchanges');
+    Route::get('/assets-gathering-to-hd-wallet', [ExchangeAssetsWithdrawalController::class, 'index'])->name('ref-exchange.assets-gathering-to-hd-wallet.index');
+    Route::get('/assets-gathering-to-hd-wallet/create', [ExchangeAssetsWithdrawalController::class, 'create'])->name('ref-exchange.assets-gathering-to-hd-wallet.create');
+    Route::post('/assets-gathering-to-hd-wallet/', [ExchangeAssetsWithdrawalController::class, 'store'])->name('ref-exchange.assets-gathering-to-hd-wallet.store');
+    Route::get('/assets-gathering-to-hd-wallet/pending-withdrawal/', [ExchangeAssetsWithdrawalController::class, 'getPendingRefExchangeWithdrawal'])->name('ref-exchange.assets-gathering-to-hd-wallet.pending-withdrawal');
 });
 
-
-
-
-Route::prefix('transactions')->group(function (){
-   Route::get('/',[TransactionController::class,'index'])->name('transaction.index')->can('transaction');
+Route::prefix('transactions')->group(function () {
+    Route::get('/', [TransactionController::class, 'index'])->name('transaction.index')->can('transaction');
 });
 
-Route::prefix('otc_orders')->group(function (){
-    Route::get('/',[OTCOrderController::class,'index'])->name('otc_orders.index')->can('transaction');
+Route::prefix('otc_orders')->group(function () {
+    Route::get('/', [OTCOrderController::class, 'index'])->name('otc_orders.index')->can('transaction');
 });
 
-Route::prefix('deposits')->group(function (){
-   Route::get('/',[DepositController::class,'index'])->name('deposit.index')->can('deposit');
+Route::prefix('deposits')->group(function () {
+    Route::get('/', [DepositController::class, 'index'])->name('deposit.index')->can('deposit');
 });
 
-Route::prefix('withdrawal')->group(function (){
-    Route::get('/',[WithdrawalController::class,'index'])->name('withdrawal.index')->can('withdrawal');
-    Route::get('/check-withdrawal',[WithdrawalController::class,'checkWithdrawal'])->name('withdrawal.check-withdrawal')->can('withdrawal');
-    Route::get('/{withdraw}/confirm',[WithdrawalController::class,'confirmWithdrawal'])->name('withdrawal.confirm-withdrawal')->can('withdrawal');
-    Route::get('/{withdraw}/cancel',[WithdrawalController::class,'cancelWithdrawal'])->name('withdrawal.cancel-withdrawal')->can('withdrawal');
+Route::prefix('withdrawal')->group(function () {
+    Route::get('/', [WithdrawalController::class, 'index'])->name('withdrawal.index')->can('withdrawal');
+    Route::get('/check-withdrawal/{withdrawal}', [WithdrawalController::class, 'checkWithdrawal'])->name('withdrawal.check-withdrawal')->can('withdrawal');
+    Route::get('/{withdraw}/confirm', [WithdrawalController::class, 'confirmWithdrawal'])->name('withdrawal.confirm-withdrawal')->can('withdrawal');
+    Route::get('/{withdraw}/cancel', [WithdrawalController::class, 'cancelWithdrawal'])->name('withdrawal.cancel-withdrawal')->can('withdrawal');
 });
 
 Route::get('/internal-settings', [InternalSettingController::class, 'index'])->name('internal.setting.index')->can('setting.int.index');
@@ -208,11 +197,11 @@ Route::post('/internal-settings/update-exchange-withdrawal-setting', [InternalSe
 Route::get('/external-settings', [ExternalSettingController::class, 'index'])->name('external-setting.index')->can('setting.ext.index');
 Route::post('/external-settings/update-ref-address', [ExternalSettingController::class, 'updateRefAddress'])->name('setting.ext.update-ref-address')->can('setting.ext.index');
 
-Route::prefix('wallet')->group(function (){
-    Route::get('increase-credit',[WalletController::class,'increaseCreditForm'])->name('wallet.increase-credit.form')->can('wallet');
-    Route::post('increase-credit',[WalletController::class,'increaseCredit'])->name('wallet.increase-credit')->can('wallet');
-    Route::get('decrease-credit',[WalletController::class,'decreaseCreditForm'])->name('wallet.decrease-credit.form')->can('wallet');
-    Route::post('decrease-credit',[WalletController::class,'decreaseCredit'])->name('wallet.decrease-credit')->can('wallet');
+Route::prefix('wallet')->group(function () {
+    Route::get('increase-credit', [WalletController::class, 'increaseCreditForm'])->name('wallet.increase-credit.form')->can('wallet');
+    Route::post('increase-credit', [WalletController::class, 'increaseCredit'])->name('wallet.increase-credit')->can('wallet');
+    Route::get('decrease-credit', [WalletController::class, 'decreaseCreditForm'])->name('wallet.decrease-credit.form')->can('wallet');
+    Route::post('decrease-credit', [WalletController::class, 'decreaseCredit'])->name('wallet.decrease-credit')->can('wallet');
     Route::get('{wallet}/user/{user}/block-balance', [WalletController::class, 'blockBalanceForm'])->name('wallet.block-balance.form')->can('wallet');
     Route::post('{wallet}/block-balance', [WalletController::class, 'blockBalance'])->name('wallet.block-balance')->can('wallet');
     Route::get('{wallet}/user/{user}/unblock-balance', [WalletController::class, 'unblockBalanceForm'])->name('wallet.unblock-balance.form')->can('wallet');
@@ -222,10 +211,10 @@ Route::prefix('wallet')->group(function (){
 
 });
 
-Route::prefix('report')->group(function (){
-    Route::get('deposit',[DepositReportController::class,'index'])->name('report.deposit')->can('report');
-    Route::get('withdrawal',[WithdrawalReportController::class,'index'])->name('report.withdrawal')->can('report');
+Route::prefix('report')->group(function () {
+    Route::get('deposit', [DepositReportController::class, 'index'])->name('report.deposit')->can('report');
+    Route::get('withdrawal', [WithdrawalReportController::class, 'index'])->name('report.withdrawal')->can('report');
     Route::get('user-registration-report', [UserRegistrationReportController::class, 'index'])->name('report.getUserRegistrationState')->can('user.index');
     Route::get('user-registration-report/month', [UserRegistrationReportController::class, 'getUserRegistrationState'])->name('report.getUserRegistrationState.month')->can('user.index');
-    Route::get('ref-exchange/bought-history',[RefExchangeController::class,'boughtHistory'])->name('report.ref-exchange.bought-history')->can('report');
+    Route::get('ref-exchange/bought-history', [RefExchangeController::class, 'boughtHistory'])->name('report.ref-exchange.bought-history')->can('report');
 });

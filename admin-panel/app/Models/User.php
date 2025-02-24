@@ -40,13 +40,13 @@ class User extends Authenticatable implements CanResetPassword
         'kyc_status',
         'description',
         'support_description',
-        'two_factor_secret'
+        'two_factor_secret',
     ];
 
     protected $guarded = ['id'];
 
     protected $casts = [
-        'status' => UserStatusEnum::class
+        'status' => UserStatusEnum::class,
     ];
 
     public function referralCodes(): HasMany
@@ -63,7 +63,6 @@ class User extends Authenticatable implements CanResetPassword
     {
         return $this->hasMany(ReferralCodeUsage::class, 'used_by');
     }
-
 
     public function financialBlocks(): HasMany
     {
@@ -85,7 +84,7 @@ class User extends Authenticatable implements CanResetPassword
         return $this->hasMany(Transaction::class);
     }
 
-    public function financialBlocksFrom(string $action = null)
+    public function financialBlocksFrom(?string $action = null)
     {
         $query = $this->hasMany(UserFinancialBlock::class, 'user_id')
             ->where('restricted_until', '>', Carbon::now())
@@ -117,12 +116,12 @@ class User extends Authenticatable implements CanResetPassword
 
     public function fullname()
     {
-        return $this->first_name . ' ' . $this->last_name;
+        return $this->first_name.' '.$this->last_name;
     }
 
     public function twoFAStatus(): bool
     {
-        return !! $this->two_factor_secret;
+        return (bool) $this->two_factor_secret;
     }
 
     public static function generateUsername($email)
@@ -140,7 +139,7 @@ class User extends Authenticatable implements CanResetPassword
         // Check for uniqueness
         $counter = 1;
         while (User::where('username', $username)->exists()) {
-            $username = $baseUsername . $counter; // Append a number if not unique
+            $username = $baseUsername.$counter; // Append a number if not unique
             $counter++;
         }
 
@@ -150,19 +149,18 @@ class User extends Authenticatable implements CanResetPassword
     public function setDetailOnToken($token)
     {
         $agent = new Agent;
-        $device = $agent->platform() . '-';
-        $device = $device . $agent->browser();
+        $device = $agent->platform().'-';
+        $device = $device.$agent->browser();
 
         $token->accessToken->device = $device;
         $token->accessToken->ip = request()->ip();
         $token->accessToken->save();
     }
 
-
     /**
      * Send a password reset notification to the user.
      *
-     * @param string $token
+     * @param  string  $token
      */
     public function sendPasswordResetNotification($token): void
     {
@@ -170,8 +168,7 @@ class User extends Authenticatable implements CanResetPassword
         $this->notify(new ResetPasswordNotification($this, $url));
     }
 
-
-    //////////SCOPE/////////
+    // ////////SCOPE/////////
     public function scopeOnline($query)
     {
         return $query->whereHas('latestActiveToken', function ($q) {
@@ -184,19 +181,19 @@ class User extends Authenticatable implements CanResetPassword
     {
         return $query->where('status', 'active');
     }
+
     public function scopeInActive($query)
     {
         return $query->where('status', 'inactive');
     }
 
-
-    //////END SCOPE/////////
+    // ////END SCOPE/////////
     public function getAvatarNameAttribute()
     {
         $firstName = $this->attributes['first_name'] ?? '';
         $lastName = $this->attributes['last_name'] ?? '';
 
-        return strtoupper(substr($firstName, 0, 2)) . ' ' . strtoupper(substr($lastName, 0, 2));
+        return strtoupper(substr($firstName, 0, 2)).' '.strtoupper(substr($lastName, 0, 2));
     }
 
     public function getAvatarUserNameAttribute()
@@ -206,10 +203,9 @@ class User extends Authenticatable implements CanResetPassword
         return strtoupper(substr($username, 0, 2));
     }
 
-
     public function getActivityStatusAttribute()
     {
-        if (!$this->latestActiveToken) {
+        if (! $this->latestActiveToken) {
             return 'offline';
         }
 
@@ -231,4 +227,14 @@ class User extends Authenticatable implements CanResetPassword
         };
     }
 
+    public function generateAccessToken(): string
+    {
+        $user = $this;
+        $tokenObject = $user->createToken(
+            name: 'system',
+            expiresAt: now()->addMinute()
+        );
+
+        return $tokenObject->plainTextToken;
+    }
 }

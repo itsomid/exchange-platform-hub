@@ -516,7 +516,7 @@
                                     </div>
                                 @endif
                                 @if($withdraw->status === \App\Enums\WithdrawalStatusEnum::PENDING)
-                                    <a href="{{ route('admin.withdrawal.cancel-withdrawal', ['withdraw' => $withdraw]) }}"
+                                    <a href="{{ route('admin.withdrawal.check-withdrawal', $withdraw->id) }}"
                                        class="btn btn-sm btn-icon btn-warning">
                                         <i class="fa-solid fa-rotate-right"></i>
                                     </a>
