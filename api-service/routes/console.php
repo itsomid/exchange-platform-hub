@@ -9,4 +9,4 @@ use Illuminate\Support\Facades\Schedule;
 //    $this->comment('asdasd');
 //})->purpose('Display an inspiring quote')->everyTenSeconds();
 
-Schedule::command('wallet:check-withdrawal')->everyTenSeconds();
+Schedule::command('wallet:check-withdrawal')->hourly();
