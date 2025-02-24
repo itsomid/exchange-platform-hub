@@ -185,9 +185,9 @@ class WithdrawController extends Controller
     public function checkWithdrawal()
     {
         $service = resolve(WithdrawalService::class);
-        $response = $service->checkWithdrawal(Auth::id());
+        $response = $service->checkSpecificUserWithdrawal(Auth::id());
 
-        if($response->getStatus() === null){
+        if ($response->getStatus() === null) {
             return response([], Response::HTTP_NO_CONTENT);
         }
 

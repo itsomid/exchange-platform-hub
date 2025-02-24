@@ -113,14 +113,13 @@ class WithdrawalService
         }
     }
 
-    public function checkWithdrawal(int $userId): CheckWithdrawalResponseDTO
+    public function checkSpecificUserWithdrawal(int $userId): CheckWithdrawalResponseDTO
     {
         $checkWithdrawalResponseDTO = resolve(CheckWithdrawalResponseDTO::class);
 
         $user = $this->userRepository->getUserById($userId);
 
         $pendingWithdrawal = $this->withdrawalRepository->getAllPending($userId);
-
 
         foreach ($pendingWithdrawal as $withdrawal) {
             try {
