@@ -29,7 +29,7 @@ services:
       - php-admin
       - database
       - admin-queue
-      - laravel-cron
+      - laravel-admin-cron
 #      - phpmyadmin
     networks:
       - laravel
@@ -69,7 +69,7 @@ services:
       - php-api
       - database
       - api-queue
-      - laravel-cron
+      - laravel-api-cron
     networks:
       - laravel
 
@@ -110,7 +110,7 @@ services:
 
 
   # Laravel Cron Jobs
-  laravel-cron:
+  laravel-admin-cron:
     build:
       context: ./dockerfiles
       dockerfile: php.dockerfile
@@ -118,14 +118,34 @@ services:
         - UID=${UID:-1000}
         - GID=${GID:-1000}
         - USER=${USER:-laraveluser}
-    container_name: laravel-cron
+    container_name: laravel-admin-cron
     volumes:
       - ./admin-panel:/var/www/html:delegated
       - ./env/admin_panel.env:/var/www/html/.env
     depends_on:
       - database
     working_dir: /var/www/html
-    entrypoint: [ 'php', '/var/www/html/artisan', 'schedule:work' ]
+    entrypoint: /bin/sh -c "while true; do php artisan schedule:run >> /dev/null 2>&1; sleep 60; done"
+    networks:
+      - laravel
+
+  laravel-api-cron:
+    build:
+      context: ./dockerfiles
+      dockerfile: php.dockerfile
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - USER=${USER:-laraveluser}
+    container_name: laravel-api-cron
+    volumes:
+      - "./api-service:/var/www/html:delegated"
+      - "./env/api_service.env:/var/www/html/.env"
+    depends_on:
+      - database
+    working_dir: /var/www/html
+    entrypoint: /bin/sh -c "while true; do php artisan schedule:run >> /dev/null 2>&1; sleep 60; done"
+#    entrypoint: /bin/sh -c "while true; do echo \"[ $(date) ] Running schedule...\"; php artisan schedule:run; sleep 60; done"
     networks:
       - laravel
 

@@ -26,6 +26,7 @@ class CheckWithdrawalWallet extends Command
      */
     public function handle(): void
     {
+        \Log::info('Checking pending withdrawals!');
         $this->info('Checking pending withdrawals...');
         $checkWithdrawal = resolve(WithdrawalService::class);
         $checkWithdrawal->checkAllWithdrawal();
