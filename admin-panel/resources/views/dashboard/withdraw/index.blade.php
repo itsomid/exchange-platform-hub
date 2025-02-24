@@ -7,9 +7,17 @@
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
-                            <span>تعداد برداشت ها</span>
+                            <span>
+
+                                تعداد برداشت ها
+                                @if(request('status'))
+                                    ({{\App\Enums\WithdrawalStatusEnum::TYPE_LABEL[request('status')]}})
+                                @else
+                                    <span>(همه)</span>
+                                @endif
+                            </span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{count($withdraws)}}</h4>
+                                <h4 class="mb-0 me-2">{{$withdraws->total()}}</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-danger rounded p-2">
@@ -114,7 +122,7 @@
             </div>
             <form action="{{route('admin.withdrawal.index')}}" method="get">
                 <div class="row">
-                    <div class="col-md-3 mt-3">
+                    <div class="col-md-3">
                         <div class="form-group">
                             <label class="form-label" for="type">وضعیت برداشت:</label>
                             <select name="status" class="form-control" id="type">
@@ -128,7 +136,7 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-6 mt-3">
+                    <div class="col-md-6 ">
                         <label class="form-label" for="user">کاربر :</label>
                         <x-user-selection-component
                             input-name="user"
@@ -140,13 +148,12 @@
 
                         ></x-user-selection-component>
                     </div>
-                    <div class="w-100"></div>
-                    <div class="col-md-2">
-                        <div class="form-group mt-3"><br>
+                    <div class="col-md-2 align-self-end">
+
                             <button class="btn btn-success text-white" type="submit">
                                 <span>فیلتر</span><i class="fas fa-filter mx-3"></i>
                             </button>
-                        </div>
+
                     </div>
                 </div>
             </form>
@@ -297,7 +304,8 @@
                                 <h6 class="mb-0 d-flex">
                                     @if($withdraw->explorer_address_url)
 
-                                        <a  href="javascript:void(0);" class="clipboard-btn mx-1" data-clipboard-action="copy"
+                                        <a href="javascript:void(0);" class="clipboard-btn mx-1"
+                                           data-clipboard-action="copy"
                                            data-clipboard-target="#withdraw{{$withdraw->address}}">
                                             <i class="fa-regular fa-clone"></i>
                                         </a>
@@ -320,8 +328,9 @@
                             <td class="font-number">
                                 <h6 class="mb-0">
                                     @if($withdraw->explorer_tx_url && $withdraw->transaction_hash)
-                                        <a  href="javascript:void(0);" class="clipboard-btn mx-1" data-clipboard-action="copy"
-                                            data-clipboard-target="#deposit{{$withdraw->transaction_hash}}">
+                                        <a href="javascript:void(0);" class="clipboard-btn mx-1"
+                                           data-clipboard-action="copy"
+                                           data-clipboard-target="#deposit{{$withdraw->transaction_hash}}">
                                             <i class="fa-regular fa-clone"></i>
                                         </a>
                                         <input type="hidden"
@@ -352,42 +361,36 @@
                             </td>
                             <td>
 
-                                @if(in_array($withdraw->status, [
-                                        \App\Enums\WithdrawalStatusEnum::COMPLETED,
-                                        \App\Enums\WithdrawalStatusEnum::AWAITING_APPROVAL,
-                                        \App\Enums\WithdrawalStatusEnum::PENDING,
-                                        \App\Enums\WithdrawalStatusEnum::FAILED
-                                    ]))
-                                    <a href="#" class="btn btn-icon btn-text-secondary" data-bs-toggle="modal"
-                                       data-bs-target="#withdraw-modal-{{$withdraw->id}}">
-                                        <i class="fa-regular fa-eye fa-xl"></i>
-                                    </a>
+                                <a href="#" class="btn btn-icon btn-text-secondary" data-bs-toggle="modal"
+                                   data-bs-target="#withdraw-modal-{{$withdraw->id}}">
+                                    <i class="fa-regular fa-eye fa-xl"></i>
+                                </a>
 
-                                    <div class="modal fade" id="withdraw-modal-{{$withdraw->id}}" tabindex="-1"
-                                         aria-hidden="true">
-                                        <div class="modal-dialog" role="document">
-                                            <div class="modal-content border-3 border-{{
+                                <div class="modal fade" id="withdraw-modal-{{$withdraw->id}}" tabindex="-1"
+                                     aria-hidden="true">
+                                    <div class="modal-dialog" role="document">
+                                        <div class="modal-content border-3 border-{{
                                                     $withdraw->status === \App\Enums\WithdrawalStatusEnum::COMPLETED ? 'success' :
                                                     ($withdraw->status === \App\Enums\WithdrawalStatusEnum::FAILED ? 'danger' :
                                                         ($withdraw->status === \App\Enums\WithdrawalStatusEnum::PENDING ? 'warning':'info')
                                                     ) }}">
-                                                <div class="modal-header" dir="ltr">
-                                                    <h5 class="modal-title font-number">Withdraw #{{$withdraw->id}}</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                            aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    @include('dashboard.withdraw.withdrawal-modal-body', ['withdraw' => $withdraw])
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-label-secondary"
-                                                            data-bs-dismiss="modal">بستن
-                                                    </button>
-                                                </div>
+                                            <div class="modal-header" dir="ltr">
+                                                <h5 class="modal-title font-number">Withdraw #{{$withdraw->id}}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                @include('dashboard.withdraw.withdrawal-modal-body', ['withdraw' => $withdraw])
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-label-secondary"
+                                                        data-bs-dismiss="modal">بستن
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
-                                @endif
+                                </div>
+
                                 @if($withdraw->status === \App\Enums\WithdrawalStatusEnum::COMPLETED)
                                     <a href="" class="btn btn-icon btn-text-secondary" data-bs-toggle="modal"
                                        data-bs-target="#withdraw-{{$withdraw->id}}">
@@ -511,6 +514,12 @@
                                             </div>
                                         </div>
                                     </div>
+                                @endif
+                                @if($withdraw->status === \App\Enums\WithdrawalStatusEnum::PENDING)
+                                    <a href="{{ route('admin.withdrawal.cancel-withdrawal', ['withdraw' => $withdraw]) }}"
+                                       class="btn btn-sm btn-icon btn-warning">
+                                        <i class="fa-solid fa-rotate-right"></i>
+                                    </a>
                                 @endif
                                 @if($withdraw->status === \App\Enums\WithdrawalStatusEnum::AWAITING_APPROVAL)
                                     <a href="{{ route('admin.withdrawal.confirm-withdrawal', ['withdraw' => $withdraw]) }}"

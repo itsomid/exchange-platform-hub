@@ -101,4 +101,9 @@ class WithdrawalController extends Controller
             return redirect()->back()->withErrors(['general' => $exception->getMessage()]);
         }
     }
+
+    public function checkWithdrawal()
+    {
+
+    }
 }

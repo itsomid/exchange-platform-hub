@@ -194,6 +194,7 @@ Route::prefix('deposits')->group(function (){
 
 Route::prefix('withdrawal')->group(function (){
     Route::get('/',[WithdrawalController::class,'index'])->name('withdrawal.index')->can('withdrawal');
+    Route::get('/check-withdrawal',[WithdrawalController::class,'checkWithdrawal'])->name('withdrawal.check-withdrawal')->can('withdrawal');
     Route::get('/{withdraw}/confirm',[WithdrawalController::class,'confirmWithdrawal'])->name('withdrawal.confirm-withdrawal')->can('withdrawal');
     Route::get('/{withdraw}/cancel',[WithdrawalController::class,'cancelWithdrawal'])->name('withdrawal.cancel-withdrawal')->can('withdrawal');
 });
