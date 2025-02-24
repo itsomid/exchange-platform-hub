@@ -78,7 +78,7 @@ class CheckWalletService
                     DB::beginTransaction();
 
                     $currency = Currency::whereSymbol($transaction->getCryptocurrency())->first();
-                    $usdtValue = Math::mul($currency->exchangePrice->price, $transaction->getAmount());
+                    $usdtValue = Math::mul($currency->exchangePrice, $transaction->getAmount());
                     $deposit = $this->depositRepository->create(resolve(CreateDepositRequestDTO::class)
                         ->setUserId($transaction->getUserId())
                         ->setCurrencySymbol($transaction->getCryptocurrency())
