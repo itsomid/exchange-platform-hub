@@ -74,13 +74,27 @@ class WithdrawRequest extends FormRequest
      */
     public function rules(): array
     {
+        $currency = Currency::query()->where('symbol', $this->input('currency'))->first(['id']);
+
         return [
             'currency' => ['required', Rule::exists(Currency::class, 'symbol')],
-            'currency_chain' => ['required', Rule::exists(CurrencyChain::class, 'chain')->where('withdraw_enabled', 1)],
+            'currency_chain' => ['required', Rule::exists(CurrencyChain::class, 'chain')->where('currency_id', $currency?->id)->where('withdraw_enabled', 1)],
             'destination_address' => ['required', new GeneralBlockchainAddress],
             'amount' => ['required', new CheckMinAmount($this->input('currency'), $this->input('currency_chain')), new CheckWalletBalance($this->input('currency'))],
             '2fa_code' => [Rule::requiredIf(fn () => ! empty(Auth::user()->two_factor_secret)), new CheckTwoFactorRule],
             'otp_code' => ['required', new CheckOTPRule],
+        ];
+    }
+
+    /**
+     * Get custom messages for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'currency_chain.exists' => __('validation.currency_chain_inactive'),
         ];
     }
 }

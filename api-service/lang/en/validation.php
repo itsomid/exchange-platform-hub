@@ -165,7 +165,7 @@ return [
     'insufficient_balance' => 'The amount :amount exceeds your wallet balance in :currency.',
     'invalid_2fa_code' => 'The Google 2FA code provided is invalid.',
     'invalid_otp_code' => 'The OTP code provided is invalid or expired.',
-
+    'currency_chain_inactive' => 'The selected currency chain is inactive.',
     /*
     |--------------------------------------------------------------------------
     | Custom Validation Language Lines
