@@ -12,29 +12,25 @@ use App\Imports\UsersImport;
 use App\Models\Admin;
 use App\Models\ReferralCode;
 use App\Models\User;
-use App\Services\JWT;
-use App\Services\SavedAddressService\SavedAddressService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
-use Morilog\Jalali\Jalalian;
 
 class UserController extends Controller
 {
     public function index()
     {
-//        return \request()->all();
+        //        return \request()->all();
 
-        $users = User::with('introducerReferral.user','activeFinancialBlocks')
+        $users = User::with('introducerReferral.user', 'activeFinancialBlocks')
             ->filterBy(request()->all())
             ->paginate(20);
         $referral_codes = ReferralCode::all();
         $onlineUserCount = User::online()->count();
         $activeUsersCount = User::active()->count();
         $inActiveUsersCount = User::inActive()->count();
-
 
         $usersHasTransactionCount = User::has('transactions')->count();
 
@@ -43,7 +39,7 @@ class UserController extends Controller
             ->groupBy('support_description')
             ->get();
 
-        return view('dashboard.user.index',[
+        return view('dashboard.user.index', [
             'users' => $users,
             'referral_codes' => $referral_codes,
             'onlineUserCount' => $onlineUserCount,
@@ -216,25 +212,20 @@ class UserController extends Controller
     public function loginAsUser(User $user)
     {
 
-        $token = JWT::new()
-            ->payload(JWT::getPayload($user->id))
-            ->encode();
+        $token = $user->generateAccessToken();
 
-        return redirect(config('bitexroom.user_panel_destination')
-            .'?token='.$token
-            .'&user_id='.$user->id
-            .'&name='.$user->name
-            .'&mobile='.$user->mobile
-            .'&support='.optional($user->saleSupport)->fullname()
-            .'&route=dashboard');
+        return redirect(
+            sprintf(config('frontend.base_url'), $token)
+        );
     }
 
     public function suspendUser(User $user)
     {
         $user = User::find($user->id);
 
-        if (!$user) {
+        if (! $user) {
             Toast::message('کاربر یافت نشد.')->danger();
+
             return redirect()->back();
         }
 
@@ -244,6 +235,7 @@ class UserController extends Controller
         $user->save();
 
         Toast::message('وضعیت کاربر با موفقیت تغییر کرد')->success();
+
         return redirect()->back();
     }
 }

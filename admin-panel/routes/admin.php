@@ -106,6 +106,7 @@ Route::post('/users/financial-status/mass-block', [UserFinancialBlockController:
 Route::get('/users/{user}/wallets', [UserWalletController::class, 'userWallets'])->name('wallet.index')->can('wallet');
 Route::get('/users/{user}/wallets/{wallet}/{type}', [UserWalletController::class, 'walletDetails'])->name('wallet.detail')->can('wallet');
 Route::get('/users/{user}/inquiry', [InquiryController::class, 'userDetails'])->name('inquiry.user-details')->can('admin.inquiry');
+Route::get('/login-as-user/{user}', [UserController::class, 'loginAsUser'])->name('user.login-as-user')->can('user.login-as-customer');
 
 Route::get('/inquiry', [InquiryController::class, 'index'])->name('inquiry.index')->can('admin.inquiry');
 Route::post('/inquiry', [InquiryController::class, 'submit'])->name('inquiry.submit')->can('admin.inquiry');
