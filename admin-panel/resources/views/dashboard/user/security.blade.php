@@ -11,12 +11,19 @@
                 تنظیمات امنیتی کاربر
             </h5>
             <a href="{{route('admin.user.reset-password-email',['user'=>$user->id])}}" class="btn btn-primary mt-2">ارسال لینک بازیابی رمز عبور</a>
-            @if($user->twoFAStatus())
+
                 <form action="{{ route('admin.users.disable-user-two-factor', ['user'=>$user->id]) }}" method="post">
                     @csrf
-                    <button class="btn btn-warning mt-2">غیرفعال سازی ورود دومرحله ایی </button>
+                    <button class="btn btn-warning mt-2" @if(!$user->twoFAStatus()) disabled @endif>
+                        @if(!$user->twoFAStatus())
+                            ورود دو مرحله ایی غیرفعال است
+                        @else
+                            غیرفعال سازی ورود دومرحله ایی
+                        @endif
+
+                    </button>
                 </form>
-            @endif
+
         </div>
     </div>
 
