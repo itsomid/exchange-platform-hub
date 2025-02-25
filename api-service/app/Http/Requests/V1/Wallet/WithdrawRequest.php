@@ -76,7 +76,7 @@ class WithdrawRequest extends FormRequest
     {
         return [
             'currency' => ['required', Rule::exists(Currency::class, 'symbol')],
-            'currency_chain' => ['required', Rule::exists(CurrencyChain::class, 'chain')],
+            'currency_chain' => ['required', Rule::exists(CurrencyChain::class, 'chain')->where('withdraw_enabled', 1)],
             'destination_address' => ['required', new GeneralBlockchainAddress],
             'amount' => ['required', new CheckMinAmount($this->input('currency'), $this->input('currency_chain')), new CheckWalletBalance($this->input('currency'))],
             '2fa_code' => [Rule::requiredIf(fn () => ! empty(Auth::user()->two_factor_secret)), new CheckTwoFactorRule],
