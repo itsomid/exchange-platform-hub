@@ -212,7 +212,7 @@ class UserController extends Controller
     public function loginAsUser(User $user)
     {
 
-        $token = $user->generateAccessToken();
+        $token = $user->generateAccessToken(10);
 
         return redirect(
             sprintf(config('frontend.base_url'), $token)
