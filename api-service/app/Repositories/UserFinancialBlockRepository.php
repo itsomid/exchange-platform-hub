@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Enums\UserFinancialBlockAction;
 use App\Models\UserFinancialBlock;
 use App\Repositories\DTO\UserFinancialBlock\SaveOrUpdateBlockStateRequestDTO;
 use App\Repositories\Interfaces\UserFinancialBlockRepositoryInterface;
@@ -17,5 +18,14 @@ class UserFinancialBlockRepository implements UserFinancialBlockRepositoryInterf
                 'restricted_until' => $requestDTO->getRestrictedUntil(),
                 'reason' => $requestDTO->getReason(),
             ]);
+    }
+
+    public function getLatestUserBlock(int $userId, UserFinancialBlockAction $action): ?UserFinancialBlock
+    {
+        return UserFinancialBlock::query()
+            ->where('user_id', $userId)
+            ->where('action', $action)
+            ->latest()
+            ->first();
     }
 }

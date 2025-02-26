@@ -12,4 +12,8 @@ return [
         'check_withdrawal_started' => 'فرآیند برداشت شما شروع شده است.',
         'check_withdrawal_error' => 'برداشت شما با شکست مواجه شد.',
     ],
+    'user_financial_block' => [
+        'withdrawal' => 'شما از برداشت تا :date مسدود شده‌اید.',
+        'trade' => 'شما از معامله تا :date مسدود شده‌اید.',
+    ],
 ];
