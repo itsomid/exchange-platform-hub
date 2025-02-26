@@ -16,4 +16,7 @@ return [
         'withdrawal' => 'You are blocked from withdrawal until :date.',
         'trade' => 'You are blocked from trade until :date.',
     ],
+    'otp' => [
+        'send' => 'The verification code has been sent to your email.',
+    ],
 ];
