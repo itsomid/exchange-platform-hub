@@ -157,22 +157,31 @@
 
                 </a>
                 <ul class="menu-sub">
-                    <li class="menu-item @if(request()->is('admin/tickets?status=pending*')) active @endif">
-                        <a href="{{route('admin.role.index')}}" class="menu-link">
+                    <li class="menu-item @if (request()->routeIs('admin.tickets.index') && request('status') === \App\Enums\TicketStatusEnum::OPEN->value) active @endif">
+                        <a href="{{ route('admin.tickets.index', ['status' => \App\Enums\TicketStatusEnum::OPEN]) }}" class="menu-link">
                             <i class="menu-icon fa-light fa-user fa-sm"></i>
-                            <div>در انتظار پاسخ</div>
+                            <div>تیکت های جدید</div>
                         </a>
                     </li>
-                    <li class="menu-item @if(request()->is('admin/tickets/*')) active @endif">
-                        <a href="{{route('admin.permission.index')}}" class="menu-link">
-                            <i class="menu-icon fa-light fa-key fa-sm"></i>
-                            <div>پاسخ داده شده</div>
-                        </a>
-                    </li>
-                    <li class="menu-item @if(request()->is('admin/tickets*')) active @endif">
-                        <a href="{{route('admin.tickets.index')}}" class="menu-link">
+
+                    <li class="menu-item @if (request()->routeIs('admin.tickets.index') && !request()->has('status')) active @endif">
+                        <a href="{{ route('admin.tickets.index') }}" class="menu-link">
                             <i class="menu-icon fa-light fa-ticket"></i>
                             <div>همه تیکت ها</div>
+                        </a>
+                    </li>
+
+                    <li class="menu-item @if (request()->routeIs('admin.tickets.index') && request('status') === \App\Enums\TicketStatusEnum::InProgress->value) active @endif">
+                        <a href="{{ route('admin.tickets.index', ['status' => \App\Enums\TicketStatusEnum::InProgress]) }}" class="menu-link">
+                            <i class="menu-icon fa-light fa-key fa-sm"></i>
+                            <div>تیکت های فعال</div>
+                        </a>
+                    </li>
+
+                    <li class="menu-item @if (request()->routeIs('admin.tickets.index') && request('status') === \App\Enums\TicketStatusEnum::CLOSED->value) active @endif">
+                        <a href="{{ route('admin.tickets.index', ['status' => \App\Enums\TicketStatusEnum::CLOSED]) }}" class="menu-link">
+                            <i class="menu-icon fa-light fa-key fa-sm"></i>
+                            <div>بسته شده</div>
                         </a>
                     </li>
                 </ul>

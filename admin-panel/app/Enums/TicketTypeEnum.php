@@ -12,6 +12,8 @@ enum TicketTypeEnum: string
     case DEPOSIT = 'deposit';
     case OTC_ORDER = 'otc_order';
 
+    case UNKNOWN = 'unknown';
+
     /**
      * Get the corresponding model class for each type.
      */
@@ -24,7 +26,7 @@ enum TicketTypeEnum: string
             OTCOrder::class => self::OTC_ORDER,
         ];
 
-        return $classToEnumMap[$modelClass] ?? null;
+        return $classToEnumMap[$modelClass] ?? self::UNKNOWN;
     }
 
     /**
@@ -41,12 +43,15 @@ enum TicketTypeEnum: string
         self::WITHDRAWAL->value => 'برداشت',
         self::DEPOSIT->value => 'واریز',
         self::OTC_ORDER->value => 'معامله',
+        self::UNKNOWN->value => 'نامشخص',
     ];
 
     const array TYPE_COLOR = [
         self::WITHDRAWAL->value => 'danger',
         self::DEPOSIT->value => 'success',
         self::OTC_ORDER->value => 'info',
+        self::UNKNOWN->value => 'secondary',
+
     ];
 
     /**

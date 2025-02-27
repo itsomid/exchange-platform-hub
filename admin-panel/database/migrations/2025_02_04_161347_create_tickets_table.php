@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('subject');
             $table->string('status')->default(TicketStatusEnum::OPEN->value);
             $table->string('priority')->default(TicketPriorityEnum::LOW->value);
+            $table->text('note')->nullable();
             $table->timestamp('closed_at')->nullable();
             $table->timestamp('reopened_at')->nullable();
             $table->timestamp('resolved_at')->nullable();
