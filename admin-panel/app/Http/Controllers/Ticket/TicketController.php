@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Ticket;
 
 use App\Enums\TicketStatusEnum;
+use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use Illuminate\Http\Request;
@@ -11,7 +12,7 @@ class TicketController extends Controller
 {
     public function index()
     {
-         $tickets = Ticket::all();
+         $tickets = Ticket::orderBy('created_at','DESC')->filterBy(request()->all())->get();
         return view('dashboard.ticket.index', compact('tickets'));
     }
 
@@ -71,8 +72,8 @@ class TicketController extends Controller
 
     public function destroy(Ticket $ticket)
     {
-        abort_unless($ticket->user_id === auth()->id(), 403);
         $ticket->delete();
-        return redirect()->route('tickets.index');
+        Toast::message('پیام با موفقیت حذف شد.')->success()->notify();
+        return redirect()->back();
     }
 }

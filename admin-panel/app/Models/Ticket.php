@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\TicketPriorityEnum;
 use App\Enums\TicketStatusEnum;
 use App\Enums\TicketTypeEnum;
+use App\Filters\Filterable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -12,6 +13,10 @@ use Illuminate\Support\Str;
 
 class Ticket extends Model
 {
+    use Filterable;
+
+    public $filterNameSpace = 'App\Filters\TicketFilters';
+
     protected $fillable = [
         'ticket_number', 'user_id', 'subject', 'status',
         'priority', 'closed_at', 'reopened_at', 'resolved_at',
@@ -19,7 +24,6 @@ class Ticket extends Model
     ];
     protected $casts = [
         'status' => TicketStatusEnum::class, // Cast the status to the enum
-
         'priority' => TicketPriorityEnum::class, // Cast the status to the enum
     ];
     public function user(): BelongsTo

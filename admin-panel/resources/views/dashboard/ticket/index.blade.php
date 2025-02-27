@@ -1,5 +1,5 @@
 @extends('dashboard.layout.master')
-@section('title', 'مدیریت کدهای معرف')
+@section('title', 'مدیریت تیکت ها')
 @section('content')
     <div class="row g-4 mb-4">
         <div class="col-sm-12 col-xl-3">
@@ -88,8 +88,7 @@
                     <tbody class="table-border-bottom-0">
                     @foreach($tickets as $ticket)
                         @php
-                            // Convert the string value to the actual enum instance
-                          $ticketTypeEnum = $ticket->ticketable_type ? App\Enums\TicketTypeEnum::fromModelClass($ticket->ticketable_type) : null;
+                             $ticketTypeEnum = App\Enums\TicketTypeEnum::fromModelClass($ticket->ticketable_type ?? 'unknown');
                         @endphp
                         <tr>
                             <td>
@@ -105,14 +104,12 @@
                                 </div>
                             </td>
                             <td>
-                                {{$ticket->created_at}}
+                                {{\App\Helpers\DateFormatter::convertToPersianDate($ticket->created_at,'H:i %Y/%m/%d')}}
                             </td>
-                            <td>
-                                {{$ticket->subject}}
-                            </td>
+                            <td>{{$ticket->subject}}</td>
                             <td>
                                 <span
-                                    class="badge bg-label-{{$ticketTypeEnum?->color()}}">{{$ticketTypeEnum?->label()}}</span>
+                                    class="badge bg-label-{{$ticketTypeEnum->color()}}">{{$ticketTypeEnum->label()}}</span>
                             </td>
                             <td>
                                   <span
@@ -124,10 +121,6 @@
                             </td>
                             <td>
                                 <div class="d-flex align-items-center">
-
-                                    <a href="" class="text-secondary me-3">
-                                        <i class="fa-light fa-pen-to-square fa-lg"></i>
-                                    </a>
                                     <a href="{{route('admin.ticket.replies.index',['ticket'=>$ticket])}}" class="btn btn-icon btn-text-secondary">
                                         <i class="fa-light fa-eye fa-lg"></i>
                                     </a>
