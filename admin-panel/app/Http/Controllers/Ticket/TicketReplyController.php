@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Ticket;
 
 use App\Enums\TicketStatusEnum;
+use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Ticket\StoreTicketReplyRequest;
 use App\Models\Ticket;
@@ -36,11 +37,8 @@ class TicketReplyController extends Controller
 
         $ticket->status = $request->status;
         $ticket->save();
-        $ticketReplies = TicketReply::where('ticket_id', $ticket->id)->orderBy('created_at','DESC')->get();
 
-        return view('dashboard.ticket.ticket-view',[
-            'ticket' => $ticket,
-            'ticketReplies' => $ticketReplies
-        ]);
+        Toast::message('پاسخ شما با موفقیت ثبت شد.')->success()->notify();
+        return redirect()->back();
     }
 }
