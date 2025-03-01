@@ -50,8 +50,8 @@ class SavedAddressRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', Rule::unique(SavedAddress::class, 'name')],
-            'address' => ['required'],
+            'name' => ['required', Rule::unique(SavedAddress::class, 'name')->where('user_id', auth()->id())],
+            'address' => ['required', Rule::unique(SavedAddress::class, 'address')->where('user_id', auth()->id())],
             'chain' => ['required', Rule::exists(CurrencyChain::class, 'chain')],
         ];
     }
