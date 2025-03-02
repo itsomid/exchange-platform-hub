@@ -75,6 +75,10 @@ class CheckWalletService
                         ->first();
                     $usdtValue = Math::mul($market->exchangePrice->price, $transaction->getAmount());
 
+                    $depositStatus = DepositStatusEnum::CONFIRMED;
+                    if (Math::comp($transaction->getAmount(), $currencyChain->min_deposit_amount) === -1) {
+                        $depositStatus = DepositStatusEnum::TOO_SMALL;
+                    }
                     $deposit = $this->depositRepository->create(resolve(CreateDepositRequestDTO::class)
                         ->setUserId($transaction->getUserId())
                         ->setCurrencySymbol($transaction->getCryptocurrency())
@@ -83,7 +87,7 @@ class CheckWalletService
                         ->setAddress($transaction->getWalletAddress())
                         ->setTransactionHash($transaction->getTransactionHash())
                         ->setConfirmedAt($transaction->getTimestamp())
-                        ->setStatus(DepositStatusEnum::CONFIRMED)
+                        ->setStatus($depositStatus)
                         ->setUsdtValue($usdtValue)
                     );
 
@@ -98,8 +102,10 @@ class CheckWalletService
                         ->setStatus(TransactionStatusEnum::SUCCESS)
                         ->setDescription('واریز به آدرس: '.$deposit->address.' هش تراکنش: '.$transactionHash)
                     );
-                    $wallet->increment('balance', $transaction->getAmount());
-                    $user->notify(new DepositSuccessful($transaction->getCryptocurrency(), $transaction->getAmount(), $user->name));
+                    if ($depositStatus === DepositStatusEnum::CONFIRMED) {
+                        $wallet->increment('balance', $transaction->getAmount());
+                        $user->notify(new DepositSuccessful($transaction->getCryptocurrency(), $transaction->getAmount(), $user->name));
+                    }
                     DB::commit();
                     $hasNewTransaction = true;
                 } catch (Throwable $exception) {
