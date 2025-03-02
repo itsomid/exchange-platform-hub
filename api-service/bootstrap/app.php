@@ -17,7 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->prefix('api/v1/auth')
                 ->group(base_path('routes/auth_v1.php'));
 
-            Route::middleware(['api', 'auth:sanctum', 'verified'])
+            Route::middleware(['api', 'auth:sanctum', 'verified', 'check.user.status'])
                 ->prefix('api/v1')
                 ->group(base_path('routes/api_v1.php'));
         }
@@ -25,7 +25,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         //        $middleware->redirectGuestsTo('/login');
         $middleware->append(\App\Http\Middleware\SetLocale::class)
-            ->throttleWithRedis();
+            ->throttleWithRedis()
+            ->alias([
+                'check.user.status' => \App\Http\Middleware\CheckUserStatus::class,
+            ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->renderable(function (ThrottleRequestsException $e) {
