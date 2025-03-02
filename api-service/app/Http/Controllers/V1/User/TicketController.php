@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\V1\User;
 
+use App\Enums\TicketStatusEnum;
 use App\Enums\TicketTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\User\ReplyTicketRequest;
@@ -169,6 +170,9 @@ class TicketController extends Controller
             'is_private' => false,
             'image' => $imagePath,
         ]);
+
+        $ticket->status = TicketStatusEnum::InProgress;
+        $ticket->save();
 
         return new TicketReplyResource($reply);
     }
