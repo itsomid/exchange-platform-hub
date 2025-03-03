@@ -128,12 +128,12 @@ class WalletService
 
         foreach ($markets as $market) {
             $wallet = $wallets[$market->base_currency] ?? null;
-            $lists[] = $this->SetWalletDTP($wallet, $market);
+            $lists[] = $this->SetWalletDTO($wallet, $market);
         }
 
         //USDT
         $wallet = $wallets['USDT'] ?? null;
-        $lists[] = $this->SetWalletDTP($wallet);
+        $lists[] = $this->SetWalletDTO($wallet);
 
         return $lists;
     }
@@ -175,7 +175,7 @@ class WalletService
             ->setAmount($sumAmount);
     }
 
-    public function SetWalletDTP(?\App\Models\Wallet $wallet, ?Market $market = null): WalletListsResponseDTO
+    public function SetWalletDTO(?\App\Models\Wallet $wallet, ?Market $market = null): WalletListsResponseDTO
     {
         if (is_null($wallet)) {
             return resolve(WalletListsResponseDTO::class)

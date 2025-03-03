@@ -21,7 +21,7 @@ class EmailOTPController extends Controller
         );
 
         return response([
-            'message' => 'email send successfully',
+            'message' => __('messages.otp.send'),
         ]);
     }
 }

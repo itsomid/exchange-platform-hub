@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\OTCOrder;
 
+use App\Enums\OTCOrderStatusEnum;
 use App\Enums\OTCOrderTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
@@ -17,15 +18,21 @@ class OTCOrderController extends Controller
             ->orderBy('id', request()->input('sortById', 'desc'))
             ->paginate(50);
 
-        $todayOrderCount =  OTCOrder::whereDate('created_at', $today)->count();
-        $totalSellOrderCount =  OTCOrder::whereType(OTCOrderTypeEnum::SELL)->count();
-        $totalBuyOrderCount =  OTCOrder::whereType(OTCOrderTypeEnum::BUY)->count();
+        $todayOrderCount =  OTCOrder::whereDate('created_at', $today)
+            ->whereStatus(OTCOrderStatusEnum::SUCCESS)->count();
+
+        $totalSellOrderCount =  OTCOrder::whereType(OTCOrderTypeEnum::SELL)
+            ->whereStatus(OTCOrderStatusEnum::SUCCESS)->count();
+        $totalBuyOrderCount =  OTCOrder::whereType(OTCOrderTypeEnum::BUY)
+            ->whereStatus(OTCOrderStatusEnum::SUCCESS)->count();
 
         $totalOrdersValue = OTCOrder::with('market')
+            ->whereStatus(OTCOrderStatusEnum::SUCCESS)
             ->get()
             ->sum('total_value');
 
         $totalTodayOrdersValue = OTCOrder::with('market')
+            ->whereStatus(OTCOrderStatusEnum::SUCCESS)
             ->whereDate('created_at', $today)
             ->get()
             ->sum('total_value');
@@ -33,6 +40,7 @@ class OTCOrderController extends Controller
 
         $topUsers = OTCOrder::with(['market', 'user'])
             ->whereDate('created_at', $today)
+            ->whereStatus(OTCOrderStatusEnum::SUCCESS)
             ->get()
             ->groupBy('user_id')
             ->map(function ($orders, $userId) {

@@ -318,7 +318,7 @@
                                                     محدودیت های مالی
                                                 </a>
                                                 @can('user.login-as-customer')
-                                                    <a class="dropdown-item" href="#">
+                                                    <a class="dropdown-item" href="{{ route('admin.user.login-as-user', $user->id) }}">
                                                         <i class="fa-light fa-right-to-bracket"></i>
                                                         ورود به عنوان کاربر
                                                     </a>

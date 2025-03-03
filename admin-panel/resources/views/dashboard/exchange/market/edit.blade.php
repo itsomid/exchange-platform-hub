@@ -28,7 +28,7 @@
                             %
                         </div>
                         <h2 class="mb-0">
-                            ${{formatNumber($market->activeExchangePrice->price,2)}}
+                            ${{formatNumberTrimZeros($market->activeExchangePrice->price)}}
                         </h2>
 
                     </div>
@@ -69,7 +69,7 @@
                             {{ $market->activeExchangePrice->price_change_percentage > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->price_change_percentage, 2) }}%
                         </div>
                         <h2 class="mb-0">
-                            ${{formatNumber($market->activeExchangePrice->exchange_sell_price,2)}}
+                            ${{formatNumberTrimZeros($market->activeExchangePrice->exchange_sell_price)}}
                         </h2>
 
                     </div>
@@ -110,7 +110,7 @@
                             {{ $market->activeExchangePrice->price_change_percentage > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->price_change_percentage, 2) }}%
                         </div>
                         <h2 class="mb-0">
-                            ${{formatNumber($market->activeExchangePrice->exchange_buy_price,2)}}
+                            ${{formatNumberTrimZeros($market->activeExchangePrice->exchange_buy_price)}}
                         </h2>
 
                     </div>

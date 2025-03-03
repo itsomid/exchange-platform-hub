@@ -12,4 +12,11 @@ return [
         'check_withdrawal_started' => 'Your withdrawal request has been processed.',
         'check_withdrawal_error' => 'Your withdrawal request has been Failed',
     ],
+    'user_financial_block' => [
+        'withdrawal' => 'You are blocked from withdrawal until :date.',
+        'trade' => 'You are blocked from trade until :date.',
+    ],
+    'otp' => [
+        'send' => 'The verification code has been sent to your email.',
+    ],
 ];

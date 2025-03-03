@@ -9,7 +9,7 @@ use App\Models\Withdrawal;
 enum TicketStatusEnum: string
 {
     case OPEN = 'open'; // باز
-    case  CLOSED= 'closed';  // بسته شده
+    case CLOSED= 'closed';  // بسته شده
     case InProgress = 'in_progress'; // در حال بررسی
     case WaitingForCustomer = 'waiting_for_customer'; // در انتظار پاسخ مشتری
     case WaitingForSupport = 'waiting_for_support'; // در انتظار پاسخ پشتیبانی
@@ -32,10 +32,13 @@ enum TicketStatusEnum: string
         self::WaitingForCustomer->value => 'success',
         self::WaitingForSupport->value => 'warning',
         self::RESOLVED->value => 'success',
-        self::CLOSED->value => 'secondary',
+        self::CLOSED->value => 'danger',
         self::REOPENED->value => 'warning',
     ];
-
+    public static function values(): array
+    {
+        return array_column(self::cases(), 'value');
+    }
     public function label(): string
     {
         return self::TYPE_LABEL[$this->value] ?? '';

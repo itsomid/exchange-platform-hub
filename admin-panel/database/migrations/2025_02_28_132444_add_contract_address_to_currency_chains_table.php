@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('exchange_transactions', function (Blueprint $table) {
-            $table->decimal('filled_amount', 18, 8)->nullable()->after('amount');
+        Schema::table('currency_chains', function (Blueprint $table) {
+            $table->string('contract_address')->nullable()->after('explorer_tx_url');
         });
     }
 
@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('exchange_transactions', function (Blueprint $table) {
+        Schema::table('currency_chains', function (Blueprint $table) {
             //
         });
     }

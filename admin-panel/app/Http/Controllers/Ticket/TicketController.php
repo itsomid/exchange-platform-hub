@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Ticket;
 
 use App\Enums\TicketStatusEnum;
+use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use Illuminate\Http\Request;
@@ -11,8 +12,30 @@ class TicketController extends Controller
 {
     public function index()
     {
-         $tickets = Ticket::all();
-        return view('dashboard.ticket.index', compact('tickets'));
+        $tickets = Ticket::orderBy('created_at', 'DESC')->filterBy(request()->all())->paginate(20);
+
+        $pendingTicketCount = Ticket::whereIn('status', [
+            TicketStatusEnum::InProgress,
+            TicketStatusEnum::OPEN,
+            TicketStatusEnum::REOPENED,
+            TicketStatusEnum::WaitingForSupport
+        ])->count();
+
+        $answeredTicketCount = Ticket::whereIn('status', [
+            TicketStatusEnum::WaitingForCustomer,
+            TicketStatusEnum::RESOLVED,
+        ])->count();
+
+        $closedTicketCount = Ticket::whereIn('status', [
+            TicketStatusEnum::CLOSED,
+        ])->count();
+
+        return view('dashboard.ticket.index', [
+            'tickets' => $tickets,
+            'pendingTicketCount' => $pendingTicketCount,
+            'answeredTicketCount' => $answeredTicketCount,
+            'closedTicketCount' => $closedTicketCount
+        ]);
     }
 
     public function create()
@@ -71,8 +94,8 @@ class TicketController extends Controller
 
     public function destroy(Ticket $ticket)
     {
-        abort_unless($ticket->user_id === auth()->id(), 403);
         $ticket->delete();
-        return redirect()->route('tickets.index');
+        Toast::message('پیام با موفقیت حذف شد.')->success()->notify();
+        return redirect()->back();
     }
 }

@@ -8,9 +8,11 @@ use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Exceptions\V1\Wallet\InternalWalletHasProblemException;
 use App\Exceptions\V1\Wallet\UserDoesNotHaveWalletAddress;
+use App\Exceptions\V1\Wallet\UserDoesNotHaveWalletChainAddress;
 use App\Helpers\Math;
 use App\Infrastructure\HDWallet\DTO\HDDeposit\GetDepositListsRequestDTO;
 use App\Infrastructure\HDWallet\HDWalletDepositService;
+use App\Models\Currency;
 use App\Models\Market;
 use App\Notifications\DepositSuccessful;
 use App\Repositories\DTO\Deposit\CreateDepositRequestDTO;
@@ -40,13 +42,17 @@ class CheckWalletService
         $hasNewTransaction = false;
         $user = $this->userRepository->getUserById($requestDTO->getUserId());
         $wallet = $this->walletRepository->getOneByCurrency($requestDTO->getCurrencySymbol(), $requestDTO->getUserId());
+
         if (is_null($wallet)) {
+
             throw new UserDoesNotHaveWalletAddress;
         }
         $wallet = $wallet->load('chains.wallet.currency.chains');
+
         $chains = $wallet->chains;
+
         if (! $chains->contains(fn ($chain) => ! empty($chain->address))) {
-            throw new UserDoesNotHaveWalletAddress;
+            throw new UserDoesNotHaveWalletChainAddress;
         }
 
         $hdDeposit = resolve(HDWalletDepositService::class);
@@ -62,6 +68,7 @@ class CheckWalletService
                     ->setWalletAddress($chain->address)
                     ->setBlockchain($currencyChain->blockchain_name->value)
             );
+
             foreach ($transactions as $transaction) {
                 if ($this->depositRepository->isDepositExists($transaction->getTransactionHash())) {
                     continue;
@@ -69,11 +76,14 @@ class CheckWalletService
                 $transactionHash = $transaction->getTransactionHash();
                 try {
                     DB::beginTransaction();
-                    $market = Market::query()
-                        ->with('exchangePrice')
-                        ->where('base_currency', $transaction->getCryptocurrency())
-                        ->first();
-                    $usdtValue = Math::mul($market->exchangePrice->price, $transaction->getAmount());
+
+                    $depositStatus = DepositStatusEnum::CONFIRMED;
+                    if (Math::comp($transaction->getAmount(), $currencyChain->min_deposit_amount) === -1) {
+                        $depositStatus = DepositStatusEnum::TOO_SMALL;
+                    }
+
+                    $currency = Currency::whereSymbol($transaction->getCryptocurrency())->first();
+                    $usdtValue = Math::mul($currency->exchangePrice->price, $transaction->getAmount());
 
                     $deposit = $this->depositRepository->create(resolve(CreateDepositRequestDTO::class)
                         ->setUserId($transaction->getUserId())
@@ -83,7 +93,7 @@ class CheckWalletService
                         ->setAddress($transaction->getWalletAddress())
                         ->setTransactionHash($transaction->getTransactionHash())
                         ->setConfirmedAt($transaction->getTimestamp())
-                        ->setStatus(DepositStatusEnum::CONFIRMED)
+                        ->setStatus($depositStatus)
                         ->setUsdtValue($usdtValue)
                     );
 
@@ -98,8 +108,10 @@ class CheckWalletService
                         ->setStatus(TransactionStatusEnum::SUCCESS)
                         ->setDescription('واریز به آدرس: '.$deposit->address.' هش تراکنش: '.$transactionHash)
                     );
-                    $wallet->increment('balance', $transaction->getAmount());
-                    $user->notify(new DepositSuccessful($transaction->getCryptocurrency(), $transaction->getAmount(), $user->name));
+                    if ($depositStatus === DepositStatusEnum::CONFIRMED) {
+                        $wallet->increment('balance', $transaction->getAmount());
+                        $user->notify(new DepositSuccessful($transaction->getCryptocurrency(), $transaction->getAmount(), $user->name));
+                    }
                     DB::commit();
                     $hasNewTransaction = true;
                 } catch (Throwable $exception) {
