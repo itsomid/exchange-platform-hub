@@ -160,6 +160,7 @@ Route::prefix('exchange')->group(function () {
     Route::get('/wallets/localWallets', [ExchangeWalletController::class, 'localWallets'])->name('exchange.local-wallet');
     Route::get('/wallets/coinexWallets', [ExchangeWalletController::class, 'coinexWallets'])->name('exchange.coinex-wallet');
     Route::get('/wallets/hotWallets', [ExchangeWalletController::class, 'hotWallets'])->name('exchange.hot-wallet');
+    Route::post('/wallets/refresh-hot-wallet-balance', [ExchangeWalletController::class, 'refreshHotWalletBalance'])->name('refresh.balance');
 });
 
 Route::prefix('ref-exchanges')->group(function () {

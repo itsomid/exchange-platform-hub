@@ -87,6 +87,7 @@ class CurrencyChainSeeder extends Seeder
                 'is_base_coin' => false,
                 'explorer_address_url' => 'https://tronscan.org/#/address/{address}',
                 'explorer_tx_url' => 'https://tronscan.org/#/transaction/{hash}',
+                'contract_address' => 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'
             ],
             [
                 'currency_id' => $usdt->id,
@@ -104,10 +105,10 @@ class CurrencyChainSeeder extends Seeder
                 'withdrawal_precision' => 6,
                 'memo' => null,
                 'is_memo_required_for_deposit' => false,
+                'is_base_coin' => false,
                 'explorer_address_url' => 'https://etherscan.io/address/{address}',
                 'explorer_tx_url' => 'https://etherscan.io/tx/{hash}',
-                'is_base_coin' => false,
-
+                'contract_address' => '0xdAC17F958D2ee523a2206206994597C13D831ec7'
             ],
             [
                 'currency_id' => $usdt->id,
@@ -128,6 +129,7 @@ class CurrencyChainSeeder extends Seeder
                 'is_base_coin' => false,
                 'explorer_address_url' => 'https://bscscan.com/address/{address}',
                 'explorer_tx_url' => 'https://bscscan.com/tx/{hash}',
+                'contract_address' => '0x55d398326f99059fF775485246999027B3197955'
             ],
 
             // BNB (BSC) chain

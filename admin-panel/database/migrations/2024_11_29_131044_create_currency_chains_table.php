@@ -31,6 +31,7 @@ return new class extends Migration
             $table->boolean('is_memo_required_for_deposit')->default(false); // Is memo required for deposit
             $table->string('explorer_address_url')->nullable(); // Add this column for blockchain explorer URL template
             $table->string('explorer_tx_url')->nullable(); // Add this column for blockchain explorer URL template
+            $table->string('contract_address')->nullable();
             $table->boolean('is_base_coin')->default(false); // Is this the main chain for the currency
             $table->timestamps();
         });
