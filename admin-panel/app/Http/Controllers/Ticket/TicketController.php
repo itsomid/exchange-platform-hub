@@ -12,8 +12,30 @@ class TicketController extends Controller
 {
     public function index()
     {
-         $tickets = Ticket::orderBy('created_at','DESC')->filterBy(request()->all())->get();
-        return view('dashboard.ticket.index', compact('tickets'));
+        $tickets = Ticket::orderBy('created_at', 'DESC')->filterBy(request()->all())->paginate(20);
+
+        $pendingTicketCount = Ticket::whereIn('status', [
+            TicketStatusEnum::InProgress,
+            TicketStatusEnum::OPEN,
+            TicketStatusEnum::REOPENED,
+            TicketStatusEnum::WaitingForSupport
+        ])->count();
+
+        $answeredTicketCount = Ticket::whereIn('status', [
+            TicketStatusEnum::WaitingForCustomer,
+            TicketStatusEnum::RESOLVED,
+        ])->count();
+
+        $closedTicketCount = Ticket::whereIn('status', [
+            TicketStatusEnum::CLOSED,
+        ])->count();
+
+        return view('dashboard.ticket.index', [
+            'tickets' => $tickets,
+            'pendingTicketCount' => $pendingTicketCount,
+            'answeredTicketCount' => $answeredTicketCount,
+            'closedTicketCount' => $closedTicketCount
+        ]);
     }
 
     public function create()

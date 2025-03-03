@@ -40,7 +40,7 @@ class WithdrawalService
     public function createWithdrawal(CreateWithdrawalRequestDTO $requestDTO): CreateWithdrawalResponseDTO
     {
         try {
-            DB::beginTransaction();
+
             // Fetch the wallet
 
             $wallet = $this->walletRepository->getWalletWithLock(
@@ -80,6 +80,7 @@ class WithdrawalService
                     ->setExchangeFee($chain->exchange_withdrawal_fee)
                     ->setStatus($withdrawalStatus)
             );
+            DB::beginTransaction();
             if ($withdrawalStatus === WithdrawalStatusEnum::AWAITING_APPROVAL) {
                 $withdrawal->update([
                     'description' => 'Admin approval required',

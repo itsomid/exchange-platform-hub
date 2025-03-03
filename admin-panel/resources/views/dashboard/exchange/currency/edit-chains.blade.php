@@ -98,7 +98,7 @@
                                         <div class="form-group">
                                             <label class="form-label" for="network_fee_{{$chain->id}}" >فی شبکه برای برداشت (واحد)</label>
                                             <input  name="chains[{{$chain->id}}][network_fee]" id="network_fee_{{$chain->id}}" class="form-control font-number"
-                                                    placeholder="فی شبکه." value="{{$chain->network_fee}}" disabled required>
+                                                    placeholder="فی شبکه." value="{{formatNumber($chain->network_fee,$currency->precision)}}" disabled required>
                                             @error('network_fee')
                                             <small class="text-danger">{{$message}}</small>
                                             @enderror

@@ -7,56 +7,56 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="content-left">
-                            <h5 class="mb-1"></h5>
                             <small>همه تیکت ها</small>
+                            <h5 class="mb-1">{{$tickets->total()}}</h5>
+                        </div>
+                        <span class="badge bg-label-primary rounded-circle p-3">
+                            <i class="fa-light fa-tickets fa-md"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 col-xl-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="content-left">
+                            <small>درانتظار پاسخ</small>
+                            <h5 class="mb-1">{{$pendingTicketCount}}</h5>
+                        </div>
+                        <span class="badge bg-label-warning rounded-circle p-3">
+                        <i class="fa-light fa-tickets fa-md"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 col-xl-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="content-left">
+                            <small>پاسخ داده شده</small>
+                            <h5 class="mb-1">{{$answeredTicketCount}}</h5>
+                        </div>
+                        <span class="badge bg-label-success rounded-circle p-3">
+                            <i class="fa-light fa-tickets fa-md"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 col-xl-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="content-left">
+                            <small>بسته شده</small>
+                            <h5 class="mb-1">{{$closedTicketCount}}</h5>
                         </div>
                         <span class="badge bg-label-danger rounded-circle p-3">
-                            <i class="fa-light fa-users fa-xl"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-12 col-xl-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div class="content-left">
-                            <h5 class="mb-1"></h5>
-                            <small>درانتظار پاسخ</small>
-                        </div>
-                        <span class="badge bg-label-success rounded-circle p-3">
-                            <i class="fa-light fa-gift fa-xl"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-12 col-xl-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div class="content-left">
-                            <h5 class="mb-1"></h5>
-                            <small>پاسخ داده شده</small>
-                        </div>
-                        <span class="badge bg-label-success rounded-circle p-3">
-                            <i class="fa-light fa-gift fa-xl"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-12 col-xl-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div class="content-left">
-                            <h5 class="mb-1"></h5>
-                            <small>بسته شده</small>
-                        </div>
-                        <span class="badge bg-label-success rounded-circle p-3">
-                            <i class="fa-light fa-gift fa-xl"></i>
+                              <i class="fa-light fa-tickets fa-md"></i>
                         </span>
                     </div>
                 </div>
@@ -138,7 +138,11 @@
                     </tbody>
                 </table>
             </div>
-            {{--                @include('dashboard.layout.pagination', ['collection' => $regentCodes])--}}
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    {{$tickets->appends(request()->all())->links()}}
+                </div>
+            </div>
         </div>
     </div>
 
