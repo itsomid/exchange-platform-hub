@@ -30,7 +30,7 @@
                     <a class="nav-link @if(request()->route()->getName() == 'admin.user.financial-block.getBlocks') active @endif"
                        href="{{route('admin.user.financial-block.getBlocks',['user' => $user->id])}}">
                         <i class="fa-regular fa-file-chart-column me-2"></i>
-                        دسترسی مالی
+                        محدودیت های مالی
                     </a>
                 </li>
 
