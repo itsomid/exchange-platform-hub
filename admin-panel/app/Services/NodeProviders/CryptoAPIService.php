@@ -11,6 +11,9 @@ class CryptoAPIService
 {
     protected $baseUrl = 'https://rest.cryptoapis.io/';
 
+    /**
+     * @throws Exception
+     */
     public function getBalance(string $currency_symbol, string $address, string $network = 'mainnet')
     {
         $coinConfig = $this->getCoinConfig($currency_symbol);
