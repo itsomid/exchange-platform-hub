@@ -10,7 +10,6 @@ use App\Models\Setting;
 use App\Services\Exchanges\Asset\Enum\WithdrawStatusEnum;
 use App\Services\Exchanges\DTO\ChargeUSDTRequestDTO;
 use App\Services\Exchanges\ExchangeService;
-use App\Services\Wallet\WalletService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Throwable;
@@ -31,10 +30,7 @@ class TransferToHotWallet extends Command
      */
     protected $description = 'Command description';
 
-    public function __construct(private readonly WalletService $walletService)
-    {
-        parent::__construct();
-    }
+    const string CACHE_KEY = 'exchange_withdrawal_period_time_last_hit';
 
     /**
      * Execute the console command.
@@ -45,20 +41,22 @@ class TransferToHotWallet extends Command
             return;
         }
         $withdrawalType = Setting::getSetting('exchange_withdrawal_type');
+        $this->processCountBased();
+        $this->processTimeBased();
+        //        if ($withdrawalType === 'exchange_withdrawal_period_time') {
+        //        } elseif ($withdrawalType === 'exchange_withdrawal_period_buy') {
+        //        }
+    }
 
-        if ($withdrawalType === 'exchange_withdrawal_period_time') {
-            $this->processTimeBased();
-        } elseif ($withdrawalType === 'exchange_withdrawal_period_buy') {
-            $this->processCountBased();
-        }
+    private function getPeriodTime(): int
+    {
+        return (int) Setting::getSetting('exchange_withdrawal_period_time');
     }
 
     private function processTimeBased(): void
     {
-        $periodTime = (int) Setting::getSetting('exchange_withdrawal_period_time');
-        $cacheKey = 'exchange_withdrawal_period_time_last_hit';
-        $lastHit = Cache::get($cacheKey, 0);
-        if ($lastHit && $lastHit->diffInMinutes() < $periodTime) {
+        $lastHit = Cache::get(self::CACHE_KEY, 0);
+        if ($lastHit && $lastHit->diffInMinutes() < $this->getPeriodTime()) {
             $this->info("Remaining time to withdraw : {$lastHit->diffInMinutes()} minutes");
 
             return;
@@ -72,7 +70,7 @@ class TransferToHotWallet extends Command
             $this->transferCurrency($currency);
         }
 
-        Cache::put($cacheKey, now(), now()->addMinutes($periodTime));
+        Cache::put(self::CACHE_KEY, now(), now()->addMinutes($this->getPeriodTime()));
 
     }
 
@@ -93,6 +91,8 @@ class TransferToHotWallet extends Command
                 $this->transferCurrency($currency);
             }
         }
+
+        Cache::put(self::CACHE_KEY, now(), now()->addMinutes($this->getPeriodTime()));
     }
 
     public function transferCurrency(Currency $currency): void
