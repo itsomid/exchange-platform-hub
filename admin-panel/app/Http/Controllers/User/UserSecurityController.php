@@ -15,7 +15,12 @@ class UserSecurityController extends Controller
     public function index(User $user)
     {
         $agent = new Agent();
-        return view('dashboard.user.security',['user'=>$user, 'agent'=>$agent]);
+        $tokens = $user->tokens()->orderBy('created_at','DESC')->paginate(10);
+        return view('dashboard.user.security', [
+            'user' => $user,
+            'agent' => $agent,
+            'tokens' => $tokens,
+        ]);
     }
 
     public function sendResetLinkEmail(User $user)
@@ -23,9 +28,9 @@ class UserSecurityController extends Controller
         $status = Password::sendResetLink(
             ['email' => $user->email]
         );
-        if($status === Password::RESET_LINK_SENT){
+        if ($status === Password::RESET_LINK_SENT) {
             Toast::message('لینک بازیابی رمز عبور با موفقیت به کاربر ارسال شد')->success()->notify();
-        }else{
+        } else {
             report("Panel can not send reset link {$user->id}");
             Toast::message('مشکل فنی رخ داده است لطفا دقایق دیگری تلاش کنید.')->danger()->notify();
         }
@@ -43,11 +48,13 @@ class UserSecurityController extends Controller
 
         return redirect()->back();
     }
+
     public function passwordEdit(User $user)
     {
 
-        return view('dashboard.user.edit-password',['user'=>$user]);
+        return view('dashboard.user.edit-password', ['user' => $user]);
     }
+
     public function passwordUpdate(Request $request, User $user)
     {
         $this->validate($request, [
