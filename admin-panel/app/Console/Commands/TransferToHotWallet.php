@@ -31,6 +31,9 @@ class TransferToHotWallet extends Command
     protected $description = 'Command description';
 
     const string CACHE_KEY = 'exchange_withdrawal_period_time_last_hit';
+    const string EXCHANGE_WITHDRAWAL_PERIOD_TIME = 'exchange_withdrawal_period_time';
+    const string EXCHANGE_WITHDRAWAL_PERIOD_BUY = 'exchange_withdrawal_period_buy';
+    const string EXCHANGE_WITHDRAWAL_BOTH_TYPE = 'exchange_withdrawal_both_type';
 
     /**
      * Execute the console command.
@@ -40,17 +43,26 @@ class TransferToHotWallet extends Command
         if ((int) Setting::getSetting('exchange_withdrawal_status') === 0) {
             return;
         }
-        $withdrawalType = Setting::getSetting('exchange_withdrawal_type');
-        $this->processCountBased();
-        $this->processTimeBased();
-        //        if ($withdrawalType === 'exchange_withdrawal_period_time') {
-        //        } elseif ($withdrawalType === 'exchange_withdrawal_period_buy') {
-        //        }
+        $withdrawalType = $this->getWithdrawalType();
+
+        if ($withdrawalType === self::EXCHANGE_WITHDRAWAL_PERIOD_TIME) {
+            $this->processTimeBased();
+        } elseif ($withdrawalType === self::EXCHANGE_WITHDRAWAL_PERIOD_BUY) {
+            $this->processCountBased();
+        }elseif ($withdrawalType === self::EXCHANGE_WITHDRAWAL_BOTH_TYPE){
+            $this->processCountBased();
+            $this->processTimeBased();
+        }
     }
 
     private function getPeriodTime(): int
     {
         return (int) Setting::getSetting('exchange_withdrawal_period_time');
+    }
+
+    private function getWithdrawalType(): string
+    {
+        return Setting::getSetting('exchange_withdrawal_type');
     }
 
     private function processTimeBased(): void
@@ -92,7 +104,9 @@ class TransferToHotWallet extends Command
             }
         }
 
-        Cache::put(self::CACHE_KEY, now(), now()->addMinutes($this->getPeriodTime()));
+        if($this->getWithdrawalType() === self::EXCHANGE_WITHDRAWAL_BOTH_TYPE){
+            Cache::put(self::CACHE_KEY, now(), now()->addMinutes($this->getPeriodTime()));
+        }
     }
 
     public function transferCurrency(Currency $currency): void
