@@ -2,27 +2,26 @@
 @section('title','ویرایش رمز عبور')
 @section('user-body')
 
-
-
     <!-- Two-steps verification -->
     <div class="card mb-6">
         <div class="card-body">
             <h5 class="mb-6"><i class="fa fa-firewall"></i>
                 تنظیمات امنیتی کاربر
             </h5>
-            <a href="{{route('admin.user.reset-password-email',['user'=>$user->id])}}" class="btn btn-primary mt-2">ارسال لینک بازیابی رمز عبور</a>
+            <a href="{{route('admin.user.reset-password-email',['user'=>$user->id])}}" class="btn btn-primary mt-2">ارسال
+                لینک بازیابی رمز عبور</a>
 
-                <form action="{{ route('admin.users.disable-user-two-factor', ['user'=>$user->id]) }}" method="post">
-                    @csrf
-                    <button class="btn btn-warning mt-2" @if(!$user->twoFAStatus()) disabled @endif>
-                        @if(!$user->twoFAStatus())
-                            ورود دو مرحله ایی غیرفعال است
-                        @else
-                            غیرفعال سازی ورود دومرحله ایی
-                        @endif
+            <form action="{{ route('admin.users.disable-user-two-factor', ['user'=>$user->id]) }}" method="post">
+                @csrf
+                <button class="btn btn-warning mt-2" @if(!$user->twoFAStatus()) disabled @endif>
+                    @if(!$user->twoFAStatus())
+                        ورود دو مرحله ایی غیرفعال است
+                    @else
+                        غیرفعال سازی ورود دومرحله ایی
+                    @endif
 
-                    </button>
-                </form>
+                </button>
+            </form>
 
         </div>
     </div>
@@ -41,29 +40,30 @@
                 </tr>
                 </thead>
                 <tbody>
-                @foreach($user->tokens as $token)
-                    @php
-                        $agent->setUserAgent($token->user_agent);
-                    @endphp
-                    <tr class="{{$token->expires_at > now() ? 'table-success': 'table-danger'}}">
-                        <td class="text-truncate text-heading fw-medium bf">
-                            <i class="fa-brands
-                                <x-os-fa-icon :platform="$agent->platform()"></x-os-fa-icon>
-                                me-2">
-                            </i>
-                            {{$agent->browser()}} On {{  $agent->platform() }}
-                        </td>
-                        <td class="text-truncate">{{  $token->user_agent }}</td>
-                        <td class="text-truncate">{{ App\Helpers\LocationFinder::getCountryAndCity($token->ip) }}</td>
-                        <td class="text-truncate">{{ $token->ip }}</td>
-                        <td class="text-truncate">
-                            <span>{{\App\Helpers\DateFormatter::convertToPersianDate($token->last_used_at,'H:i:s %Y/%m/%d')}}</span>
-                        </td>
-                    </tr>
-                @endforeach
+                    @foreach($tokens as $token)
+                        @php
+                            $agent->setUserAgent($token->user_agent);
+                        @endphp
+                        <tr class="{{$token->expires_at > now() ? 'table-success': 'table-danger'}}">
+                            <td class="text-truncate text-heading fw-medium bf">
+                                <i class="fa-brands
+                                    <x-os-fa-icon :platform=" $agent->platform()"></x-os-fa-icon>
+                                    me-2">
+                                </i>
+                                {{$agent->browser()}} On {{  $agent->platform() }}
+                            </td>
+                            <td class="text-truncate">{{  $token->user_agent }}</td>
+                            <td class="text-truncate">{{ $token->ip ? App\Helpers\LocationFinder::getCountryAndCity($token->ip): 'N\A' }}</td>
+                            <td class="text-truncate">{{ $token->ip }}</td>
+                            <td class="text-truncate">
+                                <span>{{\App\Helpers\DateFormatter::convertToPersianDate($token->last_used_at,'H:i:s %Y/%m/%d')}}</span>
+                            </td>
+                        </tr>
+                    @endforeach
                 </tbody>
             </table>
         </div>
     </div>
+    {{$tokens->appends(request()->all())->links()}}
 
 @endsection

@@ -66,7 +66,7 @@
                                 <h4 class="mb-0 me-2">{{$onlineUserCount}}</h4>
                             </div>
                         </div>
-                        <span class="badge bg-label-primary rounded p-2">
+                        <span class="badge bg-label-success rounded p-2">
                             <i class="fa-light fa-user-alt fa-lg"></i>
 
                         </span>
