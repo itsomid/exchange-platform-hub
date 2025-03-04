@@ -295,6 +295,7 @@ class WithdrawalService
                         ->setTransactionHash($responseDTO->getTransactionHash());
 
                     AdminNotification::sendHotWalletNotEnoughBalance($responseDTO->getCurrencySymbol(), $responseDTO->getAmount());
+                    $this->lockedBalanceRepository->deleteWithdrawalLockedBalance($withdrawal->id);
                 }
 
                 if ($responseDTO->getStatus() === 'completed') {
@@ -306,9 +307,8 @@ class WithdrawalService
                     $checkWithdrawalResponseDTO->setStatus(WithdrawalStatusEnum::COMPLETED)
                         ->setTransactionHash($responseDTO->getTransactionHash())
                         ->setConfirmedAt($withdrawal->confirmed_at);
+                    $this->lockedBalanceRepository->deleteWithdrawalLockedBalance($withdrawal->id);
                 }
-
-                $this->lockedBalanceRepository->deleteWithdrawalLockedBalance($withdrawal->id);
 
             } catch (NotFoundException) {
                 $withdrawal->update([
