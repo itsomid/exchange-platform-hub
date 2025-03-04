@@ -7,6 +7,7 @@ use App\Enums\WithdrawalStatusEnum;
 class CreateWithdrawalResponseDTO
 {
     private int $id;
+
     private WithdrawalStatusEnum $status;
 
     private string $fee;
@@ -52,6 +53,7 @@ class CreateWithdrawalResponseDTO
     public function setId(int $id): CreateWithdrawalResponseDTO
     {
         $this->id = $id;
+
         return $this;
     }
 

@@ -49,7 +49,6 @@ class TicketController extends Controller
             ? TicketTypeEnum::fromString($validateData['ticketable_type'])->model()
             : null;
 
-
         $ticket = Ticket::query()->create([
             'ticket_number' => Ticket::generateTicketNumber(),
             'user_id' => Auth::id(),

@@ -12,8 +12,6 @@ enum TicketTypeEnum: string
     case DEPOSIT = 'deposit';
     case OTC_ORDER = 'otc_order';
 
-
-
     /**
      * Get the corresponding model class based on the enum value.
      */
@@ -46,6 +44,4 @@ enum TicketTypeEnum: string
     {
         return array_column(self::cases(), 'value');
     }
-
-
 }

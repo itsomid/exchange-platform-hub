@@ -12,6 +12,7 @@ class CheckWithdrawalResponseDTO
     private ?int $withdrawId = null;
 
     private ?string $amount = null;
+
     private ?string $totalFee = null;
 
     private ?string $currencySymbol = null;
@@ -23,9 +24,10 @@ class CheckWithdrawalResponseDTO
     private ?string $walletAddress = null;
 
     private ?Carbon $confirmedAt = null;
-    private ?string $explorerAddressUrl;
-    private ?string $explorerTxUrl;
 
+    private ?string $explorerAddressUrl;
+
+    private ?string $explorerTxUrl;
 
     public function setStatus(WithdrawalStatusEnum $status): CheckWithdrawalResponseDTO
     {
@@ -62,6 +64,7 @@ class CheckWithdrawalResponseDTO
     {
         return $this->amount;
     }
+
     public function setTotalFee(?string $total_fee): CheckWithdrawalResponseDTO
     {
         $this->totalFee = $total_fee;
@@ -137,6 +140,7 @@ class CheckWithdrawalResponseDTO
     public function setExplorerAddressUrl(?string $explorerAddressUrl): self
     {
         $this->explorerAddressUrl = $explorerAddressUrl;
+
         return $this;
     }
 
@@ -148,6 +152,7 @@ class CheckWithdrawalResponseDTO
     public function setExplorerTxUrl(?string $explorerTxUrl): self
     {
         $this->explorerTxUrl = $explorerTxUrl;
+
         return $this;
     }
 

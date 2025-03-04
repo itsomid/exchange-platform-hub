@@ -27,11 +27,11 @@ class ExchangePrice extends Model
 
     public function getSellPriceAttribute(): string
     {
-        return Math::add(Math::mul($this->price , ( $this->exchange_profit_buy / 100 )) , $this->price);
+        return Math::add(Math::mul($this->price, ($this->exchange_profit_buy / 100)), $this->price);
     }
 
     public function getBuyPriceAttribute(): string
     {
-        return Math::add(Math::mul($this->price , ( $this->exchange_profit_sell / 100 )) , $this->price);
+        return Math::add(Math::mul($this->price, ($this->exchange_profit_sell / 100)), $this->price);
     }
 }

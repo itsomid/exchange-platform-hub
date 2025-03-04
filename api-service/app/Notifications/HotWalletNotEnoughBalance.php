@@ -2,8 +2,6 @@
 
 namespace App\Notifications;
 
-use App\Helpers\Math;
-use App\Models\Market;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -18,10 +16,7 @@ class HotWalletNotEnoughBalance extends Notification implements ShouldQueue
     /**
      * Create a new notification instance.
      */
-    public function __construct(private string $currencyName, private string $amount)
-    {
-
-    }
+    public function __construct(private string $currencyName, private string $amount) {}
 
     /**
      * Get the notification's delivery channels.
@@ -32,7 +27,6 @@ class HotWalletNotEnoughBalance extends Notification implements ShouldQueue
     {
         return ['mail', 'database'];
     }
-
 
     public function toDatabase($notifiable): array
     {
