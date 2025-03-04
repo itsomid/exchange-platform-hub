@@ -17,7 +17,6 @@ return new class extends Migration
     {
         Schema::create('locked_balance_details', function (Blueprint $table) {
             $table->id();
-            $table->text('description')->nullable();
             $table->foreignIdFor(Wallet::class)
                 ->constrained()
                 ->cascadeOnDelete();
@@ -26,6 +25,7 @@ return new class extends Migration
             $table->foreignIdFor(Withdrawal::class)->nullable();
             $table->foreignIdFor(OTCOrder::class, 'otc_order_id')->nullable();
             $table->foreignIdFor(SpotOrder::class)->nullable();
+            $table->text('description')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });
