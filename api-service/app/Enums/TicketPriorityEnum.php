@@ -3,8 +3,6 @@
 namespace App\Enums;
 
 use App\Models\Deposit;
-use App\Models\OTCOrder;
-use App\Models\Withdrawal;
 
 enum TicketPriorityEnum: string
 {
@@ -32,8 +30,6 @@ enum TicketPriorityEnum: string
 
     /**
      * Get color for the deposit status.
-     *
-     * @return string
      */
     public function color(): string
     {

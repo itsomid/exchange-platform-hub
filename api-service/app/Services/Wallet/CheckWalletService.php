@@ -13,7 +13,6 @@ use App\Helpers\Math;
 use App\Infrastructure\HDWallet\DTO\HDDeposit\GetDepositListsRequestDTO;
 use App\Infrastructure\HDWallet\HDWalletDepositService;
 use App\Models\Currency;
-use App\Models\Market;
 use App\Notifications\DepositSuccessful;
 use App\Repositories\DTO\Deposit\CreateDepositRequestDTO;
 use App\Repositories\DTO\Transaction\CreateTransactionRequestDTO;

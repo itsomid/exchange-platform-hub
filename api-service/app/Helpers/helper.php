@@ -50,7 +50,7 @@ if (! function_exists('formatNumberTrimZeros')) {
         }
 
         // Recombine parts with the decimal separator
-        return $integerPart . $decimal . $decimalPart;
+        return $integerPart.$decimal.$decimalPart;
     }
 
     function toDecimalString($number, $precision = 8): string

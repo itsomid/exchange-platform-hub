@@ -3,18 +3,17 @@
 namespace App\Enums;
 
 use App\Models\Deposit;
-use App\Models\OTCOrder;
-use App\Models\Withdrawal;
 
 enum TicketStatusEnum: string
 {
     case OPEN = 'open'; // باز
-    case  CLOSED= 'closed';  // بسته شده
+    case CLOSED = 'closed';  // بسته شده
     case InProgress = 'in_progress'; // در حال بررسی
     case WaitingForCustomer = 'waiting_for_customer'; // در انتظار پاسخ مشتری
     case WaitingForSupport = 'waiting_for_support'; // در انتظار پاسخ پشتیبانی
-    case RESOLVED = 'resolved';// حل شده
+    case RESOLVED = 'resolved'; // حل شده
     case REOPENED = 'reopened'; // مجدداً باز شده
+
     // get type class
     const array TYPE_LABEL = [
         self::OPEN->value => 'باز',
@@ -43,8 +42,6 @@ enum TicketStatusEnum: string
 
     /**
      * Get color for the deposit status.
-     *
-     * @return string
      */
     public function color(): string
     {

@@ -13,6 +13,7 @@ class WithdrawResponseDTO
     private Carbon $createdAt;
 
     private string $currency;
+
     private string $exchange;
 
     private string $chain;
@@ -50,6 +51,7 @@ class WithdrawResponseDTO
     public function setExchange(string $exchange): WithdrawResponseDTO
     {
         $this->exchange = $exchange;
+
         return $this;
     }
 

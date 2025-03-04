@@ -28,7 +28,7 @@ readonly class LoginService
         if (! $user || ! Hash::check($loginRequestDTO->getPassword(), $user->password)) {
             throw new InvalidUsernameOrPasswordException;
         }
-        if ($user->status === UserStatusEnum::SUSPEND){
+        if ($user->status === UserStatusEnum::SUSPEND) {
             throw new UserIsSuspendException;
         }
         if (is_null($user->email_verified_at) && $user->status !== UserStatusEnum::ACTIVE) {

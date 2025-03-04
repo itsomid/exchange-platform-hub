@@ -8,6 +8,7 @@ use Carbon\Carbon;
 class GetAllDepositWithdrawResponseDTO
 {
     private int $id;
+
     private string $currencySymbol;
 
     private string $currencyChain;
@@ -27,6 +28,7 @@ class GetAllDepositWithdrawResponseDTO
     private ?Carbon $confirmedAt;
 
     private ?string $explorerAddressUrl;
+
     private ?string $explorerTxUrl;
 
     public function setCurrencySymbol(string $currencySymbol): self
@@ -140,6 +142,7 @@ class GetAllDepositWithdrawResponseDTO
     public function setId(int $id): GetAllDepositWithdrawResponseDTO
     {
         $this->id = $id;
+
         return $this;
     }
 
@@ -151,6 +154,7 @@ class GetAllDepositWithdrawResponseDTO
     public function setExplorerAddressUrl(?string $explorerAddressUrl): self
     {
         $this->explorerAddressUrl = $explorerAddressUrl;
+
         return $this;
     }
 
@@ -162,6 +166,7 @@ class GetAllDepositWithdrawResponseDTO
     public function setExplorerTxUrl(?string $explorerTxUrl): self
     {
         $this->explorerTxUrl = $explorerTxUrl;
+
         return $this;
     }
 
