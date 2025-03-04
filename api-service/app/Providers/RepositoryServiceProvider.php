@@ -8,6 +8,7 @@ use App\Repositories\EmailOTPRepository;
 use App\Repositories\Interfaces\CurrencyRepositoryInterface;
 use App\Repositories\Interfaces\DepositRepositoryInterface;
 use App\Repositories\Interfaces\EmailOTPRepositoryInterface;
+use App\Repositories\Interfaces\LockedBalanceRepositoryInterface;
 use App\Repositories\Interfaces\MarketHistoryRepositoryInterface;
 use App\Repositories\Interfaces\MarketRepositoryInterface;
 use App\Repositories\Interfaces\OTCOrderRepositoryInterface;
@@ -20,6 +21,7 @@ use App\Repositories\Interfaces\UserRepositoryInterface;
 use App\Repositories\Interfaces\WalletChainRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Repositories\Interfaces\WithdrawalRepositoryInterface;
+use App\Repositories\LockedBalanceRepository;
 use App\Repositories\MarketHistoryRepository;
 use App\Repositories\MarketRepository;
 use App\Repositories\OTCOrderRepository;
@@ -57,6 +59,7 @@ class RepositoryServiceProvider extends ServiceProvider
         app()->bind(OTCOrderRepositoryInterface::class, OTCOrderRepository::class);
         app()->bind(WithdrawalRepositoryInterface::class, WithdrawalRepository::class);
         app()->bind(OTCRefExchangeWithdrawalInterface::class, OTCRefExchangeWithdrawalRepository::class);
+        app()->bind(LockedBalanceRepositoryInterface::class, LockedBalanceRepository::class);
 
     }
 

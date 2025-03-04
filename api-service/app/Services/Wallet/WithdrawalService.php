@@ -2,6 +2,7 @@
 
 namespace App\Services\Wallet;
 
+use App\Enums\LockedBalanceTypeEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
@@ -17,6 +18,7 @@ use App\Models\Wallet;
 use App\Models\Withdrawal;
 use App\Notifications\WithdrawalSuccessful;
 use App\Repositories\Interfaces\CurrencyRepositoryInterface;
+use App\Repositories\Interfaces\LockedBalanceRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Repositories\Interfaces\WithdrawalRepositoryInterface;
 use App\Services\Exchanges\AdminNotification;
@@ -34,6 +36,7 @@ class WithdrawalService
         private readonly CurrencyRepositoryInterface $currencyRepository,
         private readonly WithdrawalRepositoryInterface $withdrawalRepository,
         private readonly HDWalletWithdrawalService $withdrawalService,
+        private readonly LockedBalanceRepositoryInterface $lockedBalanceRepository,
 
     ) {}
 
@@ -63,10 +66,6 @@ class WithdrawalService
                 $withdrawalStatus = WithdrawalStatusEnum::AWAITING_APPROVAL;
             }
 
-            // Deduct balance and lock funds
-            $wallet->decrement('balance', $amount);
-            $wallet->increment('locked_balance', $amount);
-
             // Create the withdrawal record
             $withdrawal = $this->withdrawalRepository->create(
                 resolve(\App\Repositories\DTO\Withdrawal\CreateWithdrawalRequestDTO::class)
@@ -80,6 +79,8 @@ class WithdrawalService
                     ->setExchangeFee($chain->exchange_withdrawal_fee)
                     ->setStatus($withdrawalStatus)
             );
+            $this->lockBalance($wallet, $amount, $withdrawal->id);
+
             DB::beginTransaction();
             if ($withdrawalStatus === WithdrawalStatusEnum::AWAITING_APPROVAL) {
                 $withdrawal->update([
@@ -294,8 +295,6 @@ class WithdrawalService
                         ->setTransactionHash($responseDTO->getTransactionHash());
 
                     AdminNotification::sendHotWalletNotEnoughBalance($responseDTO->getCurrencySymbol(), $responseDTO->getAmount());
-
-                    continue;
                 }
 
                 if ($responseDTO->getStatus() === 'completed') {
@@ -308,6 +307,8 @@ class WithdrawalService
                         ->setTransactionHash($responseDTO->getTransactionHash())
                         ->setConfirmedAt($withdrawal->confirmed_at);
                 }
+
+                $this->lockedBalanceRepository->deleteWithdrawalLockedBalance($withdrawal->id);
 
             } catch (NotFoundException) {
                 $withdrawal->update([
@@ -322,5 +323,18 @@ class WithdrawalService
         }
 
         return $checkWithdrawalResponseDTO;
+    }
+
+    public function lockBalance(Wallet $wallet, string $amount, int $withdrawalId): void
+    {
+        $this->lockedBalanceRepository->createLockedBalance([
+            'wallet_id' => $wallet->id,
+            'amount' => $amount,
+            'type' => LockedBalanceTypeEnum::WITHDRAWAL,
+            'withdrawal_id' => $withdrawalId,
+        ]);
+        // Deduct balance and lock funds
+        $wallet->decrement('balance', $amount);
+        $wallet->increment('locked_balance', $amount);
     }
 }

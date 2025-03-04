@@ -79,7 +79,7 @@ class OTCService
             config('bitexroom.bitexroom_user_id')
         );
 
-        return $wallet->available;
+        return $wallet->balance;
     }
 
     /**
@@ -366,8 +366,8 @@ class OTCService
                     ->setSubtype(TransactionSubTypeEnum::COINEX)
                     ->setStatus(TransactionStatusEnum::SUCCESS)
                     ->setDescription(sprintf('استفاده USDT به مقدار %s',
-                            formatNumberTrimZeros((float) $receivedAmount)
-                        )
+                        formatNumberTrimZeros((float) $receivedAmount)
+                    )
                     ));
 
                 $this->refExchangeWithdrawalRepository->create(
@@ -409,7 +409,7 @@ class OTCService
         $sellAmount = $otc->quantity;
 
         $amountInQuoteCurrency = Math::mul($market->exchangePrice->sell_price, $sellAmount);
-//        dd($amountInQuoteCurrency);
+        //        dd($amountInQuoteCurrency);
         $fee = Math::mul($amountInQuoteCurrency, Math::div(Setting::getSetting('otc_sell_fee'), '100'));
         $receivedAmount = Math::sub($amountInQuoteCurrency, $fee);
 
