@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('order_type'); //buy, sell
             $table->string('order_kind'); //market, limit
             $table->decimal('quantity', 18, 8);
-            $table->decimal('price', 18, 8);
+            $table->decimal('price', 18, 8)->nullable();
             $table->string('status');
             $table->decimal('filled_quantity', 18, 8)->default(0); // How much has been filled
             $table->timestamps();
