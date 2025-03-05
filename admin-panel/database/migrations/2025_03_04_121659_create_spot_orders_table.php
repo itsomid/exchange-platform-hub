@@ -22,6 +22,7 @@ return new class extends Migration
             $table->decimal('quantity', 18, 8);
             $table->decimal('price', 18, 8);
             $table->string('status');
+            $table->decimal('filled_quantity', 18, 8)->default(0); // How much has been filled
             $table->timestamps();
         });
 
