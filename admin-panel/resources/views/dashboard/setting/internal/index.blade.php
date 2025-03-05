@@ -6,7 +6,10 @@
             <div class="card">
                 <div class="card-body">
                     <div class="card-title header-elements">
-                        <h5 class="m-0 me-2">تنظیمات دعوت از دوستان</h5>
+                        <h5 class="m-0 me-2">تنظیمات دعوت از دوستان
+
+                            <span class="text-{{$referralProfitStatus->value ? 'success' : 'danger'}}">({{$referralProfitStatus->value ? 'فعال' : 'غیرفعال'}})</span>
+                        </h5>
                     </div>
                     <form action="{{route('admin.setting.int.update-referral-setting')}}" method="post">
                         @csrf
@@ -122,7 +125,9 @@
             <div class="card">
                 <div class="card-body">
                     <div class="card-title header-elements">
-                        <h5 class="m-0 me-2">تنظیمات تجمیع و برداشت از صرافی های مرجع</h5>
+                        <h5 class="m-0 me-2">تنظیمات تجمیع و برداشت از صرافی های مرجع
+                            <span class="text-{{$exchangeWithdrawalStatus->value ? 'success' : 'danger'}}">({{$exchangeWithdrawalStatus->value ? 'فعال' : 'غیرفعال'}})</span>
+                        </h5>
 
                     </div>
                     <form action="{{route('admin.setting.int.update-exchange-withdrawal-setting')}}" method="post">
