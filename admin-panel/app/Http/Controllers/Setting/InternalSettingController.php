@@ -106,7 +106,7 @@ class InternalSettingController extends Controller
             }
         }
 
-        Toast::message('دستریسی های جدید افزوده شدند')->success()->notify();
+        Toast::message('دسترسی های جدید افزوده شدند')->success()->notify();
 
         return redirect()->route('admin.internal.setting.index');
     }
