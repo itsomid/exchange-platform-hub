@@ -78,4 +78,17 @@ class RoleController extends Controller
         Toast::message('نقش با موفقیت ویرایش شد')->success()->notify();
         return redirect()->route('admin.role.index');
     }
+
+    public function destroy(Role $role)
+    {
+        // Check if the role has any users associated with it
+        if ($role->users()->count() > 0) {
+            Toast::message('این نقش دارای کاربران مرتبط است و نمی‌توان آن را حذف کرد')->danger()->notify();
+            return redirect()->route('admin.role.index');
+        }
+
+        $role->delete();
+        Toast::message('نقش با موفقیت حذف شد')->success()->notify();
+        return redirect()->route('admin.role.index');
+    }
 }

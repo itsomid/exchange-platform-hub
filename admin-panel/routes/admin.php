@@ -121,6 +121,7 @@ Route::get('/roles/create', [RoleController::class, 'create'])->name('role.creat
 Route::post('/roles', [RoleController::class, 'store'])->name('role.store')->can('roles.permissions');
 Route::get('/roles/{role}/edit', [RoleController::class, 'edit'])->name('role.edit')->can('roles.permissions');
 Route::patch('/roles/{role}', [RoleController::class, 'update'])->name('role.update')->can('roles.permissions');
+Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('role.destroy')->can('roles.permissions');
 
 Route::get('/permissions', [PermissionController::class, 'index'])->name('permission.index')->can('roles.permissions');
 Route::get('/permissions/{permission}/edit', [PermissionController::class, 'edit'])->name('permission.edit')->can('roles.permissions');
