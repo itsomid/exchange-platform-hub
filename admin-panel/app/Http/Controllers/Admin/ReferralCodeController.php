@@ -22,9 +22,10 @@ class ReferralCodeController extends Controller
             ->withCount('registeredUsers')
             ->withCount('referralCodeUsage')
             ->withSum('transactions', 'amount')
-            ->get();
-        $totalTransactionSum = $referralCodes->sum('transactions_sum_amount');
-        $totalRegisteredUsers = $referralCodes->sum('registered_users_count');
+            ->paginate(30);
+
+        $totalTransactionSum = ReferralCode::filterBy(request()->all())->withSum('transactions', 'amount')->get()->sum('transactions_sum_amount');
+        $totalRegisteredUsers = ReferralCode::filterBy(request()->all())->withCount('registeredUsers')->get()->sum('registered_users_count');
 
         return view('dashboard.referral_code.index', [
             'referralCodes' => $referralCodes,
