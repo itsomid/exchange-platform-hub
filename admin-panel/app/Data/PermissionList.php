@@ -11,9 +11,8 @@ class PermissionList
         $permissions = [
             ['admin.index', 'مشاهده لیست پرسنل'],
             ['admin.index.statistic_boxes', 'مشاهده باکس آمار در لیست پرسنل'],
-            ['admin.index.table.mobile', 'مشاهده  ستون شماره تماس ها در لیست پرسنل'],
+            ['admin.index.table.mobile', 'مشاهده  ستون شماره تماس ها    در لیست پرسنل'],
             ['admin.index.table.email', 'مشاهده  ستون آدرس ایمیل ها در لیست پرسنل'],
-            ['admin.index.table.supervisor', 'مشاهده  ستون سرپرست ها در لیست پرسنل'],
             ['admin.create', 'افزودن پرسنل جدید'],
             ['admin.edit', 'ویرایش پرسنل'],
             ['admin.toggle', 'مسدودسازی پرسنل'],
@@ -32,9 +31,8 @@ class PermissionList
             ['user.create', 'افزودن کاربر جدید'],
             ['user.edit', 'ویرایش کاربر'],
             ['user.edit-note', 'ویرایش یادداشت کاربر'],
-            ['user.verify', 'تایید شماره کاربر'],
+            ['user.verify', 'تایید حساب کاربر'],
             ['user.excel', 'دانلود خروجی اکسل از لیست کاربران'],
-            ['user.group-register', 'ثبت نام گروهی کاربر'],
             ['user.login-as-customer', 'ورود به عنوان کاربر'],
 
             ['referral_code.index', 'مشاهده کد های معرف'],
