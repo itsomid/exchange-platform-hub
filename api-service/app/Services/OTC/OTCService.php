@@ -221,7 +221,7 @@ class OTCService
             ->setType(TransactionTypeEnum::BUY)
             ->setSubtype(TransactionSubTypeEnum::OTC)
             ->setStatus(TransactionStatusEnum::SUCCESS)
-            ->setDescription(sprintf('خرید %s %s به قیمت %s %s',
+            ->setDescription(sprintf('خرید %s %s به قیمت واحد %s %s',
                 formatNumberTrimZeros((float) $buyAmount),
                 $market->base_currency,
                 formatNumberTrimZeros((float) $market->exchangePrice->buy_price),
@@ -240,7 +240,7 @@ class OTCService
             ->setType(TransactionTypeEnum::SELL)
             ->setSubtype(TransactionSubTypeEnum::OTC)
             ->setStatus(TransactionStatusEnum::SUCCESS)
-            ->setDescription(sprintf('فروش %s %s به قیمت %s %s',
+            ->setDescription(sprintf('فروش %s %s به قیمت واحد %s %s',
                 formatNumberTrimZeros((float) $amountInQuoteCurrency),
                 $market->base_currency,
                 formatNumberTrimZeros((float) $market->exchangePrice->buy_price),
@@ -259,7 +259,7 @@ class OTCService
             ->setType(TransactionTypeEnum::BUY)
             ->setSubtype(TransactionSubTypeEnum::OTC)
             ->setStatus(TransactionStatusEnum::SUCCESS)
-            ->setDescription(sprintf('فروش %s %s به قیمت %s %s',
+            ->setDescription(sprintf('فروش %s %s به قیمت واحد %s %s',
                 formatNumberTrimZeros((float) $buyAmount),
                 $market->base_currency,
                 formatNumberTrimZeros((float) $market->exchangePrice->buy_price),
@@ -279,7 +279,7 @@ class OTCService
             ->setSubtype(TransactionSubTypeEnum::OTC)
             ->setStatus(TransactionStatusEnum::SUCCESS)
             ->setDescription(
-                sprintf('خرید %s %s به قیمت %s %s',
+                sprintf('خرید %s %s به قیمت واحد %s %s',
                     formatNumberTrimZeros((float) $amountInQuoteCurrency),
                     $market->base_currency,
                     formatNumberTrimZeros((float) $market->exchangePrice->buy_price),
@@ -444,7 +444,7 @@ class OTCService
             ->setType(TransactionTypeEnum::SELL)
             ->setSubtype(TransactionSubTypeEnum::OTC)
             ->setStatus(TransactionStatusEnum::SUCCESS)
-            ->setDescription(sprintf('فروش %s %s به قیمت %s %s',
+            ->setDescription(sprintf('فروش %s %s به قیمت واحد %s %s',
                 formatNumberTrimZeros((float) $sellAmount),
                 $market->base_currency,
                 formatNumberTrimZeros((float) $market->exchangePrice->sell_price),
@@ -502,7 +502,7 @@ class OTCService
             ->setType(TransactionTypeEnum::SELL)
             ->setSubtype(TransactionSubTypeEnum::OTC)
             ->setStatus(TransactionStatusEnum::SUCCESS)
-            ->setDescription(sprintf('خرید %s %s به قیمت %s %s',
+            ->setDescription(sprintf('خرید %s %s به قیمت واحد %s %s',
                 formatNumberTrimZeros((float) $receivedAmount),
                 $market->base_currency,
                 formatNumberTrimZeros((float) $market->exchangePrice->sell_price),

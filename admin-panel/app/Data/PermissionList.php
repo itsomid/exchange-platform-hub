@@ -48,7 +48,7 @@ class PermissionList
             ['withdrawal', 'مشاهده لیست برداشت ها'],
 
             ['report','لیست گزارش ها'],
-            ['view-logs','لیست گزارش ها'],
+            ['view-logs','لیست ارورها'],
 
             ['notifications','لیست اعلان های مدیریت'],
             ['support','پشتیبانی کاربر'],
