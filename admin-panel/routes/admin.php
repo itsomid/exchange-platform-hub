@@ -105,11 +105,11 @@ Route::post('/users/financial-status/mass-block', [UserFinancialBlockController:
 
 Route::get('/users/{user}/wallets', [UserWalletController::class, 'userWallets'])->name('wallet.index')->can('wallet');
 Route::get('/users/{user}/wallets/{wallet}/{type}', [UserWalletController::class, 'walletDetails'])->name('wallet.detail')->can('wallet');
-Route::get('/users/{user}/inquiry', [InquiryController::class, 'userDetails'])->name('inquiry.user-details')->can('admin.inquiry');
+Route::get('/users/{user}/inquiry', [InquiryController::class, 'userDetails'])->name('inquiry.user-details')->can('user.index');
 Route::get('/login-as-user/{user}', [UserController::class, 'loginAsUser'])->name('user.login-as-user')->can('user.login-as-customer');
 
-Route::get('/inquiry', [InquiryController::class, 'index'])->name('inquiry.index')->can('admin.inquiry');
-Route::post('/inquiry', [InquiryController::class, 'submit'])->name('inquiry.submit')->can('admin.inquiry');
+Route::get('/inquiry', [InquiryController::class, 'index'])->name('inquiry.index')->can('user.index');
+Route::post('/inquiry', [InquiryController::class, 'submit'])->name('inquiry.submit')->can('user.index');
 // Route::get('/users/2fa', [UserSecurityController::class, ''])->name('profile.2fa.edit');
 // Route::get('/users/{user}/tokens', [UserTokenController::class, 'twoFAEdit'])->name('user.token.index')->can('user.edit');
 // Route::patch('/users/{user}/tokens/{token}/revoke', [UserTokenController::class, 'revoke'])->name('user.token.revoke')->can('user.edit');
