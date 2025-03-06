@@ -66,7 +66,7 @@
                 <li class="mt-2 d-flex justify-content-between">
                     <span class="h6">احراز هویت دو مرحله ای:</span>
                     <span
-                        class="text-{{auth('admin')->user()->twoFAStatus()?'success':'danger'}}">{{auth('admin')->user()->twoFAStatus()?'فعال':'غیرفعال'}}</span>
+                        class="badge bg-label-{{$user->twoFAStatus()?'success':'danger'}} align-self-baseline">{{$user->twoFAStatus()?'فعال':'غیرفعال'}}</span>
                 </li>
                 <li class="mt-2 d-flex justify-content-between">
                     <span class="h6">تاریخ ایجاد حساب:</span>

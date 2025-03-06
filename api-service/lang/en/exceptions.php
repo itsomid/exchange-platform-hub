@@ -16,4 +16,5 @@ return [
     \App\Exceptions\V1\Wallet\UserDoesNotHaveWalletAddress::class => 'You do not have an active wallet address. Please create a wallet address first.',
     \App\Exceptions\V1\Auth\UserNotVerifiedException::class => 'Your account has not been verified.',
     \App\Exceptions\V1\Auth\UserIsSuspendException::class => 'Your account is suspended.',
+    \App\Exceptions\ReferralCodeSystemDisabledException::class => 'Referral code system is disabled.',
 ];

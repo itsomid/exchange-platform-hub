@@ -34,7 +34,7 @@
                                     <div class="text-center mt-5">
                                         <button class=" btn btn-primary">
                                             <i class="fas fa-edit mx-2"></i>
-                                            ویرایش نقش کاربر
+                                            ذخیره
                                         </button>
                                     </div>
                                 </div>

@@ -7,7 +7,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="content-left">
-                            <h5 class="mb-1">{{count($referralCodes)}}</h5>
+                            <h5 class="mb-1">{{$referralCodes->total()}}</h5>
                             <small>تعداد کدهای معرف</small>
                         </div>
                         <span class="badge bg-label-danger rounded-circle p-3">
@@ -99,6 +99,7 @@
                         <th>تعداد دوستان</th>
                         <th>تعداد معاملات</th>
                         <th>مجموع دریافتی</th>
+                        <th>حداکثر تعداد قابل استفاده</th>
                         <th>عملیات</th>
                     </tr>
                     </thead>
@@ -133,7 +134,9 @@
                             <td>
                                 ${{formatNumber($referralCode->transactions_sum_amount,2)}}
                             </td>
-
+                            <td>
+                                {{$referralCode->usage_limit}}
+                            </td>
                             <td>
                                 <div class="d-flex align-items-center">
 
@@ -155,8 +158,11 @@
                     </tbody>
                 </table>
             </div>
-            {{--                @include('dashboard.layout.pagination', ['collection' => $regentCodes])--}}
+        </div>
+        <div class="row justify-content-center">
+            {{$referralCodes->appends(request()->all())->links()}}
         </div>
     </div>
+
 
 @endsection

@@ -26,6 +26,7 @@ class InternalSettingController extends Controller
         $otcSellFee = Setting::where('key', 'otc_sell_fee')->first();
         $referralProfitStatus = Setting::where('key', 'referral_profit_status')->first();
         $referralProfitPercentage = Setting::where('key', 'referral_profit_percentage')->first();
+        $referralUsageLimitCount = Setting::where('key', 'referral_usage_limit_count')->first();
         $exchangeWithdrawalPeriodTime = Setting::where('key', 'exchange_withdrawal_period_time')->first();
         $exchangeWithdrawalPeriodBuy = Setting::where('key', 'exchange_withdrawal_period_buy')->first();
         $exchangeWithdrawalType = Setting::where('key', 'exchange_withdrawal_type')->first();
@@ -39,6 +40,7 @@ class InternalSettingController extends Controller
             'otcSellFee' => $otcSellFee,
             'referralProfitStatus' => $referralProfitStatus,
             'referralProfitPercentage' => $referralProfitPercentage,
+            'referralUsageLimitCount' => $referralUsageLimitCount,
             'exchangeWithdrawalPeriodTime' => $exchangeWithdrawalPeriodTime,
             'exchangeWithdrawalPeriodBuy' => $exchangeWithdrawalPeriodBuy,
             'exchangeWithdrawalType' => $exchangeWithdrawalType,
@@ -54,6 +56,7 @@ class InternalSettingController extends Controller
         $request->validate([
             'referral_profit_status' => 'nullable|boolean',
             'referral_profit_percentage' => 'required|numeric|min:0|max:100',
+            'referral_usage_limit_count' => 'required|numeric|min:0|max:1000',
         ]);
 
         // Update referral profit status
@@ -66,6 +69,11 @@ class InternalSettingController extends Controller
         Setting::updateOrCreate(
             ['key' => 'referral_profit_percentage'],
             ['value' => $request->input('referral_profit_percentage')]
+        );
+
+        Setting::updateOrCreate(
+            ['key' => 'referral_usage_limit_count'],
+            ['value' => $request->input('referral_usage_limit_count')]
         );
         Toast::message('تنظیمات رفرال با موفقیت ذخیره شد')->success()->notify();
         // Redirect with success message
@@ -106,7 +114,7 @@ class InternalSettingController extends Controller
             }
         }
 
-        Toast::message('دستریسی های جدید افزوده شدند')->success()->notify();
+        Toast::message('دسترسی های جدید افزوده شدند')->success()->notify();
 
         return redirect()->route('admin.internal.setting.index');
     }

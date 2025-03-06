@@ -28,8 +28,13 @@ class SettingTableSeeder extends Seeder
             ],
             [
                 'key' => 'referral_profit_percentage',
-                'name' => ' نرخ کارمزد اهدایی به کاربر از طریق کد دعوت',
+                'name' => 'نرخ کارمزد اهدایی به کاربر از طریق کد دعوت',
                 'value' => '30',
+            ],
+            [
+                'key' => 'referral_usage_limit_count',
+                'name' => 'حداکثر تعداد استفاده کاربر از کد دعوت',
+                'value' => '50',
             ],
             [
                 'key' => 'exchange_withdrawal_period_time',

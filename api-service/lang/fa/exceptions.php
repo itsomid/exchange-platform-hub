@@ -17,4 +17,5 @@ return [
     \App\Exceptions\V1\Wallet\UserDoesNotHaveWalletChainAddress::class => 'شما آدرس واریز فعالی ندارید. لطفاً ابتدا یک آدرس واریز ایجاد کنید.',
     \App\Exceptions\V1\Auth\UserNotVerifiedException::class => 'حساب کاربری شما تایید نشده است.',
     \App\Exceptions\V1\Auth\UserIsSuspendException::class => 'حساب کاربری شما تعلیق شده است.',
+    \App\Exceptions\ReferralCodeSystemDisabledException::class => 'ساخت کد معرف غیرفعال است.',
 ];
