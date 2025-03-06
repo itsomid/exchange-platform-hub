@@ -14,9 +14,9 @@ class ReferralCodeCreateRequest extends FormRequest
     public function authorize(): bool
     {
         $referralProfitStatus = Setting::where('key', 'referral_profit_status')->first();
-        
+                
         if ($referralProfitStatus?->value == 0) {
-            throw new ReferralCodeSystemDisabledException();
+            throw new  ReferralCodeSystemDisabledException();
         }
 
         return true;
