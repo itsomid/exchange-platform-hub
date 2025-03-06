@@ -1,61 +1,60 @@
 @extends('dashboard.layout.master')
 @section('title', 'مدیریت کاربران')
 @section('content')
-    @can('admin.index.statistic_boxes')
-        <div class="row g-4 mb-4">
-            <div class="col-sm-12 col-xl-4">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-start justify-content-between">
-                            <div class="content-left">
-                                <span>تعداد همکاران</span>
-                                <div class="d-flex align-items-center my-1">
-                                    <h4 class="mb-0 me-2">{{$admins->count()}}</h4>
-                                </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-sm-12 col-xl-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                            <span>تعداد همکاران</span>
+                            <div class="d-flex align-items-center my-1">
+                                <h4 class="mb-0 me-2">{{$admins->count()}}</h4>
                             </div>
-                            <span class="badge bg-label-primary rounded p-2">
+                        </div>
+                        <span class="badge bg-label-primary rounded p-2">
                             <i class="fa-solid fa-users"></i>
                         </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-12 col-xl-4">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-start justify-content-between">
-                            <div class="content-left">
-                                <span>همکاران فعال</span>
-                                <div class="d-flex align-items-center my-1">
-                                    <h4 class="mb-0 me-2">{{$admins->where('is_active', 1)->count()}}</h4>
-                                </div>
-                            </div>
-                            <span class="badge bg-label-success rounded p-2">
-                            <i class="fa-solid fa-user-check"></i>
-                        </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-12 col-xl-4">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-start justify-content-between">
-                            <div class="content-left">
-                                <span>همکاران غیر فعال</span>
-                                <div class="d-flex align-items-center my-1">
-                                    <h4 class="mb-0 me-2">{{$admins->where('is_active', 0)->count()}}</h4>
-                                </div>
-                            </div>
-                            <span class="badge bg-label-warning rounded p-2">
-                                <i class="fa-solid fa-user-xmark"></i>
-                            </span>
-                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    @endcan
+        <div class="col-sm-12 col-xl-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                            <span>همکاران فعال</span>
+                            <div class="d-flex align-items-center my-1">
+                                <h4 class="mb-0 me-2">{{$admins->where('is_active', 1)->count()}}</h4>
+                            </div>
+                        </div>
+                        <span class="badge bg-label-success rounded p-2">
+                            <i class="fa-solid fa-user-check"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 col-xl-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                            <span>همکاران غیر فعال</span>
+                            <div class="d-flex align-items-center my-1">
+                                <h4 class="mb-0 me-2">{{$admins->where('is_active', 0)->count()}}</h4>
+                            </div>
+                        </div>
+                        <span class="badge bg-label-warning rounded p-2">
+                                <i class="fa-solid fa-user-xmark"></i>
+                            </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="card mb-3">
         <div class="card-body">
@@ -65,7 +64,8 @@
 
                 <div class="col-md-10 user_role">
                     <label class="form-label" for="search_key">نام یا شماره تماس یا ایمیل یا ID</label>
-                    <input type="text" class="form-control" name="search_key" value="{{request()->input('search_key')}}" placeholder="دنبال چی میگردی؟">
+                    <input type="text" class="form-control" name="search_key" value="{{request()->input('search_key')}}"
+                           placeholder="دنبال چی میگردی؟">
                 </div>
                 <div class="col-md-2 mt-2 text-center">
                     <button class="btn btn-success">
@@ -114,12 +114,9 @@
                         </th>
                         <th>آواتار</th>
                         <th>نام</th>
-                        @can('admin.index.table.mobile')
-                            <th>شماره تماس</th>
-                        @endcan
-                        @can('admin.index.table.email')
-                            <th>آدرس ایمیل</th>
-                        @endcan
+
+                        <th>شماره تماس</th>
+                        <th>آدرس ایمیل</th>
                         <th>نقش</th>
 
 
@@ -139,16 +136,16 @@
                             <td>
                                 {{$admin->fullname()}}
                             </td>
-                            @can('admin.index.table.mobile')
-                                <td>
-                                    <a href="tel:{{$admin->mobile}}">{{$admin->mobile}}</a>
-                                </td>
-                            @endcan
-                            @can('admin.index.table.email')
-                                <td>
-                                    {{$admin->email}}
-                                </td>
-                            @endcan
+
+                            <td>
+                                <a href="tel:{{$admin->mobile}}">{{$admin->mobile}}</a>
+                            </td>
+
+
+                            <td>
+                                {{$admin->email}}
+                            </td>
+
                             <td>
                                 <div>
                                     @foreach($admin->roles()->get() as $role)

@@ -10,15 +10,10 @@ class PermissionList
     {
         $permissions = [
             ['admin.index', 'مشاهده لیست پرسنل'],
-            ['admin.index.statistic_boxes', 'مشاهده باکس آمار در لیست پرسنل'],
-            ['admin.index.table.mobile', 'مشاهده  ستون شماره تماس ها    در لیست پرسنل'],
-            ['admin.index.table.email', 'مشاهده  ستون آدرس ایمیل ها در لیست پرسنل'],
             ['admin.create', 'افزودن پرسنل جدید'],
             ['admin.edit', 'ویرایش پرسنل'],
             ['admin.toggle', 'مسدودسازی پرسنل'],
-            ['admin.manage-all-support', 'مشاهده تمام پشتیبانان'],
             ['admin.login-as-admin', 'ورود به عنوان ادمین'],
-            ['admin.inquiry', 'استعلام شماره تماس'],
 
             ['roles.permissions', 'مدیریت نقش ها و مجوز ها'],
 
@@ -41,7 +36,6 @@ class PermissionList
 
             ['setting.int.index', 'مشاهده تنظیمات داخلی'],
             ['setting.int.view-logs', 'مشاهده لاگ ها و خطاهای سیستم'],
-            ['setting.ext.index', 'مشاهده تنظیمات خارجی'],
 
             ['currency','مدیریت کوین ها'],
             ['market','مدیریت بازار'],
