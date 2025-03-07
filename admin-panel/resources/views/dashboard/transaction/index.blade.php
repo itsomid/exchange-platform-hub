@@ -10,28 +10,11 @@
                         <div class="content-left">
                             <span>تعداد تراکنش ها</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{count($transactions)}}</h4>
+                                <h4 class="mb-0 me-2">{{$transactions->total()}}</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-danger rounded p-2">
                             <i class="fa-light fa-money-bill-wave fa-lg"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-12 col-xl-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
-                        <div class="content-left">
-                            <span>تعداد تراکنش های امروز</span>
-                            <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{count($transactions)}}</h4>
-                            </div>
-                        </div>
-                        <span class="badge bg-label-warning rounded">
-                            <i class="fa-light fa-money-bill-wave"></i>
                         </span>
                     </div>
                 </div>
@@ -43,7 +26,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
-                            <span>تعداد کارمزدهای برداشت امروز</span>
+                            <span>تعداد کارمزدهای برداشت </span>
                             <div class="d-flex align-items-center my-1">
                                 <h4 class="mb-0 me-2">{{$withdrawalFeeTransactionsCount}}</h4>
                             </div>
@@ -60,7 +43,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
-                            <span>تعداد کارمزدهای معاملات امروز OTC</span>
+                            <span>تعداد کارمزدهای معاملات OTC</span>
                             <div class="d-flex align-items-center my-1">
 
                                 <h4 class="mb-0 me-2">{{$OTCFeeTransactionsCount}}</h4>
@@ -307,7 +290,7 @@
                             </td>
                             <td>
                                 <div class="d-flex flex-column">
-                                    <a href="" class="text-heading text-truncate">
+                                    <a  class="text-heading text-truncate">
                                         <span class="fw-medium">{{$transaction->user->email}}</span>
                                     </a>
                                     <small>{{$transaction->user->username}}</small>
