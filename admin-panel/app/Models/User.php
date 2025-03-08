@@ -63,6 +63,10 @@ class User extends Authenticatable implements CanResetPassword
     {
         return $this->hasMany(ReferralCodeUsage::class, 'used_by');
     }
+    public function ownerReferralCodeUsage(): HasMany
+    {
+        return $this->hasMany(ReferralCodeUsage::class, 'used_by')->where('type','introducer');
+    }
 
     public function financialBlocks(): HasMany
     {
