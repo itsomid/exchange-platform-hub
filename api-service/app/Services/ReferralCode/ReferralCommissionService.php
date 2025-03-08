@@ -50,6 +50,7 @@ class ReferralCommissionService
                 $introducerCommissionToUSDT = Math::mul($introducerCommission, $otcOrder->price);
                 $friendCommissionToUSDT = Math::mul($friendCommission, $otcOrder->price);
                 if ($introducerCommission > 0) {
+
                     $this->applyCommission($introducer, $introducerCommissionToUSDT, $otcOrder, $referralCode, 'introducer');
                 }
 
@@ -99,8 +100,9 @@ class ReferralCommissionService
 
         ReferralCodeUsage::query()->create([
             'referral_code_id' => $referralCode->id,
-            'used_by' => $user->id,
+            'used_by' => $otcOrder->user_id,
             'transaction_id' => $transaction->id,
+            'type' => $role,
             'used_at' => now(),
         ]);
 

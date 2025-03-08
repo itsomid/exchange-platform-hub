@@ -17,12 +17,20 @@ class ReferralCodeController extends Controller
 {
     public function index()
     {
-        $referralCodes = ReferralCode::filterBy(request()->all())
+        $query = ReferralCode::filterBy(request()->all())
             ->with('user')
-            ->withCount('registeredUsers')
-            ->withCount('referralCodeUsage')
-            ->withSum('transactions', 'amount')
-            ->paginate(30);
+            ->withSum('transactions', 'amount');
+
+        // Only add withCount if we're not sorting by registered users count
+        if (!request()->has('sortByRegisteredUserCount')) {
+            $query->withCount('registeredUsers');
+        }
+
+        if (!request()->has('sortByReferralCodeUsageCount')) {
+            $query->withCount('referralCodeUsage');
+        }
+
+        $referralCodes = $query->paginate(30);
 
         $totalTransactionSum = ReferralCode::filterBy(request()->all())->withSum('transactions', 'amount')->get()->sum('transactions_sum_amount');
         $totalRegisteredUsers = ReferralCode::filterBy(request()->all())->withCount('registeredUsers')->get()->sum('registered_users_count');
@@ -78,16 +86,15 @@ class ReferralCodeController extends Controller
     public function showUsage(ReferralCode $referralCode)
     {
 
-//        return $referralCodeUsage = ReferralCodeUsage::where('referral_code_id',$referralCode->id)->with('transaction')->get();
-        $referralCode
-            ->load('registeredUsers')
+
+        $referralCode = $referralCode
+            ->load(['friendsReferralCodeUsage','registeredUsers', 'introducerTransactions'])
             ->loadCount('registeredUsers')
-            ->load('transactions')
-            ->loadSum('transactions', 'amount');
+            ->loadSum('introducerTransactions', 'amount');
 
+        $countOfUserHasUsedReferralCode = $referralCode->friendsReferralCodeUsage->groupBy('used_by')->count();
+        $conversationRate = ($countOfUserHasUsedReferralCode / ($referralCode->registered_users_count)) * 100;
 
-        $countOfUserHasUsedReferralCode = $referralCode->referralCodeUsage->groupBy('used_by')->count();
-        $conversationRate = ($countOfUserHasUsedReferralCode / $referralCode->registered_users_count) * 100;
         return view('dashboard.referral_code.referred-users', [
             'referralCode' => $referralCode,
             'conversationRate' => $conversationRate
@@ -102,5 +109,22 @@ class ReferralCodeController extends Controller
         return view('dashboard.referral_code.referred-users-transaction', [
             'referralUsages' => $referralUsages
         ]);
+    }
+
+    public function destroy(ReferralCode $referralCode)
+    {
+        if ($referralCode->registeredUsers()->exists()) {
+            Toast::message('این کد معرف دارای کاربران مرتبط است و نمی‌توان آن را حذف کرد')->danger()->notify();
+            return redirect()->route('admin.referral_code.index');
+        }
+
+        if ($referralCode->transactions()->exists()) {
+            Toast::message('این کد معرف دارای تراکنش‌ها مرتبط است و نمی‌توان آن را حذف کرد')->danger()->notify();
+            return redirect()->route('admin.referral_code.index');
+        }
+
+        $referralCode->delete();
+        Toast::message('کد معرف با موفقیت حذف شد')->success()->notify();
+        return redirect()->route('admin.referral_code.index');
     }
 }

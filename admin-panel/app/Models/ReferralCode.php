@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\TransactionSubTypeEnum;
 use App\Filters\Filterable;
 use Faker\Factory as Faker;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -38,11 +39,45 @@ class ReferralCode extends Model
     {
         return $this->hasMany(ReferralCodeUsage::class,'referral_code_id');
     }
+    public function friendsReferralCodeUsage(): HasMany
+    {
 
+        return $this->hasMany(ReferralCodeUsage::class, 'referral_code_id')->where('type','friend');
+    }
+
+    public function ownerReferralCodeUsage(): HasMany
+    {
+        return $this->hasMany(ReferralCodeUsage::class, 'referral_code_id')->where('type','introducer');
+    }
     public function transactions(): HasManyThrough
     {
         return $this->hasManyThrough(Transaction::class,ReferralCodeUsage::class,'referral_code_id','id','id','transaction_id');
     }
+
+    public function introducerTransactions(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Transaction::class,
+            ReferralCodeUsage::class,
+            'referral_code_id', // Foreign key on ReferralCodeUsage table
+            'id', // Foreign key on Transaction table
+            'id', // Local key on ReferralCode table
+            'transaction_id' // Local key on ReferralCodeUsage table
+        )->where('transactions.subtype', TransactionSubTypeEnum::REFERRAL_INTRODUCER);
+    }
+
+    public function friendsTransactions(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Transaction::class,
+            ReferralCodeUsage::class,
+            'referral_code_id', // Foreign key on ReferralCodeUsage table
+            'id', // Foreign key on Transaction table
+            'id', // Local key on ReferralCode table
+            'transaction_id' // Local key on ReferralCodeUsage table
+        )->where('transactions.subtype', TransactionSubtypeEnum::REFERRAL_FRIEND);
+    }
+
     public static function generateReferralCode()
     {
         $faker = Faker::create();

@@ -88,6 +88,7 @@ Route::post('/users', [UserController::class, 'store'])->name('user.store')->can
 Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('user.edit')->can('user.edit');
 Route::patch('/users/{user}/update', [UserController::class, 'update'])->name('user.update')->can('user.edit');
 Route::patch('/users/{user}/toggle-status', [UserController::class, 'suspendUser'])->name('user.toggle-status')->can('user.index');
+Route::patch('/users/{user}/active-user', [UserController::class, 'activeUser'])->name('user.active-user')->can('user.index');
 
 Route::get('/users/{user}/update-password', [UserSecurityController::class, 'passwordEdit'])->name('user.password.edit');
 Route::patch('/users/{user}/update-password', [UserSecurityController::class, 'passwordUpdate'])->name('user.password.update');
@@ -134,6 +135,7 @@ Route::get('/referral-codes/referred-user/{user}/transactions', [ReferralCodeCon
 Route::post('/referral-codes', [ReferralCodeController::class, 'store'])->name('referral_code.store')->can('referral_code.create');
 Route::get('/referral-codes/{referral_code}/edit', [ReferralCodeController::class, 'edit'])->name('referral_code.edit')->can('referral_code.edit');
 Route::patch('/referral-codes/{referral_code}', [ReferralCodeController::class, 'update'])->name('referral_code.update')->can('referral_code.edit');
+Route::delete('/referral-codes/{referral_code}', [ReferralCodeController::class, 'destroy'])->name('referral_code.destroy')->can('referral_code.edit');
 
 Route::get('/exchange/currencies', [CurrencyController::class, 'index'])->name('currency.index')->can('currency');
 Route::get('/exchange/currencies/create', [CurrencyController::class, 'create'])->name('currency.create')->can('currency');
