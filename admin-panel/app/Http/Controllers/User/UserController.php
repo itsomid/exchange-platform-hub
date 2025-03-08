@@ -22,8 +22,6 @@ class UserController extends Controller
 {
     public function index()
     {
-        //        return \request()->all();
-
         $users = User::with('introducerReferral.user', 'activeFinancialBlocks')
             ->filterBy(request()->all())
             ->paginate(20);
@@ -232,6 +230,20 @@ class UserController extends Controller
         // Toggle status
         $newStatus = $user->status === UserStatusEnum::SUSPEND ? UserStatusEnum::ACTIVE : UserStatusEnum::SUSPEND;
         $user->status = $newStatus;
+        $user->save();
+
+        Toast::message('وضعیت کاربر با موفقیت تغییر کرد')->success();
+
+        return redirect()->back();
+    }
+
+    public function activeUser(User $user)
+    {
+        $user->status = UserStatusEnum::ACTIVE;
+
+        $user->email_verified_at = now();
+
+
         $user->save();
 
         Toast::message('وضعیت کاربر با موفقیت تغییر کرد')->success();
