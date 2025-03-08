@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('referral_code_id')->constrained()->onDelete('cascade'); // Links to the referral code
             $table->foreignId('used_by')->constrained(table: 'users')->onDelete('cascade'); // The friend who used the code
             $table->foreignId('transaction_id')->constrained()->onDelete('cascade');
+            $table->enum('type', ['introducer', 'friend'])->default('friend');
             $table->timestamp('used_at')->nullable();
             $table->timestamps();
         });

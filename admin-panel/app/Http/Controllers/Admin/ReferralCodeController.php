@@ -87,7 +87,7 @@ class ReferralCodeController extends Controller
     {
 
 
-        $referralCode = $referralCode
+         $referralCode = $referralCode
             ->load(['friendsReferralCodeUsage','registeredUsers', 'introducerTransactions'])
             ->loadCount('registeredUsers')
             ->loadSum('introducerTransactions', 'amount');
@@ -104,7 +104,7 @@ class ReferralCodeController extends Controller
     public function showTransactionsForReferredUser(User $user)
     {
 
-        $referralUsages = ReferralCodeUsage::whereUsedBy($user->id)->with(['transaction','usedBy'])->withSum('transaction','amount')->get();
+        $referralUsages = ReferralCodeUsage::whereUsedBy($user->id)->where('type','introducer')->with(['transaction','usedBy'])->withSum('transaction','amount')->get();
 
         return view('dashboard.referral_code.referred-users-transaction', [
             'referralUsages' => $referralUsages

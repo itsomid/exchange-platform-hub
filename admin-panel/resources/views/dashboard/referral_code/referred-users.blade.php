@@ -24,7 +24,7 @@
                         <div class="content-left">
                             <h5 class="mb-1">
                                 <small>USDT</small>
-                                {{formatNumberTrimZeros($referralCode->transactions_sum_amount)}}
+                                {{formatNumberTrimZeros($referralCode->introducer_transactions_sum_amount)}}
                             </h5>
                             <small>مجموع دریافتی کاربران</small>
                         </div>
@@ -92,12 +92,11 @@
                             </td>
 
                             <td>
-                                <span class="me-2">{{count($referredUser->referralCodeUsage)}}</span>
+                                <span class="me-2">{{count($referredUser->ownerReferralCodeUsage)}}</span>
                             </td>
 
                             <td class="font-number">
                                 {{$referredUser->ownerReferralCodeUsage->loadSum('transaction','amount')->sum('transaction_sum_amount')}}
-
                             </td>
 
                             <td>

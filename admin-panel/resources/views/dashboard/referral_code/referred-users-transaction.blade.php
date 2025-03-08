@@ -25,7 +25,9 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="content-left">
-                            <h5 class="mb-1">{{formatNumberTrimZeros($referralUsages->sum('transaction_sum_amount'))}}</h5>
+                            <h5 class="mb-1">
+                                <small>USDT</small>
+                                {{formatNumberTrimZeros($referralUsages->sum('transaction_sum_amount'))}}</h5>
                             <small>مجموع دریافتی از کاربر
                                 ({{$referralUsages[0]->usedBy->fullname()}})
                             </small>
@@ -65,7 +67,7 @@
                             </td>
 
                             <td>
-                                <small>USDT</small>    
+                                <small>USDT</small>
                                 {{formatNumberTrimZeros($usage->transaction->amount)}}
                             </td>
 
