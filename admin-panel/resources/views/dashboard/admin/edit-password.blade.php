@@ -3,6 +3,7 @@
 @section('content')
 
     <div class="card">
+        <h4 class="card-header">تغییر رمز عبور ({{$admin->fullname()}}) </h4>
         <form action="{{route('admin.admin.password.update', ['admin' => $admin->id])}}" method="post">
             @csrf
             @method('PATCH')

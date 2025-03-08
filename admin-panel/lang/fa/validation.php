@@ -128,5 +128,6 @@ return [
         'tracking_code' => 'شماره پیگیری',
         'paid_date' => 'تاریخ پرداخت',
         'introducer_code' => 'کد معرف',
+        'persian_name' => 'نام فارسی',
     ],
 ];

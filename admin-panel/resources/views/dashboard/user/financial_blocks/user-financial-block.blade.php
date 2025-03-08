@@ -74,9 +74,9 @@
                 </tr>
                 </thead>
                 <tbody>
-                @foreach($user->financialBlocks as $block)
+                @foreach($userFinancialBlockHistory as $block)
 
-                    <tr class=" {{$block->isExpired()?'table-danger':null}}">
+                    <tr class=" {{$block->isExpired() || $block->deleted_at?'table-danger':null}}">
                         <td class="text-truncate text-heading fw-medium">
                             {{\App\Enums\UserFinancialBlockAction::TYPE_LABEL[$block->action] }}
                             <span class="badge bg-label-primary me-1">  {{$block->action }}</span>
@@ -87,22 +87,30 @@
                         <td class="">{{$block->reason === 'admin' ? $block->reason .' (#'. $block->admin_id . ')' : $block->reason }}</td>
                         <td class="">{{$block->description}}</td>
                         <td class="">
-                            <form action="{{route('admin.user.financial-block.deleteBlock',['user'=>$user,'financialBlock'=>$block->id])}}" method="post">
-                                @csrf
-                                @method('DELETE')
-                                <button class="btn btn-icon btn-danger ">
-                                    <i class="fa-light fa-trash-alt fa-lg"></i>
-                                </button>
-                            </form>
+                            @if(!$block->deleted_at)
+                                <form action="{{route('admin.user.financial-block.deleteBlock',['user'=>$user,'financialBlock'=>$block->id])}}" method="post">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-link text-danger">
+                                        <i class="fa-light fa-trash-alt fa-lg"></i>
+                                    </button>
+                                </form>
+
+                            @else
+                                <span class="badge bg-danger">حذف شده</span>
+                            @endif
 
                         </td>
                     </tr>
 
                 @endforeach
                 </tbody>
+
+
             </table>
         </div>
     </div>
+    {{$userFinancialBlockHistory->links()}}
 
 @endsection
 @section('vendor-script')

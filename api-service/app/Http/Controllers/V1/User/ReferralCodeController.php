@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\User\ReferralCodeCreateRequest;
 use App\Http\Resources\V1\User\ReferralCodeListCollection;
 use App\Http\Resources\V1\User\ReferralCodeResource;
+use App\Models\Setting;
 use App\Services\User\DTO\ReferralCode\ReferralCodeCreateRequestDTO;
 use App\Services\User\ReferralCodeService;
 use Illuminate\Support\Facades\Auth;
@@ -56,13 +57,15 @@ class ReferralCodeController extends Controller
     public function store(ReferralCodeCreateRequest $request)
     {
         $validated = $request->validated();
+        $referralProfitPercentage = Setting::where('key', 'referral_profit_percentage')->first();
+        $referralUsageLimitCount = Setting::where('key', 'referral_usage_limit_count')->first();
 
         $responseDTO = $this->referralCodeService->create(
             resolve(ReferralCodeCreateRequestDTO::class)
                 ->setUserId(Auth::id())
                 ->setFriendFee($validated['friend_fee'])
-                ->setMaxFee(config('user.referral-code.max-fee'))
-                ->setUsageLimit(config('user.referral-code.usage-limit'))
+                ->setMaxFee($referralProfitPercentage->value)
+                ->setUsageLimit($referralUsageLimitCount->value)
         );
 
         return response([

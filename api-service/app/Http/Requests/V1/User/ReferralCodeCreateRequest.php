@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\V1\User;
 
+use App\Exceptions\ReferralCodeSystemDisabledException;
 use Illuminate\Foundation\Http\FormRequest;
+use App\Models\Setting;
 
 class ReferralCodeCreateRequest extends FormRequest
 {
@@ -11,6 +13,12 @@ class ReferralCodeCreateRequest extends FormRequest
      */
     public function authorize(): bool
     {
+        $referralProfitStatus = Setting::where('key', 'referral_profit_status')->first();
+                
+        if ($referralProfitStatus?->value == 0) {
+            throw new  ReferralCodeSystemDisabledException();
+        }
+
         return true;
     }
 
@@ -28,8 +36,10 @@ class ReferralCodeCreateRequest extends FormRequest
      */
     public function rules(): array
     {
+        $referralProfitPercentage = Setting::where('key', 'referral_profit_percentage')->first() ?? 30;
+
         return [
-            'friend_fee' => ['required', 'integer', 'min:0', 'max:'.config('user.referral-code.max-fee')],
+            'friend_fee' => ['required', 'integer', 'min:0', 'max:' . $referralProfitPercentage->value],
         ];
     }
 }

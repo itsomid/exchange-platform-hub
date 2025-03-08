@@ -24,7 +24,6 @@
                             <th>گارد</th>
                             <th>آخرین ویرایش</th>
                             <th>عملیات</th>
-
                         </tr>
                         </thead>
                         <tbody class="table-border-bottom-0">
@@ -34,19 +33,44 @@
                                 <td class="w-50">{{$role->name}}</td>
                                 <td class="w-25">{{$role->guard_name}}</td>
                                 <td class="w-25">{{\Morilog\Jalali\Jalalian::forge($role->updated_at)->format('%A, %d %B %Y')}}</td>
-
                                 <td>
-                                    <a href="{{route('admin.role.edit', ['role' => $role->id])}}"
-                                       class="btn btn-info rounded">
-                                        <i class="fa fa-pen mx-2"></i> ویرایش
+                                    <a href="{{route('admin.role.edit', ['role' => $role->id])}}" class="">
+                                        <i class="fa fa-pen mx-2"></i>
+                                    </a>
+                                    <a  class="btn btn-link p-0 text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{$role->id}}">
+                                        <i class="fa fa-trash mx-2"></i>
                                     </a>
                                 </td>
-
                             </tr>
                         @endforeach
                         </tbody>
                     </table>
                 </div>
+                <!-- Modals placed outside the table but within the card-body -->
+                @foreach($roles as $role)
+                    <!-- Delete Modal -->
+                    <div class="modal fade" id="deleteModal{{$role->id}}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">حذف نقش</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    آیا از حذف نقش "{{$role->persian_name}}" اطمینان دارید؟
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">انصراف</button>
+                                    <form action="{{route('admin.role.destroy', $role)}}" method="POST">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger">حذف</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
             </div>
         </div>
     </div>

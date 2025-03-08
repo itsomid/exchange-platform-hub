@@ -347,9 +347,16 @@
                                      role="dialog">
                                     <div class="modal-dialog modal-xl" role="document">
                                         <div class="modal-content">
-                                            <div class="modal-header">
+                                            <div class="modal-header justify-content-between">
                                                 <h5 class="modal-title font-number" id="exampleModalLabel4">تراکنش های
                                                     معامله #{{$order->id}}</h5>
+                                                <div class="d-flex flex-column ">
+                                                    <a href="" class="text-heading text-truncate">
+                                                        <span class="h6 fw-medium">{{$order->user->email}}</span>
+                                                        <span class="me-2">({{$order->user->username}})</span>
+                                                    </a>
+
+                                                </div>
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal"
                                                         aria-label="Close"></button>
                                             </div>

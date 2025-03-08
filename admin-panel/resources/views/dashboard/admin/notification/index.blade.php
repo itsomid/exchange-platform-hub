@@ -1,46 +1,43 @@
 @extends('dashboard.layout.master')
 @section('title', 'اعلان های مدیریت')
 @section('content')
-    @can('admin.index.statistic_boxes')
-        <div class="row g-4 mb-4">
-            <div class="col-sm-12 col-xl-4">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-start justify-content-between">
-                            <div class="content-left">
-                                <span>تعداد اعلان ها</span>
-                                <div class="d-flex align-items-center my-1">
-                                    <h4 class="mb-0 me-2">{{$notifications->count()}}</h4>
-                                </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-sm-12 col-xl-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                            <span>تعداد اعلان ها</span>
+                            <div class="d-flex align-items-center my-1">
+                                <h4 class="mb-0 me-2">{{$notifications->count()}}</h4>
                             </div>
-                            <span class="badge bg-label-primary rounded p-2">
+                        </div>
+                        <span class="badge bg-label-primary rounded p-2">
                             <i class="fa-solid fa-users"></i>
                         </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-12 col-xl-4">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-start justify-content-between">
-                            <div class="content-left">
-                                <span>اعلان های ادمین</span>
-                                <div class="d-flex align-items-center my-1">
-                                    <h4 class="mb-0 me-2">{{$notifications->count()}}</h4>
-                                </div>
-                            </div>
-                            <span class="badge bg-label-success rounded p-2">
-                            <i class="fa-solid fa-user-check"></i>
-                        </span>
-                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    @endcan
-
-
+        <div class="col-sm-12 col-xl-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                            <span>اعلان های ادمین</span>
+                            <div class="d-flex align-items-center my-1">
+                                <h4 class="mb-0 me-2">{{$notifications->count()}}</h4>
+                            </div>
+                        </div>
+                        <span class="badge bg-label-success rounded p-2">
+                            <i class="fa-solid fa-user-check"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
     <div class="card">
@@ -71,7 +68,8 @@
                                 {{ $notification->notifiable_type === 'App\Models\Admin' ? 'Admin' : 'Other' }}
                             </td>
                             <td>
-                                <span class="badge bg-label-primary">{{ \App\Enums\NotificationType::getLabel($notification->type) }}</span>
+                                <span
+                                    class="badge bg-label-primary">{{ \App\Enums\NotificationType::getLabel($notification->type) }}</span>
                             </td>
                             <td>{{ $notification->data['message'] }}</td>
                             <td>
@@ -83,7 +81,8 @@
                             </td>
                             <td>
                                 @if ($notification->read_at == null)
-                                    <form action="{{ route('admin.admin.notifications.mark-read', $notification->id) }}" method="POST">
+                                    <form action="{{ route('admin.admin.notifications.mark-read', $notification->id) }}"
+                                          method="POST">
                                         @csrf
                                         @method('PATCH')
                                         <button type="submit" class="btn btn-sm btn-primary">Mark as Read</button>

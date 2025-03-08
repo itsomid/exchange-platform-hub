@@ -6,11 +6,12 @@ use App\Enums\FinancialBlockReasonsEnum;
 
 use App\Filters\Filterable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 class UserFinancialBlock extends Model
 {
-    use Filterable;
+    use Filterable, SoftDeletes;
     public $filterNameSpace = 'App\Filters\FinancialBlockFilters';
     protected $fillable = [
         'user_id',
