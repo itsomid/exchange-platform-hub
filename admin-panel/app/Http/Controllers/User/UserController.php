@@ -26,9 +26,9 @@ class UserController extends Controller
             ->filterBy(request()->all())
             ->paginate(20);
         $referral_codes = ReferralCode::all();
-        $onlineUserCount = User::online()->count();
-        $activeUsersCount = User::active()->count();
-        $inActiveUsersCount = User::inActive()->count();
+        $onlineUserCount = User::filterBy(request()->all())->online()->count();
+        $activeUsersCount = User::filterBy(request()->all())->active()->count();
+        $inActiveUsersCount = User::filterBy(request()->all())->inActive()->count();
 
         $usersHasTransactionCount = User::has('transactions')->count();
 
