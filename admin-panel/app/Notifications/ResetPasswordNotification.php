@@ -36,10 +36,13 @@ class ResetPasswordNotification extends Notification implements ShouldQueue
      */
     public function toMail(object $notifiable): MailMessage
     {
+        $expiration = now()->addMinutes(5)->diffForHumans();
         return (new MailMessage)
-            ->line('The introduction to the notification.')
-            ->action('Notification Action', url('/'))
-            ->line('Thank you for using our application!');
+            ->view('mail.auth.reset-password', [
+                'url' => $this->url,
+                'expiration'=>$expiration
+            ])
+            ->subject('بازیابی رمز عبور');
     }
 
     /**
