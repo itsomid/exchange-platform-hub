@@ -18,7 +18,7 @@ class TradeController extends Controller
 {
     /**
      * @OA\Post(
-     *     path="/orders",
+     *     path="/api/spot/trades",
      *     tags={"Spot Orders"},
      *     summary="Create a new trading order",
      *     description="Create a new spot trading order in the exchange",
@@ -95,6 +95,75 @@ class TradeController extends Controller
         ], Response::HTTP_CREATED);
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/spot/trades",
+     *     tags={"Spot Orders"},
+     *     summary="Get user's spot orders",
+     *     description="Retrieve a list of authenticated user's spot orders with optional filters",
+     *     security={{"bearerAuth": {}}},
+     *
+     *     @OA\Parameter(
+     *         name="type",
+     *         in="query",
+     *         description="Filter by order type",
+     *         required=false,
+     *
+     *         @OA\Schema(
+     *             type="string",
+     *             enum={"market", "limit"}
+     *         )
+     *     ),
+     *
+     *     @OA\Parameter(
+     *         name="side",
+     *         in="query",
+     *         description="Filter by order side",
+     *         required=false,
+     *
+     *         @OA\Schema(
+     *             type="string",
+     *             enum={"buy", "sell"}
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of spot orders",
+     *
+     *         @OA\JsonContent(
+     *             type="array",
+     *
+     *             @OA\Items(ref="#/components/schemas/SpotOrderResource")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="The given data was invalid."),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object",
+     *                 example={"type": {"The selected type is invalid."}}
+     *             )
+     *         )
+     *     )
+     * )
+     */
     public function lists(ListOrderRequest $request)
     {
         $spotOrder = resolve(SpotService::class);
