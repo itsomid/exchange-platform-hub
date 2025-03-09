@@ -78,26 +78,26 @@
 
                     <tr class=" {{$block->isExpired() || $block->deleted_at?'table-danger':null}}">
                         <td class="text-truncate text-heading fw-medium">
-                            {{\App\Enums\UserFinancialBlockAction::TYPE_LABEL[$block->action] }}
-                            <span class="badge bg-label-primary me-1">  {{$block->action }}</span>
+                            {{$block->action->label()}}
+                            <span class="badge bg-label-primary me-1">{{$block->action }}</span>
 
                         </td>
                         <td class="text-truncate">{{\App\Helpers\DateFormatter::convertToPersianDate($block->created_at,'H:i:s %Y-%m-%d')}}</td>
                         <td class="text-truncate">{{\App\Helpers\DateFormatter::convertToPersianDate($block->restricted_until,'H:i:s %Y-%m-%d')}}</td>
-                        <td class="">{{$block->reason === 'admin' ? $block->reason .' (#'. $block->admin_id . ')' : $block->reason }}</td>
+                        <td class="">{{$block->reason === \App\Enums\FinancialBlockReasonsEnum::ADMIN ? $block->reason->label() .' (#'. $block->admin_id . ')' : $block->reason->label() }}</td>
                         <td class="">{{$block->description}}</td>
                         <td class="">
                             @if(!$block->deleted_at)
                                 <form action="{{route('admin.user.financial-block.deleteBlock',['user'=>$user,'financialBlock'=>$block->id])}}" method="post">
                                     @csrf
                                     @method('DELETE')
-                                    <button class="btn btn-link text-danger">
+                                    <button class="btn btn-icon btn-danger text-white">
                                         <i class="fa-light fa-trash-alt fa-lg"></i>
                                     </button>
                                 </form>
 
                             @else
-                                <span class="badge bg-danger">حذف شده</span>
+                                <span class="badge bg-label-danger">حذف شده</span>
                             @endif
 
                         </td>

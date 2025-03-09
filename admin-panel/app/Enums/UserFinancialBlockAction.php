@@ -13,4 +13,9 @@ enum UserFinancialBlockAction :string
         self::DEPOSIT->value => 'بلاک از واریز',
         self::TRADE->value => 'بلاک از معامله',
     ];
+
+    public function label()
+    {
+        return self::TYPE_LABEL[$this->value] ??'';
+    }
 }

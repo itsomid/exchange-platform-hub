@@ -181,13 +181,8 @@
 
 
                                 <td>
-                                    @if($user->status === 'active')
-                                        <span class="badge bg-label-success">فعال</span>
-                                    @elseif($user->status === 'suspended')
-                                        <span class="badge bg-label-danger">تعلیق شده</span>
-                                    @else
-                                        <span class="badge bg-label-secondary">غیرفعال</span>
-                                    @endif
+                                  <span
+                                      class="badge bg-label-{{$user->status->color()}} align-self-baseline">{{$user->status->label()}}</span>
 
                                 </td>
 
@@ -197,7 +192,7 @@
                                     @else
                                         @foreach($user->activeFinancialBlocks as $block)
                                             <div class="badge bg-label-danger me-2">
-                                                <p class="mb-1">{{\App\Enums\UserFinancialBlockAction::TYPE_LABEL[$block->action] }}</p>
+                                                <p class="mb-1">{{$block->action->label()}}</p>
                                                 <span>{{\App\Helpers\DateFormatter::timeUntilInPersian($block->restricted_until)}}</span>
                                             </div>
                                         @endforeach
@@ -211,7 +206,7 @@
                                     <form action="{{route('admin.user.financial-block.deleteBlock',['user'=>$user,'financialBlock'=>$block->id])}}" method="post">
                                         @csrf
                                         @method('DELETE')
-                                        <button class="btn btn-icon btn-danger ">
+                                        <button class="btn btn-icon btn-danger">
                                             <i class="fa-light fa-trash-alt fa-lg"></i>
                                         </button>
                                     </form>
