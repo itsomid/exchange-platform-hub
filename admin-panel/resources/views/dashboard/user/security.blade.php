@@ -4,20 +4,23 @@
 
     <!-- Two-steps verification -->
     <div class="card mb-6">
-        <div class="card-body">
+        <div class="card-header">
             <h5 class="mb-6"><i class="fa fa-firewall"></i>
                 تنظیمات امنیتی کاربر
             </h5>
-            <a href="{{route('admin.user.reset-password-email',['user'=>$user->id])}}" class="btn btn-primary mt-2">ارسال
-                لینک بازیابی رمز عبور</a>
+        </div>
+        <div class="card-body d-flex">
+
+            <a href="{{route('admin.user.reset-password-email',['user'=>$user->id])}}" class="btn btn-primary me-3">
+                ارسال لینک بازیابی رمز عبور
+            </a>
 
             <form action="{{ route('admin.users.disable-user-two-factor', ['user'=>$user->id]) }}" method="post">
                 @csrf
-                <button class="btn btn-warning mt-2" @if(!$user->twoFAStatus()) disabled @endif>
+                <button class="btn btn-warning" @if(!$user->twoFAStatus()) disabled @endif>
+                    غیرفعال سازی ورود دومرحله ایی
                     @if(!$user->twoFAStatus())
-                        ورود دو مرحله ایی غیرفعال است
-                    @else
-                        غیرفعال سازی ورود دومرحله ایی
+                        <small class="mx-2">(ورود دو مرحله ایی غیرفعال است)</small>
                     @endif
 
                 </button>

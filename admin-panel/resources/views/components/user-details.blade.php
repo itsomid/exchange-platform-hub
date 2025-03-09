@@ -14,6 +14,10 @@
         <div class="info-container">
             <ul class="list-unstyled mb-6">
                 <li class="mt-2 d-flex justify-content-between">
+                    <span class="h6">شناسه کاربری:</span>
+                    <span class="font-number">#{{ $user->id}}</span>
+                </li>
+                <li class="mt-2 d-flex justify-content-between">
                     <span class="h6">نام کاربری:</span>
                     <span>{{ $user->username}}</span>
                 </li>

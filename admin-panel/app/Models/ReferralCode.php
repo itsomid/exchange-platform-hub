@@ -45,7 +45,7 @@ class ReferralCode extends Model
         return $this->hasMany(ReferralCodeUsage::class, 'referral_code_id')->where('type','friend');
     }
 
-    public function ownerReferralCodeUsage(): HasMany
+    public function introducerReferralCodeUsage(): HasMany
     {
         return $this->hasMany(ReferralCodeUsage::class, 'referral_code_id')->where('type','introducer');
     }

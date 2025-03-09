@@ -22,6 +22,7 @@
                                id="codeInput"
                                class="form-control font-ernumber"
                                value="{{$referralCode->code}}"
+                               disabled
                                placeholder="کد یا شناسه ی دلخواه چند حرفی را وارد کنید"
                                readonly
                         >
@@ -47,6 +48,7 @@
                                id="introducerFee"
                                class="form-control number_sep"
                                placeholder="مقدار را وارد کنید"
+                               disabled
                                value="{{$referralCode->introducer_fee}}"
                         >
                     </div>
@@ -57,6 +59,7 @@
                                id="friendFee"
                                class="form-control number_sep"
                                placeholder="مقدار را وارد کنید"
+                               disabled
                                value="{{$referralCode->friend_fee}}"
                         >
                     </div>

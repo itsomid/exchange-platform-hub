@@ -28,6 +28,7 @@ class UserSecurityController extends Controller
         $status = Password::sendResetLink(
             ['email' => $user->email]
         );
+
         if ($status === Password::RESET_LINK_SENT) {
             Toast::message('لینک بازیابی رمز عبور با موفقیت به کاربر ارسال شد')->success()->notify();
         } else {

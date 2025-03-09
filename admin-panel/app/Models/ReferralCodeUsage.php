@@ -31,8 +31,4 @@ class ReferralCodeUsage extends Model
     {
         return $this->belongsTo(User::class, 'used_by');
     }
-    public function usedBy()
-    {
-        return $this->belongsTo(User::class, 'used_by');
-    }
 }

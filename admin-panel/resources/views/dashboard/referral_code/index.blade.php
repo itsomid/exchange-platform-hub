@@ -23,7 +23,7 @@
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="content-left">
                             <h5 class="mb-1">
-                                <small>USDT</small>    
+                                <small>USDT</small>
                                 {{formatNumberTrimZeros($totalTransactionSum)}}
                             </h5>
                             <small>مجموع دریافتی کاربران</small>
@@ -98,7 +98,7 @@
                         <th>#</th>
                         <th>کد دعوت</th>
                         <th>کاربر</th>
-                        <th>سهم از کارمزد شما / دوستان</th>
+                        <th>سهم از کارمزد سازنده / دوستان</th>
                         <th>
                             @php
                                 $currentParams = request()->except('sortByRegisteredUserCount');
@@ -129,7 +129,7 @@
                                 @else
                                     <span><i class="fa-solid fa-arrow-down"></i></span>
                                 @endif
-                            </a>    
+                            </a>
                         </th>
                         <th>
                             @php
@@ -170,7 +170,7 @@
                                 </div>
                             </td>
                             <td>
-                                {{$referralCode->introducer_fee}}%/{{$referralCode->friend_fee}}%
+                                {{$referralCode->introducer_fee}}% / {{$referralCode->friend_fee}}%
                             </td>
                             <td>
                                 <span class="me-2">{{$referralCode->registered_users_count}}</span>
