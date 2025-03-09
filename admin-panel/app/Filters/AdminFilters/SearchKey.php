@@ -14,7 +14,10 @@ class SearchKey implements \App\Filters\FilterContract
     public function handle($value = null): void
     {
         if (! is_null($value)) {
-            $this->query->where('id', $value)->orWhere('mobile', 'LIKE', '%'.$value.'%')->orWhere('first_name', 'LIKE', '%'.$value.'%')->orWhere('last_name', 'LIKE', '%'.$value.'%');
+            $this->query->where('id', $value)->orWhere('mobile', 'LIKE', '%'.$value.'%')
+            ->orWhere('first_name', 'LIKE', '%'.$value.'%')
+            ->orWhere('last_name', 'LIKE', '%'.$value.'%')
+            ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ['%'.$value.'%']);
         }
     }
 }
