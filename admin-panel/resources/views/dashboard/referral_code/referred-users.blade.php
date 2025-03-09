@@ -24,7 +24,7 @@
                         <div class="content-left">
                             <h5 class="mb-1">
                                 <small>USDT</small>
-                                {{formatNumberTrimZeros($referralCode->introducer_transactions_sum_amount)}}
+                                {{formatNumberTrimZeros($referralCode->transactions_sum_amount)}}
                             </h5>
                             <small>مجموع درآمد کد معرف برای سازنده و افراد معرفی شده </small>
                         </div>

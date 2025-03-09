@@ -139,7 +139,7 @@
                             @endphp
                             <a href="{{ route('admin.referral_code.index', array_merge($currentParams, ['sortByAmount' => $newSortDirection])) }}"
                                class="text-black">
-                                مجموع دریافتی USDT
+                                مجموع درآمد USDT
                                 @if($currentSortDirection === 'asc')
                                     <span><i class="fa-solid fa-arrow-up"></i></span>
                                 @else

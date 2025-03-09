@@ -90,7 +90,7 @@ class ReferralCodeController extends Controller
         $referralCode = $referralCode
             ->load(['friendsReferralCodeUsage','introducerReferralCodeUsage', 'registeredUsers', 'introducerTransactions'])
             ->loadCount('registeredUsers')
-            ->loadSum('introducerTransactions', 'amount');
+            ->loadSum('transactions', 'amount');
 
         $countOfUserHasUsedReferralCode = $referralCode->friendsReferralCodeUsage->groupBy('used_by')->count();
         $conversationRate = ($countOfUserHasUsedReferralCode / ($referralCode->registered_users_count)) * 100;
