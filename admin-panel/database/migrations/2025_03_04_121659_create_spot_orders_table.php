@@ -17,8 +17,8 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(User::class)->constrained();
             $table->foreignIdFor(Market::class)->constrained();
-            $table->string('order_type'); //buy, sell
-            $table->string('order_kind'); //market, limit
+            $table->string('side'); //buy, sell
+            $table->string('type'); //market, limit
             $table->decimal('quantity', 18, 8);
             $table->decimal('price', 18, 8)->nullable();
             $table->string('status');
