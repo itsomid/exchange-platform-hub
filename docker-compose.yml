@@ -68,7 +68,6 @@ services:
     depends_on:
       - php-api
       - database
-      - api-queue
       - laravel-api-cron
     networks:
       - laravel
