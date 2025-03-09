@@ -16,7 +16,7 @@ class CoinexHasError extends Notification implements ShouldQueue
      */
     public function __construct(private string $marketName, private string $amount, private string $errorMessage)
     {
-        //
+        $this->onQueue('api-email');
     }
 
     /**

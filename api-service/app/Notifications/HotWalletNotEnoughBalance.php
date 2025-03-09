@@ -16,7 +16,9 @@ class HotWalletNotEnoughBalance extends Notification implements ShouldQueue
     /**
      * Create a new notification instance.
      */
-    public function __construct(private string $currencyName, private string $amount) {}
+    public function __construct(private string $currencyName, private string $amount) {
+        $this->onQueue('api-email');
+    }
 
     /**
      * Get the notification's delivery channels.

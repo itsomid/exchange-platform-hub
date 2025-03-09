@@ -22,6 +22,7 @@ class DepositSuccessful extends Notification implements ShouldQueue
      */
     public function __construct(string $currencySymbol, string $amount, string $name)
     {
+        $this->onQueue('api-email');
         $this->currencySymbol = $currencySymbol;
         $this->amount = $amount;
         $this->name = $name;

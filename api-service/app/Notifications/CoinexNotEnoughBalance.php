@@ -20,6 +20,7 @@ class CoinexNotEnoughBalance extends Notification implements ShouldQueue
      */
     public function __construct(private string $marketName, private string $amount)
     {
+        $this->onQueue('api-email');
         if ($this->marketName === 'USDT') {
             $this->usdtValue = $this->amount;
 

@@ -17,7 +17,7 @@ class ResetPasswordNotification extends Notification implements ShouldQueue
      */
     public function __construct(private readonly User $user, private readonly string $url)
     {
-        $this->onQueue('email');
+        $this->onQueue('admin-email');
         //
     }
 

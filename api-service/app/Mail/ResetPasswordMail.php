@@ -31,7 +31,7 @@ class ResetPasswordMail extends Mailable implements ShouldQueue
         return new Envelope(
             from: new Address('info@bitexroom.com', 'BitexRoom'),
             to: [$this->user->email],
-            subject: 'بازبابی رمز عبور',
+            subject: 'بازبابی رمز عبور (پنل کاربری)',
         );
     }
 
@@ -44,7 +44,8 @@ class ResetPasswordMail extends Mailable implements ShouldQueue
         $expiration = now()->addMinutes(config('auth.passwords.users.expire'))->diffForHumans();
 
         return new Content(
-            view: 'mail.auth.reset-password',
+
+            view: 'mail.auth.reset-password-api',
             with: [
                 'url' => $this->url,
                 'expiration' => $expiration,

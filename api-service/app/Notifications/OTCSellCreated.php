@@ -11,7 +11,9 @@ class OTCSellCreated extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(private string $currencySymbol, private string $amount, private string $name) {}
+    public function __construct(private string $currencySymbol, private string $amount, private string $name) {
+        $this->onQueue('api-email');
+    }
 
     /**
      * Get the notification's delivery channels.
