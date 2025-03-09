@@ -25,7 +25,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="content-left">
-                            <h5 class="mb-1">${{formatNumber($referralUsages->sum('transaction_sum_amount'),2)}}</h5>
+                            <h5 class="mb-1">{{formatNumberTrimZeros($referralUsages->sum('transaction_sum_amount'))}}</h5>
                             <small>مجموع دریافتی از کاربر
                                 ({{$referralUsages[0]->usedBy->fullname()}})
                             </small>
@@ -65,7 +65,8 @@
                             </td>
 
                             <td>
-                                ${{formatNumber($usage->transaction->amount,2)}}
+                                <small>USDT</small>    
+                                {{formatNumberTrimZeros($usage->transaction->amount)}}
                             </td>
 
                             <td>
@@ -76,13 +77,12 @@
                                 {{$usage->transaction->description}}
                             </td>
 
-
                         </tr>
                     @endforeach
                     </tbody>
                 </table>
             </div>
-            {{--                @include('dashboard.layout.pagination', ['collection' => $regentCodes])--}}
+
         </div>
     </div>
 

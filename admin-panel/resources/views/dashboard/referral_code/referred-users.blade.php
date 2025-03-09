@@ -22,8 +22,11 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="content-left">
-                            <h5 class="mb-1">${{formatNumber($referralCode->transactions_sum_amount,2)}}</h5>
-                            <small>مجموع دریافتی کاربر</small>
+                            <h5 class="mb-1">
+                                <small>USDT</small>
+                                {{formatNumberTrimZeros($referralCode->transactions_sum_amount)}}
+                            </h5>
+                            <small>مجموع دریافتی کاربران</small>
                         </div>
                         <span class="badge bg-label-success rounded-circle p-3">
                             <i class="fa-light fa-gift"></i>
@@ -67,7 +70,7 @@
                         <th>REFERRED USER ID</th>
                         <th>کاربر</th>
                         <th>تعداد معاملات</th>
-                        <th>مجموع دریافتی</th>
+                        <th>مجموع دریافتی (USDT) </th>
                         <th>عملیات</th>
                     </tr>
                     </thead>
@@ -90,16 +93,15 @@
 
                             <td>
                                 <span class="me-2">{{count($referredUser->referralCodeUsage)}}</span>
-                                <a href="">(مشاهده)</a>
                             </td>
 
-                            <td>
-                                ${{$referredUser->referralCodeUsage->loadSum('transaction','amount')->sum('transaction_sum_amount')}}
+                            <td class="font-number">
+                                {{$referredUser->ownerReferralCodeUsage->loadSum('transaction','amount')->sum('transaction_sum_amount')}}
+
                             </td>
 
                             <td>
                                 <div class="d-flex align-items-center">
-
 
                                     <a class="text-secondary me-3" href="{{route('admin.referral_code.showTransactionsForReferredUser',['user'=>$referredUser->id])}}">
 
@@ -113,7 +115,7 @@
                     </tbody>
                 </table>
             </div>
-            {{--                @include('dashboard.layout.pagination', ['collection' => $regentCodes])--}}
+
         </div>
     </div>
 

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ReferralCodeUsage extends Model
 {
     protected $fillable = [
-        'referral_code_id', 'used_by', 'transaction_id', 'used_at',
+        'referral_code_id', 'used_by', 'transaction_id','type', 'used_at',
     ];
 
     protected function casts(): array

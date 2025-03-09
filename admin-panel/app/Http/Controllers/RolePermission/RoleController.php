@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\RolePermission;
 
+use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
@@ -29,7 +30,7 @@ class RoleController extends Controller
     {
         $this->validate($request, [
             'name' => ['required', 'unique:roles'],
-            'persian_name' => ['required'],
+            'persian_name' => ['required','unique:roles'],
         ]);
 
         $input = $request->all();
@@ -40,14 +41,18 @@ class RoleController extends Controller
         ]);
 
         if (isset($input['permissions'])) {
-            $role->syncPermissions($input['permissions']);
+            $permissions = Permission::whereIn('id', $input['permissions'])->pluck('name')->toArray();
+            foreach ($permissions as $permission) {
+                $role->givePermissionTo($permission);
+            }
         }
-
+        Toast::message('نقش با موفقیت ایجاد شد')->success()->notify();
         return redirect()->route('admin.role.index');
     }
 
     public function edit(Role $role)
     {
+
         $permissions = Permission::query()->get();
 
         return view('dashboard.role.edit')
@@ -59,9 +64,10 @@ class RoleController extends Controller
     {
 
         $this->validate($request, [
-            'name' => ['required'],
-            'persian_name' => ['required'],
+            'name' => ['required', 'unique:roles,name,' . $role->id],
+            'persian_name' => ['required','unique:roles,persian_name,' . $role->id],
         ]);
+
         $input = $request->all();
 
         $role->update([
@@ -69,7 +75,20 @@ class RoleController extends Controller
             'persian_name' => $input['persian_name'],
         ]);
         $role->syncPermissions($input['permissions']);
+        Toast::message('نقش با موفقیت ویرایش شد')->success()->notify();
+        return redirect()->route('admin.role.index');
+    }
 
+    public function destroy(Role $role)
+    {
+        // Check if the role has any users associated with it
+        if ($role->users()->count() > 0) {
+            Toast::message('این نقش دارای کاربران مرتبط است و نمی‌توان آن را حذف کرد')->danger()->notify();
+            return redirect()->route('admin.role.index');
+        }
+
+        $role->delete();
+        Toast::message('نقش با موفقیت حذف شد')->success()->notify();
         return redirect()->route('admin.role.index');
     }
 }

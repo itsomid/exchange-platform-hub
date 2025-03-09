@@ -7,7 +7,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="content-left">
-                            <h5 class="mb-1">{{count($referralCodes)}}</h5>
+                            <h5 class="mb-1">{{$referralCodes->total()}}</h5>
                             <small>تعداد کدهای معرف</small>
                         </div>
                         <span class="badge bg-label-danger rounded-circle p-3">
@@ -22,7 +22,10 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="content-left">
-                            <h5 class="mb-1">${{formatNumber($totalTransactionSum,2)}}</h5>
+                            <h5 class="mb-1">
+                                <small>USDT</small>    
+                                {{formatNumberTrimZeros($totalTransactionSum)}}
+                            </h5>
                             <small>مجموع دریافتی کاربران</small>
                         </div>
                         <span class="badge bg-label-success rounded-circle p-3">
@@ -96,9 +99,55 @@
                         <th>کد دعوت</th>
                         <th>کاربر</th>
                         <th>سهم از کارمزد شما / دوستان</th>
-                        <th>تعداد دوستان</th>
-                        <th>تعداد معاملات</th>
-                        <th>مجموع دریافتی</th>
+                        <th>
+                            @php
+                                $currentParams = request()->except('sortByRegisteredUserCount');
+                                $currentSortDirection = request()->input('sortByRegisteredUserCount', 'asc');
+                                $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
+                            @endphp
+                            <a href="{{ route('admin.referral_code.index', array_merge($currentParams, ['sortByRegisteredUserCount' => $newSortDirection])) }}"
+                               class="text-black">
+                                تعداد افراد معرفی شده
+                                @if($currentSortDirection === 'asc')
+                                    <span><i class="fa-solid fa-arrow-up"></i></span>
+                                @else
+                                    <span><i class="fa-solid fa-arrow-down"></i></span>
+                                @endif
+                            </a>
+                        </th>
+                        <th>
+                            @php
+                                $currentParams = request()->except('sortByReferralCodeUsageCount');
+                                $currentSortDirection = request()->input('sortByReferralCodeUsageCount', 'asc');
+                                $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
+                            @endphp
+                            <a href="{{ route('admin.referral_code.index', array_merge($currentParams, ['sortByReferralCodeUsageCount' => $newSortDirection])) }}"
+                               class="text-black">
+                                تعداد استفاده از کد
+                                @if($currentSortDirection === 'asc')
+                                    <span><i class="fa-solid fa-arrow-up"></i></span>
+                                @else
+                                    <span><i class="fa-solid fa-arrow-down"></i></span>
+                                @endif
+                            </a>    
+                        </th>
+                        <th>
+                            @php
+                                $currentParams = request()->except('sortByAmount');
+                                $currentSortDirection = request()->input('sortByAmount', 'asc');
+                                $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
+                            @endphp
+                            <a href="{{ route('admin.referral_code.index', array_merge($currentParams, ['sortByAmount' => $newSortDirection])) }}"
+                               class="text-black">
+                                مجموع دریافتی USDT
+                                @if($currentSortDirection === 'asc')
+                                    <span><i class="fa-solid fa-arrow-up"></i></span>
+                                @else
+                                    <span><i class="fa-solid fa-arrow-down"></i></span>
+                                @endif
+                            </a>
+                        </th>
+                        <th>حداکثر تعداد قابل استفاده</th>
                         <th>عملیات</th>
                     </tr>
                     </thead>
@@ -125,37 +174,75 @@
                             </td>
                             <td>
                                 <span class="me-2">{{$referralCode->registered_users_count}}</span>
-                                <a href="">(مشاهده)</a>
                             </td>
                             <td>
                                 {{$referralCode->referral_code_usage_count}}
                             </td>
                             <td>
-                                ${{formatNumber($referralCode->transactions_sum_amount,2)}}
-                            </td>
 
+                                @if($referralCode->transactions_sum_amount > 0)
+                                    {{formatNumberTrimZeros($referralCode->transactions_sum_amount)}}
+                                @else
+                                    <span>0</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($referralCode->usage_limit > 0)
+                                    <span class="me-2">{{$referralCode->usage_limit}}</span>
+                                @else
+                                    <span>نامحدود</span>
+                                @endif
+                            </td>
                             <td>
                                 <div class="d-flex align-items-center">
 
-                                    <a class="text-secondary me-3"
+                                    <a  class="btn btn-link p-0 text-secondary me-2"
                                        href="{{ route('admin.referral_code.edit', ['referral_code' => $referralCode->id]) }}">
                                         <i class="fa-light fa-pen-to-square fa-lg"></i>
                                     </a>
-                                    <a class="text-secondary me-3" href="{{route('admin.referral_code.show',['referral_code' => $referralCode->id])}}">
+                                    <a  class="btn btn-link p-0 text-secondary me-2"
+                                       href="{{route('admin.referral_code.show',['referral_code' => $referralCode->id])}}">
                                         <i class="fa-light fa-eye fa-lg"></i>
                                     </a>
-                                    <a class="text-secondary me-3" href="">
 
+                                    <a  class="btn btn-link p-0 text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{$referralCode->id}}">
                                         <i class="fa-light fa-trash-alt fa-lg"></i>
+
                                     </a>
+                                    <div class="modal fade" id="deleteModal{{$referralCode->id}}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">حذف نقش</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    آیا از حذف کد معرف "{{$referralCode->code}}" اطمینان دارید؟
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">انصراف</button>
+                                                    <form action="{{route('admin.referral_code.destroy', $referralCode)}}" method="POST">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-danger">حذف</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
+
+
                     @endforeach
                     </tbody>
+
                 </table>
             </div>
-            {{--                @include('dashboard.layout.pagination', ['collection' => $regentCodes])--}}
+        </div>
+        <div class="row justify-content-center">
+            {{$referralCodes->appends(request()->all())->links()}}
         </div>
     </div>
 

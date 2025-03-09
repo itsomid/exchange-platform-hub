@@ -94,17 +94,30 @@
 
             </ul>
             <div class="d-flex justify-content-center">
-
-                <form action="{{ route('admin.user.toggle-status', $user->id) }}" method="POST">
-                    @csrf
-                    @method('PATCH')
-
-                    <button
-                        class="btn btn-{{ $user->status === \App\Enums\UserStatusEnum::SUSPEND? 'success':'danger'}}"
-                        onclick="return confirm('آیا مطمئن هستید؟')">
-                        {{ $user->status === \App\Enums\UserStatusEnum::SUSPEND ? 'فعالسازی کاربر' : 'تعلیق کاربر' }}
-                    </button>
-                </form>
+                @if($user->status === \App\Enums\UserStatusEnum::INACTIVE)
+                    <div class="text-center">
+                        <form action="{{ route('admin.user.active-user', $user->id) }}" method="POST">
+                            @csrf
+                            @method('PATCH')
+                            <button
+                                class="btn btn-success"
+                                onclick="return confirm('آیا از فعال سازی کاربر مطمئن هستید؟')">
+                                فعالسازی کاربر
+                            </button>
+                        </form>
+                        <p class="mt-3 text-danger">کاربر ایمیل خود را تایید نکرده است</p>
+                    </div>
+                @else
+                    <form action="{{ route('admin.user.toggle-status', $user->id) }}" method="POST">
+                        @csrf
+                        @method('PATCH')
+                        <button
+                            class="btn btn-{{ $user->status === \App\Enums\UserStatusEnum::SUSPEND? 'success':'danger'}}"
+                            onclick="return confirm('آیا مطمئن هستید؟')">
+                            {{ $user->status === \App\Enums\UserStatusEnum::SUSPEND ? 'فعالسازی کاربر' : 'تعلیق کاربر' }}
+                        </button>
+                    </form>
+                @endif
             </div>
         </div>
     </div>

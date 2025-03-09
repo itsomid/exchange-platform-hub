@@ -160,14 +160,14 @@
         <div class="card-body">
             <div class="card-title header-elements">
                 <h5 class="m-0 me-2">لیست کاربران</h5>
-
-                <div class="card-title-elements ms-auto">
-                    <a href="{{route('admin.user.create')}}" class="btn btn-primary">
-                        <i class="fa fa-plus mx-2"></i>
-                        افزودن کاربر جدید
-                    </a>
-
-                </div>
+                @can('user.create')
+                    <div class="card-title-elements ms-auto">
+                        <a href="{{route('admin.user.create')}}" class="btn btn-primary">
+                            <i class="fa fa-plus mx-2"></i>
+                            افزودن کاربر جدید
+                        </a>
+                    </div>
+                @endcan
             </div>
 
             @if(count($users))
@@ -302,11 +302,13 @@
                                                 <i class="fa-solid fa-ellipsis-vertical"></i>
                                             </button>
                                             <div class="dropdown-menu">
-                                                <a class="dropdown-item"
-                                                   href="{{route('admin.user.edit', ['user'=>$user->id])}}">
-                                                    <i class="fa-light fa-pen"></i>
-                                                    ویرایش کاربر
-                                                </a>
+                                                @can('user.edit')
+                                                    <a class="dropdown-item"
+                                                       href="{{route('admin.user.edit', ['user'=>$user->id])}}">
+                                                        <i class="fa-light fa-pen"></i>
+                                                        ویرایش کاربر
+                                                    </a>
+                                                @endcan
                                                 <a class="dropdown-item"
                                                    href="{{route('admin.user.password.edit', ['user'=>$user->id])}}">
                                                     <i class="fa-regular fa-unlock"></i>
@@ -318,7 +320,8 @@
                                                     محدودیت های مالی
                                                 </a>
                                                 @can('user.login-as-customer')
-                                                    <a class="dropdown-item" href="{{ route('admin.user.login-as-user', $user->id) }}">
+                                                    <a class="dropdown-item"
+                                                       href="{{ route('admin.user.login-as-user', $user->id) }}">
                                                         <i class="fa-light fa-right-to-bracket"></i>
                                                         ورود به عنوان کاربر
                                                     </a>

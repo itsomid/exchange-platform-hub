@@ -42,8 +42,10 @@ class UserFinancialBlockController extends Controller
         $userFinancialBlockActions = UserFinancialBlockAction::cases();
 
         $user->load('financialBlocks');
+        $userFinancialBlockHistory = UserFinancialBlock::query()->whereUserId($user->id)->withTrashed()->orderBy('created_at','desc')->paginate(20);
         return view('dashboard.user.financial_blocks.user-financial-block', [
-            'user' => $user,
+            'user'=>$user,
+            'userFinancialBlockHistory' => $userFinancialBlockHistory,
             'userFinancialBlockActions' => $userFinancialBlockActions
         ]);
     }

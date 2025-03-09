@@ -14,14 +14,26 @@
                     <form action="{{route('admin.setting.int.update-referral-setting')}}" method="post">
                         @csrf
                         <div class="row mt-5">
-                            <div class="col-xl-3">
+                            <div class="col-xl-4">
                                 <div class="form-group">
-                                    <label class="form-label" for="referral_profit_percentage">درصد اهدایی به کاربران
-                                        برای معرفی دوستان</label>
+                                    <label class="form-label" for="referral_profit_percentage">حداکثر درصد اهدایی به کاربران برای معرفی دوستان</label>
                                     <input type="number" name="referral_profit_percentage"
                                            id="referral_profit_percentage" class="form-control"
                                            placeholder="درصد اهدایی به کاربران برای معرفی دوستان"
                                            value="{{$referralProfitPercentage->value}}"
+                                           required>
+                                    @error('otcBuyFee')
+                                    <small class="text-danger">{{$message}}</small>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-xl-4">
+                                <div class="form-group">
+                                    <label class="form-label" for="referral_usage_limit_count">حداکثر تعداد استفاده کاربر از کد معرف</label>
+                                    <input type="number" name="referral_usage_limit_count"
+                                           id="referral_usage_limit_count" class="form-control"
+                                           placeholder="حداکثر تعداد استفاده کاربر از کد معرف"
+                                           value="{{$referralUsageLimitCount->value}}"
                                            required>
                                     @error('otcBuyFee')
                                     <small class="text-danger">{{$message}}</small>
@@ -63,7 +75,7 @@
                     <form action="{{route('admin.setting.int.update-otc-setting')}}" method="post">
                         @csrf
                         <div class="row mt-5">
-                            <div class="col-xl-3">
+                            <div class="col-xl-4">
                                 <div class="form-group">
                                     <label class="form-label" for="otc_buy_fee">کارمزد فروش به مشتری (درصد)</label>
                                     <input name="otc_buy_fee" id="otc_buy_fee" class="form-control"
@@ -75,7 +87,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-xl-3">
+                            <div class="col-xl-4">
                                 <div class="form-group">
                                     <label class="form-label" for="otc_sell_fee">کارمزد خرید از مشتری (درصد)</label>
                                     <input name="otc_sell_fee" id="otc_sell_fee" class="form-control"
