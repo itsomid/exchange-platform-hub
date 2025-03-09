@@ -165,7 +165,7 @@ services:
     depends_on:
       - database
     working_dir: /var/www/html
-    entrypoint: [ 'php', '/var/www/html/artisan', 'queue:work' ]
+    entrypoint: [ 'php', '/var/www/html/artisan', 'queue:work --tries=20 --timeout=60 --queue=default' ]
     networks:
       - laravel
 
@@ -184,7 +184,7 @@ services:
     depends_on:
       - database
     working_dir: /var/www/html
-    entrypoint: [ 'php', '/var/www/html/artisan', 'queue:work' ]
+    entrypoint: [ 'php', '/var/www/html/artisan', 'queue:work', '--tries=20', '--timeout=60', '--queue=default,email' ]
     networks:
       - laravel
 

@@ -34,6 +34,8 @@ class UserSecurityController extends Controller
 
         if ($status === Password::RESET_LINK_SENT) {
             Toast::message('لینک بازیابی رمز عبور با موفقیت به کاربر ارسال شد')->success()->notify();
+        }elseif ($status === Password::RESET_THROTTLED){
+            Toast::message('تعداد درخواست از حد مجاز بیشتر شده است. دقایقی بعد تلاش کنید.')->danger()->notify();
         } else {
             report("Panel can not send reset link {$user->id}");
             Toast::message('مشکل فنی رخ داده است لطفا دقایق دیگری تلاش کنید.')->danger()->notify();
