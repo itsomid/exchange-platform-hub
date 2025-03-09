@@ -16,10 +16,69 @@ use Symfony\Component\HttpFoundation\Response;
 
 class TradeController extends Controller
 {
+    /**
+     * @OA\Post(
+     *     path="/orders",
+     *     tags={"Spot Orders"},
+     *     summary="Create a new trading order",
+     *     description="Create a new spot trading order in the exchange",
+     *     security={{"bearerAuth": {}}},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/OrderRequest")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=201,
+     *         description="Order created successfully",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="Order created successfully")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="The given data was invalid."),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object",
+     *                 example={"market_id": {"The market id field is required."}}
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=400,
+     *         description="Market validation error",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="Invalid market selected")
+     *         )
+     *     )
+     * )
+     */
     public function store(CreateOrderRequest $request)
     {
         $validated = $request->validated();
-        //TODO
         $spotOrder = resolve(SpotService::class);
         $spotOrder->trade(
             resolve(SpotTradeRequestDTO::class)

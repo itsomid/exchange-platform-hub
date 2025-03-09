@@ -8,6 +8,47 @@ use App\Models\Market;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * @OA\Schema(
+ *     schema="OrderRequest",
+ *     required={"market_id", "type", "side", "quantity", "price"},
+ *
+ *     @OA\Property(
+ *         property="market_id",
+ *         type="integer",
+ *         example=1,
+ *         description="ID of the trading pair market"
+ *     ),
+ *     @OA\Property(
+ *         property="type",
+ *         type="string",
+ *         enum={"limit", "market"},
+ *         example="limit",
+ *         description="Order type"
+ *     ),
+ *     @OA\Property(
+ *         property="side",
+ *         type="string",
+ *         enum={"buy", "sell"},
+ *         example="buy",
+ *         description="Order side"
+ *     ),
+ *     @OA\Property(
+ *         property="quantity",
+ *         type="number",
+ *         format="float",
+ *         example=0.5,
+ *         description="Order quantity (must be between market's min/max trade amount)"
+ *     ),
+ *     @OA\Property(
+ *         property="price",
+ *         type="number",
+ *         format="float",
+ *         example=45000.50,
+ *         description="Order price per unit"
+ *     )
+ * )
+ */
 class CreateOrderRequest extends FormRequest
 {
     /**
