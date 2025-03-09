@@ -169,24 +169,24 @@ services:
     networks:
       - laravel
 
-  api-queue:
-    build:
-      context: ./dockerfiles
-      dockerfile: php.dockerfile
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-        - USER=${USER:-laraveluser}
-    container_name: api-queue
-    volumes:
-      - "./api-service:/var/www/html:delegated"
-      - "./env/api_service.env:/var/www/html/.env"
-    depends_on:
-      - database
-    working_dir: /var/www/html
-    entrypoint: [ 'php', '/var/www/html/artisan', 'queue:work', '--tries=20', '--timeout=60', '--queue=api-service' ]
-    networks:
-      - laravel
+#  api-queue:
+#    build:
+#      context: ./dockerfiles
+#      dockerfile: php.dockerfile
+#      args:
+#        - UID=${UID:-1000}
+#        - GID=${GID:-1000}
+#        - USER=${USER:-laraveluser}
+#    container_name: api-queue
+#    volumes:
+#      - "./api-service:/var/www/html:delegated"
+#      - "./env/api_service.env:/var/www/html/.env"
+#    depends_on:
+#      - database
+#    working_dir: /var/www/html
+#    entrypoint: [ 'php', '/var/www/html/artisan', 'queue:work', '--tries=20', '--timeout=60', '--queue=default,email' ]
+#    networks:
+#      - laravel
 
   # Laravel Queue Workers
   coinex-listen:
