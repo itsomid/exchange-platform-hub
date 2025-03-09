@@ -38,6 +38,7 @@ class ResetPasswordNotification extends Notification implements ShouldQueue
     {
         $expiration = now()->addMinutes(5)->diffForHumans();
         return (new MailMessage)
+            ->from('info@bitexroom.com', 'BitexRoom')
             ->view('mail.auth.reset-password', [
                 'url' => $this->url,
                 'expiration'=>$expiration
