@@ -6,6 +6,9 @@ use App\Enums\SpotOrderSideEnum;
 use App\Enums\SpotOrderTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Spot\CreateOrderRequest;
+use App\Http\Requests\V1\Spot\ListOrderRequest;
+use App\Http\Resources\SpotOrderResource;
+use App\Services\Spot\DTO\SpotTradeListsRequestDTO;
 use App\Services\Spot\DTO\SpotTradeRequestDTO;
 use App\Services\Spot\SpotService;
 use Illuminate\Support\Facades\Auth;
@@ -33,9 +36,30 @@ class TradeController extends Controller
         ], Response::HTTP_CREATED);
     }
 
-    public function lists()
+    public function lists(ListOrderRequest $request)
     {
         $spotOrder = resolve(SpotService::class);
+        $lists = $spotOrder->lists(
+            resolve(SpotTradeListsRequestDTO::class)
+                ->setUserId(Auth::id())
+                ->setSide(
+                    $request->has('side') ?
+                    SpotOrderSideEnum::tryFrom(
+                        $request->input('side')
+                    )
+                        :
+                        null
+                )
+                ->setType(
+                    $request->has('type') ?
+                    SpotOrderTypeEnum::tryFrom(
+                        $request->input('type')
+                    )
+                        :
+                        null
+                )
+        );
 
+        return SpotOrderResource::collection($lists);
     }
 }

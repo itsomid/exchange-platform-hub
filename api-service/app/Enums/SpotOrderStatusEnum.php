@@ -4,5 +4,5 @@ namespace App\Enums;
 
 enum SpotOrderStatusEnum: string
 {
-    case PENDING = 'pending';
+    case OPEN = 'open';
 }

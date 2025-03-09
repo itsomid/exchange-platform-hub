@@ -9,10 +9,13 @@ use App\Exceptions\V1\OTC\InsufficientBalanceException;
 use App\Helpers\Math;
 use App\Models\LockedBalanceDetail;
 use App\Repositories\DTO\SpotOrder\SpotOrderCreateRequestDTO;
+use App\Repositories\DTO\SpotOrder\TradeListRequestDTO;
 use App\Repositories\Interfaces\MarketRepositoryInterface;
 use App\Repositories\Interfaces\SpotOrderRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
+use App\Services\Spot\DTO\SpotTradeListsRequestDTO;
 use App\Services\Spot\DTO\SpotTradeRequestDTO;
+use Illuminate\Database\Eloquent\Collection;
 use Throwable;
 
 class SpotService
@@ -67,7 +70,7 @@ class SpotService
                 resolve(SpotOrderCreateRequestDTO::class)
                     ->setSide($side)
                     ->setPrice($price)
-                    ->setStatus(SpotOrderStatusEnum::PENDING)
+                    ->setStatus(SpotOrderStatusEnum::OPEN)
                     ->setMarketId($market->id)
                     ->setQuantity($quantity)
                     ->setFilledQuantity(0)
@@ -87,5 +90,13 @@ class SpotService
         }
     }
 
-    public function lists() {}
+    public function lists(SpotTradeListsRequestDTO $requestDTO): Collection
+    {
+        return $this->spotOrderRepository->lists(
+            resolve(TradeListRequestDTO::class)
+                ->setType($requestDTO->getType())
+                ->setSide($requestDTO->getSide())
+                ->setUserId($requestDTO->getUserId())
+        );
+    }
 }
