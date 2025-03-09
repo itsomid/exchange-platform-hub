@@ -85,7 +85,7 @@
                             <td>
 
                                 <div class="d-flex flex-column">
-                                    <a href="" class="text-heading text-truncate">
+                                    <a href="{{route('admin.inquiry.user-details',['user'=>$referredUser])}}" class="text-heading text-truncate">
                                         <span class="fw-medium">{{ $referredUser->email}}</span>
                                     </a>
                                     <small>{{ $referredUser->fullname()}}</small>

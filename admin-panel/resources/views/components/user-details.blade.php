@@ -62,7 +62,7 @@
                         <div class="text-end">
                             @foreach($user->activeFinancialBlocks as $block)
                                 <span
-                                    class="badge bg-label-danger ms-1 align-self-baseline">{{\App\Enums\UserFinancialBlockAction::TYPE_LABEL[$block->action] }}</span>
+                                    class="badge bg-label-danger ms-1 align-self-baseline">{{$block->action->label() }}</span>
                             @endforeach
                         </div>
                     @endif
@@ -89,7 +89,7 @@
                     <span class="h6">مکان:</span>
                     @if($user->latestActiveToken)
                         {{$user->latestActiveToken->ip}}
-                        <td class="text-truncate">{{ App\Helpers\LocationFinder::getCountryAndCity($user->latestActiveToken->ip) }}</td>
+                        <td class="text-truncate">{{ $user->latestActiveToken->ip ? App\Helpers\LocationFinder::getCountryAndCity($user->latestActiveToken->ip): 'N/A' }}</td>
                     @else
                         <span>بدون فعالیت</span>
                     @endif

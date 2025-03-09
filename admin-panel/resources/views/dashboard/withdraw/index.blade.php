@@ -273,7 +273,7 @@
 
                             <td>
                                 <div class="d-flex flex-column">
-                                    <a href="" class="text-heading text-truncate">
+                                    <a href="{{route('admin.inquiry.user-details',['user'=>$withdraw->user])}}" class="text-heading text-truncate">
                                         <span class="fw-medium">{{$withdraw->user->email}}</span>
                                     </a>
                                     <small>{{$withdraw->user->username}}</small>

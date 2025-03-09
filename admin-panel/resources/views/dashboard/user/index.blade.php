@@ -223,7 +223,7 @@
                                         </div>
 
                                         <div class="d-flex flex-column">
-                                            <a href="" class="text-heading text-truncate">
+                                            <a href="{{route('admin.inquiry.user-details',['user'=>$user])}}" class="text-heading text-truncate">
                                                 <span class="fw-medium">{{$user->email}}</span>
                                             </a>
                                             <small>{{$user->username}}</small>
@@ -257,7 +257,7 @@
                                     @else
                                         @foreach($user->activeFinancialBlocks as $block)
                                             <div class="badge bg-label-danger me-2">
-                                                <p class="mb-1">{{\App\Enums\UserFinancialBlockAction::TYPE_LABEL[$block->action] }}</p>
+                                                <p class="mb-1">{{$block->action->label()}}</p>
                                                 <span>{{\App\Helpers\DateFormatter::timeUntilInPersian($block->restricted_until)}}</span>
                                             </div>
                                         @endforeach
