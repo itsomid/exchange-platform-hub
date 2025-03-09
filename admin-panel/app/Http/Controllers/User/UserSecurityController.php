@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers\User;
 
+use App\Enums\FinancialBlockReasonsEnum;
+use App\Enums\UserFinancialBlockAction;
 use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\UserFinancialBlock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
@@ -43,6 +46,15 @@ class UserSecurityController extends Controller
     {
         $user->update([
             'two_factor_secret' => null,
+        ]);
+
+        UserFinancialBlock::query()->create([
+            'user_id' => $user->id,
+            'action' => UserFinancialBlockAction::WITHDRAW,
+            'reason' => FinancialBlockReasonsEnum::DISABLE_TWO_FACTOR->value,
+            'admin_id' => \Auth::guard('admin')->user()->id,
+            'description' => 'غیر فعالسازی دومرحله ای',
+            'restricted_until' => now()->addDays(2),
         ]);
 
         Toast::message('ورود دومرحله ایی کاربر با موفقیت غیر فعال شد.')->success()->notify();
