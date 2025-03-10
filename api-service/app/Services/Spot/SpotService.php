@@ -26,6 +26,13 @@ class SpotService
         private readonly SpotOrderRepositoryInterface $spotOrderRepository,
     ) {}
 
+    public function calcCommission($tradeAmount): string
+    {
+        $feeRate = 0.001; // 0.1% commission
+
+        return $commission = Math::mul($tradeAmount, $feeRate);
+    }
+
     public function trade(SpotTradeRequestDTO $requestDTO): void
     {
         $market = $this->marketRepository->getMarketById($requestDTO->getMarketId());
@@ -41,13 +48,10 @@ class SpotService
             : $market->base_currency;
 
         // Determine commission type (maker/taker) and rate
-        $feeRate = 0.001; // 0.1% commission
 
         $tradeAmount = ($side === SpotOrderSideEnum::BUY)
             ? Math::mul($quantity, $price)
             : $quantity;
-        $commission = Math::mul($quantity, $feeRate);
-        $receivedAmount = Math::sub($quantity, $commission);
 
         // Check wallet balance (with pessimistic locking)
         $wallet = $this->walletRepository->getOneOrCreateByCurrencyWithLock($currency, $requestDTO->getUserId());
