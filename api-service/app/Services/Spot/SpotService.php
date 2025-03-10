@@ -43,24 +43,22 @@ class SpotService
         // Determine commission type (maker/taker) and rate
         $feeRate = 0.001; // 0.1% commission
 
-        // Calculate required balance and commission
         $tradeAmount = ($side === SpotOrderSideEnum::BUY)
             ? Math::mul($quantity, $price)
             : $quantity;
-
-        $commission = Math::mul($tradeAmount, $feeRate); // 0.1% maker/taker fee
-        $requiredAmount = Math::add($tradeAmount, $commission);
+        $commission = Math::mul($quantity, $feeRate);
+        $receivedAmount = Math::sub($quantity, $commission);
 
         // Check wallet balance (with pessimistic locking)
         $wallet = $this->walletRepository->getOneOrCreateByCurrencyWithLock($currency, $requestDTO->getUserId());
 
-        if (Math::comp($wallet->balance, $requiredAmount) === -1) {
+        if (Math::comp($wallet->balance, $tradeAmount) === -1) {
             throw new InsufficientBalanceException;
         }
 
         // Update wallet balances
-        $wallet->balance = Math::sub($wallet->balance, $requiredAmount);
-        $wallet->locked_balance = Math::add($wallet->locked_balance, $requiredAmount);
+        $wallet->balance = Math::sub($wallet->balance, $tradeAmount);
+        $wallet->locked_balance = Math::add($wallet->locked_balance, $tradeAmount);
 
         try {
             $wallet->save();
@@ -81,7 +79,7 @@ class SpotService
             // Record locked balance details
             LockedBalanceDetail::query()->create([
                 'wallet_id' => $wallet->id,
-                'amount' => $requiredAmount,
+                'amount' => $tradeAmount,
                 'type' => LockedBalanceTypeEnum::SPOT,
                 'spot_order_id' => $spotOrder->id,
             ]);
