@@ -26,7 +26,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('sport_trade', function (Blueprint $table) {
+        Schema::create('spot_trades', function (Blueprint $table) {
             $table->id();
             $table->unsignedInteger('buy_order_id');
             $table->unsignedInteger('sell_order_id');
