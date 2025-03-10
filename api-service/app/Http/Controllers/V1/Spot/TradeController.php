@@ -18,7 +18,7 @@ class TradeController extends Controller
 {
     /**
      * @OA\Post(
-     *     path="/api/spot/trades",
+     *     path="/api/v1/spot/trades",
      *     tags={"Spot Orders"},
      *     summary="Create a new trading order",
      *     description="Create a new spot trading order in the exchange",
@@ -97,7 +97,7 @@ class TradeController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/spot/trades",
+     *     path="/api/v1/spot/trades",
      *     tags={"Spot Orders"},
      *     summary="Get user's spot orders",
      *     description="Retrieve a list of authenticated user's spot orders with optional filters",
