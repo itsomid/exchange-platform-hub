@@ -310,9 +310,11 @@ class WithdrawalService
                 }
 
             } catch (NotFoundException) {
+                report(new \Exception('Withdrawal #'.$withdrawal->id.' not found in HD wallet Service'));
                 $withdrawal->update([
                     'status' => WithdrawalStatusEnum::FAILED,
                 ]);
+                $this->fialedWithdrawalAndUnlockBalance($withdrawal);
             } catch (Throwable $exception) {
                 report($exception);
 
