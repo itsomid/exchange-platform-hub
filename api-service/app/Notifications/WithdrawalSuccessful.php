@@ -6,6 +6,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use App\Mail\WithdrawalMail;
 
 class WithdrawalSuccessful extends Notification implements ShouldQueue
 {
@@ -52,14 +53,14 @@ class WithdrawalSuccessful extends Notification implements ShouldQueue
     /**
      * Get the mail representation of the notification.
      */
-    public function toMail(object $notifiable): MailMessage
+    public function toMail(object $notifiable): WithdrawalMail
     {
-        return (new MailMessage)
-            ->subject('برداشت موفق')
-            ->line('برداشت '.$this->currencySymbol.' به مقدار '.$this->amount.' روی شبکه'.$this->network.' با موفقیت انجام شد.')
-            ->line('متشکریم که از پلتفرم ما استفاده می کنید!')
-            ->action('مشاهده تراکنش', url('/transactions'))
-            ->greeting("سلام {$this->name} عزیز");
+
+        return new WithdrawalMail(
+            $this->currencySymbol,
+            $this->amount,
+            $this->network
+        );
     }
 
     /**

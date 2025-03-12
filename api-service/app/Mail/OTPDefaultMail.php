@@ -16,7 +16,7 @@ class OTPDefaultMail extends Mailable implements ShouldQueue
     /**
      * Create a new message instance.
      */
-    public function __construct(private readonly int $code, private readonly ?string $name) {}
+    public function __construct(private readonly int $code, private readonly ?string $name = null) {}
 
     /**
      * Get the message envelope.
@@ -33,11 +33,11 @@ class OTPDefaultMail extends Mailable implements ShouldQueue
      */
     public function content(): Content
     {
-        $expiration = now()->addMinutes(15)->diffForHumans();
+        $expiration = now()->addMinutes(10)->diffForHumans();
 
         return new Content(
             view: 'mail.otp.default-mail',
-            with: ['code' => $this->code, 'name' => $this->name, 'expiration' => $expiration],
+            with: ['code' => $this->code, 'expiration' => $expiration],
         );
     }
 
