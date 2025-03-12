@@ -28,13 +28,13 @@ return new class extends Migration
 
         Schema::create('spot_trades', function (Blueprint $table) {
             $table->id();
-            $table->unsignedInteger('buy_order_id');
-            $table->unsignedInteger('sell_order_id');
+            $table->unsignedInteger('maker_order_id');
+            $table->unsignedInteger('taker_order_id');
 
             $table->decimal('quantity', 18, 8);
             $table->decimal('price', 18, 8);
 
-            $table->unique(['buy_order_id', 'sell_order_id']);
+            $table->unique(['maker_order_id', 'taker_order_id']);
             $table->timestamps();
         });
     }

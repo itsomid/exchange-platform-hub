@@ -11,9 +11,9 @@ use Illuminate\Database\Eloquent\Collection;
 
 class SpotOrderRepository implements SpotOrderRepositoryInterface
 {
-    public function create(SpotOrderCreateRequestDTO $requestDTO)
+    public function create(SpotOrderCreateRequestDTO $requestDTO): SpotOrder
     {
-        SpotOrder::query()
+        return SpotOrder::query()
             ->create([
                 'user_id' => $requestDTO->getUserId(),
                 'market_id' => $requestDTO->getMarketId(),

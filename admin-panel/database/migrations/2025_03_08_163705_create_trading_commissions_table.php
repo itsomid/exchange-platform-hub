@@ -15,8 +15,10 @@ return new class extends Migration
         Schema::create('trading_commissions', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(SpotTrade::class)->constrained();
-            $table->decimal('commission_amount', 18, 8);
-            $table->string('commission_percentage');
+            $table->decimal('maker_commission_amount', 18, 8);
+            $table->string('maker_commission_percentage');
+            $table->decimal('taker_commission_amount', 18, 8);
+            $table->string('taker_commission_percentage');
             $table->timestamps();
         });
     }
