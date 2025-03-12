@@ -63,8 +63,7 @@ class WithdrawalService
                 $withdrawalStatus = WithdrawalStatusEnum::AWAITING_APPROVAL;
             }
 
-            // Deduct balance and lock funds
-            $wallet->decrement('balance', $amount);
+            // increase lock funds
             $wallet->increment('locked_balance', $amount);
 
             // Create the withdrawal record
@@ -137,8 +136,8 @@ class WithdrawalService
                 ->where('currency_symbol', $withdrawal->currency_symbol)
                 ->lockForUpdate()
                 ->first();
+
             $wallet->decrement('locked_balance', $withdrawal->amount);
-            $wallet->increment('balance', $withdrawal->amount);
 
             DB::commit();
         } catch (Throwable $e) {
@@ -169,6 +168,7 @@ class WithdrawalService
             ]);
 
             // Unlock funds and deduct locked balance
+            $wallet->decrement('balance', $withdrawal->amount);
             $wallet->decrement('locked_balance', $withdrawal->amount);
 
             // Create the transaction record

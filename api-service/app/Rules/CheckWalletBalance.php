@@ -25,7 +25,8 @@ class CheckWalletBalance implements ValidationRule
             ->where('currency_symbol', $this->currency)
             ->first();
 
-        if (is_null($wallet) || Math::comp($value, $wallet->balance) === 1) {
+        $availableBalance = Math::sub($wallet->balance, $wallet->locked_balance);
+        if (is_null($wallet) || Math::comp($value, $availableBalance) === 1) {
             $fail(__('validation.insufficient_balance', [
                 'amount' => $value,
                 'currency' => $this->currency,
