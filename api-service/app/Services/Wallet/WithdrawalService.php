@@ -177,12 +177,12 @@ class WithdrawalService
                 'wallet_id' => $wallet->id,
                 'withdrawal_id' => $withdrawal->id,
                 'amount' => -$withdrawal->amount,
-                'balance' => $wallet->balance,
+                'balance' => Math::add($wallet->balance, $withdrawal->amount),
                 'type' => TransactionTypeEnum::WITHDRAWAL,
                 'subtype' => TransactionSubTypeEnum::USER_INITIATED,
                 'status' => TransactionStatusEnum::SUCCESS,
                 'description' => 'برداشت به آدرس: '.$withdrawal->address.' هش تراکنش: '.$transactionHash,
-                'admin_description' => '',
+                'admin_description' => ''
             ]);
             $baseCoinChain = CurrencyChain::query()
                 ->where('chain', $withdrawal->currencyChain->chain)
@@ -199,11 +199,11 @@ class WithdrawalService
                     'wallet_id' => $wallet->id,
                     'withdrawal_id' => $withdrawal->id,
                     'amount' => -$hdWalletNetworkFee,
-                    'balance' => $wallet->balance,
+                    'balance' => null,
                     'type' => TransactionTypeEnum::FEE,
                     'subtype' => TransactionSubTypeEnum::HD_WALLET_FEE,
                     'status' => TransactionStatusEnum::SUCCESS,
-                    'description' => 'کارمزد شبکه برداشت به آدرس: '.$withdrawal->address.' هش تراکنش: '.$transactionHash,
+                    'description' => 'کارمزد پرداخت شده به شبکه برای برداشت از HD Wallet.',
                 ]);
             $this->createExchangeWithdrawalFee($withdrawal, $hdWalletNetworkFee);
 

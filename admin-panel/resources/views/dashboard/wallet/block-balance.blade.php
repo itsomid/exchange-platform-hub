@@ -99,10 +99,9 @@
                         <input type="number"
                                name="block_amount"
                                id="block_amount"
-                               step="0.00000001"
+                               step="0.000000001"
                                class="form-control font-number"
                                dir="ltr"
-
                                placeholder="میزان کوین مورد نظر را وارد کنید">
 
                         @error('amount')<small class="text-danger">{{$message}}</small>@enderror
@@ -110,7 +109,7 @@
                     <div class="w-100 my-3"></div>
                     <div class="col-md-6" dir="ltr">
 
-                        <input type="range"  class="form-range" value="0" min="0" max="{{$wallet->balance - $wallet->locked_balance}}" step="0.00000001"  id="amount_range">
+                        <input type="range"  class="form-range" value="0" min="0" max="{{bcsub($wallet->balance , $wallet->locked_balance,8)}}" step="0.000000001"  id="amount_range">
                     </div>
                     <div class="w-100"></div>
                     <div class="col-md-6 mt-5">
