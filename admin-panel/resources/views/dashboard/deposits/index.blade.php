@@ -464,6 +464,30 @@
 
 @endsection
 @section('vendor-script')
-    @vite(['resources/assets/vendor/libs/clipboard/clipboard.js',
-            'resources/assets/js/extended-ui-misc-clipboardjs.js'])
+ <script>
+        $(document).ready(function () {
+            $('[data-bs-toggle="tooltip"]').tooltip();
+            
+            // Handle copy functionality
+            $('.clipboard-btn').on('click', function(e) {
+                e.preventDefault();
+                const btn = $(this);
+                const icon = btn.find('i');
+                const originalIcon = icon.attr('class');
+                
+                // Copy the text
+                const targetId = btn.data('clipboard-target');
+                const textToCopy = $(targetId).val();
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    // Change icon to tick
+                    icon.removeClass(originalIcon).addClass('fa-solid fa-check');
+                    
+                    // Change back to original icon after 2 seconds
+                    setTimeout(() => {
+                        icon.removeClass('fa-solid fa-check').addClass(originalIcon);
+                    }, 2000);
+                });
+            });
+        });
+    </script>
 @endsection

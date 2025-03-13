@@ -309,10 +309,11 @@
                                            data-clipboard-target="#withdraw{{$withdraw->address}}">
                                             <i class="fa-regular fa-clone"></i>
                                         </a>
+                                        
                                         <input type="hidden"
                                                value="{{$withdraw->address}}"
                                                id="withdraw{{$withdraw->address}}"
-                                               class="form-control text-left" placeholder="کد معرف شما"
+                                               class="form-control text-left"
                                                aria-label="Username"
                                                readonly>
 
@@ -551,6 +552,27 @@
     <script>
         $(document).ready(function () {
             $('[data-bs-toggle="tooltip"]').tooltip();
+            
+            // Handle copy functionality
+            $('.clipboard-btn').on('click', function(e) {
+                e.preventDefault();
+                const btn = $(this);
+                const icon = btn.find('i');
+                const originalIcon = icon.attr('class');
+                
+                // Copy the text
+                const targetId = btn.data('clipboard-target');
+                const textToCopy = $(targetId).val();
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    // Change icon to tick
+                    icon.removeClass(originalIcon).addClass('fa-solid fa-check');
+                    
+                    // Change back to original icon after 2 seconds
+                    setTimeout(() => {
+                        icon.removeClass('fa-solid fa-check').addClass(originalIcon);
+                    }, 2000);
+                });
+            });
         });
     </script>
 @endsection
