@@ -40,7 +40,7 @@ class OrderMatchingEngine
         }
     }
 
-    private function market(SpotOrder $order): void
+    public function market(SpotOrder $order): void
     {
         $oppositeType = $order->side === SpotOrderSideEnum::BUY ? SpotOrderSideEnum::SELL : SpotOrderSideEnum::BUY;
         $sortType = $order->side === SpotOrderSideEnum::BUY ? 'ASC' : 'DESC';
@@ -61,7 +61,7 @@ class OrderMatchingEngine
         }
     }
 
-    private function limit(SpotOrder $order)
+    public function limit(SpotOrder $order)
     {
         $oppositeType = $order->side === SpotOrderSideEnum::BUY ? SpotOrderSideEnum::SELL : SpotOrderSideEnum::BUY;
         $sortType = $order->side === SpotOrderSideEnum::BUY ? 'ASC' : 'DESC';

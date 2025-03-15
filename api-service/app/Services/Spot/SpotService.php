@@ -15,6 +15,7 @@ use App\Repositories\Interfaces\SpotOrderRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Services\Spot\DTO\SpotTradeListsRequestDTO;
 use App\Services\Spot\DTO\SpotTradeRequestDTO;
+use App\Services\Spot\DTO\SpotTradeResponseDTO;
 use Illuminate\Database\Eloquent\Collection;
 use Throwable;
 
@@ -33,8 +34,9 @@ class SpotService
         return $commission = Math::mul($tradeAmount, $feeRate);
     }
 
-    public function trade(SpotTradeRequestDTO $requestDTO): void
+    public function trade(SpotTradeRequestDTO $requestDTO): SpotTradeResponseDTO
     {
+        $response = resolve(SpotTradeResponseDTO::class);
         $market = $this->marketRepository->getMarketById($requestDTO->getMarketId());
 
         $type = $requestDTO->getType();
@@ -79,6 +81,7 @@ class SpotService
                     ->setType($type)
                     ->setUserId($requestDTO->getUserId())
             );
+            $response->setSpotOrderModel($spotOrder);
 
             // Record locked balance details
             LockedBalanceDetail::query()->create([
@@ -90,6 +93,8 @@ class SpotService
         } catch (Throwable $exception) {
             report($exception);
         }
+
+        return $response;
     }
 
     public function lists(SpotTradeListsRequestDTO $requestDTO): Collection
