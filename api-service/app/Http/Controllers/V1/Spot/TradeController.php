@@ -13,7 +13,9 @@ use App\Services\Spot\DTO\SpotTradeRequestDTO;
 use App\Services\Spot\OrderMatchingEngine;
 use App\Services\Spot\SpotService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 class TradeController extends Controller
 {
@@ -80,28 +82,42 @@ class TradeController extends Controller
     public function store(CreateOrderRequest $request)
     {
         $validated = $request->validated();
-        $type = SpotOrderTypeEnum::tryFrom($validated['type']);
-        $spotOrder = resolve(SpotService::class);
-        $response = $spotOrder->trade(
-            resolve(SpotTradeRequestDTO::class)
-                ->setUserId(Auth::id())
-                ->setQuantity($validated['quantity'])
-                ->setType($type)
-                ->setSide(SpotOrderSideEnum::tryFrom($validated['side']))
-                ->setPrice($validated['price'])
-                ->setMarketId($validated['market_id'])
-        );
+        $lock = Cache::lock('trade:'.$validated['market_id'].Auth::id(), 10);
+        if ($lock->get()) {
+            try {
+                $type = SpotOrderTypeEnum::tryFrom($validated['type']);
+                $spotOrder = resolve(SpotService::class);
+                $response = $spotOrder->trade(
+                    resolve(SpotTradeRequestDTO::class)
+                        ->setUserId(Auth::id())
+                        ->setQuantity($validated['quantity'])
+                        ->setType($type)
+                        ->setSide(SpotOrderSideEnum::tryFrom($validated['side']))
+                        ->setPrice($validated['price'])
+                        ->setMarketId($validated['market_id'])
+                );
 
-        $orderMatchingEngine = resolve(OrderMatchingEngine::class);
-        if ($type === SpotOrderTypeEnum::MARKET) {
-            $orderMatchingEngine->market($response->getSpotOrderModel());
-        } elseif ($type === SpotOrderTypeEnum::LIMIT) {
-            $orderMatchingEngine->limit($response->getSpotOrderModel());
+                $orderMatchingEngine = resolve(OrderMatchingEngine::class);
+                if ($type === SpotOrderTypeEnum::MARKET) {
+                    $orderMatchingEngine->market($response->getSpotOrderModel());
+                } elseif ($type === SpotOrderTypeEnum::LIMIT) {
+                    $orderMatchingEngine->limit($response->getSpotOrderModel());
+                }
+
+                return response([
+                    'message' => __('spot.order_created'),
+                ], Response::HTTP_CREATED);
+            } catch (Throwable $exception) {
+                $lock->release();
+                throw $exception;
+            } finally {
+                $lock->release();
+            }
         }
 
         return response([
-            'message' => __('spot.order_created'),
-        ], Response::HTTP_CREATED);
+            'message' => __('auth.too_many_attempts'),
+        ], Response::HTTP_TOO_MANY_REQUESTS);
     }
 
     /**
