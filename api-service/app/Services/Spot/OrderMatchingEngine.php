@@ -14,9 +14,9 @@ use App\Repositories\Interfaces\WalletRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
-class OrderMatchingEngine
+readonly class OrderMatchingEngine
 {
-    public function __construct(private readonly WalletRepositoryInterface $walletRepository) {}
+    public function __construct(private WalletRepositoryInterface $walletRepository) {}
 
     public function processOrder(): void
     {
@@ -61,7 +61,7 @@ class OrderMatchingEngine
         }
     }
 
-    public function limit(SpotOrder $order)
+    public function limit(SpotOrder $order): void
     {
         $oppositeType = $order->side === SpotOrderSideEnum::BUY ? SpotOrderSideEnum::SELL : SpotOrderSideEnum::BUY;
         $sortType = $order->side === SpotOrderSideEnum::BUY ? 'ASC' : 'DESC';
