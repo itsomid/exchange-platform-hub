@@ -82,7 +82,7 @@ class TradeController extends Controller
     public function store(CreateOrderRequest $request)
     {
         $validated = $request->validated();
-        $lock = Cache::lock('trade:'.$validated['market_id'].Auth::id(), 10);
+        $lock = Cache::lock('trade:'.$validated['market_id'].Auth::id(), 40);
         if ($lock->get()) {
             try {
                 $type = SpotOrderTypeEnum::tryFrom($validated['type']);
