@@ -148,6 +148,8 @@ services:
     entrypoint: /bin/sh -c "while true; do echo \"[ $(date) ] Running schedule...\"; php artisan schedule:run; sleep 60; done"
     networks:
       - laravel
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   # Laravel Queue Workers
   admin-queue:
@@ -187,6 +189,8 @@ services:
     entrypoint: [ 'php', '/var/www/html/artisan', 'queue:work' ]
     networks:
       - laravel
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   # Laravel Queue Workers
   coinex-listen:
