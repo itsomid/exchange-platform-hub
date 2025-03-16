@@ -5,18 +5,26 @@ namespace App\Services\Spot;
 use App\Enums\SpotOrderSideEnum;
 use App\Enums\SpotOrderStatusEnum;
 use App\Enums\SpotOrderTypeEnum;
+use App\Enums\TransactionStatusEnum;
+use App\Enums\TransactionSubTypeEnum;
+use App\Enums\TransactionTypeEnum;
 use App\Helpers\Math;
 use App\Models\LockedBalanceDetail;
 use App\Models\SpotOrder;
 use App\Models\SpotTrade;
 use App\Models\TradingCommission;
+use App\Repositories\DTO\Transaction\CreateTransactionRequestDTO;
+use App\Repositories\Interfaces\TransactionRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
 readonly class OrderMatchingEngine
 {
-    public function __construct(private WalletRepositoryInterface $walletRepository) {}
+    public function __construct(
+        private WalletRepositoryInterface $walletRepository,
+        private readonly TransactionRepositoryInterface $transactionRepository,
+    ) {}
 
     public function processOrder(): void
     {
@@ -122,6 +130,39 @@ readonly class OrderMatchingEngine
         if ($oppositeOrder->getRemindedQuantity() <= 0) {
             $oppositeOrder->update(['status' => SpotOrderStatusEnum::COMPLETED]);
         }
+    }
+
+    private function addTransactions(SpotOrder $spotOrder, SpotTrade $spotTrade)
+    {
+        $wallet = $this->walletRepository->getOneByCurrency($spotOrder->user_id, $spotOrder->market->base_currency);
+
+        $bitexroomWallet = $this->walletRepository->getBitexroomWallet($spotOrder->market->base_currency);
+
+        // **Create Transaction for Trader**
+        $this->transactionRepository->create(
+            resolve(CreateTransactionRequestDTO::class)
+                ->setUserId($spotOrder->user_id)
+                ->setType(TransactionTypeEnum::BUY)
+                ->setAmount($spotTrade->quantity)
+                ->setStatus(TransactionStatusEnum::SUCCESS)
+                ->setBalance($wallet->balance)
+                ->setDescription('test')
+                ->setSubtype(TransactionSubTypeEnum::SPOT)
+                ->setWalletId($wallet->id)
+        );
+        // **Create Transaction for Commission**
+        $this->transactionRepository->create(
+            resolve(CreateTransactionRequestDTO::class)
+                ->setUserId($spotOrder->user_id)
+                ->setType(TransactionTypeEnum::FEE)
+                ->setAmount($spotTrade->commission->quantity)
+                ->setStatus(TransactionStatusEnum::SUCCESS)
+                ->setBalance($wallet->balance)
+                ->setDescription('test')
+                ->setSubtype(TransactionSubTypeEnum::SPOT)
+                ->setWalletId($wallet->id)
+        );
+
     }
 
     public function calcCommission($tradeAmount): string
