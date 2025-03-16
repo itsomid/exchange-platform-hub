@@ -79,7 +79,7 @@ class OTCService
             config('bitexroom.bitexroom_user_id')
         );
 
-        return $wallet->available;
+        return $wallet->balance;
     }
 
     /**

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Helpers\Math;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -36,11 +35,6 @@ class Wallet extends Model
     public function currency(): BelongsTo
     {
         return $this->belongsTo(Currency::class, 'currency_symbol', 'symbol');
-    }
-
-    public function getAvailableAttribute(): string
-    {
-        return Math::sub($this->balance, $this->locked_balance);
     }
 
     public function chains(): HasMany

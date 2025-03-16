@@ -1704,6 +1704,201 @@
                 ]
             }
         },
+        "/api/spot/trades": {
+            "get": {
+                "tags": [
+                    "Spot Orders"
+                ],
+                "summary": "Get user's spot orders",
+                "description": "Retrieve a list of authenticated user's spot orders with optional filters",
+                "operationId": "ae08a958e93745fd39ac008eac9239a8",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Filter by order type",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "market",
+                                "limit"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "side",
+                        "in": "query",
+                        "description": "Filter by order side",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "buy",
+                                "sell"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of spot orders",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SpotOrderResource"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "example": {
+                                                "type": [
+                                                    "The selected type is invalid."
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Spot Orders"
+                ],
+                "summary": "Create a new trading order",
+                "description": "Create a new spot trading order in the exchange",
+                "operationId": "466df489819f103f9e463d509de73e18",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OrderRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Order created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Order created successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "example": {
+                                                "market_id": [
+                                                    "The market id field is required."
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Market validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid market selected"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/v1/transactions/all-deposit-withdraw": {
             "get": {
                 "tags": [
@@ -3737,6 +3932,53 @@
                 },
                 "type": "object"
             },
+            "OrderRequest": {
+                "required": [
+                    "market_id",
+                    "type",
+                    "side",
+                    "quantity",
+                    "price"
+                ],
+                "properties": {
+                    "market_id": {
+                        "description": "ID of the trading pair market",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "type": {
+                        "description": "Order type",
+                        "type": "string",
+                        "enum": [
+                            "limit",
+                            "market"
+                        ],
+                        "example": "limit"
+                    },
+                    "side": {
+                        "description": "Order side",
+                        "type": "string",
+                        "enum": [
+                            "buy",
+                            "sell"
+                        ],
+                        "example": "buy"
+                    },
+                    "quantity": {
+                        "description": "Order quantity (must be between market's min/max trade amount)",
+                        "type": "number",
+                        "format": "float",
+                        "example": 0.5
+                    },
+                    "price": {
+                        "description": "Order price per unit",
+                        "type": "number",
+                        "format": "float",
+                        "example": 45000.5
+                    }
+                },
+                "type": "object"
+            },
             "AllDepositWithdrawalRequest": {
                 "description": "Query parameters for filtering deposit and withdrawal transactions.",
                 "properties": {
@@ -3967,6 +4209,52 @@
                     "has_two_factor": {
                         "description": "Indicates whether the user has two-factor authentication enabled.",
                         "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "SpotOrderResource": {
+                "properties": {
+                    "market": {
+                        "description": "Trading pair in BASE|QUOTE format",
+                        "type": "string",
+                        "example": "BTC|USD"
+                    },
+                    "side": {
+                        "type": "string",
+                        "enum": [
+                            "buy",
+                            "sell"
+                        ],
+                        "example": "buy"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "limit",
+                            "market"
+                        ],
+                        "example": "limit"
+                    },
+                    "quantity": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 0.5
+                    },
+                    "price": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 45000.5
+                    },
+                    "status": {
+                        "description": "Order status",
+                        "type": "string",
+                        "example": "filled"
+                    },
+                    "filled_quantity": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 0.5
                     }
                 },
                 "type": "object"
@@ -4981,6 +5269,10 @@
         {
             "name": "Profile",
             "description": "Profile"
+        },
+        {
+            "name": "Spot Orders",
+            "description": "Spot Orders"
         },
         {
             "name": "Transactions",

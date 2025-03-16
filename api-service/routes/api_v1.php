@@ -87,3 +87,9 @@ Route::prefix('/tickets')->group(function () {
     Route::get('/{ticket}', [App\Http\Controllers\V1\User\TicketController::class, 'show']);
     Route::post('/{ticket}/reply', [App\Http\Controllers\V1\User\TicketController::class, 'reply']);
 });
+
+//Spot
+Route::prefix('/spot')->group(function () {
+    Route::post('/trades', [\App\Http\Controllers\V1\Spot\TradeController::class, 'store']);
+    Route::get('/trades', [\App\Http\Controllers\V1\Spot\TradeController::class, 'lists']);
+});

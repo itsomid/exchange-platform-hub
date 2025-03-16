@@ -10,3 +10,4 @@ use Illuminate\Support\Facades\Schedule;
 //})->purpose('Display an inspiring quote')->everyTenSeconds();
 
 Schedule::command('wallet:check-withdrawal')->hourly();
+Schedule::command('orders:match')->everyMinute();
