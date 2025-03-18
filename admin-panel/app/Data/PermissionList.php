@@ -52,6 +52,8 @@ class PermissionList
 
             ['notifications','لیست اعلان های مدیریت'],
             ['support','پشتیبانی کاربر'],
+            ['viewTelescope','لاراول تلسکوپ'],
+            ['viewPulse','لاراول پالس'],
 
         ];
 

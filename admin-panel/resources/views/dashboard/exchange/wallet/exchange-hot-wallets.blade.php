@@ -4,8 +4,11 @@
 
     {{-- EXCHANGE LOCAL WALLET--}}
     <div class="card mt-6">
-        <div class="card-body">
-            <h4 class="mb-0">دارایی Hot Wallet</h4>
+        <div class="card-header">
+            <div class="d-flex justify-content-between">
+                <h4 class="mb-0">دارایی Hot Wallet</h4>
+                <a href="{{route('wallet.assets-gathering-to-cold-wallet')}}" class="btn btn-primary">انتقال دارایی به Cold Wallet</a>
+            </div>
         </div>
     </div>
     <div class="row g-6 mt-3">

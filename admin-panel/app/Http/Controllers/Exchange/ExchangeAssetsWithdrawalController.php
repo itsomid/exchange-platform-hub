@@ -53,7 +53,7 @@ class ExchangeAssetsWithdrawalController extends Controller
 
         ///TODO: complete Withdrawal
 
-        return view('dashboard.exchange.wallet.exchange-assets-request-form', [
+        return view('dashboard.exchange.ref_exchange.assets-withdrawal-request-form', [
             'currency' => $currency,
             'currencyChains' => $currencyChains,
             'walletChains' => $walletChains,

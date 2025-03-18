@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Exchange;
 
 use App\Http\Controllers\Controller;
 use App\Models\Currency;
+use App\Models\Wallet;
 use App\Models\WalletChain;
 use App\Services\NodeProviders\BscScanService;
 use App\Services\NodeProviders\CryptoAPIService;
@@ -204,6 +205,35 @@ class ExchangeWalletController extends Controller
         return response()->json([
             'amount' => formatNumberTrimZeros($balanceData['amount'])
         ]);
+    }
+
+    public function assetsGatheringToColdWallet(Request $request)
+    {
+        if ($request->has('currency_symbol')) {
+            $currency_symbol = $request->currency_symbol;
+        } else {
+            $currency_symbol = 'USDT';
+        }
+        $currency = Currency::whereSymbol($currency_symbol)->first();
+
+        $currencyChains = $currency->chains;
+        $wallet = Wallet::where('currency_symbol', $currency->symbol)->first();
+
+
+        $walletChains = $wallet->walletChains;
+
+        return view('dashboard.exchange.wallet.assets-gathering-to-cold-wallet-form',[
+            'currency' => $currency,
+            'currencyChains' => $currencyChains,
+            'walletChains' => $walletChains,
+        ]);
+        $chainName = $request->input('chain_name');
+        $walletChain = WalletChain::where('currency_chain', $chainName)->first();
+
+        $coldWalletAddress = $request->input('cold_wallet_address');
+
+
+
     }
 
 }

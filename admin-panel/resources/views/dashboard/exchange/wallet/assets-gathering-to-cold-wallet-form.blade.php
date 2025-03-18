@@ -6,7 +6,7 @@
         <div class="card-header d-flex justify-content-between">
             <div class="col-md-7 mb-md-0 mb-6 ps-0 d-flex align-items-center">
                 <img src="{{$currency->coinLogo()}}" width="60px">
-                <h5 class="mb-0 ms-3 card-title">فرم برداشت ({{$currency->name}}) از Coinex</h5>
+                <h5 class="mb-0 ms-3 card-title">فرم برداشت ({{$currency->name}}) از HD Wallet</h5>
             </div>
 
             <div class="col-md-5 col-8 pe-0 ps-0 ps-md-2">
