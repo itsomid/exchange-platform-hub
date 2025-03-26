@@ -34,6 +34,8 @@ readonly class OrderMatchingEngine
             ->get();
 
         foreach ($orders as $order) {
+            //Maybe this order matched with another order
+            $order->refresh();
             DB::beginTransaction();
             try {
                 if ($order->type === SpotOrderTypeEnum::MARKET) {
