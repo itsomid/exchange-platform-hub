@@ -12,4 +12,6 @@ interface SpotOrderRepositoryInterface
     public function create(SpotOrderCreateRequestDTO $requestDTO): SpotOrder;
 
     public function lists(TradeListRequestDTO $requestDTO): Collection;
+
+    public function getLatestOrders(int $marketId, int $limit): array;
 }

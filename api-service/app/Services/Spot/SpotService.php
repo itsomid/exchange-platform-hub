@@ -106,4 +106,9 @@ class SpotService
                 ->setUserId($requestDTO->getUserId())
         );
     }
+
+    public function getLatestOrderBook(int $marketId, int $limit): array
+    {
+        return $this->spotOrderRepository->getLatestOrders($marketId, $limit);
+    }
 }
