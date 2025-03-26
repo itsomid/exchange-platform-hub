@@ -2,6 +2,8 @@
 
 namespace App\Repositories;
 
+use App\Enums\SpotOrderSideEnum;
+use App\Enums\SpotOrderStatusEnum;
 use App\Models\SpotOrder;
 use App\Repositories\DTO\SpotOrder\SpotOrderCreateRequestDTO;
 use App\Repositories\DTO\SpotOrder\TradeListRequestDTO;
@@ -35,5 +37,30 @@ class SpotOrderRepository implements SpotOrderRepositoryInterface
             ->latest()
             ->with('market')
             ->get();
+    }
+
+    public function getLatestOrders(int $marketId, int $limit): array
+    {
+        return [
+            'asks' => SpotOrder::query()
+                ->selectRaw('price, SUM(filled_quantity) as filled_quantity, SUM(quantity) as quantity')
+                ->where('market_id', $marketId)
+                ->where('side', SpotOrderSideEnum::SELL)
+                ->where('status', SpotOrderStatusEnum::OPEN)
+                ->orderBy('price', 'asc') // Lowest price first for asks
+                ->limit($limit)
+                ->groupBy('price')
+                ->get(),
+
+            'bids' => SpotOrder::query()
+                ->selectRaw('price, SUM(filled_quantity) as filled_quantity, SUM(quantity) as quantity')
+                ->where('market_id', $marketId)
+                ->where('side', SpotOrderSideEnum::BUY)
+                ->where('status', SpotOrderStatusEnum::OPEN)
+                ->orderBy('price', 'desc') // Highest price first for bids
+                ->limit($limit)
+                ->groupBy('price')
+                ->get(),
+        ];
     }
 }

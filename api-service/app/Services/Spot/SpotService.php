@@ -5,6 +5,7 @@ namespace App\Services\Spot;
 use App\Enums\LockedBalanceTypeEnum;
 use App\Enums\SpotOrderSideEnum;
 use App\Enums\SpotOrderStatusEnum;
+use App\Events\OrderBookUpdated;
 use App\Exceptions\V1\OTC\InsufficientBalanceException;
 use App\Helpers\Math;
 use App\Models\LockedBalanceDetail;
@@ -90,6 +91,8 @@ class SpotService
                 'type' => LockedBalanceTypeEnum::SPOT,
                 'spot_order_id' => $spotOrder->id,
             ]);
+            //Update Socket
+            OrderBookUpdated::dispatch($requestDTO->getMarketId());
         } catch (Throwable $exception) {
             report($exception);
         }
@@ -105,5 +108,10 @@ class SpotService
                 ->setSide($requestDTO->getSide())
                 ->setUserId($requestDTO->getUserId())
         );
+    }
+
+    public function getLatestOrderBook(int $marketId, int $limit): array
+    {
+        return $this->spotOrderRepository->getLatestOrders($marketId, $limit);
     }
 }

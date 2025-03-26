@@ -8,6 +8,7 @@ use App\Enums\SpotOrderTypeEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
+use App\Events\OrderBookUpdated;
 use App\Helpers\Math;
 use App\Models\LockedBalanceDetail;
 use App\Models\SpotOrder;
@@ -66,6 +67,7 @@ readonly class OrderMatchingEngine
                 break;
             }
             $this->completeOrder($order, $oppositeOrder);
+            $this->broadcastOrderBook($order->market_id);
         }
     }
 
@@ -89,6 +91,7 @@ readonly class OrderMatchingEngine
                 break;
             }
             $this->completeOrder($order, $oppositeOrder);
+            $this->broadcastOrderBook($order->market_id);
         }
     }
 
@@ -215,5 +218,10 @@ readonly class OrderMatchingEngine
                 ->where('spot_order_id', $makerOrder->id)
                 ->delete();
         });
+    }
+
+    private function broadcastOrderBook(int $marketId): void
+    {
+        OrderBookUpdated::dispatch($marketId);
     }
 }
