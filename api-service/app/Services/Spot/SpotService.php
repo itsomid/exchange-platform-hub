@@ -5,6 +5,7 @@ namespace App\Services\Spot;
 use App\Enums\LockedBalanceTypeEnum;
 use App\Enums\SpotOrderSideEnum;
 use App\Enums\SpotOrderStatusEnum;
+use App\Enums\SpotOrderTypeEnum;
 use App\Events\OrderBookUpdated;
 use App\Exceptions\V1\OTC\InsufficientBalanceException;
 use App\Helpers\Math;
@@ -43,8 +44,13 @@ class SpotService
         $type = $requestDTO->getType();
         $side = $requestDTO->getSide();
         $quantity = $requestDTO->getQuantity();
-        $price = $requestDTO->getPrice();
 
+        if ($type === SpotOrderTypeEnum::MARKET) {
+            $priceType = $side === SpotOrderSideEnum::BUY ? 'buy_price' : 'sell_price';
+            $price = $market->exchangePrice->$priceType;
+        } else {
+            $price = $requestDTO->getPrice();
+        }
         // Determine currency for balance check
         $currency = ($side === SpotOrderSideEnum::BUY)
             ? $market->quote_currency
@@ -74,7 +80,7 @@ class SpotService
             $spotOrder = $this->spotOrderRepository->create(
                 resolve(SpotOrderCreateRequestDTO::class)
                     ->setSide($side)
-                    ->setPrice($price)
+                    ->setPrice($type === SpotOrderTypeEnum::MARKET ? null : $price)
                     ->setStatus(SpotOrderStatusEnum::OPEN)
                     ->setMarketId($market->id)
                     ->setQuantity($quantity)

@@ -18,7 +18,7 @@ class SpotOrderCreateRequestDTO
 
     private SpotOrderTypeEnum $type;
 
-    private string $price;
+    private ?string $price = null;
 
     private SpotOrderStatusEnum $status;
 
@@ -72,14 +72,14 @@ class SpotOrderCreateRequestDTO
         return $this->type;
     }
 
-    public function setPrice(string $price): SpotOrderCreateRequestDTO
+    public function setPrice(?string $price): SpotOrderCreateRequestDTO
     {
         $this->price = $price;
 
         return $this;
     }
 
-    public function getPrice(): string
+    public function getPrice(): ?string
     {
         return $this->price;
     }

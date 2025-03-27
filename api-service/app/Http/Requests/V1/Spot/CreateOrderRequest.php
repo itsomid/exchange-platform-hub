@@ -73,7 +73,7 @@ class CreateOrderRequest extends FormRequest
             'type' => ['required', Rule::enum(SpotOrderTypeEnum::class)],
             'side' => ['required', Rule::enum(SpotOrderSideEnum::class)],
             'quantity' => ['required', 'numeric', 'min:'.$market?->min_trade_amount, 'max:'.$market->max_trade_amount],
-            'price' => ['required', 'numeric'],
+            'price' => ['required_if:type,limit', 'nullable', 'numeric'],
         ];
     }
 }

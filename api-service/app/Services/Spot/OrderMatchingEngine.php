@@ -61,6 +61,7 @@ readonly class OrderMatchingEngine
             ->where('market_id', $order->market_id)
             ->where('status', SpotOrderStatusEnum::OPEN)
             ->orderBy('price', $sortType)
+            ->whereNotNull('price') // Ensure matching against LIMIT orders only
             ->lockForUpdate()
             ->get();
 
@@ -68,6 +69,9 @@ readonly class OrderMatchingEngine
             if ($order->getRemindedQuantity() <= 0) {
                 break;
             }
+            // Set market order price to the matched limit order's price
+            $order->price = $oppositeOrder->price;
+
             $this->completeOrder($order, $oppositeOrder);
             $this->broadcastOrderBook($order->market_id);
         }
@@ -82,9 +86,21 @@ readonly class OrderMatchingEngine
             ->where('side', $oppositeType)
             ->where('market_id', $order->market_id)
             ->where('status', SpotOrderStatusEnum::OPEN)
-            ->when($order->side === SpotOrderSideEnum::BUY, fn ($query) => $query->where('price', '<=', $order->price))
-            ->when($order->side === SpotOrderSideEnum::SELL, fn ($query) => $query->where('price', '>=', $order->price))
-            ->orderBy('price', $sortType)
+            ->where(function ($query) use ($order) {
+                // Match with:
+                // - Market orders (no price)
+                // - Limit orders that meet the price condition
+                $query->whereNull('price') // Market order
+                    ->orWhere(function ($q) use ($order) {
+                        if ($order->side === SpotOrderSideEnum::BUY) {
+                            $q->where('price', '<=', $order->price); // Buy: Match at or below limit price
+                        } else {
+                            $q->where('price', '>=', $order->price); // Sell: Match at or above limit price
+                        }
+                    });
+            })
+            ->orderByRaw('price IS NULL DESC') // Prioritize market orders (NULL price first)
+            ->orderBy('price', $sortType) // Then sort limit orders by price
             ->lockForUpdate()
             ->get();
 
@@ -92,6 +108,12 @@ readonly class OrderMatchingEngine
             if ($order->getRemindedQuantity() <= 0) {
                 break;
             }
+
+            // If matching with a market order, set its price to the limit order's price
+            if ($oppositeOrder->price === null) {
+                $oppositeOrder->price = $order->price;
+            }
+
             $this->completeOrder($order, $oppositeOrder);
             $this->broadcastOrderBook($order->market_id);
         }
@@ -129,10 +151,12 @@ readonly class OrderMatchingEngine
             ]);
 
         if ($order->getRemindedQuantity() <= 0) {
+            $order->price = $order->getOriginal('price');
             $order->update(['status' => SpotOrderStatusEnum::COMPLETED]);
         }
 
         if ($oppositeOrder->getRemindedQuantity() <= 0) {
+            $oppositeOrder->price = $oppositeOrder->getOriginal('price');
             $oppositeOrder->update(['status' => SpotOrderStatusEnum::COMPLETED]);
         }
     }

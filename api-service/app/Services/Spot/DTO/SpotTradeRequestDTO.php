@@ -17,7 +17,7 @@ class SpotTradeRequestDTO
 
     private string $quantity;
 
-    private string $price;
+    private ?string $price = null;
 
     public function setUserId(int $userId): SpotTradeRequestDTO
     {
@@ -79,14 +79,14 @@ class SpotTradeRequestDTO
         return $this->quantity;
     }
 
-    public function setPrice(string $price): SpotTradeRequestDTO
+    public function setPrice(?string $price): SpotTradeRequestDTO
     {
         $this->price = $price;
 
         return $this;
     }
 
-    public function getPrice(): string
+    public function getPrice(): ?string
     {
         return $this->price;
     }
