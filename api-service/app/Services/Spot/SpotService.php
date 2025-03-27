@@ -15,10 +15,10 @@ use App\Repositories\DTO\SpotOrder\TradeListRequestDTO;
 use App\Repositories\Interfaces\MarketRepositoryInterface;
 use App\Repositories\Interfaces\SpotOrderRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
-use App\Services\Spot\DTO\SpotTradeListsRequestDTO;
-use App\Services\Spot\DTO\SpotTradeListsResponseDTO;
-use App\Services\Spot\DTO\SpotTradeRequestDTO;
-use App\Services\Spot\DTO\SpotTradeResponseDTO;
+use App\Services\Spot\DTO\SpotOrderListsRequestDTO;
+use App\Services\Spot\DTO\SpotOrderListsResponseDTO;
+use App\Services\Spot\DTO\SpotOrderRequestDTO;
+use App\Services\Spot\DTO\SpotOrderResponseDTO;
 use Throwable;
 
 class SpotService
@@ -36,9 +36,9 @@ class SpotService
         return $commission = Math::mul($tradeAmount, $feeRate);
     }
 
-    public function trade(SpotTradeRequestDTO $requestDTO): SpotTradeResponseDTO
+    public function trade(SpotOrderRequestDTO $requestDTO): SpotOrderResponseDTO
     {
-        $response = resolve(SpotTradeResponseDTO::class);
+        $response = resolve(SpotOrderResponseDTO::class);
         $market = $this->marketRepository->getMarketById($requestDTO->getMarketId());
 
         $type = $requestDTO->getType();
@@ -106,7 +106,7 @@ class SpotService
         return $response;
     }
 
-    public function lists(SpotTradeListsRequestDTO $requestDTO): array
+    public function lists(SpotOrderListsRequestDTO $requestDTO): array
     {
         return $this->spotOrderRepository->lists(
             resolve(TradeListRequestDTO::class)
@@ -119,7 +119,7 @@ class SpotService
             $filledValue = $order->makerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0);
             $filledValue = Math::add($filledValue, $order->takerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0));
 
-            return resolve(SpotTradeListsResponseDTO::class)
+            return resolve(SpotOrderListsResponseDTO::class)
                 ->setId($order->id)
                 ->setStatus($order->status)
                 ->setSide($order->side)
@@ -144,7 +144,7 @@ class SpotService
         return $this->spotOrderRepository->getLatestOrders($marketId, $limit);
     }
 
-    public function getDetail(int $userId, int $orderId): SpotTradeListsResponseDTO
+    public function getDetail(int $userId, int $orderId): SpotOrderListsResponseDTO
     {
         $order = $this->spotOrderRepository->getDetail(
             userId: $userId,
@@ -153,7 +153,7 @@ class SpotService
         $filledValue = $order->makerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0);
         $filledValue = Math::add($filledValue, $order->takerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0));
 
-        return resolve(SpotTradeListsResponseDTO::class)
+        return resolve(SpotOrderListsResponseDTO::class)
             ->setId($order->id)
             ->setStatus($order->status)
             ->setSide($order->side)

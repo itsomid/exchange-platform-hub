@@ -4,7 +4,7 @@ namespace App\Services\Spot\DTO;
 
 use App\Models\SpotOrder;
 
-class SpotTradeResponseDTO
+class SpotOrderResponseDTO
 {
     private ?SpotOrder $spotOrderModel = null;
 

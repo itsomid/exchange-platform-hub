@@ -1729,14 +1729,14 @@
                 }
             }
         },
-        "/api/v1/spot/trades": {
+        "/api/v1/spot/orders": {
             "get": {
                 "tags": [
                     "Spot Orders"
                 ],
                 "summary": "Get user's spot orders",
                 "description": "Retrieve a list of authenticated user's spot orders with optional filters",
-                "operationId": "8e54a0575f8914ac931c79642ecf3017",
+                "operationId": "fff40fb95dea4d9020d5674546afdd35",
                 "parameters": [
                     {
                         "name": "type",
@@ -1845,7 +1845,7 @@
                 ],
                 "summary": "Create a new trading order",
                 "description": "Create a new spot trading order in the exchange",
-                "operationId": "5f389a1401e2e629b0ab1ff3dce70687",
+                "operationId": "01d21c34960bf20657d869f5b0d9112c",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -1937,14 +1937,14 @@
                 ]
             }
         },
-        "/api/v1/spot/order/{orderId}": {
+        "/api/v1/spot/orders/{orderId}": {
             "get": {
                 "tags": [
                     "Spot Orders"
                 ],
                 "summary": "Get spot order details",
                 "description": "Retrieve order detilas",
-                "operationId": "208dbe11afeffdc41014e882ede70fe3",
+                "operationId": "322dc58046e3682777a0ca66b25065e4",
                 "responses": {
                     "200": {
                         "description": "List of spot orders",

@@ -7,7 +7,7 @@ use App\Enums\SpotOrderStatusEnum;
 use App\Enums\SpotOrderTypeEnum;
 use Carbon\Carbon;
 
-class SpotTradeListsResponseDTO
+class SpotOrderListsResponseDTO
 {
     private int $id;
 
@@ -31,7 +31,7 @@ class SpotTradeListsResponseDTO
 
     private Carbon $createdAt;
 
-    public function setMarketName(string $baseCurrency, string $quoteCurrency): SpotTradeListsResponseDTO
+    public function setMarketName(string $baseCurrency, string $quoteCurrency): SpotOrderListsResponseDTO
     {
         $this->marketName = $baseCurrency.'|'.$quoteCurrency;
 
@@ -43,7 +43,7 @@ class SpotTradeListsResponseDTO
         return $this->marketName;
     }
 
-    public function setSide(SpotOrderSideEnum $side): SpotTradeListsResponseDTO
+    public function setSide(SpotOrderSideEnum $side): SpotOrderListsResponseDTO
     {
         $this->side = $side;
 
@@ -55,7 +55,7 @@ class SpotTradeListsResponseDTO
         return $this->side;
     }
 
-    public function setType(SpotOrderTypeEnum $type): SpotTradeListsResponseDTO
+    public function setType(SpotOrderTypeEnum $type): SpotOrderListsResponseDTO
     {
         $this->type = $type;
 
@@ -67,7 +67,7 @@ class SpotTradeListsResponseDTO
         return $this->type;
     }
 
-    public function setQuantity(string $quantity): SpotTradeListsResponseDTO
+    public function setQuantity(string $quantity): SpotOrderListsResponseDTO
     {
         $this->quantity = $quantity;
 
@@ -79,7 +79,7 @@ class SpotTradeListsResponseDTO
         return $this->quantity;
     }
 
-    public function setPrice(?string $price): SpotTradeListsResponseDTO
+    public function setPrice(?string $price): SpotOrderListsResponseDTO
     {
         $this->price = $price;
 
@@ -91,7 +91,7 @@ class SpotTradeListsResponseDTO
         return $this->price;
     }
 
-    public function setStatus(SpotOrderStatusEnum $status): SpotTradeListsResponseDTO
+    public function setStatus(SpotOrderStatusEnum $status): SpotOrderListsResponseDTO
     {
         $this->status = $status;
 
@@ -103,7 +103,7 @@ class SpotTradeListsResponseDTO
         return $this->status;
     }
 
-    public function setFilledQuantity(string $filledQuantity): SpotTradeListsResponseDTO
+    public function setFilledQuantity(string $filledQuantity): SpotOrderListsResponseDTO
     {
         $this->filledQuantity = $filledQuantity;
 
@@ -115,7 +115,7 @@ class SpotTradeListsResponseDTO
         return $this->filledQuantity;
     }
 
-    public function setCommission(string $commission): SpotTradeListsResponseDTO
+    public function setCommission(string $commission): SpotOrderListsResponseDTO
     {
         $this->commission = $commission;
 
@@ -127,7 +127,7 @@ class SpotTradeListsResponseDTO
         return $this->commission;
     }
 
-    public function setFilledValue(string $filledValue): SpotTradeListsResponseDTO
+    public function setFilledValue(string $filledValue): SpotOrderListsResponseDTO
     {
         $this->filledValue = $filledValue;
 
@@ -139,7 +139,7 @@ class SpotTradeListsResponseDTO
         return $this->filledValue;
     }
 
-    public function setCreatedAt(Carbon $createdAt): SpotTradeListsResponseDTO
+    public function setCreatedAt(Carbon $createdAt): SpotOrderListsResponseDTO
     {
         $this->createdAt = $createdAt;
 
@@ -151,7 +151,7 @@ class SpotTradeListsResponseDTO
         return $this->createdAt;
     }
 
-    public function setId(int $id): SpotTradeListsResponseDTO
+    public function setId(int $id): SpotOrderListsResponseDTO
     {
         $this->id = $id;
 

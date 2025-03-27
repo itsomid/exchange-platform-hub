@@ -92,7 +92,7 @@ Route::prefix('/tickets')->group(function () {
 Route::prefix('/spot')->group(function () {
     //get-markets
     Route::get('/markets', [\App\Http\Controllers\V1\Spot\MarketController::class, 'lists'])->name('spot.markets')->withoutMiddleware(['auth:sanctum', 'verified']);
-    Route::post('/trades', [\App\Http\Controllers\V1\Spot\TradeController::class, 'store']);
-    Route::get('/trades', [\App\Http\Controllers\V1\Spot\TradeController::class, 'lists']);
-    Route::get('/order/{orderId}', [\App\Http\Controllers\V1\Spot\TradeController::class, 'show']);
+    Route::post('/orders', [\App\Http\Controllers\V1\Spot\OrderController::class, 'store']);
+    Route::get('/orders', [\App\Http\Controllers\V1\Spot\OrderController::class, 'lists']);
+    Route::get('/orders/{orderId}', [\App\Http\Controllers\V1\Spot\OrderController::class, 'show']);
 });

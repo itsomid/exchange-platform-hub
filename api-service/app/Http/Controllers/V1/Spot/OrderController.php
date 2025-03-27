@@ -8,8 +8,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Spot\CreateOrderRequest;
 use App\Http\Requests\V1\Spot\ListOrderRequest;
 use App\Http\Resources\SpotOrderResource;
-use App\Services\Spot\DTO\SpotTradeListsRequestDTO;
-use App\Services\Spot\DTO\SpotTradeRequestDTO;
+use App\Services\Spot\DTO\SpotOrderListsRequestDTO;
+use App\Services\Spot\DTO\SpotOrderRequestDTO;
 use App\Services\Spot\OrderMatchingEngine;
 use App\Services\Spot\SpotService;
 use Illuminate\Support\Facades\Auth;
@@ -17,13 +17,13 @@ use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
-class TradeController extends Controller
+class OrderController extends Controller
 {
     public function __construct(private readonly SpotService $spotService) {}
 
     /**
      * @OA\Post(
-     *     path="/api/v1/spot/trades",
+     *     path="/api/v1/spot/orders",
      *     tags={"Spot Orders"},
      *     summary="Create a new trading order",
      *     description="Create a new spot trading order in the exchange",
@@ -90,7 +90,7 @@ class TradeController extends Controller
                 $type = SpotOrderTypeEnum::tryFrom($validated['type']);
                 $spotOrder = resolve(SpotService::class);
                 $response = $spotOrder->trade(
-                    resolve(SpotTradeRequestDTO::class)
+                    resolve(SpotOrderRequestDTO::class)
                         ->setUserId(Auth::id())
                         ->setQuantity($validated['quantity'])
                         ->setType($type)
@@ -124,7 +124,7 @@ class TradeController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v1/spot/trades",
+     *     path="/api/v1/spot/orders",
      *     tags={"Spot Orders"},
      *     summary="Get user's spot orders",
      *     description="Retrieve a list of authenticated user's spot orders with optional filters",
@@ -206,7 +206,7 @@ class TradeController extends Controller
     public function lists(ListOrderRequest $request)
     {
         $lists = $this->spotService->lists(
-            resolve(SpotTradeListsRequestDTO::class)
+            resolve(SpotOrderListsRequestDTO::class)
                 ->setUserId(Auth::id())
                 ->setSide($request->input('side'))
                 ->setType($request->input('type'))
@@ -218,7 +218,7 @@ class TradeController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v1/spot/order/{orderId}",
+     *     path="/api/v1/spot/orders/{orderId}",
      *     tags={"Spot Orders"},
      *     summary="Get spot order details",
      *     description="Retrieve order detilas",

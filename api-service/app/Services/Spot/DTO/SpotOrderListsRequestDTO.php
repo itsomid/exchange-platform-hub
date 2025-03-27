@@ -6,7 +6,7 @@ use App\Enums\SpotOrderSideEnum;
 use App\Enums\SpotOrderStatusEnum;
 use App\Enums\SpotOrderTypeEnum;
 
-class SpotTradeListsRequestDTO
+class SpotOrderListsRequestDTO
 {
     private int $userId;
 
@@ -16,7 +16,7 @@ class SpotTradeListsRequestDTO
 
     private ?SpotOrderStatusEnum $status = null;
 
-    public function setUserId(int $userId): SpotTradeListsRequestDTO
+    public function setUserId(int $userId): SpotOrderListsRequestDTO
     {
         $this->userId = $userId;
 
@@ -28,7 +28,7 @@ class SpotTradeListsRequestDTO
         return $this->userId;
     }
 
-    public function setSide(?string $side): SpotTradeListsRequestDTO
+    public function setSide(?string $side): SpotOrderListsRequestDTO
     {
         $this->side = SpotOrderSideEnum::tryFrom($side);
 
@@ -40,7 +40,7 @@ class SpotTradeListsRequestDTO
         return $this->side;
     }
 
-    public function setType(?string $type): SpotTradeListsRequestDTO
+    public function setType(?string $type): SpotOrderListsRequestDTO
     {
         $this->type = SpotOrderTypeEnum::tryFrom($type);
 
@@ -52,7 +52,7 @@ class SpotTradeListsRequestDTO
         return $this->type;
     }
 
-    public function setStatus(?string $status): SpotTradeListsRequestDTO
+    public function setStatus(?string $status): SpotOrderListsRequestDTO
     {
         $this->status = SpotOrderStatusEnum::tryFrom($status);
 

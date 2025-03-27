@@ -5,7 +5,7 @@ namespace App\Services\Spot\DTO;
 use App\Enums\SpotOrderSideEnum;
 use App\Enums\SpotOrderTypeEnum;
 
-class SpotTradeRequestDTO
+class SpotOrderRequestDTO
 {
     private int $userId;
 
@@ -19,7 +19,7 @@ class SpotTradeRequestDTO
 
     private ?string $price = null;
 
-    public function setUserId(int $userId): SpotTradeRequestDTO
+    public function setUserId(int $userId): SpotOrderRequestDTO
     {
         $this->userId = $userId;
 
@@ -31,7 +31,7 @@ class SpotTradeRequestDTO
         return $this->userId;
     }
 
-    public function setMarketId(int $marketId): SpotTradeRequestDTO
+    public function setMarketId(int $marketId): SpotOrderRequestDTO
     {
         $this->marketId = $marketId;
 
@@ -43,7 +43,7 @@ class SpotTradeRequestDTO
         return $this->marketId;
     }
 
-    public function setType(SpotOrderTypeEnum $type): SpotTradeRequestDTO
+    public function setType(SpotOrderTypeEnum $type): SpotOrderRequestDTO
     {
         $this->type = $type;
 
@@ -55,7 +55,7 @@ class SpotTradeRequestDTO
         return $this->type;
     }
 
-    public function setSide(SpotOrderSideEnum $side): SpotTradeRequestDTO
+    public function setSide(SpotOrderSideEnum $side): SpotOrderRequestDTO
     {
         $this->side = $side;
 
@@ -67,7 +67,7 @@ class SpotTradeRequestDTO
         return $this->side;
     }
 
-    public function setQuantity(string $quantity): SpotTradeRequestDTO
+    public function setQuantity(string $quantity): SpotOrderRequestDTO
     {
         $this->quantity = $quantity;
 
@@ -79,7 +79,7 @@ class SpotTradeRequestDTO
         return $this->quantity;
     }
 
-    public function setPrice(?string $price): SpotTradeRequestDTO
+    public function setPrice(?string $price): SpotOrderRequestDTO
     {
         $this->price = $price;
 
