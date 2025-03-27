@@ -3,6 +3,7 @@
 namespace App\Repositories\DTO\SpotOrder;
 
 use App\Enums\SpotOrderSideEnum;
+use App\Enums\SpotOrderStatusEnum;
 use App\Enums\SpotOrderTypeEnum;
 
 class TradeListRequestDTO
@@ -12,6 +13,8 @@ class TradeListRequestDTO
     private ?SpotOrderSideEnum $side = null;
 
     private ?SpotOrderTypeEnum $type = null;
+
+    private ?SpotOrderStatusEnum $status = null;
 
     public function setUserId(int $userId): self
     {
@@ -47,5 +50,17 @@ class TradeListRequestDTO
     public function getType(): ?SpotOrderTypeEnum
     {
         return $this->type;
+    }
+
+    public function setStatus(?SpotOrderStatusEnum $status): TradeListRequestDTO
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
+    public function getStatus(): ?SpotOrderStatusEnum
+    {
+        return $this->status;
     }
 }

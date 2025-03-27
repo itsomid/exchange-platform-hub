@@ -16,9 +16,9 @@ use App\Repositories\Interfaces\MarketRepositoryInterface;
 use App\Repositories\Interfaces\SpotOrderRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Services\Spot\DTO\SpotTradeListsRequestDTO;
+use App\Services\Spot\DTO\SpotTradeListsResponseDTO;
 use App\Services\Spot\DTO\SpotTradeRequestDTO;
 use App\Services\Spot\DTO\SpotTradeResponseDTO;
-use Illuminate\Database\Eloquent\Collection;
 use Throwable;
 
 class SpotService
@@ -106,14 +106,37 @@ class SpotService
         return $response;
     }
 
-    public function lists(SpotTradeListsRequestDTO $requestDTO): Collection
+    public function lists(SpotTradeListsRequestDTO $requestDTO): array
     {
         return $this->spotOrderRepository->lists(
             resolve(TradeListRequestDTO::class)
                 ->setType($requestDTO->getType())
                 ->setSide($requestDTO->getSide())
+                ->setStatus($requestDTO->getStatus())
                 ->setUserId($requestDTO->getUserId())
-        );
+        )->map(function ($order) {
+
+            $filledValue = $order->makerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0);
+            $filledValue = Math::add($filledValue, $order->takerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0));
+
+            return resolve(SpotTradeListsResponseDTO::class)
+                ->setId($order->id)
+                ->setStatus($order->status)
+                ->setSide($order->side)
+                ->setType($order->type)
+                ->setCommission(
+                    Math::add(
+                        $order->maker_commissions_sum_maker_commission_amount ?? 0,
+                        $order->taker_commissions_sum_taker_commission_amount ?? 0
+                    )
+                )
+                ->setFilledQuantity($order->filled_quantity)
+                ->setQuantity($order->quantity)
+                ->setPrice($order->price)
+                ->setMarketName($order->market->base_currency, $order->market->quote_currency)
+                ->setFilledValue($filledValue)
+                ->setCreatedAt($order->created_at);
+        })->toArray();
     }
 
     public function getLatestOrderBook(int $marketId, int $limit): array

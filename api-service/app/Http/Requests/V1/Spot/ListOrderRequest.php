@@ -3,6 +3,7 @@
 namespace App\Http\Requests\V1\Spot;
 
 use App\Enums\SpotOrderSideEnum;
+use App\Enums\SpotOrderStatusEnum;
 use App\Enums\SpotOrderTypeEnum;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -27,6 +28,7 @@ class ListOrderRequest extends FormRequest
         return [
             'type' => ['sometimes', 'string', Rule::enum(SpotOrderTypeEnum::class)],
             'side' => ['sometimes', 'string', Rule::enum(SpotOrderSideEnum::class)],
+            'status' => ['sometimes', 'string', Rule::enum(SpotOrderStatusEnum::class)],
         ];
     }
 }

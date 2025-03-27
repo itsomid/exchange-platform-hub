@@ -152,6 +152,18 @@ class TradeController extends Controller
      *         )
      *     ),
      *
+     *          @OA\Parameter(
+     *          name="status",
+     *          in="query",
+     *          description="Filter by order status",
+     *          required=false,
+     *
+     *          @OA\Schema(
+     *              type="string",
+     *              enum={"open", "completed"}
+     *          )
+     *      ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="List of spot orders",
@@ -195,22 +207,9 @@ class TradeController extends Controller
         $lists = $spotOrder->lists(
             resolve(SpotTradeListsRequestDTO::class)
                 ->setUserId(Auth::id())
-                ->setSide(
-                    $request->has('side') ?
-                    SpotOrderSideEnum::tryFrom(
-                        $request->input('side')
-                    )
-                        :
-                        null
-                )
-                ->setType(
-                    $request->has('type') ?
-                    SpotOrderTypeEnum::tryFrom(
-                        $request->input('type')
-                    )
-                        :
-                        null
-                )
+                ->setSide($request->input('side'))
+                ->setType($request->input('type'))
+                ->setStatus($request->input('status'))
         );
 
         return SpotOrderResource::collection($lists);

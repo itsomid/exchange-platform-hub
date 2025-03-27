@@ -34,8 +34,11 @@ class SpotOrderRepository implements SpotOrderRepositoryInterface
             ->where('user_id', $requestDTO->getUserId())
             ->when($requestDTO->getSide(), fn (Builder $q) => $q->where('side', $requestDTO->getSide()))
             ->when($requestDTO->getType(), fn (Builder $q) => $q->where('type', $requestDTO->getType()))
+            ->when($requestDTO->getStatus(), fn (Builder $q) => $q->where('status', $requestDTO->getStatus()))
             ->latest()
             ->with('market')
+            ->withSum('makerCommissions', 'maker_commission_amount')
+            ->withSum('takerCommissions', 'taker_commission_amount')
             ->get();
     }
 

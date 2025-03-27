@@ -8,6 +8,8 @@ use App\Enums\SpotOrderTypeEnum;
 use App\Helpers\Math;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 /**
  * @property int                 $id
@@ -50,6 +52,40 @@ class SpotOrder extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function makerTrades(): HasMany
+    {
+        return $this->hasMany(SpotTrade::class, 'maker_order_id');
+    }
+
+    public function takerTrades(): HasMany
+    {
+        return $this->hasMany(SpotTrade::class, 'taker_order_id');
+    }
+
+    public function makerCommissions(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            TradingCommission::class,
+            SpotTrade::class,
+            'maker_order_id',
+            'spot_trade_id',
+            'id',
+            'id'
+        );
+    }
+
+    public function takerCommissions(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            TradingCommission::class,
+            SpotTrade::class,
+            'taker_order_id',
+            'spot_trade_id',
+            'id',
+            'id'
+        );
     }
 
     public function getRemindedQuantity(): string
