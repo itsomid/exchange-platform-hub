@@ -1704,14 +1704,39 @@
                 ]
             }
         },
-        "/api/spot/trades": {
+        "/api/v1/spot/markets": {
+            "get": {
+                "tags": [
+                    "Spot Orders"
+                ],
+                "summary": "List SPOT Markets",
+                "description": "Retrieve a list of Spot markets with their details such as base currency, quote currency, and trade limits.",
+                "operationId": "025c04c51b33e15fdd126b6663364036",
+                "responses": {
+                    "200": {
+                        "description": "List of OTC markets retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Market"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/spot/trades": {
             "get": {
                 "tags": [
                     "Spot Orders"
                 ],
                 "summary": "Get user's spot orders",
                 "description": "Retrieve a list of authenticated user's spot orders with optional filters",
-                "operationId": "ae08a958e93745fd39ac008eac9239a8",
+                "operationId": "8e54a0575f8914ac931c79642ecf3017",
                 "parameters": [
                     {
                         "name": "type",
@@ -1736,6 +1761,19 @@
                             "enum": [
                                 "buy",
                                 "sell"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by order status",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "open",
+                                "completed"
                             ]
                         }
                     }
@@ -1807,7 +1845,7 @@
                 ],
                 "summary": "Create a new trading order",
                 "description": "Create a new spot trading order in the exchange",
-                "operationId": "466df489819f103f9e463d509de73e18",
+                "operationId": "5f389a1401e2e629b0ab1ff3dce70687",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -4215,10 +4253,15 @@
             },
             "SpotOrderResource": {
                 "properties": {
+                    "id": {
+                        "description": "order id",
+                        "type": "number",
+                        "example": "1"
+                    },
                     "market": {
                         "description": "Trading pair in BASE|QUOTE format",
                         "type": "string",
-                        "example": "BTC|USD"
+                        "example": "BTC|USDT"
                     },
                     "side": {
                         "type": "string",
@@ -4255,6 +4298,22 @@
                         "type": "number",
                         "format": "float",
                         "example": 0.5
+                    },
+                    "commission": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 0.001
+                    },
+                    "filled_value": {
+                        "description": "filled value in USDT",
+                        "type": "number",
+                        "format": "float",
+                        "example": 5.2
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2023-12-21T14:00:00Z"
                     }
                 },
                 "type": "object"
@@ -4490,6 +4549,11 @@
                 "title": "Market",
                 "description": "Details of an OTC market.",
                 "properties": {
+                    "market_id": {
+                        "description": "Market primary key",
+                        "type": "integer",
+                        "example": "1"
+                    },
                     "base_currency": {
                         "description": "Base currency of the market.",
                         "type": "string",
