@@ -30,6 +30,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedInteger('maker_order_id');
             $table->unsignedInteger('taker_order_id');
+            $table->foreignIdFor(Market::class)->constrained();
 
             $table->decimal('quantity', 18, 8);
             $table->decimal('price', 18, 8);

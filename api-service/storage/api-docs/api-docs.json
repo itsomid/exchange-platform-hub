@@ -2009,6 +2009,62 @@
                 ]
             }
         },
+        "/api/v1/spot/trades/{marketId}/latest": {
+            "get": {
+                "tags": [
+                    "Spot Orders"
+                ],
+                "summary": "Get latest matched trades for a market",
+                "description": "Returns a list of the most recent matched trades in the spot market",
+                "operationId": "getLatestMatched",
+                "parameters": [
+                    {
+                        "name": "marketId",
+                        "in": "path",
+                        "description": "ID of the market",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TradeResource"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Market not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Market not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error"
+                    }
+                }
+            }
+        },
         "/api/v1/transactions/all-deposit-withdraw": {
             "get": {
                 "tags": [
@@ -4807,6 +4863,26 @@
                     "has_two_factor": {
                         "description": "Shows user's two-factor state",
                         "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "TradeResource": {
+                "properties": {
+                    "price": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 50000.5
+                    },
+                    "quantity": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 0.5
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2023-08-15T14:30:45Z"
                     }
                 },
                 "type": "object"

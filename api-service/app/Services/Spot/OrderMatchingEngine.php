@@ -136,6 +136,7 @@ readonly class OrderMatchingEngine
                 'taker_order_id' => $takerOrder->id,
                 'quantity' => $tradeQuantity,
                 'price' => $makerOrder->price,
+                'market_id' => $order->market_id,
             ]);
 
         $this->updateWallets($takerOrder, $makerOrder, $tradeQuantity, $makerOrder->price);

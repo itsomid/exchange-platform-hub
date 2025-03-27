@@ -95,4 +95,5 @@ Route::prefix('/spot')->group(function () {
     Route::post('/orders', [\App\Http\Controllers\V1\Spot\OrderController::class, 'store']);
     Route::get('/orders', [\App\Http\Controllers\V1\Spot\OrderController::class, 'lists']);
     Route::get('/orders/{orderId}', [\App\Http\Controllers\V1\Spot\OrderController::class, 'show']);
+    Route::get('/trades/{marketId}/latest', [\App\Http\Controllers\V1\Spot\TradeController::class, 'getLatestMatched']);
 });

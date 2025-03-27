@@ -16,6 +16,7 @@ use App\Repositories\Interfaces\OTCRefExchangeWithdrawalInterface;
 use App\Repositories\Interfaces\ReferralCodeRepositoryInterface;
 use App\Repositories\Interfaces\ReferralCodeUsageRepositoryInterface;
 use App\Repositories\Interfaces\SpotOrderRepositoryInterface;
+use App\Repositories\Interfaces\SpotTradeRepositoryInterface;
 use App\Repositories\Interfaces\TransactionRepositoryInterface;
 use App\Repositories\Interfaces\UserEmailVerificationInterface;
 use App\Repositories\Interfaces\UserRepositoryInterface;
@@ -30,6 +31,7 @@ use App\Repositories\OTCRefExchangeWithdrawalRepository;
 use App\Repositories\ReferralCodeRepository;
 use App\Repositories\ReferralCodeUsageRepository;
 use App\Repositories\SpotOrderRepository;
+use App\Repositories\SpotTradeRepository;
 use App\Repositories\TransactionRepository;
 use App\Repositories\UserEmailVerificationRepository;
 use App\Repositories\UserRepository;
@@ -63,6 +65,7 @@ class RepositoryServiceProvider extends ServiceProvider
         app()->bind(OTCRefExchangeWithdrawalInterface::class, OTCRefExchangeWithdrawalRepository::class);
         app()->bind(LockedBalanceRepositoryInterface::class, LockedBalanceRepository::class);
         app()->bind(SpotOrderRepositoryInterface::class, SpotOrderRepository::class);
+        app()->bind(SpotTradeRepositoryInterface::class, SpotTradeRepository::class);
 
     }
 
