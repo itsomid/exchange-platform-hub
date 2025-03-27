@@ -94,4 +94,5 @@ Route::prefix('/spot')->group(function () {
     Route::get('/markets', [\App\Http\Controllers\V1\Spot\MarketController::class, 'lists'])->name('spot.markets')->withoutMiddleware(['auth:sanctum', 'verified']);
     Route::post('/trades', [\App\Http\Controllers\V1\Spot\TradeController::class, 'store']);
     Route::get('/trades', [\App\Http\Controllers\V1\Spot\TradeController::class, 'lists']);
+    Route::get('/order/{orderId}', [\App\Http\Controllers\V1\Spot\TradeController::class, 'show']);
 });

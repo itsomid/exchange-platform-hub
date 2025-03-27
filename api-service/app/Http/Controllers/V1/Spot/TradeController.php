@@ -19,6 +19,8 @@ use Throwable;
 
 class TradeController extends Controller
 {
+    public function __construct(private readonly SpotService $spotService) {}
+
     /**
      * @OA\Post(
      *     path="/api/v1/spot/trades",
@@ -203,8 +205,7 @@ class TradeController extends Controller
      */
     public function lists(ListOrderRequest $request)
     {
-        $spotOrder = resolve(SpotService::class);
-        $lists = $spotOrder->lists(
+        $lists = $this->spotService->lists(
             resolve(SpotTradeListsRequestDTO::class)
                 ->setUserId(Auth::id())
                 ->setSide($request->input('side'))
@@ -213,5 +214,59 @@ class TradeController extends Controller
         );
 
         return SpotOrderResource::collection($lists);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/v1/spot/order/{orderId}",
+     *     tags={"Spot Orders"},
+     *     summary="Get spot order details",
+     *     description="Retrieve order detilas",
+     *     security={{"bearerAuth": {}}},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of spot orders",
+     *
+     *     @OA\JsonContent(
+     *
+     *           @OA\Property(property="data",type="object", ref="#/components/schemas/SpotOrderResource"),
+     *     )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="The given data was invalid."),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object",
+     *                 example={"type": {"The selected type is invalid."}}
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function show(int $orderId)
+    {
+        return new SpotOrderResource(
+            $this->spotService->getDetail(
+                userId: Auth::id(),
+                orderId: $orderId
+            )
+        );
     }
 }

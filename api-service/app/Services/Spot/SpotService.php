@@ -143,4 +143,32 @@ class SpotService
     {
         return $this->spotOrderRepository->getLatestOrders($marketId, $limit);
     }
+
+    public function getDetail(int $userId, int $orderId): SpotTradeListsResponseDTO
+    {
+        $order = $this->spotOrderRepository->getDetail(
+            userId: $userId,
+            orderId: $orderId
+        );
+        $filledValue = $order->makerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0);
+        $filledValue = Math::add($filledValue, $order->takerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0));
+
+        return resolve(SpotTradeListsResponseDTO::class)
+            ->setId($order->id)
+            ->setStatus($order->status)
+            ->setSide($order->side)
+            ->setType($order->type)
+            ->setCommission(
+                Math::add(
+                    $order->maker_commissions_sum_maker_commission_amount ?? 0,
+                    $order->taker_commissions_sum_taker_commission_amount ?? 0
+                )
+            )
+            ->setFilledQuantity($order->filled_quantity)
+            ->setQuantity($order->quantity)
+            ->setPrice($order->price)
+            ->setMarketName($order->market->base_currency, $order->market->quote_currency)
+            ->setFilledValue($filledValue)
+            ->setCreatedAt($order->created_at);
+    }
 }

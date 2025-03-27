@@ -66,4 +66,14 @@ class SpotOrderRepository implements SpotOrderRepositoryInterface
                 ->get(),
         ];
     }
+
+    public function getDetail(int $userId, int $orderId): ?SpotOrder
+    {
+        return SpotOrder::query()
+            ->where('user_id', $userId)
+            ->where('id', $orderId)
+            ->withSum('makerCommissions', 'maker_commission_amount')
+            ->withSum('takerCommissions', 'taker_commission_amount')
+            ->first();
+    }
 }

@@ -13,5 +13,7 @@ interface SpotOrderRepositoryInterface
 
     public function lists(TradeListRequestDTO $requestDTO): Collection;
 
+    public function getDetail(int $userId, int $orderId): ?SpotOrder;
+
     public function getLatestOrders(int $marketId, int $limit): array;
 }
