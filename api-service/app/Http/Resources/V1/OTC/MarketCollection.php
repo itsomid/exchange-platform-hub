@@ -14,6 +14,12 @@ use Illuminate\Http\Resources\Json\ResourceCollection;
  *     description="Details of an OTC market.",
  *
  *     @OA\Property(
+ *          property="market_id",
+ *          type="integer",
+ *          description="Market primary key",
+ *          example="1"
+ *      ),
+ *     @OA\Property(
  *         property="base_currency",
  *         type="string",
  *         description="Base currency of the market.",

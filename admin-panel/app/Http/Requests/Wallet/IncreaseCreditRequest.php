@@ -27,6 +27,7 @@ class IncreaseCreditRequest extends FormRequest
             'user' => ['required', 'exists:users,id'],
             'currency' => ['required','string','max:10'],
             'chain' => ['required','string','max:10'],
+            'transaction_hash' => ['nullable', 'unique:withdrawals,transaction_hash'],
             'description' => ['nullable'],
             'admin_description' => ['nullable'],
         ];

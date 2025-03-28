@@ -1704,6 +1704,460 @@
                 ]
             }
         },
+        "/api/v1/spot/markets": {
+            "get": {
+                "tags": [
+                    "Spot Orders"
+                ],
+                "summary": "List SPOT Markets",
+                "description": "Retrieve a list of Spot markets with their details such as base currency, quote currency, and trade limits.",
+                "operationId": "025c04c51b33e15fdd126b6663364036",
+                "responses": {
+                    "200": {
+                        "description": "List of OTC markets retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Market"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/spot/orders": {
+            "get": {
+                "tags": [
+                    "Spot Orders"
+                ],
+                "summary": "Get user's spot orders",
+                "description": "Retrieve a list of authenticated user's spot orders with optional filters",
+                "operationId": "fff40fb95dea4d9020d5674546afdd35",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Filter by order type",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "market",
+                                "limit"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "side",
+                        "in": "query",
+                        "description": "Filter by order side",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "buy",
+                                "sell"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by order status",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "open",
+                                "completed"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of spot orders",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SpotOrderResource"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "example": {
+                                                "type": [
+                                                    "The selected type is invalid."
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Spot Orders"
+                ],
+                "summary": "Create a new trading order",
+                "description": "Create a new spot trading order in the exchange",
+                "operationId": "01d21c34960bf20657d869f5b0d9112c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OrderRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Order created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Order created successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "example": {
+                                                "market_id": [
+                                                    "The market id field is required."
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Market validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid market selected"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/spot/orders/{orderId}": {
+            "get": {
+                "tags": [
+                    "Spot Orders"
+                ],
+                "summary": "Get spot order details",
+                "description": "Retrieve order detilas",
+                "operationId": "322dc58046e3682777a0ca66b25065e4",
+                "responses": {
+                    "200": {
+                        "description": "List of spot orders",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/SpotOrderResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "example": {
+                                                "type": [
+                                                    "The selected type is invalid."
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/spot/orders/cancel/{order}": {
+            "post": {
+                "tags": [
+                    "Spot Orders"
+                ],
+                "summary": "Cancel a spot order",
+                "description": "Cancel an existing spot order by its ID",
+                "operationId": "cancelSpotOrder",
+                "parameters": [
+                    {
+                        "name": "order",
+                        "in": "path",
+                        "description": "ID of the order to cancel",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Order canceled successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Order canceled successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "You are not authorized to cancel this order"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Order not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Order not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Internal server error occurred"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/spot/trades/{marketId}/latest": {
+            "get": {
+                "tags": [
+                    "Spot Orders"
+                ],
+                "summary": "Get latest matched trades for a market",
+                "description": "Returns a list of the most recent matched trades in the spot market",
+                "operationId": "getLatestMatched",
+                "parameters": [
+                    {
+                        "name": "marketId",
+                        "in": "path",
+                        "description": "ID of the market",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TradeResource"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Market not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Market not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error"
+                    }
+                }
+            }
+        },
         "/api/v1/transactions/all-deposit-withdraw": {
             "get": {
                 "tags": [
@@ -3737,6 +4191,53 @@
                 },
                 "type": "object"
             },
+            "OrderRequest": {
+                "required": [
+                    "market_id",
+                    "type",
+                    "side",
+                    "quantity",
+                    "price"
+                ],
+                "properties": {
+                    "market_id": {
+                        "description": "ID of the trading pair market",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "type": {
+                        "description": "Order type",
+                        "type": "string",
+                        "enum": [
+                            "limit",
+                            "market"
+                        ],
+                        "example": "limit"
+                    },
+                    "side": {
+                        "description": "Order side",
+                        "type": "string",
+                        "enum": [
+                            "buy",
+                            "sell"
+                        ],
+                        "example": "buy"
+                    },
+                    "quantity": {
+                        "description": "Order quantity (must be between market's min/max trade amount)",
+                        "type": "number",
+                        "format": "float",
+                        "example": 0.5
+                    },
+                    "price": {
+                        "description": "Order price per unit",
+                        "type": "number",
+                        "format": "float",
+                        "example": 45000.5
+                    }
+                },
+                "type": "object"
+            },
             "AllDepositWithdrawalRequest": {
                 "description": "Query parameters for filtering deposit and withdrawal transactions.",
                 "properties": {
@@ -3967,6 +4468,73 @@
                     "has_two_factor": {
                         "description": "Indicates whether the user has two-factor authentication enabled.",
                         "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "SpotOrderResource": {
+                "properties": {
+                    "id": {
+                        "description": "order id",
+                        "type": "number",
+                        "example": "1"
+                    },
+                    "market": {
+                        "description": "Trading pair in BASE|QUOTE format",
+                        "type": "string",
+                        "example": "BTC|USDT"
+                    },
+                    "side": {
+                        "type": "string",
+                        "enum": [
+                            "buy",
+                            "sell"
+                        ],
+                        "example": "buy"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "limit",
+                            "market"
+                        ],
+                        "example": "limit"
+                    },
+                    "quantity": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 0.5
+                    },
+                    "price": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 45000.5
+                    },
+                    "status": {
+                        "description": "Order status",
+                        "type": "string",
+                        "example": "filled"
+                    },
+                    "filled_quantity": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 0.5
+                    },
+                    "commission": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 0.001
+                    },
+                    "filled_value": {
+                        "description": "filled value in USDT",
+                        "type": "number",
+                        "format": "float",
+                        "example": 5.2
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2023-12-21T14:00:00Z"
                     }
                 },
                 "type": "object"
@@ -4202,6 +4770,11 @@
                 "title": "Market",
                 "description": "Details of an OTC market.",
                 "properties": {
+                    "market_id": {
+                        "description": "Market primary key",
+                        "type": "integer",
+                        "example": "1"
+                    },
                     "base_currency": {
                         "description": "Base currency of the market.",
                         "type": "string",
@@ -4383,6 +4956,26 @@
                     "has_two_factor": {
                         "description": "Shows user's two-factor state",
                         "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "TradeResource": {
+                "properties": {
+                    "price": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 50000.5
+                    },
+                    "quantity": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 0.5
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2023-08-15T14:30:45Z"
                     }
                 },
                 "type": "object"
@@ -4981,6 +5574,10 @@
         {
             "name": "Profile",
             "description": "Profile"
+        },
+        {
+            "name": "Spot Orders",
+            "description": "Spot Orders"
         },
         {
             "name": "Transactions",

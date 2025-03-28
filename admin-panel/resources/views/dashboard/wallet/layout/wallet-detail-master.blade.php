@@ -12,11 +12,9 @@
                 <div class="user-profile-info">
                     <h4 class="mb-0">کیف پول {{$wallet->currency->name}}
                         @if($wallet->walletChains->isNotEmpty())
-                            <small class="text-primary fw-bolder text-decoration-underline">(دارای آدرس
-                                واریز)</small>
+                            <small class="text-primary fw-bolder text-decoration-underline">(دارای آدرس واریز)</small>
                         @endif
                     </h4>
-
 
                     <ul class="list-inline mb-0 d-flex align-items-center flex-wrap justify-content-sm-start justify-content-center gap-4 my-2">
                         <li class="list-inline-item d-flex gap-1 align-items-center">
@@ -297,23 +295,33 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link @if(request()->route('type') == 'buy') active @endif"
-                   href="{{route('admin.wallet.detail',['user' => $user->id,'wallet'=>$wallet->id,'type'=>'buy'])}}">
+                <a class="nav-link @if(request()->route('type') == 'otcBuy') active @endif"
+                   href="{{route('admin.wallet.detail',['user' => $user->id,'wallet'=>$wallet->id,'type'=>'otcBuy'])}}">
                     <i class="fa-solid fa-swap me-2"></i>
                     خرید OTC
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link @if(request()->route('type') == 'sell') active @endif"
-                   href="{{route('admin.wallet.detail',['user' => $user->id,'wallet'=>$wallet->id, 'type'=>'sell'])}}">
+                <a class="nav-link @if(request()->route('type') == 'otcSell') active @endif"
+                   href="{{route('admin.wallet.detail',['user' => $user->id,'wallet'=>$wallet->id, 'type'=>'otcSell'])}}">
                     <i class="fa-solid fa-swap me-2"></i>
                     فروش OTC
                 </a>
             </li>
+
+            <li class="nav-item">
+                <a class="nav-link @if(request()->route('type') == 'lockedBalanceDetails') active @endif"
+                   href="{{route('admin.wallet.detail',['user' => $user->id,'wallet'=>$wallet->id, 'type'=>'lockedBalanceDetails'])}}">
+                    <i class="fa-solid fa-ban me-2"></i>
+                    تاریخچه مسدود سازی موجودی
+                </a>
+            </li>
+
         </ul>
         <!--/ User Pills -->
         @yield('wallet-details-body')
+
     </div>
 
 @endsection

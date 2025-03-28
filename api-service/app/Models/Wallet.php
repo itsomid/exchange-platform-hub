@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasOneThrough;
  * @property string        $locked_balance
  * @property string        $available
  * @property string        $currency_symbol
+ * @property string        $available_balance
  * @property ExchangePrice $exchangePrice
  * @property Market        $market
  */
@@ -38,13 +39,13 @@ class Wallet extends Model
         return $this->belongsTo(Currency::class, 'currency_symbol', 'symbol');
     }
 
-    public function getAvailableAttribute(): string
-    {
-        return Math::sub($this->balance, $this->locked_balance);
-    }
-
     public function chains(): HasMany
     {
         return $this->hasMany(WalletChain::class);
+    }
+
+    public function getAvailableBalanceAttribute(): string
+    {
+        return Math::sub($this->balance, $this->locked_balance);
     }
 }

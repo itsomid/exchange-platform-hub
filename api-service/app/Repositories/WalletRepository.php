@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Helpers\Math;
 use App\Models\Wallet;
 use App\Models\WalletChain;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
@@ -120,5 +121,19 @@ class WalletRepository implements WalletRepositoryInterface
             ->where('user_id', 1)
             ->lockForUpdate()
             ->first();
+    }
+
+    public function increaseBalance(int $user_id, string $baseCurrency, string $tradeQuantity): void
+    {
+        $wallet = $this->getOneByCurrency($baseCurrency, $user_id);
+        $wallet->balance = Math::add($wallet->balance, $tradeQuantity);
+        $wallet->save();
+    }
+
+    public function decreaseLockedBalance(int $user_id, string $quoteCurrency, string $totalTradeValue): void
+    {
+        $wallet = $this->getOneByCurrency($quoteCurrency, $user_id);
+        $wallet->locked_balance = Math::sub($wallet->locked_balance, $totalTradeValue);
+        $wallet->save();
     }
 }

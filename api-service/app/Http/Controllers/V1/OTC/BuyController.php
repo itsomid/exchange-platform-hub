@@ -72,7 +72,7 @@ class BuyController extends Controller
     {
         $validateData = $request->validated();
 
-        $lock = Cache::lock('order-buy:'.$validateData['market_id'].Auth::id(), 10);
+        $lock = Cache::lock('order-buy:'.$validateData['market_id'].Auth::id(), 40);
 
         if ($lock->get()) {
             try {
