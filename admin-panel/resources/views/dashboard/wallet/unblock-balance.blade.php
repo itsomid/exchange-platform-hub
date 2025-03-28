@@ -3,7 +3,14 @@
 @section('content')
     <section class="form-control-repeater">
         <div class="card">
+
             <div class="card-body invoice-preview-header rounded">
+                 <div class="d-flex justify-content-start mb-3">
+                        <a href="{{ route('admin.wallet.index', ['user' => $user->id]) }}" >
+                            <i class="fa-regular fa-arrow-right fa-lg"></i>
+                            <span class="ms-2">بازگشت به کیف پول‌ها</span>
+                        </a>
+                    </div>
                 <div class="row text-heading px-3">
                     <div class="col-md-7 mb-md-0 mb-6 ps-0">
                         <div class="user-profile-header d-flex flex-column flex-lg-row text-sm-start text-center m-2">
@@ -131,6 +138,49 @@
             </div>
         </div>
     </section>
+     <div class="card mt-3">
+        <div class="card-body">
+            <h5 class="card-title">تاریخچه مسدودسازی موجودی کیف پول {{$wallet->currency_symbol}}</h5>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>میزان</th>
+                        <th>نوع</th>
+                        <th>تاریخ شروع</th>
+                        <th>تاریخ پایان</th>
+                        <th>توضیحات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($lockedBalanceDetails as $detail)
+                        <tr class="{{$detail->type->value !== 'admin' ? ($detail->deleted_at ? 'table-danger' : 'table-success') : ''}}">
+                            <td dir="ltr" class="font-number text-{{$detail->amount > 0 ? 'danger' : 'success'}}">{{formatNumberTrimZeros($detail->amount)}}</td>
+                            <td>
+                                <span class="badge bg-{{$detail->type->color()}}">{{$detail->type->label()}}</span>
+                            @if($detail->type->value === 'admin')
+                                @if($detail->amount > 0)
+                                    <small class="text-danger ms-2">مسدود سازی</small>
+                                @else
+                                    <small class="text-success ms-2">آزادسازی</small>
+                                @endif
+                            @endif
+                            </td>
+                            <td>{{App\Helpers\DateFormatter::convertToPersianDate($detail->created_at,'H:i:s %Y/%m/%d')}}</td>
+                            @if($detail->deleted_at)
+                                <td>{{App\Helpers\DateFormatter::convertToPersianDate($detail->deleted_at,'H:i:s %Y/%m/%d')}}</td>
+                            @else
+                                <td>-</td>
+                            @endif
+                            <td>{{$detail->description}}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+
 @endsection
 @push('scripts')
     <script>

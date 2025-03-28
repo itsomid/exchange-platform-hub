@@ -4,7 +4,14 @@
     <section class="form-control-repeater">
         <div class="card">
             <div class="card-body invoice-preview-header rounded">
+                
                 <div class="row text-heading px-3">
+                    <div class="d-flex justify-content-start mb-3">
+                        <a href="{{ route('admin.wallet.index', ['user' => $user->id]) }}" >
+                            <i class="fa-regular fa-arrow-right fa-lg"></i>
+                            <span class="ms-2">بازگشت به کیف پول‌ها</span>
+                        </a>
+                    </div>
                     <div class="col-md-7 mb-md-0 mb-6 ps-0">
                         <div class="user-profile-header d-flex flex-column flex-lg-row text-sm-start text-center m-2">
                             <div class="d-flex align-items-center">
@@ -60,7 +67,7 @@
                                 </div>
                             </dd>
                             <dt class="col-sm-5 d-md-flex align-items-center justify-content-end">
-                                <span class="fw-normal text-danger">موجودی بلاک شده</span>
+                                <span class="fw-normal text-danger">موجودی مسدود شده</span>
                             </dt>
                             <dd class="col-sm-7 mb-2">
                                 <div class="input-group">
@@ -78,7 +85,6 @@
 
                                     <input type="text" class="form-control font-number text-success" readonly="readonly"
                                            value="{{formatNumberTrimZeros(bcsub($wallet->balance , $wallet->locked_balance,8) )}}">
-{{--                                           value="{{formatNumber($wallet->balance - $wallet->locked_balance,$wallet->currency->precision )}}">--}}
                                     <span class="input-group-text"> {{$wallet->currency->symbol}}</span>
                                 </div>
                             </dd>
@@ -132,6 +138,42 @@
             </div>
         </div>
     </section>
+    <div class="card mt-3">
+        <div class="card-body">
+            <h5 class="card-title">تاریخچه مسدودسازی موجودی کیف پول {{$wallet->currency_symbol}}</h5>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>میزان</th>
+                        <th>نوع</th>
+                        <th>تاریخ شروع</th>
+                        <th>تاریخ پایان</th>
+                        <th>توضیحات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($lockedBalanceDetails as $detail)
+                        <tr class="{{$detail->type->value !== 'admin' ? ($detail->deleted_at ? 'table-danger' : 'table-success') : ''}}">
+                            <td class="font-number">{{formatNumberTrimZeros($detail->amount)}}</td>
+                            <td>
+                                <span class="badge bg-{{$detail->type->color()}}">{{$detail->type->label()}}</span>
+                            </td>
+                            <td>{{App\Helpers\DateFormatter::convertToPersianDate($detail->created_at,'H:i:s %Y/%m/%d')}}</td>
+                            @if($detail->deleted_at)
+                                <td>{{App\Helpers\DateFormatter::convertToPersianDate($detail->deleted_at,'H:i:s %Y/%m/%d')}}</td>
+                            @else
+                                <td>-</td>
+                            @endif
+                            <td>{{$detail->description}}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+
 @endsection
 @push('scripts')
     <script>

@@ -81,33 +81,68 @@ class UserWalletController extends Controller
             'totalWithdrawalsValue' => $totalWithdrawalsValue,
             'OTCOrderCount' => $OTCOrderCount,
             'totalOTCOrderValue' => $totalOTCOrderValue,
-
         ]);
     }
 
     public function walletDetails(User $user, Wallet $wallet, $type)
     {
 
+        $withdrawals = collect();
+        $deposits = collect();
+        $otcSell = collect();
+        $otcBuy = collect();
+        $lockedBalanceDetails = collect();
+
         $specificAssetValue = $this->walletService->specificAssetValue($user, $wallet->currency_symbol);
         $transactionTypes = [
             'deposit' => ['title' => 'واریز', 'data' => $wallet],
             'withdrawal' => ['title' => 'برداشت', 'data' => $wallet],
-            'buy' => ['title' => 'خرید OTC', 'data' => $wallet],
-            'sell' => ['title' => 'فروش OTC', 'data' => $wallet],
+            'otcBuy' => ['title' => 'خرید OTC', 'data' => $wallet],
+            'otcSell' => ['title' => 'فروش OTC', 'data' => $wallet],
+            'lockedBalanceDetails' => ['title' => 'مسدودسازی موجودی', 'data' => $wallet],
         ];
+
         $transactionTitle = $transactionTypes[$type]['title'] ?? 'Transactions';
         // Fetch transactions based on type
         if ($type === 'deposit') {
-             $deposits = Deposit::where('currency_symbol',$wallet->currency_symbol)->where('user_id', $user->id)->get();
-
-            // Optionally create an empty collection for withdrawals:
-            $withdrawals = collect([]);
-
-        } else {
-            $withdrawals = Withdrawal::where('currency_symbol', $wallet->currency_symbol)->where('user_id', $user->id)
+            $deposits = Deposit::where('currency_symbol', $wallet->currency_symbol)
+                ->where('user_id', $user->id)
+                ->orderBy('created_at', 'desc')
                 ->get();
 
-            $deposits = collect([]);
+
+        } else if ($type === 'withdrawal') {
+            $withdrawals = Withdrawal::where('currency_symbol', $wallet->currency_symbol)
+                ->where('user_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+        } else if ($type === 'otcBuy') {
+
+            $otcBuy = OTCOrder::where('user_id', $user->id)
+                ->whereHas('market', function($query) use ($wallet) {
+                    $query->where('base_currency', $wallet->currency_symbol);
+                })
+                ->where('type', OTCOrderTypeEnum::BUY)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+        } else if ($type === 'otcSell') {
+
+            $otcSell = OTCOrder::where('user_id', $user->id)
+                ->whereHas('market', function($query) use ($wallet) {
+                    $query->where('base_currency', $wallet->currency_symbol);
+                })
+                ->where('type', OTCOrderTypeEnum::SELL)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+        } else if ($type === 'lockedBalanceDetails') {
+            $lockedBalanceDetails = $wallet->lockedBalanceDetails()
+                ->withTrashed()
+                ->orderBy('created_at', 'desc')
+                ->get();
+
         }
 
         // Fetch the total deposit amount and the last deposit date
@@ -139,20 +174,20 @@ class UserWalletController extends Controller
 
         $lastWithdrawDate = $lastWithdraw ? \App\Helpers\DateFormatter::convertToPersianDate($lastWithdraw->created_at, '%d %B %Y') : 'بدون برداشت';
 
-        if ($user->id !== $this->exchangeUserId){
-            $totalOtcSell = $this->otcService->totalOTCOrder($user->id, $wallet->currency_symbol,OTCOrderTypeEnum::SELL);
+        if ($user->id !== $this->exchangeUserId) {
+            $totalOtcSell = $this->otcService->totalOTCOrder($user->id, $wallet->currency_symbol, OTCOrderTypeEnum::SELL);
             $totalOtcSellValue = $this->otcService->totalOTCOrderValue($user->id, $wallet->currency_symbol, OTCOrderTypeEnum::SELL);
 
-            $totalOtcBuy = $this->otcService->totalOTCOrder($user->id, $wallet->currency_symbol,OTCOrderTypeEnum::BUY);
-            $totalOtcBuyValue = $this->otcService->totalOTCOrderValue($user->id, $wallet->currency_symbol,OTCOrderTypeEnum::BUY);
+            $totalOtcBuy = $this->otcService->totalOTCOrder($user->id, $wallet->currency_symbol, OTCOrderTypeEnum::BUY);
+            $totalOtcBuyValue = $this->otcService->totalOTCOrderValue($user->id, $wallet->currency_symbol, OTCOrderTypeEnum::BUY);
 
-        }else{
+        } else {
 //            TODO: calculate exchange OTC from Transaction
-            $totalOtcSell = $this->transactionService->totalTransactionsBasedType($user->id, $wallet->currency_symbol,[TransactionTypeEnum::SELL]);
-            $totalOtcSellValue = $this->transactionService->totalTransactionsValueBasedType($user->id, $wallet->currency_symbol,[TransactionTypeEnum::SELL]);
+            $totalOtcSell = $this->transactionService->totalTransactionsBasedType($user->id, $wallet->currency_symbol, [TransactionTypeEnum::SELL]);
+            $totalOtcSellValue = $this->transactionService->totalTransactionsValueBasedType($user->id, $wallet->currency_symbol, [TransactionTypeEnum::SELL]);
 
-            $totalOtcBuy = $this->transactionService->totalTransactionsBasedType($user->id, $wallet->currency_symbol,[TransactionTypeEnum::BUY]);
-            $totalOtcBuyValue = $this->transactionService->totalTransactionsValueBasedType($user->id, $wallet->currency_symbol,[TransactionTypeEnum::BUY]);
+            $totalOtcBuy = $this->transactionService->totalTransactionsBasedType($user->id, $wallet->currency_symbol, [TransactionTypeEnum::BUY]);
+            $totalOtcBuyValue = $this->transactionService->totalTransactionsValueBasedType($user->id, $wallet->currency_symbol, [TransactionTypeEnum::BUY]);
         }
 
         $lastOtcBuy = Transaction::where('type', 'buy')
@@ -176,6 +211,8 @@ class UserWalletController extends Controller
             'transactionTitle' => $transactionTitle,
             'deposits' => $deposits,
             'withdrawals' => $withdrawals,
+            'otcSell' => $otcSell,
+            'otcBuy' => $otcBuy,
             'totalDeposits' => $totalDeposits,
             'totalDepositsValue' => $totalDepositsValue,
             'lastDepositDate' => $lastDepositDate,
@@ -187,7 +224,8 @@ class UserWalletController extends Controller
             'lastOtcSellDate' => $lastOtcSellDate,
             'totalOtcBuy' => $totalOtcBuy,
             'totalOtcBuyValue' => $totalOtcBuyValue,
-            'lastOtcBuyDate' => $lastOtcBuyDate
+            'lastOtcBuyDate' => $lastOtcBuyDate,
+            'lockedBalanceDetails' => $lockedBalanceDetails
         ]);
     }
 

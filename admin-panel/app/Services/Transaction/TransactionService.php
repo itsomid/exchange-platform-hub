@@ -139,7 +139,7 @@ class TransactionService
         \DB::transaction(function () use ($fromUserId, $toUserId, $amount, $transactionHash, $currency, $currencyChain, $type, $adminId, $description, $admin_description) {
             // Fetch wallets
 
-            $fromWallet = Wallet::firstOrCreate(
+             $fromWallet = Wallet::firstOrCreate(
                 ['user_id' => $fromUserId, 'currency_symbol' => $currency->symbol],
                 ['balance' => 0]
             );
@@ -149,39 +149,49 @@ class TransactionService
                 ['balance' => 0]
             );
 
-            // Validate sufficient balance in the from wallet
+            // Validate sufficient balance in the wallet
             if ($fromWallet->balance < $amount) {
                 if ($fromUserId === 1) {
                     throw new \Exception('موجودی ناکافی کیف پول صرافی برای برداشت.');
                 } else {
-                    throw new \Exception('موجودی ناکافی کیف پول مبدا برای برداشت.');
+                    throw new \Exception('موجودی ناکافی کیف پول کاربر برای برداشت.');
                 }
 
             }
 
             $deposit = Deposit::create([
-                'user_id' => $type === TransactionTypeEnum::DEPOSIT->value ? $toUserId : $fromUserId,
+                'user_id' => $toUserId,
                 'currency_symbol' => $currency->symbol,
                 'currency_chain_id' => $currencyChain->id,
                 'amount' => $amount,
                 'usdt_value' => $amount * $currency->exchangePrice,
                 'address' => null,
                 'transaction_hash' => $transactionHash,
-                'description' => 'manual transfer by admin: (#' . $adminId . ') to: (#' . User::find($toUserId)->username . ')',
+                'confirmed_at' => now(),
+                'description' => sprintf('manual deposit by admin: (#%d) %s: (#%s)',
+                    $adminId,
+                    $type === TransactionTypeEnum::DEPOSIT->value ? 'to' : 'from',
+                    User::find($type === TransactionTypeEnum::DEPOSIT->value ? $toUserId : $fromUserId)->username
+                ),
                 'status' => DepositStatusEnum::CONFIRMED,
             ]);
+
             $withdrawal = Withdrawal::create([
-                'user_id' => $type === TransactionTypeEnum::WITHDRAWAL->value ? $toUserId : $fromUserId,
+                'user_id' => $fromUserId,
                 'currency_symbol' => $currency->symbol,
                 'currency_chain_id' => $currencyChain->id,
                 'amount' => $amount,
                 'usdt_value' => $amount * $currency->exchangePrice,
                 'address' => null,
                 'transaction_hash' => $transactionHash,
-                'description' => 'manual transfer by admin: (#' . $adminId . ') to: (#' . User::find($toUserId)->username . ')',
+                'confirmed_at' => now(),
+                'description' => sprintf('manual withdrawal by admin: (#%d) %s: (#%s)',
+                    $adminId,
+                    $type === TransactionTypeEnum::WITHDRAWAL->value ? 'from' : 'to',
+                    User::find($type === TransactionTypeEnum::WITHDRAWAL->value ? $fromUserId : $toUserId)->username
+                ),
                 'status' => WithdrawalStatusEnum::COMPLETED,
             ]);
-
 
             $this->logTransaction(
                 wallet: $fromWallet,
@@ -192,6 +202,7 @@ class TransactionService
                 description: $description ?? 'Funds withdrawn.',
                 admin_description: $admin_description
             );
+
             $fromWallet->decrement('balance', $amount);
 
 
