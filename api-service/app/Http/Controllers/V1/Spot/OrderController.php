@@ -272,6 +272,70 @@ class OrderController extends Controller
         );
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/v1/spot/orders/cancel/{order}",
+     *     tags={"Spot Orders"},
+     *     summary="Cancel a spot order",
+     *     description="Cancel an existing spot order by its ID",
+     *     operationId="cancelSpotOrder",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="path",
+     *         description="ID of the order to cancel",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="integer",
+     *             format="int64"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Order canceled successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Order canceled successfully"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Forbidden",
+     *         @OA\JsonContent(
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="You are not authorized to cancel this order"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Order not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Order not found"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Internal server error occurred"
+     *             )
+     *         )
+     *     )
+     * )
+     */
     public function cancel(SpotOrder $order)
     {
         if (! Gate::allows('update-spot-order', $order)) {
