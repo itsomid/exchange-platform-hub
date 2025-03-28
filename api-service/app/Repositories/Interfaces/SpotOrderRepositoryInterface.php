@@ -16,4 +16,6 @@ interface SpotOrderRepositoryInterface
     public function getDetail(int $userId, int $orderId): ?SpotOrder;
 
     public function getLatestOrders(int $marketId, int $limit): array;
+
+    public function getOneWithLock(int $orderId): ?SpotOrder;
 }

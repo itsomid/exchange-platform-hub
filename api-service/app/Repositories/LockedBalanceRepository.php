@@ -21,4 +21,20 @@ class LockedBalanceRepository implements LockedBalanceRepositoryInterface
             ->where('withdrawal_id', $withdrawalId)
             ->delete();
     }
+
+    public function deleteSpotOrderLockedBalance(int $spotOrderId): void
+    {
+        LockedBalanceDetail::query()
+            ->where('type', LockedBalanceTypeEnum::SPOT)
+            ->where('spot_order_id', $spotOrderId)
+            ->delete();
+    }
+
+    public function getOne(int $typeId, LockedBalanceTypeEnum $type): ?LockedBalanceDetail
+    {
+        return LockedBalanceDetail::query()
+            ->where('type', $type)
+            ->where(LockedBalanceTypeEnum::getFieldName($type), $typeId)
+            ->first();
+    }
 }

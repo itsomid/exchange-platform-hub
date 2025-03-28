@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Mail\EmailVerification;
+use App\Models\SpotOrder;
 use App\Models\User;
 use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -29,6 +31,11 @@ class AppServiceProvider extends ServiceProvider
             $url = $notifiable->getUrlForEmailVerification(); // overwrite url
 
             return new EmailVerification($notifiable, $url);
+        });
+
+        //Spot Order Update
+        Gate::define('update-spot-order', function (User $user, SpotOrder $order) {
+            return $user->id === $order->user_id;
         });
     }
 }

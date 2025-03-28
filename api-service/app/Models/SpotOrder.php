@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property string              $filled_quantity
  * @property int                 $market_id
  * @property int                 $user_id
+ * @property Market              $market
  */
 class SpotOrder extends Model
 {
@@ -91,5 +92,28 @@ class SpotOrder extends Model
     public function getRemindedQuantity(): string
     {
         return Math::sub($this->quantity, $this->filled_quantity);
+    }
+
+    public function getFilledValue(): string
+    {
+        $filledValue = $this->makerTrades->reduce(function (string $carry, SpotTrade $item) {
+            return Math::add(
+                $carry,
+                Math::mul(
+                    $item->price,
+                    $item->quantity
+                )
+            );
+        }, 0);
+
+        return $this->takerTrades->reduce(function (string $carry, SpotTrade $item) {
+            return Math::add(
+                $carry,
+                Math::mul(
+                    $item->price,
+                    $item->quantity
+                )
+            );
+        }, $filledValue);
     }
 }

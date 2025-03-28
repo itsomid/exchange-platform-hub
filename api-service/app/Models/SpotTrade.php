@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * @property int    $id
  * @property string $quantity
+ * @property string $price
  */
 class SpotTrade extends Model
 {

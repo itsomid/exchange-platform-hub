@@ -76,4 +76,11 @@ class SpotOrderRepository implements SpotOrderRepositoryInterface
             ->withSum('takerCommissions', 'taker_commission_amount')
             ->first();
     }
+
+    public function getOneWithLock(int $orderId): ?SpotOrder
+    {
+        return SpotOrder::query()
+            ->lockForUpdate()
+            ->find($orderId);
+    }
 }

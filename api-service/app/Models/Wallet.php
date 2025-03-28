@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Helpers\Math;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasOneThrough;
  * @property string        $locked_balance
  * @property string        $available
  * @property string        $currency_symbol
+ * @property string        $available_balance
  * @property ExchangePrice $exchangePrice
  * @property Market        $market
  */
@@ -40,5 +42,10 @@ class Wallet extends Model
     public function chains(): HasMany
     {
         return $this->hasMany(WalletChain::class);
+    }
+
+    public function getAvailableBalanceAttribute(): string
+    {
+        return Math::sub($this->balance, $this->locked_balance);
     }
 }

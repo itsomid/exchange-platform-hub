@@ -12,6 +12,7 @@ use App\Helpers\Math;
 use App\Models\LockedBalanceDetail;
 use App\Repositories\DTO\SpotOrder\SpotOrderCreateRequestDTO;
 use App\Repositories\DTO\SpotOrder\TradeListRequestDTO;
+use App\Repositories\Interfaces\LockedBalanceRepositoryInterface;
 use App\Repositories\Interfaces\MarketRepositoryInterface;
 use App\Repositories\Interfaces\SpotOrderRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
@@ -19,6 +20,7 @@ use App\Services\Spot\DTO\SpotOrderListsRequestDTO;
 use App\Services\Spot\DTO\SpotOrderListsResponseDTO;
 use App\Services\Spot\DTO\SpotOrderRequestDTO;
 use App\Services\Spot\DTO\SpotOrderResponseDTO;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
 class SpotService
@@ -27,6 +29,7 @@ class SpotService
         private readonly MarketRepositoryInterface $marketRepository,
         private readonly WalletRepositoryInterface $walletRepository,
         private readonly SpotOrderRepositoryInterface $spotOrderRepository,
+        private readonly LockedBalanceRepositoryInterface $lockedBalanceRepository,
     ) {}
 
     public function calcCommission($tradeAmount): string
@@ -65,12 +68,11 @@ class SpotService
         // Check wallet balance (with pessimistic locking)
         $wallet = $this->walletRepository->getOneOrCreateByCurrencyWithLock($currency, $requestDTO->getUserId());
 
-        if (Math::comp($wallet->balance, $tradeAmount) === -1) {
+        if (Math::comp($wallet->available_balance, $tradeAmount) === -1) {
             throw new InsufficientBalanceException;
         }
 
         // Update wallet balances
-        $wallet->balance = Math::sub($wallet->balance, $tradeAmount);
         $wallet->locked_balance = Math::add($wallet->locked_balance, $tradeAmount);
 
         try {
@@ -170,5 +172,44 @@ class SpotService
             ->setMarketName($order->market->base_currency, $order->market->quote_currency)
             ->setFilledValue($filledValue)
             ->setCreatedAt($order->created_at);
+    }
+
+    public function cancel(int $userId, int $orderId): void
+    {
+        try {
+            DB::beginTransaction();
+            $order = $this->spotOrderRepository->getOneWithLock($orderId);
+            if ($order->status !== SpotOrderStatusEnum::OPEN) {
+                return;
+            }
+            $lockedDetail = $this->lockedBalanceRepository->getOne($orderId, LockedBalanceTypeEnum::SPOT);
+
+            $amountRefund = $lockedDetail->amount;
+            //Partial Matched
+            if (Math::comp($order->filled_quantity, '0') !== 0) {
+                $amountRefund = Math::sub($lockedDetail->amount, $order->getFilledValue());
+            }
+
+            $market = $order->market;
+            $this->lockedBalanceRepository->deleteSpotOrderLockedBalance($orderId);
+
+            if ($order->side === SpotOrderSideEnum::BUY) {
+                $currency = $market->quote_currency;
+            } else {
+                $currency = $market->base_currency;
+            }
+            $wallet = $this->walletRepository->getWalletWithLock($currency, $userId);
+
+            $wallet->decrement('locked_balance', $amountRefund);
+
+            $order->update([
+                'status' => SpotOrderStatusEnum::CANCELED,
+            ]);
+            DB::commit();
+        } catch (Throwable $exception) {
+            report($exception);
+            DB::rollBack();
+        }
+
     }
 }

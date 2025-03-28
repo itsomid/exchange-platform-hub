@@ -8,12 +8,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Spot\CreateOrderRequest;
 use App\Http\Requests\V1\Spot\ListOrderRequest;
 use App\Http\Resources\SpotOrderResource;
+use App\Models\SpotOrder;
 use App\Services\Spot\DTO\SpotOrderListsRequestDTO;
 use App\Services\Spot\DTO\SpotOrderRequestDTO;
 use App\Services\Spot\OrderMatchingEngine;
 use App\Services\Spot\SpotService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
@@ -268,5 +270,21 @@ class OrderController extends Controller
                 orderId: $orderId
             )
         );
+    }
+
+    public function cancel(SpotOrder $order)
+    {
+        if (! Gate::allows('update-spot-order', $order)) {
+            abort(403);
+        }
+
+        $this->spotService->cancel(
+            userId: Auth::id(),
+            orderId: $order->id
+        );
+
+        return response([
+            'message' => __('spot.order_canceled'),
+        ]);
     }
 }
