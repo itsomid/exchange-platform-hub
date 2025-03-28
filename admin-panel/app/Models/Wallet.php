@@ -51,4 +51,9 @@ class Wallet extends Model
         return $this->balance - $this->locked_balance;
     }
 
+    public function lockedBalanceDetails()
+    {
+        return $this->hasMany(LockedBalanceDetail::class);
+    }
+
 }

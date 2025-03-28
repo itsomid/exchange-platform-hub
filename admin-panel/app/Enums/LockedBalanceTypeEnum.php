@@ -1,0 +1,35 @@
+<?php
+
+namespace App\Enums;
+
+enum LockedBalanceTypeEnum: string
+{
+    case WITHDRAWAL = 'withdrawal';
+    case ADMIN = 'admin';
+    case SPOT = 'spot';
+
+    const array TYPE_LABEL = [
+        self::WITHDRAWAL->value => 'برداشت',
+        self::ADMIN->value => 'مدیریت',
+        self::SPOT->value => 'سپات',
+    ];
+
+    public function label()
+    {
+        return self::TYPE_LABEL[$this->value]??'';
+    }
+    
+    const array TYPE_COLOR = [
+        self::WITHDRAWAL->value => 'danger',
+        self::ADMIN->value => 'primary',
+        self::SPOT->value => 'success',
+    ];
+
+    public function color()
+    {
+        return self::TYPE_COLOR[$this->value]??'';
+    }
+
+}
+
+
