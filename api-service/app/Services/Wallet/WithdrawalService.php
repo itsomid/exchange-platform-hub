@@ -352,7 +352,6 @@ class WithdrawalService
             'withdrawal_id' => $withdrawalId,
         ]);
         // Deduct balance and lock funds
-        $wallet->decrement('balance', $amount);
         $wallet->increment('locked_balance', $amount);
     }
 }
