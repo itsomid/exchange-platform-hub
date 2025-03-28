@@ -262,12 +262,16 @@ class OrderController extends Controller
      *     )
      * )
      */
-    public function show(int $orderId)
+    public function show(SpotOrder $order)
     {
+        if (! Gate::allows('update-spot-order', $order)) {
+            abort(403);
+        }
+
         return new SpotOrderResource(
             $this->spotService->getDetail(
                 userId: Auth::id(),
-                orderId: $orderId
+                orderId: $order->id
             )
         );
     }
@@ -280,20 +284,25 @@ class OrderController extends Controller
      *     description="Cancel an existing spot order by its ID",
      *     operationId="cancelSpotOrder",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(
      *         name="order",
      *         in="path",
      *         description="ID of the order to cancel",
      *         required=true,
+     *
      *         @OA\Schema(
      *             type="integer",
      *             format="int64"
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Order canceled successfully",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(
      *                 property="message",
      *                 type="string",
@@ -301,10 +310,13 @@ class OrderController extends Controller
      *             )
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=403,
      *         description="Forbidden",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(
      *                 property="message",
      *                 type="string",
@@ -312,10 +324,13 @@ class OrderController extends Controller
      *             )
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=404,
      *         description="Order not found",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(
      *                 property="message",
      *                 type="string",
@@ -323,10 +338,13 @@ class OrderController extends Controller
      *             )
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=500,
      *         description="Server error",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(
      *                 property="message",
      *                 type="string",

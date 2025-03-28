@@ -96,7 +96,7 @@ Route::prefix('/spot')->group(function () {
     Route::prefix('/orders')->group(function () {
         Route::post('/', [\App\Http\Controllers\V1\Spot\OrderController::class, 'store']);
         Route::get('/', [\App\Http\Controllers\V1\Spot\OrderController::class, 'lists']);
-        Route::get('/{orderId}', [\App\Http\Controllers\V1\Spot\OrderController::class, 'show']);
+        Route::get('/{order}', [\App\Http\Controllers\V1\Spot\OrderController::class, 'show']);
         Route::post('cancel/{order}', [\App\Http\Controllers\V1\Spot\OrderController::class, 'cancel']);
     });
 
