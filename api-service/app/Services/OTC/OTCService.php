@@ -79,7 +79,7 @@ class OTCService
             config('bitexroom.bitexroom_user_id')
         );
 
-        return $wallet->balance;
+        return $wallet->available_balance;
     }
 
     /**
@@ -111,7 +111,7 @@ class OTCService
             $fee = Math::mul($buyAmount, Math::div(Setting::getSetting('otc_buy_fee'), 100));
             $receivedAmount = Math::sub($buyAmount, $fee);
 
-            if (Math::comp($buyerQuoteWallet->balance, $amountInQuoteCurrency) === -1) {
+            if (Math::comp($buyerQuoteWallet->available_balance, $amountInQuoteCurrency) === -1) {
                 throw new InsufficientBalanceException(__('otc.buyer_insufficient_balance', ['currency' => $market->quote_currency]));
             }
 
@@ -127,7 +127,7 @@ class OTCService
             );
 
             $doComplete = true;
-            if (Math::comp($sellerWallet->balance, $receivedAmount) === -1) {
+            if (Math::comp($sellerWallet->available_balance, $receivedAmount) === -1) {
                 $chain = $market->currency->chains->sort(fn ($a, $b) => $a->network_fee <=> $b->network_fee
                 )->first();
 
@@ -338,7 +338,7 @@ class OTCService
             $fee = Math::mul($amountInQuoteCurrency, Math::div(Setting::getSetting('otc_sell_fee'), 100));
             $receivedAmount = Math::sub($amountInQuoteCurrency, $fee);
 
-            if (Math::comp($sellerWallet->balance, $sellAmount) === -1) {
+            if (Math::comp($sellerWallet->available_balance, $sellAmount) === -1) {
                 throw new InsufficientBalanceException(__('otc.seller_insufficient_balance', ['currency' => $market->base_currency]));
             }
 
@@ -352,7 +352,7 @@ class OTCService
                 ->setStatus(OTCOrderStatusEnum::SUCCESS)
             );
 
-            if (Math::comp($buyerQuoteWallet->balance, $receivedAmount) === -1) {
+            if (Math::comp($buyerQuoteWallet->available_balance, $receivedAmount) === -1) {
                 $usdtWallet = $this->walletRepository
                     ->getBitexroomWallet(
                         'USDT'

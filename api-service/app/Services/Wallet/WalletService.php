@@ -167,7 +167,7 @@ class WalletService
 
         $wallets->map(function ($wallet) use (&$sumAmount) {
             $sumAmount += $wallet->exchangePrice ?
-                Math::mul($wallet->exchangePrice->price, $wallet->balance, 8) : $wallet->balance;
+                Math::mul($wallet->exchangePrice->price, $wallet->available_balance, 8) : $wallet->available_balance;
 
         });
 
