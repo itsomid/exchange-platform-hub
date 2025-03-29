@@ -213,6 +213,29 @@ services:
     networks:
       - laravel
     restart: always
+    
+  api-laravel-reverb:
+    build:
+      context: ./dockerfiles
+      dockerfile: php.dockerfile
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - USER=${USER:-f}
+    container_name: coinex-listen
+    volumes:
+      - ./api-service:/var/www/html:delegated
+      - ./env/api-service.env:/var/www/html/.env
+    depends_on:
+      - database
+      - redis
+    working_dir: /var/www/html
+    entrypoint: [ 'php', '/var/www/html/artisan', 'reverb:start' ]
+    ports:
+      - 8081:8080
+    networks:
+      - laravel
+    restart: always
 
   laravel-migrate-seed:
     build:
