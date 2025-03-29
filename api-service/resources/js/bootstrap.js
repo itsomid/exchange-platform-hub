@@ -14,3 +14,8 @@ import './echo';
 Echo.channel('order-book.1').listen('OrderBookUpdated', (event) =>{
     console.log(event)
 })
+
+Echo.channel('market.1').listen('MarketUpdated', (event) =>{
+    console.log(event)
+})
+
