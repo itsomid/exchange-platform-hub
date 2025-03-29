@@ -345,7 +345,7 @@
                                         <input type="hidden"
                                                value="{{$deposit->transaction_hash}}"
                                                id="deposit{{$deposit->transaction_hash}}"
-                                               class="form-control text-left" placeholder="کد معرف شما"
+                                               class="form-control text-left" placeholder="هش تراکنش"
                                                aria-label="Username"
                                                readonly>
                                         <a href="{{ $deposit->explorer_tx_url }}" target="_blank">

@@ -7,13 +7,142 @@
             <x-user-details :user="$user"/>
 
         </div>
-        <div class="col-xl-9 col-lg-7 order-0 order-md-1">
+        <div class="col-lg-9 order-0 order-md-1">
 
-            <div class="card  mt-4"></div>
+            <div class="card">
+                <div class="card-body card-widget-separator">
+                    <div class="row gy-4 gy-sm-1">
+                        <div class="col-sm-6 col-lg-3">
+                            <div
+                                class="d-flex justify-content-between align-items-center card-widget-1 border-end pb-4 pb-sm-0">
+                                <div>
+                                    <h4 class="mb-0">24</h4>
+                                    <p class="mb-0">تعداد کیف پول</p>
+                                </div>
+                                <div class="avatar me-sm-6">
+                                  <span class="avatar-initial rounded bg-label-secondary text-heading">
+                                    <i class="ti ti-user ti-26px"></i>
+                                  </span>
+                                </div>
+                            </div>
+                            <hr class="d-none d-sm-block d-lg-none me-6">
+                        </div>
+                        <div class="col-sm-6 col-lg-3">
+                            <div
+                                class="d-flex justify-content-between align-items-center card-widget-2 border-end pb-4 pb-sm-0">
+                                <div>
+                                    <h4 class="mb-0">165</h4>
+                                    <p class="mb-0">ارزش فعلی دارایی</p>
+                                </div>
+                                <div class="avatar me-lg-6">
+                                  <span class="avatar-initial rounded bg-label-secondary text-heading">
+                                    <i class="ti ti-file-invoice ti-26px"></i>
+                                  </span>
+                                </div>
+                            </div>
+                            <hr class="d-none d-sm-block d-lg-none">
+                        </div>
+                        <div class="col-sm-6 col-lg-3">
+                            <div
+                                class="d-flex justify-content-between align-items-center border-end pb-4 pb-sm-0 card-widget-3">
+                                <div>
+                                    <h4 class="mb-0">N/A</h4>
+                                    <p class="mb-0">سود و زیان دیروز</p>
+                                </div>
+                                <div class="avatar me-sm-6">
+                                  <span class="avatar-initial rounded bg-label-secondary text-heading">
+                                    <i class="ti ti-checks ti-26px"></i>
+                                  </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h4 class="mb-0">$876</h4>
+                                    <p class="mb-0">Unpaid</p>
+                                </div>
+                                <div class="avatar">
+                                  <span class="avatar-initial rounded bg-label-secondary text-heading">
+                                    <i class="ti ti-circle-off ti-26px"></i>
+                                  </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card  mt-4">
+                <div class="card-header">
+                    <div class="card-title header-elements">
+                        <h5 class="m-0 me-2">لیست ارز ها</h5>
+                    </div>
+                    <div class="table-responsive text-nowrap">
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th>نام ارز</th>
+                                <th>موجودی</th>
+                                <th>در دسترس</th>
+                                <th>ارزش(تتر)</th>
+                                <th>درصد از کل</th>
+                                <th>آدرس واریز</th>
+                                <th>عملیات</th>
+                            </tr>
+                            </thead>
+                            <tbody class="table-border-bottom-0">
+                            @foreach($walletsWithAssetsValues as $wallet)
+                                <tr>
+                                    <td>
+                                        <div class="d-flex">
+                                            <div class="avatar me-2">
+                                                <img src="{{$wallet->currency->coinLogo()}}" class="img-fluid"
+                                                     width="50px">
+                                            </div>
+                                            <div class="d-flex flex-column">
+                                                <span
+                                                    class="fw-medium text-black">{{$wallet->currency->persian_name}}</span>
+                                                <small>{{$wallet->currency->name}}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-black">{{formatNumberTrimZeros($wallet->balance)}}</td>
+                                    <td>{{formatNumberTrimZeros(bcsub($wallet->balance , $wallet->locked_balance,$wallet->currency->precision))}}</td>
+                                    <td>{{$wallet->assetValue}}</td>
+                                    <td>N/A</td>
+                                    <th>
+                                        @if($wallet->walletChains->isNotEmpty())
+
+                                            @foreach($wallet->walletChains as $walletChain)
+                                                @if($wallet->user_id !== 1)
+                                                    <a href="{{ $walletChain->explorer_address_url }}" target="_blank" class="my-1">
+
+                                                        <span>{{ shorten_hash($walletChain->address) }}</span>
+
+                                                        <span class="me-2">({{$walletChain->currency_chain}})</span>
+                                                        <i class="fa-regular fa-clone ms-1"></i>
+                                                    </a><br>
+                                                @else
+
+                                                @endif
+                                            @endforeach
+                                        @endif
+                                    </th>
+                                    <td>
+                                        <a class="btn btn-link p-0 text-secondary me-2"
+                                           href="{{route('admin.wallet.detail',['user'=>$user->id,'wallet'=>$wallet->id,'type'=>'deposit'])}}"><i
+                                                class="fa-light fa-eye fa-lg"></i></a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
-
     </div>
-
     <div class="row mt-3">
 
         <div class="col">
@@ -129,7 +258,8 @@
                                             </td>
 
                                             <td>
-                                                <span class="badge bg-label-success">{{$order->status->label()}}</span>
+                                                    <span
+                                                        class="badge bg-label-success">{{$order->status->label()}}</span>
                                             </td>
                                             <td>
                                                 <a href="" class="btn btn-icon btn-text-secondary"
@@ -320,7 +450,8 @@
                                             <td class="font-number">
                                                 <h6 class="mb-0">
                                                     @if($withdraw->explorer_address_url)
-                                                        <a href="{{ $withdraw->explorer_address_url }}" target="_blank"
+                                                        <a href="{{ $withdraw->explorer_address_url }}"
+                                                           target="_blank"
                                                            class="me-1">
                                                             <i class="fa-regular fa-clone"></i>
                                                         </a>
@@ -435,7 +566,8 @@
                                                                             <tbody class="table-border-bottom-0">
                                                                             @if($withdraw->transactions->isEmpty())
                                                                                 <tr>
-                                                                                    <td colspan="9" class="text-center">
+                                                                                    <td colspan="9"
+                                                                                        class="text-center">
                                                                                         تراکنشی
                                                                                         یافت
                                                                                         نشد.
@@ -555,7 +687,8 @@
                         @else
                             <div class="ms-5 mb-3">
                                 <a class="btn btn-sm btn-primary"
-                                   href="{{route('admin.deposit.index',['user' => $user->id])}}">مشاهده تمام واریزها</a>
+                                   href="{{route('admin.deposit.index',['user' => $user->id])}}">مشاهده تمام
+                                    واریزها</a>
                             </div>
                             <div class="table-responsive text-nowrap">
                                 <table class="table table-striped">
