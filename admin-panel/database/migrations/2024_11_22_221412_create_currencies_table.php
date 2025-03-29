@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('currencies', function (Blueprint $table) {
             $table->id();
             $table->string('name'); //Tether
+            $table->string('persian_name'); //تتر
             $table->string('symbol')->unique(); //USDT
             $table->string('logo')->nullable();
             $table->unsignedTinyInteger('precision')->default(8);

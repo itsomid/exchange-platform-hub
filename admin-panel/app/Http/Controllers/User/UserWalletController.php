@@ -5,7 +5,6 @@ namespace App\Http\Controllers\User;
 use App\Enums\DepositStatusEnum;
 use App\Enums\OTCOrderTypeEnum;
 use App\Enums\TransactionTypeEnum;
-use App\Enums\WithdrawalStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
 use App\Models\OTCOrder;
@@ -40,9 +39,6 @@ class UserWalletController extends Controller
 
     public function userWallets(User $user)
     {
-        $user = User::findOrFail($user->id);
-
-
         $wallets = $user->wallets()->with('walletChains')->get();
 
         $totalAssetsValue = $this->walletService->totalAssetsValue($user);
