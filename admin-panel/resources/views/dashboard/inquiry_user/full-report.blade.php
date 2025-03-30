@@ -16,12 +16,12 @@
                             <div
                                 class="d-flex justify-content-between align-items-center card-widget-1 border-end pb-4 pb-sm-0">
                                 <div>
-                                    <h4 class="mb-0">24</h4>
+                                    <h4 class="mb-0">{{count($walletsWithAssetsValues)}}</h4>
                                     <p class="mb-0">تعداد کیف پول</p>
                                 </div>
                                 <div class="avatar me-sm-6">
                                   <span class="avatar-initial rounded bg-label-secondary text-heading">
-                                    <i class="ti ti-user ti-26px"></i>
+                                    <i class="fa-light fa-wallet"></i>
                                   </span>
                                 </div>
                             </div>
@@ -31,12 +31,14 @@
                             <div
                                 class="d-flex justify-content-between align-items-center card-widget-2 border-end pb-4 pb-sm-0">
                                 <div>
-                                    <h4 class="mb-0">165</h4>
-                                    <p class="mb-0">ارزش فعلی دارایی</p>
+                                    <h4 class="mb-0">{{formatNumber($totalAssetsValue)}}
+                                        <small class="text-muted">USDT</small>
+                                    </h4>
+                                    <p class="mb-0">ارزش کل موجودی ها</p>
                                 </div>
                                 <div class="avatar me-lg-6">
                                   <span class="avatar-initial rounded bg-label-secondary text-heading">
-                                    <i class="ti ti-file-invoice ti-26px"></i>
+                                    <i class="fa-regular fa-dollar"></i>
                                   </span>
                                 </div>
                             </div>
@@ -46,12 +48,20 @@
                             <div
                                 class="d-flex justify-content-between align-items-center border-end pb-4 pb-sm-0 card-widget-3">
                                 <div>
-                                    <h4 class="mb-0">N/A</h4>
+                                    <h4 dir="ltr"
+                                        class="mb-0 {{$yesterdayProfitLoss['value'] >= 0 ? 'text-success' : 'text-danger'}}">
+                                        <small class="text-muted">USDT</small>
+                                        {{formatNumber($yesterdayProfitLoss['value'])}}
+                                    </h4>
                                     <p class="mb-0">سود و زیان دیروز</p>
+                                    <small
+                                        class="{{$yesterdayProfitLoss['value'] >= 0 ? 'text-success' : 'text-danger'}}">
+                                        {{formatNumber($yesterdayProfitLoss['percentage'])}}%
+                                    </small>
                                 </div>
                                 <div class="avatar me-sm-6">
                                   <span class="avatar-initial rounded bg-label-secondary text-heading">
-                                    <i class="ti ti-checks ti-26px"></i>
+                                    <i class="fa-regular fa-chart-line-up"></i>
                                   </span>
                                 </div>
                             </div>
@@ -59,12 +69,14 @@
                         <div class="col-sm-6 col-lg-3">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h4 class="mb-0">$876</h4>
-                                    <p class="mb-0">Unpaid</p>
+                                    <h4 class="mb-0">{{formatNumber($totalAvailableAssetsValue)}}
+                                        <small class="text-muted">USDT</small>
+                                    </h4>
+                                    <p class="mb-0">موجودی در دسترس</p>
                                 </div>
                                 <div class="avatar">
-                                  <span class="avatar-initial rounded bg-label-secondary text-heading">
-                                    <i class="ti ti-circle-off ti-26px"></i>
+                                  <span class="avatar-initial rounded bg-label-success text-heading">
+                                   <i class="fa-regular fa-dollar"></i>
                                   </span>
                                 </div>
                             </div>
@@ -78,70 +90,97 @@
                     <div class="card-title header-elements">
                         <h5 class="m-0 me-2">لیست ارز ها</h5>
                     </div>
-                    <div class="table-responsive text-nowrap">
-                        <table class="table table-striped">
-                            <thead>
+                </div>
+                <div class="table-responsive text-nowrap">
+                    <table class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>نام ارز</th>
+                            <th>موجودی</th>
+                            <th>در دسترس</th>
+                            <th>ارزش(تتر)</th>
+                            <th>درصد از کل</th>
+                            <th>آدرس واریز</th>
+                            <th>عملیات</th>
+                        </tr>
+                        </thead>
+                        <tbody class="table-border-bottom-0">
+                        @foreach($walletsWithAssetsValues as $wallet)
                             <tr>
-                                <th>نام ارز</th>
-                                <th>موجودی</th>
-                                <th>در دسترس</th>
-                                <th>ارزش(تتر)</th>
-                                <th>درصد از کل</th>
-                                <th>آدرس واریز</th>
-                                <th>عملیات</th>
-                            </tr>
-                            </thead>
-                            <tbody class="table-border-bottom-0">
-                            @foreach($walletsWithAssetsValues as $wallet)
-                                <tr>
-                                    <td>
-                                        <div class="d-flex">
-                                            <div class="avatar me-2">
-                                                <img src="{{$wallet->currency->coinLogo()}}" class="img-fluid"
-                                                     width="50px">
-                                            </div>
-                                            <div class="d-flex flex-column">
+                                <td>
+                                    <div class="d-flex">
+                                        <div class="avatar me-2">
+                                            <img src="{{$wallet->currency->coinLogo()}}" class="img-fluid"
+                                                 width="50px">
+                                        </div>
+                                        <div class="d-flex flex-column">
                                                 <span
                                                     class="fw-medium text-black">{{$wallet->currency->persian_name}}</span>
-                                                <small>{{$wallet->currency->name}}</small>
-                                            </div>
+                                            <small>{{$wallet->currency->name}}</small>
                                         </div>
-                                    </td>
-                                    <td class="text-black">{{formatNumberTrimZeros($wallet->balance)}}</td>
-                                    <td>{{formatNumberTrimZeros(bcsub($wallet->balance , $wallet->locked_balance,$wallet->currency->precision))}}</td>
-                                    <td>{{$wallet->assetValue}}</td>
-                                    <td>N/A</td>
-                                    <th>
-                                        @if($wallet->walletChains->isNotEmpty())
+                                    </div>
+                                </td>
+                                <td class="text-black">{{formatNumberTrimZeros($wallet->balance, $wallet->currency->precision)}}</td>
+                                <td>{{formatNumberTrimZeros(bcsub($wallet->balance , $wallet->locked_balance,$wallet->currency->precision))}}
+                                    <br>
+                                    @if($wallet->locked_balance > 0)
+                                        <small class="text-danger">
+                                            {{formatNumberTrimZeros($wallet->locked_balance, $wallet->currency->precision)}}
+                                            <i class="fa-regular fa-lock"></i>
+                                        </small>
+                                    @endif
+                                </td>
+                                <td>{{$wallet->assetValue}}</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="position-relative d-inline-block"
+                                             style="width: 40px; height: 40px;">
+                                            <svg class="position-absolute top-0 start-0" width="30" height="40"
+                                                 viewBox="0 0 36 36">
+                                                <circle cx="18" cy="18" r="16" fill="none" stroke="#e9ecef"
+                                                        stroke-width="4"></circle>
+                                                <circle cx="18" cy="18" r="16" fill="none" stroke="#6f38d4"
+                                                        stroke-width="4"
+                                                        stroke-dasharray="100"
+                                                        stroke-dashoffset="{{ 100 - formatNumber($wallet->assetValue / $totalAssetsValue * 100) }}"
+                                                        transform="rotate(-90 18 18)"></circle>
+                                            </svg>
+                                        </div>
+                                        <span>{{formatNumber($wallet->assetValue / $totalAssetsValue * 100)}}%</span>
+                                    </div>
+                                </td>
+                                <th>
+                                    @if($wallet->walletChains->isNotEmpty())
 
-                                            @foreach($wallet->walletChains as $walletChain)
-                                                @if($wallet->user_id !== 1)
-                                                    <a href="{{ $walletChain->explorer_address_url }}" target="_blank" class="my-1">
+                                        @foreach($wallet->walletChains as $walletChain)
+                                            @if($wallet->user_id !== 1)
+                                                <a href="{{ $walletChain->explorer_address_url }}" target="_blank"
+                                                   class="my-1">
 
-                                                        <span>{{ shorten_hash($walletChain->address) }}</span>
+                                                    <i class="fa-regular fa-clone me-1"></i>
+                                                    <span>{{ shorten_hash($walletChain->address) }} ({{$walletChain->currency_chain}})</span>
+                                                </a><br>
+                                            @else
 
-                                                        <span class="me-2">({{$walletChain->currency_chain}})</span>
-                                                        <i class="fa-regular fa-clone ms-1"></i>
-                                                    </a><br>
-                                                @else
-
-                                                @endif
-                                            @endforeach
-                                        @endif
-                                    </th>
-                                    <td>
-                                        <a class="btn btn-link p-0 text-secondary me-2"
-                                           href="{{route('admin.wallet.detail',['user'=>$user->id,'wallet'=>$wallet->id,'type'=>'deposit'])}}"><i
-                                                class="fa-light fa-eye fa-lg"></i></a>
-                                    </td>
-                                </tr>
-                            @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                                            @endif
+                                        @endforeach
+                                    @else
+                                        بدون آدرس واریز
+                                    @endif
+                                </th>
+                                <td>
+                                    <a class="btn btn-link p-0 text-secondary me-2"
+                                       href="{{route('admin.wallet.detail',['user'=>$user->id,'wallet'=>$wallet->id,'type'=>'deposit'])}}"><i
+                                            class="fa-light fa-eye fa-lg"></i></a>
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
+    </div>
     </div>
     <div class="row mt-3">
 

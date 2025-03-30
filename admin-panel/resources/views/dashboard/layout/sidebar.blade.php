@@ -57,7 +57,9 @@
                 <a disabled="" href="{{route('admin.inquiry.index')}}" class="menu-link">
                     <i class="menu-icon fa-light fa-user-alt fa-lg"></i>
                     <div>استعلام کاربر</div>
+                    <span class="badge new-badge ms-auto">New</span>
                 </a>
+
             </li>
         @endcan
 
