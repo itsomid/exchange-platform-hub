@@ -18,13 +18,15 @@ return new class extends Migration
         });
 
         // Create a trigger to prevent updates to the public_key column
-        DB::unprepared('
-            CREATE TRIGGER prevent_cold_wallet_update
-            BEFORE UPDATE ON cold_wallets
-            FOR EACH ROW
-            SIGNAL SQLSTATE "45000"
-            SET MESSAGE_TEXT = "Updating cold wallet public key is not allowed";
-        ');
+        // DB::unprepared('
+        //     CREATE TRIGGER prevent_cold_wallet_update
+        //     BEFORE UPDATE ON cold_wallets
+        //     FOR EACH ROW
+        //     SIGNAL SQLSTATE "45000"
+        //     SET MESSAGE_TEXT = "Updating cold wallet public key is not allowed";
+        // ');
+        
+        
     }
 
     /**
