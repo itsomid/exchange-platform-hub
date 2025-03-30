@@ -214,15 +214,15 @@ services:
       - laravel
     restart: always
     
-  api-laravel-reverb:
+  api-reverb:
     build:
       context: ./dockerfiles
       dockerfile: php.dockerfile
-      args:
+      args: 
         - UID=${UID:-1000}
         - GID=${GID:-1000}
         - USER=${USER:-f}
-    container_name: coinex-listen
+    container_name: api-reverb
     volumes:
       - ./api-service:/var/www/html:delegated
       - ./env/api-service.env:/var/www/html/.env
