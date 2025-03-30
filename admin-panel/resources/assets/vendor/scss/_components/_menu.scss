@@ -756,3 +756,37 @@
     background: $navbar-dark-color !important;
   }
 }
+
+.new-badge {
+    font-size: 12px;
+    background: red;
+    animation-name: blinkbadge;
+    animation-duration: 1s;
+    animation-iteration-count: infinite;
+}
+
+@keyframes blinkbadge {
+
+    0% {
+        background-color: red;
+    }
+    25% {
+        background-color: #6418C3;
+    }
+    45% {
+        background-color: #68CF29;
+    }
+    65% {
+        background-color: red;
+    }
+    75% {
+        background-color: #68CF29;
+    }
+    85% {
+        background-color: #EB8153;
+    }
+
+    100% {
+        background-color: #6418C3;
+    }
+}
