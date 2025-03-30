@@ -41,7 +41,7 @@ class InquiryController extends Controller
 
         $withdraws = Withdrawal::query()->whereUserId($user->id)->with(['user', 'currency', 'transaction'])->orderBy('created_at', 'desc')->take(5)->get();
         $totalWithdrawsCount = Withdrawal::query()->whereUserId($user->id)->count();
-
+ 
         $deposits = Deposit::query()->whereUserId($user->id)->with(['user', 'currency', 'transaction'])->orderBy('created_at', 'desc')->take(5)->get();
         $totalDepositsCount = Deposit::query()->whereUserId($user->id)->count();
 
@@ -50,6 +50,9 @@ class InquiryController extends Controller
         $totalAssetsValue = $this->walletService->totalAssetsValue($user);
         $totalAvailableAssetsValue = $this->walletService->totalAvailableAssetsValue($user);
         $totalBlockedAssetsValue = $this->walletService->totalBlockedAssetsValue($user);
+        
+        // Calculate yesterday's profit/loss
+        $yesterdayProfitLoss = $this->walletService->calculateYesterdayProfitLoss($user);
 
         // Calculate the value of each wallet's currency
         $walletsWithAssetsValues = $wallets->map(function ($wallet) {
@@ -70,6 +73,7 @@ class InquiryController extends Controller
             'totalAssetsValue' => $totalAssetsValue,
             'totalAvailableAssetsValue' => $totalAvailableAssetsValue,
             'totalBlockedAssetsValue' => $totalBlockedAssetsValue,
+            'yesterdayProfitLoss' => $yesterdayProfitLoss,
         ]);
     }
 }

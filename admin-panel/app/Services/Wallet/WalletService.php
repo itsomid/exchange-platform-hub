@@ -12,6 +12,7 @@ use App\Models\WalletChain;
 use App\Services\Wallet\DTO\UpdateBalanceRequestDTO;
 use Illuminate\Support\Facades\DB;
 use Throwable;
+use App\Models\MarketHistory;
 
 class WalletService
 {
@@ -128,29 +129,84 @@ class WalletService
         return $totalAssetsValue;
     }
 
-    public function specificAssetValue(User $user, string $currency_symbol)
+    public function specificAssetValue(User $user, string $currencySymbol)
     {
-        // Initialize the specific asset value
-        $specificAssetValue = 0;
+        $wallet = Wallet::where('user_id', $user->id)
+            ->where('currency_symbol', $currencySymbol)
+            ->first();
 
-        // Loop through the user's wallets
-        foreach ($user->wallets as $wallet) {
-            // Check if the wallet's currency matches the provided currency ID
-            if ($wallet->currency_symbol === $currency_symbol) {
-                // Get the current market price for the wallet's currency
-                $market = $wallet->currency->baseMarket; // Assuming you have a relationship in the Currency model
-
-                $currencyPrice = $market ? $market->activeExchangePrice->price : 1;
-
-                // Add the wallet's value to the specific asset value
-                $specificAssetValue += $wallet->balance * $currencyPrice;
-            }
+        if (!$wallet) {
+            return 0;
         }
 
-        return $specificAssetValue;
+        // Get the current market price for the wallet's currency
+        $market = $wallet->currency->baseMarket;
+        $currencyPrice = $market ? $market->activeExchangePrice->price : 1;
+
+        return $wallet->balance * $currencyPrice;
     }
 
+    /**
+     * Calculate user's profit/loss from yesterday.
+     *
+     * @param User $user
+     * @return array containing the profit/loss value and percentage
+     */
+    public function calculateYesterdayProfitLoss(User $user)
+    {
+        // Get yesterday and the day before
+        $yesterday = now()->subDay();
+        $dayBefore = now()->subDays(2);
+        
+        // Initialize values
+        $yesterdayValue = 0;
+        $dayBeforeValue = 0;
+        
+        // Loop through each wallet
+        foreach ($user->wallets as $wallet) {
+            // Get the market for the wallet's currency
+            $market = $wallet->currency->baseMarket;
+            
+            // Skip if no market (like USDT)
+            if (!$market) {
+                continue;
+            }
+   
+            // Get market history for yesterday
+             $yesterdayHistory = MarketHistory::where('market_id', $market->id)
+                ->whereDate('timestamp', $yesterday)
+                ->latest()
+                ->first();
+                
+            // Get market history for day before
+             $dayBeforeHistory = MarketHistory::where('market_id', $market->id)
+                ->whereDate('timestamp', $dayBefore)
+                ->latest()
+                ->first();
 
+            // Add to totals if history exists
+            if ($yesterdayHistory) {
+                $yesterdayValue += $wallet->balance * $yesterdayHistory->close;
+            }
+            
+            if ($dayBeforeHistory) {
+                $dayBeforeValue += $wallet->balance * $dayBeforeHistory->close;
+            }
+        }
+        
+        // Calculate profit/loss
+        $profitLoss = $yesterdayValue - $dayBeforeValue;
+
+        // Calculate percentage
+        $profitLossPercentage = $dayBeforeValue > 0 
+            ? ($profitLoss / $dayBeforeValue) * 100 
+            : 0;
+            
+        return [
+            'value' => $profitLoss,
+            'percentage' => $profitLossPercentage
+        ];
+    }
 
     public function updateBalance(UpdateBalanceRequestDTO $requestDTO): bool
     {
