@@ -9,6 +9,7 @@ use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Events\OrderBookUpdated;
+use App\Events\UserNotification;
 use App\Helpers\Math;
 use App\Models\LockedBalanceDetail;
 use App\Models\SpotOrder;
@@ -116,6 +117,12 @@ readonly class OrderMatchingEngine
 
             $this->completeOrder($order, $oppositeOrder);
             $this->broadcastOrderBook($order->market_id);
+            if ($order->status === SpotOrderStatusEnum::COMPLETED) {
+                $this->broadcastUserNotifications($order->user_id);
+            }
+            if ($oppositeOrder->status === SpotOrderStatusEnum::COMPLETED) {
+                $this->broadcastUserNotifications($oppositeOrder->user_id);
+            }
         }
     }
 
@@ -250,5 +257,10 @@ readonly class OrderMatchingEngine
     private function broadcastOrderBook(int $marketId): void
     {
         OrderBookUpdated::dispatch($marketId);
+    }
+
+    private function broadcastUserNotifications(int $userId): void
+    {
+        UserNotification::dispatch($userId, __('user_notifications.spot_order.order_completed', locale: 'fa'));
     }
 }
