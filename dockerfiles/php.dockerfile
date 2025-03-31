@@ -32,7 +32,9 @@ RUN apk add --no-cache freetype libjpeg-turbo libpng libwebp libxpm \
     freetype-dev libjpeg-turbo-dev libpng-dev libwebp-dev libxpm-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp --with-xpm \
     && docker-php-ext-install gd pdo pdo_mysql bcmath \
-    && apk del freetype-dev libjpeg-turbo-dev libpng-dev libwebp-dev libxpm-dev
+    && apk del freetype-dev libjpeg-turbo-dev libpng-dev libwebp-dev libxpm-dev \
+    && docker-php-ext-install pcntl && docker-php-ext-configure pcntl --enable-pcntl
+
 
 
 # Install Redis extension
