@@ -23,6 +23,10 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->group(base_path('routes/api_v1.php'));
         }
     )
+    ->withBroadcasting(
+        __DIR__.'/../routes/channels.php',
+        ['middleware' => ['auth:sanctum', 'verified']]
+    )
     ->withMiddleware(function (Middleware $middleware) {
         //        $middleware->redirectGuestsTo('/login');
         $middleware->append(\App\Http\Middleware\SetLocale::class)
