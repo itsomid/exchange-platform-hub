@@ -164,7 +164,7 @@ Route::prefix('exchange')->group(function () {
     Route::get('/wallets/coinexWallets', [ExchangeWalletController::class, 'coinexWallets'])->name('exchange.coinex-wallet');
     Route::get('/wallets/hotWallets', [ExchangeWalletController::class, 'hotWallets'])->name('exchange.hot-wallet');
     Route::post('/wallets/refresh-hot-wallet-balance', [ExchangeWalletController::class, 'refreshHotWalletBalance'])->name('refresh.balance');
-    Route::post('/wallets/hotWallets/assets-gathering-to-cold-wallet/{chain_name}', [ExchangeWalletController::class, 'assetsGatheringToColdWallet'])->name('wallet.assets-gathering-to-cold-wallet');
+    Route::get('/wallets/hotWallets/assets-gathering-to-cold-wallet', [ExchangeWalletController::class, 'assetsGatheringToColdWallet'])->name('wallet.assets-gathering-to-cold-wallet');
 });
 
 Route::prefix('ref-exchanges')->group(function () {
