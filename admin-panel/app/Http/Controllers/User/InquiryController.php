@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\User;
 
+use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
 use App\Models\OTCOrder;
@@ -30,6 +31,10 @@ class InquiryController extends Controller
         ]);
         $email = request()->input('email');
         $user = User::query()->where('email', 'LIKE', '%' . $email . '%')->first();
+        if (!$user){
+            Toast::message('کاربر با این شناسه یا ایمیل یافت نشد.')->warning()->notify();
+            return redirect()->back()->withInput();
+        }
 
         return redirect()->route('admin.inquiry.user-details', ['user' => $user]);
     }
@@ -41,7 +46,7 @@ class InquiryController extends Controller
 
         $withdraws = Withdrawal::query()->whereUserId($user->id)->with(['user', 'currency', 'transaction'])->orderBy('created_at', 'desc')->take(5)->get();
         $totalWithdrawsCount = Withdrawal::query()->whereUserId($user->id)->count();
- 
+
         $deposits = Deposit::query()->whereUserId($user->id)->with(['user', 'currency', 'transaction'])->orderBy('created_at', 'desc')->take(5)->get();
         $totalDepositsCount = Deposit::query()->whereUserId($user->id)->count();
 
@@ -50,7 +55,7 @@ class InquiryController extends Controller
         $totalAssetsValue = $this->walletService->totalAssetsValue($user);
         $totalAvailableAssetsValue = $this->walletService->totalAvailableAssetsValue($user);
         $totalBlockedAssetsValue = $this->walletService->totalBlockedAssetsValue($user);
-        
+
         // Calculate yesterday's profit/loss
         $yesterdayProfitLoss = $this->walletService->calculateYesterdayProfitLoss($user);
 
