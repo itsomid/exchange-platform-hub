@@ -68,7 +68,7 @@ class Admin extends Authenticatable
 
     public function twoFAStatus()
     {
-        return (bool)$this->two_factore_secret;
+        return (bool)$this->two_factor_secret;
     }
     public function status()
     {

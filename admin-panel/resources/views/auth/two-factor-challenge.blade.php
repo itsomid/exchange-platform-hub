@@ -32,7 +32,7 @@
                             <p class="MuiTypography-root mui-14ug9cz">
                                 کد ۶ رقمی خود را در کادر زیر وارد کنید:
                             </p>
-                            <div class="auth-input-wrapper numeral-mask-wrapper d-flex align-items-center justify-content-between" style="direction: ltr">
+                            <div class="auth-input-wrapper numeral-mask-wrapper d-flex align-items-center justify-content-between mb-3" style="direction: ltr">
                                 <input type="text" class="form-control auth-input height-50 text-center numeral-mask mx-25 mb-1" maxlength="1" autofocus="">
 
                                 <input type="text" class="form-control auth-input height-50 text-center numeral-mask mx-25 mb-1" maxlength="1">
@@ -50,8 +50,7 @@
                             <small class="text-danger">کد امنیتی وارد شده غلط می باشد</small>
                             @enderror
                         </div>
-                        <button
-                            class="btn btn-primary w-100"
+                        <button class="btn btn-primary w-100"
                             tabindex="0" type="submit">بررسی کد<span
                                 class="MuiTouchRipple-root mui-w0pj6f"></span>
                         </button>

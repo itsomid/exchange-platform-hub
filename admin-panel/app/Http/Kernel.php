@@ -2,6 +2,7 @@
 
 namespace App\Http;
 
+use App\Http\Middleware\AdminTwoFactorAuth;
 use App\Http\Middleware\CheckRegistrationCompletion;
 use App\Http\Middleware\CheckUserActivation;
 use App\Http\Middleware\JwtAuthenticator;
@@ -71,5 +72,6 @@ class Kernel extends HttpKernel
         'is_active' => CheckUserActivation::class,
         'checkJWT' => JwtAuthenticator::class,
         'view-logs' => ViewLogs::class,
+        'admin.2fa' => AdminTwoFactorAuth::class,
     ];
 }
