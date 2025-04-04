@@ -11,6 +11,7 @@ class SpotTradeRepository implements SpotTradeRepositoryInterface
     public function getLatest(int $marketId): Collection
     {
         return SpotTrade::query()
+            ->with('makerOrder')
             ->where('market_id', $marketId)
             ->latest()
             ->limit(20)
