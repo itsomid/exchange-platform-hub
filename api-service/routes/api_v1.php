@@ -99,6 +99,7 @@ Route::prefix('/spot')->group(function () {
         Route::get('/{order}', [\App\Http\Controllers\V1\Spot\OrderController::class, 'show']);
         Route::post('cancel/{order}', [\App\Http\Controllers\V1\Spot\OrderController::class, 'cancel']);
     });
+    Route::get('/order-books/{marketId}', [\App\Http\Controllers\V1\Spot\OrderController::class, 'getOrderBooks'])->name('spot.order-books');
 
     Route::get('/trades/{marketId}/latest', [\App\Http\Controllers\V1\Spot\TradeController::class, 'getLatestMatched']);
 });

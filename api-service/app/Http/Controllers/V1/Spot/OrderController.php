@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Spot\CreateOrderRequest;
 use App\Http\Requests\V1\Spot\ListOrderRequest;
 use App\Http\Resources\SpotOrderResource;
+use App\Http\Resources\V1\Spot\OrderBookResource;
 use App\Models\SpotOrder;
 use App\Services\Spot\DTO\SpotOrderListsRequestDTO;
 use App\Services\Spot\DTO\SpotOrderRequestDTO;
@@ -368,5 +369,62 @@ class OrderController extends Controller
         return response([
             'message' => __('spot.order_canceled'),
         ]);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/v1/spot/order-books/{marketId}",
+     *     tags={"Spot Orders"},
+     *     summary="Get market order book",
+     *     description="Returns the current order book (asks and bids) for a specific market",
+     *     operationId="getOrderBooks",
+     *
+     *     @OA\Parameter(
+     *         name="marketId",
+     *         in="path",
+     *         description="ID of the market",
+     *         required=true,
+     *
+     *         @OA\Schema(
+     *             type="integer",
+     *             format="int64",
+     *             example=1
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful operation",
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/OrderBookResource")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=404,
+     *         description="Market not found",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="Market not found")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="message", type="string", example="Internal server error")
+     *         )
+     *     )
+     * )
+     */
+    public function getOrderBooks(int $marketId)
+    {
+        return new OrderBookResource($this->spotService->getLatestOrderBook(
+            marketId: $marketId,
+            limit: config('spot.order_book_limit_count')
+        ));
     }
 }
