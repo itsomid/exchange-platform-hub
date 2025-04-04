@@ -4972,6 +4972,13 @@
                         "format": "float",
                         "example": 0.5
                     },
+                    "side": {
+                        "enum": [
+                            "buy",
+                            "sell"
+                        ],
+                        "example": "buy"
+                    },
                     "created_at": {
                         "type": "string",
                         "format": "date-time",

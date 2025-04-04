@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property float price_change_percentage
+ */
 class ExchangePrice extends Model
 {
     protected $fillable = ['market_id', 'exchange_id', 'price', 'open_price', 'exchange_profit_sell', 'exchange_profit_buy'];
