@@ -12,7 +12,7 @@ Route::prefix('/profile')->group(function () {
     Route::get('/sessions/active', [\App\Http\Controllers\V1\Profile\SessionController::class, 'active'])->name('user.active-sessions');
 });
 
-//ReferralCode
+// ReferralCode
 Route::prefix('/referral-codes')->group(function () {
     Route::post('/', [App\Http\Controllers\V1\User\ReferralCodeController::class, 'store'])->name('referral-codes.store');
     Route::get('/', [App\Http\Controllers\V1\User\ReferralCodeController::class, 'lists'])->name('referral-codes.lists');
@@ -21,13 +21,13 @@ Route::prefix('/referral-codes')->group(function () {
     Route::get('/referred-users/{userId}/owner-profits', [\App\Http\Controllers\V1\User\ReferralCodeUsageController::class, 'ownerProfits'])->name('referral-codes-usage.profits');
 });
 
-//Currency
+// Currency
 Route::prefix('/currencies')->group(function () {
     Route::get('/deposit-withdraw-config', [ConfigController::class, 'depositWithdrawConfig'])->name('currencies.deposit-withdraw-config');
     Route::get('/all-deposit-withdraw-config', [ConfigController::class, 'allDepositWithdrawConfig'])->name('currencies.all-deposit-withdraw-config');
 });
 
-//Wallet
+// Wallet
 Route::prefix('/wallets')->group(function () {
     Route::post('/generate-address', [WalletController::class, 'generateAddress'])->name('wallets.generate-address');
     Route::post('/refresh', [WalletController::class, 'refresh'])->name('wallets.refresh')->middleware(['throttle:wallet-check']);
@@ -45,20 +45,20 @@ Route::prefix('saved-addresses')->group(function () {
     Route::delete('/addresses/{savedAddressId}', [\App\Http\Controllers\V1\Wallet\SavedAddressController::class, 'delete']);
 
 });
-//Transaction
+// Transaction
 Route::prefix('transactions')->group(function () {
     Route::get('/all-deposit-withdraw', [\App\Http\Controllers\V1\Transaction\TransactionController::class, 'allDepositWithdraw'])->name('transactions.all-deposit-withdraw');
 });
-//Portfolio
+// Portfolio
 Route::prefix('/portfolio')->group(function () {
     Route::get('/last-week', [\App\Http\Controllers\V1\Wallet\PortfolioController::class, 'getPortfolioLastWeek'])->name('portfolio.get-portfolio-last-week');
     Route::get('/last-24-hours', [\App\Http\Controllers\V1\Wallet\PortfolioController::class, 'getPortfolio24Hours'])->name('portfolio.get-portfolio-24-hours');
 });
-//OTC
+// OTC
 Route::prefix('/otc')->group(function () {
-    //get-markets
+    // get-markets
     Route::get('/markets', [\App\Http\Controllers\V1\OTC\MarketController::class, 'lists'])->name('otc.markets')->withoutMiddleware(['auth:sanctum', 'verified']);
-    //get bitexroom available balance
+    // get bitexroom available balance
     Route::get('/bitexroom-available-balance', [\App\Http\Controllers\V1\OTC\MarketController::class, 'bitexroomAvailableBalance'])->name('otc.bitexroom-available-balance');
     Route::post('/buy', [\App\Http\Controllers\V1\OTC\BuyController::class, 'create'])->name('otc.buy')->middleware(['throttle:10,1', \App\Http\Middleware\FinancialTradeBlockMiddleware::class]);
     Route::post('/sell', [\App\Http\Controllers\V1\OTC\SellController::class, 'create'])->name('otc.sell')->middleware([\App\Http\Middleware\FinancialTradeBlockMiddleware::class]);
@@ -72,7 +72,7 @@ Route::prefix('authorization')->group(function () {
     Route::post('/otp-code/{action}', [\App\Http\Controllers\V1\Authorization\EmailOTPController::class, 'send']);
 });
 
-//Notifications
+// Notifications
 Route::prefix('notifications')->group(function () {
     Route::get('/', [App\Http\Controllers\V1\User\NotificationController::class, 'index']);
     Route::post('/mark-as-read/all', [App\Http\Controllers\V1\User\NotificationController::class, 'markAsReadAll']);
@@ -80,7 +80,7 @@ Route::prefix('notifications')->group(function () {
     Route::get('/unread', [App\Http\Controllers\V1\User\NotificationController::class, 'unread']);
     Route::get('/count-unread', [App\Http\Controllers\V1\User\NotificationController::class, 'countUnread']);
 });
-//Tickets
+// Tickets
 Route::prefix('/tickets')->group(function () {
     Route::post('/', [App\Http\Controllers\V1\User\TicketController::class, 'store']);
     Route::get('/', [App\Http\Controllers\V1\User\TicketController::class, 'index']);
@@ -88,9 +88,9 @@ Route::prefix('/tickets')->group(function () {
     Route::post('/{ticket}/reply', [App\Http\Controllers\V1\User\TicketController::class, 'reply']);
 });
 
-//Spot
+// Spot
 Route::prefix('/spot')->group(function () {
-    //get-markets
+    // get-markets
     Route::get('/markets', [\App\Http\Controllers\V1\Spot\MarketController::class, 'lists'])->name('spot.markets')->withoutMiddleware(['auth:sanctum', 'verified']);
 
     Route::prefix('/orders')->group(function () {

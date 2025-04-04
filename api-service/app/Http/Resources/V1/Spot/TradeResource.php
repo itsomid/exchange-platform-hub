@@ -23,6 +23,11 @@ use Illuminate\Http\Resources\Json\JsonResource;
  *         example=0.5
  *     ),
  *     @OA\Property(
+ *         property="side",
+ *         enum={"buy", "sell"},
+ *         example="buy"
+ *       ),
+ *     @OA\Property(
  *         property="created_at",
  *         type="string",
  *         format="date-time",
@@ -42,6 +47,7 @@ class TradeResource extends JsonResource
         return [
             'price' => $this->price,
             'quantity' => $this->quantity,
+            'side' => $this->makerOrder->side,
             'created_at' => $this->created_at,
         ];
     }

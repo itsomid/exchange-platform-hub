@@ -2,6 +2,7 @@
 
 namespace App\Services\Socket;
 
+use App\Events\MarketUpdated;
 use App\Models\Exchange;
 use App\Models\ExchangePrice;
 use App\Models\Market;
@@ -106,7 +107,7 @@ class CoinExSocketService
         if (isset($data['method']) && $data['method'] === 'state.update') {
             $markets = $data['data']['state_list'] ?? [];
             foreach ($markets as $market) {
-                $this->updateCurrencyPrice($market['market'], $market['last'] ?? null, $market['open'] ?? null);
+                $this->updateCurrencyPrice($market['market'], $market['last'] ?? null, $market['open'] ?? null, $market);
             }
         }
     }
@@ -124,7 +125,7 @@ class CoinExSocketService
         return $message;
     }
 
-    private function updateCurrencyPrice(string $symbol, ?string $lastPrice, ?string $openPrice): void
+    private function updateCurrencyPrice(string $symbol, ?string $lastPrice, ?string $openPrice, array $data): void
     {
         $baseCurrency = str_replace('USDT', '', $symbol);
 
@@ -182,8 +183,17 @@ class CoinExSocketService
                 'sell_open_price' => $sellOpenPrice,
                 'buy_price' => $buyPrice,
                 'buy_open_price' => $buyOpenPrice,
+                'price_change_percentage' => round((($lastPrice - $openPrice) / $openPrice) * 100, 2),
                 'timestamp' => now()->timestamp,
             ]));
+
+            MarketUpdated::dispatch($this->marketIds[$baseCurrency], [
+                'low' => $data['low'],
+                'high' => $data['high'],
+                'last' => $data['last'],
+                'open' => $data['open'],
+                'price_change_percentage' => round((($data['last'] - $data['open']) / $data['open']) * 100, 2),
+            ]);
         }
     }
 

@@ -18,12 +18,12 @@ class SpotTrade extends Model
 
     public function makerOrder(): BelongsTo
     {
-        return $this->belongsTo(SpotOrder::class, 'id', 'marker_order_id');
+        return $this->belongsTo(SpotOrder::class, 'maker_order_id');
     }
 
     public function takerOrder(): BelongsTo
     {
-        return $this->belongsTo(SpotOrder::class, 'id', 'taker_order_id');
+        return $this->belongsTo(SpotOrder::class, 'taker_order_id');
     }
 
     public function commission(): BelongsTo
