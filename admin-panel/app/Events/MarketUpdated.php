@@ -14,6 +14,7 @@ class MarketUpdated implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
+    public string $connection = 'sync';
     /**
      * Create a new event instance.
      */
