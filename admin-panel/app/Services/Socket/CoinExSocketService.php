@@ -187,7 +187,7 @@ class CoinExSocketService
                 'timestamp' => now()->timestamp,
             ]));
 
-            MarketUpdated::dispatch($this->marketIds[$baseCurrency], [
+            MarketUpdated::dispatchSync($this->marketIds[$baseCurrency], [
                 'low' => $data['low'],
                 'high' => $data['high'],
                 'last' => $data['last'],
