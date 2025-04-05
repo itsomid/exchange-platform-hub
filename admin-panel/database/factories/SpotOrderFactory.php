@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Market;
 use App\Models\User;
+use App\Models\Wallet;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class SpotOrderFactory extends Factory
@@ -11,9 +12,19 @@ class SpotOrderFactory extends Factory
     public function definition(): array
     {
         $type = $this->faker->randomElement(['limit', 'market']);
+        $market = Market::query()->inRandomOrder()->first();
+        $user = User::factory()->create();
+        Wallet::query()->firstOrCreate([
+            'user_id' => $user->id,
+            'currency_symbol' => $market->base_currency,
+        ], [
+            'balance' => $this->faker->randomFloat(8, 0, 100),
+            'locked_balance' => 0
+        ]);
+
         return [
-            'user_id' => User::factory(),
-            'market_id' => Market::query()->inRandomOrder()->first()->id,
+            'user_id' => $user->id,
+            'market_id' => $market->id,
             'side' => $this->faker->randomElement(['buy', 'sell']),
             'type' => $type,
             'quantity' => $this->faker->randomFloat(8, 0.01, 5),
