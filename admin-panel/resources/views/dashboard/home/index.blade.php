@@ -2,6 +2,21 @@
 @section('title', 'پیشخوان')
 @section('content')
 
+    @if(!$is2FAEnabled)
+    <div class="alert alert-warning mb-4">
+        <div class="d-flex">
+            <i class="fas fa-shield-alt me-2 mt-3 fa-lg"></i>
+            <div>
+                <h5 class="alert-heading">احراز هویت دو مرحله‌ای فعال نیست!</h5>
+                <p>برای افزایش امنیت پنل مدیریت، لطفا احراز هویت دو مرحله‌ای را فعال کنید. بدون فعال‌سازی احراز هویت دو مرحله‌ای، دسترسی شما به بخش‌های مختلف پنل محدود خواهد شد.</p>
+                <a href="{{route('admin.profile.2fa.edit')}}" class="btn btn-sm btn-warning">
+                    <i class="fas fa-lock me-1"></i> فعال‌سازی احراز هویت دو مرحله‌ای
+                </a>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <div class="row g-6">
         <div class="col-md-4">
             <div class="card h-100">

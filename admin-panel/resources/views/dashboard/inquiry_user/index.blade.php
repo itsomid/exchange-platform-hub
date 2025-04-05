@@ -10,7 +10,7 @@
                         @csrf
                         <div class="col-md-4 user_role">
                             <label class="form-label" for="email">ایمیل یا ایدی کاربر:</label>
-                            <input type="text" id="email" name="email" class="form-control" placeholder="ایمیل/شناسه کاربری">
+                            <input type="text" id="email" name="email" class="form-control" placeholder="ایمیل/شناسه کاربری" value="{{old('email')}}">
                         </div>
                         <div class="col-md-2 mt-2">
                             <button type="submit" class="btn btn-primary mt-2 text-white">

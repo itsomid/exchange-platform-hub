@@ -10,18 +10,21 @@
     </div>
 
     <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
-        <div class="navbar-nav align-items-center">
-            <a class="nav-link style-switcher-toggle hide-arrow" href="javascript:void(0);">
-                <i class="ti ti-sm"></i>
-            </a>
-        </div>
-
-
+        @if(!auth()->user()->two_factor_secret && app()->environment() == 'production')
+            <div class="navbar-nav align-items-center">
+                <a class="nav-link style-switcher-toggle hide-arrow" href="{{route('admin.profile.2fa.edit')}}">
+                    ❗⛔ برای استفاده از پنل لطفا نسبت به فعالسازی تایید دو مرحله ای اقدام کنید ⛔❗
+                </a>
+            </div>
+        @endif
         <ul class="navbar-nav flex-row align-items-center ms-auto">
+
             <!-- Style Switcher -->
             <!-- Notification -->
             <li class="nav-item dropdown-notifications navbar-dropdown dropdown me-3 me-xl-2">
-                <a class="nav-link btn btn-text-secondary btn-icon rounded-pill dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                <a class="nav-link btn btn-text-secondary btn-icon rounded-pill dropdown-toggle hide-arrow"
+                   href="javascript:void(0);" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                   aria-expanded="false">
               <span class="">
                 <i class="fa-regular fa-bell fa-xl"></i>
                   <span class="badge rounded-pill bg-danger text-white badge-notifications">{{$unreadCount}}</span>
@@ -34,7 +37,9 @@
                             <h6 class="mb-0 me-auto">اعلان‌ها</h6>
                             <div class="d-flex align-items-center h6 mb-0">
                                 <span class="badge bg-label-primary me-2">{{$unreadCount}} جدید </span>
-                                <a href="{{route('admin.admin.notifications.mark-all-read')}}" class="btn btn-text-secondary rounded-pill btn-icon dropdown-notifications-all" data-bs-toggle="tooltip" data-bs-placement="top" title="تغییر همه به خوانده شده">
+                                <a href="{{route('admin.admin.notifications.mark-all-read')}}"
+                                   class="btn btn-text-secondary rounded-pill btn-icon dropdown-notifications-all"
+                                   data-bs-toggle="tooltip" data-bs-placement="top" title="تغییر همه به خوانده شده">
                                     <i class="fa-regular fa-envelope-open text-heading"></i>
                                 </a>
                             </div>
@@ -46,9 +51,13 @@
                                 <li class="list-group-item list-group-item-action dropdown-notifications-item">
                                     <div class="d-flex">
                                         <div class="flex-grow-1">
-                                            <h6 class="small mb-1"><span class="badge bg-label-primary">{{ \App\Enums\NotificationType::getLabel($notification->type) }}</span></h6>
-                                            <small class="mb-1 d-block text-body">{{ $notification->data['message'] }}</small>
-                                            <small class="text-muted">{{\App\Helpers\DateFormatter::ago($notification->created_at)}}</small>
+                                            <h6 class="small mb-1"><span
+                                                    class="badge bg-label-primary">{{ \App\Enums\NotificationType::getLabel($notification->type) }}</span>
+                                            </h6>
+                                            <small
+                                                class="mb-1 d-block text-body">{{ $notification->data['message'] }}</small>
+                                            <small
+                                                class="text-muted">{{\App\Helpers\DateFormatter::ago($notification->created_at)}}</small>
                                         </div>
                                         <div class="flex-shrink-0 dropdown-notifications-actions">
                                             <a href="javascript:void(0)" class="dropdown-notifications-read">
@@ -72,7 +81,8 @@
                     </li>
                     <li class="border-top">
                         <div class="d-grid p-4">
-                            <a class="btn btn-primary btn-sm d-flex" href="{{route('admin.admin.notifications.index')}}">
+                            <a class="btn btn-primary btn-sm d-flex"
+                               href="{{route('admin.admin.notifications.index')}}">
                                 <small class="align-middle">مشاهده تمام اعلان ها</small>
                             </a>
                         </div>
@@ -90,7 +100,8 @@
                             @csrf
                             <input type="hidden" name="theme" value="light">
                             <button type="submit" class="dropdown-item">
-                                <span class="align-middle"> <i class="fa-regular fa-brightness-low  me-2"></i>روشن</span>
+                                <span class="align-middle"> <i
+                                        class="fa-regular fa-brightness-low  me-2"></i>روشن</span>
                             </button>
                         </form>
                     </li>
