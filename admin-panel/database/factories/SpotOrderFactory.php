@@ -22,6 +22,14 @@ class SpotOrderFactory extends Factory
             'locked_balance' => 0
         ]);
 
+        Wallet::query()->firstOrCreate([
+            'user_id' => $user->id,
+            'currency_symbol' => 'USDT',
+        ], [
+            'balance' => $this->faker->randomFloat(8, 0, 100),
+            'locked_balance' => 0
+        ]);
+
         return [
             'user_id' => $user->id,
             'market_id' => $market->id,
