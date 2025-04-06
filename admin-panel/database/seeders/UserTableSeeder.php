@@ -62,19 +62,22 @@ class UserTableSeeder extends Seeder
             'email_verified_at' => now()
         ]);
 
-        User::factory(5)->withReferralCode()->create();
-        User::factory(10)->withIntroducer()->create();
+        if (app()->environment() !== 'production'){
+            User::factory(5)->withReferralCode()->create();
+            User::factory(10)->withIntroducer()->create();
 
-        $specificIntroducerReferralCode = ReferralCode::create([
-            'code' => ReferralCode::generateReferralCode(),
-            'user_id' => $specificIntroducer->id,
-            'introducer_fee' => 25,
-            'friend_fee' => 5,
-            'usage_limit' => 1000,
-        ]);
-        $specificUser->update([
-            'introducer_code' => $specificIntroducerReferralCode->id
-        ]);
+            $specificIntroducerReferralCode = ReferralCode::create([
+                'code' => ReferralCode::generateReferralCode(),
+                'user_id' => $specificIntroducer->id,
+                'introducer_fee' => 25,
+                'friend_fee' => 5,
+                'usage_limit' => 1000,
+            ]);
+            $specificUser->update([
+                'introducer_code' => $specificIntroducerReferralCode->id
+            ]);
+        }
+
 
         //        User::factory(10)->create();
         //        User::factory(10)->unverifiedWithIncompleteRegistration()->create();
