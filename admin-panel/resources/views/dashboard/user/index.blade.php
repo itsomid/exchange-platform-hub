@@ -223,7 +223,8 @@
                                         </div>
 
                                         <div class="d-flex flex-column">
-                                            <a href="{{route('admin.inquiry.user-details',['user'=>$user])}}" class="text-heading text-truncate">
+                                            <a href="{{route('admin.inquiry.user-details',['user'=>$user])}}"
+                                               class="text-heading text-truncate">
                                                 <span class="fw-medium">{{$user->email}}</span>
                                             </a>
                                             <small>{{$user->username}}</small>
@@ -318,6 +319,11 @@
                                                    href="{{route('admin.user.financial-block.getBlocks', ['user'=>$user->id])}}">
                                                     <i class="fa-regular fa-unlock"></i>
                                                     محدودیت های مالی
+                                                </a>
+                                                <a class="dropdown-item"
+                                                   href="{{route('admin.user.security', ['user'=>$user->id])}}">
+                                                    <i class="fa-regular fa-shield-halved "></i>
+                                                    تنظیمات امنیتی کاربر
                                                 </a>
                                                 @can('user.login-as-customer')
                                                     <a class="dropdown-item"

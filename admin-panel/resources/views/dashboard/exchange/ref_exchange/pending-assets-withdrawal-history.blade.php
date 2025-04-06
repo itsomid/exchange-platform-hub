@@ -7,9 +7,13 @@
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
-                            <span>برداشت های در انتظار تکمیل</span>
+                            <span>تعداد کل در خواست های برداشت</span>
                             <div class="d-flex align-items-center my-1">
                                 <h4 class="mb-0 me-2">{{$withdrawals->count()}}</h4>
+                            </div>
+                            <span>برداشت های در انتظار تکمیل</span>
+                            <div class="d-flex align-items-center my-1">
+                                <h4 class="mb-0 me-2">{{$pendingWithdrawals->count()}}</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-primary rounded p-2">
@@ -41,7 +45,7 @@
                 <div class="card-body">
                     <ul class="p-0 m-0">
 
-                        @forelse($sumOfPendingWithdrawals as $withdraw)
+                        @forelse($pendingWithdrawals as $withdraw)
                             <li class="mb-6 d-flex justify-content-between align-items-center">
 
                                 <img src="{{asset($withdraw->currency->coinLogo())}}" class="img-fluid" width="45px">
