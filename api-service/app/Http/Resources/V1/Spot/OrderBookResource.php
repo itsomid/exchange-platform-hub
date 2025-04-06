@@ -44,7 +44,7 @@ class OrderBookResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'ask' => $this->resource['asks']->map(fn ($item) => [
+            'asks' => $this->resource['asks']->map(fn ($item) => [
                 'price' => $item->price,
                 'filled_quantity' => $item->filled_quantity,
                 'quantity' => $item->quantity,
