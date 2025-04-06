@@ -13,7 +13,9 @@ class SpotOrderFactory extends Factory
     {
         $type = $this->faker->randomElement(['limit', 'market']);
         $market = Market::query()->inRandomOrder()->first();
-        $user = User::factory()->create();
+        // Get an existing user instead of creating a new one
+        $user = User::query()->inRandomOrder()->first();
+        
         Wallet::query()->firstOrCreate([
             'user_id' => $user->id,
             'currency_symbol' => $market->base_currency,
