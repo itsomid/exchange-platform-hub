@@ -16,7 +16,7 @@ class MarketRepository implements MarketRepositoryInterface
         });
     }
 
-    public function getMarketById(int $marketId): Market
+    public function getMarketById(int $marketId): ?Market
     {
         return Market::query()
             ->find($marketId);

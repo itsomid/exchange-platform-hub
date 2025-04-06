@@ -11,5 +11,5 @@ interface MarketRepositoryInterface
 
     public function getAll(): Collection;
 
-    public function getMarketById(int $marketId): Market;
+    public function getMarketById(int $marketId): ?Market;
 }
