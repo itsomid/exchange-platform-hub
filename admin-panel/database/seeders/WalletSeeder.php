@@ -14,7 +14,8 @@ class WalletSeeder extends Seeder
      */
     public function run(): void
     {
-        $currencies = Currency::pluck('symbol')->toArray();
+        // Only get currencies that have a currency chain relationship
+        $currencies = Currency::has('chains')->pluck('symbol')->toArray();
         $user = User::find(1);
         foreach ($currencies as $currency) {
             \DB::table('wallets')->insert([
