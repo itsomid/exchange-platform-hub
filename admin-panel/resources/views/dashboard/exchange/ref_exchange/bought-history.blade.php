@@ -62,7 +62,8 @@
                         <th>ID</th>
                         <th>شماره سفارش</th>
                         <th>بازار</th>
-                        <th>مقدار</th>
+                        <th>مقدار درخواست</th>
+                        <th>مقدار خریداری شده<br>(filled_amount)</th>
                         <th>فی</th>
                         <th>میانگین قیمت (USDT)</th>
                         <th>ارزش (USDT)</th>
@@ -92,7 +93,8 @@
                                 </div>
                             </td>
 
-                            <td class="font-number">{{formatNumberTrimZeros($transaction->amount)}} ({{$transaction->currency->symbol}})</td>
+                            <td class="font-number">{{$transaction->amount}} ({{$transaction->currency->symbol}})</td>
+                            <td class="font-number">{{$transaction->filled_amount}} ({{$transaction->currency->symbol}})</td>
                             <td class="font-number">
 
                                 @if($transaction->fee > 0)
