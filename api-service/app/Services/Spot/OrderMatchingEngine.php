@@ -162,11 +162,17 @@ readonly class OrderMatchingEngine
         if ($order->getRemindedQuantity() <= 0) {
             $order->price = $order->getOriginal('price');
             $order->update(['status' => SpotOrderStatusEnum::COMPLETED]);
+            LockedBalanceDetail::query()
+                ->where('spot_order_id', $order->id)
+                ->delete();
         }
 
         if ($oppositeOrder->getRemindedQuantity() <= 0) {
             $oppositeOrder->price = $oppositeOrder->getOriginal('price');
             $oppositeOrder->update(['status' => SpotOrderStatusEnum::COMPLETED]);
+            LockedBalanceDetail::query()
+                ->where('spot_order_id', $oppositeOrder->id)
+                ->delete();
         }
     }
 
@@ -237,10 +243,6 @@ readonly class OrderMatchingEngine
                 $this->walletRepository->increaseBalance($takerOrder->user_id, $quoteCurrency, $takerReceiveQuote);
             }
 
-            LockedBalanceDetail::query()
-                ->where('spot_order_id', $takerOrder->id)
-                ->delete();
-
             // **Maker Updates**
             if ($makerOrder->side === SpotOrderSideEnum::BUY) {
                 // Buyer (Maker) receives base currency, pays in quote currency
@@ -253,9 +255,6 @@ readonly class OrderMatchingEngine
                 $this->walletRepository->increaseBalance($makerOrder->user_id, $quoteCurrency, $makerReceiveQuote);
                 $this->walletRepository->decreaseLockedBalance($makerOrder->user_id, $baseCurrency, $tradeQuantity);
             }
-            LockedBalanceDetail::query()
-                ->where('spot_order_id', $makerOrder->id)
-                ->delete();
         });
     }
 
