@@ -35,7 +35,7 @@ readonly class OrderMatchingEngine
             ->get();
 
         foreach ($orders as $order) {
-            //Maybe this order matched with another order
+            // Maybe this order matched with another order
             $order->refresh();
             DB::beginTransaction();
             try {
@@ -146,26 +146,33 @@ readonly class OrderMatchingEngine
                 'market_id' => $order->market_id,
             ]);
 
-        $this->updateWallets($takerOrder, $makerOrder, $tradeQuantity, $makerOrder->price);
-
-        $commission = $this->calcCommission($tradeQuantity);
+        $makerCommission = $this->calcCommission($tradeQuantity);
+        $takerCommission = $this->calcCommission($tradeQuantity);
         TradingCommission::query()
             ->create([
                 'spot_trade_id' => $spotTrade->id,
-                'maker_commission_amount' => $commission,
+                'maker_commission_amount' => $makerCommission,
                 'maker_commission_percentage' => 0.001,
-                'taker_commission_amount' => $commission,
+                'taker_commission_amount' => $takeCommission,
                 'taker_commission_percentage' => 0.001,
             ]);
+
+        $this->updateWallets($takerOrder, $makerOrder, $tradeQuantity, $makerOrder->price, $makerCommission, $takerCommission);
 
         if ($order->getRemindedQuantity() <= 0) {
             $order->price = $order->getOriginal('price');
             $order->update(['status' => SpotOrderStatusEnum::COMPLETED]);
+            LockedBalanceDetail::query()
+                ->where('spot_order_id', $order->id)
+                ->delete();
         }
 
         if ($oppositeOrder->getRemindedQuantity() <= 0) {
             $oppositeOrder->price = $oppositeOrder->getOriginal('price');
             $oppositeOrder->update(['status' => SpotOrderStatusEnum::COMPLETED]);
+            LockedBalanceDetail::query()
+                ->where('spot_order_id', $oppositeOrder->id)
+                ->delete();
         }
     }
 
@@ -207,7 +214,7 @@ readonly class OrderMatchingEngine
         return Math::mul($tradeAmount, 0.001); // 0.1% commission
     }
 
-    private function updateWallets(SpotOrder $takerOrder, SpotOrder $makerOrder, $tradeQuantity, $tradePrice): void
+    private function updateWallets(SpotOrder $takerOrder, SpotOrder $makerOrder, $tradeQuantity, $tradePrice, $makerCommission, $takerCommission): void
     {
         $baseCurrency = $takerOrder->market->base_currency; // Example: BTC
         $quoteCurrency = $takerOrder->market->quote_currency; // Example: USDT
@@ -215,12 +222,13 @@ readonly class OrderMatchingEngine
         $actualTradeCost = Math::mul($tradeQuantity, $tradePrice);
         $expectedTradeCost = Math::mul($tradeQuantity, $takerOrder->price); // Original order price
 
-        DB::transaction(function () use ($takerOrder, $makerOrder, $tradeQuantity, $actualTradeCost, $expectedTradeCost, $baseCurrency, $quoteCurrency) {
+        DB::transaction(function () use ($takerOrder, $makerOrder, $tradeQuantity, $actualTradeCost, $expectedTradeCost, $baseCurrency, $quoteCurrency, $makerCommission, $takerCommission) {
             // **Taker Updates**
             if ($takerOrder->side === SpotOrderSideEnum::BUY) {
                 // Buyer (Taker) receives base currency, pays in quote currency
+                $takerReceiveQty = Math::sub($tradeQuantity, $takerCommission);
                 $this->walletRepository->decreaseLockedBalance($takerOrder->user_id, $quoteCurrency, $actualTradeCost);
-                $this->walletRepository->increaseBalance($takerOrder->user_id, $baseCurrency, $tradeQuantity);
+                $this->walletRepository->increaseBalance($takerOrder->user_id, $baseCurrency, $takerReceiveQty);
 
                 // **Refund remaining USDT if price was lower than expected**
                 $refundAmount = Math::sub($expectedTradeCost, $actualTradeCost);
@@ -229,28 +237,24 @@ readonly class OrderMatchingEngine
                     $this->walletRepository->decreaseLockedBalance($takerOrder->user_id, $quoteCurrency, $refundAmount);
                 }
             } else {
+                $takerReceiveQuote = Math::sub($actualTradeCost, $takerCommission);
                 // Seller (Taker) receives quote currency, pays in base currency
                 $this->walletRepository->decreaseLockedBalance($takerOrder->user_id, $baseCurrency, $tradeQuantity);
-                $this->walletRepository->increaseBalance($takerOrder->user_id, $quoteCurrency, $actualTradeCost);
+                $this->walletRepository->increaseBalance($takerOrder->user_id, $quoteCurrency, $takerReceiveQuote);
             }
-
-            LockedBalanceDetail::query()
-                ->where('spot_order_id', $takerOrder->id)
-                ->delete();
 
             // **Maker Updates**
             if ($makerOrder->side === SpotOrderSideEnum::BUY) {
                 // Buyer (Maker) receives base currency, pays in quote currency
-                $this->walletRepository->increaseBalance($makerOrder->user_id, $baseCurrency, $tradeQuantity);
+                $makerReceiveQty = Math::sub($tradeQuantity, $makerCommission);
+                $this->walletRepository->increaseBalance($makerOrder->user_id, $baseCurrency, $makerReceiveQty);
                 $this->walletRepository->decreaseLockedBalance($makerOrder->user_id, $quoteCurrency, $actualTradeCost);
             } else {
+                $makerReceiveQuote = Math::sub($actualTradeCost, $makerCommission);
                 // Seller (Maker) receives quote currency, pays in base currency
-                $this->walletRepository->increaseBalance($makerOrder->user_id, $quoteCurrency, $actualTradeCost);
+                $this->walletRepository->increaseBalance($makerOrder->user_id, $quoteCurrency, $makerReceiveQuote);
                 $this->walletRepository->decreaseLockedBalance($makerOrder->user_id, $baseCurrency, $tradeQuantity);
             }
-            LockedBalanceDetail::query()
-                ->where('spot_order_id', $makerOrder->id)
-                ->delete();
         });
     }
 
