@@ -102,7 +102,8 @@ class ExchangeWalletController extends Controller
         $response = CoinexRequest::send(MethodEnum::GET, "/v2/assets/spot/balance");
         if ($response->json('code') !== 0) {
             \Log::error('API Error:', $response->json());
-            return [];
+
+            return 'امکان ارتباط با صرافی مرجع نیست (ارور: '.$response->json('code').' - '.$response->json('message').')' ;
         }
 
         $data = $response->json('data');
