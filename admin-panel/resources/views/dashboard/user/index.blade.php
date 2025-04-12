@@ -98,7 +98,9 @@
     <div class="card mb-3">
         <div class="card-body">
             <h5 class="card-title">خروجی اکسل</h5>
-            <form class="row mt-3 d-flex align-items-end justify-content-between">
+            <form class="row mt-3 d-flex align-items-end justify-content-between"
+                  action="{{route('admin.user.excel-export',request()->query())}}" method="POST">
+                @csrf
                 <div class="col-md-4 user_role">
                     <label class="form-label" for="UserRole">از آیدی :</label>
                     <input type="number" class="form-control" placeholder="آیدی کاربر">

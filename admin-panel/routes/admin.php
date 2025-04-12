@@ -97,6 +97,8 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::patch('/{user}/toggle-status', [UserController::class, 'suspendUser'])->name('user.toggle-status')->can('user.index');
         Route::patch('/{user}/active-user', [UserController::class, 'activeUser'])->name('user.active-user')->can('user.index');
 
+        Route::post('excel_export',[UserController::class,'exportExcel'])->name('user.excel-export')->can('user.index');
+
         Route::get('/{user}/update-password', [UserSecurityController::class, 'passwordEdit'])->name('user.password.edit');
         Route::patch('/{user}/update-password', [UserSecurityController::class, 'passwordUpdate'])->name('user.password.update');
         Route::get('/{user}/security', [UserSecurityController::class, 'index'])->name('user.security');
