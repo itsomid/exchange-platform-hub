@@ -114,7 +114,7 @@ return [
 
     //Email Verification
     'verification' => [
-        'expire' => 60, // Expiration time in minutes
+        'expire' => env('TOKEN_EXPIRE_LIFETIME',60), // Expiration time in minutes
     ],
     'rate-limiter' => [
         'too-many' => env('APP_RATE_LIMITER_TOO_MANY', 5),
