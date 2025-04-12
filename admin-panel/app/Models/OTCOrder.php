@@ -42,6 +42,11 @@ class OTCOrder extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function exchange()
+    {
+        return $this->belongsTo(Exchange::class,'exchange_id');
+    }
+
 //    public function getTotalValueAttribute()
 //    {
 //        return $this->price * $this->quantity;

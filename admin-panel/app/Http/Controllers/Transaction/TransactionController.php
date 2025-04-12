@@ -5,10 +5,8 @@ namespace App\Http\Controllers\Transaction;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Exports\TransactionExport;
-use App\Exports\UserExport;
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -85,8 +83,6 @@ class TransactionController extends Controller
                 $transaction->status->label(),
                 $transaction->admin_id ? $transaction->admin->fullname() : 'خیر',
                 $transaction->admin_description
-
-
             ];
         });
 

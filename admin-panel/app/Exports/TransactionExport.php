@@ -32,7 +32,7 @@ class TransactionExport implements FromCollection, WithHeadings
             'مقدار',
             'موجودی قبل تراکنش',
             'توضیحات',
-            'زمان',
+            'تاریخ',
             'وضعیت',
             'ایجاد توسط ادمین',
             'توضیحات ادمین',

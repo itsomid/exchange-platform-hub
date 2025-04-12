@@ -143,6 +143,26 @@
             </div>
         </div>
     </div>
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">خروجی اکسل</h5>
+            <form class="row mt-3 d-flex align-items-end"
+                  action="{{route('admin.otc_orders.excel-export',request()->query())}}" method="POST">
+                @csrf
+                <div class="col-md-2 user_role">
+                    <label class="form-label" for="UserRole">از آیدی :</label>
+                    <input type="number" class="form-control" placeholder="آیدی کاربر">
+                </div>
+                <div class="col-md-2 user_role">
+                    <label class="form-label" for="UserRole">تا آیدی :</label>
+                    <input type="number" class="form-control" placeholder="آیدی کاربر">
+                </div>
+                <div class="col-md-2 mt-2">
+                    <button class="btn btn-success class ">دانلود خروجی اکسل</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <div class="card">
         <div class="card-body">
@@ -176,9 +196,8 @@
                                 : '' }}"
                         ></x-user-selection-component>
                     </div>
-                    <div class="w-100"></div>
-                    <div class="col-md-2">
-                        <div class="form-group mt-3"><br>
+                    <div class="col-md-2 mt-3">
+                        <div class="form-group"><br>
                             <button class="btn btn-success text-white" type="submit">
                                 <span>فیلتر</span><i class="fas fa-filter mx-3"></i>
                             </button>
