@@ -187,6 +187,7 @@ Route::middleware(['admin.2fa'])->group(function () {
 
     Route::prefix('transactions')->group(function () {
         Route::get('/', [TransactionController::class, 'index'])->name('transaction.index')->can('transaction');
+        Route::post('/excel-export', [TransactionController::class, 'excelExport'])->name('transaction.excel-export')->can('transaction');
     });
 
     Route::prefix('otc_orders')->group(function () {

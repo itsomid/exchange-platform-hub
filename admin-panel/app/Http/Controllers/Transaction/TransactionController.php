@@ -4,8 +4,13 @@ namespace App\Http\Controllers\Transaction;
 
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
+use App\Exports\TransactionExport;
+use App\Exports\UserExport;
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 
 class TransactionController extends Controller
@@ -51,5 +56,40 @@ class TransactionController extends Controller
             'OTCFeeTransactionsSum' => $OTCFeeTransactionsSum,
             'withdrawalFeeTransactionsSum' => $withdrawalFeeTransactionsSum
         ]);
+    }
+
+    public function excelExport(Request $request)
+    {
+        $from = $request->get('from_id');
+        $to = $request->get('to_id');
+        $filename = 'transactions_' . $from . '_' . $to;
+
+        $transactionQuery = Transaction::orderBy('id')->filterBy(request()->all());
+        if ($request->get('from_id') && $request->get('to_id')) {
+            $transactionQuery->where('id', '>=', $request->from_id)
+                ->where('id', '<=', $request->to_id);
+        }
+        $transactions = $transactionQuery->get();
+
+        $transactions = $transactions->map(function (Transaction $transaction) {
+            return [
+                $transaction->id,
+                $transaction->type->label(),
+                $transaction->subtype->label(),
+                $transaction->user->email,
+                $transaction->wallet->currency_symbol,
+                $transaction->amount,
+                $transaction->balance,
+                $transaction->description,
+                $transaction->created_at,
+                $transaction->status->label(),
+                $transaction->admin_id ? $transaction->admin->fullname() : 'خیر',
+                $transaction->admin_description
+
+
+            ];
+        });
+
+        return Excel::download(new TransactionExport($transactions), $filename . '.xlsx');
     }
 }

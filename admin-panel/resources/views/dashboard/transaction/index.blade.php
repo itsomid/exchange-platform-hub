@@ -112,7 +112,26 @@
             </div>
         </div>
     </div>
-
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">خروجی اکسل</h5>
+            <form class="row mt-3 d-flex align-items-end"
+                  action="{{route('admin.transaction.excel-export',request()->query())}}" method="POST">
+                @csrf
+                <div class="col-md-2 user_role">
+                    <label class="form-label" for="UserRole">از آیدی :</label>
+                    <input type="number" class="form-control" placeholder="آیدی کاربر">
+                </div>
+                <div class="col-md-2 user_role">
+                    <label class="form-label" for="UserRole">تا آیدی :</label>
+                    <input type="number" class="form-control" placeholder="آیدی کاربر">
+                </div>
+                <div class="col-md-2 mt-2">
+                    <button class="btn btn-success class ">دانلود خروجی اکسل</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <div class="card mb-4">
         <div class="card-body">
             <div class="card-title header-elements">
@@ -148,7 +167,7 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-6 mt-3">
+                    <div class="col-md-4 mt-3">
                         <label class="form-label" for="user">کاربر :</label>
                         <x-user-selection-component
                             input-name="user"
@@ -159,7 +178,6 @@
                                 : '' }}"
                         ></x-user-selection-component>
                     </div>
-                    <div class="w-100"></div>
                     <div class="col-md-2">
                         <div class="form-group mt-3"><br>
                             <button class="btn btn-success text-white" type="submit">
