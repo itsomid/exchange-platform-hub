@@ -3,11 +3,17 @@
 namespace App\Http\Controllers\Withdrawal;
 
 use App\Enums\WithdrawalStatusEnum;
+use App\Exports\DepositExport;
+use App\Exports\WithdrawalExport;
 use App\Functions\FlashMessages\Toast;
+use App\Helpers\DateFormatter;
 use App\Http\Controllers\Controller;
+use App\Models\Deposit;
 use App\Models\Withdrawal;
 use App\Services\APIService\APIService;
 use App\Services\Withdrawal\WithdrawalService;
+use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class WithdrawalController extends Controller
 {
@@ -108,5 +114,42 @@ class WithdrawalController extends Controller
         Toast::message('فرآیند چک برداشت آغاز شد.')->success()->notify();
 
         return redirect()->back();
+    }
+
+    public function excelExport(Request $request)
+    {
+        $from = $request->get('from_id');
+        $to = $request->get('to_id');
+        $filename = 'withdrawal_' . $from . '_' . $to;
+
+        $withdrawalQuery = Withdrawal::orderBy('id')->filterBy(request()->all());
+        if ($request->get('from_id') && $request->get('to_id')) {
+            $withdrawalQuery->where('id', '>=', $request->from_id)
+                ->where('id', '<=', $request->to_id);
+        }
+        $withdrawals = $withdrawalQuery->get();
+
+        $withdrawals = $withdrawals->map(function (Withdrawal $withdrawal) {
+
+            return [
+                $withdrawal->id,
+                $withdrawal->user->email,
+                $withdrawal->currency_symbol,
+                $withdrawal->currencyChain->chain_name,
+                formatNumberTrimZeros($withdrawal->amount),
+                formatNumberTrimZeros($withdrawal->usdt_value),
+                formatNumberTrimZeros($withdrawal->amount - $withdrawal->total_fee),
+                formatNumberTrimZeros($withdrawal->exchange_fee),
+                formatNumberTrimZeros($withdrawal->network_fee),
+                $withdrawal->address,
+                $withdrawal->transaction_hash,
+                DateFormatter::convertToPersianDate($withdrawal->created_at,'%Y/%m/%d H:i:s'),
+                DateFormatter::convertToPersianDate($withdrawal->confirmed_at,'%Y/%m/%d H:i:s'),
+                $withdrawal->status->label(),
+                $withdrawal->description ,
+            ];
+        });
+
+        return Excel::download(new WithdrawalExport($withdrawals), $filename . '.xlsx');
     }
 }

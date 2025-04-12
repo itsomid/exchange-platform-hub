@@ -205,6 +205,7 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::get('/check-withdrawal/{withdrawal}', [WithdrawalController::class, 'checkWithdrawal'])->name('withdrawal.check-withdrawal')->can('withdrawal');
         Route::get('/{withdraw}/confirm', [WithdrawalController::class, 'confirmWithdrawal'])->name('withdrawal.confirm-withdrawal')->can('withdrawal');
         Route::get('/{withdraw}/cancel', [WithdrawalController::class, 'cancelWithdrawal'])->name('withdrawal.cancel-withdrawal')->can('withdrawal');
+        Route::post('/excel-export', [WithdrawalController::class, 'excelExport'])->name('withdrawal.excel-export')->can('withdrawal');
     });
 
     Route::get('/internal-settings', [InternalSettingController::class, 'index'])->name('internal.setting.index')->can('setting.int.index');

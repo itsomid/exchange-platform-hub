@@ -114,7 +114,26 @@
             </div>
         </div>
     </div>
-
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">خروجی اکسل</h5>
+            <form class="row mt-3 d-flex align-items-end"
+                  action="{{route('admin.withdrawal.excel-export',request()->query())}}" method="POST">
+                @csrf
+                <div class="col-md-2 user_role">
+                    <label class="form-label" for="UserRole">از آیدی :</label>
+                    <input type="number" class="form-control" placeholder="آیدی کاربر">
+                </div>
+                <div class="col-md-2 user_role">
+                    <label class="form-label" for="UserRole">تا آیدی :</label>
+                    <input type="number" class="form-control" placeholder="آیدی کاربر">
+                </div>
+                <div class="col-md-2 mt-2">
+                    <button class="btn btn-success class ">دانلود خروجی اکسل</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <div class="card mb-4">
         <div class="card-body">
             <div class="card-title header-elements">
@@ -309,7 +328,7 @@
                                            data-clipboard-target="#withdraw{{$withdraw->address}}">
                                             <i class="fa-regular fa-clone"></i>
                                         </a>
-                                        
+
                                         <input type="hidden"
                                                value="{{$withdraw->address}}"
                                                id="withdraw{{$withdraw->address}}"
@@ -552,21 +571,21 @@
     <script>
         $(document).ready(function () {
             $('[data-bs-toggle="tooltip"]').tooltip();
-            
+
             // Handle copy functionality
             $('.clipboard-btn').on('click', function(e) {
                 e.preventDefault();
                 const btn = $(this);
                 const icon = btn.find('i');
                 const originalIcon = icon.attr('class');
-                
+
                 // Copy the text
                 const targetId = btn.data('clipboard-target');
                 const textToCopy = $(targetId).val();
                 navigator.clipboard.writeText(textToCopy).then(() => {
                     // Change icon to tick
                     icon.removeClass(originalIcon).addClass('fa-solid fa-check');
-                    
+
                     // Change back to original icon after 2 seconds
                     setTimeout(() => {
                         icon.removeClass('fa-solid fa-check').addClass(originalIcon);
