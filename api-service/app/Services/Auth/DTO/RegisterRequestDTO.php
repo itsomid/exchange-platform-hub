@@ -15,6 +15,8 @@ class RegisterRequestDTO
     private int $lengthVerificationToken;
 
     private Carbon $tokenExpirationDate;
+    
+    private Carbon $registrationDate;
 
     /**
      * @return $this
@@ -80,5 +82,17 @@ class RegisterRequestDTO
     public function getIntroducerCode(): ?string
     {
         return $this->introducerCode;
+    }
+
+    public function setRegistrationDate(Carbon $registrationDate): self
+    {
+        $this->registrationDate = $registrationDate;
+
+        return $this;
+    }
+
+    public function getRegistrationDate(): Carbon
+    {
+        return $this->registrationDate;
     }
 }

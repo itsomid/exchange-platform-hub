@@ -3,6 +3,7 @@
 namespace App\Repositories\DTO\User;
 
 use App\Enums\UserStatusEnum;
+use Carbon\Carbon;
 
 class UserRegisterRequestDTO
 {
@@ -15,6 +16,8 @@ class UserRegisterRequestDTO
     private string $hashedPassword;
 
     private UserStatusEnum $userStatus;
+    
+    private Carbon $registrationDate;
 
     /**
      * @return $this
@@ -80,5 +83,17 @@ class UserRegisterRequestDTO
     public function getUserStatus(): UserStatusEnum
     {
         return $this->userStatus;
+    }
+
+    public function setRegistrationDate(Carbon $registrationDate): self
+    {
+        $this->registrationDate = $registrationDate;
+
+        return $this;
+    }
+
+    public function getRegistrationDate(): Carbon
+    {
+        return $this->registrationDate;
     }
 }
