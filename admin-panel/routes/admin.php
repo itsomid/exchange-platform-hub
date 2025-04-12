@@ -197,6 +197,7 @@ Route::middleware(['admin.2fa'])->group(function () {
 
     Route::prefix('deposits')->group(function () {
         Route::get('/', [DepositController::class, 'index'])->name('deposit.index')->can('deposit');
+        Route::post('/excel-export', [DepositController::class, 'excelExport'])->name('deposit.excel-export')->can('deposit');
     });
 
     Route::prefix('withdrawal')->group(function () {

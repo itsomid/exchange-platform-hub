@@ -2,9 +2,14 @@
 
 namespace App\Http\Controllers\Deposit;
 
+use App\Exports\DepositExport;
+use App\Exports\OTCOrderExport;
+use App\Helpers\DateFormatter;
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
+use App\Models\OTCOrder;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class DepositController extends Controller
 {
@@ -57,5 +62,39 @@ class DepositController extends Controller
             'totalTopUsersDeposit' => $totalTopUsersDeposit,
             'topUsers' => $topUsers,
         ]);
+    }
+
+    public function excelExport(Request $request)
+    {
+        $from = $request->get('from_id');
+        $to = $request->get('to_id');
+        $filename = 'deposits_' . $from . '_' . $to;
+
+        $depositQuery = Deposit::orderBy('id')->filterBy(request()->all());
+        if ($request->get('from_id') && $request->get('to_id')) {
+            $depositQuery->where('id', '>=', $request->from_id)
+                ->where('id', '<=', $request->to_id);
+        }
+        $deposits = $depositQuery->get();
+
+        $deposits = $deposits->map(function (Deposit $deposit) {
+
+            return [
+                $deposit->id,
+                $deposit->user->email,
+                $deposit->currency_symbol,
+                $deposit->currencyChain->chain_name,
+                formatNumberTrimZeros($deposit->amount),
+                formatNumberTrimZeros($deposit->usdt_value),
+                $deposit->address,
+                $deposit->transaction_hash,
+                DateFormatter::convertToPersianDate($deposit->created_at,'%Y/%m/%d H:i:s'),
+                DateFormatter::convertToPersianDate($deposit->confirmed_at,'%Y/%m/%d H:i:s'),
+                $deposit->status->label(),
+                $deposit->description ,
+            ];
+        });
+
+        return Excel::download(new DepositExport($deposits), $filename . '.xlsx');
     }
 }

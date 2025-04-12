@@ -97,7 +97,7 @@ class OTCOrderController extends Controller
                 formatNumberTrimZeros($order->total_value),
                 formatNumberTrimZeros($order->fee),
                 $userRecieved,
-                DateFormatter::convertToPersianDate($order->created_at,'H:i:s %Y/%m/%d'),
+                DateFormatter::convertToPersianDate($order->created_at,'%Y/%m/%d H:i:s'),
                 $order->status->label(),
                 $order->exchange ? $order->exchange->slug : 'داخلی',
                 $order->ref_exchange_description
