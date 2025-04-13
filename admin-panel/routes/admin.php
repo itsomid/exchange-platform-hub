@@ -87,32 +87,40 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::delete('/replies/{reply}', [TicketReplyController::class, 'destroy'])->name('replies.destroy');
     });
 
-    Route::get('/users', [UserController::class, 'index'])->name('user.index')->can('user.index');
-    Route::get('/users/create', [UserController::class, 'create'])->name('user.create')->can('user.create');
-    Route::post('/users', [UserController::class, 'store'])->name('user.store')->can('user.create');
-    Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('user.edit')->can('user.edit');
-    Route::patch('/users/{user}/update', [UserController::class, 'update'])->name('user.update')->can('user.edit');
-    Route::patch('/users/{user}/toggle-status', [UserController::class, 'suspendUser'])->name('user.toggle-status')->can('user.index');
-    Route::patch('/users/{user}/active-user', [UserController::class, 'activeUser'])->name('user.active-user')->can('user.index');
 
-    Route::get('/users/{user}/update-password', [UserSecurityController::class, 'passwordEdit'])->name('user.password.edit');
-    Route::patch('/users/{user}/update-password', [UserSecurityController::class, 'passwordUpdate'])->name('user.password.update');
-    Route::get('/users/{user}/security', [UserSecurityController::class, 'index'])->name('user.security');
-    Route::get('/users/{user}/reset-password', [UserSecurityController::class, 'sendResetLinkEmail'])->name('user.reset-password-email');
-    Route::post('/users/{user}/disable-user-two-factor', [UserSecurityController::class, 'disableTwoFactor'])->name('users.disable-user-two-factor');
+    Route::prefix('users')->group(function (){
+        Route::get('/', [UserController::class, 'index'])->name('user.index')->can('user.index');
+        Route::get('/create', [UserController::class, 'create'])->name('user.create')->can('user.create');
+        Route::post('/', [UserController::class, 'store'])->name('user.store')->can('user.create');
+        Route::get('/{user}/edit', [UserController::class, 'edit'])->name('user.edit')->can('user.edit');
+        Route::patch('/{user}/update', [UserController::class, 'update'])->name('user.update')->can('user.edit');
+        Route::patch('/{user}/toggle-status', [UserController::class, 'suspendUser'])->name('user.toggle-status')->can('user.index');
+        Route::patch('/{user}/active-user', [UserController::class, 'activeUser'])->name('user.active-user')->can('user.index');
 
-    Route::get('/users/financial-status', [UserFinancialBlockController::class, 'index'])->name('user.financial-status');
-    Route::get('/users/{user}/financial-status', [UserFinancialBlockController::class, 'getBlocks'])->name('user.financial-block.getBlocks');
-    Route::post('/users/{user}/financial-status', [UserFinancialBlockController::class, 'addBlock'])->name('user.financial-block.addBlock');
-    Route::delete('/users/{user}/financial-status/{financialBlock}', [UserFinancialBlockController::class, 'removeBlock'])->name('user.financial-block.deleteBlock');
+        Route::post('excel_export',[UserController::class,'exportExcel'])->name('user.excel-export')->can('user.index');
 
-    Route::get('/users/financial-status/mass-block', [UserFinancialBlockController::class, 'createMassBlock'])->name('user.financial-block.create-mass-block');
-    Route::post('/users/financial-status/mass-block', [UserFinancialBlockController::class, 'storeMassBlock'])->name('user.financial-block.store-mass-block');
+        Route::get('/{user}/update-password', [UserSecurityController::class, 'passwordEdit'])->name('user.password.edit');
+        Route::patch('/{user}/update-password', [UserSecurityController::class, 'passwordUpdate'])->name('user.password.update');
+        Route::get('/{user}/security', [UserSecurityController::class, 'index'])->name('user.security');
+        Route::get('/{user}/reset-password', [UserSecurityController::class, 'sendResetLinkEmail'])->name('user.reset-password-email');
+        Route::post('/{user}/disable-user-two-factor', [UserSecurityController::class, 'disableTwoFactor'])->name('users.disable-user-two-factor');
 
-    Route::get('/users/{user}/wallets', [UserWalletController::class, 'userWallets'])->name('wallet.index')->can('wallet');
-    Route::get('/users/{user}/wallets/{wallet}/{type}', [UserWalletController::class, 'walletDetails'])->name('wallet.detail')->can('wallet');
-    Route::get('/users/{user}/inquiry', [InquiryController::class, 'userDetails'])->name('inquiry.user-details')->can('user.index');
-    Route::get('/login-as-user/{user}', [UserController::class, 'loginAsUser'])->name('user.login-as-user')->can('user.login-as-customer');
+        Route::get('/financial-status', [UserFinancialBlockController::class, 'index'])->name('user.financial-status');
+        Route::get('/{user}/financial-status', [UserFinancialBlockController::class, 'getBlocks'])->name('user.financial-block.getBlocks');
+        Route::post('/{user}/financial-status', [UserFinancialBlockController::class, 'addBlock'])->name('user.financial-block.addBlock');
+        Route::delete('/{user}/financial-status/{financialBlock}', [UserFinancialBlockController::class, 'removeBlock'])->name('user.financial-block.deleteBlock');
+
+        Route::get('/financial-status/mass-block', [UserFinancialBlockController::class, 'createMassBlock'])->name('user.financial-block.create-mass-block');
+        Route::post('/financial-status/mass-block', [UserFinancialBlockController::class, 'storeMassBlock'])->name('user.financial-block.store-mass-block');
+
+        Route::get('/{user}/wallets', [UserWalletController::class, 'userWallets'])->name('wallet.index')->can('wallet');
+        Route::get('/{user}/wallets/{wallet}/{type}', [UserWalletController::class, 'walletDetails'])->name('wallet.detail')->can('wallet');
+
+        Route::get('/{user}/inquiry', [InquiryController::class, 'userDetails'])->name('inquiry.user-details')->can('user.index');
+
+        Route::get('/{user}/login-as-user/', [UserController::class, 'loginAsUser'])->name('user.login-as-user')->can('user.login-as-customer');
+    });
+
 
     Route::get('/inquiry', [InquiryController::class, 'index'])->name('inquiry.index')->can('user.index');
     Route::post('/inquiry', [InquiryController::class, 'submit'])->name('inquiry.submit')->can('user.index');
@@ -139,23 +147,23 @@ Route::middleware(['admin.2fa'])->group(function () {
     Route::patch('/referral-codes/{referral_code}', [ReferralCodeController::class, 'update'])->name('referral_code.update')->can('referral_code.edit');
     Route::delete('/referral-codes/{referral_code}', [ReferralCodeController::class, 'destroy'])->name('referral_code.destroy')->can('referral_code.edit');
 
-    Route::get('/exchange/currencies', [CurrencyController::class, 'index'])->name('currency.index')->can('currency');
-    Route::get('/exchange/currencies/create', [CurrencyController::class, 'create'])->name('currency.create')->can('currency');
-    Route::post('/exchange/currencies', [CurrencyController::class, 'store'])->name('currency.store')->can('currency');
-    Route::get('/exchange/currencies/{currency}', [CurrencyController::class, 'show'])->name('currency.show')->can('currency');
-    Route::get('/exchange/currencies/{currency}/edit', [CurrencyController::class, 'edit'])->name('currency.edit')->can('currency');
-    Route::patch('/exchange/currencies/{currency}', [CurrencyController::class, 'update'])->name('currency.update')->can('currency');
-    Route::delete('/exchange/currencies/{currency}', [CurrencyController::class, 'destroy'])->name('currency.destroy')->can('currency');
-
-    Route::get('/exchange/currencies/{currency}/chains', [CurrencyChainController::class, 'getChains'])->name('currency.chains.edit')->can('currency');
-    Route::get('/exchange/currencies/{currency}/chains/create', [CurrencyChainController::class, 'createChain'])->name('currency.chains.create')->can('currency');
-    Route::post('/exchange/currencies/{currency}/chains', [CurrencyChainController::class, 'storeChain'])->name('currency.chains.store')->can('currency');
-    Route::patch('/exchange/currencies/{currency}/chains', [CurrencyChainController::class, 'updateChains'])->name('currency.chains.update')->can('currency');
-
-    Route::get('/exchange/currencies/{currency}/nodeprovider', [NodeProviderController::class, 'edit'])->name('currency.nodeprovider.edit')->can('currency');
-    Route::patch('/exchange/currencies/{currency}/nodeprovider', [NodeProviderController::class, 'update'])->name('currency.nodeprovider.update')->can('currency');
-
     Route::prefix('exchange')->group(function () {
+        Route::get('/currencies', [CurrencyController::class, 'index'])->name('currency.index')->can('currency');
+        Route::get('/currencies/create', [CurrencyController::class, 'create'])->name('currency.create')->can('currency');
+        Route::post('/currencies', [CurrencyController::class, 'store'])->name('currency.store')->can('currency');
+        Route::get('/currencies/{currency}', [CurrencyController::class, 'show'])->name('currency.show')->can('currency');
+        Route::get('/currencies/{currency}/edit', [CurrencyController::class, 'edit'])->name('currency.edit')->can('currency');
+        Route::patch('/currencies/{currency}', [CurrencyController::class, 'update'])->name('currency.update')->can('currency');
+        Route::delete('/currencies/{currency}', [CurrencyController::class, 'destroy'])->name('currency.destroy')->can('currency');
+
+        Route::get('/currencies/{currency}/chains', [CurrencyChainController::class, 'getChains'])->name('currency.chains.edit')->can('currency');
+        Route::get('/currencies/{currency}/chains/create', [CurrencyChainController::class, 'createChain'])->name('currency.chains.create')->can('currency');
+        Route::post('/currencies/{currency}/chains', [CurrencyChainController::class, 'storeChain'])->name('currency.chains.store')->can('currency');
+        Route::patch('/currencies/{currency}/chains', [CurrencyChainController::class, 'updateChains'])->name('currency.chains.update')->can('currency');
+
+        Route::get('/currencies/{currency}/nodeprovider', [NodeProviderController::class, 'edit'])->name('currency.nodeprovider.edit')->can('currency');
+        Route::patch('/currencies/{currency}/nodeprovider', [NodeProviderController::class, 'update'])->name('currency.nodeprovider.update')->can('currency');
+
         Route::get('/markets', [MarketController::class, 'index'])->name('market.index')->can('market');
         Route::get('/markets/create', [MarketController::class, 'create'])->name('market.create')->can('market');
         Route::post('/markets', [MarketController::class, 'store'])->name('market.store')->can('market');
@@ -179,10 +187,12 @@ Route::middleware(['admin.2fa'])->group(function () {
 
     Route::prefix('transactions')->group(function () {
         Route::get('/', [TransactionController::class, 'index'])->name('transaction.index')->can('transaction');
+        Route::post('/excel-export', [TransactionController::class, 'excelExport'])->name('transaction.excel-export')->can('transaction');
     });
 
     Route::prefix('otc_orders')->group(function () {
         Route::get('/', [OTCOrderController::class, 'index'])->name('otc_orders.index')->can('transaction');
+        Route::post('/excel-export', [OTCOrderController::class, 'excelExport'])->name('otc_orders.excel-export')->can('transaction');
     });
 
     Route::prefix('deposits')->group(function () {

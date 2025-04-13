@@ -129,7 +129,7 @@ class UserController extends Controller
 
         $from = $request->get('from_id');
         $to = $request->get('to_id');
-        $filename = 'users_'.$from.'_'.$to;
+        $filename = 'users_' . $from . '_' . $to;
 
         $userQuery = User::orderBy('id')->filterBy(request()->all());
         if ($request->get('from_id') && $request->get('to_id')) {
@@ -141,29 +141,24 @@ class UserController extends Controller
         $users = $users->map(function ($user) {
             $support = $user->saleSupport ? $user->saleSupport->fullname() : 'unknown';
 
-            $gender = 'نامشخص';
-            if ($user->sex === 0) {
-                $gender = 'دختر';
-            }
-            if ($user->sex === 1) {
-                $gender = 'پسر';
-            }
-
             $sales_description = $user->support_description;
 
             return [
                 $user->id,
-                $user->mobile,
-                $gender,
-                str_replace(['(', ')'], ' ', $user->name),
-                str_replace(['(', ')'], ' ', $user->name_english),
-                $support,
-                $sales_description,
+                $user->email,
+                $user->username,
+                str_replace(['(', ')'], ' ', $user->fullname()),
+                $user->introducerReferral ?  $user->introducerReferral->code : '',
+                $user->introducer_code ? $user->introducerReferral->user->fullname() :   '',
+                $user->status->label(),
+                $user->last_login,
+                $user->two_factor_secret ? 'فعال' : 'غیرفعال',
+                $user->email_verified_at,
                 $user->created_at,
             ];
         });
 
-        return Excel::download(new UserExport($users), $filename.'.xlsx');
+        return Excel::download(new UserExport($users), $filename . '.xlsx');
     }
 
     public function groupRegisterForm()
@@ -196,7 +191,7 @@ class UserController extends Controller
         $createdUsers = $import->getCreatedUsers();
         $rowCount = $import->getRowCount();
 
-        if (! count($createdUsers)) {
+        if (!count($createdUsers)) {
             return redirect()->back()
                 ->with(['warning' => 'تمام لیست شما قبلا ثبت نام شده است.']);
         }
@@ -221,7 +216,7 @@ class UserController extends Controller
     {
         $user = User::find($user->id);
 
-        if (! $user) {
+        if (!$user) {
             Toast::message('کاربر یافت نشد.')->danger();
 
             return redirect()->back();

@@ -38,6 +38,7 @@ readonly class RegisterService
                 ->setEmail($registerRequestDTO->getEmail())
                 ->setIntroducerId($referralCodeModel?->id)
                 ->setUserStatus(UserStatusEnum::INACTIVE)
+                ->setRegistrationDate($registerRequestDTO->getRegistrationDate())
                 ->setHashedPassword(
                     Hash::make($registerRequestDTO->getPassword())
                 )

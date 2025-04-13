@@ -98,7 +98,9 @@
     <div class="card mb-3">
         <div class="card-body">
             <h5 class="card-title">خروجی اکسل</h5>
-            <form class="row mt-3 d-flex align-items-end justify-content-between">
+            <form class="row mt-3 d-flex align-items-end justify-content-between"
+                  action="{{route('admin.user.excel-export',request()->query())}}" method="POST">
+                @csrf
                 <div class="col-md-4 user_role">
                     <label class="form-label" for="UserRole">از آیدی :</label>
                     <input type="number" class="form-control" placeholder="آیدی کاربر">
@@ -223,7 +225,8 @@
                                         </div>
 
                                         <div class="d-flex flex-column">
-                                            <a href="{{route('admin.inquiry.user-details',['user'=>$user])}}" class="text-heading text-truncate">
+                                            <a href="{{route('admin.inquiry.user-details',['user'=>$user])}}"
+                                               class="text-heading text-truncate">
                                                 <span class="fw-medium">{{$user->email}}</span>
                                             </a>
                                             <small>{{$user->username}}</small>
@@ -318,6 +321,11 @@
                                                    href="{{route('admin.user.financial-block.getBlocks', ['user'=>$user->id])}}">
                                                     <i class="fa-regular fa-unlock"></i>
                                                     محدودیت های مالی
+                                                </a>
+                                                <a class="dropdown-item"
+                                                   href="{{route('admin.user.security', ['user'=>$user->id])}}">
+                                                    <i class="fa-regular fa-shield-halved "></i>
+                                                    تنظیمات امنیتی کاربر
                                                 </a>
                                                 @can('user.login-as-customer')
                                                     <a class="dropdown-item"

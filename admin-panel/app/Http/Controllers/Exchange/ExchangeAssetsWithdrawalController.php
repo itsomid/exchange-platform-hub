@@ -130,7 +130,9 @@ class ExchangeAssetsWithdrawalController extends Controller
             ->orderByRaw("status = ? DESC", [OTCRefExchangeWithdrawalStatusEnum::PENDING->value])
             ->get();
 
-        $sumOfPendingWithdrawals = OTCRefExchangeWithdrawal::select(
+
+
+        $pendingWithdrawals = OTCRefExchangeWithdrawal::select(
             'otc_ref_exchange_withdrawals.currency_id',
             \DB::raw('SUM(transactions.amount) as total_withdraw_amount')
         )
@@ -143,7 +145,8 @@ class ExchangeAssetsWithdrawalController extends Controller
 
         return view('dashboard.exchange.ref_exchange.pending-assets-withdrawal-history', [
             'withdrawals' => $withdrawals,
-            'sumOfPendingWithdrawals' => $sumOfPendingWithdrawals,
+            'pendingWithdrawals' => $pendingWithdrawals,
+//            '$pendingWithdrawalsCount' =>
         ]);
     }
 

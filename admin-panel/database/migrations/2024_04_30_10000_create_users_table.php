@@ -26,7 +26,7 @@ return new class extends Migration
             $table->decimal('transaction_limit', 18, 2)->default(0); // Transaction limit
 
             $table->timestamp('email_verified_at')->nullable();
-            $table->timestamp('registration_date')->useCurrent(); // Registration date
+            $table->timestamp('registration_date')->nullable(); // Registration date
             $table->string('two_factor_secret')->nullable(); // 2FA status
             $table->timestamp('last_login')->nullable(); // Last login
             $table->string('last_ip_address')->nullable(); // Last login IP address

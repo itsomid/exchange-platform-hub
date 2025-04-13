@@ -74,6 +74,7 @@ class RegisterController extends Controller
                 ->setPassword($validatedData['password'])
                 ->setIntroducerCode($validatedData['introducer_code'] ?? null)
                 ->setLengthVerificationToken(5)
+                ->setRegistrationDate(now())
                 ->setTokenExpirationDate(
                     now()->addMinutes(
                         config('auth.verification.expire')

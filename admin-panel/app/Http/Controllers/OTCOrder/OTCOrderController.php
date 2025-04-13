@@ -4,10 +4,12 @@ namespace App\Http\Controllers\OTCOrder;
 
 use App\Enums\OTCOrderStatusEnum;
 use App\Enums\OTCOrderTypeEnum;
+use App\Exports\OTCOrderExport;
+use App\Helpers\DateFormatter;
 use App\Http\Controllers\Controller;
-use App\Models\Deposit;
 use App\Models\OTCOrder;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class OTCOrderController extends Controller
 {
@@ -63,5 +65,45 @@ class OTCOrderController extends Controller
             'totalSellOrderCount' => $totalSellOrderCount,
             'totalBuyOrderCount' => $totalBuyOrderCount,
         ]);
+    }
+
+    public function excelExport(Request $request)
+    {
+        $from = $request->get('from_id');
+        $to = $request->get('to_id');
+        $filename = 'otc_orders_' . $from . '_' . $to;
+
+        $OTCOrderQuery = OTCOrder::orderBy('id')->filterBy(request()->all());
+        if ($request->get('from_id') && $request->get('to_id')) {
+            $OTCOrderQuery->where('id', '>=', $request->from_id)
+                ->where('id', '<=', $request->to_id);
+        }
+        $otcOrders = $OTCOrderQuery->get();
+
+        $otcOrders = $otcOrders->map(function (OTCOrder $order) {
+            if ($order->type === \App\Enums\OTCOrderTypeEnum::BUY){
+                $userRecieved = formatNumberTrimZeros(bcsub($order->quantity ,  $order->fee,8));
+            }else{
+                $userRecieved = formatNumberTrimZeros(bcsub(bcmul($order->price , $order->quantity,5) ,  $order->fee,5));
+            }
+
+            return [
+                $order->id,
+                $order->market->name,
+                $order->type->label(),
+                $order->user->email,
+                formatNumberTrimZeros($order->quantity),
+                formatNumberTrimZeros($order->price),
+                formatNumberTrimZeros($order->total_value),
+                formatNumberTrimZeros($order->fee),
+                $userRecieved,
+                DateFormatter::convertToPersianDate($order->created_at,'H:i:s %Y/%m/%d'),
+                $order->status->label(),
+                $order->exchange ? $order->exchange->slug : 'داخلی',
+                $order->ref_exchange_description
+            ];
+        });
+
+        return Excel::download(new OTCOrderExport($otcOrders), $filename . '.xlsx');
     }
 }

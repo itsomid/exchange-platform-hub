@@ -25,6 +25,7 @@ class UserRepository implements UserRepositoryInterface
                     'last_name' => null,
                     'password' => $registerRequestDTO->getHashedPassword(),
                     'introducer_code' => $registerRequestDTO->getIntroducerId(),
+                    'registration_date' => $registerRequestDTO->getRegistrationDate(),
                     'status' => $registerRequestDTO->getUserStatus(),
                 ]
             );

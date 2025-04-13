@@ -39,14 +39,14 @@ class DatabaseSeeder extends Seeder
             CurrencyChainSeeder::class,
             ExchangeSeeder::class,
             MarketSeeder::class,
-            WalletSeeder::class,
+//            WalletSeeder::class,
 //            TransactionSeeder::class,
             NodeProviderSeeder::class,
-            ExternalApiConfigSeeder::class,
+//            ExternalApiConfigSeeder::class,
 //            OTCBuySeeder::class,
 //            DepositSeeder::class,
 //            WithdrawalSeeder::class,
-            SavedAddressesSeeder::class,
+//            SavedAddressesSeeder::class,
         ]);
     }
 }
