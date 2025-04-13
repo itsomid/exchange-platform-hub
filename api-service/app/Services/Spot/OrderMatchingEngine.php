@@ -153,7 +153,7 @@ readonly class OrderMatchingEngine
                 'spot_trade_id' => $spotTrade->id,
                 'maker_commission_amount' => $makerCommission,
                 'maker_commission_percentage' => 0.001,
-                'taker_commission_amount' => $takeCommission,
+                'taker_commission_amount' => $takerCommission,
                 'taker_commission_percentage' => 0.001,
             ]);
 
