@@ -21,6 +21,9 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::middleware(['api', 'auth:sanctum', 'verified', 'check.user.status'])
                 ->prefix('api/v1')
                 ->group(base_path('routes/api_v1.php'));
+
+            Route::middleware(['api'])->prefix('/api/accounting/v1')
+                ->group(base_path('routes/accounting_v1.php'));
         }
     )
     ->withBroadcasting(
@@ -41,7 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 'message' => __('auth.too_many_attempts'),
             ], 429, $e->getHeaders());
         });
-        //Service Exception
+        // Service Exception
         $exceptions->renderable(function (ServiceException $e, $request) {
             if (property_exists($e, 'render')) {
                 return $e->render($request);
