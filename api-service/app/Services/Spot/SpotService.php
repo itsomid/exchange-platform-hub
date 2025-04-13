@@ -206,6 +206,8 @@ class SpotService
                 'status' => SpotOrderStatusEnum::CANCELED,
             ]);
             DB::commit();
+            OrderBookUpdated::dispatch($market->id);
+
         } catch (Throwable $exception) {
             report($exception);
             DB::rollBack();

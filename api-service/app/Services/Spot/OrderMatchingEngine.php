@@ -153,7 +153,7 @@ readonly class OrderMatchingEngine
                 'spot_trade_id' => $spotTrade->id,
                 'maker_commission_amount' => $makerCommission,
                 'maker_commission_percentage' => 0.001,
-                'taker_commission_amount' => $takeCommission,
+                'taker_commission_amount' => $takerCommission,
                 'taker_commission_percentage' => 0.001,
             ]);
 
@@ -222,40 +222,36 @@ readonly class OrderMatchingEngine
         $actualTradeCost = Math::mul($tradeQuantity, $tradePrice);
         $expectedTradeCost = Math::mul($tradeQuantity, $takerOrder->price); // Original order price
 
-        DB::transaction(function () use ($takerOrder, $makerOrder, $tradeQuantity, $actualTradeCost, $expectedTradeCost, $baseCurrency, $quoteCurrency, $makerCommission, $takerCommission) {
-            // **Taker Updates**
-            if ($takerOrder->side === SpotOrderSideEnum::BUY) {
-                // Buyer (Taker) receives base currency, pays in quote currency
-                $takerReceiveQty = Math::sub($tradeQuantity, $takerCommission);
-                $this->walletRepository->decreaseLockedBalance($takerOrder->user_id, $quoteCurrency, $actualTradeCost);
-                $this->walletRepository->increaseBalance($takerOrder->user_id, $baseCurrency, $takerReceiveQty);
-
-                // **Refund remaining USDT if price was lower than expected**
-                $refundAmount = Math::sub($expectedTradeCost, $actualTradeCost);
-                if (Math::comp($refundAmount, 0) === 1) {
-                    $this->walletRepository->increaseBalance($takerOrder->user_id, $quoteCurrency, $refundAmount);
-                    $this->walletRepository->decreaseLockedBalance($takerOrder->user_id, $quoteCurrency, $refundAmount);
-                }
-            } else {
-                $takerReceiveQuote = Math::sub($actualTradeCost, $takerCommission);
-                // Seller (Taker) receives quote currency, pays in base currency
-                $this->walletRepository->decreaseLockedBalance($takerOrder->user_id, $baseCurrency, $tradeQuantity);
-                $this->walletRepository->increaseBalance($takerOrder->user_id, $quoteCurrency, $takerReceiveQuote);
+        // **Taker Updates**
+        if ($takerOrder->side === SpotOrderSideEnum::BUY) {
+            // Buyer (Taker) receives base currency, pays in quote currency
+            $takerReceiveQty = Math::sub($tradeQuantity, $takerCommission);
+            $this->walletRepository->decreaseLockedBalance($takerOrder->user_id, $quoteCurrency, $actualTradeCost);
+            $this->walletRepository->increaseBalance($takerOrder->user_id, $baseCurrency, $takerReceiveQty);
+            // **Refund remaining USDT if price was lower than expected**
+            $refundAmount = Math::sub($expectedTradeCost, $actualTradeCost);
+            if (Math::comp($refundAmount, 0) === 1) {
+                $this->walletRepository->increaseBalance($takerOrder->user_id, $quoteCurrency, $refundAmount);
+                $this->walletRepository->decreaseLockedBalance($takerOrder->user_id, $quoteCurrency, $refundAmount);
             }
-
-            // **Maker Updates**
-            if ($makerOrder->side === SpotOrderSideEnum::BUY) {
-                // Buyer (Maker) receives base currency, pays in quote currency
-                $makerReceiveQty = Math::sub($tradeQuantity, $makerCommission);
-                $this->walletRepository->increaseBalance($makerOrder->user_id, $baseCurrency, $makerReceiveQty);
-                $this->walletRepository->decreaseLockedBalance($makerOrder->user_id, $quoteCurrency, $actualTradeCost);
-            } else {
-                $makerReceiveQuote = Math::sub($actualTradeCost, $makerCommission);
-                // Seller (Maker) receives quote currency, pays in base currency
-                $this->walletRepository->increaseBalance($makerOrder->user_id, $quoteCurrency, $makerReceiveQuote);
-                $this->walletRepository->decreaseLockedBalance($makerOrder->user_id, $baseCurrency, $tradeQuantity);
-            }
-        });
+        } else {
+            $takerReceiveQuote = Math::sub($actualTradeCost, $takerCommission);
+            // Seller (Taker) receives quote currency, pays in base currency
+            $this->walletRepository->decreaseLockedBalance($takerOrder->user_id, $baseCurrency, $tradeQuantity);
+            $this->walletRepository->increaseBalance($takerOrder->user_id, $quoteCurrency, $takerReceiveQuote);
+        }
+        // **Maker Updates**
+        if ($makerOrder->side === SpotOrderSideEnum::BUY) {
+            // Buyer (Maker) receives base currency, pays in quote currency
+            $makerReceiveQty = Math::sub($tradeQuantity, $makerCommission);
+            $this->walletRepository->increaseBalance($makerOrder->user_id, $baseCurrency, $makerReceiveQty);
+            $this->walletRepository->decreaseLockedBalance($makerOrder->user_id, $quoteCurrency, $actualTradeCost);
+        } else {
+            $makerReceiveQuote = Math::sub($actualTradeCost, $makerCommission);
+            // Seller (Maker) receives quote currency, pays in base currency
+            $this->walletRepository->increaseBalance($makerOrder->user_id, $quoteCurrency, $makerReceiveQuote);
+            $this->walletRepository->decreaseLockedBalance($makerOrder->user_id, $baseCurrency, $tradeQuantity);
+        }
     }
 
     private function broadcastOrderBook(int $marketId): void
