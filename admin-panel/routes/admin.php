@@ -19,6 +19,7 @@ use App\Http\Controllers\Exchange\MarketController;
 use App\Http\Controllers\Exchange\NodeProviderController;
 use App\Http\Controllers\Exchange\RefExchangeController;
 use App\Http\Controllers\OTCOrder\OTCOrderController;
+use App\Http\Controllers\SpotOrder\SpotTradeController;
 use App\Http\Controllers\RolePermission\PermissionController;
 use App\Http\Controllers\RolePermission\RoleController;
 use App\Http\Controllers\Setting\ExternalSettingController;
@@ -191,8 +192,13 @@ Route::middleware(['admin.2fa'])->group(function () {
     });
 
     Route::prefix('otc_orders')->group(function () {
-        Route::get('/', [OTCOrderController::class, 'index'])->name('otc_orders.index')->can('transaction');
-        Route::post('/excel-export', [OTCOrderController::class, 'excelExport'])->name('otc_orders.excel-export')->can('transaction');
+        Route::get('/', [OTCOrderController::class, 'index'])->name('otc_orders.index')->can('otc_order');
+        Route::post('/excel-export', [OTCOrderController::class, 'excelExport'])->name('otc_orders.excel-export')->can('otc_order');
+    });
+
+    Route::prefix('spot_trades')->group(function () {
+        Route::get('/', [SpotTradeController::class, 'index'])->name('spot_trades.index')->can('spot_trade');
+        Route::post('/excel-export', [SpotTradeController::class, 'excelExport'])->name('spot_trade.excel-export')->can('spot_trade');
     });
 
     Route::prefix('deposits')->group(function () {

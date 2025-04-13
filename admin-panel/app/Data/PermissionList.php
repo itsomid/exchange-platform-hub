@@ -44,6 +44,7 @@ class PermissionList
 
             ['transaction','مدیریت تراکنش ها'],
             ['otc_order', 'مشاهده لیست سفارش ها'],
+            ['spot_trade', 'مشاهده لیست معاملات اسپات'],
             ['deposit', 'مشاهده لیست واریزی ها'],
             ['withdrawal', 'مشاهده لیست برداشت ها'],
 

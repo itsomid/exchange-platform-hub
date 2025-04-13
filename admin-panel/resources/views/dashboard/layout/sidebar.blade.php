@@ -98,8 +98,15 @@
             <li class="menu-item @if(request()->is('admin/otc*')) active @endif">
                 <a href="{{route('admin.otc_orders.index')}}" class="menu-link">
                     <i class="menu-icon  fa-regular fa-swap"></i>
-
                     <div>معاملات OTC</div>
+                </a>
+            </li>
+        @endcan
+        @can('spot_trade')
+            <li class="menu-item @if(request()->is('admin/spot*')) active @endif">
+                <a href="{{route('admin.spot_trades.index')}}" class="menu-link">
+                    <i class="menu-icon  fa-regular fa-chart-waterfall"></i>
+                    <div>معاملات اسپات</div>
                 </a>
             </li>
         @endcan
@@ -132,7 +139,7 @@
             </li>
             <li class="menu-item @if(request()->is('admin/exchange/market*')) active @endif">
                 <a href="{{route('admin.market.index')}}" class="menu-link">
-                    <i class="menu-icon fa-regular fa-display-chart-up-circle-dollar"></i>
+                    <i class="menu-icon fa-regular fa-shop"></i>
                     <div>Market</div>
                 </a>
             </li>
@@ -145,6 +152,7 @@
         @endcanany
         @can(['support'])
             <li class="menu-header small text-uppercase">
+                <span class="menu-header-text">بخش ارتباط با کاربر</span>
                 <span class="menu-header-text">بخش ارتباط با کاربر</span>
             </li>
             <li class="menu-item @if(request()->is('admin/tickets*')) active open @endif">
