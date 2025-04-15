@@ -9,7 +9,7 @@ use Throwable;
 
 class JWT
 {
-    private array $payload;
+    private array $payload = [];
 
     const string Algorithm = 'HS256';
 
