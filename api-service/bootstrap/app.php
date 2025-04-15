@@ -22,7 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->prefix('api/v1')
                 ->group(base_path('routes/api_v1.php'));
 
-            Route::middleware(['api'])->prefix('/api/accounting/v1')
+            Route::middleware(['api', 'jwt.auth'])->prefix('/api/accounting/v1')
                 ->group(base_path('routes/accounting_v1.php'));
         }
     )
@@ -36,6 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
             ->throttleWithRedis()
             ->alias([
                 'check.user.status' => \App\Http\Middleware\CheckUserStatus::class,
+                'jwt.auth' => \App\Http\Middleware\JwtAuthMiddleware::class,
             ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
