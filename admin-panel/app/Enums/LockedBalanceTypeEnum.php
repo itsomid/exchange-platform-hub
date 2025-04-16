@@ -11,14 +11,14 @@ enum LockedBalanceTypeEnum: string
     const array TYPE_LABEL = [
         self::WITHDRAWAL->value => 'برداشت',
         self::ADMIN->value => 'مدیریت',
-        self::SPOT->value => 'سپات',
+        self::SPOT->value => 'اسپات',
     ];
 
     public function label()
     {
         return self::TYPE_LABEL[$this->value]??'';
     }
-    
+
     const array TYPE_COLOR = [
         self::WITHDRAWAL->value => 'danger',
         self::ADMIN->value => 'primary',
