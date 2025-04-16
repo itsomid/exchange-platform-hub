@@ -142,11 +142,11 @@
                                                 <circle cx="18" cy="18" r="16" fill="none" stroke="#6f38d4"
                                                         stroke-width="4"
                                                         stroke-dasharray="100"
-                                                        stroke-dashoffset="{{ 100 - formatNumber($wallet->assetValue / $totalAssetsValue * 100) }}"
+                                                        stroke-dashoffset="{{ $totalAssetsValue > 0 ? (100 - formatNumber($wallet->assetValue / $totalAssetsValue * 100)) : 100 }}"
                                                         transform="rotate(-90 18 18)"></circle>
                                             </svg>
                                         </div>
-                                        <span>{{formatNumber($wallet->assetValue / $totalAssetsValue * 100)}}%</span>
+                                        <span>{{ $totalAssetsValue > 0 ? formatNumber($wallet->assetValue / $totalAssetsValue * 100) : 0 }}%</span>
                                     </div>
                                 </td>
                                 <th>
