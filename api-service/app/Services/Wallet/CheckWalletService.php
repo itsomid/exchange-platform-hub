@@ -38,6 +38,7 @@ class CheckWalletService
      */
     public function checkUserDeposit(CheckUserDepositRequestDTO $requestDTO): bool
     {
+
         $hasNewTransaction = false;
         $user = $this->userRepository->getUserById($requestDTO->getUserId());
         $wallet = $this->walletRepository->getOneByCurrency($requestDTO->getCurrencySymbol(), $requestDTO->getUserId());
@@ -82,7 +83,8 @@ class CheckWalletService
                     }
 
                     $currency = Currency::whereSymbol($transaction->getCryptocurrency())->first();
-                    $usdtValue = Math::mul($currency->exchangePrice->price, $transaction->getAmount());
+
+                    $usdtValue = Math::mul($currency->exchangePrice, $transaction->getAmount());
 
                     $currency = Currency::whereSymbol($transaction->getCryptocurrency())->first();
                     $usdtValue = Math::mul($currency->exchangePrice, $transaction->getAmount());
