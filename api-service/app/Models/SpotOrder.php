@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\SpotOrderSideEnum;
 use App\Enums\SpotOrderStatusEnum;
 use App\Enums\SpotOrderTypeEnum;
+use App\Enums\SpotRoleEnum;
 use App\Helpers\Math;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -115,5 +116,16 @@ class SpotOrder extends Model
                 )
             );
         }, $filledValue);
+    }
+
+    public function getRole(): ?SpotRoleEnum
+    {
+        if (! is_null($this->makerTrades)) {
+            return SpotRoleEnum::MAKER;
+        } elseif (! is_null($this->takerTrades)) {
+            return SpotRoleEnum::TAKER;
+        }
+
+        return null;
     }
 }
