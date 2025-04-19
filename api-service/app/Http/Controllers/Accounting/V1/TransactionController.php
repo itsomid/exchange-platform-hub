@@ -45,7 +45,7 @@ class TransactionController
             ->with('user', 'wallet')
             ->whereNull('journal_entry_number')
             ->latest()
-            ->paginate(100);
+            ->get();
 
         return TransactionResource::collection($transactions);
     }
