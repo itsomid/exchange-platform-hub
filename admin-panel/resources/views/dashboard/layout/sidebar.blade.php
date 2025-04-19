@@ -343,12 +343,15 @@
             </li>
         @endcan
         @can('view-logs')
-            <li class="menu-item @if(request()->route()->getName() == 'telescope') active @endif">
-                <a href="{{route('telescope')}}" class="menu-link">
-                    <i class="menu-icon fa-light fa-telescope fa-sm"></i>
-                    <div> تلسکوپ</div>
-                </a>
-            </li>
+            @if (!app()->environment('production') && Route::has('telescope'))
+                <li class="menu-item @if(request()->route()->getName() == 'telescope') active @endif">
+                    <a href="{{route('telescope')}}" class="menu-link">
+                        <i class="menu-icon fa-light fa-telescope fa-sm"></i>
+                        <div> تلسکوپ</div>
+                    </a>
+                </li>
+
+            @endif
 
             <li class="menu-item @if(request()->is('/pulse*')) active @endif">
                 <a href="{{url('./pulse')}}" class="menu-link">
