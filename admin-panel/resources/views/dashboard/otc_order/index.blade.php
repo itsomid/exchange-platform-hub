@@ -78,7 +78,7 @@
                             <span>حجم معاملات</span>
                             <div class="d-flex align-items-center my-1">
                                 <h4 class="mb-0 me-2">{{formatNumber($totalOrdersValue)}}
-                                <small>USDT</small>
+                                    <small>USDT</small>
                                 </h4>
                             </div>
                         </div>
@@ -343,10 +343,10 @@
                             </td>
                             <td class="font-number" dir="ltr">
                                 @if($order->type === \App\Enums\OTCOrderTypeEnum::BUY)
-                                    {{formatNumberTrimZeros(bcsub($order->quantity ,  $order->fee,8))}}
+                                    {{formatNumberTrimZeros(bcsub($order->quantity ,$order->fee,8))}}
                                     <small>{{$order->market->baseCurrency->symbol}}</small>
                                 @else
-                                    {{formatNumberTrimZeros(bcsub(bcmul($order->price , $order->quantity,5) ,  $order->fee,5))}}
+                                    {{formatNumberTrimZeros(bcsub(bcmul($order->price ,$order->quantity,5) ,$order->fee,5))}}
                                     <small>{{$order->market->quoteCurrency->symbol}}</small>
                                 @endif
                             </td>
@@ -473,7 +473,9 @@
                                                 </div>
                                             </div>
                                             <div class="modal-footer">
-                                                <a type="button" href="{{route('admin.transaction.index',['otc_order_id'=>$order->id])}}" class="btn btn-primary">لیست تراکنش ها</a>
+                                                <a type="button"
+                                                   href="{{route('admin.transaction.index',['otc_order_id'=>$order->id])}}"
+                                                   class="btn btn-primary">لیست تراکنش ها</a>
                                                 <button type="button" class="btn btn-label-secondary waves-effect"
                                                         data-bs-dismiss="modal">بستن
                                                 </button>

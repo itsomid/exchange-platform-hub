@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Enums\SpotOrderSideEnum;
+use App\Enums\SpotOrderStatusEnum;
+use App\Enums\SpotOrderTypeEnum;
 use App\Filters\Filterable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +17,8 @@ class SpotTrade extends Model
     use Filterable, HasApiTokens, HasFactory;
     public $filterNameSpace = 'App\Filters\SpotTradeFilter';
 
-    protected $appends = ['side'];
+    protected $appends = ['maker_side', 'taker_side'];
+
 
     public function market()
     {
@@ -36,8 +39,12 @@ class SpotTrade extends Model
         return $this->hasOne(TradingCommission::class);
     }
 
-    public function getSideAttribute()
+    public function getMakerSideAttribute()
     {
-        return $this->makerOrder->side === SpotOrderSideEnum::SELL ? 'SELL' : 'BUY';
+        return $this->makerOrder->side === SpotOrderSideEnum::SELL ? 'sell' : 'buy';
+    }
+    public function getTakerSideAttribute()
+    {
+        return $this->takerOrder->side === SpotOrderSideEnum::SELL ? 'sell' : 'buy';
     }
 }

@@ -19,129 +19,129 @@
                 </div>
             </div>
         </div>
-{{--        <div class="col-sm-12 col-xl-3">--}}
-{{--            <div class="card">--}}
-{{--                <div class="card-body">--}}
-{{--                    <div class="d-flex align-items-start justify-content-between">--}}
-{{--                        <div class="content-left">--}}
-{{--                            <span>تعداد معاملات امروز</span>--}}
-{{--                            <div class="d-flex align-items-center my-1">--}}
-{{--                                <h4 class="mb-0 me-2">{{$todayOrderCount}}</h4>--}}
-{{--                            </div>--}}
-{{--                        </div>--}}
-{{--                        <span class="badge bg-label-warning rounded">--}}
-{{--                            <i class="fa-light fa-swap"></i>--}}
-{{--                        </span>--}}
-{{--                    </div>--}}
-{{--                </div>--}}
-{{--            </div>--}}
-{{--        </div>--}}
-{{--        <div class="col-sm-12 col-xl-3">--}}
-{{--            <div class="card">--}}
-{{--                <div class="card-body">--}}
-{{--                    <div class="d-flex align-items-start justify-content-between">--}}
-{{--                        <div class="content-left">--}}
-{{--                            <span>تعداد معاملات خرید</span>--}}
-{{--                            <div class="d-flex align-items-center my-1">--}}
-{{--                                <h4 class="mb-0 me-2">{{$totalBuyOrderCount}}</h4>--}}
-{{--                            </div>--}}
-{{--                        </div>--}}
-{{--                        <span class="badge bg-label-primary rounded p-2">--}}
-{{--                            <i class="fa-regular fa-user-tag"></i>--}}
-{{--                        </span>--}}
-{{--                    </div>--}}
-{{--                </div>--}}
-{{--            </div>--}}
-{{--        </div>--}}
-{{--        <div class="col-sm-12 col-xl-3">--}}
-{{--            <div class="card">--}}
-{{--                <div class="card-body ">--}}
-{{--                    <div class="d-flex align-items-start justify-content-between">--}}
-{{--                        <div class="content-left">--}}
-{{--                            <span>تعداد معاملات فروش</span>--}}
-{{--                            <div class="d-flex align-items-center my-1">--}}
-{{--                                <h4 class="mb-0 me-2">{{$totalSellOrderCount}}</h4>--}}
-{{--                            </div>--}}
-{{--                        </div>--}}
-{{--                        <span class="badge bg-label-primary rounded p-2">--}}
-{{--                            <i class="fa-regular fa-user-tag"></i>--}}
-{{--                        </span>--}}
-{{--                    </div>--}}
-{{--                </div>--}}
-{{--            </div>--}}
-{{--        </div>--}}
-{{--        <div class="col-sm-12 col-xl-3">--}}
-{{--            <div class="card">--}}
-{{--                <div class="card-body">--}}
-{{--                    <div class="d-flex align-items-start justify-content-between">--}}
-{{--                        <div class="content-left">--}}
-{{--                            <span>حجم معاملات</span>--}}
-{{--                            <div class="d-flex align-items-center my-1">--}}
-{{--                                <h4 class="mb-0 me-2">{{formatNumber($totalOrdersValue)}}--}}
-{{--                                <small>USDT</small>--}}
-{{--                                </h4>--}}
-{{--                            </div>--}}
-{{--                        </div>--}}
-{{--                        <span class="badge bg-label-primary rounded p-2">--}}
-{{--                            <i class="fa-regular fa-user-tag"></i>--}}
-{{--                        </span>--}}
-{{--                    </div>--}}
-{{--                </div>--}}
-{{--            </div>--}}
-{{--        </div>--}}
-{{--        <div class="col-sm-12 col-xl-3">--}}
-{{--            <div class="card">--}}
-{{--                <div class="card-body bg-success">--}}
-{{--                    <div class="d-flex align-items-start justify-content-between">--}}
-{{--                        <div class="content-left">--}}
-{{--                            <span class="text-white">کاربران با بیشترین معامله امروز</span>--}}
-{{--                            <div class="d-flex align-items-baseline my-1">--}}
-{{--                                <small class="text-white mx-2"> حجم معاملات امروز: </small>--}}
-{{--                                <h4 class="mb-0 me-2 text-primary">{{formatNumber($totalTodayOrdersValue,2)}}</h4>--}}
-{{--                                <small class="text-primary">USDT</small>--}}
-{{--                            </div>--}}
-{{--                        </div>--}}
+        {{--        <div class="col-sm-12 col-xl-3">--}}
+        {{--            <div class="card">--}}
+        {{--                <div class="card-body">--}}
+        {{--                    <div class="d-flex align-items-start justify-content-between">--}}
+        {{--                        <div class="content-left">--}}
+        {{--                            <span>تعداد معاملات امروز</span>--}}
+        {{--                            <div class="d-flex align-items-center my-1">--}}
+        {{--                                <h4 class="mb-0 me-2">{{$todayOrderCount}}</h4>--}}
+        {{--                            </div>--}}
+        {{--                        </div>--}}
+        {{--                        <span class="badge bg-label-warning rounded">--}}
+        {{--                            <i class="fa-light fa-swap"></i>--}}
+        {{--                        </span>--}}
+        {{--                    </div>--}}
+        {{--                </div>--}}
+        {{--            </div>--}}
+        {{--        </div>--}}
+        {{--        <div class="col-sm-12 col-xl-3">--}}
+        {{--            <div class="card">--}}
+        {{--                <div class="card-body">--}}
+        {{--                    <div class="d-flex align-items-start justify-content-between">--}}
+        {{--                        <div class="content-left">--}}
+        {{--                            <span>تعداد معاملات خرید</span>--}}
+        {{--                            <div class="d-flex align-items-center my-1">--}}
+        {{--                                <h4 class="mb-0 me-2">{{$totalBuyOrderCount}}</h4>--}}
+        {{--                            </div>--}}
+        {{--                        </div>--}}
+        {{--                        <span class="badge bg-label-primary rounded p-2">--}}
+        {{--                            <i class="fa-regular fa-user-tag"></i>--}}
+        {{--                        </span>--}}
+        {{--                    </div>--}}
+        {{--                </div>--}}
+        {{--            </div>--}}
+        {{--        </div>--}}
+        {{--        <div class="col-sm-12 col-xl-3">--}}
+        {{--            <div class="card">--}}
+        {{--                <div class="card-body ">--}}
+        {{--                    <div class="d-flex align-items-start justify-content-between">--}}
+        {{--                        <div class="content-left">--}}
+        {{--                            <span>تعداد معاملات فروش</span>--}}
+        {{--                            <div class="d-flex align-items-center my-1">--}}
+        {{--                                <h4 class="mb-0 me-2">{{$totalSellOrderCount}}</h4>--}}
+        {{--                            </div>--}}
+        {{--                        </div>--}}
+        {{--                        <span class="badge bg-label-primary rounded p-2">--}}
+        {{--                            <i class="fa-regular fa-user-tag"></i>--}}
+        {{--                        </span>--}}
+        {{--                    </div>--}}
+        {{--                </div>--}}
+        {{--            </div>--}}
+        {{--        </div>--}}
+        {{--        <div class="col-sm-12 col-xl-3">--}}
+        {{--            <div class="card">--}}
+        {{--                <div class="card-body">--}}
+        {{--                    <div class="d-flex align-items-start justify-content-between">--}}
+        {{--                        <div class="content-left">--}}
+        {{--                            <span>حجم معاملات</span>--}}
+        {{--                            <div class="d-flex align-items-center my-1">--}}
+        {{--                                <h4 class="mb-0 me-2">{{formatNumber($totalOrdersValue)}}--}}
+        {{--                                <small>USDT</small>--}}
+        {{--                                </h4>--}}
+        {{--                            </div>--}}
+        {{--                        </div>--}}
+        {{--                        <span class="badge bg-label-primary rounded p-2">--}}
+        {{--                            <i class="fa-regular fa-user-tag"></i>--}}
+        {{--                        </span>--}}
+        {{--                    </div>--}}
+        {{--                </div>--}}
+        {{--            </div>--}}
+        {{--        </div>--}}
+        {{--        <div class="col-sm-12 col-xl-3">--}}
+        {{--            <div class="card">--}}
+        {{--                <div class="card-body bg-success">--}}
+        {{--                    <div class="d-flex align-items-start justify-content-between">--}}
+        {{--                        <div class="content-left">--}}
+        {{--                            <span class="text-white">کاربران با بیشترین معامله امروز</span>--}}
+        {{--                            <div class="d-flex align-items-baseline my-1">--}}
+        {{--                                <small class="text-white mx-2"> حجم معاملات امروز: </small>--}}
+        {{--                                <h4 class="mb-0 me-2 text-primary">{{formatNumber($totalTodayOrdersValue,2)}}</h4>--}}
+        {{--                                <small class="text-primary">USDT</small>--}}
+        {{--                            </div>--}}
+        {{--                        </div>--}}
 
-{{--                        <ul class="list-unstyled avatar-group d-flex my-0">--}}
-{{--                            @if(count($topUsers))--}}
-{{--                                @foreach($topUsers as $topUser)--}}
-{{--                                    <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-html='true'--}}
-{{--                                        data-bs-placement="top" class="avatar pull-up"--}}
-{{--                                        title="<span class='fw-medium'>نام:</span>--}}
-{{--                                                    {{ $topUser['user']->fullname()}}</span>--}}
-{{--                                                    <br> <span class='fw-medium'>شناسه کاربری:</span>--}}
-{{--                                                    <span class='fw-medium font-monospace'>({{ $topUser['user']->id }}#)</span>--}}
-{{--                                                    <br> <span class='fw-medium'>نام کاربری:</span>--}}
-{{--                                                    <span class='fw-medium font-monospace'>({{ $topUser['user']->username }})</span>--}}
-{{--                                                    <br> <span class='fw-medium'>مجموع واریز:</span>--}}
-{{--                                                    <span class='fw-medium font-monospace'>{{ formatNumberTrimZeros($topUser['totalOrders']) }}$</span>--}}
-{{--                                                    ">--}}
-{{--                                        <div class="avatar me-2">--}}
-{{--                                            @php--}}
-{{--                                                // Define your color array--}}
-{{--                                                $colors = ['primary', 'info', 'danger', 'warning','success'];--}}
+        {{--                        <ul class="list-unstyled avatar-group d-flex my-0">--}}
+        {{--                            @if(count($topUsers))--}}
+        {{--                                @foreach($topUsers as $topUser)--}}
+        {{--                                    <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-html='true'--}}
+        {{--                                        data-bs-placement="top" class="avatar pull-up"--}}
+        {{--                                        title="<span class='fw-medium'>نام:</span>--}}
+        {{--                                                    {{ $topUser['user']->fullname()}}</span>--}}
+        {{--                                                    <br> <span class='fw-medium'>شناسه کاربری:</span>--}}
+        {{--                                                    <span class='fw-medium font-monospace'>({{ $topUser['user']->id }}#)</span>--}}
+        {{--                                                    <br> <span class='fw-medium'>نام کاربری:</span>--}}
+        {{--                                                    <span class='fw-medium font-monospace'>({{ $topUser['user']->username }})</span>--}}
+        {{--                                                    <br> <span class='fw-medium'>مجموع واریز:</span>--}}
+        {{--                                                    <span class='fw-medium font-monospace'>{{ formatNumberTrimZeros($topUser['totalOrders']) }}$</span>--}}
+        {{--                                                    ">--}}
+        {{--                                        <div class="avatar me-2">--}}
+        {{--                                            @php--}}
+        {{--                                                // Define your color array--}}
+        {{--                                                $colors = ['primary', 'info', 'danger', 'warning','success'];--}}
 
-{{--                                                // Get a random index from the array--}}
-{{--                                                $randomIndex = array_rand($colors);--}}
+        {{--                                                // Get a random index from the array--}}
+        {{--                                                $randomIndex = array_rand($colors);--}}
 
-{{--                                                // Retrieve the color using the random index--}}
-{{--                                                $randomColor = $colors[$randomIndex];--}}
-{{--                                            @endphp--}}
-{{--                                            <span--}}
-{{--                                                class="avatar-initial rounded-circle bg-label-{{$randomColor}}">{{$topUser['user']->avatar_user_name}}</span>--}}
-{{--                                        </div>--}}
-{{--                                    </li>--}}
-{{--                                @endforeach--}}
-{{--                            @else--}}
-{{--                                بدون معامله--}}
-{{--                            @endif--}}
+        {{--                                                // Retrieve the color using the random index--}}
+        {{--                                                $randomColor = $colors[$randomIndex];--}}
+        {{--                                            @endphp--}}
+        {{--                                            <span--}}
+        {{--                                                class="avatar-initial rounded-circle bg-label-{{$randomColor}}">{{$topUser['user']->avatar_user_name}}</span>--}}
+        {{--                                        </div>--}}
+        {{--                                    </li>--}}
+        {{--                                @endforeach--}}
+        {{--                            @else--}}
+        {{--                                بدون معامله--}}
+        {{--                            @endif--}}
 
-{{--                        </ul>--}}
+        {{--                        </ul>--}}
 
-{{--                    </div>--}}
-{{--                </div>--}}
-{{--            </div>--}}
-{{--        </div>--}}
+        {{--                    </div>--}}
+        {{--                </div>--}}
+        {{--            </div>--}}
+        {{--        </div>--}}
     </div>
     <div class="card mb-3">
         <div class="card-body">
@@ -259,8 +259,11 @@
                     <th>قیمت</th>
                     <th>کاربر Maker</th>
                     <th>کاربر Taker</th>
-
-                    <th>کارمزد</th>
+                    <th>کارمزد کل
+                        <i class="fa-regular fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top"
+                           data-bs-custom-class="tooltip-dark"
+                           title="مجموع ارزش کارمزد maker و taker"></i>
+                    </th>
                     <th>
                         @php
                             $currentParams = request()->except('sortByCreatedAt');
@@ -288,38 +291,135 @@
                     </tr>
                 @else
 
-                    @foreach($spotTrades as $trade)
+                    @foreach($spotTrades as $spotTrade)
                         <tr class="table-striped">
-                            <td>{{$trade->id}}</td>
+                            <td>{{$spotTrade->id}}</td>
                             <td class="text-heading fw-medium">
-                                <img src="{{asset($trade->market->baseCurrency->coinLogo())}}"
+                                <img src="{{asset($spotTrade->market->baseCurrency->coinLogo())}}"
                                      class="rounded-circle" width="32px">
-                                <small>{{$trade->market->name}}</small>
+                                <small>{{$spotTrade->market->name}}</small>
                             </td>
                             <td>
-                                <span class="badge bg-{{ $trade->side === 'BUY' ? 'success' : 'danger' }}">
-                                    {{ $trade->side }}
+                                <span class="badge bg-{{ $spotTrade->takerSide === 'BUY' ? 'success' : 'danger' }}">
+                                    {{ $spotTrade->takerSide }}
                                 </span>
                             </td>
-                            <td>{{ $trade->makerOrder->type->label() }}</td>
+                            <td>{{ $spotTrade->takerOrder->type->label() }}</td>
                             <td>
-                                <span class="ms-1">{{formatNumberTrimZeros($trade->quantity)  }}</span>
-                                <small>{{$trade->market->base_currency}}</small>
+                                <span class="ms-1">{{formatNumberTrimZeros($spotTrade->quantity)  }}</span>
+                                <small>{{$spotTrade->market->base_currency}}</small>
                             </td>
-                            <td>{{ formatNumber($trade->price) }}</td>
-                            <td>{{ $trade->makerOrder->user->email }}</td>
-                            <td>{{ $trade->takerOrder->user->email }}</td>
-                            <td class="text-info">{{ formatNumber($trade->commission->maker_commission_amount, 2) }} USDT</td>
-                            <td dir="ltr">{{ jdate($trade->created_at)->format('Y-m-d H:i') }}</td>
+                            <td dir="ltr">{{ formatNumber($spotTrade->price) }}
+                                <small>USDT</small>
+                            </td>
+                            <td>{{ $spotTrade->makerOrder->user->email }}</td>
+                            <td>{{ $spotTrade->takerOrder->user->email }}</td>
+                            <td class="text-info"
+                                dir="ltr">{{ formatNumberTrimZeros($spotTrade->total_commission_value) }}
+                                <small>USDT</small>
+                            </td>
+                            <td dir="ltr">{{ jdate($spotTrade->created_at)->format('Y-m-d H:i') }}</td>
                             <td>
                                 <span class="badge bg-label-success">
-                                    {{ $trade->makerOrder->status->label() }}
+                                    {{ $spotTrade->makerOrder->status->label() }}
                                 </span>
                             </td>
                             <td>
-                                <a href="" class="btn btn-sm btn-icon">
-                                    <i class="fa-regular fa-eye"></i>
+                                <a href="" class="btn btn-sm btn-icon" data-bs-toggle="modal"
+                                   data-bs-target="#trade-{{$spotTrade->id}}">
+                                    <i class="fa-light fa-eye"></i>
                                 </a>
+                                <div class="modal fade show" id="trade-1" tabindex="-1" aria-modal="true"
+                                     role="dialog" style="display: block;">
+                                    <div class="modal-dialog modal-xl" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header justify-content-between">
+
+                                                <div>
+                                                    <h5>جزيیات معامله</h5>
+                                                    <h6 class="modal-title font-number mb-2">شماره معامله
+                                                        #{{$spotTrade->id}}</h6>
+                                                    <div class="d-flex gap-2 mb-2 align-items-baseline">
+                                                        <span>شماره سفارش Maker --></span>
+                                                        <h6 class="modal-title font-number">#{{$spotTrade->maker_order_id}}</h6>
+                                                    </div>
+                                                    <div class="d-flex gap-2 mb-2 align-items-baseline">
+                                                        <span>شماره سفارش Taker --></span>
+                                                        <h6 class="modal-title font-number"> #{{$spotTrade->taker_order_id}}</h6>
+                                                    </div>
+
+                                                </div>
+
+                                                <div class="d-flex flex-column ">
+                                                    <a href="" class="text-heading text-truncate text-end mb-2">
+                                                        <span class="h6 fw-medium">Maker:</span>
+                                                        <span
+                                                            class="me-1">{{$spotTrade->makerOrder->user->email}}</span>
+                                                        <span
+                                                            class="me-2">({{$spotTrade->makerOrder->user->username}})</span>
+                                                    </a>
+                                                    <a href="" class="text-heading text-truncate text-end">
+                                                        <span class="h6 fw-medium">Taker:</span>
+                                                        <span
+                                                            class="me-2">{{$spotTrade->takerOrder->user->email}}</span>
+                                                        <span
+                                                            class="me-2">({{$spotTrade->takerOrder->user->username}})</span>
+                                                    </a>
+                                                </div>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div
+                                                    class="d-flex align-items-sm-center justify-content-between border-bottom py-4 mb-4">
+                                                    <div class="d-flex flex-wrap gap-2 font-number">
+                                                        <span class="text-success">{{formatNumber($spotTrade->quantity/$spotTrade->makerOrder->quantity * 100)}} درصد از کل سفارش</span>
+                                                    </div>
+                                                    <div class="d-flex align-items-center">
+                                                        <h5 class="me-2 font-weight-bolder text-black m-0">{{$spotTrade->market->name}} ({{$spotTrade->takerOrder->type}})</h5>
+                                                        <span
+                                                            class="badge bg-{{ $spotTrade->takerSide === 'BUY' ? 'success' : 'danger' }}">{{ $spotTrade->takerSide }}</span>
+                                                    </div>
+                                                </div>
+                                                <div
+                                                    class="d-flex align-items-sm-center justify-content-between border-bottom py-4 mb-4">
+                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">کارمزد Maker</h6>
+                                                    <div class="d-flex flex-wrap gap-1 font-number" dir="ltr">
+                                                        @if($spotTrade->makerSide === \App\Enums\SpotOrderSideEnum::BUY->value)
+                                                            <span>{{formatNumberTrimZeros($spotTrade->commission->maker_commission_amount)}} {{$spotTrade->market->base_currency}}</span>
+                                                        @else
+                                                            <span>{{formatNumberTrimZeros($spotTrade->commission->maker_commission_amount)}} {{$spotTrade->market->quote_currency}}</span>
+                                                        @endif
+                                                        <small class="text-muted me-2">({{formatNumberTrimZeros($spotTrade->maker_commission_value)}} USDT)</small>
+                                                    </div>
+                                                </div>
+                                                <div
+                                                    class="d-flex align-items-sm-center justify-content-between border-bottom py-4 mb-4">
+                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">کارمزد Taker</h6>
+                                                    <div class="d-flex flex-wrap gap-1 font-number" dir="ltr">
+                                                        @if($spotTrade->takerSide === \App\Enums\SpotOrderSideEnum::BUY->value)
+                                                            <span>{{formatNumberTrimZeros($spotTrade->commission->taker_commission_amount)}} {{$spotTrade->market->base_currency}}</span>
+                                                        @else
+                                                            <span>{{formatNumberTrimZeros($spotTrade->commission->taker_commission_amount)}} {{$spotTrade->market->quote_currency}}</span>
+                                                        @endif
+                                                        <br>
+                                                        <small class="text-muted">({{formatNumberTrimZeros($spotTrade->taker_commission_value)}} USDT)</small>
+                                                    </div>
+                                                </div>
+                                                <div
+                                                    class="d-flex align-items-sm-center justify-content-between border-bottom py-4 mb-4">
+                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">مجموع کارمزد (USDT)</h6>
+                                                    <div class="d-flex flex-wrap gap-1 font-number" dir="ltr">
+                                                        <span class="text-info">{{formatNumberTrimZeros($spotTrade->total_commission_value)}} USDT</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">بستن</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                     @endforeach
