@@ -3,8 +3,34 @@
 use App\Http\Controllers\V1\Currency\ConfigController;
 use App\Http\Controllers\V1\Wallet\WalletController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Http\Request;
 
 Route::get('/captcha', [\App\Http\Controllers\CaptchaController::class, '__invoke'])->withoutMiddleware(['auth:sanctum', 'verified']);
+
+// Test mail server route
+Route::get('/test-mail', function (Request $request) {
+    try {
+        $to = $request->input('email', config('mail.from.address'));
+
+        Mail::raw('This is a test email from the application to verify mail server configuration.', function ($message) use ($to) {
+            $message->to('o.shabani@hotmail.com')
+                ->subject('Mail Server Test');
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Test email sent successfully to ' . $to
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to send test email',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+})->name('test.mail')->withoutMiddleware(['auth:sanctum', 'verified']);
+
 Route::prefix('/profile')->group(function () {
     Route::get('/show', [\App\Http\Controllers\V1\Profile\UserController::class, 'show'])->name('user.show');
     Route::patch('/change-password', [\App\Http\Controllers\V1\Profile\UserController::class, 'changePassword'])->name('user.change-password');
