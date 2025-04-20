@@ -20,6 +20,7 @@ class TransactionRepository implements TransactionRepositoryInterface
             'deposit_id' => $requestDTO->getDepositId(),
             'withdrawal_id' => $requestDTO->getWithdrawalId(),
             'otc_order_id' => $requestDTO->getOtcOrderId(),
+            'spot_order_id' => $requestDTO->getSpotOrderId(),
             'balance' => $requestDTO->getBalance(),
             'amount' => $requestDTO->getAmount(),
             'type' => $requestDTO->getType(),

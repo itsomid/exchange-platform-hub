@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Transaction extends Model
 {
     protected $fillable = [
-        'user_id', 'admin_id', 'wallet_id', 'deposit_id', 'withdrawal_id', 'otc_order_id', 'amount', 'balance', 'type', 'subtype', 'description', 'admin_description', 'status', 'journal_entry_number',
+        'user_id', 'admin_id', 'wallet_id', 'deposit_id', 'withdrawal_id', 'otc_order_id', 'spot_order_id', 'amount', 'balance', 'type', 'subtype', 'description', 'admin_description', 'status', 'journal_entry_number',
     ];
 
     protected function casts(): array

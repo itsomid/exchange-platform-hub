@@ -5,6 +5,7 @@ namespace App\Services\Spot;
 use App\Enums\SpotOrderSideEnum;
 use App\Enums\SpotOrderStatusEnum;
 use App\Enums\SpotOrderTypeEnum;
+use App\Enums\SpotRoleEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
@@ -159,6 +160,8 @@ readonly class OrderMatchingEngine
 
         $this->updateWallets($takerOrder, $makerOrder, $tradeQuantity, $makerOrder->price, $makerCommission, $takerCommission);
 
+        $this->addTransactions($order, $spotTrade, $makerCommission, $takerCommission);
+        $this->addTransactions($oppositeOrder, $spotTrade, $makerCommission, $takerCommission);
         if ($order->getRemindedQuantity() <= 0) {
             $order->price = $order->getOriginal('price');
             $order->update(['status' => SpotOrderStatusEnum::COMPLETED]);
@@ -176,35 +179,60 @@ readonly class OrderMatchingEngine
         }
     }
 
-    private function addTransactions(SpotOrder $spotOrder, SpotTrade $spotTrade)
+    private function addTransactions(SpotOrder $spotOrder, SpotTrade $spotTrade, string $makerCommission, string $takerCommission): void
     {
-        $wallet = $this->walletRepository->getOneByCurrency($spotOrder->user_id, $spotOrder->market->base_currency);
+        $baseCurrency = $spotOrder->side === SpotOrderSideEnum::BUY ? $spotOrder->market->base_currency : $spotOrder->market->quote_currency;
+        $quoteCurrency = $spotOrder->side === SpotOrderSideEnum::BUY ? $spotOrder->market->quote_currency : $spotOrder->market->base_currency;
+        $walletBaseCurrency = $this->walletRepository->getOneByCurrency($baseCurrency, $spotOrder->user_id);
+        $walletQuoteCurrency = $this->walletRepository->getOneByCurrency($quoteCurrency, $spotOrder->user_id);
 
-        $bitexroomWallet = $this->walletRepository->getBitexroomWallet($spotOrder->market->base_currency);
+        $buyQuantity = $spotOrder->side === SpotOrderSideEnum::BUY ? $spotTrade->quantity : Math::mul($spotTrade->quantity, $spotTrade->price);
+        $sellQuantity = $spotOrder->side === SpotOrderSideEnum::BUY ? Math::mul($spotTrade->quantity, $spotTrade->price) : $spotTrade->quantity;
 
         // **Create Transaction for Trader**
         $this->transactionRepository->create(
             resolve(CreateTransactionRequestDTO::class)
+                ->setSpotOrderId($spotOrder->id)
                 ->setUserId($spotOrder->user_id)
                 ->setType(TransactionTypeEnum::BUY)
-                ->setAmount($spotTrade->quantity)
+                ->setAmount($buyQuantity)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
-                ->setBalance($wallet->balance)
+                ->setBalance($walletBaseCurrency->balance)
                 ->setDescription('test')
                 ->setSubtype(TransactionSubTypeEnum::SPOT)
-                ->setWalletId($wallet->id)
+                ->setWalletId($walletBaseCurrency->id)
         );
+
+        // **Create Transaction for Trader**
+        $this->transactionRepository->create(
+            resolve(CreateTransactionRequestDTO::class)
+                ->setSpotOrderId($spotOrder->id)
+                ->setUserId($spotOrder->user_id)
+                ->setType(TransactionTypeEnum::SELL)
+                ->setAmount($sellQuantity * -1)
+                ->setStatus(TransactionStatusEnum::SUCCESS)
+                ->setBalance($walletQuoteCurrency->balance)
+                ->setDescription('test')
+                ->setSubtype(TransactionSubTypeEnum::SPOT)
+                ->setWalletId($walletQuoteCurrency->id)
+        );
+
+        $commission = $spotOrder->getRole() === SpotRoleEnum::MAKER ?
+            $takerCommission :
+            $makerCommission;
+
         // **Create Transaction for Commission**
         $this->transactionRepository->create(
             resolve(CreateTransactionRequestDTO::class)
+                ->setSpotOrderId($spotOrder->id)
                 ->setUserId($spotOrder->user_id)
                 ->setType(TransactionTypeEnum::FEE)
-                ->setAmount($spotTrade->commission->quantity)
+                ->setAmount($commission * -1)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
-                ->setBalance($wallet->balance)
+                ->setBalance($walletBaseCurrency->balance)
                 ->setDescription('test')
                 ->setSubtype(TransactionSubTypeEnum::SPOT)
-                ->setWalletId($wallet->id)
+                ->setWalletId($walletBaseCurrency->id)
         );
 
     }
