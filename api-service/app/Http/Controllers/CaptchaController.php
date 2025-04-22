@@ -58,7 +58,8 @@ class CaptchaController extends Controller
     public function __invoke()
     {
         $captcha = Captcha::create(config: 'flat', api: true);
-        $response = ['is_fishy' => true,  'image' => $captcha['img']->toDataUri(), 'captcha_key' => $captcha['key']];
+    
+        $response = ['is_fishy' => true,  'image' => $captcha['img'], 'captcha_key' => $captcha['key']];
 
         return response($response, Response::HTTP_OK);
     }
