@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\SpotOrderRoleEnum;
 use App\Enums\SpotOrderSideEnum;
 use App\Enums\SpotOrderStatusEnum;
 use App\Enums\SpotOrderTypeEnum;
@@ -14,6 +15,8 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 class SpotOrder extends Model
 {
     use HasFactory;
+    public $filterNameSpace = 'App\Filters\SpotOrderFilter';
+    protected $appends = ['role'];
     protected function casts(): array
     {
         return [
@@ -22,6 +25,7 @@ class SpotOrder extends Model
             'status' => SpotOrderStatusEnum::class,
         ];
     }
+
 
     public function market(): BelongsTo
     {
@@ -32,6 +36,7 @@ class SpotOrder extends Model
     {
         return $this->belongsTo(User::class);
     }
+
 
     public function makerTrades(): HasMany
     {
@@ -93,5 +98,37 @@ class SpotOrder extends Model
                 )
             );
         }, $filledValue);
+    }
+    
+
+    public function getRoleAttribute(): SpotOrderRoleEnum
+    {
+        if ($this->type === SpotOrderTypeEnum::MARKET) {
+            return SpotOrderRoleEnum::TAKER;
+        }
+
+        if ($this->makerTrades()->exists()) {
+            return $this->takerTrades()->exists() ? SpotOrderRoleEnum::BOTH : SpotOrderRoleEnum::MAKER;
+        }
+
+        return $this->takerTrades()->exists() ? SpotOrderRoleEnum::TAKER : SpotOrderRoleEnum::PENDING;
+    }
+
+    public function isMaker(): bool
+    {
+        if ($this->type === SpotOrderTypeEnum::MARKET) {
+            return false;
+        }
+
+        return $this->makerTrades()->exists();
+    }
+
+    public function isTaker(): bool
+    {
+
+        if ($this->type === SpotOrderTypeEnum::MARKET) {
+            return true;
+        }
+        return $this->takerTrades()->exists();
     }
 }

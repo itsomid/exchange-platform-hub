@@ -1,5 +1,5 @@
 @extends('dashboard.layout.master')
-@section('title', 'مدیریت معاملات')
+@section('title', 'مدیریت معاملات Spot')
 @section('content')
     {{--    TODO: Complete OTC ORder Card--}}
     <div class="row g-4 mb-4">
@@ -213,7 +213,7 @@
     <div class="card mt-3">
         <div class="card-header">
             <div class="card-title header-elements">
-                <h5 class="m-0 me-2">لیست معاملات OTC</h5>
+                <h5 class="m-0 me-2">لیست معاملات اسپات</h5>
 
             </div>
         </div>
@@ -314,8 +314,8 @@
                             </td>
                             <td>{{ $spotTrade->makerOrder->user->email }}</td>
                             <td>{{ $spotTrade->takerOrder->user->email }}</td>
-                            <td class="text-info"
-                                dir="ltr">{{ formatNumberTrimZeros($spotTrade->total_commission_value) }}
+                            <td class="text-info" dir="ltr">
+                                {{ formatNumberTrimZeros($spotTrade->total_commission_value) }}
                                 <small>USDT</small>
                             </td>
                             <td dir="ltr">{{ jdate($spotTrade->created_at)->format('Y-m-d H:i') }}</td>
@@ -329,8 +329,8 @@
                                    data-bs-target="#trade-{{$spotTrade->id}}">
                                     <i class="fa-light fa-eye"></i>
                                 </a>
-                                <div class="modal fade show" id="trade-1" tabindex="-1" aria-modal="true"
-                                     role="dialog" style="display: block;">
+                                <div class="modal fade " id="trade-{{$spotTrade->id}}" tabindex="-1" aria-modal="true"
+                                     role="dialog">
                                     <div class="modal-dialog modal-xl" role="document">
                                         <div class="modal-content">
                                             <div class="modal-header justify-content-between">
@@ -373,10 +373,13 @@
                                                 <div
                                                     class="d-flex align-items-sm-center justify-content-between border-bottom py-4 mb-4">
                                                     <div class="d-flex flex-wrap gap-2 font-number">
+
                                                         <span class="text-success">{{formatNumber($spotTrade->quantity/$spotTrade->makerOrder->quantity * 100)}} درصد از کل سفارش</span>
                                                     </div>
                                                     <div class="d-flex align-items-center">
-                                                        <h5 class="me-2 font-weight-bolder text-black m-0">{{$spotTrade->market->name}} ({{$spotTrade->takerOrder->type}})</h5>
+                                                        <h5 class="me-2 font-weight-bolder text-black m-0">{{$spotTrade->market->name}}
+                                                            <span class="text-primary">({{$spotTrade->takerOrder->type}})</span>
+                                                        </h5>
                                                         <span
                                                             class="badge bg-{{ $spotTrade->takerSide === 'BUY' ? 'success' : 'danger' }}">{{ $spotTrade->takerSide }}</span>
                                                     </div>
@@ -386,11 +389,11 @@
                                                     <h6 class="m-0 mb-2 mb-md-0 me-12">کارمزد Maker</h6>
                                                     <div class="d-flex flex-wrap gap-1 font-number" dir="ltr">
                                                         @if($spotTrade->makerSide === \App\Enums\SpotOrderSideEnum::BUY->value)
-                                                            <span>{{formatNumberTrimZeros($spotTrade->commission->maker_commission_amount)}} {{$spotTrade->market->base_currency}}</span>
+                                                            <span class="text-black">{{formatNumberTrimZeros($spotTrade->commission->maker_commission_amount)}} {{$spotTrade->market->base_currency}}</span>
                                                         @else
-                                                            <span>{{formatNumberTrimZeros($spotTrade->commission->maker_commission_amount)}} {{$spotTrade->market->quote_currency}}</span>
+                                                            <span class="text-black">{{formatNumberTrimZeros($spotTrade->commission->maker_commission_amount)}} {{$spotTrade->market->quote_currency}}</span>
                                                         @endif
-                                                        <small class="text-muted me-2">({{formatNumberTrimZeros($spotTrade->maker_commission_value)}} USDT)</small>
+                                                        <small class="me-2">({{formatNumberTrimZeros($spotTrade->maker_commission_value)}} USDT)</small>
                                                     </div>
                                                 </div>
                                                 <div
@@ -403,7 +406,7 @@
                                                             <span>{{formatNumberTrimZeros($spotTrade->commission->taker_commission_amount)}} {{$spotTrade->market->quote_currency}}</span>
                                                         @endif
                                                         <br>
-                                                        <small class="text-muted">({{formatNumberTrimZeros($spotTrade->taker_commission_value)}} USDT)</small>
+                                                        <small >({{formatNumberTrimZeros($spotTrade->taker_commission_value)}} USDT)</small>
                                                     </div>
                                                 </div>
                                                 <div

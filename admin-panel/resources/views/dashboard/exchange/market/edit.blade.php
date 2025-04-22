@@ -47,7 +47,8 @@
                             <div
                                 class="badge rounded bg-label-{{ $market->activeExchangePrice->exchange_profit_sell < 0 ? 'danger' : 'success' }}"
                                 dir="ltr">
-                                {{ $market->activeExchangePrice->exchange_profit_sell > 0 ? '+' : '' }}{{formatNumberTrimZeros($market->activeExchangePrice->exchange_profit_sell )}}%
+                                {{ $market->activeExchangePrice->exchange_profit_sell > 0 ? '+' : '' }}{{formatNumberTrimZeros($market->activeExchangePrice->exchange_profit_sell )}}
+                                %
                             </div>
                         </h5>
                         <div class="avatar-group d-flex align-items-center assigned-avatar">
@@ -65,8 +66,10 @@
 
                     <div class="d-flex gap-2 align-items-center my-3 justify-content-end font-number">
                         <div
-                            class="badge rounded bg-label-{{ $market->price_change_percentage < 0 ? 'danger' : 'success' }}" dir="ltr">
-                            {{ $market->activeExchangePrice->price_change_percentage > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->price_change_percentage, 2) }}%
+                            class="badge rounded bg-label-{{ $market->price_change_percentage < 0 ? 'danger' : 'success' }}"
+                            dir="ltr">
+                            {{ $market->activeExchangePrice->price_change_percentage > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->price_change_percentage, 2) }}
+                            %
                         </div>
                         <h2 class="mb-0">
                             ${{formatNumberTrimZeros($market->activeExchangePrice->exchange_sell_price)}}
@@ -88,7 +91,8 @@
                             <div
                                 class="badge rounded bg-label-{{ $market->activeExchangePrice->exchange_profit_buy < 0 ? 'danger' : 'success' }}"
                                 dir="ltr">
-                                {{ $market->activeExchangePrice->exchange_profit_buy > 0 ? '+' : '' }}{{formatNumberTrimZeros($market->activeExchangePrice->exchange_profit_buy)}}%
+                                {{ $market->activeExchangePrice->exchange_profit_buy > 0 ? '+' : '' }}{{formatNumberTrimZeros($market->activeExchangePrice->exchange_profit_buy)}}
+                                %
                             </div>
                         </h5>
                         <div class="avatar-group d-flex align-items-center assigned-avatar">
@@ -106,8 +110,10 @@
 
                     <div class="d-flex gap-2 align-items-center my-3 justify-content-end font-number">
                         <div
-                            class="badge rounded bg-label-{{ $market->price_change_percentage < 0 ? 'danger' : 'success' }}" dir="ltr">
-                            {{ $market->activeExchangePrice->price_change_percentage > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->price_change_percentage, 2) }}%
+                            class="badge rounded bg-label-{{ $market->price_change_percentage < 0 ? 'danger' : 'success' }}"
+                            dir="ltr">
+                            {{ $market->activeExchangePrice->price_change_percentage > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->price_change_percentage, 2) }}
+                            %
                         </div>
                         <h2 class="mb-0">
                             ${{formatNumberTrimZeros($market->activeExchangePrice->exchange_buy_price)}}
@@ -139,9 +145,11 @@
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label class="form-label" for="exchange">صرافی مرجع</label>
-                                    <select name="exchange_id"  id="exchange" class="select2 form-control">
+                                    <select name="exchange_id" id="exchange" class="select2 form-control">
                                         @foreach($exchanges as $exchange)
-                                            <option @if($exchange->id === $market->activeExchangePrice->exchange_id) selected @endif value="{{ $exchange->id }}">{{ $exchange->name }}</option>
+                                            <option
+                                                @if($exchange->id === $market->activeExchangePrice->exchange_id) selected
+                                                @endif value="{{ $exchange->id }}">{{ $exchange->name }}</option>
                                         @endforeach
                                     </select>
                                     @error('exchange_id')
@@ -175,10 +183,11 @@
                         <div class="row mt-5">
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label class="form-label" for="min_otc_amount">حداقل مقدار معامله در این
+                                    <label class="form-label" for="min_otc_amount">حداقل مقدار معامله OTC در این
                                         بازار</label>
-                                    <input name="min_otc_amount" id="min_otc_amount" class="form-control"
-                                           placeholder="حداقل مقدار معامله در این بازار."
+                                    <input name="min_otc_amount" id="min_otc_amount" class="form-control font-number"
+                                           dir="ltr"
+                                           placeholder="حداقل مقدار معامله OTC در این بازار."
                                            value="{{formatNumberTrimZeros($market->min_otc_amount)}}"
                                            required>
                                     @error('min_otc_amount')
@@ -188,9 +197,10 @@
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label class="form-label" for="max_otc_amount">حداکثر مقدار معامله در این
+                                    <label class="form-label" for="max_otc_amount">حداکثر مقدار معامله OTC در این
                                         بازار</label>
-                                    <input name="max_otc_amount" id="max_otc_amount" class="form-control"
+                                    <input name="max_otc_amount" id="max_otc_amount" class="form-control font-number"
+                                           dir="ltr"
                                            placeholder="حداکثر مقدار معامله در این بازار."
                                            value="{{formatNumberTrimZeros($market->max_otc_amount)}}" required>
                                     @error('max_otc_amount')
@@ -202,8 +212,39 @@
                         <div class="row mt-5">
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label class="form-label" for="exchange_profit_sell">سود صرافی از محل خرید از صرافی مرجع (فروش به مشتری) (درصد)</label>
-                                    <input name="exchange_profit_sell" id="exchange_profit_sell" class=" form-control font-number " dir="ltr"
+                                    <label class="form-label" for="min_trade_amount">حداقل مقدار معامله SPOT در این
+                                        بازار</label>
+                                    <input name="min_trade_amount" id="min_trade_amount"
+                                           class="form-control font-number" dir="ltr"
+                                           placeholder="حداقل مقدار معامله OTC در این بازار."
+                                           value="{{formatNumberTrimZeros($market->min_trade_amount)}}"
+                                           required>
+                                    @error('min_trade_amount')
+                                    <small class="text-danger">{{$message}}</small>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label class="form-label" for="max_trade_amount">حداکثر مقدار معامله SPOT در این
+                                        بازار</label>
+                                    <input name="max_trade_amount" id="max_trade_amount"
+                                           class="form-control font-number" dir="ltr"
+                                           placeholder="حداکثر مقدار معامله در این بازار."
+                                           value="{{formatNumberTrimZeros($market->max_trade_amount)}}" required>
+                                    @error('max_trade_amount')
+                                    <small class="text-danger">{{$message}}</small>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-5">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label class="form-label" for="exchange_profit_sell">سود صرافی از محل خرید از صرافی
+                                        مرجع (فروش به مشتری) (درصد)</label>
+                                    <input name="exchange_profit_sell" id="exchange_profit_sell"
+                                           class=" form-control font-number " dir="ltr"
                                            placeholder="سود صرافی از محل خرید از صرافی مرجع( فروش به مشتری)"
                                            value="{{formatNumber($market->activeExchangePrice->exchange_profit_sell,2)}}"
                                            required>
@@ -214,8 +255,10 @@
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label class="form-label" for="exchange_profit_buy">سود صرافی از محل فروش به صرافی مرجع (خرید از مشتری)</label>
-                                    <input name="exchange_profit_buy" id="exchange_profit_buy" class=" form-control font-number " dir="ltr"
+                                    <label class="form-label" for="exchange_profit_buy">سود صرافی از محل فروش به صرافی
+                                        مرجع (خرید از مشتری)</label>
+                                    <input name="exchange_profit_buy" id="exchange_profit_buy"
+                                           class=" form-control font-number " dir="ltr"
                                            placeholder="سود صرافی از محل فروش به صرافی مرجع (خرید از مشتری)"
                                            value="{{formatNumber($market->activeExchangePrice->exchange_profit_buy,2)}}"
                                            required>
@@ -238,10 +281,10 @@
                         </div>
                         <div class=" d-flex justify-content-start mt-5">
 
-                                <button class="btn btn-primary ">
-                                    <i class="fa fa-save mx-2"></i>
-                                    ذخیره
-                                </button>
+                            <button class="btn btn-primary ">
+                                <i class="fa fa-save mx-2"></i>
+                                ذخیره
+                            </button>
 
                         </div>
                     </form>

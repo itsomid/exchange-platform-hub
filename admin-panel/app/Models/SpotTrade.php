@@ -41,10 +41,10 @@ class SpotTrade extends Model
 
     public function getMakerSideAttribute()
     {
-        return $this->makerOrder->side === SpotOrderSideEnum::SELL ? 'sell' : 'buy';
+        return $this->makerOrder->side === SpotOrderSideEnum::SELL ? 'SELL' : 'BUY';
     }
     public function getTakerSideAttribute()
     {
-        return $this->takerOrder->side === SpotOrderSideEnum::SELL ? 'sell' : 'buy';
+        return $this->takerOrder->side === SpotOrderSideEnum::SELL ? 'SELL' : 'BUY';
     }
 }

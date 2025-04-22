@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\SpotOrder;
+namespace App\Http\Controllers\SpotTrade;
 
 use App\Http\Controllers\Controller;
 use App\Models\SpotTrade;

@@ -102,12 +102,26 @@
                 </a>
             </li>
         @endcan
-        @can('spot_trade')
-            <li class="menu-item @if(request()->is('admin/spot*')) active @endif">
-                <a href="{{route('admin.spot_trades.index')}}" class="menu-link">
+        @can('spot')
+            <li class="menu-item @if(request()->is('admin/spot*')) active open @endif">
+                <a href="javascript:void(0);" class="menu-link menu-toggle">
                     <i class="menu-icon  fa-regular fa-chart-waterfall"></i>
-                    <div>معاملات اسپات</div>
+                    <div>مدیریت اسپات</div>
                 </a>
+                <ul class="menu-sub">
+                    <li class="menu-item @if(request()->is('admin/spot/orders*')) active @endif">
+                        <a href="{{route('admin.spot_orders.index')}}" class="menu-link">
+                            <i class="menu-icon  fa-regular fa-chart-waterfall"></i>
+                            <div>سفارشات اسپات</div>
+                        </a>
+                    </li>
+                    <li class="menu-item @if(request()->is('admin/spot/trades*')) active @endif">
+                        <a href="{{route('admin.spot_trades.index')}}" class="menu-link">
+                            <i class="menu-icon  fa-regular fa-chart-waterfall"></i>
+                            <div>معاملات اسپات</div>
+                        </a>
+                    </li>
+                </ul>
             </li>
         @endcan
         @can('deposit')
@@ -152,7 +166,6 @@
         @endcanany
         @can(['support'])
             <li class="menu-header small text-uppercase">
-                <span class="menu-header-text">بخش ارتباط با کاربر</span>
                 <span class="menu-header-text">بخش ارتباط با کاربر</span>
             </li>
             <li class="menu-item @if(request()->is('admin/tickets*')) active open @endif">
