@@ -21,26 +21,6 @@
         </div>
 
     </div>
-    <div class="card mb-3">
-        <div class="card-body">
-            <h5 class="card-title">خروجی اکسل</h5>
-            <form class="row mt-3 d-flex align-items-end"
-                  action="{{route('admin.spot_orders.excel-export',request()->query())}}" method="POST">
-                @csrf
-                <div class="col-md-2 user_role">
-                    <label class="form-label" for="UserRole">از آیدی :</label>
-                    <input type="number" class="form-control" placeholder="آیدی کاربر">
-                </div>
-                <div class="col-md-2 user_role">
-                    <label class="form-label" for="UserRole">تا آیدی :</label>
-                    <input type="number" class="form-control" placeholder="آیدی کاربر">
-                </div>
-                <div class="col-md-2 mt-2">
-                    <button class="btn btn-success class ">دانلود خروجی اکسل</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <div class="card">
         <div class="card-body">
@@ -177,11 +157,10 @@
                             </td>
                             <td>{{ $spotOrder->type->label() }}</td>
                             <td>
-                                <span class="ms-1">{{formatNumberTrimZeros($spotOrder->quantity)  }}</span>
+                                <span class="ms-1">{{formatNumberTrimZeros($spotOrder->quantity) }}</span>
                                 <small>{{$spotOrder->market->base_currency}}</small>
                             </td>
-                            <td dir="ltr">{{ $spotOrder->price ? formatNumber($spotOrder->price) : 'سفارش بازار' }}
-                            </td>
+                            <td dir="ltr">{{ $spotOrder->price ? formatNumber($spotOrder->price) : 'سفارش بازار' }}</td>
                             <td>{{ $spotOrder->user->email }}</td>
                             <td>
                                 <div class="d-flex align-items-center gap-2">
@@ -268,7 +247,7 @@
                                                     <h6 class="m-0 mb-2 mb-md-0 me-12">قیمت</h6>
                                                     <div class="d-flex flex-wrap gap-1 font-number" dir="ltr">
                                                         <span>{{ $spotOrder->price ? formatNumber($spotOrder->price) : 'سفارش بازار' }}</span>
-                                                        <small>{{ $spotOrder->price ? 'USDT' : '' }}</small>
+                                                        <span>{{ $spotOrder->price ? 'USDT' : '' }}</span>
                                                     </div>
                                                 </div>
                                                 <div
@@ -276,7 +255,7 @@
                                                     <h6 class="m-0 mb-2 mb-md-0 me-12">ارزش سفارش</h6>
                                                     <div class="d-flex flex-wrap gap-1 font-number" dir="ltr">
                                                         <span>{{ $spotOrder->price ? formatNumberTrimZeros(bcmul($spotOrder->price , $spotOrder->quantity, 8 )) : 'سفارش بازار' }}</span>
-                                                        <small>{{ $spotOrder->price ? 'USDT' : '' }}</small>
+                                                        <span>{{ $spotOrder->price ? 'USDT' : '' }}</span>
                                                     </div>
                                                 </div>
                                                 <div
@@ -301,6 +280,13 @@
                                                         <span class="text-info">{{formatNumberTrimZeros($spotOrder->total_taker_commission_value)}} USDT</span>
                                                     </div>
                                                 </div>
+                                                <div
+                                                    class="d-flex align-items-sm-center justify-content-between border-bottom py-4 mb-4">
+                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">ارزش کارمزد کل Taker و Maker</h6>
+                                                    <div class="d-flex flex-wrap gap-1 font-number" dir="ltr">
+                                                        <span class="text-info">{{formatNumberTrimZeros($spotOrder->total_commission_value)}} USDT</span>
+                                                    </div>
+                                                </div>
                                                 <!-- جزییات معاملات اجرا شده -->
                                                 <div class="py-4 mb-4">
                                                     <h5 class="mb-4">جزییات اجرا (Exec. Details)</h5>
@@ -311,8 +297,8 @@
                                                                 <th>شناسه معامله</th>
                                                                 <th>مقدار</th>
                                                                 <th>قیمت USDT</th>
-                                                                <th>ارزش معامله</th>
-                                                                <th>کارمزد</th>
+                                                                <th>ارزش معامله USDT</th>
+                                                                <th>کارمزد Maker / Taker</th>
                                                                 <th>طرف مقابل</th>
                                                                 <th>تاریخ</th>
                                                             </tr>
@@ -340,36 +326,22 @@
                                                                             {{ formatNumber($trade->price * $trade->quantity) }}
                                                                         </td>
                                                                         <td class="text-danger" dir="ltr">
-                                                                            @if($trade->maker_order_id !== $spotOrder->id)
-                                                                                @if($trade->makerSide === \App\Enums\SpotOrderSideEnum::BUY->value)
-                                                                                    <span>{{formatNumberTrimZeros($trade->commission->maker_commission_amount)}}
-                                                                                            <small>{{$trade->market->base_currency}}</small>
-                                                                                        </span>
-                                                                                @else
-                                                                                    <span>{{formatNumberTrimZeros($trade->commission->maker_commission_amount)}}
-                                                                                            <small>{{$trade->market->quote_currency}}</small>
-                                                                                        </span>
-                                                                                @endif
-                                                                            @else
-                                                                                @if($trade->takerSide === \App\Enums\SpotOrderSideEnum::BUY->value)
-                                                                                    <span>{{formatNumberTrimZeros($trade->commission->taker_commission_amount)}}
-                                                                                            <small>{{$trade->market->base_currency}}</small>
-                                                                                        </span>
-                                                                                @else
-                                                                                    <span>{{formatNumberTrimZeros($trade->commission->taker_commission_amount)}}
-                                                                                            <small>{{$trade->market->quote_currency}}</small>
-                                                                                        </span>
-                                                                                @endif
-                                                                            @endif
+                                                                            <small>{{formatNumberTrimZeros($trade->commission->maker_commission_amount)}}
+                                                                                {{$trade->commission->maker_commission_currency}}</small>
+                                                                            <strong> / </strong>
+                                                                            <small>{{formatNumberTrimZeros($trade->commission->taker_commission_amount)}}
+                                                                                {{$trade->commission->taker_commission_currency}}</small>
                                                                         </td>
                                                                         <td>
                                                                             @if($trade->maker_order_id == $spotOrder->id)
-                                                                                {{ $trade->takerOrder->user->email ?? 'نامشخص' }}
+                                                                                <small>{{ $trade->takerOrder->user->email ?? 'نامشخص' }}</small>
                                                                             @else
-                                                                                {{ $trade->makerOrder->user->email ?? 'نامشخص' }}
+                                                                                <small>{{ $trade->makerOrder->user->email ?? 'نامشخص' }}</small>
                                                                             @endif
                                                                         </td>
-                                                                        <td dir="ltr">{{ jdate($trade->created_at)->format('Y-m-d H:i') }}</td>
+                                                                        <td dir="ltr">
+                                                                            <small>{{ \App\Helpers\DateFormatter::convertToPersianDate($trade->created_at,'%Y/%m/%d H:i:s') }}</small>
+                                                                        </td>
                                                                     </tr>
                                                                 @endforeach
                                                             @endif

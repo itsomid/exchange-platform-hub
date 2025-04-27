@@ -6,6 +6,102 @@
             <div class="card">
                 <div class="card-body">
                     <div class="card-title header-elements">
+                        <h5 class="m-0 me-2">کارمزد خرید و فروش OTC</h5>
+
+                    </div>
+                    <form action="{{route('admin.setting.int.update-otc-setting')}}" method="post">
+                        @csrf
+                        <div class="row mt-5">
+                            <div class="col-xl-4">
+                                <div class="form-group">
+                                    <label class="form-label" for="otc_buy_fee">کارمزد فروش به مشتری (درصد)</label>
+                                    <input name="otc_buy_fee" id="otc_buy_fee" class="form-control"
+                                           placeholder="کارمزد فروش به مشتری (درصد)"
+                                           value="{{$otcBuyFee->value}}"
+                                           required>
+                                    @error('otcBuyFee')
+                                    <small class="text-danger">{{$message}}</small>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-xl-4">
+                                <div class="form-group">
+                                    <label class="form-label" for="otc_sell_fee">کارمزد خرید از مشتری (درصد)</label>
+                                    <input name="otc_sell_fee" id="otc_sell_fee" class="form-control"
+                                           placeholder="کارمزد خرید از مشتری (درصد)"
+                                           value="{{$otcSellFee->value}}" required>
+                                    @error('otcSellFee')
+                                    <small class="text-danger">{{$message}}</small>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class=" d-flex justify-content-start mt-5">
+
+                                <button class="btn btn-primary ">
+                                    <i class="fa fa-save mx-2"></i>
+                                    ذخیره
+                                </button>
+
+                            </div>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title header-elements">
+                        <h5 class="m-0 me-2">کارمزد Taker و Maker در فروش اسپات</h5>
+
+                    </div>
+                    <form action="{{route('admin.setting.int.update-otc-setting')}}" method="post">
+                        @csrf
+                        <div class="row mt-5">
+                            <div class="col-xl-4">
+                                <div class="form-group">
+                                    <label class="form-label" for="spot_maker_fee">کارمزد Maker (درصد)</label>
+                                    <input name="spot_maker_fee" id="spot_maker_fee" class="form-control"
+                                           placeholder="کارمزد خرید از مشتری (درصد)"
+                                           value="{{$spotMakerFee->value}}" required>
+                                    @error('otcSellFee')
+                                    <small class="text-danger">{{$message}}</small>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-xl-4">
+                                <div class="form-group">
+                                    <label class="form-label" for="spot_taker_fee">کارمزد Taker (درصد)</label>
+                                    <input name="spot_taker_fee" id="spot_taker_fee" class="form-control"
+                                           placeholder="کارمزد فروش به مشتری (درصد)"
+                                           value="{{$spotTakerFee->value}}"
+                                           required>
+                                    @error('otcBuyFee')
+                                    <small class="text-danger">{{$message}}</small>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class=" d-flex justify-content-start mt-5">
+
+                                <button class="btn btn-primary ">
+                                    <i class="fa fa-save mx-2"></i>
+                                    ذخیره
+                                </button>
+
+                            </div>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title header-elements">
                         <h5 class="m-0 me-2">تنظیمات دعوت از دوستان
 
                             <span class="text-{{$referralProfitStatus->value ? 'success' : 'danger'}}">({{$referralProfitStatus->value ? 'فعال' : 'غیرفعال'}})</span>
@@ -66,53 +162,7 @@
             </div>
         </div>
         <div class="col-md-6">
-            <div class="card">
-                <div class="card-body">
-                    <div class="card-title header-elements">
-                        <h5 class="m-0 me-2">کارمزد خرید و فروش OTC</h5>
 
-                    </div>
-                    <form action="{{route('admin.setting.int.update-otc-setting')}}" method="post">
-                        @csrf
-                        <div class="row mt-5">
-                            <div class="col-xl-4">
-                                <div class="form-group">
-                                    <label class="form-label" for="otc_buy_fee">کارمزد فروش به مشتری (درصد)</label>
-                                    <input name="otc_buy_fee" id="otc_buy_fee" class="form-control"
-                                           placeholder="کارمزد فروش به مشتری (درصد)"
-                                           value="{{$otcBuyFee->value}}"
-                                           required>
-                                    @error('otcBuyFee')
-                                    <small class="text-danger">{{$message}}</small>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-xl-4">
-                                <div class="form-group">
-                                    <label class="form-label" for="otc_sell_fee">کارمزد خرید از مشتری (درصد)</label>
-                                    <input name="otc_sell_fee" id="otc_sell_fee" class="form-control"
-                                           placeholder="کارمزد خرید از مشتری (درصد)"
-                                           value="{{$otcSellFee->value}}" required>
-                                    @error('otcSellFee')
-                                    <small class="text-danger">{{$message}}</small>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class=" d-flex justify-content-start mt-5">
-
-                                <button class="btn btn-primary ">
-                                    <i class="fa fa-save mx-2"></i>
-                                    ذخیره
-                                </button>
-
-                            </div>
-                        </div>
-                    </form>
-
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
             <div class="card">
                 <div class="card-body">
                     <div class="card-title header-elements">
@@ -133,6 +183,7 @@
                 </div>
             </div>
         </div>
+
         <div class="col-md-6">
             <div class="card">
                 <div class="card-body">

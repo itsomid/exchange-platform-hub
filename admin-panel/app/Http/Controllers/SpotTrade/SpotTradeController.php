@@ -41,16 +41,16 @@ class SpotTradeController extends Controller
 
     public function calculateCommissionValues(SpotTrade $trade, TradingCommission $commission) {
 
-        // If maker is buyer, their commission is in base currency
-        if ($trade->makerSide === 'buy') {
-            // Convert maker commission (in base currency) to USDT
+  
+        if ($commission->maker_commission_currency !== 'USDT') {
+     
             $makerCommissionValue = bcmul($commission->maker_commission_amount, $trade->price, 8);
-            // Taker commission is already in USDT
+
             $takerCommissionValue = $commission->taker_commission_amount;
         } else {
-            // If maker is seller, their commission is in USDT
+       
             $makerCommissionValue = $commission->maker_commission_amount;
-            // Convert taker commission (in base currency) to USDT
+   
             $takerCommissionValue = bcmul($commission->taker_commission_amount, $trade->price, 8);
         }
 

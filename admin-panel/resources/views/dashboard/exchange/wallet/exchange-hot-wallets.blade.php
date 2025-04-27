@@ -7,7 +7,7 @@
         <div class="card-header">
             <div class="d-flex justify-content-between">
                 <h4 class="mb-0">دارایی Hot Wallet</h4>
-                <a href="{{route('admin.wallet.assets-gathering-to-cold-wallet')}}" class="btn btn-primary disabled">انتقال دارایی به Cold Wallet</a>
+                <a href="{{route('admin.wallet.assets-gathering-to-cold-wallet')}}" class="btn btn-primary">انتقال دارایی به Cold Wallet</a>
             </div>
         </div>
     </div>
@@ -54,6 +54,18 @@
                                 <i class="fa-regular fa-clone"></i>
                             </a>
                         </div>
+                    </div>
+                    <div class="card-body border-top">
+
+                        @if(\App\Models\Currency::whereSymbol( $walletChain->wallet->currency_symbol)->first()->chains->isNotEmpty())
+                            <a href="{{route('admin.wallet.assets-gathering-to-cold-walle',['currency_symbol'=> $walletChain->wallet->currency_symbol ])}}"
+                               class="btn btn-primary">
+                                <i class="fa-regular fa-arrow-up-right fa-xl mx-2"></i>
+                                برداشت دارایی
+                            </a>
+                        @else
+                            امکان برداشت موجود نیست
+                        @endif
                     </div>
                 </div>
             </div>

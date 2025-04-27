@@ -53,7 +53,7 @@ class SpotOrderController extends Controller
             $query->orderBy('created_at', $request->sortByCreatedAt);
         }
 
-        $spotOrders = $query->get();
+         $spotOrders = $query->get();
 
         // Calculate commission values for each order's trades
         foreach ($spotOrders as $order) {
@@ -67,10 +67,10 @@ class SpotOrderController extends Controller
                     $commissionValues = $this->calculateCommissionValues($trade, $trade->commission);
                     $trade->maker_commission_value = $commissionValues['maker_commission_value'];
                     $trade->taker_commission_value = $commissionValues['taker_commission_value'];
-                    $trade->total_commission_value = $commissionValues['total_commission_value'];
+//                    $trade->total_commission_value = $commissionValues['total_commission_value'];
                     $order->total_maker_commission_value = bcadd($order->total_maker_commission_value, $trade->maker_commission_value, 8);
                     $order->total_taker_commission_value = bcadd($order->total_taker_commission_value, $trade->taker_commission_value, 8);
-                    $order->total_commission_value = bcadd($order->total_commission_value, $trade->maker_commission_value, 8);
+                    $order->total_commission_value = bcadd($order->total_commission_value, $commissionValues['total_commission_value'], 8);
                 }
             }
 
@@ -80,11 +80,11 @@ class SpotOrderController extends Controller
                     $commissionValues = $this->calculateCommissionValues($trade, $trade->commission);
                     $trade->maker_commission_value = $commissionValues['maker_commission_value'];
                     $trade->taker_commission_value = $commissionValues['taker_commission_value'];
-                    $trade->total_commission_value = $commissionValues['total_commission_value'];
+//                    $trade->total_commission_value = $commissionValues['total_commission_value'];
 
                     $order->total_maker_commission_value = bcadd($order->total_maker_commission_value, $trade->maker_commission_value, 8);
                     $order->total_taker_commission_value = bcadd($order->total_taker_commission_value, $trade->taker_commission_value, 8);
-                    $order->total_commission_value = bcadd($order->total_commission_value, $trade->taker_commission_value, 8);
+                    $order->total_commission_value = bcadd($order->total_commission_value, $commissionValues['total_commission_value'], 8);
                 }
             }
         }
@@ -95,16 +95,17 @@ class SpotOrderController extends Controller
     }
 
     public function calculateCommissionValues(SpotTrade $trade, TradingCommission $commission) {
-        // If maker is buyer, their commission is in base currency
-        if ($trade->makerSide === 'buy') {
-            // Convert maker commission (in base currency) to USDT
+
+
+        if ($commission->maker_commission_currency !== 'USDT') {
+
             $makerCommissionValue = bcmul($commission->maker_commission_amount, $trade->price, 8);
-            // Taker commission is already in USDT
+
             $takerCommissionValue = $commission->taker_commission_amount;
         } else {
-            // If maker is seller, their commission is in USDT
+
             $makerCommissionValue = $commission->maker_commission_amount;
-            // Convert taker commission (in base currency) to USDT
+
             $takerCommissionValue = bcmul($commission->taker_commission_amount, $trade->price, 8);
         }
 

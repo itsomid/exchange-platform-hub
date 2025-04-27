@@ -388,11 +388,10 @@
                                                     class="d-flex align-items-sm-center justify-content-between border-bottom py-4 mb-4">
                                                     <h6 class="m-0 mb-2 mb-md-0 me-12">کارمزد Maker</h6>
                                                     <div class="d-flex flex-wrap gap-1 font-number" dir="ltr">
-                                                        @if($spotTrade->makerSide === \App\Enums\SpotOrderSideEnum::BUY->value)
-                                                            <span class="text-black">{{formatNumberTrimZeros($spotTrade->commission->maker_commission_amount)}} {{$spotTrade->market->base_currency}}</span>
-                                                        @else
-                                                            <span class="text-black">{{formatNumberTrimZeros($spotTrade->commission->maker_commission_amount)}} {{$spotTrade->market->quote_currency}}</span>
-                                                        @endif
+
+                                                        <span class="text-black">{{formatNumberTrimZeros($spotTrade->commission->maker_commission_amount)}}
+                                                            {{$spotTrade->commission->maker_commission_currency}}</span>
+
                                                         <small class="me-2">({{formatNumberTrimZeros($spotTrade->maker_commission_value)}} USDT)</small>
                                                     </div>
                                                 </div>
