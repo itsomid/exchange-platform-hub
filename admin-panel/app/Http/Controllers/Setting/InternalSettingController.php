@@ -24,6 +24,8 @@ class InternalSettingController extends Controller
         $last3permissions = Permission::query()->latest()->take(3)->get();
         $otcBuyFee = Setting::where('key', 'otc_buy_fee')->first();
         $otcSellFee = Setting::where('key', 'otc_sell_fee')->first();
+        $spotMakerFee = Setting::where('key', 'spot_maker_fee')->first();
+        $spotTakerFee = Setting::where('key', 'spot_taker_fee')->first();
         $referralProfitStatus = Setting::where('key', 'referral_profit_status')->first();
         $referralProfitPercentage = Setting::where('key', 'referral_profit_percentage')->first();
         $referralUsageLimitCount = Setting::where('key', 'referral_usage_limit_count')->first();
@@ -38,6 +40,8 @@ class InternalSettingController extends Controller
             'last3permissions' => $last3permissions,
             'otcBuyFee' => $otcBuyFee,
             'otcSellFee' => $otcSellFee,
+            'spotMakerFee' => $spotMakerFee,
+            'spotTakerFee' => $spotTakerFee,
             'referralProfitStatus' => $referralProfitStatus,
             'referralProfitPercentage' => $referralProfitPercentage,
             'referralUsageLimitCount' => $referralUsageLimitCount,

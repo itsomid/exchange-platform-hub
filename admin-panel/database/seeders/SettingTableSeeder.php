@@ -22,6 +22,16 @@ class SettingTableSeeder extends Seeder
                 'value' => '0.11',
             ],
             [
+                'key' => 'spot_maker_fee',
+                'name' => 'کارمزد Maker',
+                'value' => '0.15',
+            ],
+            [
+                'key' => 'spot_taker_fee',
+                'name' => 'کارمزد Taker',
+                'value' => '0.25',
+            ],
+            [
                 'key' => 'referral_profit_status',
                 'name' => 'وضعیت سیستم رفرال',
                 'value' => true,
