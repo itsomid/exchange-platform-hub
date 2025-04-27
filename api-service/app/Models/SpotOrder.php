@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\SpotOrderRoleEnum;
 use App\Enums\SpotOrderSideEnum;
 use App\Enums\SpotOrderStatusEnum;
 use App\Enums\SpotOrderTypeEnum;
@@ -26,6 +27,8 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  */
 class SpotOrder extends Model
 {
+    protected $appends = ['role'];
+
     protected $fillable = [
         'user_id',
         'market_id',
@@ -117,15 +120,16 @@ class SpotOrder extends Model
             );
         }, $filledValue);
     }
-
-    public function getRole(): ?SpotRoleEnum
+    public function getRoleAttribute(): SpotOrderRoleEnum
     {
-        if (! is_null($this->makerTrades)) {
-            return SpotRoleEnum::MAKER;
-        } elseif (! is_null($this->takerTrades)) {
-            return SpotRoleEnum::TAKER;
+        if ($this->type === SpotOrderTypeEnum::MARKET) {
+            return SpotOrderRoleEnum::TAKER;
         }
 
-        return null;
+        if ($this->makerTrades()->exists()) {
+            return $this->takerTrades()->exists() ? SpotOrderRoleEnum::BOTH : SpotOrderRoleEnum::MAKER;
+        }
+
+        return $this->takerTrades()->exists() ? SpotOrderRoleEnum::TAKER : SpotOrderRoleEnum::PENDING;
     }
 }

@@ -18,7 +18,7 @@ class CreateTransactionRequestDTO
 
     private ?int $otcOrderId = null;
 
-    private ?int $spotOrderId = null;
+    private ?int $spotTradeId = null;
 
     private ?string $balance = null;
 
@@ -164,15 +164,15 @@ class CreateTransactionRequestDTO
         return $this->withdrawalId;
     }
 
-    public function setSpotOrderId(?int $spotOrderId): CreateTransactionRequestDTO
+    public function setSpotTradeId(?int $spotTradeId): CreateTransactionRequestDTO
     {
-        $this->spotOrderId = $spotOrderId;
+        $this->spotTradeId = $spotTradeId;
 
         return $this;
     }
 
-    public function getSpotOrderId(): ?int
+    public function getSpotTradeId(): ?int
     {
-        return $this->spotOrderId;
+        return $this->spotTradeId;
     }
 }

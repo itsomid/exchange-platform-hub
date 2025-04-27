@@ -32,13 +32,6 @@ class SpotService
         private readonly LockedBalanceRepositoryInterface $lockedBalanceRepository,
     ) {}
 
-    public function calcCommission($tradeAmount): string
-    {
-        $feeRate = 0.001; // 0.1% commission
-
-        return $commission = Math::mul($tradeAmount, $feeRate);
-    }
-
     public function trade(SpotOrderRequestDTO $requestDTO): SpotOrderResponseDTO
     {
         $response = resolve(SpotOrderResponseDTO::class);

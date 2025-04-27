@@ -65,4 +65,9 @@ class Transaction extends Model
     {
         return $this->belongsTo(Deposit::class, 'withdrawal_id');
     }
+
+    public function spotTrade()
+    {
+        return $this->belongsTo(SpotTrade::class,'spot_trade_id');
+    }
 }
