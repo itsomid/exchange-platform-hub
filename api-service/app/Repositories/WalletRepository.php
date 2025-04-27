@@ -129,6 +129,12 @@ class WalletRepository implements WalletRepositoryInterface
         $wallet->balance = Math::add($wallet->balance, $tradeQuantity);
         $wallet->save();
     }
+    public function decreaseBalance(int $user_id, string $baseCurrency, string $tradeQuantity): void
+    {
+        $wallet = $this->getOneByCurrency($baseCurrency, $user_id);
+        $wallet->balance = Math::sub($wallet->balance, $tradeQuantity);
+        $wallet->save();
+    }
 
     public function decreaseLockedBalance(int $user_id, string $quoteCurrency, string $totalTradeValue): void
     {

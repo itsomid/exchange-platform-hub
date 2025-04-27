@@ -2,10 +2,10 @@
 
 namespace App\Services\Spot;
 
+use App\Enums\SpotOrderRoleEnum;
 use App\Enums\SpotOrderSideEnum;
 use App\Enums\SpotOrderStatusEnum;
 use App\Enums\SpotOrderTypeEnum;
-use App\Enums\SpotRoleEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
@@ -13,6 +13,7 @@ use App\Events\OrderBookUpdated;
 use App\Events\UserNotification;
 use App\Helpers\Math;
 use App\Models\LockedBalanceDetail;
+use App\Models\Setting;
 use App\Models\SpotOrder;
 use App\Models\SpotTrade;
 use App\Models\TradingCommission;
@@ -25,9 +26,11 @@ use Throwable;
 readonly class OrderMatchingEngine
 {
     public function __construct(
-        private WalletRepositoryInterface $walletRepository,
+        private WalletRepositoryInterface               $walletRepository,
         private readonly TransactionRepositoryInterface $transactionRepository,
-    ) {}
+    )
+    {
+    }
 
     public function processOrder(): void
     {
@@ -48,7 +51,7 @@ readonly class OrderMatchingEngine
                 DB::commit();
             } catch (Throwable $e) {
                 DB::rollBack();
-                logger()->error('Order matching failed: '.$e->getMessage(), ['exception' => $e]);
+                logger()->error('Order matching failed: ' . $e->getMessage(), ['exception' => $e]);
             }
         }
     }
@@ -93,13 +96,13 @@ readonly class OrderMatchingEngine
                 // - Market orders (no price)
                 // - Limit orders that meet the price condition
                 $query->whereNull('price') // Market order
-                    ->orWhere(function ($q) use ($order) {
-                        if ($order->side === SpotOrderSideEnum::BUY) {
-                            $q->where('price', '<=', $order->price); // Buy: Match at or below limit price
-                        } else {
-                            $q->where('price', '>=', $order->price); // Sell: Match at or above limit price
-                        }
-                    });
+                ->orWhere(function ($q) use ($order) {
+                    if ($order->side === SpotOrderSideEnum::BUY) {
+                        $q->where('price', '<=', $order->price); // Buy: Match at or below limit price
+                    } else {
+                        $q->where('price', '>=', $order->price); // Sell: Match at or above limit price
+                    }
+                });
             })
             ->orderByRaw('price IS NULL DESC') // Prioritize market orders (NULL price first)
             ->orderBy('price', $sortType) // Then sort limit orders by price
@@ -129,6 +132,8 @@ readonly class OrderMatchingEngine
 
     private function completeOrder(SpotOrder $order, SpotOrder $oppositeOrder): void
     {
+        $spotMakerFee = Setting::getSetting('spot_maker_fee');
+        $spotTakerFee = Setting::getSetting('spot_taker_fee');
         $tradeQuantity = min($order->getRemindedQuantity(), $oppositeOrder->getRemindedQuantity());
 
         $order->increment('filled_quantity', $tradeQuantity);
@@ -147,21 +152,52 @@ readonly class OrderMatchingEngine
                 'market_id' => $order->market_id,
             ]);
 
-        $makerCommission = $this->calcCommission($tradeQuantity);
-        $takerCommission = $this->calcCommission($tradeQuantity);
+        // Calculate trade cost (in quote currency)
+        $tradeCost = Math::mul($tradeQuantity, $makerOrder->price);
+
+        // Calculate commission based on what each party receives
+        // If maker is buying, they receive base currency, otherwise quote currency
+        $makerCommissionAmount = null;
+        $makerCommissionCurrency = null;
+        if ($makerOrder->side === SpotOrderSideEnum::BUY) {
+            // Maker buys and receives base currency (e.g., TRX)
+            $makerCommissionAmount = $this->calcCommission($tradeQuantity, Math::div($spotMakerFee, 100));
+            $makerCommissionCurrency = $order->market->base_currency;
+        } else {
+            // Maker sells and receives quote currency (e.g., USDT)
+            $makerCommissionAmount = $this->calcCommission($tradeCost, Math::div($spotMakerFee, 100));
+            $makerCommissionCurrency = $order->market->quote_currency;
+        }
+
+        // If taker is buying, they receive base currency, otherwise quote currency
+        $takerCommissionAmount = null;
+        $takerCommissionCurrency = null;
+        if ($takerOrder->side === SpotOrderSideEnum::BUY) {
+            // Taker buys and receives base currency (e.g., TRX)
+            $takerCommissionAmount = $this->calcCommission($tradeQuantity, Math::div($spotTakerFee, 100));
+            $takerCommissionCurrency = $order->market->base_currency;
+        } else {
+            // Taker sells and receives quote currency (e.g., USDT)
+            $takerCommissionAmount = $this->calcCommission($tradeCost, Math::div($spotTakerFee, 100));
+            $takerCommissionCurrency = $order->market->quote_currency;
+        }
+
         TradingCommission::query()
             ->create([
                 'spot_trade_id' => $spotTrade->id,
-                'maker_commission_amount' => $makerCommission,
-                'maker_commission_percentage' => 0.001,
-                'taker_commission_amount' => $takerCommission,
-                'taker_commission_percentage' => 0.001,
+                'maker_commission_amount' => $makerCommissionAmount,
+                'maker_commission_percentage' => $spotMakerFee,
+                'maker_commission_currency' => $makerCommissionCurrency,
+                'taker_commission_amount' => $takerCommissionAmount,
+                'taker_commission_percentage' => $spotTakerFee,
+                'taker_commission_currency' => $takerCommissionCurrency,
             ]);
 
-        $this->updateWallets($takerOrder, $makerOrder, $tradeQuantity, $makerOrder->price, $makerCommission, $takerCommission);
+        $this->updateWallets($takerOrder, $makerOrder, $tradeQuantity, $makerOrder->price, $makerCommissionAmount, $takerCommissionAmount);
 
-        $this->addTransactions($order, $spotTrade, $makerCommission, $takerCommission);
-        $this->addTransactions($oppositeOrder, $spotTrade, $makerCommission, $takerCommission);
+        $this->addTransactions($order, $spotTrade, $makerCommissionAmount, $takerCommissionAmount);
+        $this->addTransactions($oppositeOrder, $spotTrade, $makerCommissionAmount, $takerCommissionAmount);
+
         if ($order->getRemindedQuantity() <= 0) {
             $order->price = $order->getOriginal('price');
             $order->update(['status' => SpotOrderStatusEnum::COMPLETED]);
@@ -179,7 +215,7 @@ readonly class OrderMatchingEngine
         }
     }
 
-    private function addTransactions(SpotOrder $spotOrder, SpotTrade $spotTrade, string $makerCommission, string $takerCommission): void
+    private function addTransactions(SpotOrder $spotOrder, SpotTrade $spotTrade, string $makerCommissionAmount, string $takerCommissionAmount): void
     {
         $baseCurrency = $spotOrder->side === SpotOrderSideEnum::BUY ? $spotOrder->market->base_currency : $spotOrder->market->quote_currency;
         $quoteCurrency = $spotOrder->side === SpotOrderSideEnum::BUY ? $spotOrder->market->quote_currency : $spotOrder->market->base_currency;
@@ -192,13 +228,18 @@ readonly class OrderMatchingEngine
         // **Create Transaction for Trader**
         $this->transactionRepository->create(
             resolve(CreateTransactionRequestDTO::class)
-                ->setSpotOrderId($spotOrder->id)
+                ->setSpotTradeId($spotTrade->id)
                 ->setUserId($spotOrder->user_id)
                 ->setType(TransactionTypeEnum::BUY)
                 ->setAmount($buyQuantity)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
                 ->setBalance($walletBaseCurrency->balance)
-                ->setDescription('test')
+                ->setDescription(
+                    sprintf('%s %s %s',
+                        $spotOrder->side === SpotOrderSideEnum::BUY ? 'خرید' : 'فروش',
+                        formatNumberTrimZeros((float)$spotTrade->quantity),
+                        $spotOrder->market->base_currency
+                    ))
                 ->setSubtype(TransactionSubTypeEnum::SPOT)
                 ->setWalletId($walletBaseCurrency->id)
         );
@@ -206,40 +247,71 @@ readonly class OrderMatchingEngine
         // **Create Transaction for Trader**
         $this->transactionRepository->create(
             resolve(CreateTransactionRequestDTO::class)
-                ->setSpotOrderId($spotOrder->id)
+                ->setSpotTradeId($spotTrade->id)
                 ->setUserId($spotOrder->user_id)
                 ->setType(TransactionTypeEnum::SELL)
                 ->setAmount($sellQuantity * -1)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
                 ->setBalance($walletQuoteCurrency->balance)
-                ->setDescription('test')
+                ->setDescription(
+                    sprintf('%s %s %s',
+                        $spotOrder->side === SpotOrderSideEnum::BUY ? 'خرید' : 'فروش',
+                        formatNumberTrimZeros((float)$spotTrade->quantity),
+                        $spotOrder->market->base_currency
+                    ))
                 ->setSubtype(TransactionSubTypeEnum::SPOT)
                 ->setWalletId($walletQuoteCurrency->id)
         );
 
-        $commission = $spotOrder->getRole() === SpotRoleEnum::MAKER ?
-            $takerCommission :
-            $makerCommission;
+        // Determine which commission applies and which wallet to use based on role
+        $commissionAmount = null;
+        $commissionWallet = null;
+
+        if ($spotOrder->role === SpotOrderRoleEnum::MAKER) {
+            $commissionAmount = $makerCommissionAmount;
+            // If this is the maker's transaction
+            if ($spotOrder->side === SpotOrderSideEnum::BUY) {
+                // Maker buys, gets base currency, commission in base currency
+                $commissionWallet = $walletBaseCurrency;
+            } else {
+                // Maker sells, gets quote currency, commission in quote currency
+                $commissionWallet = $walletQuoteCurrency;
+            }
+        } else {
+            $commissionAmount = $takerCommissionAmount;
+            // If this is the taker's transaction
+            if ($spotOrder->side === SpotOrderSideEnum::BUY) {
+                // Taker buys, gets base currency, commission in base currency
+                $commissionWallet = $walletQuoteCurrency;
+            } else {
+                // Taker sells, gets quote currency, commission in quote currency
+                $commissionWallet = $walletBaseCurrency;
+            }
+        }
 
         // **Create Transaction for Commission**
         $this->transactionRepository->create(
             resolve(CreateTransactionRequestDTO::class)
-                ->setSpotOrderId($spotOrder->id)
+                ->setSpotTradeId($spotTrade->id)
                 ->setUserId($spotOrder->user_id)
                 ->setType(TransactionTypeEnum::FEE)
-                ->setAmount($commission * -1)
+                ->setAmount($commissionAmount * -1)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
-                ->setBalance($walletBaseCurrency->balance)
-                ->setDescription('test')
+                ->setBalance($commissionWallet->balance)
+                ->setDescription(
+                    sprintf('کارمزد معامله اسپات %s %s به ارزش %s',
+                        $spotOrder->side === SpotOrderSideEnum::BUY ? 'خرید' : 'فروش',
+                        $spotOrder->market->base_currency,
+                        formatNumberTrimZeros((float)$commissionAmount),
+                    ))
                 ->setSubtype(TransactionSubTypeEnum::SPOT)
-                ->setWalletId($walletBaseCurrency->id)
+                ->setWalletId($commissionWallet->id)
         );
-
     }
 
-    public function calcCommission($tradeAmount): string
+    public function calcCommission($tradeAmount, $fee = 0.001): string
     {
-        return Math::mul($tradeAmount, 0.001); // 0.1% commission
+        return Math::mul($tradeAmount, $fee);
     }
 
     private function updateWallets(SpotOrder $takerOrder, SpotOrder $makerOrder, $tradeQuantity, $tradePrice, $makerCommission, $takerCommission): void
@@ -253,9 +325,14 @@ readonly class OrderMatchingEngine
         // **Taker Updates**
         if ($takerOrder->side === SpotOrderSideEnum::BUY) {
             // Buyer (Taker) receives base currency, pays in quote currency
+            // Commission is taken from base currency (what they receive)
             $takerReceiveQty = Math::sub($tradeQuantity, $takerCommission);
             $this->walletRepository->decreaseLockedBalance($takerOrder->user_id, $quoteCurrency, $actualTradeCost);
             $this->walletRepository->increaseBalance($takerOrder->user_id, $baseCurrency, $takerReceiveQty);
+
+            //Decrease Quote Currency
+            $this->walletRepository->decreaseBalance($takerOrder->user_id, $quoteCurrency, $actualTradeCost);
+
             // **Refund remaining USDT if price was lower than expected**
             $refundAmount = Math::sub($expectedTradeCost, $actualTradeCost);
             if (Math::comp($refundAmount, 0) === 1) {
@@ -263,22 +340,44 @@ readonly class OrderMatchingEngine
                 $this->walletRepository->decreaseLockedBalance($takerOrder->user_id, $quoteCurrency, $refundAmount);
             }
         } else {
-            $takerReceiveQuote = Math::sub($actualTradeCost, $takerCommission);
             // Seller (Taker) receives quote currency, pays in base currency
+            // Commission is taken from quote currency (what they receive)
+            $takerReceiveQuote = Math::sub($actualTradeCost, $takerCommission);
+
             $this->walletRepository->decreaseLockedBalance($takerOrder->user_id, $baseCurrency, $tradeQuantity);
+
+
             $this->walletRepository->increaseBalance($takerOrder->user_id, $quoteCurrency, $takerReceiveQuote);
+
+            //Decrease Quote Currency
+            $this->walletRepository->decreaseBalance($takerOrder->user_id, $baseCurrency, $tradeQuantity);
         }
+
         // **Maker Updates**
         if ($makerOrder->side === SpotOrderSideEnum::BUY) {
             // Buyer (Maker) receives base currency, pays in quote currency
+            // Commission is taken from base currency (what they receive)
             $makerReceiveQty = Math::sub($tradeQuantity, $makerCommission);
+
+            //increase Receive Coin Balance
             $this->walletRepository->increaseBalance($makerOrder->user_id, $baseCurrency, $makerReceiveQty);
+
+            //Decrease Quote Currency
+            $this->walletRepository->decreaseBalance($makerOrder->user_id, $quoteCurrency, $actualTradeCost);
+
             $this->walletRepository->decreaseLockedBalance($makerOrder->user_id, $quoteCurrency, $actualTradeCost);
+
+
         } else {
-            $makerReceiveQuote = Math::sub($actualTradeCost, $makerCommission);
             // Seller (Maker) receives quote currency, pays in base currency
+            // Commission is taken from quote currency (what they receive)
+            $makerReceiveQuote = Math::sub($actualTradeCost, $makerCommission);
             $this->walletRepository->increaseBalance($makerOrder->user_id, $quoteCurrency, $makerReceiveQuote);
+
             $this->walletRepository->decreaseLockedBalance($makerOrder->user_id, $baseCurrency, $tradeQuantity);
+
+            //Decrease Quote Currency
+            $this->walletRepository->decreaseBalance($makerOrder->user_id, $baseCurrency, $tradeQuantity);
         }
     }
 

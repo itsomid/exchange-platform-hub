@@ -28,6 +28,7 @@ interface WalletRepositoryInterface
     public function getBitexroomWalletWithLock(string $currency): Wallet;
 
     public function increaseBalance(int $user_id, string $baseCurrency, string $tradeQuantity);
+    public function decreaseBalance(int $user_id, string $baseCurrency, string $tradeQuantity);
 
     public function decreaseLockedBalance(int $user_id, string $quoteCurrency, string $totalTradeValue);
 }
