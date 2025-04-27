@@ -17,8 +17,10 @@ return new class extends Migration
             $table->foreignIdFor(SpotTrade::class)->constrained();
             $table->decimal('maker_commission_amount', 18, 8);
             $table->string('maker_commission_percentage');
+            $table->string('maker_commission_currency');
             $table->decimal('taker_commission_amount', 18, 8);
             $table->string('taker_commission_percentage');
+            $table->string('taker_commission_currency');
             $table->timestamps();
         });
     }

@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('transactions', function (Blueprint $table) {
-            $table->unsignedBigInteger('journal_entry_number')->nullable()->after('admin_description');
+            $table->unsignedBigInteger('spot_trade_id')->nullable()->after('otc_order_id')->index();
+            $table->foreign('spot_trade_id')->references('id')->on('spot_trades')->onDelete('set null');
         });
     }
 
@@ -21,8 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('transactions', function (Blueprint $table) {
-            $table->dropColumn('journal_entry_number');
+        Schema::table('transaction', function (Blueprint $table) {
+            $table->dropColumn('spot_trade_id');
         });
     }
 };

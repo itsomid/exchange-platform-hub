@@ -19,7 +19,7 @@ return new class extends Migration
             $table->unsignedBigInteger('deposit_id')->nullable(); // Foreign key
             $table->unsignedBigInteger('withdrawal_id')->nullable(); // Foreign key
             $table->unsignedBigInteger('otc_order_id')->nullable(); // Foreign key
-            //            $table->unsignedBigInteger('spot_order_id')->nullable(); // Foreign key
+            $table->unsignedBigInteger('spot_order_id')->nullable(); // Foreign key
             $table->decimal('amount', 20, 8); // To handle precise values like cryptocurrency
             $table->decimal('balance', 18, 8)->nullable(); // balance after transaction
             $table->string('type', 50); // Status of transaction
@@ -28,6 +28,7 @@ return new class extends Migration
 
             $table->text('description')->nullable(); // Optional description
             $table->text('admin_description')->nullable(); // Optional description
+            $table->unsignedBigInteger('journal_entry_number')->nullable();
             $table->timestamps();
 
             // Define foreign key constraints
@@ -37,7 +38,7 @@ return new class extends Migration
             $table->foreign('deposit_id')->references('id')->on('deposits')->onDelete('set null');
             $table->foreign('withdrawal_id')->references('id')->on('withdrawals')->onDelete('set null');
             $table->foreign('otc_order_id')->references('id')->on('otc_orders')->onDelete('set null');
-            //            $table->foreign('spot_order_id')->references('id')->on('spot_orders')->onDelete('set null');
+            $table->foreign('spot_order_id')->references('id')->on('spot_orders')->onDelete('set null');
         });
     }
 
