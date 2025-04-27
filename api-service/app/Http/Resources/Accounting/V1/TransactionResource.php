@@ -20,6 +20,8 @@ class TransactionResource extends JsonResource
             'user_email' => $this->user->email,
             'coin_type' => $this->wallet->currency_symbol,
             'otc_order_id' => $this->otc_order_id,
+            'spot_trade_id' => $this->spot_trade_id,
+            'price' => $this->spot_trade_id ? $this->spotTrade?->MakerOrder->price: ($this->otc_order_id ? $this->otcOrder?->price : null),
             'wallet_id' => $this->wallet_id,
             'amount' => $this->amount,
             'balance' => $this->balance,

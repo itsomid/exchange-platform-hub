@@ -44,7 +44,6 @@ class TransactionController
         $transactions = Transaction::query()
             ->with('user', 'wallet')
             ->whereNull('journal_entry_number')
-            ->latest()
             ->get();
 
         return TransactionResource::collection($transactions);
