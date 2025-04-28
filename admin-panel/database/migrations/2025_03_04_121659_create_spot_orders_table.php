@@ -28,12 +28,15 @@ return new class extends Migration
 
         Schema::create('spot_trades', function (Blueprint $table) {
             $table->id();
-            $table->unsignedInteger('maker_order_id');
-            $table->unsignedInteger('taker_order_id');
+            $table->unsignedBigInteger('maker_order_id');
+            $table->unsignedBigInteger('taker_order_id');
             $table->foreignIdFor(Market::class)->constrained();
 
             $table->decimal('quantity', 18, 8);
             $table->decimal('price', 18, 8);
+
+            $table->foreign('maker_order_id')->references('id')->on('spot_orders')->onDelete('cascade');
+            $table->foreign('taker_order_id')->references('id')->on('spot_orders')->onDelete('cascade');
 
             $table->unique(['maker_order_id', 'taker_order_id']);
             $table->timestamps();
