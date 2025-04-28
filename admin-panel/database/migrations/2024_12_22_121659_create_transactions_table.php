@@ -38,7 +38,7 @@ return new class extends Migration
             $table->foreign('deposit_id')->references('id')->on('deposits')->onDelete('set null');
             $table->foreign('withdrawal_id')->references('id')->on('withdrawals')->onDelete('set null');
             $table->foreign('otc_order_id')->references('id')->on('otc_orders')->onDelete('set null');
-            $table->foreign('spot_trade_id')->references('id')->on('spot_trade_id')->onDelete('set null');
+            $table->foreign('spot_trade_id')->references('id')->on('spot_trades')->onDelete('set null');
         });
     }
 
