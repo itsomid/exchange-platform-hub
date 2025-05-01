@@ -111,21 +111,40 @@ class ExchangeWalletController extends Controller
             return [];
         }
 
-        // Convert the array to a collection of objects
-        $coinexAssets = collect($data)->map(function ($item) {
+        // Filter the data first to include only assets present in the Currency model
+        $filteredData = collect($data)->filter(function ($item) {
+            return Currency::where('symbol', $item['ccy'])->exists();
+        });
+
+        // Convert the filtered array to a collection of objects and add coinLogo
+        $supportCoinexAssets = $filteredData->map(function ($item) {
             $asset = (object)$item;
-            // Fetch the currency logo using the Currency model
+            // Fetch the currency logo using the Currency model (we know it exists from the filter)
             $currency = Currency::where('symbol', $asset->ccy)->first();
 
             // Add the coinLogo property to the asset object
-            $asset->coinLogo = $currency ? $currency->coinLogo() : 'default-logo.png'; // Provide a default logo if not found
+            $asset->coinLogo = $currency->coinLogo(); // No need for default as we filtered
 
+            return $asset;
+        });
+
+        // Filter the data for assets *not* present in the Currency model
+        $unsupportedData = collect($data)->filter(function ($item) {
+            return !Currency::where('symbol', $item['ccy'])->exists();
+        });
+
+        // Convert the unsupported array to a collection of objects
+        $unsupportCoinexAssets = $unsupportedData->map(function ($item) {
+            $asset = (object)$item;
+            // Assign a default logo for unsupported assets
+            $asset->coinLogo = asset('images/logo/logo.svg');
             return $asset;
         });
 
 
         return view('dashboard.exchange.wallet.exchange-coinex-wallets', [
-            'coinexAssets' => $coinexAssets,
+            'supportCoinexAssets' => $supportCoinexAssets,
+            'unsupportCoinexAssets' => $unsupportCoinexAssets,
         ]);
 
     }
