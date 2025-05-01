@@ -160,7 +160,8 @@
                                 <span class="ms-1">{{formatNumberTrimZeros($spotOrder->quantity) }}</span>
                                 <small>{{$spotOrder->market->base_currency}}</small>
                             </td>
-                            <td dir="ltr">{{ $spotOrder->price ? formatNumber($spotOrder->price) : 'سفارش بازار' }}</td>
+                            <td dir="ltr" class="fw-bold">{{ $spotOrder->price ? formatNumber($spotOrder->price) : 'سفارش بازار' }}
+                            </td>
                             <td>{{ $spotOrder->user->email }}</td>
                             <td>
                                 <div class="d-flex align-items-center gap-2">
@@ -176,8 +177,8 @@
                                                     transform="rotate(-90 18 18)"></circle>
                                         </svg>
 
-                                        <span class="font-number position-absolute text-black font-weight-bold"
-                                              style="font-size: 13px; top: 11px; right: 5px">{{round($spotOrder->filled_quantity / $spotOrder->quantity * 100) }}%</span>
+                                        <span class="font-number position-absolute text-black fw-light"
+                                              style="font-size: 13px; top: 11px; right: 6px">{{round($spotOrder->filled_quantity / $spotOrder->quantity * 100) }}%</span>
                                     </div>
 
                                     {{ formatNumberTrimZeros($spotOrder->filled_quantity) }}
@@ -225,7 +226,7 @@
                                                     <div class="d-flex align-items-center">
                                                         <span
                                                             class="me-2 badge bg-{{$spotOrder->role->color()}}">{{ $spotOrder->role->label()}}</span>
-                                                        <h5 class="me-2 font-weight-bolder text-black m-0">{{$spotOrder->market->name}}
+                                                        <h5 class="me-2 fw-bold text-black m-0">{{$spotOrder->market->name}}
                                                             <span
                                                                 class="text-primary">({{$spotOrder->type->value}})</span>
                                                         </h5>

@@ -58,7 +58,7 @@
                     <div class="card-body border-top">
 
                         @if(\App\Models\Currency::whereSymbol( $walletChain->wallet->currency_symbol)->first()->chains->isNotEmpty())
-                            <a href="{{route('admin.wallet.assets-gathering-to-cold-walle',['currency_symbol'=> $walletChain->wallet->currency_symbol ])}}"
+                            <a href="{{route('admin.wallet.assets-gathering-to-cold-wallet',['currency_symbol'=> $walletChain->wallet->currency_symbol ])}}"
                                class="btn btn-primary">
                                 <i class="fa-regular fa-arrow-up-right fa-xl mx-2"></i>
                                 برداشت دارایی

@@ -377,7 +377,7 @@
                                                         <span class="text-success">{{formatNumber($spotTrade->quantity/$spotTrade->makerOrder->quantity * 100)}} درصد از کل سفارش</span>
                                                     </div>
                                                     <div class="d-flex align-items-center">
-                                                        <h5 class="me-2 font-weight-bolder text-black m-0">{{$spotTrade->market->name}}
+                                                        <h5 class="me-2 fw-bold text-black m-0">{{$spotTrade->market->name}}
                                                             <span class="text-primary">({{$spotTrade->takerOrder->type}})</span>
                                                         </h5>
                                                         <span
