@@ -40,7 +40,8 @@ class OrderBookUpdated implements ShouldBroadcast
 
     public function broadcastWith(): array
     {
-        return $this->spotOrderService->getLatestOrderBook(
+        $spotOrderService = resolve(SpotService::class);
+        return $spotOrderService->getLatestOrderBook(
             marketId: $this->marketId,
             limit: config('spot.order_book_limit_count')
         );
