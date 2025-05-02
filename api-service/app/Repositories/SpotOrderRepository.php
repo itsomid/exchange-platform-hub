@@ -50,7 +50,7 @@ class SpotOrderRepository implements SpotOrderRepositoryInterface
                 ->where('market_id', $marketId)
                 ->where('side', SpotOrderSideEnum::SELL)
                 ->where('status', SpotOrderStatusEnum::OPEN)
-                ->orderBy('price', 'asc') // Lowest price first for asks
+                ->orderBy('price', 'desc') // Lowest price first for asks
                 ->limit($limit)
                 ->groupBy('price')
                 ->get(),
