@@ -213,6 +213,13 @@
                                        value="exchange_withdrawal_period_buy">
                                 <label class="form-check-label" for="exchange_withdrawal_period_buy_checkbox">برحسب تعداد خرید</label>
                             </div>
+                            <div class="form-check form-check-inline">
+                                <input name="exchange_withdrawal_type"
+                                       class="form-check-input" type="radio"
+                                       id="exchange_withdrawal_both_type" {{$exchangeWithdrawalType->value === 'exchange_withdrawal_both_type'?'checked':''}}
+                                       value="exchange_withdrawal_both_type">
+                                <label class="form-check-label" for="exchange_withdrawal_both_type">هردو</label>
+                            </div>
                         </div>
                         <div class="row mt-5">
                             <div class="col-xl-4">
