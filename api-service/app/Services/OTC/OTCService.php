@@ -134,7 +134,9 @@ class OTCService
                 )->first();
 
                 // amountForBuy = (receivedAmount - exchange_withdrawal_fee) + network_fee
-                $amountForBuy = Math::sub($receivedAmount, $chain->network_fee);
+                //$amountForBuy = Math::sub($receivedAmount, $chain->network_fee);
+
+                $amountForBuy = $receivedAmount; // buy equal user trade
                 $exchangeService = resolve(ExchangeService::class);
                 $resultBuyRefExchange = $exchangeService->buy(
                     resolve(ExchangeBuyRequestDTO::class)
