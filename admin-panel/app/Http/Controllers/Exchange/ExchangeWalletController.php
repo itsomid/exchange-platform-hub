@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Currency;
 use App\Models\Wallet;
 use App\Models\WalletChain;
+use App\Services\NodeProviders\BlockchairService;
 use App\Services\NodeProviders\BscScanService;
 use App\Services\NodeProviders\CryptoAPIService;
 use App\Services\Exchanges\Asset\Coinex\Authentication\MethodEnum;
@@ -22,20 +23,24 @@ class ExchangeWalletController extends Controller
     protected $walletService;
 
     protected $cryptoApi;
+    protected $blockchair;
     protected $bscScan;
     protected $tronScan;
     protected $etherScan;
 
     public function __construct(
-        WalletService $walletService,
-        CryptoAPIService $cryptoApi,
-        BscScanService $bscScan,
-        TronScanService $tronScan,
-        EtherScanService $etherScan
+        WalletService     $walletService,
+        CryptoAPIService  $cryptoApi,
+        BlockchairService $blockchair,
+        BscScanService    $bscScan,
+        TronScanService   $tronScan,
+        EtherScanService  $etherScan,
+
     )
     {
         $this->walletService = $walletService;
         $this->cryptoApi = $cryptoApi;
+        $this->blockchair = $blockchair;
         $this->bscScan = $bscScan;
         $this->tronScan = $tronScan;
         $this->etherScan = $etherScan;
@@ -62,7 +67,11 @@ class ExchangeWalletController extends Controller
             } elseif ($chain === 'ERC20') {
                 return $this->etherScan->getUsdtBalance($address);
             }
-        } else {
+        } elseif ($currency === 'DOGE') {
+            return $this->blockchair->getBalance($currency, $address);
+        } elseif ($currency === 'BTC') {
+            return $this->blockchair->getBalance($currency, $address);
+        }else {
             return $this->cryptoApi->getBalance($currency, $address);
         }
 
@@ -103,7 +112,7 @@ class ExchangeWalletController extends Controller
         if ($response->json('code') !== 0) {
             \Log::error('API Error:', $response->json());
 
-            return 'امکان ارتباط با صرافی مرجع نیست (ارور: '.$response->json('code').' - '.$response->json('message').')' ;
+            return 'امکان ارتباط با صرافی مرجع نیست (ارور: ' . $response->json('code') . ' - ' . $response->json('message') . ')';
         }
 
         $data = $response->json('data');
@@ -242,7 +251,7 @@ class ExchangeWalletController extends Controller
 
         $walletChains = $wallet->walletChains;
 
-        return view('dashboard.exchange.wallet.assets-gathering-to-cold-wallet-form',[
+        return view('dashboard.exchange.wallet.assets-gathering-to-cold-wallet-form', [
             'currency' => $currency,
             'currencyChains' => $currencyChains,
             'walletChains' => $walletChains,
@@ -251,7 +260,6 @@ class ExchangeWalletController extends Controller
         $walletChain = WalletChain::where('currency_chain', $chainName)->first();
 
         $coldWalletAddress = $request->input('cold_wallet_address');
-
 
 
     }
