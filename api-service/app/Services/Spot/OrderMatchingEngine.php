@@ -237,6 +237,18 @@ readonly class OrderMatchingEngine
                 ->delete();
             // Broadcast user notification for the completed order
             $this->broadcastUserNotifications($order->user_id);
+
+            // --- شروع منطق جدید برای سفارش مارکت ---
+            if ($order->type === SpotOrderTypeEnum::MARKET) {
+                // محاسبه میانگین قیمت تمام معاملات انجام‌شده برای این سفارش
+                $avgPrice = \App\Models\SpotTrade::query()
+                    ->where('taker_order_id', $order->id)
+                    ->avg('price');
+                if ($avgPrice !== null) {
+                    $order->update(['price' => $avgPrice]);
+                }
+            }
+            // --- پایان منطق جدید ---
         }
 
         if ($oppositeOrder->getRemindedQuantity() <= 0) {
@@ -364,8 +376,13 @@ readonly class OrderMatchingEngine
         if ($takerOrder->side === SpotOrderSideEnum::BUY) {
             // Buyer (Taker) receives base currency, pays in quote currency
             // Commission is taken from base currency (what they receive)
+
             $takerReceiveQty = Math::sub($tradeQuantity, $takerCommission);
-            $this->walletRepository->decreaseLockedBalance($takerOrder->user_id, $quoteCurrency, $actualTradeCost);
+
+            if ($takerOrder->type !== SpotOrderTypeEnum::MARKET) {
+                $this->walletRepository->decreaseLockedBalance($takerOrder->user_id, $quoteCurrency, $actualTradeCost);
+            }
+
             $this->walletRepository->increaseBalance($takerOrder->user_id, $baseCurrency, $takerReceiveQty);
 
             //Decrease Quote Currency
@@ -388,7 +405,9 @@ readonly class OrderMatchingEngine
             // Commission is taken from quote currency (what they receive)
             $takerReceiveQuote = Math::sub($actualTradeCost, $takerCommission);
 
-            $this->walletRepository->decreaseLockedBalance($takerOrder->user_id, $baseCurrency, $tradeQuantity);
+            if ($takerOrder->type !== SpotOrderTypeEnum::MARKET) {
+                $this->walletRepository->decreaseLockedBalance($takerOrder->user_id, $baseCurrency, $tradeQuantity);
+            }
 
 
             $this->walletRepository->increaseBalance($takerOrder->user_id, $quoteCurrency, $takerReceiveQuote);

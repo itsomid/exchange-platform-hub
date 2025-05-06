@@ -41,15 +41,15 @@ class SpotService
         $type = $requestDTO->getType();
         $side = $requestDTO->getSide();
         $quantity = $requestDTO->getQuantity();
+        
+        $price = $requestDTO->getPrice();
 
-        if ($type === SpotOrderTypeEnum::MARKET) {
-            $priceType = $side === SpotOrderSideEnum::BUY ? 'buy_price' : 'sell_price';
-            $price = $market->exchangePrice->$priceType;
-        } else {
-            $price = $requestDTO->getPrice();
+        if ($type !== SpotOrderTypeEnum::MARKET) {
+
             if (Math::comp($price, '0') !== 1) {
                 throw new InvalidArgumentException('قیمت باید بزرگتر از صفر باشد.');
             }
+
         }
         // Determine currency for balance check
         $currency = ($side === SpotOrderSideEnum::BUY)
@@ -69,17 +69,22 @@ class SpotService
             throw new InsufficientBalanceException;
         }
 
-        // Update wallet balances
-        $wallet->locked_balance = Math::add($wallet->locked_balance, $tradeAmount);
+        // Update wallet balances only if it's not a market order
+        if ($type !== SpotOrderTypeEnum::MARKET) {
+            $wallet->locked_balance = Math::add($wallet->locked_balance, $tradeAmount);
+        }
 
         try {
+            // Save wallet regardless of whether balance was locked or not,
+            // as other wallet properties might have changed or need to persist the lock if applied.
             $wallet->save();
 
             // Create spot order with commission details
             $spotOrder = $this->spotOrderRepository->create(
                 resolve(SpotOrderCreateRequestDTO::class)
                     ->setSide($side)
-                    ->setPrice($type === SpotOrderTypeEnum::MARKET ? null : $price)
+//                    ->setPrice($type === SpotOrderTypeEnum::MARKET ? null : $price)
+                    ->setPrice($price)
                     ->setStatus(SpotOrderStatusEnum::OPEN)
                     ->setMarketId($market->id)
                     ->setQuantity($quantity)
@@ -90,12 +95,14 @@ class SpotService
             $response->setSpotOrderModel($spotOrder);
 
             // Record locked balance details
-            LockedBalanceDetail::query()->create([
-                'wallet_id' => $wallet->id,
-                'amount' => $tradeAmount,
-                'type' => LockedBalanceTypeEnum::SPOT,
-                'spot_order_id' => $spotOrder->id,
-            ]);
+            if ($type !== SpotOrderTypeEnum::MARKET) {
+                LockedBalanceDetail::query()->create([
+                    'wallet_id' => $wallet->id,
+                    'amount' => $tradeAmount,
+                    'type' => LockedBalanceTypeEnum::SPOT,
+                    'spot_order_id' => $spotOrder->id,
+                ]);
+            }
             //Update Socket
             OrderBookUpdated::dispatch($requestDTO->getMarketId());
         } catch (Throwable $exception) {

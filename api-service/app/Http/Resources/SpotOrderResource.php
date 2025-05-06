@@ -37,7 +37,7 @@ class SpotOrderResource extends JsonResource
             'side' => $this->getSide(),
             'type' => $this->getType(),
             'quantity' => $this->getQuantity(),
-            'price' => $this->getPrice() ?? 'market',
+            'price' => $this->getPrice(),
             'status' => __('enum.spot.status.'.$this->getStatus()->name),
             'filled_quantity' => $this->getFilledQuantity(),
             'commission' => $this->getCommission(),
