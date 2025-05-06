@@ -33,4 +33,12 @@ return [
             \App\Enums\OTCOrderTypeEnum::SELL->name => 'فروش',
         ],
     ],
+    'spot' =>[
+        'status' => [
+            \App\Enums\SpotOrderStatusEnum::OPEN->name => 'باز',
+            \App\Enums\SpotOrderStatusEnum::COMPLETED->name => 'کامل شده',
+            \App\Enums\SpotOrderStatusEnum::CANCELED->name => 'لغو شده',
+            \App\Enums\SpotOrderStatusEnum::PARTIALLY_FILLED_CANCELED->name => 'قسمتی تکمیل و لغو شده',
+        ],
+    ]
 ];

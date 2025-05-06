@@ -20,6 +20,7 @@ use App\Services\Spot\DTO\SpotOrderListsRequestDTO;
 use App\Services\Spot\DTO\SpotOrderListsResponseDTO;
 use App\Services\Spot\DTO\SpotOrderRequestDTO;
 use App\Services\Spot\DTO\SpotOrderResponseDTO;
+use InvalidArgumentException;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -46,6 +47,9 @@ class SpotService
             $price = $market->exchangePrice->$priceType;
         } else {
             $price = $requestDTO->getPrice();
+            if (Math::comp($price, '0') !== 1) {
+                throw new InvalidArgumentException('قیمت باید بزرگتر از صفر باشد.');
+            }
         }
         // Determine currency for balance check
         $currency = ($side === SpotOrderSideEnum::BUY)

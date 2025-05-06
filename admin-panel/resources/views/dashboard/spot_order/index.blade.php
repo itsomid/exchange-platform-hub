@@ -189,7 +189,15 @@
                             <td>
                                 <span class="badge bg-label-{{ $spotOrder->status->color() }}">
                                     {{ $spotOrder->status->label() }}
+
                                 </span>
+                                @if($spotOrder->status === \App\Enums\SpotOrderStatusEnum::PARTIALLY_FILLED_CANCELED)
+                                    <i class="fa-regular fa-info-circle fa-lg ms-2"
+                                       data-bs-toggle="tooltip" data-bs-placement="top"
+                                       data-bs-custom-class="tooltip-dark"
+                                       title="با توجه به اینکه دیگر سفارش از نوع {{ $spotOrder->side === \App\Enums\SpotOrderSideEnum::BUY ? \App\Enums\SpotOrderSideEnum::SELL->value : \App\Enums\SpotOrderSideEnum::BUY->label() }} برای پر کردن این سفارش موجود نبود. سفارش به صورت ناقص پر شده و مابقی مبلغ به حساب کاربر بازگردانده شد."
+                                    ></i>
+                                @endif
                             </td>
                             <td>
                                 <a href="" class="btn btn-sm btn-icon" data-bs-toggle="modal"

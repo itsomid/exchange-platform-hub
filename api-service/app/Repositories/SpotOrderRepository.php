@@ -34,7 +34,18 @@ class SpotOrderRepository implements SpotOrderRepositoryInterface
             ->where('user_id', $requestDTO->getUserId())
             ->when($requestDTO->getSide(), fn (Builder $q) => $q->where('side', $requestDTO->getSide()))
             ->when($requestDTO->getType(), fn (Builder $q) => $q->where('type', $requestDTO->getType()))
-            ->when($requestDTO->getStatus(), fn (Builder $q) => $q->where('status', $requestDTO->getStatus()))
+            ->when($requestDTO->getStatus(), function (Builder $q) use ($requestDTO) {
+                $status = $requestDTO->getStatus();
+                if ($status === SpotOrderStatusEnum::COMPLETED) {
+                    // If 'completed' is requested, include 'partially_filled_canceled' as well
+                    return $q->whereIn('status', [
+                        SpotOrderStatusEnum::COMPLETED,
+                        SpotOrderStatusEnum::PARTIALLY_FILLED_CANCELED,
+                    ]);
+                }
+                // Otherwise, filter by the exact status
+                return $q->where('status', $status);
+            })
             ->latest()
             ->with('market')
             ->withSum('makerCommissions', 'maker_commission_amount')
