@@ -52,7 +52,7 @@ class OrderBookResource extends JsonResource
                 'total' => $item->price ? Math::mul($item->price, $item->quantity) : null,
                 'depth_percent' =>
                     $item->price?
-                    Math::div($item->filled_quantity,$item->quantity) : null
+                    Math::div($item->filled_quantity,$item->quantity) * 100 : null
             ]),
             'bids' => $this->resource['bids']->map(fn ($item) => [
                 'price' => $item->price,
@@ -61,7 +61,7 @@ class OrderBookResource extends JsonResource
                 'total' => $item->price ? Math::mul($item->price, $item->quantity) : null,
                 'depth_percent' =>
                     $item->price?
-                    Math::div($item->filled_quantity,$item->quantity) : null
+                    Math::div($item->filled_quantity,$item->quantity) * 100 : null
             ]),
         ];
     }
