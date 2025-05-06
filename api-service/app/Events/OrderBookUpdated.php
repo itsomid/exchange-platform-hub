@@ -2,6 +2,7 @@
 
 namespace App\Events;
 
+use App\Http\Resources\V1\Spot\OrderBookResource; // Add this import
 use App\Services\Spot\SpotService;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
@@ -38,12 +39,17 @@ class OrderBookUpdated implements ShouldBroadcast
         ];
     }
 
+    /**
+     * Get the data to broadcast.
+     *
+     * @return array<string, mixed>
+     */
     public function broadcastWith(): array
     {
         $spotOrderService = resolve(SpotService::class);
-        return $spotOrderService->getLatestOrderBook(
+        return (new OrderBookResource($spotOrderService->getLatestOrderBook(
             marketId: $this->marketId,
             limit: config('spot.order_book_limit_count')
-        );
+        )))->resolve(); // Use resolve() to get the array representation
     }
 }
