@@ -41,26 +41,32 @@ class SpotService
         $type = $requestDTO->getType();
         $side = $requestDTO->getSide();
         $quantity = $requestDTO->getQuantity();
-        
+
         $price = $requestDTO->getPrice();
 
+
         if ($type !== SpotOrderTypeEnum::MARKET) {
-
-            if (Math::comp($price, '0') !== 1) {
-                throw new InvalidArgumentException('قیمت باید بزرگتر از صفر باشد.');
+            if (is_null($price) || Math::comp($price, '0') !== 1) {
+                throw new InvalidArgumentException('قیمت باید بزرگتر از صفر و معتبر باشد.');
             }
-
         }
+
         // Determine currency for balance check
         $currency = ($side === SpotOrderSideEnum::BUY)
             ? $market->quote_currency
             : $market->base_currency;
 
-        // Determine commission type (maker/taker) and rate
 
-        $tradeAmount = ($side === SpotOrderSideEnum::BUY)
-            ? Math::mul($quantity, $price)
-            : $quantity;
+
+        if ($side === SpotOrderSideEnum::BUY) {
+            if ($type === SpotOrderTypeEnum::MARKET) {
+                $tradeAmount = $quantity;
+            } else {
+                $tradeAmount = Math::mul($quantity, $price);
+            }
+        } else {
+            $tradeAmount = $quantity;
+        }
 
         // Check wallet balance (with pessimistic locking)
         $wallet = $this->walletRepository->getOneOrCreateByCurrencyWithLock($currency, $requestDTO->getUserId());
@@ -75,8 +81,6 @@ class SpotService
         }
 
         try {
-            // Save wallet regardless of whether balance was locked or not,
-            // as other wallet properties might have changed or need to persist the lock if applied.
             $wallet->save();
 
             // Create spot order with commission details
