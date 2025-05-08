@@ -187,7 +187,7 @@
                                         بازار</label>
                                     <input name="min_otc_amount" id="min_otc_amount" class="form-control font-number"
                                            dir="ltr"
-                                           placeholder="حداقل مقدار معامله OTC در این بازار."
+                                           placeholder="حداقل مقدار معامله OTC در این بازار"
                                            value="{{formatNumberTrimZeros($market->min_otc_amount)}}"
                                            required>
                                     @error('min_otc_amount')
@@ -201,7 +201,7 @@
                                         بازار</label>
                                     <input name="max_otc_amount" id="max_otc_amount" class="form-control font-number"
                                            dir="ltr"
-                                           placeholder="حداکثر مقدار معامله در این بازار."
+                                           placeholder="حداکثر مقدار معامله  OTC در این بازار"
                                            value="{{formatNumberTrimZeros($market->max_otc_amount)}}" required>
                                     @error('max_otc_amount')
                                     <small class="text-danger">{{$message}}</small>
@@ -216,7 +216,7 @@
                                         بازار</label>
                                     <input name="min_trade_amount" id="min_trade_amount"
                                            class="form-control font-number" dir="ltr"
-                                           placeholder="حداقل مقدار معامله OTC در این بازار."
+                                           placeholder="حداقل مقدار معامله اسپات در این بازار"
                                            value="{{formatNumberTrimZeros($market->min_trade_amount)}}"
                                            required>
                                     @error('min_trade_amount')
@@ -230,7 +230,7 @@
                                         بازار</label>
                                     <input name="max_trade_amount" id="max_trade_amount"
                                            class="form-control font-number" dir="ltr"
-                                           placeholder="حداکثر مقدار معامله در این بازار."
+                                           placeholder="حداکثر مقدار معامله اسپات در این بازار"
                                            value="{{formatNumberTrimZeros($market->max_trade_amount)}}" required>
                                     @error('max_trade_amount')
                                     <small class="text-danger">{{$message}}</small>
