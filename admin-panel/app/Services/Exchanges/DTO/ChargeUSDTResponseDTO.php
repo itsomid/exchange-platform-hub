@@ -4,11 +4,11 @@ namespace App\Services\Exchanges\DTO;
 
 use App\Services\Exchanges\Asset\Enum\WithdrawStatusEnum;
 
-class ChargeUSDTResponse
+class ChargeUSDTResponseDTO
 {
     private WithdrawStatusEnum $withdrawStatus;
 
-    public function setWithdrawStatus(WithdrawStatusEnum $withdrawStatus): ChargeUSDTResponse
+    public function setWithdrawStatus(WithdrawStatusEnum $withdrawStatus): ChargeUSDTResponseDTO
     {
         $this->withdrawStatus = $withdrawStatus;
 

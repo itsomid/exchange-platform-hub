@@ -13,7 +13,7 @@ use App\Services\Exchanges\Asset\DTO\WithdrawRequestDTO;
 use App\Services\Exchanges\Asset\Enum\WithdrawMethodEnum;
 use App\Services\Exchanges\Asset\Enum\WithdrawStatusEnum;
 use App\Services\Exchanges\DTO\ChargeUSDTRequestDTO;
-use App\Services\Exchanges\DTO\ChargeUSDTResponse;
+use App\Services\Exchanges\DTO\ChargeUSDTResponseDTO;
 use App\Services\Wallet\WalletService;
 use Throwable;
 
@@ -21,7 +21,7 @@ class ExchangeService
 {
     public function __construct(private readonly WalletService $walletService) {}
 
-    public function chargeCurrency(ChargeUSDTRequestDTO $requestDTO): ChargeUSDTResponse
+    public function chargeCurrency(ChargeUSDTRequestDTO $requestDTO): ChargeUSDTResponseDTO
     {
         try {
             $asset = AssetFactory::make('coinex');
@@ -44,6 +44,13 @@ class ExchangeService
                     ->setCurrency($bitexroomWallet->currency_symbol)
             );
 
+            // Check if withdrawal failed
+            if ($response->getStatus() === WithdrawStatusEnum::FAILED) {
+                return resolve(ChargeUSDTResponseDTO::class)
+                    ->setWithdrawStatus(WithdrawStatusEnum::FAILED);
+            }
+
+            // Continue with successful withdrawal processing
             ExchangeAssetsWithdrawal::query()
                 ->create([
                     'withdrawal_id' => $response->getWithdrawId(),
@@ -81,11 +88,11 @@ class ExchangeService
         } catch (Throwable $exception) {
             report($exception);
 
-            return resolve(ChargeUSDTResponse::class)
+            return resolve(ChargeUSDTResponseDTO::class)
                 ->setWithdrawStatus(WithdrawStatusEnum::FAILED);
         }
 
-        return resolve(ChargeUSDTResponse::class)
+        return resolve(ChargeUSDTResponseDTO::class)
             ->setWithdrawStatus($response->getStatus());
     }
 }

@@ -12,6 +12,7 @@ use App\Services\Exchanges\DTO\ChargeUSDTRequestDTO;
 use App\Services\Exchanges\ExchangeService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class TransferToHotWallet extends Command
@@ -69,7 +70,7 @@ class TransferToHotWallet extends Command
     {
         $lastHit = Cache::get(self::CACHE_KEY, 0);
         if ($lastHit && $lastHit->diffInMinutes() < $this->getPeriodTime()) {
-            $this->info("Remaining time to withdrawww : {$lastHit->diffInMinutes()} minutes");
+            $this->info("Remaining time to withdraw : {$lastHit->diffInMinutes()} minutes");
 
             return;
         }
@@ -129,7 +130,8 @@ class TransferToHotWallet extends Command
             $quantityNeeded = Math::add($quantityNeeded, $data->transaction->amount);
         }
         $quantityNeeded = abs(formatNumber($quantityNeeded, $currency->precision));
-        $this->info('Withdrawal'.$currency->symbol.' - amount: '.$quantityNeeded);
+        Log::channel('ref-exchange')->info('Withdrawal '.$currency->symbol.' - amount: '.$quantityNeeded);
+
         try {
             $exchangeService = resolve(ExchangeService::class);
             $chargeFromRefExchange = $exchangeService->chargeCurrency(
