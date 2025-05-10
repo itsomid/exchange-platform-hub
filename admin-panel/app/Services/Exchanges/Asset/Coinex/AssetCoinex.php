@@ -44,22 +44,17 @@ class AssetCoinex implements AssetInterface
 
         if ($response->json('code') !== 0) {
             Log::channel('ref-exchange')->info('Coinex withdrawal error response: ' . $response->body());
-            
+
             $errorCode = $response->json('code');
             $mappedError = CoinexWithdrawalError::tryFrom($errorCode);
             $errorResponse = CoinexWithdrawalError::mapErrorToResponse($mappedError);
-            
-            Log::channel('ref-exchange')->info('Attempting to dispatch notification with error: ' . json_encode($errorResponse));
-            
+
             AdminNotification::dispatchCoinexHasProblem(
                 $errorResponse,
                 $requestDTO->getCurrency(),
                 $requestDTO->getAmount()
             );
-            
-            Log::channel('ref-exchange')->info('Notification dispatched, now throwing exception');
-            
-            // Pass the error code and message to the exception
+
             throw new CoinexWithdrawalException(
                 "Coinex withdrawal failed with code: {$response->json('code')}, message: {$response->json('message')}"
             );
