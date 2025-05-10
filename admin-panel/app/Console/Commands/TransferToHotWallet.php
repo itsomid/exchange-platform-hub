@@ -69,7 +69,7 @@ class TransferToHotWallet extends Command
     {
         $lastHit = Cache::get(self::CACHE_KEY, 0);
         if ($lastHit && $lastHit->diffInMinutes() < $this->getPeriodTime()) {
-            $this->info("Remaining time to withdraw : {$lastHit->diffInMinutes()} minutes");
+            $this->info("Remaining time to withdrawww : {$lastHit->diffInMinutes()} minutes");
 
             return;
         }
