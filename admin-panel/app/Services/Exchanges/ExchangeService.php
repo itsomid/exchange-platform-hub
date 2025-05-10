@@ -44,12 +44,6 @@ class ExchangeService
                     ->setCurrency($bitexroomWallet->currency_symbol)
             );
 
-            // Check if withdrawal failed
-            if ($response->getStatus() === WithdrawStatusEnum::FAILED) {
-                return resolve(ChargeUSDTResponseDTO::class)
-                    ->setWithdrawStatus(WithdrawStatusEnum::FAILED);
-            }
-
             // Continue with successful withdrawal processing
             ExchangeAssetsWithdrawal::query()
                 ->create([

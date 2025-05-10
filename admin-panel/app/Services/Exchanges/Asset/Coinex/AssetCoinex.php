@@ -9,7 +9,6 @@ use App\Services\Exchanges\Asset\Contract\AssetInterface;
 use App\Services\Exchanges\Asset\DTO\BalanceResponseDTO;
 use App\Services\Exchanges\Asset\DTO\WithdrawRequestDTO;
 use App\Services\Exchanges\Asset\DTO\WithdrawResponseDTO;
-use App\Services\Exchanges\Asset\Enum\WithdrawStatusEnum;
 use App\Services\Exchanges\Enums\CoinexWithdrawalError;
 use Illuminate\Support\Facades\Log;
 
@@ -56,13 +55,9 @@ class AssetCoinex implements AssetInterface
                 $requestDTO->getAmount()
             );
 
-            // Return a failure response instead of throwing an exception
-            return resolve(WithdrawResponseDTO::class)
-                ->setWithdrawId('')
-                ->setCurrency($requestDTO->getCurrency())
-                ->setAmount($requestDTO->getAmount())
-                ->setAddress($requestDTO->getAddress())
-                ->setStatus(WithdrawStatusEnum::FAILED->value);
+            throw new CoinexWithdrawalException(
+                "Coinex withdrawal failed with code: {$response->json('code')}, message: {$response->json('message')}"
+            );
         }
 
         $data = $response->json('data');
