@@ -128,7 +128,8 @@ class TransferToHotWallet extends Command
         foreach ($pendingLists as $data) {
             $quantityNeeded = Math::add($quantityNeeded, $data->transaction->amount);
         }
-        $quantityNeeded = abs($quantityNeeded);
+        $quantityNeeded = abs(formatNumber($quantityNeeded, $currency->precision));
+        $this->info('Withdrawal'.$currency->symbol.' - amount: '.$quantityNeeded);
         try {
             $exchangeService = resolve(ExchangeService::class);
             $chargeFromRefExchange = $exchangeService->chargeCurrency(
