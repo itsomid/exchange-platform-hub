@@ -60,14 +60,13 @@ class SpotService
 
         if ($side === SpotOrderSideEnum::BUY) {
             if ($type === SpotOrderTypeEnum::MARKET) {
-                $tradeAmount = $quantity;
+                $tradeAmount = Math::mul($quantity, $market->exchangePrice->price);
             } else {
                 $tradeAmount = Math::mul($quantity, $price);
             }
         } else {
             $tradeAmount = $quantity;
         }
-
         // Check wallet balance (with pessimistic locking)
         $wallet = $this->walletRepository->getOneOrCreateByCurrencyWithLock($currency, $requestDTO->getUserId());
 
@@ -96,6 +95,7 @@ class SpotService
                     ->setType($type)
                     ->setUserId($requestDTO->getUserId())
             );
+
             $response->setSpotOrderModel($spotOrder);
 
             // Record locked balance details
@@ -126,9 +126,9 @@ class SpotService
                 ->setUserId($requestDTO->getUserId())
         )->map(function ($order) {
 
-            $filledValue = $order->makerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0);
-            $filledValue = Math::add($filledValue, $order->takerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0));
-
+//            $filledValue = $order->makerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0);
+//            $filledValue = Math::add($filledValue, $order->takerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0));
+            $filledValue = formatNumberTrimZeros(bcmul($order->price , $order->filled_quantity, 8 ));
             return resolve(SpotOrderListsResponseDTO::class)
                 ->setId($order->id)
                 ->setStatus($order->status)
@@ -160,9 +160,10 @@ class SpotService
             userId: $userId,
             orderId: $orderId
         );
-        $filledValue = $order->makerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0);
-        $filledValue = Math::add($filledValue, $order->takerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0));
 
+//        $filledValue = $order->makerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0);
+//        $filledValue = Math::add($filledValue, $order->takerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0));
+        $filledValue = formatNumberTrimZeros(bcmul($order->price , $order->filled_quantity, 8 ));
         return resolve(SpotOrderListsResponseDTO::class)
             ->setId($order->id)
             ->setStatus($order->status)

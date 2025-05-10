@@ -34,8 +34,8 @@ class SpotOrderResource extends JsonResource
         return [
             'id' => $this->getId(),
             'market' => $this->getMarketName(),
-            'side' => $this->getSide(),
-            'type' => $this->getType(),
+            'side' => __('enum.spot.side.'.$this->getSide()->name),
+            'type' => __('enum.spot.type.'.$this->getType()->name),
             'quantity' => $this->getQuantity(),
             'price' => $this->getPrice(),
             'status' => __('enum.spot.status.'.$this->getStatus()->name),

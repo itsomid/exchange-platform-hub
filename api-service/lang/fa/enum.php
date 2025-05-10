@@ -34,6 +34,14 @@ return [
         ],
     ],
     'spot' =>[
+        'type' => [
+            \App\Enums\SpotOrderTypeEnum::MARKET->name => 'سریع',
+            \App\Enums\SpotOrderTypeEnum::LIMIT->name => 'تعیین قیمت',
+        ],
+        'side' => [
+            \App\Enums\SpotOrderSideEnum::BUY->name => 'خرید',
+            \App\Enums\SpotOrderSideEnum::SELL->name => 'فروش',
+        ],
         'status' => [
             \App\Enums\SpotOrderStatusEnum::OPEN->name => 'باز',
             \App\Enums\SpotOrderStatusEnum::COMPLETED->name => 'کامل شده',

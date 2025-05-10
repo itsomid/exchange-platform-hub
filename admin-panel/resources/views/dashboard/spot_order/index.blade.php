@@ -160,7 +160,7 @@
                                 <span class="ms-1">{{formatNumberTrimZeros($spotOrder->quantity) }}</span>
                                 <small>{{$spotOrder->market->base_currency}}</small>
                             </td>
-                            <td dir="ltr" class="fw-bold">{{ $spotOrder->price ? formatNumber($spotOrder->price) : 'سفارش بازار' }}
+                            <td dir="ltr" class="fw-bold">{{ formatNumberTrimZeros($spotOrder->price) }}
                             </td>
                             <td>{{ $spotOrder->user->email }}</td>
                             <td>
