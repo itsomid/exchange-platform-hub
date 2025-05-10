@@ -51,7 +51,10 @@ class AssetCoinex implements AssetInterface
                 $requestDTO->getCurrency(),
                 $requestDTO->getAmount()
             );
-            throw new CoinexWithdrawalException;
+         // Pass the error code and message to the exception
+            throw new CoinexWithdrawalException(
+                "Coinex withdrawal failed with code: {$response->json('code')}, message: {$response->json('message')}"
+            );
         }
 
         $data = $response->json('data');
