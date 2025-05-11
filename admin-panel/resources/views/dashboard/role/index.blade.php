@@ -6,7 +6,7 @@
             <div class="card-body">
                 <div class="card-title header-elements">
                     <h5 class="m-0 me-2">لیست نقش ها</h5>
-                    @can('role.create')
+                    @can('roles.permissions')
                         <div class="card-title-elements ms-auto">
                             <a href="{{route('admin.role.create')}}" class="btn btn-primary">
                                 <i class="fa fa-plus mx-2"></i>

@@ -111,6 +111,17 @@
                                     @enderror
                                 </div>
                             </div>
+                            <div class="col-md-6 mb-1">
+                                <div class="form-group mt-3">
+                                    <label class="" for="select-basic">نقش ها</label>
+                                    <select class="select2 form-select" multiple id="select-basic" name="roles[]"
+                                            data-placeholder="لطفا نقش را انتخاب کنید">
+                                        @foreach($roles as $role)
+                                            <option value="{{$role->id}}" {{$admin->hasRole($role->name)?'selected':''}}>{{$role->name}} | {{$role->persian_name}}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
                             <div class="col-md-6 mt-3">
                                 <div class="form-group ">
                                     <label for="gender">جنسیت:</label>

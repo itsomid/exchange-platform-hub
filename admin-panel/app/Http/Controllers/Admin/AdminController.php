@@ -50,7 +50,7 @@ class AdminController extends Controller
             'whatsapp' => 'nullable',
         ]);
 
-        $user = Admin::create([
+        $admin = Admin::create([
             'first_name' => $data['first_name'],
             'last_name' => $data['last_name'],
             'mobile' => $data['mobile'],
@@ -63,7 +63,7 @@ class AdminController extends Controller
         ]);
 
         //attach user roles
-        $user->roles()->sync($request->roles);
+        $admin->roles()->sync($request->roles);
         Toast::message('کاربر با موفقیت ایجاد شد.')->success()->notify();
 
         return redirect()->route('admin.admin.index');
@@ -72,8 +72,10 @@ class AdminController extends Controller
     public function edit(Admin $admin)
     {
 
+        $roles = Role::query()->get();
         return view('dashboard.admin.edit')->with([
             'admin' => $admin,
+            'roles' => $roles
         ]);
     }
 
@@ -97,6 +99,8 @@ class AdminController extends Controller
         ];
 
         $admin->update($data);
+
+        $admin->roles()->sync($request->roles);
         Toast::message('کاربر با موفقیت ویرایش شد.')->success()->notify();
 
         return redirect()->route('admin.admin.index');

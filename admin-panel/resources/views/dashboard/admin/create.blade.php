@@ -47,7 +47,8 @@
                     <div class="col-md-6">
                         <div class="form-group mt-3">
                             <label for="mobile">ایمیل</label>
-                            <input type="email" name="email" id="email" class="form-control" placeholder="ایمیل را وارد کنید"
+                            <input type="email" name="email" id="email" class="form-control"
+                                   placeholder="ایمیل را وارد کنید"
                                    value="{{old('email')}}">
                             @error('email')
                             <small class="text-danger">{{$message}}</small>
@@ -83,8 +84,8 @@
                         <div class="form-group mt-3">
                             <label class="form-label" for="gender">جنسیت:</label>
                             <select id="gender" name="gender" class="form-select text-capitalize mb-md-0 ">
-                                <option  value="female">دختر</option>
-                                <option  value="male" selected>پسر</option>
+                                <option value="female">دختر</option>
+                                <option value="male" selected>پسر</option>
                             </select>
                         </div>
                     </div>
@@ -96,7 +97,8 @@
                             <span id="basic-icon-default-fullname2" class="input-group-text">
                                 <i class="fa-regular fa-envelope"></i>
                             </span>
-                            <input type="email" class="form-control" id="email" name="email" placeholder="ایمیل را وارد کنید."
+                            <input type="email" class="form-control" id="email" name="email"
+                                   placeholder="ایمیل را وارد کنید."
                                    aria-label="@example.com" aria-describedby=""/>
 
                         </div>
@@ -147,12 +149,12 @@
                         @enderror
                     </div>
                 </div>
-                <div class=" d-flex justify-content-center mt-3">
+                <div class="d-flex justify-content-start mt-3">
 
-                        <button class="btn btn-primary w-100">
-                            <i class="fa fa-save mx-2"></i>
-                            ذخیره
-                        </button>
+                    <button class="btn btn-primary">
+                        <i class="fa fa-save mx-2"></i>
+                        ذخیره
+                    </button>
 
                 </div>
             </form>
