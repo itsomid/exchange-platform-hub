@@ -185,8 +185,7 @@ readonly class OrderMatchingEngine
 
         // Calculate commission based on what each party receives
         // If maker is buying, they receive base currency, otherwise quote currency
-        $makerCommissionAmount = null;
-        $makerCommissionCurrency = null;
+
         if ($makerOrder->side === SpotOrderSideEnum::BUY) {
             // Maker buys and receives base currency (e.g., TRX)
             $makerCommissionAmount = $this->calcCommission($tradeQuantity, Math::div($spotMakerFee, 100));
@@ -198,8 +197,6 @@ readonly class OrderMatchingEngine
         }
 
         // If taker is buying, they receive base currency, otherwise quote currency
-        $takerCommissionAmount = null;
-        $takerCommissionCurrency = null;
         if ($takerOrder->side === SpotOrderSideEnum::BUY) {
             // Taker buys and receives base currency (e.g., TRX)
             $takerCommissionAmount = $this->calcCommission($tradeQuantity, Math::div($spotTakerFee, 100));
@@ -275,7 +272,7 @@ readonly class OrderMatchingEngine
         $buyQuantity = $spotOrder->side === SpotOrderSideEnum::BUY ? $spotTrade->quantity : Math::mul($spotTrade->quantity, $spotTrade->price);
         $sellQuantity = $spotOrder->side === SpotOrderSideEnum::BUY ? Math::mul($spotTrade->quantity, $spotTrade->price) : $spotTrade->quantity;
 
-        // **Create Transaction for Trader**
+
         $this->transactionRepository->create(
             resolve(CreateTransactionRequestDTO::class)
                 ->setSpotTradeId($spotTrade->id)
@@ -294,7 +291,7 @@ readonly class OrderMatchingEngine
                 ->setWalletId($walletBaseCurrency->id)
         );
 
-        // **Create Transaction for Trader**
+
         $this->transactionRepository->create(
             resolve(CreateTransactionRequestDTO::class)
                 ->setSpotTradeId($spotTrade->id)
@@ -314,31 +311,20 @@ readonly class OrderMatchingEngine
         );
 
         // Determine which commission applies and which wallet to use based on role
-        $commissionAmount = null;
-        $commissionWallet = null;
 
         if ($spotOrder->role === SpotOrderRoleEnum::MAKER) {
             $commissionAmount = $makerCommissionAmount;
-            // If this is the maker's transaction
-            if ($spotOrder->side === SpotOrderSideEnum::BUY) {
-                // Maker buys, gets base currency, commission in base currency
-                $commissionWallet = $walletBaseCurrency;
-            } else {
-                // Maker sells, gets quote currency, commission in quote currency
-                $commissionWallet = $walletQuoteCurrency;
-            }
         } else {
             $commissionAmount = $takerCommissionAmount;
-            // If this is the taker's transaction
-            if ($spotOrder->side === SpotOrderSideEnum::BUY) {
-                // Taker buys, gets base currency, commission in base currency
-                $commissionWallet = $walletQuoteCurrency;
-            } else {
-                // Taker sells, gets quote currency, commission in quote currency
-                $commissionWallet = $walletBaseCurrency;
-            }
         }
 
+
+        if ($spotOrder->side === SpotOrderSideEnum::BUY) {
+            $commissionWallet = $this->walletRepository->getOneByCurrency($spotOrder->market->base_currency, $spotOrder->user_id);
+        }else{
+            $commissionWallet = $this->walletRepository->getOneByCurrency($spotOrder->market->quote_currency, $spotOrder->user_id);
+        }
+        
         // **Create Transaction for Commission**
         $this->transactionRepository->create(
             resolve(CreateTransactionRequestDTO::class)
