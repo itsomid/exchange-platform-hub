@@ -16,7 +16,9 @@ return new class extends Migration
     {
         Schema::create('otc_ref_exchange_withdrawals', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Currency::class);
+            $table->foreignIdFor(Currency::class)
+                ->constrained()
+                ->cascadeOnDelete();
             $table->foreignIdFor(Transaction::class)
                 ->constrained()
                 ->cascadeOnDelete();
