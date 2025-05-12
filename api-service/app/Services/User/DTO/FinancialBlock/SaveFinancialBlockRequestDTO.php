@@ -2,6 +2,7 @@
 
 namespace App\Services\User\DTO\FinancialBlock;
 
+use App\Enums\FinancialBlockReasonsEnum;
 use App\Enums\UserFinancialBlockAction;
 use Carbon\Carbon;
 
@@ -11,7 +12,7 @@ class SaveFinancialBlockRequestDTO
 
     private UserFinancialBlockAction $action;
 
-    private string $reason;
+    private FinancialBlockReasonsEnum $reason;
 
     private Carbon $restrictedUntil;
 
@@ -39,14 +40,14 @@ class SaveFinancialBlockRequestDTO
         return $this->action;
     }
 
-    public function setReason(string $reason): self
+    public function setReason(FinancialBlockReasonsEnum $reason): self
     {
         $this->reason = $reason;
 
         return $this;
     }
 
-    public function getReason(): string
+    public function getReason(): FinancialBlockReasonsEnum
     {
         return $this->reason;
     }
