@@ -105,9 +105,9 @@ class TransferToHotWallet extends Command
             }
         }
 
-        if($this->getWithdrawalType() === self::EXCHANGE_WITHDRAWAL_BOTH_TYPE){
-            Cache::put(self::CACHE_KEY, now(), now()->addMinutes($this->getPeriodTime()));
-        }
+//        if($this->getWithdrawalType() === self::EXCHANGE_WITHDRAWAL_BOTH_TYPE){
+//            Cache::put(self::CACHE_KEY, now(), now()->addMinutes($this->getPeriodTime()));
+//        }
     }
 
     public function transferCurrency(Currency $currency): void
