@@ -41,7 +41,8 @@ class ResetPasswordNotification extends Notification implements ShouldQueue
             ->from('info@bitexroom.com', 'BitexRoom')
             ->view('mail.auth.reset-password', [
                 'url' => $this->url,
-                'expiration'=>$expiration
+                'expiration'=>$expiration,
+                'baseUrl' => config('app.url') // Add this line
             ])
             ->subject('بازیابی رمز عبور');
     }

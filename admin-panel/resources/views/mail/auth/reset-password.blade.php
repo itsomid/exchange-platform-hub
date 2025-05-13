@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="{{ $baseUrl }}">
     <title>بازیابی رمز عبور</title>
     <style>
 
@@ -80,7 +81,8 @@
         <p>با احترام،<br>تیم Bitexroom</p>
     </div>
     <div class="email-footer">
-        <p>تمام حقوق محفوظ است &copy; Bitexroom</p>
+        <p>تمام حقوق محفوظ است &copy; <a href="{{ $baseUrl }}" style="color: #666; text-decoration: none;">Bitexroom</a></p>
+        <p>{{$baseUrl}}</p>
     </div>
 </div>
 </body>
