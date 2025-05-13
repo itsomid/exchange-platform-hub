@@ -8,6 +8,7 @@ enum CoinexWithdrawalError: int
     case Address_White_List = 11050;
     case Asset_Insufficient = 11008;
     case Exceeding_Withdrawal_Decimal_Limit = 11029;
+    case Amount_too_Small = 3127;
 
     public static function mapErrorToResponse(CoinexWithdrawalError $errorEnum): string
     {
@@ -16,6 +17,7 @@ enum CoinexWithdrawalError: int
             CoinexWithdrawalError::Address_White_List => 'آدرس ولت در وایت لیست نمی باشد.',
             CoinexWithdrawalError::Asset_Insufficient => 'عدم موجودی کافی (فی برداشت) برای انجام فرآیند تجمیع.',
             CoinexWithdrawalError::Exceeding_Withdrawal_Decimal_Limit => 'تعداد اعشار مقدار برداشت بیشتر از حد مجار است.',
+            CoinexWithdrawalError::Amount_too_Small => 'مقدار معامله کوچکتر از حد مجاز است.',
             default => 'خطای ناشناخته، لطفا دوباره تلاش کنید.',
         };
     }

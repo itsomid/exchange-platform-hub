@@ -1,6 +1,6 @@
 <nav
-    class="layout-navbar {{$container}} navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme"
-    id="layout-navbar">
+        class="layout-navbar {{$container}} navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme"
+        id="layout-navbar">
     <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
         <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)">
             {{--            <i class="ti ti-menu-2 ti-sm"></i>--}}
@@ -52,12 +52,12 @@
                                     <div class="d-flex">
                                         <div class="flex-grow-1">
                                             <h6 class="small mb-1"><span
-                                                    class="badge bg-label-primary">{{ \App\Enums\NotificationType::getLabel($notification->type) }}</span>
+                                                        class="badge bg-label-primary">{{ \App\Enums\NotificationTypeEnum::getLabel($notification->type) }}</span>
                                             </h6>
                                             <small
-                                                class="mb-1 d-block text-body">{{ $notification->data['message'] }}</small>
+                                                    class="mb-1 d-block text-body">{{ $notification->data['message'] }}</small>
                                             <small
-                                                class="text-muted">{{\App\Helpers\DateFormatter::ago($notification->created_at)}}</small>
+                                                    class="text-muted">{{\App\Helpers\DateFormatter::ago($notification->created_at)}}</small>
                                         </div>
                                         <div class="flex-shrink-0 dropdown-notifications-actions">
                                             <a href="javascript:void(0)" class="dropdown-notifications-read">
@@ -101,7 +101,7 @@
                             <input type="hidden" name="theme" value="light">
                             <button type="submit" class="dropdown-item">
                                 <span class="align-middle"> <i
-                                        class="fa-regular fa-brightness-low  me-2"></i>روشن</span>
+                                            class="fa-regular fa-brightness-low  me-2"></i>روشن</span>
                             </button>
                         </form>
                     </li>

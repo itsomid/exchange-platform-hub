@@ -69,7 +69,7 @@
                             </td>
                             <td>
                                 <span
-                                    class="badge bg-label-primary">{{ \App\Enums\NotificationType::getLabel($notification->type) }}</span>
+                                    class="badge bg-label-primary">{{ \App\Enums\NotificationTypeEnum::getLabel($notification->type) }}</span>
                             </td>
                             <td>{{ $notification->data['message'] }}</td>
                             <td>
@@ -97,6 +97,11 @@
                     @endforeach
                     </tbody>
                 </table>
+            </div>
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    {{$notifications->appends(request()->all())->links()}}
+                </div>
             </div>
         </div>
     </div>
