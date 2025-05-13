@@ -28,6 +28,11 @@ class UserSecurityController extends Controller
 
     public function sendResetLinkEmail(User $user)
     {
+//        \Mail::raw('This is a test email from Laravel.', function ($message) {
+//            $message->to(['o.shabani@hotmail.com', 'omid.it.shabani@gmail.com']) // Replace 'another@example.com' with the second recipient's email
+//            ->subject('Test Email');
+//        });
+
         $status = Password::sendResetLink(
             ['email' => $user->email]
         );
