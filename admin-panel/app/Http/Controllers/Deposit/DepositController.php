@@ -3,11 +3,9 @@
 namespace App\Http\Controllers\Deposit;
 
 use App\Exports\DepositExport;
-use App\Exports\OTCOrderExport;
 use App\Helpers\DateFormatter;
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
-use App\Models\OTCOrder;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 

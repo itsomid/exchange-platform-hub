@@ -10,7 +10,7 @@
                         <div class="content-left">
                             <span>تعداد اعلان ها</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{$notifications->count()}}</h4>
+                                <h4 class="mb-0 me-2">{{$notifications->total()}}</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-primary rounded p-2">
@@ -20,26 +20,51 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-12 col-xl-4">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
-                        <div class="content-left">
-                            <span>اعلان های ادمین</span>
-                            <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{$notifications->count()}}</h4>
-                            </div>
-                        </div>
-                        <span class="badge bg-label-success rounded p-2">
-                            <i class="fa-solid fa-user-check"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+
     </div>
 
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="card-title header-elements">
+                <h5 class="m-0 me-2">فیلتر</h5>
+            </div>
+            <div class="d-flex justify-content-between">
+                <form action="{{route('admin.admin.notifications.index')}}" method="get" class="mt-3 d-flex align-items-end">
 
+
+                    <div class="form-group me-3">
+                        <label class="form-label" for="type">نوع اعلان:</label>
+                        <select name="type" class="form-control" id="type">
+                            <option value="">همه</option>
+                            @foreach(\App\Enums\NotificationTypeEnum::cases() as $case)
+                                <option
+                                    value="{{$case->value}}" {{request()->has('type') && request()->input('type') === $case->value ? 'selected' : "" }}>
+                                    {{\App\Enums\NotificationTypeEnum::getLabel($case->value)}}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+
+                    <div class="form-group">
+                        <button class="btn btn-success text-white">
+                            <span>فیلتر</span><i class="fas fa-filter mx-3"></i>
+                        </button>
+                    </div>
+
+                </form>
+                <form action="{{ route('admin.admin.admin.notifications.destroyAll') }}" method="POST"
+                      onsubmit="return confirm('مطمینی میخوای همه اعلان هارو پاک کنی؟');">
+                    @csrf
+                    @method('DELETE')
+                    <input type="hidden" name="type" value="{{ request('type') }}">
+                    <!-- Add other filter fields as hidden inputs if needed -->
+                    <button type="submit" class="btn btn-danger">پاک کردن اعلان ها</button>
+                </form>
+            </div>
+
+        </div>
+    </div>
     <div class="card">
         <div class="card-body">
             <div class="card-title header-elements">

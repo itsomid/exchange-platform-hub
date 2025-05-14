@@ -4,8 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
+use App\Models\NotificationRecord;
 use Illuminate\Http\Request;
-use Illuminate\Notifications\DatabaseNotification;
+
 
 class AdminNotificationController extends Controller
 {
@@ -13,11 +14,10 @@ class AdminNotificationController extends Controller
     {
         $admin = auth()->user(); // Get authenticated admin
 
-
         if ($admin->hasRole(['super_admin', 'admin'])) {
-            $notifications = DatabaseNotification::where('notifiable_type','App\Models\Admin')->latest()->paginate(100);
+            $notifications = NotificationRecord::where('notifiable_type','App\Models\Admin')->filterBy(request()->all())->latest()->paginate(100);
         } else {
-            $notifications = $admin->notifications()->latest()->paginate(100);
+            $notifications = NotificationRecord::where('notifiable_id',$admin->id)->where('notifiable_type','App\Models\Admin')->filterBy(request()->all())->latest()->paginate(100);
         }
 
         return view('dashboard.admin.notification.index', [
@@ -41,5 +41,29 @@ class AdminNotificationController extends Controller
 
         Toast::message('تمام اعلان ها به خوانده شده تغییر یافت.');
         return back();
+    }
+
+    public function destroyAll(Request $request)
+    {
+        $admin = auth()->user();
+
+        if ($admin->hasRole(['super_admin', 'admin'])) {
+            $query = NotificationRecord::where('notifiable_type', 'App\Models\Admin');
+            if ($request->filled('type')) {
+                $query->where('type', $request->input('type'));
+            }
+            // Add more filters as needed
+            $query->delete();
+        } else {
+            $query = $admin->notifications();
+            if ($request->filled('type')) {
+                $query->where('type', $request->input('type'));
+            }
+            // Add more filters as needed
+            $query->delete();
+        }
+
+        Toast::message('تمام اعلان های فیلتر شده پاک شد.');
+        return redirect()->route('admin.admin.notifications.index');
     }
 }

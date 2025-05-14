@@ -80,6 +80,7 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::get('/notifications', [AdminNotificationController::class, 'index'])->name('admin.notifications.index');
         Route::patch('/notifications/mark-read/{id}', [AdminNotificationController::class, 'markAsRead'])->name('admin.notifications.mark-read');
         Route::get('/notifications/mark-all-read', [AdminNotificationController::class, 'markAllAsRead'])->name('admin.notifications.mark-all-read');
+        Route::delete('admin/notifications/destroyAll', [AdminNotificationController::class, 'destroyAll'])->name('admin.admin.notifications.destroyAll');
     });
 
     Route::resource('/tickets', TicketController::class)->except(['ticket']);
