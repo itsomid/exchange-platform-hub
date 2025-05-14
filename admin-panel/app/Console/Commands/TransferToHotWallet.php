@@ -109,12 +109,15 @@ class TransferToHotWallet extends Command
     private function isTimeConditionMet(): bool
     {
         $lastHit = Cache::get(self::CACHE_KEY);
+        $this->info("Last hit from cache: " . ($lastHit ? $lastHit->toDateTimeString() : 'null')); // Log $lastHit
         if (!$lastHit) { // First run or cache expired/cleared
             $this->info("Time condition: Cache key '" . self::CACHE_KEY . "' not found. Assuming condition met.");
             return true;
         }
 
-        $minutesSinceLastHit = now()->diffInMinutes($lastHit);
+        
+        $minutesSinceLastHit = now()->diffInMinutes($lastHit, true);
+        $this->info("Minutes since last hit (absolute): {$minutesSinceLastHit} ");
         $periodTime = $this->getPeriodTime();
 
         if ($minutesSinceLastHit >= $periodTime) {
@@ -151,7 +154,7 @@ class TransferToHotWallet extends Command
                     ->exists();
 
                 if ($hasPendingForThisCurrency) {
-                    $this->transferCurrency($currency);
+//                    $this->transferCurrency($currency);
                     $processedThisRun = true;
                 }
             }
@@ -166,7 +169,7 @@ class TransferToHotWallet extends Command
             foreach ($currencies as $currency) {
                 if ($this->isCountConditionMetForCurrency($currency)) {
                     $this->info("Count condition met for {$currency->symbol} in 'both' type. Attempting transfer.");
-                    $this->transferCurrency($currency);
+//                    $this->transferCurrency($currency);
                 }
             }
         }
