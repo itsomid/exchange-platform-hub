@@ -51,8 +51,7 @@ class TransferToHotWallet extends Command
         } elseif ($withdrawalType === self::EXCHANGE_WITHDRAWAL_PERIOD_BUY) {
             $this->processCountBased();
         }elseif ($withdrawalType === self::EXCHANGE_WITHDRAWAL_BOTH_TYPE){
-            $this->processCountBased();
-            $this->processTimeBased();
+            $this->processBothTypes(); // Changed from processCountBased() then processTimeBased()
         }
     }
 
@@ -105,9 +104,72 @@ class TransferToHotWallet extends Command
             }
         }
 
-//        if($this->getWithdrawalType() === self::EXCHANGE_WITHDRAWAL_BOTH_TYPE){
-//            Cache::put(self::CACHE_KEY, now(), now()->addMinutes($this->getPeriodTime()));
-//        }
+    }
+
+    private function isTimeConditionMet(): bool
+    {
+        $lastHit = Cache::get(self::CACHE_KEY);
+        if (!$lastHit) { // First run or cache expired/cleared
+            $this->info("Time condition: Cache key '" . self::CACHE_KEY . "' not found. Assuming condition met.");
+            return true;
+        }
+
+        $minutesSinceLastHit = now()->diffInMinutes($lastHit);
+        $periodTime = $this->getPeriodTime();
+
+        if ($minutesSinceLastHit >= $periodTime) {
+            $this->info("Time condition met: {$minutesSinceLastHit} minutes passed (>= {$periodTime} min period).");
+            return true;
+        } else {
+            $remainingMinutes = $periodTime - $minutesSinceLastHit;
+            $this->info("Time condition NOT met. {$remainingMinutes} minutes remaining in period.");
+            return false;
+        }
+    }
+
+    private function isCountConditionMetForCurrency(Currency $currency): bool
+    {
+        $countBuy = (int) Setting::getSetting('exchange_withdrawal_period_buy');
+        return OTCRefExchangeWithdrawal::query()
+            ->where('currency_id', $currency->id)
+            ->where('status', OTCRefExchangeWithdrawalStatusEnum::PENDING)
+            ->count() >= $countBuy;
+    }
+
+    private function processBothTypes(): void
+    {
+        $currencies = Currency::query()->with('chains')->has('chains')->get();
+        $timeConditionIsMet = $this->isTimeConditionMet();
+
+        if ($timeConditionIsMet) {
+            $this->info("Processing 'both' type: Time condition met. Attempting transfer for all eligible currencies.");
+            $processedThisRun = false;
+            foreach ($currencies as $currency) {
+                $hasPendingForThisCurrency = OTCRefExchangeWithdrawal::query()
+                    ->where('currency_id', $currency->id)
+                    ->where('status', OTCRefExchangeWithdrawalStatusEnum::PENDING)
+                    ->exists();
+
+                if ($hasPendingForThisCurrency) {
+                    $this->transferCurrency($currency);
+                    $processedThisRun = true;
+                }
+            }
+            if ($processedThisRun) {
+                Cache::put(self::CACHE_KEY, now(), now()->addMinutes($this->getPeriodTime()));
+                $this->info("Time-based cache updated for 'both' type after processing due to time condition.");
+            } else {
+                $this->info("Time condition met for 'both' type, but no pending withdrawals found for any currency. Cache not updated.");
+            }
+        } else {
+            $this->info("Processing 'both' type: Time condition NOT met. Checking count-based conditions for each currency.");
+            foreach ($currencies as $currency) {
+                if ($this->isCountConditionMetForCurrency($currency)) {
+                    $this->info("Count condition met for {$currency->symbol} in 'both' type. Attempting transfer.");
+                    $this->transferCurrency($currency);
+                }
+            }
+        }
     }
 
     public function transferCurrency(Currency $currency): void
