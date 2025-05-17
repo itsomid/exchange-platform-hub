@@ -198,7 +198,6 @@ class TransferToHotWallet extends Command
             $quantityNeeded = Math::add($quantityNeeded, $data->transaction->amount);
         }
         $quantityNeeded = abs(formatNumber($quantityNeeded, $currency->precision));
-        Log::channel('ref-exchange')->info('Withdrawal '.$currency->symbol.' - amount: '.$quantityNeeded);
 
         try {
             $exchangeService = resolve(ExchangeService::class);
@@ -216,8 +215,8 @@ class TransferToHotWallet extends Command
                         'status' => OTCRefExchangeWithdrawalStatusEnum::COMPLETED,
                     ]);
                 $this->info($currency->symbol.' Withdrawal successful. status : '.$chargeFromRefExchange->getWithdrawStatus()->value);
-                Log::channel('hot-wallet-transfer-audit')->info(
-                    "Hot wallet transfer for {$currency->symbol} triggered by {$triggerType}. Amount: {$quantityNeeded}. Status: {$chargeFromRefExchange->getWithdrawStatus()->value}"
+                Log::channel('ref-exchange')->info(
+                    "Assets Gathering for {$currency->symbol} triggered by {$triggerType}. Amount: {$quantityNeeded}. Status: {$chargeFromRefExchange->getWithdrawStatus()->value}"
                 );
             } else {
                 $this->error($currency->symbol.' Withdrawal failed. status : '.$chargeFromRefExchange->getWithdrawStatus()->value);
