@@ -36,6 +36,9 @@ class TransferToHotWallet extends Command
     const string EXCHANGE_WITHDRAWAL_PERIOD_BUY = 'exchange_withdrawal_period_buy';
     const string EXCHANGE_WITHDRAWAL_BOTH_TYPE = 'exchange_withdrawal_both_type';
 
+    const string TRIGGER_TYPE_TIME = 'time_condition';
+    const string TRIGGER_TYPE_COUNT = 'count_condition';
+
     /**
      * Execute the console command.
      */
@@ -79,7 +82,7 @@ class TransferToHotWallet extends Command
             ->has('chains')
             ->get();
         foreach ($currencies as $currency) {
-            $this->transferCurrency($currency);
+            $this->transferCurrency($currency, self::TRIGGER_TYPE_TIME);
         }
 
         Cache::put(self::CACHE_KEY, now(), now()->addMinutes($this->getPeriodTime()));
@@ -100,7 +103,7 @@ class TransferToHotWallet extends Command
                 ->where('currency_id', $currency->id)
                 ->where('status', OTCRefExchangeWithdrawalStatusEnum::PENDING)
                 ->count() >= $countBuy) {
-                $this->transferCurrency($currency);
+                $this->transferCurrency($currency, self::TRIGGER_TYPE_COUNT);
             }
         }
 
@@ -115,7 +118,7 @@ class TransferToHotWallet extends Command
             return true;
         }
 
-        
+
         $minutesSinceLastHit = now()->diffInMinutes($lastHit, true);
         $this->info("Minutes since last hit (absolute): {$minutesSinceLastHit} ");
         $periodTime = $this->getPeriodTime();
@@ -154,7 +157,7 @@ class TransferToHotWallet extends Command
                     ->exists();
 
                 if ($hasPendingForThisCurrency) {
-//                    $this->transferCurrency($currency);
+                    $this->transferCurrency($currency, self::TRIGGER_TYPE_TIME);
                     $processedThisRun = true;
                 }
             }
@@ -169,13 +172,13 @@ class TransferToHotWallet extends Command
             foreach ($currencies as $currency) {
                 if ($this->isCountConditionMetForCurrency($currency)) {
                     $this->info("Count condition met for {$currency->symbol} in 'both' type. Attempting transfer.");
-//                    $this->transferCurrency($currency);
+                    $this->transferCurrency($currency, self::TRIGGER_TYPE_COUNT);
                 }
             }
         }
     }
 
-    public function transferCurrency(Currency $currency): void
+    public function transferCurrency(Currency $currency, string $triggerType): void
     {
         $chain = $currency->chains->sortBy('min_withdraw_amount')->first();
 
@@ -213,6 +216,9 @@ class TransferToHotWallet extends Command
                         'status' => OTCRefExchangeWithdrawalStatusEnum::COMPLETED,
                     ]);
                 $this->info($currency->symbol.' Withdrawal successful. status : '.$chargeFromRefExchange->getWithdrawStatus()->value);
+                Log::channel('hot-wallet-transfer-audit')->info(
+                    "Hot wallet transfer for {$currency->symbol} triggered by {$triggerType}. Amount: {$quantityNeeded}. Status: {$chargeFromRefExchange->getWithdrawStatus()->value}"
+                );
             } else {
                 $this->error($currency->symbol.' Withdrawal failed. status : '.$chargeFromRefExchange->getWithdrawStatus()->value);
             }
