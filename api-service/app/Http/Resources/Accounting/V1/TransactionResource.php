@@ -14,6 +14,21 @@ class TransactionResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $price = null;
+        if ($this->spot_trade_id) {
+            $price = $this->spotTrade?->MakerOrder->price;
+        } elseif ($this->otc_order_id) {
+            if($this->wallet->currency_symbol === 'USDT'){
+                $price = "1";
+            }
+            elseif ($this->wallet->currency_symbol === 'CET') {
+                $price = null;
+            }
+            else {
+                $price = $this->otcOrder?->price;
+            }
+        }
+
         return [
             'id' => $this->id,
             'user_id' => $this->user_id,
@@ -21,7 +36,7 @@ class TransactionResource extends JsonResource
             'coin_type' => $this->wallet->currency_symbol,
             'otc_order_id' => $this->otc_order_id,
             'spot_trade_id' => $this->spot_trade_id,
-            'price' => $this->spot_trade_id ? $this->spotTrade?->MakerOrder->price: ($this->otc_order_id ? $this->otcOrder?->price : null),
+            'price' => $price,
             'wallet_id' => $this->wallet_id,
             'amount' => $this->amount,
             'balance' => $this->balance,
