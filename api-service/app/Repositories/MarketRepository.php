@@ -25,7 +25,8 @@ class MarketRepository implements MarketRepositoryInterface
     {
         return Market::query()
             ->whereBaseCurrency($baseCurrency)
-            ->whereQuoteCurrency($quoteCurrency);
+            ->whereQuoteCurrency($quoteCurrency)
+            ->first();
     }
 
     public function getAll(): Collection
