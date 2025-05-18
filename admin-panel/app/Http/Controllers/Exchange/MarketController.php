@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Exchange;
 
 
+use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Market\StoreMarketRequest;
 use App\Http\Requests\Market\UpdateMarketRequest;
 use App\Models\Currency;
 use App\Models\Exchange;
+use App\Models\ExchangePrice;
 use App\Models\Market;
 use Illuminate\Http\Request;
 
@@ -28,6 +31,54 @@ class MarketController extends Controller
         $exchanges = Exchange::query()->orderBy('priority')->get();
         $currencies = Currency::all();
         return view('dashboard.exchange.market.create', ['currencies' => $currencies, 'exchanges' => $exchanges]);
+    }
+
+    public function store(StoreMarketRequest $request)
+    {
+        // Get the base currency from the selected currency ID
+        $baseCurrency = Currency::findOrFail($request->symbol);
+
+        // Get the quote currency (USDT is hardcoded in the form)
+        $quoteCurrency = Currency::where('symbol', 'USDT')->firstOrFail();
+
+        // Check if a market with the same currency pair already exists
+        $existingMarket = Market::where('base_currency', $baseCurrency->symbol)
+            ->where('quote_currency', $quoteCurrency->symbol)
+            ->first();
+
+        if ($existingMarket) {
+            return redirect()
+                ->route('admin.market.create')
+                ->withInput()
+                ->withErrors(['symbol' => 'بازار با جفت ارز ' . $baseCurrency->symbol . '-' . $quoteCurrency->symbol . ' قبلاً ایجاد شده است.']);
+
+        }
+
+        // Create the market
+        $market = Market::create([
+            'base_currency' => $baseCurrency->symbol,
+            'quote_currency' => $quoteCurrency->symbol,
+            'min_otc_amount' => $request->min_otc_amount,
+            'max_otc_amount' => $request->max_otc_amount,
+            'min_trade_amount' => $request->min_trade_amount,
+            'max_trade_amount' => $request->max_trade_amount,
+            'is_active' => $request->has('is_active') ? $request->is_active : false,
+        ]);
+
+        // Create the exchange price record
+        ExchangePrice::create([
+            'market_id' => $market->id,
+            'exchange_id' => $request->exchange_id,
+            'exchange_profit_sell' => $request->exchange_profit_sell,
+            'exchange_profit_buy' => $request->exchange_profit_buy,
+            'price' => 0, // Initial price will be updated by the price fetching service
+            'open_price' => 0, // Initial open price
+        ]);
+
+        // Redirect back with a success message
+        return redirect()
+            ->route('admin.market.index')
+            ->with('success', 'بازار جدید با موفقیت ایجاد شد.');
     }
 
     public function edit(Market $market)

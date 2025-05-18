@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
 {
-    public function __construct(private readonly OTCOrderService $service) {}
+    public function __construct(private readonly OTCOrderService $OTCService) {}
 
     /**
      * @OA\Get(
@@ -72,7 +72,7 @@ class OrderController extends Controller
      */
     public function lists(Request $request)
     {
-        $listsDTO = $this->service->lists(
+        $listsDTO = $this->OTCService->lists(
             resolve(OTCOrderListsRequestDTO::class)
                 ->setFilterQueryString($request->only(['type', 'market', 'created_at']))
                 ->setUserId(Auth::id())

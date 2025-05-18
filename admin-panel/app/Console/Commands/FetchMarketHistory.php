@@ -36,7 +36,7 @@ class FetchMarketHistory extends Command
 
 
         $exchange = MarketHistoryFactory::make($exchange);
-        $markets = Market::query()->get();
+        $markets = Market::query()->where('is_active', true)->get();
         foreach ($markets as $market) {
             $candle = $exchange->fetchHistory($market->base_currency . $market->quote_currency, $period, $limit);
             if($this->saveMarketHistory($market, $candle[0])){

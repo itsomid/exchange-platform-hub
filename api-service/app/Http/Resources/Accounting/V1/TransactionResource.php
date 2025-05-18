@@ -14,7 +14,6 @@ class TransactionResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $price = null;
         if ($this->spot_trade_id) {
             $price = $this->spotTrade?->MakerOrder->price;
         } elseif ($this->otc_order_id) {
