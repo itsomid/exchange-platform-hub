@@ -130,9 +130,8 @@ class OTCService
 
             $doComplete = true;
             if (Math::comp($sellerWallet->available_balance, $receivedAmount) === -1) {
-                $chain = $market->currency->chains->sort(fn($a, $b) => $a->network_fee <=> $b->network_fee
-                )->first();
 
+               // $chain = $market->currency->chains->sort(fn($a, $b) => $a->network_fee <=> $b->network_fee)->first();
                 // amountForBuy = (receivedAmount - exchange_withdrawal_fee) + network_fee
                 //$amountForBuy = Math::sub($receivedAmount, $chain->network_fee);
 

@@ -80,12 +80,18 @@ class ExchangeService
                     $market->base_currency,
                     config('bitexroom.bitexroom_user_id')
                 );
+            // Get CET market price
+            $cetMarket = $this->marketRepository->getMarketBySymbol('CET', 'USDT');
+            $cetPrice = $cetMarket ? $cetMarket->exchangePrice->price : 0;
+
             //CET
             $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
                 ->setUserId(config('bitexroom.bitexroom_user_id'))
                 ->setWalletId($cetWallet->id)
                 ->setOtcOrderId($otcOrder->id)
                 ->setAmount(-$response->getDiscountFee())
+                ->setCoinPrice($cetPrice)
+                ->setPriceSourceId($market->exchangePrice->exchange->id)
                 ->setType(TransactionTypeEnum::EXCHANGE)
                 ->setSubtype(TransactionSubTypeEnum::COINEX)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
@@ -112,6 +118,8 @@ class ExchangeService
                 ->setWalletId($baseCurrencyWallet->id)
                 ->setOtcOrderId($otcOrder->id)
                 ->setAmount($response->getFilledAmount())
+                ->setCoinPrice($market->exchangePrice->price)
+                ->setPriceSourceId($market->exchangePrice->exchange->id)
                 ->setType(TransactionTypeEnum::EXCHANGE)
                 ->setSubtype(TransactionSubTypeEnum::COINEX)
                 ->setStatus(TransactionStatusEnum::SUCCESS)

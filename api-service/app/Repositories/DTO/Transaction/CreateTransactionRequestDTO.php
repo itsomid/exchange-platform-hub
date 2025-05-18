@@ -23,6 +23,8 @@ class CreateTransactionRequestDTO
     private ?string $balance = null;
 
     private string $amount;
+    private ?string $coinPrice = null;
+    private ?int $priceSourceId = null;
 
     private TransactionTypeEnum $type;
 
@@ -91,7 +93,27 @@ class CreateTransactionRequestDTO
     {
         return $this->amount;
     }
+    public function setPriceSourceId(?int $priceSourceId): CreateTransactionRequestDTO
+    {
+        $this->priceSourceId = $priceSourceId;
 
+        return $this;
+    }
+
+    public function getPriceSourceId(): ?int
+    {
+        return $this->priceSourceId;
+    }
+
+    public function setCoinPrice(string $coinPrice)
+    {
+        $this->coinPrice = $coinPrice;
+        return $this;
+    }
+    public function getCoinPrice()
+    {
+        return $this->coinPrice;
+    }
     public function setType(TransactionTypeEnum $type): CreateTransactionRequestDTO
     {
         $this->type = $type;
@@ -175,4 +197,6 @@ class CreateTransactionRequestDTO
     {
         return $this->spotTradeId;
     }
+
+
 }
