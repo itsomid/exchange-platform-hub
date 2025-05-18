@@ -21,7 +21,7 @@ class TransactionResource extends JsonResource
                 $price = "1";
             }
             elseif ($this->wallet->currency_symbol === 'CET') {
-                $price = null;
+                $price = $this->coin_price;
             }
             else {
                 $price = $this->otcOrder?->price;
