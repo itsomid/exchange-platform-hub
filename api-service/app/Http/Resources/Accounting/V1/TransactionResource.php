@@ -35,7 +35,7 @@ class TransactionResource extends JsonResource
             'coin_type' => $this->wallet->currency_symbol,
             'otc_order_id' => $this->otc_order_id,
             'spot_trade_id' => $this->spot_trade_id,
-            'price' => $price,
+            'price' => $this->coin_price,
             'wallet_id' => $this->wallet_id,
             'amount' => $this->amount,
             'balance' => $this->balance,
