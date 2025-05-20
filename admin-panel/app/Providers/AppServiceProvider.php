@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Models\Admin;
+use App\Repositories\Interfaces\MarketRepositoryInterface;
+use App\Repositories\MarketRepository;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\URL;
@@ -14,6 +16,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         //
+        $this->app->bind(MarketRepositoryInterface::class, MarketRepository::class);
     }
 
     public function boot(): void
