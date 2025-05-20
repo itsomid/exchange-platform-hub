@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Exceptions\Coinex;
+namespace App\Exceptions\Exchange;
 
 use Exception;
 
