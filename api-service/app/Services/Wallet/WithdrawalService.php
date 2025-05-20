@@ -247,7 +247,7 @@ class WithdrawalService
                 'balance' => $exchangeWallet->balance,
                 'amount' => $exchangeWithdrawalFee,
                 'type' => TransactionTypeEnum::FEE,
-                'subtype' => TransactionSubTypeEnum::WITHDRAWAL_EXCHANGE_FEE,
+                'subtype' => TransactionSubTypeEnum::EXCHANGE_WITHDRAWAL_FEE,
                 'status' => TransactionStatusEnum::SUCCESS,
                 'description' => "کارمزد برداشت صرافی  {$exchangeWallet->currency_symbol} کاربر  "."(#{$withdrawal->user->id}) ".$withdrawal->user->username,
             ]);
@@ -263,7 +263,7 @@ class WithdrawalService
                 'amount' => $exchangeNetworkFee,
                 'balance' => $exchangeWallet->balance,
                 'type' => TransactionTypeEnum::FEE,
-                'subtype' => TransactionSubTypeEnum::WITHDRAWAL_NETWORK_FEE,
+                'subtype' => TransactionSubTypeEnum::NETWORK_WITHDRAWAL_FEE,
                 'status' => TransactionStatusEnum::SUCCESS,
                 'description' => "کارمزد شبکه صرافی  {$exchangeWallet->currency_symbol} کاربر  "."(#{$withdrawal->user->id}) ".$withdrawal->user->username,
                 'admin_description' => '',

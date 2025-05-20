@@ -53,7 +53,7 @@ class HomeController extends Controller
 
         //سود صرافی از محل کارمزدهای برداشت
         $withdrawalFeeTransactionsByCurrency = Transaction::where('type', TransactionTypeEnum::FEE)
-            ->where('subtype', TransactionSubTypeEnum::WITHDRAWAL_EXCHANGE_FEE)
+            ->where('subtype', TransactionSubTypeEnum::EXCHANGE_WITHDRAWAL_FEE)
             ->join('wallets', 'wallets.id', '=', 'transactions.wallet_id')
             ->selectRaw('wallets.currency_symbol, SUM(transactions.amount) as total_amount, COUNT(transactions.id) as transaction_count')
             ->groupBy('wallets.currency_symbol')

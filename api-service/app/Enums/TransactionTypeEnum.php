@@ -10,5 +10,5 @@ enum TransactionTypeEnum: string
     case WITHDRAWAL = 'withdrawal';
     case REFERRAL = 'referral';
     case FEE = 'fee';
-    case EXCHANGE = 'exchange';
+    case REF_EXCHANGE = 'ref_exchange';
 }

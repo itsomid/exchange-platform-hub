@@ -14,8 +14,12 @@ enum TransactionSubTypeEnum: string
     case HOT_WALLET = 'hot_wallet';
     case COLD_WALLET = 'cold_wallet';
     case HD_WALLET_FEE = 'hd_wallet_fee';
-    case WITHDRAWAL_EXCHANGE_FEE = 'withdrawal_exchange_fee';
-    case WITHDRAWAL_NETWORK_FEE = 'withdrawal_network_fee';
+    case EXCHANGE_WITHDRAWAL_FEE = 'exchange_withdrawal_fee';
+    case NETWORK_WITHDRAWAL_FEE = 'network_withdrawal_fee';
+    case REF_EXCHANGE_BUY = 'ref_exchange_buy';
+    case REF_EXCHANGE_BUY_FEE = 'ref_exchange_buy_fee';
+    case REF_EXCHANGE_WITHDRAWAL = 'ref_exchange_withdrawal';
+    case REF_EXCHANGE_WITHDRAWAL_FEE = 'ref_exchange_withdrawal_fee';
 
     const array TYPE_LABEL = [
         self::MANUAL_ADMIN->value => 'ادمین',
@@ -28,8 +32,12 @@ enum TransactionSubTypeEnum: string
         self::HOT_WALLET->value => 'هات ولت',
         self::COLD_WALLET->value => 'کلد ولت',
         self::HD_WALLET_FEE->value => 'فی HD wallet',
-        self::WITHDRAWAL_EXCHANGE_FEE->value => 'فی برداشت صرافی',
-        self::WITHDRAWAL_NETWORK_FEE->value => 'فی برداشت شبکه'
+        self::EXCHANGE_WITHDRAWAL_FEE->value => 'فی برداشت صرافی',
+        self::NETWORK_WITHDRAWAL_FEE->value => 'فی برداشت شبکه',
+        self::REF_EXCHANGE_BUY->value => 'خرید از صرافی مرجع',
+        self::REF_EXCHANGE_BUY_FEE->value => 'فی خرید از صرافی مرجع',
+        self::REF_EXCHANGE_WITHDRAWAL->value => 'برداشت از صرافی مرجع',
+        self::REF_EXCHANGE_WITHDRAWAL_FEE->value => 'فی برداشت از صرافی مرجع',
     ];
 
     const array TYPE_COLOR = [
@@ -43,8 +51,12 @@ enum TransactionSubTypeEnum: string
         self::HOT_WALLET->value => 'info',
         self::COLD_WALLET->value => 'info',
         self::HD_WALLET_FEE->value => 'info',
-        self::WITHDRAWAL_EXCHANGE_FEE->value => 'info',
-        self::WITHDRAWAL_NETWORK_FEE->value => 'info'
+        self::EXCHANGE_WITHDRAWAL_FEE->value => 'info',
+        self::NETWORK_WITHDRAWAL_FEE->value => 'info',
+        self::REF_EXCHANGE_BUY->value => 'info',
+        self::REF_EXCHANGE_BUY_FEE->value => 'info',
+        self::REF_EXCHANGE_WITHDRAWAL->value => 'info',
+        self::REF_EXCHANGE_WITHDRAWAL_FEE->value => 'info',
     ];
 
     public function label(): string

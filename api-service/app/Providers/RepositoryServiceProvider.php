@@ -5,9 +5,11 @@ namespace App\Providers;
 use App\Repositories\CurrencyRepository;
 use App\Repositories\DepositRepository;
 use App\Repositories\EmailOTPRepository;
+use App\Repositories\ExchangeRepository;
 use App\Repositories\Interfaces\CurrencyRepositoryInterface;
 use App\Repositories\Interfaces\DepositRepositoryInterface;
 use App\Repositories\Interfaces\EmailOTPRepositoryInterface;
+use App\Repositories\Interfaces\ExchangeRepositoryInterface;
 use App\Repositories\Interfaces\LockedBalanceRepositoryInterface;
 use App\Repositories\Interfaces\MarketHistoryRepositoryInterface;
 use App\Repositories\Interfaces\MarketRepositoryInterface;
@@ -66,6 +68,7 @@ class RepositoryServiceProvider extends ServiceProvider
         app()->bind(LockedBalanceRepositoryInterface::class, LockedBalanceRepository::class);
         app()->bind(SpotOrderRepositoryInterface::class, SpotOrderRepository::class);
         app()->bind(SpotTradeRepositoryInterface::class, SpotTradeRepository::class);
+        app()->bind(ExchangeRepositoryInterface::class, ExchangeRepository::class);
 
     }
 

@@ -22,7 +22,7 @@ class TransactionController extends Controller
             ->where('subtype', TransactionSubTypeEnum::OTC)->count();
 
         $withdrawalFeeTransactionsCount = Transaction::where('type', TransactionTypeEnum::FEE)
-            ->where('subtype', TransactionSubTypeEnum::WITHDRAWAL_EXCHANGE_FEE)->count();
+            ->where('subtype', TransactionSubTypeEnum::EXCHANGE_WITHDRAWAL_FEE)->count();
 
 
          $OTCFeeTransactionsSum = Transaction::where('type', TransactionTypeEnum::FEE)
@@ -37,7 +37,7 @@ class TransactionController extends Controller
 
         // Calculate sum of withdrawal fee transactions
         $withdrawalFeeTransactionsSum = Transaction::where('type', TransactionTypeEnum::FEE)
-            ->where('subtype', TransactionSubTypeEnum::WITHDRAWAL_EXCHANGE_FEE)
+            ->where('subtype', TransactionSubTypeEnum::EXCHANGE_WITHDRAWAL_FEE)
             ->with('wallet.currency')
             ->get()
             ->sum(function ($transaction) {

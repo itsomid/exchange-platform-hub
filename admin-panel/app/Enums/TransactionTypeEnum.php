@@ -10,7 +10,7 @@ enum TransactionTypeEnum: string
     case WITHDRAWAL = 'withdrawal';
     case REFERRAL = 'referral';
     case FEE = 'fee';
-    case EXCHANGE = 'exchange';
+    case ًREF_EXCHANGE = 'ref_exchange';
 
     const array TYPE_LABEL = [
         self::BUY->value => 'دریافت',//دریافت
@@ -19,7 +19,7 @@ enum TransactionTypeEnum: string
         self::WITHDRAWAL->value => 'برداشت',
         self::REFERRAL->value => 'دعوت از دوستان',
         self::FEE->value => 'کارمزد',
-        self::EXCHANGE->value => 'صرافی مرجع',
+        self::ًREF_EXCHANGE->value => 'صرافی مرجع',
         //        self::ADMIN_CREDIT->value => 'اعتبار ادمین',
     ];
 
@@ -30,7 +30,7 @@ enum TransactionTypeEnum: string
         self::WITHDRAWAL->value => 'danger',
         self::REFERRAL->value => 'primary',
         self::FEE->value => 'info',
-        self::EXCHANGE->value => 'info',
+        self::ًREF_EXCHANGE->value => 'info',
         //        self::ADMIN_CREDIT->value => 'info',
     ];
 
@@ -41,7 +41,7 @@ enum TransactionTypeEnum: string
         self::WITHDRAWAL->value => 'arrow-up-right',
         self::REFERRAL->value => 'user-tag',
         self::FEE->value => 'hand-holding-dollar',
-        self::EXCHANGE->value => 'hand-holding-dollar',
+        self::ًREF_EXCHANGE->value => 'hand-holding-dollar',
 
         //        self::ADMIN_CREDIT->value => 'user-tie-hair',
     ];
