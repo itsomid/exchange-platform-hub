@@ -24,7 +24,7 @@ class CreateTransactionRequestDTO
 
     private string $amount;
     private ?string $coinPrice = null;
-    private ?int $priceSourceId = null;
+    private ?int $exchangeId = null;
 
     private TransactionTypeEnum $type;
 
@@ -93,16 +93,16 @@ class CreateTransactionRequestDTO
     {
         return $this->amount;
     }
-    public function setPriceSourceId(?int $priceSourceId): CreateTransactionRequestDTO
+    public function setExchangeId(?int $exchangeId): CreateTransactionRequestDTO
     {
-        $this->priceSourceId = $priceSourceId;
+        $this->exchangeId = $exchangeId;
 
         return $this;
     }
 
-    public function getPriceSourceId(): ?int
+    public function getExchangeId(): ?int
     {
-        return $this->priceSourceId;
+        return $this->exchangeId;
     }
 
     public function setCoinPrice(string $coinPrice)

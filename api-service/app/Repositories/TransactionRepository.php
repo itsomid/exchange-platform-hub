@@ -24,7 +24,7 @@ class TransactionRepository implements TransactionRepositoryInterface
             'balance' => $requestDTO->getBalance(),
             'amount' => $requestDTO->getAmount(),
             'coin_price' => $requestDTO->getCoinPrice(),
-            'price_source_id' => $requestDTO->getPriceSourceId(),
+            'exchange_id' => $requestDTO->getExchangeId(),
             'type' => $requestDTO->getType(),
             'subtype' => $requestDTO->getSubtype(),
             'status' => $requestDTO->getStatus(),

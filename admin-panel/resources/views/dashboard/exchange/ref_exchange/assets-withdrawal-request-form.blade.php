@@ -38,6 +38,14 @@
                         </div>
                     </div>
                     <div class="w-100"></div>
+                    <div class="col-xl-4 mb-4">
+                        <div class="form-group">
+                            <label class="form-label" for="amount">مقدار را وارد کنید:</label>
+                            <input type="text" name="amount" id="amount" class="form-control" placeholder="مقدار">
+                            @error('currency')<small class="text-danger">{{$message}}</small>@enderror
+                        </div>
+                    </div>
+                    <div class="w-100"></div>
                     @foreach($walletChains as $chain)
                         <div class="col-xl-4 mb-3">
                             <label for="withdrawal_address" class="form-label">
