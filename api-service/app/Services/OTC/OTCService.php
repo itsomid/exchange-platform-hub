@@ -21,6 +21,7 @@ use App\Notifications\OTCSellCreated;
 use App\Repositories\DTO\OTCOrder\CreateOTCOrderRequestDTO;
 use App\Repositories\DTO\OTCRefExchangeWithdrawal\CreateOTCRefExchangeWithdrawalRequestDTO;
 use App\Repositories\DTO\Transaction\CreateTransactionRequestDTO;
+use App\Repositories\Interfaces\ExchangeRepositoryInterface;
 use App\Repositories\Interfaces\MarketRepositoryInterface;
 use App\Repositories\Interfaces\OTCOrderRepositoryInterface;
 use App\Repositories\Interfaces\OTCRefExchangeWithdrawalInterface;
@@ -43,6 +44,7 @@ class OTCService
 {
     public function __construct(
         private readonly MarketRepositoryInterface         $marketRepository,
+        private readonly ExchangeRepositoryInterface       $exchangeRepository,
         private readonly WalletRepositoryInterface         $walletRepository,
         private readonly TransactionRepositoryInterface    $transactionRepository,
         private readonly OTCOrderRepositoryInterface       $otcOrderRepository,
@@ -96,6 +98,7 @@ class OTCService
             DB::beginTransaction();
             //Find Market
             $market = $this->marketRepository->getMarketById($requestDTO->getMarketId());
+            $activeExchange = $this->exchangeRepository->getActiveExchange();
 
             $sellerWallet = $this->walletRepository
                 ->getOneOrCreateByCurrencyWithLock(
@@ -122,7 +125,7 @@ class OTCService
                 ->setMarketId($market->id)
                 ->setQuantity($buyAmount)
                 ->setPrice($market->exchangePrice->buy_price)
-                ->setExchangeId($market->exchangePrice->exchange_id)
+                ->setExchangeId($activeExchange->id)
                 ->setFee($fee)
                 ->setType(OTCOrderTypeEnum::BUY)
                 ->setStatus(OTCOrderStatusEnum::PENDING)
@@ -185,15 +188,18 @@ class OTCService
     public function completeBuyOrder(CompletedOrderRequestDTO $requestDTO): void
     {
         $otc = $this->otcOrderRepository->getOneById($requestDTO->getOtcId());
+        $activeExchange = $this->exchangeRepository->getActiveExchange();
 
+        $market = $otc->market;
         $buyAmount = $otc->quantity;
-        $amountInQuoteCurrency = Math::mul($otc->market->exchangePrice->buy_price, $otc->quantity);
+        $buyPrice = $otc->price;
+
+        $amountInQuoteCurrency = Math::mul($buyPrice, $otc->quantity);
 
         $fee = Math::mul($buyAmount, Math::div(Setting::getSetting('otc_buy_fee'), 100));
         $receivedAmount = Math::sub($buyAmount, $fee);
 
-        //Find Market
-        $market = $this->marketRepository->getMarketById($otc->market_id);
+
         $sellerWallet = $this->walletRepository
             ->getOneOrCreateByCurrencyWithLock(
                 $market->base_currency,
@@ -221,6 +227,8 @@ class OTCService
             ->setOtcOrderId($otc->id)
             ->setBalance($buyerWallet->balance)
             ->setAmount($receivedAmount)
+            ->setCoinPrice($buyPrice)
+            ->setExchangeId($activeExchange->id)
             ->setType(TransactionTypeEnum::BUY)
             ->setSubtype(TransactionSubTypeEnum::OTC)
             ->setStatus(TransactionStatusEnum::SUCCESS)
@@ -240,6 +248,8 @@ class OTCService
             ->setOtcOrderId($otc->id)
             ->setBalance($buyerQuoteWallet->balance)
             ->setAmount((string)-$amountInQuoteCurrency)
+            ->setCoinPrice("1")
+            ->setExchangeId($activeExchange->id)
             ->setType(TransactionTypeEnum::SELL)
             ->setSubtype(TransactionSubTypeEnum::OTC)
             ->setStatus(TransactionStatusEnum::SUCCESS)
@@ -257,6 +267,8 @@ class OTCService
             ->setOtcOrderId($otc->id)
             ->setBalance($sellerQuoteWallet->balance)
             ->setAmount($amountInQuoteCurrency)
+            ->setCoinPrice("1")
+            ->setExchangeId($activeExchange->id)
             ->setType(TransactionTypeEnum::BUY)
             ->setSubtype(TransactionSubTypeEnum::OTC)
             ->setStatus(TransactionStatusEnum::SUCCESS)
@@ -274,6 +286,8 @@ class OTCService
             ->setOtcOrderId($otc->id)
             ->setBalance($sellerWallet->balance)
             ->setAmount((string)-$receivedAmount)
+            ->setCoinPrice($buyPrice)
+            ->setExchangeId($activeExchange->id)
             ->setType(TransactionTypeEnum::SELL)
             ->setSubtype(TransactionSubTypeEnum::OTC)
             ->setStatus(TransactionStatusEnum::SUCCESS)
@@ -295,6 +309,8 @@ class OTCService
             ->setOtcOrderId($otc->id)
             ->setBalance($sellerWallet->balance)
             ->setAmount($otc->fee)
+            ->setCoinPrice($buyPrice)
+            ->setExchangeId($activeExchange->id)
             ->setType(TransactionTypeEnum::FEE)
             ->setSubtype(TransactionSubTypeEnum::OTC)
             ->setStatus(TransactionStatusEnum::SUCCESS)
@@ -321,6 +337,7 @@ class OTCService
             DB::beginTransaction();
             // Find Market
             $market = $this->marketRepository->getMarketById($requestDTO->getMarketId());
+            $activeExchange = $this->exchangeRepository->getActiveExchange();
             $sellerWallet = $this->walletRepository
                 ->getOneOrCreateByCurrencyWithLock(
                     $market->base_currency,
@@ -351,7 +368,9 @@ class OTCService
                 ->setStatus(OTCOrderStatusEnum::SUCCESS)
             );
 
+            //WITHDRAW USDT From Ref exchange IN SELL
             if (Math::comp($buyerQuoteWallet->available_balance, $receivedAmount) === -1) {
+
                 $usdtWallet = $this->walletRepository
                     ->getBitexroomWallet(
                         'USDT'
@@ -361,11 +380,14 @@ class OTCService
                     ->setWalletId($usdtWallet->id)
                     ->setOtcOrderId($otc_order->id)
                     ->setAmount(-$receivedAmount)
-                    ->setType(TransactionTypeEnum::WITHDRAWAL)
-                    ->setSubtype(TransactionSubTypeEnum::COINEX)
+                    ->setCoinPrice("1")
+                    ->setExchangeId($activeExchange->id)
+                    ->setType(TransactionTypeEnum::REF_EXCHANGE)
+                    ->setSubtype(TransactionSubTypeEnum::REF_EXCHANGE_WITHDRAWAL)
                     ->setStatus(TransactionStatusEnum::SUCCESS)
-                    ->setDescription(sprintf('استفاده USDT به مقدار %s',
-                            formatNumberTrimZeros((float)$receivedAmount)
+                    ->setDescription(sprintf('برداشت USDT به مقدار %s از صرافی مرجع (%s)',
+                            formatNumberTrimZeros((float)$receivedAmount),
+                            $market->exchangePrice->exchange->name
                         )
                     ));
 
@@ -404,10 +426,12 @@ class OTCService
     public function completeSellOrder(CompletedOrderRequestDTO $requestDTO): void
     {
         $otc = $this->otcOrderRepository->getOneById($requestDTO->getOtcId());
+        $activeExchange = $this->exchangeRepository->getActiveExchange();
         $market = $otc->market;
         $sellAmount = $otc->quantity;
+        $sellPrice = $otc->price;
 
-        $amountInQuoteCurrency = Math::mul($market->exchangePrice->sell_price, $sellAmount);
+        $amountInQuoteCurrency = Math::mul($sellPrice, $sellAmount);
         //        dd($amountInQuoteCurrency);
         $fee = Math::mul($amountInQuoteCurrency, Math::div(Setting::getSetting('otc_sell_fee'), '100'));
         $receivedAmount = Math::sub($amountInQuoteCurrency, $fee);
@@ -440,6 +464,8 @@ class OTCService
             ->setOtcOrderId($otc->id)
             ->setBalance($sellerWallet->balance)
             ->setAmount((string)(-$sellAmount))
+            ->setCoinPrice($sellPrice)
+            ->setExchangeId($activeExchange->id)
             ->setType(TransactionTypeEnum::SELL)
             ->setSubtype(TransactionSubTypeEnum::OTC)
             ->setStatus(TransactionStatusEnum::SUCCESS)
@@ -459,6 +485,8 @@ class OTCService
             ->setOtcOrderId($otc->id)
             ->setBalance($sellerQuoteWallet->balance)
             ->setAmount($receivedAmount)
+            ->setCoinPrice("1")
+            ->setExchangeId($activeExchange->id)
             ->setType(TransactionTypeEnum::BUY)
             ->setSubtype(TransactionSubTypeEnum::OTC)
             ->setStatus(TransactionStatusEnum::SUCCESS)
@@ -478,6 +506,8 @@ class OTCService
             ->setOtcOrderId($otc->id)
             ->setBalance($buyerWallet->balance)
             ->setAmount($sellAmount)
+            ->setCoinPrice($sellPrice)
+            ->setExchangeId($activeExchange->id)
             ->setType(TransactionTypeEnum::BUY)
             ->setSubtype(TransactionSubTypeEnum::OTC)
             ->setStatus(TransactionStatusEnum::SUCCESS)
@@ -498,6 +528,8 @@ class OTCService
             ->setOtcOrderId($otc->id)
             ->setBalance($buyerQuoteWallet->balance)
             ->setAmount((string)(-$receivedAmount))
+            ->setCoinPrice("1")
+            ->setExchangeId($activeExchange->id)
             ->setType(TransactionTypeEnum::SELL)
             ->setSubtype(TransactionSubTypeEnum::OTC)
             ->setStatus(TransactionStatusEnum::SUCCESS)
@@ -517,6 +549,8 @@ class OTCService
             ->setOtcOrderId($otc->id)
             ->setBalance($buyerQuoteWallet->balance)
             ->setAmount($fee)
+            ->setCoinPrice("1")
+            ->setExchangeId($activeExchange->id)
             ->setType(TransactionTypeEnum::FEE)
             ->setSubtype(TransactionSubTypeEnum::OTC)
             ->setStatus(TransactionStatusEnum::SUCCESS)

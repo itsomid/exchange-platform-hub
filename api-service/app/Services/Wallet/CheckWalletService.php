@@ -16,10 +16,14 @@ use App\Models\Currency;
 use App\Notifications\DepositSuccessful;
 use App\Repositories\DTO\Deposit\CreateDepositRequestDTO;
 use App\Repositories\DTO\Transaction\CreateTransactionRequestDTO;
+use App\Repositories\ExchangeRepository;
 use App\Repositories\Interfaces\DepositRepositoryInterface;
+use App\Repositories\Interfaces\ExchangeRepositoryInterface;
+use App\Repositories\Interfaces\MarketRepositoryInterface;
 use App\Repositories\Interfaces\TransactionRepositoryInterface;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
+use App\Repositories\MarketRepository;
 use App\Services\Wallet\DTO\CheckWallet\CheckUserDepositRequestDTO;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -28,6 +32,7 @@ class CheckWalletService
 {
     public function __construct(
         private readonly DepositRepositoryInterface $depositRepository,
+        private readonly ExchangeRepositoryInterface $exchangeRepository,
         private readonly WalletRepositoryInterface $walletRepository,
         private readonly TransactionRepositoryInterface $transactionRepository,
         private readonly UserRepositoryInterface $userRepository,
@@ -42,6 +47,7 @@ class CheckWalletService
         $hasNewTransaction = false;
         $user = $this->userRepository->getUserById($requestDTO->getUserId());
         $wallet = $this->walletRepository->getOneByCurrency($requestDTO->getCurrencySymbol(), $requestDTO->getUserId());
+        $activeExchange = $this->exchangeRepository->getActiveExchange();
 
         if (is_null($wallet)) {
 
@@ -83,11 +89,8 @@ class CheckWalletService
                     }
 
                     $currency = Currency::whereSymbol($transaction->getCryptocurrency())->first();
-
                     $usdtValue = Math::mul($currency->exchangePrice, $transaction->getAmount());
 
-                    $currency = Currency::whereSymbol($transaction->getCryptocurrency())->first();
-                    $usdtValue = Math::mul($currency->exchangePrice, $transaction->getAmount());
                     $deposit = $this->depositRepository->create(resolve(CreateDepositRequestDTO::class)
                         ->setUserId($transaction->getUserId())
                         ->setCurrencySymbol($transaction->getCryptocurrency())
@@ -106,6 +109,8 @@ class CheckWalletService
                         ->setWalletId($wallet->id)
                         ->setBalance($wallet->balance)
                         ->setAmount($transaction->getAmount())
+                        ->setCoinPrice($currency->exchangePrice)
+                        ->setExchangeId($activeExchange->id)
                         ->setType(TransactionTypeEnum::DEPOSIT)
                         ->setSubtype(TransactionSubTypeEnum::USER_INITIATED)
                         ->setStatus(TransactionStatusEnum::SUCCESS)

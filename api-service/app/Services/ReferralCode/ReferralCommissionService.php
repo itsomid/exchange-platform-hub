@@ -72,9 +72,9 @@ class ReferralCommissionService
         });
     }
 
-    private function applyCommission(User $user, string $amount, OTCOrder $otcOrder, ReferralCode $referralCode, string $role): void
+    private function applyCommission(User $user, string $commissionAmount, OTCOrder $otcOrder, ReferralCode $referralCode, string $role): void
     {
-        if ($amount <= 0) {
+        if ($commissionAmount <= 0) {
             return; // No commission to apply
         }
 
@@ -84,14 +84,15 @@ class ReferralCommissionService
             return; // Wallet not found
         }
 
-        $wallet->increment('balance', $amount);
+        $wallet->increment('balance', $commissionAmount);
 
         $transaction = Transaction::query()->create([
             'user_id' => $user->id,
             'wallet_id' => $wallet->id,
             'otc_order_id' => $otcOrder->id,
             'balance' => $wallet->balance,
-            'amount' => $amount,
+            'amount' => $commissionAmount,
+            'coin_price' => $otcOrder->price,
             'type' => TransactionTypeEnum::REFERRAL,
             'subtype' => $role === 'introducer' ? TransactionSubTypeEnum::REFERRAL_INTRODUCER : TransactionSubTypeEnum::REFERRAL_FRIEND,
             'status' => TransactionStatusEnum::SUCCESS,
@@ -108,14 +109,14 @@ class ReferralCommissionService
 
         $exchangeWallet = $this->walletRepository->getBitexroomWallet('USDT');
         if ($exchangeWallet) {
-            $exchangeWallet->decrement('balance', $amount);
+            $exchangeWallet->decrement('balance', $commissionAmount);
 
             Transaction::query()->create([
                 'user_id' => config('bitexroom.bitexroom_user_id'), // Admin or exchange user ID
                 'wallet_id' => $exchangeWallet->id,
                 'otc_order_id' => $otcOrder->id,
                 'balance' => $exchangeWallet->balance,
-                'amount' => -$amount,
+                'amount' => -$commissionAmount,
                 'type' => TransactionTypeEnum::REFERRAL,
                 'subtype' => $role === 'introducer' ? TransactionSubTypeEnum::REFERRAL_INTRODUCER : TransactionSubTypeEnum::REFERRAL_FRIEND,
                 'status' => TransactionStatusEnum::SUCCESS,
