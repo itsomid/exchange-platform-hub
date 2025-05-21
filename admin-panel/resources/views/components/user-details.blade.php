@@ -88,8 +88,10 @@
                 <li class="mt-2 d-flex justify-content-between">
                     <span class="h6">مکان:</span>
                     @if($user->latestActiveToken)
-                        {{$user->latestActiveToken->ip}}
-                        <td class="text-truncate">{{ $user->latestActiveToken->ip ? App\Helpers\LocationFinder::getCountryAndCity($user->latestActiveToken->ip): 'N/A' }}</td>
+                        <div>
+                            <span class="ms-1">{{ $user->latestActiveToken->ip ? App\Helpers\LocationFinder::getCountryAndCity($user->latestActiveToken->ip): 'N/A' }}</span>
+                            <span>({{$user->latestActiveToken->ip}})</span>
+                        </div>
                     @else
                         <span>بدون فعالیت</span>
                     @endif

@@ -2,7 +2,8 @@
 
 namespace App\Services\Exchanges\Asset\Coinex;
 
-use App\Exceptions\Coinex\CoinexWithdrawalException;
+use App\Exceptions\Exchange\CantResolveCoinexException;
+use App\Exceptions\Exchange\CoinexWithdrawalException;
 use App\Services\Exchanges\Asset\AdminNotification;
 use App\Services\Exchanges\Asset\Coinex\Authentication\MethodEnum;
 use App\Services\Exchanges\Asset\Contract\AssetInterface;
@@ -10,7 +11,9 @@ use App\Services\Exchanges\Asset\DTO\BalanceResponseDTO;
 use App\Services\Exchanges\Asset\DTO\WithdrawRequestDTO;
 use App\Services\Exchanges\Asset\DTO\WithdrawResponseDTO;
 use App\Services\Exchanges\Enums\CoinexWithdrawalError;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class AssetCoinex implements AssetInterface
 {
@@ -39,8 +42,13 @@ class AssetCoinex implements AssetInterface
         if ($requestDTO->getChain()) {
             $requestBody['chain'] = $requestDTO->getChain();
         }
+        try {
+            $response = CoinexRequest::send(MethodEnum::POST, '/v2/assets/withdraw', $requestBody);
 
-        $response = CoinexRequest::send(MethodEnum::POST, '/v2/assets/withdraw', $requestBody);
+        } catch (ConnectionException|Throwable $exception) {
+            report($exception);
+            throw new CantResolveCoinexException("Can't Resolve https://api.coinex.com");
+        }
 
         if ($response->json('code') !== 0) {
             Log::channel('ref-exchange')->error('Coinex withdrawal failed with code: ' . $response->json('code') . ', message: ' . $response->json('message') . ', response: ' . $response->body());

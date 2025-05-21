@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('transactions', function (Blueprint $table) {
-            $table->decimal('coin_price', 20, 8)->nullable()->after('balance'); // قیمت ارز به دلار
-            $table->unsignedBigInteger('price_source_id')->nullable()->after('coin_price'); // Reference to exchanges table
-            $table->foreign('price_source_id')->references('id')->on('exchanges')->nullOnDelete();
+            $table->decimal('coin_price', 20, 8)->nullable()->after('balance');
+            $table->unsignedBigInteger('exchange_id')->nullable()->after('coin_price');
+            $table->foreign('exchange_id')->references('id')->on('exchanges')->nullOnDelete();
         });
     }
 
@@ -24,8 +24,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('transactions', function (Blueprint $table) {
-            $table->dropForeign(['price_source_id']);
-            $table->dropColumn('price_source_id');
+            $table->dropForeign(['exchange_id']);
+            $table->dropColumn('exchange_id');
             $table->dropColumn('coin_price');
         });
     }

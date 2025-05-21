@@ -98,7 +98,7 @@
                                 </h6>
                             </td>
                             <td>
-                                {{$withdraw->withdrawal_date}}
+                                {{\App\Helpers\DateFormatter::convertToPersianDate( $withdraw->withdrawal_date,'H:i:s %Y/%m/%d')}}
                             </td>
                             {{--                            <td>--}}
                             {{--                                {{$withdraw->description}}--}}

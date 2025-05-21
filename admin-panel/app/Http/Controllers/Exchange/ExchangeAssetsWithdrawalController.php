@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Exchange;
 
 use App\Enums\OTCRefExchangeWithdrawalStatusEnum;
 use App\Enums\WithdrawalStatusEnum;
+use App\Exceptions\Exchange\CoinexWithdrawalException;
 use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
 use App\Models\Currency;
@@ -17,6 +18,8 @@ use App\Models\Withdrawal;
 use App\Services\Exchanges\Asset\AssetFactory;
 use App\Services\Exchanges\Asset\DTO\WithdrawRequestDTO;
 use App\Services\Exchanges\Asset\Enum\WithdrawMethodEnum;
+use App\Services\Exchanges\DTO\ChargeUSDTRequestDTO;
+use App\Services\Exchanges\ExchangeService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -82,39 +85,27 @@ class ExchangeAssetsWithdrawalController extends Controller
         if (!in_array($request->currency_chain, $validChains)) {
             return redirect()->back()->withErrors(['chain' => 'شبکه انتخاب شده با ارز مطابقت ندارد.']);
         }
-
         try {
-            $asset = AssetFactory::make('coinex');
-            $res = $asset->withdraw(
-                resolve(WithdrawRequestDTO::class)
-                    ->setCurrency($request->input('currency_symbol'))
-                    ->setChain($request->input('currency_chain'))
-                    ->setAmount($request->input('amount'))
-                    ->setWithdrawMethod(WithdrawMethodEnum::ON_CHAIN)
-                    ->setAddress($request->input('withdrawal_address'))
-            );
 
-            ExchangeAssetsWithdrawal::query()->create([
-                'admin_id'           => auth()->id(),
-                'withdrawal_id'      => $res->getWithdrawId(),
-                'exchange'           => 'coinex',
-                'currency_symbol'    => $request->input('currency_symbol'),
-                'currency_chain'     => $request->input('currency_chain'),
-                'fee_currency'       => $res->getCurrencyFee(),
-                'fee'                => $res->getFee(),
-                'amount'             => $res->getAmount(),
-                'actual_amount'      => $res->getActualAmount(),
-                'hd_wallet_address'  => $res->getAddress(),
-                'withdrawal_date'    => $res->getCreatedAt(),
-                'explore_address_url'=> $res->getExploreAddress(),
-                'description'        => $request->input('description'),
-            ]);
+            $exchangeService = resolve(ExchangeService::class);
+            $exchangeService->chargeCurrency(
+                resolve(ChargeUSDTRequestDTO::class)
+                    ->setCurrency($currency->symbol)
+                    ->setCurrencyChain($request->input('currency_chain'))
+                    ->setQuantity($request->input('amount'))
+            );
 
             Toast::message('درخواست برداشت ثبت شد و تا دقایقی دیگر منتقل می گردد.')
                 ->success()
                 ->notify();
 
             return redirect()->route('admin.ref-exchange.assets-gathering-to-hd-wallet.index');
+        }catch (CoinexWithdrawalException $e) {
+            report($e);
+            Toast::message('خطا در برداشت از صرافی: ' . $e->getMessage())
+                ->danger()
+                ->notify();
+            return redirect()->back()->withInput();
         } catch (\Throwable $e) {
             report($e);
             Toast::message('فرآیند برداشت با شکست مواجه شد. لطفا دوباره تلاش کنید.')
