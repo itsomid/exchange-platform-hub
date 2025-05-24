@@ -57,4 +57,9 @@ class Transaction extends Model
     {
         return $this->belongsTo(SpotTrade::class,'spot_trade_id');
     }
+
+    public function exchange() : BelongsTo
+    {
+        return $this->belongsTo(Exchange::class,'exchange_id');
+    }
 }

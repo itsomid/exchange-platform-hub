@@ -110,7 +110,7 @@ class CheckWalletService
                         ->setBalance($wallet->balance)
                         ->setAmount($transaction->getAmount())
                         ->setCoinPrice($currency->exchangePrice)
-                        ->setExchangeId($activeExchange->id)
+                        ->setExchangeId(null)
                         ->setType(TransactionTypeEnum::DEPOSIT)
                         ->setSubtype(TransactionSubTypeEnum::USER_INITIATED)
                         ->setStatus(TransactionStatusEnum::SUCCESS)
