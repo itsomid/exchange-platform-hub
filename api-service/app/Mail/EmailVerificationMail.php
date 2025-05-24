@@ -6,24 +6,21 @@ use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use Jenssegers\Agent\Agent;
 
-class UserAgentChanged extends Mailable implements ShouldQueue
+class EmailVerificationMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    public User $user;
-
-    public string $newAgent;
-
-    public function __construct(User $user, string $newAgent)
+    /**
+     * Create a new message instance.
+     */
+    public function __construct(public User $user, public string $url)
     {
-        $this->user = $user;
-        $this->newAgent = $newAgent;
-
+        //
     }
 
     /**
@@ -32,7 +29,9 @@ class UserAgentChanged extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'دستگاه شما تغییر کرده است',
+            from: new Address('info@bitexroom.com', 'BitexRoom'),
+            to: [$this->user->email],
+            subject: 'فعال‌سازی حساب کاربری',
         );
     }
 
@@ -41,15 +40,17 @@ class UserAgentChanged extends Mailable implements ShouldQueue
      */
     public function content(): Content
     {
-        $agent = new Agent;
-        $agent->setUserAgent($this->newAgent);
+        $emailVerificationModel = $this->user->emailVerification()->latest()->first();
+        $token = $this->user->getLatestToken();
+        $expirationDate = $emailVerificationModel->expiration_date->diffForHumans();
 
         return new Content(
-            view: 'mail.auth.change-user-agent',
+            view: 'mail.auth.email-verification',
             with: [
-                'platform' => $agent->platform(),
-                'browser' => $agent->browser(),
-                'device' => $agent->device(),
+                'user' => $this->user,
+                'token' => $token,
+                'url' => $this->url,
+                'expirationDate' => $expirationDate,
             ]
         );
     }

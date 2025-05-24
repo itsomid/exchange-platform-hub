@@ -309,7 +309,7 @@ class WithdrawalService
                         ->setConfirmedAt($withdrawal->confirmed_at)
                         ->setTransactionHash($responseDTO->getTransactionHash());
 
-                    AdminNotification::sendHotWalletNotEnoughBalance($responseDTO->getCurrencySymbol(), $responseDTO->getAmount());
+                    AdminNotification::sendHotWalletNotEnoughBalance($responseDTO->getCurrencySymbol(), $responseDTO->getAmount(), $user);
 
                 }
 

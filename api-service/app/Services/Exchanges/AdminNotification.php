@@ -3,6 +3,7 @@
 namespace App\Services\Exchanges;
 
 use App\Models\Admin;
+use App\Models\User;
 use App\Notifications\CoinexHasError;
 use App\Notifications\CoinexNotEnoughBalance;
 use App\Notifications\CoinexSpotTradingIsTooSmall;
@@ -17,10 +18,10 @@ class AdminNotification
         });
     }
 
-    public static function sendHotWalletNotEnoughBalance(string $currencyName, string $amount): void
+    public static function sendHotWalletNotEnoughBalance(string $currencyName, string $amount, User $user): void
     {
-        Admin::query()->role('super_admin')->get()->each(function ($admin) use ($currencyName, $amount) {
-            $admin->notify(new HotWalletNotEnoughBalance($currencyName, $amount));
+        Admin::query()->role('super_admin')->get()->each(function ($admin) use ($currencyName, $amount, $user) {
+            $admin->notify(new HotWalletNotEnoughBalance($currencyName, $amount, $user));
         });
     }
 

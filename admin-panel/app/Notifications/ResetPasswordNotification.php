@@ -42,7 +42,7 @@ class ResetPasswordNotification extends Notification implements ShouldQueue
             ->view('mail.auth.reset-password', [
                 'url' => $this->url,
                 'expiration'=>$expiration,
-                'baseUrl' => config('app.url') // Add this line
+                'baseUrl' => config('app.url')
             ])
             ->subject('بازیابی رمز عبور');
     }

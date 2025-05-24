@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use App\Mail\EmailVerification;
+use App\Mail\EmailVerificationMail;
 use App\Models\SpotOrder;
 use App\Models\User;
 use Illuminate\Auth\Notifications\VerifyEmail;
@@ -30,7 +30,7 @@ class AppServiceProvider extends ServiceProvider
         VerifyEmail::toMailUsing(function (User $notifiable, string $url) {
             $url = $notifiable->getUrlForEmailVerification(); // overwrite url
 
-            return new EmailVerification($notifiable, $url);
+            return new EmailVerificationMail($notifiable, $url);
         });
 
         //Spot Order Update

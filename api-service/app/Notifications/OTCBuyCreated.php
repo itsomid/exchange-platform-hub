@@ -44,6 +44,7 @@ class OTCBuyCreated extends Notification implements ShouldQueue
                 'name' => $this->name,
                 'currencySymbol' => $this->currencySymbol,
                 'amount' => $this->amount,
+                'baseUrl' => config('app.url'),
                 'transactionUrl' => url('/transactions'),
             ]);
     }

@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -16,7 +17,7 @@ class HotWalletNotEnoughBalance extends Notification implements ShouldQueue
     /**
      * Create a new notification instance.
      */
-    public function __construct(private string $currencyName, private string $amount) {
+    public function __construct(private string $currencyName, private string $amount, private User $user) {
         $this->onQueue('api-email');
     }
 
@@ -32,9 +33,8 @@ class HotWalletNotEnoughBalance extends Notification implements ShouldQueue
 
     public function toDatabase($notifiable): array
     {
-
         return [
-            'message' => 'صرافی ما برای برداشت '.$this->currencyName.' به مقدار '.formatNumberTrimZeros($this->amount).' از هات ولت به علت عدم موجودی دچار خطا شد.',
+            'message' => 'صرافی ما برای برداشت '.$this->currencyName.' به مقدار '.formatNumberTrimZeros($this->amount).' از هات ولت کاربر '.$this->user->username.' (ID: '.$this->user->id.') به علت عدم موجودی دچار خطا شد.',
             'url' => '/transactions', // Optional: URL to redirect to
         ];
     }
@@ -45,9 +45,13 @@ class HotWalletNotEnoughBalance extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('به علت عدم موجودی هات ولت به مشکل خورده‌ایم')
-            ->line('صرافی ما برای برداشت '.$this->currencyName.' به مقدار '.formatNumberTrimZeros($this->amount).' از هات ولت به علت عدم موجودی دچار خطا شد.')
-            ->greeting('سلام مدیر عزیز');
+            ->subject('به علت عدم موجودی هات ولت به مشکل خورده‌ایم.')
+            ->view('mail.withdrawal.hotwallet-withdrawal-problem', [
+                'currencyName' => $this->currencyName,
+                'amount' => formatNumberTrimZeros($this->amount),
+                'user' => $this->user,
+                'baseUrl' => config('app.url')
+            ]);
     }
 
     /**
