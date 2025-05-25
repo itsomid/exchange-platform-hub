@@ -4,6 +4,7 @@ namespace App\Services\Exchanges\Asset\Coinex;
 
 use App\Exceptions\Exchange\CantResolveCoinexException;
 use App\Exceptions\Exchange\CoinexWithdrawalException;
+use App\Models\Currency;
 use App\Services\Exchanges\Asset\AdminNotification;
 use App\Services\Exchanges\Asset\Coinex\Authentication\MethodEnum;
 use App\Services\Exchanges\Asset\Contract\AssetInterface;
@@ -31,12 +32,13 @@ class AssetCoinex implements AssetInterface
 
     public function withdraw(WithdrawRequestDTO $requestDTO): WithdrawResponseDTO
     {
+        $formattedAmount = $this->formatWithdrawalAmount($requestDTO->getCurrency(), $requestDTO->getAmount());
 
         $requestBody = [
             'ccy' => $requestDTO->getCurrency(),
             'to_address' => $requestDTO->getAddress(),
             'withdraw_method' => $requestDTO->getWithdrawMethod()->value,
-            'amount' => $requestDTO->getAmount(),
+            'amount' => $formattedAmount,
             'fee_ccy' => 'CET',
         ];
         if ($requestDTO->getChain()) {
@@ -85,5 +87,22 @@ class AssetCoinex implements AssetInterface
             ->setFee($data['tx_fee'] > 0 ? $data['tx_fee'] : $data['fee_amount'])
             ->setCurrencyFee($data['fee_ccy']);
 
+    }
+
+    /**
+     * Format the withdrawal amount according to the currency's precision
+     *
+     * @param string $currencySymbol
+     * @param string $amount
+     * @return string
+     */
+    private function formatWithdrawalAmount(string $currencySymbol, string $amount): string
+    {
+
+        $currency = Currency::where('symbol', $currencySymbol)->first();
+
+        $precision = $currency ? $currency->precision : 8;
+
+        return formatNumber((float)$amount, $precision, '');
     }
 }

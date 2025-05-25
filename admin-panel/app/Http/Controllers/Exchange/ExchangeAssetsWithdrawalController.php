@@ -27,7 +27,7 @@ class ExchangeAssetsWithdrawalController extends Controller
 {
     public function index()
     {
-        $withdraws = ExchangeAssetsWithdrawal::with('currency')->get();
+        $withdraws = ExchangeAssetsWithdrawal::with('currency')->orderBy('id','desc')->get();
 
         $withdrawalFeeSum = ExchangeAssetsWithdrawal::sum('fee');
 
