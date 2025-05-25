@@ -19,7 +19,7 @@ class Transaction extends Model
     public $filterNameSpace = 'App\Filters\TransactionFilter';
 
     protected $fillable = [
-        'user_id', 'admin_id', 'wallet_id', 'deposit_id', 'withdrawal_id', 'otc_order_id', 'amount', 'balance', 'coin_price', 'price_source_id', 'type', 'subtype', 'description', 'admin_description', 'status'
+        'user_id', 'admin_id', 'wallet_id', 'deposit_id', 'withdrawal_id', 'otc_order_id', 'amount', 'balance', 'coin_price', 'exchange_id', 'type', 'subtype', 'description', 'admin_description', 'status'
     ];
 
     protected function casts(): array
