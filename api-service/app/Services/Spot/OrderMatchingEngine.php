@@ -279,6 +279,7 @@ readonly class OrderMatchingEngine
                 ->setUserId($spotOrder->user_id)
                 ->setType(TransactionTypeEnum::BUY)
                 ->setAmount($buyQuantity)
+                ->setCoinPrice($spotOrder->side === SpotOrderSideEnum::BUY ? $spotTrade->price : "1")
                 ->setStatus(TransactionStatusEnum::SUCCESS)
                 ->setBalance($walletBaseCurrency->balance)
                 ->setDescription(
@@ -298,6 +299,7 @@ readonly class OrderMatchingEngine
                 ->setUserId($spotOrder->user_id)
                 ->setType(TransactionTypeEnum::SELL)
                 ->setAmount($sellQuantity * -1)
+                ->setCoinPrice($spotOrder->side === SpotOrderSideEnum::BUY ? "1" : $spotTrade->price)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
                 ->setBalance($walletQuoteCurrency->balance)
                 ->setDescription(
@@ -324,7 +326,7 @@ readonly class OrderMatchingEngine
         }else{
             $commissionWallet = $this->walletRepository->getOneByCurrency($spotOrder->market->quote_currency, $spotOrder->user_id);
         }
-        
+
         // **Create Transaction for Commission**
         $this->transactionRepository->create(
             resolve(CreateTransactionRequestDTO::class)
@@ -332,6 +334,7 @@ readonly class OrderMatchingEngine
                 ->setUserId($spotOrder->user_id)
                 ->setType(TransactionTypeEnum::FEE)
                 ->setAmount($commissionAmount * -1)
+                ->setCoinPrice($spotOrder->side === SpotOrderSideEnum::BUY ? $spotTrade->price : "1")
                 ->setStatus(TransactionStatusEnum::SUCCESS)
                 ->setBalance($commissionWallet->balance)
                 ->setDescription(
