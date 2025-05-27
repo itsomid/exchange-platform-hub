@@ -35,6 +35,10 @@ class Market extends Model
         return $this->belongsTo(Currency::class, 'base_currency', 'symbol');
     }
 
+    public function quoteCurrency()
+    {
+        return $this->belongsTo(Currency::class,'quote_currency','symbol');
+    }
     public function getMarketNameAttribute(): string
     {
         return $this->base_currency.''.$this->quote_currency;

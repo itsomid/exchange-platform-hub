@@ -188,7 +188,6 @@ class OTCService
     public function completeBuyOrder(CompletedOrderRequestDTO $requestDTO): void
     {
         $otc = $this->otcOrderRepository->getOneById($requestDTO->getOtcId());
-        $activeExchange = $this->exchangeRepository->getActiveExchange();
 
         $market = $otc->market;
         $buyAmount = $otc->quantity;
@@ -320,7 +319,7 @@ class OTCService
                     formatNumberTrimZeros((float)$otc->fee),
                     $market->base_currency)
             ));
-
+        $sellerWallet->increment('balance',(float)$otc->fee);
         $otc->update([
             'status' => OTCOrderStatusEnum::SUCCESS,
         ]);
@@ -365,7 +364,7 @@ class OTCService
                 ->setPrice($market->exchangePrice->sell_price)
                 ->setFee($fee)
                 ->setType(OTCOrderTypeEnum::SELL)
-                ->setStatus(OTCOrderStatusEnum::SUCCESS)
+                ->setStatus(OTCOrderStatusEnum::PENDING)
             );
 
             //WITHDRAW USDT From Ref exchange IN SELL
@@ -379,9 +378,9 @@ class OTCService
                     ->setUserId(config('bitexroom.bitexroom_user_id'))
                     ->setWalletId($usdtWallet->id)
                     ->setOtcOrderId($otc_order->id)
-                    ->setAmount(-$receivedAmount)
+                    ->setAmount($receivedAmount)
                     ->setCoinPrice("1")
-                    ->setExchangeId(null)
+                    ->setExchangeId($activeExchange->id)
                     ->setType(TransactionTypeEnum::REF_EXCHANGE)
                     ->setSubtype(TransactionSubTypeEnum::REF_EXCHANGE_WITHDRAWAL)
                     ->setStatus(TransactionStatusEnum::SUCCESS)
@@ -393,7 +392,7 @@ class OTCService
 
                 $this->refExchangeWithdrawalRepository->create(
                     resolve(CreateOTCRefExchangeWithdrawalRequestDTO::class)
-                        ->setCurrencyId($market->currency->id)
+                        ->setCurrencyId($market->quoteCurrency->id)
                         ->setTransactionId($chargeUSDTTransaction->id)
                         ->setStatus(OTCRefExchangeWithdrawalStatusEnum::PENDING)
                 );
@@ -426,14 +425,14 @@ class OTCService
     public function completeSellOrder(CompletedOrderRequestDTO $requestDTO): void
     {
         $otc = $this->otcOrderRepository->getOneById($requestDTO->getOtcId());
-        $activeExchange = $this->exchangeRepository->getActiveExchange();
+
         $market = $otc->market;
         $sellAmount = $otc->quantity;
         $sellPrice = $otc->price;
+        $fee = $otc->fee;
 
         $amountInQuoteCurrency = Math::mul($sellPrice, $sellAmount);
-        //        dd($amountInQuoteCurrency);
-        $fee = Math::mul($amountInQuoteCurrency, Math::div(Setting::getSetting('otc_sell_fee'), '100'));
+
         $receivedAmount = Math::sub($amountInQuoteCurrency, $fee);
 
         $buyerWallet = $this->walletRepository
@@ -540,7 +539,10 @@ class OTCService
                     $market->quote_currency)
             )
         );
-        $buyerQuoteWallet->decrement('balance', (float)$receivedAmount);
+        if (Math::comp($buyerQuoteWallet->available_balance, $receivedAmount) >= 0) {
+            $buyerQuoteWallet->decrement('balance', (float)$receivedAmount);
+        }
+
 
         // Commission Transaction
         $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
@@ -561,7 +563,7 @@ class OTCService
                     $market->quote_currency)
             )
         );
-
+        $buyerQuoteWallet->increment('balance', (float)$fee);
         $otc->update([
             'status' => OTCOrderStatusEnum::SUCCESS,
         ]);
