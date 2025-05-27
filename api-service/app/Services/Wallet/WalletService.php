@@ -120,7 +120,7 @@ class WalletService
     public function getLists(DTO\Wallet\WalletListsRequestDTO $requestDTO): array
     {
         $wallets = $this->walletRepository->getLists($requestDTO->getUserId());
-        $markets = $this->marketRepository->getAll();
+        $markets = $this->marketRepository->getActiveMarket();
 
         $lists = [];
 

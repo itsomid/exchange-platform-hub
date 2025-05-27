@@ -35,4 +35,11 @@ class MarketRepository implements MarketRepositoryInterface
             return Market::query()->get();
         });
     }
+
+    public function getActiveMarket() :Collection
+    {
+        return Cache::remember(__CLASS__.'getActiveMarket', 60, function () {
+            return Market::query()->whereIsActive(true)->get();
+        });
+    }
 }

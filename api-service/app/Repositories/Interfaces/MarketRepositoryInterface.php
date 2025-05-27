@@ -11,6 +11,8 @@ interface MarketRepositoryInterface
 
     public function getAll(): Collection;
 
+    public function getActiveMarket(): Collection;
+
     public function getMarketById(int $marketId): ?Market;
     public function getMarketBySymbol(string $baseCurrency, string $quoteCurrency): ?Market;
 }
