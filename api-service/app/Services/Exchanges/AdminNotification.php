@@ -4,6 +4,7 @@ namespace App\Services\Exchanges;
 
 use App\Models\Admin;
 use App\Models\User;
+use App\Notifications\CoinexPriceDifferenceTooLarge;
 use App\Notifications\CoinexHasError;
 use App\Notifications\CoinexNotEnoughBalance;
 use App\Notifications\CoinexSpotTradingIsTooSmall;
@@ -11,7 +12,7 @@ use App\Notifications\HotWalletNotEnoughBalance;
 
 class AdminNotification
 {
-    public static function sendEnoughBalance(string $marketName, string $amount): void
+    public static function sendCoinexNotEnoughBalance(string $marketName, string $amount): void
     {
         Admin::query()->role(['super_admin', 'admin'])->get()->each(function ($admin) use ($marketName, $amount) {
             $admin->notify(new CoinexNotEnoughBalance($marketName, $amount));
@@ -32,6 +33,12 @@ class AdminNotification
         });
     }
 
+    public static function sendPriceDifferenceTooLarge(string $marketName, string $amount, string $message): void
+    {
+        Admin::query()->role(['super_admin', 'admin'])->get()->each(function ($admin) use ($marketName, $amount,$message) {
+            $admin->notify(new CoinexPriceDifferenceTooLarge($marketName, $amount,$message));
+        });
+    }
     public static function logError(string $marketName, string $amount, string $errorMessage): void
     {
         Admin::query()->role(['super_admin', 'admin'])->get()->each(function ($admin) use ($marketName, $amount, $errorMessage) {

@@ -54,7 +54,7 @@ class AssetCoinex implements AssetInterface
         //Balance Not Enough
         if ($response->json('code') === 3109) {
             Log::channel('ref-exchange')->info('Coinex Balance Not Enough In USDT');
-            AdminNotification::sendEnoughBalance($request->getMarket(), $request->getQuantity());
+            AdminNotification::sendCoinexNotEnoughBalance($request->getMarket(), $request->getQuantity());
 
             return resolve(BuyDTOResponse::class)
                 ->setSpotStatus(SpotStatusEnum::NotEnoughBalance)
@@ -67,6 +67,15 @@ class AssetCoinex implements AssetInterface
 
             return resolve(BuyDTOResponse::class)
                 ->setSpotStatus(SpotStatusEnum::AmountTooSmall)
+                ->setErrorCode($response->json('code'))
+                ->setIsDone(false);
+        }
+        if ($response->json('code') === 3606) {
+            Log::channel('ref-exchange')->info('Order price and the latest price deviation is too large');
+            AdminNotification::sendPriceDifferenceTooLarge($request->getMarket(), $request->getQuantity(),$response->json('message'));
+            
+            return resolve(BuyDTOResponse::class)
+                ->setSpotStatus(SpotStatusEnum::PriceDifferenceTooLarge)
                 ->setErrorCode($response->json('code'))
                 ->setIsDone(false);
         }
@@ -134,7 +143,7 @@ class AssetCoinex implements AssetInterface
         //Balance Not Enough
         if ($response->json('code') === 3109) {
             Log::channel('ref-exchange')->warning('Coinex Balance Not Enough In USDT');
-            AdminNotification::sendEnoughBalance('USDT', $requestDTO->getAmount());
+            AdminNotification::sendCoinexNotEnoughBalance('USDT', $requestDTO->getAmount());
         }
         if (! $response->successful() || $response->json('code') !== 0) {
             Log::channel('ref-exchange')->warning($response->body());

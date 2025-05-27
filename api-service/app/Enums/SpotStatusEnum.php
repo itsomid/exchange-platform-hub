@@ -9,5 +9,6 @@ enum SpotStatusEnum: string
     case AmountTooSmall = 'Amount_Too_Small';
     case BuyOrderFailed = 'Buy_Order_Failed';
     case ConnectionLosses = 'Connection_Losses';
+    case PriceDifferenceTooLarge = 'PRICE_DIFFERENCE_TOO_LARGE';
 
 }
