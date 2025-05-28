@@ -15,8 +15,8 @@
                             <select id="action" name="action" class="form-select text-capitalize mb-md-0 ">
                                 @foreach($userFinancialBlockActions as $action)
                                     <option
-                                        {{ old('action') == $action->value ? 'selected' : '' }} value="{{$action}}">
-                                        {{ \App\Enums\UserFinancialBlockAction::TYPE_LABEL[$action->value] }}
+                                            {{ old('action') == $action->value ? 'selected' : '' }} value="{{$action}}">
+                                        {{ \App\Enums\FinancialBlockActionEnum::TYPE_LABEL[$action->value] }}
                                     </option>
                                 @endforeach
                             </select>
@@ -63,7 +63,6 @@
         </div>
 
     </div>
-
 
 @endsection
 @section('vendor-script')

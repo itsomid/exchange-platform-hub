@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Enums\FinancialBlockReasonsEnum;
 
-use App\Enums\UserFinancialBlockAction;
+use App\Enums\FinancialBlockActionEnum;
 use App\Filters\Filterable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -23,7 +23,7 @@ class UserFinancialBlock extends Model
         'restricted_until',
     ];
     protected $casts =[
-      'action' => UserFinancialBlockAction::class,
+      'action' => FinancialBlockActionEnum::class,
       'reason' => FinancialBlockReasonsEnum::class
     ];
 

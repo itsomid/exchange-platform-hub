@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\User;
 
 use App\Enums\FinancialBlockReasonsEnum;
-use App\Enums\UserFinancialBlockAction;
+use App\Enums\FinancialBlockActionEnum;
 use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -57,7 +57,7 @@ class UserSecurityController extends Controller
 
         UserFinancialBlock::query()->create([
             'user_id' => $user->id,
-            'action' => UserFinancialBlockAction::WITHDRAW,
+            'action' => FinancialBlockActionEnum::WITHDRAW,
             'reason' => FinancialBlockReasonsEnum::DISABLE_TWO_FACTOR->value,
             'admin_id' => \Auth::guard('admin')->user()->id,
             'description' => 'غیر فعالسازی دومرحله ای',

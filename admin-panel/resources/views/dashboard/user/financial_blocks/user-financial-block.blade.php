@@ -15,7 +15,7 @@
                             <select id="action" name="action" class="form-select text-capitalize mb-md-0 ">
                                 @foreach($userFinancialBlockActions as $action)
                                     <option
-                                        {{ old('action') == $action->value ? 'selected' : '' }} value="{{$action}}">{{ \App\Enums\UserFinancialBlockAction::TYPE_LABEL[$action->value] }}</option>
+                                            {{ old('action') == $action->value ? 'selected' : '' }} value="{{$action}}">{{ \App\Enums\FinancialBlockActionEnum::TYPE_LABEL[$action->value] }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -88,7 +88,8 @@
                         <td class="">{{$block->description}}</td>
                         <td class="">
                             @if(!$block->deleted_at)
-                                <form action="{{route('admin.user.financial-block.deleteBlock',['user'=>$user,'financialBlock'=>$block->id])}}" method="post">
+                                <form action="{{route('admin.user.financial-block.deleteBlock',['user'=>$user,'financialBlock'=>$block->id])}}"
+                                      method="post">
                                     @csrf
                                     @method('DELETE')
                                     <button class="btn btn-icon btn-danger text-white">

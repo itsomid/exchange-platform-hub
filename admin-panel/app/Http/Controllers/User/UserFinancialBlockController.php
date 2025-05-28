@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\User;
 
 use App\Enums\FinancialBlockReasonsEnum;
-use App\Enums\UserFinancialBlockAction;
+use App\Enums\FinancialBlockActionEnum;
 use App\Functions\FlashMessages\Toast;
 use App\Helpers\DateFormatter;
 use App\Http\Controllers\Controller;
@@ -39,7 +39,8 @@ class UserFinancialBlockController extends Controller
 
     public function getBlocks(User $user)
     {
-        $userFinancialBlockActions = UserFinancialBlockAction::cases();
+
+        $userFinancialBlockActions = FinancialBlockActionEnum::cases();
 
         $user->load('financialBlocks');
         $userFinancialBlockHistory = UserFinancialBlock::query()->whereUserId($user->id)->withTrashed()->orderBy('created_at','desc')->paginate(20);
@@ -81,7 +82,7 @@ class UserFinancialBlockController extends Controller
     public function createMassBlock()
     {
 
-        $userFinancialBlockActions = UserFinancialBlockAction::cases();
+        $userFinancialBlockActions = FinancialBlockActionEnum::cases();
         return view('dashboard.user.financial_blocks.create-mass-block', [
             'userFinancialBlockActions' => $userFinancialBlockActions
         ]);
