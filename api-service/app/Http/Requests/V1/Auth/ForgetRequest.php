@@ -3,6 +3,7 @@
 namespace App\Http\Requests\V1\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\App;
 
 class ForgetRequest extends FormRequest
 {
@@ -29,6 +30,9 @@ class ForgetRequest extends FormRequest
     {
         return [
             'email' => 'required|email',
+            'captcha' => App::isProduction() ? ['required', 'array'] : ['nullable'],
+            'captcha.key' => App::isProduction() ? ['required', 'string'] : ['nullable'],
+            'captcha.value' => App::isProduction() ? ['required', 'captcha_api:'.request('captcha.key').',flat'] : ['nullable'],
         ];
     }
 }
