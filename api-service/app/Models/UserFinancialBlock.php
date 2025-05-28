@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\UserFinancialBlockAction;
+use App\Enums\FinancialBlockActionEnum;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -26,7 +26,7 @@ class UserFinancialBlock extends Model
     {
         return [
             'restricted_until' => 'datetime',
-            'action' => UserFinancialBlockAction::class,
+            'action' => FinancialBlockActionEnum::class,
         ];
     }
 

@@ -2,7 +2,7 @@
 
 namespace App\Services\User;
 
-use App\Enums\UserFinancialBlockAction;
+use App\Enums\FinancialBlockActionEnum;
 use App\Repositories\DTO\UserFinancialBlock\SaveOrUpdateBlockStateRequestDTO;
 use App\Repositories\UserFinancialBlockRepository;
 use App\Services\User\DTO\FinancialBlock\GetUserBlockedStateResponseDTO;
@@ -23,7 +23,7 @@ class FinancialBlockService
         );
     }
 
-    public function getUserBlockedState(int $userId, UserFinancialBlockAction $action): GetUserBlockedStateResponseDTO
+    public function getUserBlockedState(int $userId, FinancialBlockActionEnum $action): GetUserBlockedStateResponseDTO
     {
         $userBlockModel = $this->repository->getLatestUserBlock($userId, $action);
 

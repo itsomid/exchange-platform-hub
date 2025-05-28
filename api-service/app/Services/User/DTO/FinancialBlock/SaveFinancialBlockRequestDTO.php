@@ -3,14 +3,14 @@
 namespace App\Services\User\DTO\FinancialBlock;
 
 use App\Enums\FinancialBlockReasonsEnum;
-use App\Enums\UserFinancialBlockAction;
+use App\Enums\FinancialBlockActionEnum;
 use Carbon\Carbon;
 
 class SaveFinancialBlockRequestDTO
 {
     private int $userId;
 
-    private UserFinancialBlockAction $action;
+    private FinancialBlockActionEnum $action;
 
     private FinancialBlockReasonsEnum $reason;
 
@@ -28,14 +28,14 @@ class SaveFinancialBlockRequestDTO
         return $this->userId;
     }
 
-    public function setAction(UserFinancialBlockAction $action): self
+    public function setAction(FinancialBlockActionEnum $action): self
     {
         $this->action = $action;
 
         return $this;
     }
 
-    public function getAction(): UserFinancialBlockAction
+    public function getAction(): FinancialBlockActionEnum
     {
         return $this->action;
     }

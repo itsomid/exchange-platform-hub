@@ -2,7 +2,7 @@
 
 namespace App\Repositories;
 
-use App\Enums\UserFinancialBlockAction;
+use App\Enums\FinancialBlockActionEnum;
 use App\Models\UserFinancialBlock;
 use App\Repositories\DTO\UserFinancialBlock\SaveOrUpdateBlockStateRequestDTO;
 use App\Repositories\Interfaces\UserFinancialBlockRepositoryInterface;
@@ -20,7 +20,7 @@ class UserFinancialBlockRepository implements UserFinancialBlockRepositoryInterf
             ]);
     }
 
-    public function getLatestUserBlock(int $userId, UserFinancialBlockAction $action): ?UserFinancialBlock
+    public function getLatestUserBlock(int $userId, FinancialBlockActionEnum $action): ?UserFinancialBlock
     {
         return UserFinancialBlock::query()
             ->where('user_id', $userId)

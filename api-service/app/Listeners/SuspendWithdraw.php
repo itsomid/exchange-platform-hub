@@ -3,7 +3,7 @@
 namespace App\Listeners;
 
 use App\Enums\FinancialBlockReasonsEnum;
-use App\Enums\UserFinancialBlockAction;
+use App\Enums\FinancialBlockActionEnum;
 use App\Services\User\DTO\FinancialBlock\SaveFinancialBlockRequestDTO;
 use App\Services\User\FinancialBlockService;
 use Illuminate\Auth\Events\PasswordReset;
@@ -30,8 +30,8 @@ class SuspendWithdraw implements ShouldQueue
             ->saveOrUpdateState(
                 resolve(SaveFinancialBlockRequestDTO::class)
                     ->setUserId($user->id)
-                    ->setAction(UserFinancialBlockAction::WITHDRAW)
-                    ->setRestrictedUntil(now()->addDay())
+                    ->setAction(FinancialBlockActionEnum::WITHDRAW)
+                    ->setRestrictedUntil(now()->addDays(2))
                     ->setReason(FinancialBlockReasonsEnum::PASSWORD_CHANGED)
             );
     }

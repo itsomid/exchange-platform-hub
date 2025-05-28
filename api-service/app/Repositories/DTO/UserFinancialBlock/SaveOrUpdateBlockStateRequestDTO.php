@@ -2,16 +2,17 @@
 
 namespace App\Repositories\DTO\UserFinancialBlock;
 
-use App\Enums\UserFinancialBlockAction;
+use App\Enums\FinancialBlockActionEnum;
+use App\Enums\FinancialBlockReasonsEnum;
 use Carbon\Carbon;
 
 class SaveOrUpdateBlockStateRequestDTO
 {
     private int $userId;
 
-    private UserFinancialBlockAction $action;
+    private FinancialBlockActionEnum $action;
 
-    private string $reason;
+    private FinancialBlockReasonsEnum $reason;
 
     private Carbon $restrictedUntil;
 
@@ -27,26 +28,26 @@ class SaveOrUpdateBlockStateRequestDTO
         return $this->userId;
     }
 
-    public function setAction(UserFinancialBlockAction $action): self
+    public function setAction(FinancialBlockActionEnum $action): self
     {
         $this->action = $action;
 
         return $this;
     }
 
-    public function getAction(): UserFinancialBlockAction
+    public function getAction(): FinancialBlockActionEnum
     {
         return $this->action;
     }
 
-    public function setReason(string $reason): self
+    public function setReason(FinancialBlockReasonsEnum $reason): self
     {
         $this->reason = $reason;
 
         return $this;
     }
 
-    public function getReason(): string
+    public function getReason(): FinancialBlockReasonsEnum
     {
         return $this->reason;
     }

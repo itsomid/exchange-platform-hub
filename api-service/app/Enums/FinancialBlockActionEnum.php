@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum UserFinancialBlockAction: string
+enum FinancialBlockActionEnum: string
 {
     case WITHDRAW = 'withdraw';
     case DEPOSIT = 'deposit';

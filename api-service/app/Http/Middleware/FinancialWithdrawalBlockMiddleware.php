@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Enums\UserFinancialBlockAction;
+use App\Enums\FinancialBlockActionEnum;
 use App\Services\User\FinancialBlockService;
 use Closure;
 use Illuminate\Http\Request;
@@ -19,7 +19,7 @@ class FinancialWithdrawalBlockMiddleware
     {
         $service = resolve(FinancialBlockService::class);
 
-        $blockState = $service->getUserBlockedState(auth()->id(), UserFinancialBlockAction::WITHDRAW);
+        $blockState = $service->getUserBlockedState(auth()->id(), FinancialBlockActionEnum::WITHDRAW);
         if ($blockState->isBlock()) {
             return response()->json(['message' => __('messages.user_financial_block.withdrawal', ['date' => $blockState->getRestrictUntil()->diffForHumans()])], 403);
         }
