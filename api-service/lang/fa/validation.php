@@ -190,6 +190,7 @@ return [
         'family' => 'نام خانوادگی',
         'password' => 'رمز عبور',
         'password_confirmation' => 'تاییدیه ی رمز عبور',
+        'confirm' => 'تاییدیه ی رمز عبور',
         'city' => 'شهر',
         'province' => 'استان',
         'country' => 'کشور',

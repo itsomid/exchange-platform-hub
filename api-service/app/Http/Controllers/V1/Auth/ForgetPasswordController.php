@@ -5,6 +5,7 @@ namespace App\Http\Controllers\V1\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Auth\ChangePasswordRequest;
 use App\Http\Requests\V1\Auth\ForgetRequest;
+use App\Http\Requests\V1\Auth\ResetPasswordRequest;
 use App\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Response;
@@ -106,7 +107,7 @@ class ForgetPasswordController extends Controller
      *     )
      * )
      */
-    public function resetPassword(ChangePasswordRequest $request): Response
+    public function resetPassword(ResetPasswordRequest $request): Response // Changed ChangePasswordRequest to ResetPasswordRequest
     {
         $status = Password::reset(
             $request->only('email', 'password', 'token'),
@@ -130,3 +131,4 @@ class ForgetPasswordController extends Controller
             ], Response::HTTP_BAD_REQUEST);
     }
 }
+
