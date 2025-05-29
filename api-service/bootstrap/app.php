@@ -37,6 +37,7 @@ return Application::configure(basePath: dirname(__DIR__))
             ->alias([
                 'check.user.status' => \App\Http\Middleware\CheckUserStatus::class,
                 'jwt.auth' => \App\Http\Middleware\JwtAuthMiddleware::class,
+                'verified' => \App\Http\Middleware\CustomEnsureEmailIsVerified::class,
             ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
