@@ -30,4 +30,12 @@ class UpdateCurrencyRequest extends FormRequest
             'logo' => 'image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
         ];
     }
+
+    public function prepareForValidation()
+    {
+        $this->merge([
+            'max_auto_withdraw_amount' => str_replace(',', '', $this->max_auto_withdraw_amount)
+        ]);
+
+    }
 }
