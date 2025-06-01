@@ -200,8 +200,25 @@
                             <th>نام</th>
                             <th>کد معرف ثبت نامی</th>
                             <th>وضعیت حساب</th>
-                            <th>آخرین فعالیت</th>
-                            <th>وضعیت اکانت</th>
+                            <th>آخرین فعالیت
+                                <br>وضعیت حساب
+                            </th>
+                            <th>
+                                @php
+                                    $currentParams = request()->except('sortByCreatedAt');
+                                    $currentSortDirection = request()->input('sortByCreatedAt', 'asc');
+                                    $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
+                                @endphp
+                                <a href="{{ route('admin.user.index', array_merge($currentParams, ['sortByCreatedAt' => $newSortDirection])) }}"
+                                   class="text-black">
+                                    تاریخ ثبت نام
+                                    @if($currentSortDirection === 'asc')
+                                        <span><i class="fa-solid fa-arrow-up"></i></span>
+                                    @else
+                                        <span><i class="fa-solid fa-arrow-down"></i></span>
+                                    @endif
+                                </a>
+                            </th>
                             <th>عملیات</th>
                         </tr>
                         </thead>
@@ -265,17 +282,19 @@
                                             </div>
                                         @endforeach
                                     @endif
+                                    <span
+                                        class="badge bg-label-{{$user->status->color()}} align-self-baseline ms-2">{{$user->status->label()}}</span>
                                 </td>
                                 <td class="font-number">
+
                                     @if($user->latestActiveToken)
-                                        {{\App\Helpers\DateFormatter::convertToPersianDate($user->latestActiveToken->last_used_at,'H:i:s %Y/%m/%d')}}
+                                        <span>{{\App\Helpers\DateFormatter::convertToPersianDate($user->latestActiveToken->last_used_at,'H:i:s %Y/%m/%d')}}</span>
                                     @else
                                         <span>بدون فعالیت</span>
                                     @endif
                                 </td>
                                 <td>
-                                    <span
-                                        class="badge bg-label-{{$user->status->color()}} align-self-baseline">{{$user->status->label()}}</span>
+                                    <span>{{\App\Helpers\DateFormatter::convertToPersianDate($user->created_at,'H:i:s %d %B %Y')}}</span>
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center">
