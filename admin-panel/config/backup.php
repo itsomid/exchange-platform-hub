@@ -76,13 +76,6 @@ return [
              *
              * For a complete list of available customization options, see https://github.com/spatie/db-dumper
              */
-            'mysql' => [
-                'dump_command_timeout' => 60 * 5,
-                'use_single_transaction' => true,
-                'extra_options' => [
-                    '--ssl-mode=DISABLED', // 👈 this is the key
-                ],
-            ],
             'databases' => [
                 env('DB_CONNECTION', 'mysql'),
             ],
