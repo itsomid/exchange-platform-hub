@@ -28,7 +28,7 @@ RUN docker-php-ext-install pdo pdo_mysql bcmath
 
 # Install extensions
 RUN apk update && apk upgrade
-RUN apk add --no-cache freetype libjpeg-turbo libpng libwebp libxpm \
+RUN apk add --no-cache php8-zip freetype libjpeg-turbo libpng libwebp libxpm \
     freetype-dev libjpeg-turbo-dev libpng-dev libwebp-dev libxpm-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp --with-xpm \
     && docker-php-ext-install gd pdo pdo_mysql bcmath \
