@@ -11,9 +11,8 @@ use Illuminate\Support\Facades\Hash;
 
 class AdminSecurityController extends Controller
 {
-    public function passwordEdit()
+    public function passwordEdit(Admin $admin)
     {
-        $admin = Auth::guard('admin')->user();
 
         return view('dashboard.admin.edit-password', ['admin' => $admin]);
     }
