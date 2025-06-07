@@ -29,6 +29,7 @@ RUN docker-php-ext-install pdo pdo_mysql bcmath
 # Installing php extensions
 RUN apk update && apk upgrade \
     && apk add --no-cache \
+        mysql-client \
         libzip-dev \
         freetype libjpeg-turbo libpng libwebp libxpm \
         freetype-dev libjpeg-turbo-dev libpng-dev libwebp-dev libxpm-dev \
