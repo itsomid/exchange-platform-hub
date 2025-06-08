@@ -6,5 +6,5 @@ use App\Exceptions\ServiceException;
 
 class InvalidUsernameOrPasswordException extends ServiceException
 {
-    protected $code = 401;
+    protected $code = 400;
 }
