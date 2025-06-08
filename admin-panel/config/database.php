@@ -46,7 +46,8 @@ return [
             'dump' => [
                 'use_single_transaction' => true,
                 'timeout' => 300,
-                'extra_options' => '--ssl-mode=DISABLED',
+                'extra_options' => '--ssl-mode=DISABLED --no-tablespaces',
+                'add_extra_option' => '--ssl=0 --default-auth=mysql_native_password',
             ],
             'url' => env('DATABASE_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
@@ -63,6 +64,7 @@ return [
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
             ]) : [],
         ],
 
