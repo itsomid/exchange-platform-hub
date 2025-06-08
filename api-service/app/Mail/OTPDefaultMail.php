@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Enums\EmailOTPActionEnum;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -16,7 +17,10 @@ class OTPDefaultMail extends Mailable implements ShouldQueue
     /**
      * Create a new message instance.
      */
-    public function __construct(private readonly int $code, private readonly ?string $name = null) {}
+    public function __construct(private readonly int $code, private readonly ?string $name = null, private readonly EmailOTPActionEnum $action)
+    {
+        $this->onQueue('api-email');
+    }
 
     /**
      * Get the message envelope.
@@ -37,7 +41,11 @@ class OTPDefaultMail extends Mailable implements ShouldQueue
 
         return new Content(
             view: 'mail.otp.default-mail',
-            with: ['code' => $this->code, 'expiration' => $expiration],
+            with: [
+                'code' => $this->code,
+                'expiration' => $expiration,
+                'action' => $this->action
+            ],
         );
     }
 

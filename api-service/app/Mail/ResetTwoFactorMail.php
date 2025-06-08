@@ -18,7 +18,7 @@ class ResetTwoFactorMail extends Mailable implements ShouldQueue
      */
     public function __construct(private readonly string $encryptedToken)
     {
-        //
+        $this->onQueue('api-email');
     }
 
     /**

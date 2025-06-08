@@ -1,5 +1,5 @@
 @extends('mail.layout.master-mail-layout')
-@section('title', 'سفارش خرید شما تکمیل شد')
+@section('title', 'کد دو عاملی')
 @section('header')
     کد دو عاملی
 @endsection
@@ -8,8 +8,8 @@
     <br>
 
     <div style="text-align: center">
-        <p>کد تأیید شما:</p>
-        <div class="otp-code">{{ $code }}</div>
+        <p>کد تأیید برای {{ $action->getLabel() }}:</p>
+        <div class="activation-code">{{ $code }}</div>
         <p>این کد تا <strong>{{ $expiration }}</strong> معتبر است.</p>
         <p>اگر این درخواست را شما ثبت نکرده‌اید، لطفاً این ایمیل را نادیده بگیرید.</p>
     </div>

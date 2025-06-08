@@ -20,7 +20,7 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
      */
     public function __construct(public User $user, public string $url)
     {
-        //
+        $this->onQueue('api-email');
     }
 
     /**

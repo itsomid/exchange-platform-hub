@@ -59,12 +59,6 @@
             border-radius: 4px;
             font-size: 18px;
         }
-        .otp-code {
-            font-size: 22px;
-            font-weight: bold;
-            color: #4CAF50;
-            margin: 20px 0;
-        }
         .email-footer {
             background-color: #f1f1f1;
             text-align: center;

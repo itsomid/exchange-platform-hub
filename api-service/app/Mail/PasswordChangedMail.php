@@ -18,7 +18,7 @@ class PasswordChangedMail extends Mailable implements ShouldQueue
      */
     public function __construct()
     {
-        //
+        $this->onQueue('api-email');
     }
 
     /**

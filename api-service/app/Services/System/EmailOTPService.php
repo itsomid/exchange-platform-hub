@@ -108,7 +108,7 @@ class EmailOTPService
         $mailableClass = $requestDTO->getMailable() ?? OTPDefaultMail::class;
 
         Mail::to($requestDTO->getEmail())->send(
-            new $mailableClass($code, $requestDTO->getName())
+            new $mailableClass($code, $requestDTO->getName(),$requestDTO->getAction())
         );
     }
 
