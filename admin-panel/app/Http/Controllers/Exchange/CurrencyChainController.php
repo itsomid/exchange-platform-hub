@@ -123,6 +123,7 @@ class CurrencyChainController extends Controller
                     'deposit_delay_minutes' => $chainData['deposit_delay_minutes'],
                     'safe_confirmations' => $chainData['safe_confirmations'],
                     'exchange_withdrawal_fee' => $chainData['exchange_withdrawal_fee'],
+                    'withdrawal_precision' => $chainData['withdrawal_precision'],
                     'deposit_enabled' => isset($chainData['deposit_enabled']) && $chainData['deposit_enabled'] == '1',
                     'withdraw_enabled' => isset($chainData['withdraw_enabled']) && $chainData['withdraw_enabled'] == '1',
                 ]);

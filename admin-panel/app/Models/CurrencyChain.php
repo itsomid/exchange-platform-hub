@@ -21,6 +21,7 @@ class CurrencyChain extends Model
         'network_fee',
         'deposit_enabled',
         'withdraw_enabled',
+        'withdrawal_precision',
         'is_base_coin',
     ];
 

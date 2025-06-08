@@ -82,7 +82,19 @@
                                         </div>
                                     </div>
                                 </div>
-
+                                <div class="row mt-5">
+                                    <div class="col-lg-3">
+                                        <div class="form-group">
+                                            <label class="form-label" for="withdrawal_precision_{{$chain->id}}">مقدار اعشار کوین هنگام برداشت</label>
+                                            <input  type="number" name="chains[{{$chain->id}}][withdrawal_precision]" id="withdrawal_precision_{{$chain->id}}" class="form-control"
+                                                    placeholder="مقدار اعشار کوین"
+                                                    value="{{$chain->withdrawal_precision}}" required>
+                                            @error('precision')
+                                            <small class="text-danger">{{$message}}</small>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="row mt-5">
                                     <div class="col-md-3 ">
                                         <div class="form-group">
