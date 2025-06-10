@@ -170,9 +170,9 @@ class CoinExSocketService
                     'open_price' => $openPrice,
                 ]);
 
-            $sellPrice = bcmul($lastPrice, 12, 8);
+            $sellPrice = bcmul($lastPrice, ($this->exchangePrices[$this->marketIds[$baseCurrency]]['exchange_profit_sell'] / 100) + 1, 8);
             $buyPrice = bcmul($lastPrice, ($this->exchangePrices[$this->marketIds[$baseCurrency]]['exchange_profit_buy'] / 100) + 1, 8);
-
+            
             $sellOpenPrice = bcmul($openPrice, ($this->exchangePrices[$this->marketIds[$baseCurrency]]['exchange_profit_sell'] / 100) + 1, 8);
             $buyOpenPrice = bcmul($openPrice, ($this->exchangePrices[$this->marketIds[$baseCurrency]]['exchange_profit_buy'] / 100) + 1, 8);
 
