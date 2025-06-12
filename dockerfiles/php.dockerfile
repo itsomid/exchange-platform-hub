@@ -22,10 +22,6 @@ RUN echo "php_admin_flag[log_errors] = on" >> /usr/local/etc/php-fpm.d/www.conf
 RUN apk update && apk upgrade
 RUN docker-php-ext-install pdo pdo_mysql bcmath
 
-
-
-# Installing php extensions
-
 # Installing php extensions
 RUN apk update && apk upgrade \
     && apk add --no-cache \
