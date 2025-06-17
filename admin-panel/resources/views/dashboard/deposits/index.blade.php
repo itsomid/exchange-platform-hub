@@ -2,7 +2,7 @@
 @section('title', 'مدیریت واریزی ها')
 @section('content')
     <div class="row g-4 mb-4">
-        <div class="col-sm-12 col-xl-3">
+        <div class="col-sm-12 col-md-4 col-xxl-3">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
@@ -76,7 +76,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-12 col-xl-3">
+        <div class="col-sm-12 col-xl-4">
             <div class="card">
                 <div class="card-body bg-success">
                     <div class="d-flex align-items-start justify-content-between">
