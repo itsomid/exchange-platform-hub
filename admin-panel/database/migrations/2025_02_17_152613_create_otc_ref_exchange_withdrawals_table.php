@@ -14,6 +14,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        //TODO: Rename table name
         Schema::create('otc_ref_exchange_withdrawals', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(Currency::class)

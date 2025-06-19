@@ -38,6 +38,8 @@ use App\Http\Controllers\User\UserWalletController;
 use App\Http\Controllers\Wallet\WalletController;
 use App\Http\Controllers\Withdrawal\WithdrawalController;
 use App\Http\Controllers\Withdrawal\WithdrawalReportController;
+use App\Http\Controllers\Stock\StockController;
+
 use Illuminate\Support\Facades\Route;
 
 // Routes accessible without 2FA
@@ -247,5 +249,16 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::get('user-registration-report', [UserRegistrationReportController::class, 'index'])->name('report.getUserRegistrationState')->can('user.index');
         Route::get('user-registration-report/month', [UserRegistrationReportController::class, 'getUserRegistrationState'])->name('report.getUserRegistrationState.month')->can('user.index');
         Route::get('ref-exchange/bought-history', [RefExchangeController::class, 'boughtHistory'])->name('report.ref-exchange.bought-history')->can('report');
+    });
+
+    // *********STOCKS*********//
+    Route::prefix('stocks')->group(function () {
+        Route::get('/', [StockController::class, 'index'])->name('stock.index');
+        Route::get('/create', [StockController::class, 'create'])->name('stock.create');
+        Route::post('/', [StockController::class, 'store'])->name('stock.store');
+        Route::get('/{stock}', [StockController::class, 'show'])->name('stock.show');
+        Route::get('/{stock}/edit', [StockController::class, 'edit'])->name('stock.edit');
+        Route::patch('/{stock}', [StockController::class, 'update'])->name('stock.update');
+        Route::delete('/{stock}', [StockController::class, 'destroy'])->name('stock.destroy');
     });
 });
