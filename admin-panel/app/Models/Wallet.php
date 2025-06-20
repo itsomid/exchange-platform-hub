@@ -55,5 +55,9 @@ class Wallet extends Model
     {
         return $this->hasMany(LockedBalanceDetail::class);
     }
+    public function chains(): HasMany
+    {
+        return $this->hasMany(WalletChain::class);
+    }
 
 }

@@ -9,6 +9,7 @@ use App\Enums\TransactionTypeEnum;
 use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Wallet\IncreaseCreditRequest;
+use App\Http\Requests\Wallet\RefreshWalletRequest;
 use App\Models\Currency;
 use App\Models\CurrencyChain;
 use App\Models\Transaction;
@@ -16,6 +17,8 @@ use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WalletChain;
 use App\Services\Transaction\TransactionService;
+use App\Services\Wallet\CheckWalletService;
+use App\Services\Wallet\DTO\CheckWallet\CheckUserDepositRequestDTO;
 use App\Services\Wallet\DTO\UpdateBalanceRequestDTO;
 use App\Services\Wallet\WalletService;
 use Illuminate\Http\Request;
@@ -301,5 +304,21 @@ class WalletController extends Controller
         Toast::message('آدرس با موفقیت به روز شد.')->success()->notify();
         return redirect()->back();
 
+    }
+
+    public function refresh(User $user, Wallet $wallet)
+    {
+        $hasNewTransaction = resolve(CheckWalletService::class)
+            ->checkUserDeposit(
+                resolve(CheckUserDepositRequestDTO::class)
+                    ->setUserId($user->id)
+                    ->setCurrencySymbol($wallet->currency_symbol)
+            );
+
+        if ($hasNewTransaction) {
+            Toast::message('تراکنش‌های جدید با موفقیت بررسی شدند.')->success()->notify();
+        }
+
+        return redirect()->back();
     }
 }

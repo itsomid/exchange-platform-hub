@@ -239,6 +239,7 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::post('{wallet}/unblock-balance', [WalletController::class, 'unblockBalance'])->name('wallet.unblock-balance')->can('wallet');
         Route::post('{wallet}/create-chain-address/{chain_name}', [WalletController::class, 'createExchangeWalletChain'])->name('wallet.create-chain-address');
         Route::post('update-chain-address/{wallet_chain}', [WalletController::class, 'updateExchangeWalletChain'])->name('wallet.update-chain-address');
+        Route::get('{user}/{wallet}/refresh', [WalletController::class, 'refresh'])->name('wallet.refresh');
     });
 
     Route::prefix('report')->group(function () {
