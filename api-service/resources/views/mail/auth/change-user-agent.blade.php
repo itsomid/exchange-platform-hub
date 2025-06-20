@@ -73,3 +73,25 @@
 </div>
 </body>
 </html>
+@extends('mail.layout.master-mail-layout')
+@section('title', 'تغییر دستگاه شما')
+@section('header')
+    تغییر دستگاه شما
+@endsection
+@section('content')
+    <div style="text-align: right;">
+        <p>سلام کاربر عزیز،</p>
+        <p>ما متوجه شدیم که دستگاهی که از آن به حساب کاربری خود وارد می‌شوید تغییر کرده است. جزئیات مربوط به دستگاه جدید در زیر آمده است:</p>
+        <ul>
+            <li><strong>مرورگر:</strong> {{ $browser }}</li>
+            <li><strong>سیستم‌عامل:</strong> {{ $platform }}</li>
+            <li><strong>دستگاه:</strong> {{ $device }}</li>
+        </ul>
+        <div class="important-info">
+            اگر این تغییر توسط شما انجام نشده است، لطفاً فوراً حساب کاربری خود را ایمن کنید.
+        </div>
+        <p>در صورت نیاز به راهنمایی بیشتر، با تیم پشتیبانی ما تماس بگیرید.</p>
+    </div>
+
+
+@endsection
