@@ -63,7 +63,7 @@
                     <th>ارزش</th>
                     <th>نوع سهام</th>
                     <th>کارمزد ابطال</th>
-                    <th class="text-wrap font-number w-25">توضیحات</th>
+                    <th class="text-wrap w-25">توضیحات</th>
                     <th>
                         @php
                             $currentParams = request()->except('sortByCreatedAt');
@@ -106,16 +106,16 @@
                             <td>
                                 {{$stock->type->label()}}
                             </td>
-                            <td class="font-number" dir="ltr">
+                            <td dir="ltr">
                                 {{$stock->cancellation_fee}}
                             </td>
-                            <td class="font-number">
+                            <td >
                                 {{$stock->description}}
                             </td>
-                            <td class="font-number text-wrap">
+                            <td class="text-wrap">
                                 {{$stock->created_at}}
                             </td>
-                            <td class="font-number">
+                            <td >
                                 <span class="badge bg-label-{{$stock->status->color()}} rounded p-2">
                                     {{$stock->status->label()}}
                                 </span>
@@ -123,7 +123,7 @@
                             <td>
                                 <a href="{{route('admin.stock.edit', $stock->id)}}" class="btn btn-icon btn-text-secondary">
                                     <i class="fa-regular fa-pen-to-square fa-lg"></i>
-                                </a>    
+                                </a>
                                 <a href="#" class="btn btn-icon btn-text-secondary" data-bs-toggle="modal"
                                    data-bs-target="#stock-{{$stock->id}}">
                                     <i class="fa-regular fa-eye fa-lg"></i>

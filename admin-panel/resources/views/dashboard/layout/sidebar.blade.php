@@ -141,22 +141,22 @@
             </li>
         @endcan
         @can('spot')
-            <li class="menu-item @if(request()->is('admin/spot*')) active open @endif">
+            <li class="menu-item @if(request()->is('admin/stock*')) active open @endif">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">
                     <i class="menu-icon  fa-regular fa-chart-waterfall"></i>
                     <div>مدیریت معجزه قرن</div>
                 </a>
                 <ul class="menu-sub">
-                    <li class="menu-item @if(request()->is('admin/spot/orders*')) active @endif">
+                    <li class="menu-item @if(request()->is('admin/stocks*')) active @endif">
                         <a href="{{route('admin.stock.index')}}" class="menu-link">
                             <i class="menu-icon  fa-regular fa-chart-waterfall"></i>
                             <div>مدیریت سهم ها</div>
                         </a>
                     </li>
-                    <li class="menu-item @if(request()->is('admin/spot/trades*')) active @endif">
-                        <a href="{{route('admin.spot_trades.index')}}" class="menu-link">
+                    <li class="menu-item @if(request()->is('admin/stocks-contracts*')) active @endif">
+                        <a href="{{route('admin.stock-contract.index')}}" class="menu-link">
                             <i class="menu-icon  fa-regular fa-chart-waterfall"></i>
-                            <div>معاملات سهام</div>
+                            <div>مدیریت قراردادها</div>
                         </a>
                     </li>
                 </ul>

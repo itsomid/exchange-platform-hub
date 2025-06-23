@@ -39,6 +39,7 @@ use App\Http\Controllers\Wallet\WalletController;
 use App\Http\Controllers\Withdrawal\WithdrawalController;
 use App\Http\Controllers\Withdrawal\WithdrawalReportController;
 use App\Http\Controllers\Stock\StockController;
+use App\Http\Controllers\Stock\StockContractController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -261,5 +262,16 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::get('/{stock}/edit', [StockController::class, 'edit'])->name('stock.edit');
         Route::patch('/{stock}', [StockController::class, 'update'])->name('stock.update');
         Route::delete('/{stock}', [StockController::class, 'destroy'])->name('stock.destroy');
+    });
+
+    // *********STOCK CONTRACTS*********//
+    Route::prefix('stock-contracts')->group(function () {
+        Route::get('/', [StockContractController::class, 'index'])->name('stock-contract.index');
+        Route::get('/create', [StockContractController::class, 'create'])->name('stock-contract.create');
+        Route::post('/', [StockContractController::class, 'store'])->name('stock-contract.store');
+        Route::get('/{stockContract}', [StockContractController::class, 'show'])->name('stock-contract.show');
+        Route::get('/{stockContract}/edit', [StockContractController::class, 'edit'])->name('stock-contract.edit');
+        Route::patch('/{stockContract}', [StockContractController::class, 'update'])->name('stock-contract.update');
+        Route::delete('/{stockContract}', [StockContractController::class, 'destroy'])->name('stock-contract.destroy');
     });
 });

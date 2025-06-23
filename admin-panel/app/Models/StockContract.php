@@ -2,12 +2,17 @@
 
 namespace App\Models;
 
+use App\Enums\StockContractStatusEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class StockContract extends Model
 {
     use HasFactory;
+
+    protected $casts = [
+        'contract_status' => StockContractStatusEnum::class,
+    ];
 
     protected $fillable = [
         'user_id',
@@ -22,6 +27,9 @@ class StockContract extends Model
         'sold_at',
         'description',
     ];
+
+
+
 
     public function user()
     {
