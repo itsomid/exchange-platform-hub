@@ -8,17 +8,12 @@
                 @csrf
                 <div class="col-md-6">
                     <label class="form-label mt-5" for="user_id">کاربر :</label>
-                    <select name="user_id" id="user_id" class="form-control @error('user_id') is-invalid @enderror" required>
-                        <option value="">انتخاب کاربر</option>
-                        @foreach($users as $user)
-                            <option value="{{ $user->id }}" {{ old('user_id') == $user->id ? 'selected' : '' }}>
-                                {{ $user->name }} ({{ $user->email }})
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('user_id')
-                        <small class="text-danger">{{ $message }}</small>
-                    @enderror
+                    <x-user-selection-component
+                        inputName="user_id"
+                        multiple="0"
+                        selected=""
+                        selected-label="">
+                    </x-user-selection-component>
                 </div>
 
                 <div class="col-md-6">
@@ -65,10 +60,10 @@
 
                 <div class="col-md-12 mt-3">
                     <label class="form-label" for="description">توضیحات:</label>
-                    <textarea name="description" 
-                              id="description" 
-                              class="form-control @error('description') is-invalid @enderror" 
-                              rows="3" 
+                    <textarea name="description"
+                              id="description"
+                              class="form-control @error('description') is-invalid @enderror"
+                              rows="3"
                               placeholder="توضیحات قرارداد را وارد کنید">{{ old('description') }}</textarea>
                     @error('description')
                         <small class="text-danger">{{ $message }}</small>

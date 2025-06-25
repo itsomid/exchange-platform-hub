@@ -7,20 +7,16 @@
             <form class="row" method="post" action="{{ route('admin.stock-contract.update', $stockContract->id) }}">
                 @csrf
                 @method('PATCH')
-                
+
                 <div class="col-md-6">
-                    <label class="form-label mt-5" for="user_id">کاربر :</label>
-                    <select name="user_id" id="user_id" class="form-control @error('user_id') is-invalid @enderror" required>
-                        <option value="">انتخاب کاربر</option>
-                        @foreach($users as $user)
-                            <option value="{{ $user->id }}" {{ old('user_id', $stockContract->user_id) == $user->id ? 'selected' : '' }}>
-                                {{ $user->name }} ({{ $user->email }})
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('user_id')
-                        <small class="text-danger">{{ $message }}</small>
-                    @enderror
+                    <label class="form-label mt-3" for="user">کاربر :</label>
+                    <x-user-selection-component
+                        inputName="user"
+                        multiple="0"
+                        disabled="1"
+                        selected="{{$stockContract->user}}"
+                        selected-label="({{$stockContract->user->id}}#) {{$stockContract->user->fullname()}} | {{$stockContract->user->email}}">
+                    </x-user-selection-component>
                 </div>
 
                 <div class="col-md-6">
@@ -29,7 +25,7 @@
                         <option value="">انتخاب سهام</option>
                         @foreach($stocks as $stock)
                             <option value="{{ $stock->id }}" {{ old('stock_id', $stockContract->stock_id) == $stock->id ? 'selected' : '' }}>
-                                {{ $stock->name }} - {{ number_format($stock->value) }} تومان
+                                {{ $stock->name }} - {{ number_format($stock->value) }} USDT
                             </option>
                         @endforeach
                     </select>
@@ -67,10 +63,10 @@
 
                 <div class="col-md-12 mt-3">
                     <label class="form-label" for="description">توضیحات:</label>
-                    <textarea name="description" 
-                              id="description" 
-                              class="form-control @error('description') is-invalid @enderror" 
-                              rows="3" 
+                    <textarea name="description"
+                              id="description"
+                              class="form-control @error('description') is-invalid @enderror"
+                              rows="3"
                               placeholder="توضیحات قرارداد را وارد کنید">{{ old('description', $stockContract->description) }}</textarea>
                     @error('description')
                         <small class="text-danger">{{ $message }}</small>
@@ -90,4 +86,4 @@
             </form>
         </div>
     </div>
-@endsection 
+@endsection

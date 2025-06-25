@@ -177,7 +177,7 @@
                                 </div>
                             </td>
                             <td>
-                                <span class="fw-medium">{{ $contract->contract_number }}</span>
+                                <span class="fw-medium font-number">{{ $contract->contract_number }}</span>
                             </td>
                             <td>
                                 <span class="fw-medium">{{ $contract->stock->name ?? 'نامشخص' }}</span>
@@ -189,7 +189,7 @@
                                 <span class="font-number" dir="ltr">{{ number_format($contract->total_value) }}</span>
                             </td>
                             <td>
-                                <span class="text-wrap">{{ $contract->created_at->format('Y/m/d H:i') }}</span>
+                                {{\App\Helpers\DateFormatter::convertToPersianDate($contract->created_at,'H:i:s %Y/%m/%d')}}
                             </td>
                             <td>
                                 <span class="badge bg-label-{{ $contract->contract_status->color() }} rounded p-2">

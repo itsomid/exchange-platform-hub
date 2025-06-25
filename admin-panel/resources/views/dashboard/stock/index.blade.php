@@ -112,8 +112,8 @@
                             <td >
                                 {{$stock->description}}
                             </td>
-                            <td class="text-wrap">
-                                {{$stock->created_at}}
+                            <td>
+                                {{\App\Helpers\DateFormatter::convertToPersianDate($stock->created_at,'H:i:s %Y/%m/%d')}}
                             </td>
                             <td >
                                 <span class="badge bg-label-{{$stock->status->color()}} rounded p-2">
@@ -150,7 +150,7 @@
                                                 </div>
                                                 <div
                                                     class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
-                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">تعداد کاربران این سهم</h6>
+                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">تعداد قراردادهای این سهم</h6>
                                                     <div class="d-flex  gap-4 align-items-center">
                                                         <span class="font-number">{{$stock->contracts->count()}}</span>
                                                     </div>
@@ -171,7 +171,7 @@
                                                 <div
                                                     class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
                                                     <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات سهام</h6>
-                                                    <div class="text-wrap font-number w-60 text-end">
+                                                    <div class="text-wrap w-60 text-end">
                                                         {{$stock->description}}
                                                     </div>
                                                 </div>

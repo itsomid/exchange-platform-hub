@@ -153,9 +153,9 @@
                             <div>مدیریت سهم ها</div>
                         </a>
                     </li>
-                    <li class="menu-item @if(request()->is('admin/stocks-contracts*')) active @endif">
+                    <li class="menu-item @if(request()->is('admin/stock-contracts*')) active @endif">
                         <a href="{{route('admin.stock-contract.index')}}" class="menu-link">
-                            <i class="menu-icon  fa-regular fa-chart-waterfall"></i>
+                            <i class="menu-icon fa-regular fa-chart-waterfall"></i>
                             <div>مدیریت قراردادها</div>
                         </a>
                     </li>
