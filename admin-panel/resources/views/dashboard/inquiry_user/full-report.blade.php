@@ -87,9 +87,15 @@
 
             <div class="card  mt-4">
                 <div class="card-header">
-                    <div class="card-title header-elements">
-                        <h5 class="m-0 me-2">لیست ارز ها</h5>
-                    </div>
+{{--                    <div class="card-title header-elements">--}}
+{{--                        <h5 class="m-0 me-2">لیست ارز ها</h5>--}}
+{{--                        <div class="card-title-elements ms-auto">--}}
+{{--                            <a href="{{route('admin.wallet.refresh')}}" class="btn btn-primary">--}}
+{{--                                <i class="fa-solid fa-rotate-right"></i>چک واریز--}}
+{{--                            </a>--}}
+{{--                        </div>--}}
+{{--                    </div>--}}
+
                 </div>
                 <div class="table-responsive text-nowrap">
                     <table class="table table-striped">
@@ -165,10 +171,13 @@
                                             @endif
                                         @endforeach
                                     @else
-                                        بدون آدرس واریز
+                                        N/A
                                     @endif
                                 </th>
                                 <td>
+                                    <a href="{{route('admin.wallet.refresh',['user'=>$user->id,'wallet'=>$wallet->id])}}" class="btn btn-primary btn-sm me-2">
+                                        <i class="fa-solid fa-rotate-right me-1"></i>چک واریز
+                                    </a>
                                     <a class="btn btn-link p-0 text-secondary me-2"
                                        href="{{route('admin.wallet.detail',['user'=>$user->id,'wallet'=>$wallet->id,'type'=>'deposit'])}}"><i
                                             class="fa-light fa-eye fa-lg"></i></a>
@@ -181,7 +190,7 @@
             </div>
         </div>
     </div>
-    </div>
+
     <div class="row mt-3">
 
         <div class="col">
