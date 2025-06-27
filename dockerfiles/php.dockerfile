@@ -18,6 +18,9 @@ RUN sed -i "s/user = www-data/user = ${USER}/g" /usr/local/etc/php-fpm.d/www.con
 RUN sed -i "s/group = www-data/group = ${USER}/g" /usr/local/etc/php-fpm.d/www.conf
 RUN echo "php_admin_flag[log_errors] = on" >> /usr/local/etc/php-fpm.d/www.conf
 
+# Install Node.js and npm
+RUN apk add --no-cache nodejs npm
+
 # Installing php extensions
 RUN apk update && apk upgrade
 RUN docker-php-ext-install pdo pdo_mysql bcmath
@@ -33,13 +36,14 @@ RUN apk update && apk upgrade \
     && docker-php-ext-install gd zip pdo pdo_mysql bcmath pcntl \
     && apk del freetype-dev libjpeg-turbo-dev libpng-dev libwebp-dev libxpm-dev
 
-
-
 # Install Redis extension
 RUN apk add --no-cache $PHPIZE_DEPS \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && apk del $PHPIZE_DEPS
+
+# Install Puppeteer globally
+RUN npm install -g puppeteer
 
 # Set permissions for Laravel storage and cache directories
 RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache && \
