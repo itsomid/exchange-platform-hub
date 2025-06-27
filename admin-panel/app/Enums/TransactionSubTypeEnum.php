@@ -20,6 +20,7 @@ enum TransactionSubTypeEnum: string
     case REF_EXCHANGE_BUY_FEE = 'ref_exchange_buy_fee';
     case REF_EXCHANGE_WITHDRAWAL = 'ref_exchange_withdrawal';
     case REF_EXCHANGE_WITHDRAWAL_FEE = 'ref_exchange_withdrawal_fee';
+    case STOCK = 'stock';
 
     const array TYPE_LABEL = [
         self::MANUAL_ADMIN->value => 'ادمین',
@@ -38,6 +39,7 @@ enum TransactionSubTypeEnum: string
         self::REF_EXCHANGE_BUY_FEE->value => 'فی خرید از صرافی مرجع',
         self::REF_EXCHANGE_WITHDRAWAL->value => 'برداشت از صرافی مرجع',
         self::REF_EXCHANGE_WITHDRAWAL_FEE->value => 'فی برداشت از صرافی مرجع',
+        self::STOCK->value => 'سهام',
     ];
 
     const array TYPE_COLOR = [
@@ -57,6 +59,7 @@ enum TransactionSubTypeEnum: string
         self::REF_EXCHANGE_BUY_FEE->value => 'info',
         self::REF_EXCHANGE_WITHDRAWAL->value => 'info',
         self::REF_EXCHANGE_WITHDRAWAL_FEE->value => 'info',
+        self::STOCK->value => 'warning',
     ];
 
     public function label(): string

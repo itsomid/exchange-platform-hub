@@ -35,7 +35,7 @@ class WalletService
     public function getUserWallet(int $userId, string $currency): ?Wallet
     {
         return Wallet::where('user_id', $userId)
-            ->where('currency', $currency)
+            ->where('currency_symbol', $currency)
             ->first();
     }
 
@@ -290,5 +290,47 @@ class WalletService
     {
         // Placeholder for address generation logic
         return '0x' . bin2hex(random_bytes(20));
+    }
+
+    /**
+     * Check if user has sufficient balance and decrease it if possible.
+     *
+     * @param int $userId
+     * @param string $currencySymbol
+     * @param float $amount
+     * @return bool True if balance was sufficient and decremented, false otherwise
+     */
+    public function checkAndDecreaseBalance(int $userId, string $currencySymbol, float $amount): bool
+    {
+        try {
+            return DB::transaction(function () use ($userId, $currencySymbol, $amount) {
+                $wallet = Wallet::where('user_id', $userId)
+                    ->where('currency_symbol', $currencySymbol)
+                    ->lockForUpdate()
+                    ->first();
+                if (!$wallet || $wallet->balance < $amount) {
+                    return false;
+                }
+                $wallet->decrement('balance', $amount);
+                return true;
+            });
+        } catch (\Throwable $exception) {
+            report($exception);
+            return false;
+        }
+    }
+    public function increaseBalance(int $userId, string $currencySymbol, float $amount): bool
+    {
+        return DB::transaction(function () use ($userId, $currencySymbol, $amount) {
+            $wallet = Wallet::where('user_id', $userId)
+                ->where('currency_symbol', $currencySymbol)
+                ->lockForUpdate()
+                ->first();
+            if (!$wallet) {
+                return false;
+            }
+            $wallet->increment('balance', $amount);
+            return true;
+        });
     }
 }

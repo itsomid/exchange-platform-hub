@@ -22,7 +22,7 @@
                         <option value="">انتخاب سهام</option>
                         @foreach($stocks as $stock)
                             <option value="{{ $stock->id }}" {{ old('stock_id') == $stock->id ? 'selected' : '' }}>
-                                {{ $stock->name }} - {{ number_format($stock->value) }} تومان
+                                {{ $stock->name }} - {{ number_format($stock->value) }} USDT
                             </option>
                         @endforeach
                     </select>

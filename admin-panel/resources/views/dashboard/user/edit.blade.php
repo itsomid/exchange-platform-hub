@@ -148,7 +148,7 @@
 @section('vendor-script')
     @vite(['resources/assets/vendor/libs/select2/select2.js',
             'resources/assets/vendor/js/forms-selects.js',
-'resources/assets/js/pages-auth-two-steps.js'
+            'resources/assets/js/pages-auth-two-steps.js'
           ])
 
 @endsection

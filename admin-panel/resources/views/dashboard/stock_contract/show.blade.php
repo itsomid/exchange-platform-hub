@@ -12,6 +12,11 @@
                     <a href="{{ route('admin.stock-contract.edit', $stockContract->id) }}" class="btn btn-primary">
                         <i class="fa fa-edit mx-2"></i> ویرایش
                     </a>
+                    @if($stockContract->contract_file)
+                        <a href="{{ asset('storage/contracts/stock/' . $stockContract->contract_file) }}" class="btn btn-success" target="_blank">
+                            <i class="fa fa-download mx-2"></i> دانلود قرارداد
+                        </a>
+                    @endif
                 </div>
             </div>
         </div>
@@ -33,18 +38,18 @@
                             </div>
                             <div class="d-flex justify-content-between">
                                 <span class="text-muted">تاریخ ایجاد:</span>
-                                <span>{{ $stockContract->created_at->format('Y/m/d H:i') }}</span>
+                                <span>{{ \App\Helpers\DateFormatter::convertToPersianDate($stockContract->created_at,'H:i:s - %d %B %Y') }}</span>
                             </div>
                             @if($stockContract->sold_at)
                                 <div class="d-flex justify-content-between">
                                     <span class="text-muted">تاریخ فروش:</span>
-                                    <span>{{ $stockContract->sold_at->format('Y/m/d H:i') }}</span>
+                                    <span>{{ \App\Helpers\DateFormatter::convertToPersianDate($stockContract->sold_at,'H:i:s - %d %B %Y') }}</span>
                                 </div>
                             @endif
                             @if($stockContract->cancelled_at)
                                 <div class="d-flex justify-content-between">
                                     <span class="text-muted">تاریخ ابطال:</span>
-                                    <span>{{ $stockContract->cancelled_at->format('Y/m/d H:i') }}</span>
+                                    <span>{{ \App\Helpers\DateFormatter::convertToPersianDate($stockContract->cancelled_at,'H:i:s - %d %B %Y') }}</span>
                                 </div>
                             @endif
                         </div>
@@ -61,15 +66,15 @@
                             </div>
                             <div class="d-flex justify-content-between">
                                 <span class="text-muted">ارزش هر سهم:</span>
-                                <span class="font-number" dir="ltr">{{ number_format($stockContract->stock->value ?? 0) }} تومان</span>
+                                <span class="font-number" dir="ltr">{{ number_format($stockContract->stock->value ?? 0) }} USDT</span>
                             </div>
                             <div class="d-flex justify-content-between">
                                 <span class="text-muted">ارزش کل قرارداد:</span>
-                                <span class="font-number" dir="ltr">{{ number_format($stockContract->total_value) }} تومان</span>
+                                <span class="font-number" dir="ltr">{{ number_format($stockContract->total_value) }} USDT</span>
                             </div>
                             <div class="d-flex justify-content-between">
                                 <span class="text-muted">کارمزد ابطال:</span>
-                                <span class="font-number" dir="ltr">{{ number_format($stockContract->cancellation_fee) }} تومان</span>
+                                <span class="font-number" dir="ltr">{{ number_format($stockContract->cancellation_fee) }} USDT</span>
                             </div>
                         </div>
                     </div>
@@ -81,7 +86,7 @@
                         <div class="d-flex flex-column gap-2">
                             <div class="d-flex justify-content-between">
                                 <span class="text-muted">نام:</span>
-                                <span>{{ $stockContract->user->name ?? 'نامشخص' }}</span>
+                                <span>{{ $stockContract->user->fullname() ?? 'نامشخص' }}</span>
                             </div>
                             <div class="d-flex justify-content-between">
                                 <span class="text-muted">ایمیل:</span>
@@ -89,7 +94,7 @@
                             </div>
                             <div class="d-flex justify-content-between">
                                 <span class="text-muted">شماره تلفن:</span>
-                                <span>{{ $stockContract->user->phone ?? 'نامشخص' }}</span>
+                                <span>{{ $stockContract->user->mobile ?? 'نامشخص' }}</span>
                             </div>
                         </div>
                     </div>

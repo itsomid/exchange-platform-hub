@@ -2,20 +2,39 @@
 
 namespace App\Http\Controllers\Stock;
 
-use App\Http\Controllers\Controller;
-use App\Models\StockContract;
-use App\Models\Stock;
-use App\Models\User;
+use App\Enums\DepositStatusEnum;
 use App\Enums\StockContractStatusEnum;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use App\Enums\StockTypeEnum;
+use App\Enums\TransactionStatusEnum;
+use App\Enums\TransactionSubTypeEnum;
+use App\Enums\TransactionTypeEnum;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Stock\StockContractStoreRequest;
+use App\Http\Requests\Stock\StockContractUpdateRequest;
+use App\Models\Deposit;
+use App\Models\Stock;
+use App\Models\StockContract;
+use App\Models\Transaction;
+use App\Models\User;
+use App\Services\Wallet\WalletService;
+use Illuminate\Support\Facades\Storage;
+use Spatie\LaravelPdf\Facades\Pdf;
 
 class StockContractController extends Controller
 {
+    protected $walletService;
+    protected $exchangeUserId;
+
+    public function __construct(WalletService $walletService)
+    {
+        $this->exchangeUserId = config('exchange.exchange_user_id', 1);
+        $this->walletService = $walletService;
+    }
+
     public function index()
     {
         $contracts = StockContract::with(['user', 'stock'])->get();
-        
+
         // Dashboard statistics
         $totalContracts = $contracts->count();
         $soldContracts = $contracts->where('contract_status', StockContractStatusEnum::SOLD)->count();
@@ -23,8 +42,8 @@ class StockContractController extends Controller
         $soldAmount = $contracts->where('contract_status', StockContractStatusEnum::SOLD)->sum('total_value');
         $canceledAmount = $contracts->where('contract_status', StockContractStatusEnum::CANCELED)->sum('total_value');
         $cancellationFees = $contracts->where('contract_status', StockContractStatusEnum::CANCELED)->sum('cancellation_fee');
-        
-        return view('dashboard.stock_cntract.index', [
+
+        return view('dashboard.stock_contract.index', [
             'contracts' => $contracts,
             'totalContracts' => $totalContracts,
             'soldContracts' => $soldContracts,
@@ -39,41 +58,67 @@ class StockContractController extends Controller
     {
         $stocks = Stock::where('status', 'active')->get();
         $users = User::all();
-        return view('dashboard.stock_cntract.create', compact('stocks', 'users'));
+        return view('dashboard.stock_contract.create', compact('stocks', 'users'));
     }
 
-    public function store(Request $request)
+    public function store(StockContractStoreRequest $request)
     {
-        $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'stock_id' => 'required|exists:stocks,id',
-            'amount' => 'required|numeric|min:1',
-            'contract_status' => 'required|in:active,sold,canceled',
-            'description' => 'nullable|string',
-        ]);
+        $stock = Stock::findOrFail($request->stock_id);
+        $totalValue = $stock->value * $request->amount;
 
-        $stock = Stock::findOrFail($validated['stock_id']);
-        $totalValue = $stock->value * $validated['amount'];
+        $wallet = $this->walletService->getUserWallet($request->user_id, 'USDT');
+
+        if ($stock->type !== StockTypeEnum::GIFT) {
+
+            $hasBalance = $this->walletService->checkAndDecreaseBalance($request->user_id, 'USDT', $totalValue);
+            if (!$hasBalance) {
+                return redirect()->back()->withErrors(['balance' => 'موجودی کیف پول کاربر کافی نیست.']);
+            }
+
+        }
 
         $contractData = [
-            'user_id' => $validated['user_id'],
-            'stock_id' => $validated['stock_id'],
+            'user_id' => $request->user_id,
+            'stock_id' => $request->stock_id,
             'contract_number' => StockContract::generateContractNumber(),
-            'amount' => $validated['amount'],
+            'amount' => $request->amount,
             'total_value' => $totalValue,
-            'contract_status' => $validated['contract_status'],
+            'contract_status' => $request->contract_status,
             'cancellation_fee' => $stock->cancellation_fee,
-            'description' => $validated['description'],
+            'description' => $request->description,
         ];
 
-        // Set timestamps based on status
-        if ($validated['contract_status'] === 'sold') {
+        if ($request->contract_status === 'sold') {
             $contractData['sold_at'] = now();
-        } elseif ($validated['contract_status'] === 'canceled') {
+        } elseif ($request->contract_status === 'canceled') {
             $contractData['cancelled_at'] = now();
         }
 
         $contract = StockContract::create($contractData);
+
+        Transaction::create([
+            'user_id' => $request->user_id,
+            'wallet_id' => $wallet->id,
+            'amount' => -$totalValue,
+            'balance' => $wallet->balance,
+            'type' => TransactionTypeEnum::WITHDRAWAL,
+            'subtype' => TransactionSubTypeEnum::STOCK,
+            'status' => TransactionStatusEnum::SUCCESS,
+            'description' => 'خرید سهام توسط ادمین (ID: #' . auth()->id() . ',' . \Auth::guard('admin')->user()->fullname() . ') - شماره قرارداد: ' . $contract->contract_number,
+        ]);
+
+        $username = $contract->user->username ?? 'user';
+        $relativeDir = 'contracts/stock';
+        // Ensure directory exists in public disk
+        if (!Storage::disk('public')->exists($relativeDir)) {
+            Storage::disk('public')->makeDirectory($relativeDir);
+        }
+        $pdfPath = $username . '_' . $contract->contract_number . '.pdf';
+        Pdf::view('dashboard.stock_contract.contract_pdf', [
+            'contract' => $contract,
+            'stock' => $stock,
+        ])->save(storage_path('app/public/contracts/stock/' . $pdfPath));
+        $contract->update(['contract_file' => $pdfPath]);
 
         return redirect()->route('admin.stock-contract.index')->with('success', 'قرارداد با موفقیت ایجاد شد.');
     }
@@ -81,46 +126,63 @@ class StockContractController extends Controller
     public function show(StockContract $stockContract)
     {
         $stockContract->load(['user', 'stock']);
-        return view('dashboard.stock_cntract.show', compact('stockContract'));
+        return view('dashboard.stock_contract.show', compact('stockContract'));
     }
 
     public function edit(StockContract $stockContract)
     {
         $stocks = Stock::where('status', 'active')->get();
         $users = User::all();
-        return view('dashboard.stock_cntract.edit', compact('stockContract', 'stocks', 'users'));
+        return view('dashboard.stock_contract.edit', compact('stockContract', 'stocks', 'users'));
     }
 
-    public function update(Request $request, StockContract $stockContract)
+    public function update(StockContractUpdateRequest $request, StockContract $stockContract)
     {
-        $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'stock_id' => 'required|exists:stocks,id',
-            'amount' => 'required|numeric|min:1',
-            'contract_status' => 'required|in:active,sold,canceled',
-            'description' => 'nullable|string',
-        ]);
-
-        $stock = Stock::findOrFail($validated['stock_id']);
-        $totalValue = $stock->value * $validated['amount'];
-
         $updateData = [
-            'user_id' => $validated['user_id'],
-            'stock_id' => $validated['stock_id'],
-            'amount' => $validated['amount'],
-            'total_value' => $totalValue,
-            'contract_status' => $validated['contract_status'],
-            'cancellation_fee' => $stock->cancellation_fee,
-            'description' => $validated['description'],
+            'contract_status' => $request->contract_status,
+            'description' => $request->description,
         ];
 
         // Handle status changes and timestamps
-        if ($validated['contract_status'] === 'sold' && $stockContract->contract_status !== StockContractStatusEnum::SOLD) {
+        if ($request->contract_status === 'sold' && $stockContract->contract_status !== StockContractStatusEnum::SOLD) {
             $updateData['sold_at'] = now();
-        } elseif ($validated['contract_status'] === 'canceled' && $stockContract->contract_status !== StockContractStatusEnum::CANCELED) {
+        } elseif ($request->contract_status === 'canceled' && $stockContract->contract_status !== StockContractStatusEnum::CANCELED) {
             $updateData['cancelled_at'] = now();
-        }
 
+            // Refund logic
+            $refundAmount = $stockContract->total_value - $stockContract->cancellation_fee;
+            if ($refundAmount > 0) {
+                $user = $stockContract->user;
+                $wallet = $this->walletService->getUserWallet($user->id, 'USDT');
+                $ExchangeWallet = $this->walletService->getExchangeWallet('USDT');
+
+                // Create transaction record
+                Transaction::create([
+                    'user_id' => $user->id,
+                    'wallet_id' => $wallet->id,
+                    'amount' => $refundAmount,
+                    'balance' => $wallet->balance,
+                    'type' => TransactionTypeEnum::DEPOSIT,
+                    'subtype' => TransactionSubTypeEnum::STOCK,
+                    'status' => TransactionStatusEnum::SUCCESS,
+                    'description' => 'بازگشت وجه ابطال قرارداد سهام' . $stockContract->contract_number,
+                ]);
+
+                Transaction::create([
+                    'user_id' => $this->exchangeUserId,
+                    'wallet_id' => $ExchangeWallet->id,
+                    'amount' => $stockContract->cancellation_fee,
+                    'balance' => $ExchangeWallet->balance,
+                    'type' => TransactionTypeEnum::DEPOSIT,
+                    'subtype' => TransactionSubTypeEnum::STOCK,
+                    'status' => TransactionStatusEnum::SUCCESS,
+                    'description' => 'کارمزد ابطال قرارداد' . $stockContract->contract_number,
+                ]);
+
+                // Update wallet balance using WalletService
+                $this->walletService->increaseBalance($user->id, 'USDT', $refundAmount);
+            }
+        }
         $stockContract->update($updateData);
 
         return redirect()->route('admin.stock-contract.index')->with('success', 'قرارداد با موفقیت بروزرسانی شد.');
@@ -128,6 +190,7 @@ class StockContractController extends Controller
 
     public function destroy(StockContract $stockContract)
     {
+        return $stockContract;
         $stockContract->delete();
         return redirect()->route('admin.stock-contract.index')->with('success', 'قرارداد با موفقیت حذف شد.');
     }

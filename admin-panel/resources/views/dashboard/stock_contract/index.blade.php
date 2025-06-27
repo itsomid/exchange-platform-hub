@@ -128,7 +128,7 @@
                     <th>ID</th>
                     <th>کاربر</th>
                     <th>شماره قرارداد</th>
-                    <th>سهام</th>
+                    <th>نوع سهام</th>
                     <th>تعداد</th>
                     <th>ارزش قرارداد</th>
                     <th>
@@ -166,18 +166,21 @@
                                     <div class="avatar-wrapper">
                                         <div class="avatar avatar-sm me-3">
                                             <span class="avatar-initial rounded-circle bg-label-primary">
-                                                {{ substr($contract->user->name ?? 'کاربر', 0, 1) }}
+                                                {{ substr($contract->user->username ?? 'کاربر', 0, 1) }}
                                             </span>
                                         </div>
                                     </div>
                                     <div class="d-flex flex-column">
-                                        <h6 class="mb-0">{{ $contract->user->name ?? 'کاربر' }}</h6>
+                                        <h6 class="mb-0">{{ $contract->user->fullname() ?? 'کاربر' }}</h6>
                                         <small class="text-muted">{{ $contract->user->email ?? '' }}</small>
                                     </div>
                                 </div>
                             </td>
                             <td>
-                                <span class="fw-medium font-number">{{ $contract->contract_number }}</span>
+                                <a href="{{ asset('storage/contracts/stock/' . $contract->contract_file) }}" target="_blank" class="fw-medium font-number">
+                                    <i class="fa-thin fa-file-certificate fa-lg"></i>
+                                    {{ $contract->contract_number }}
+                                </a>
                             </td>
                             <td>
                                 <span class="fw-medium">{{ $contract->stock->name ?? 'نامشخص' }}</span>
@@ -186,10 +189,15 @@
                                 <span class="font-number" dir="ltr">{{ number_format($contract->amount) }}</span>
                             </td>
                             <td>
-                                <span class="font-number" dir="ltr">{{ number_format($contract->total_value) }}</span>
+                                <span class="font-number" dir="ltr">
+                                    <h6 class="font-number text-heading mb-0">
+                                        <span class="ms-1">{{ number_format($contract->total_value,2) }}</span>
+                                        <small class="text-muted">USDT</small>
+                                    </h6>
+                                </span>
                             </td>
                             <td>
-                                {{\App\Helpers\DateFormatter::convertToPersianDate($contract->created_at,'H:i:s %Y/%m/%d')}}
+                                {{\App\Helpers\DateFormatter::convertToPersianDate($contract->created_at,'H:i:s - %d %B %Y')}}
                             </td>
                             <td>
                                 <span class="badge bg-label-{{ $contract->contract_status->color() }} rounded p-2">
@@ -197,29 +205,19 @@
                                 </span>
                             </td>
                             <td>
-                                <div class="dropdown">
-                                    <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
-                                        <i class="fa fa-ellipsis-v"></i>
+                                <a class="text-secondary me-1" href="{{ route('admin.stock-contract.show', $contract->id) }}">
+                                    <i class="fa fa-eye"></i>
+                                </a>
+                                <a class="text-secondary me-1" href="{{ route('admin.stock-contract.edit', $contract->id) }}">
+                                    <i class="fa fa-edit"></i>
+                                </a>
+                                <form action="{{ route('admin.stock-contract.destroy', $contract->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-link text-danger p-0 m-0" onclick="return confirm('آیا از حذف این قرارداد اطمینان دارید؟')">
+                                        <i class="fa-light fa-trash-alt"></i>
                                     </button>
-                                    <div class="dropdown-menu">
-                                        <a class="dropdown-item" href="{{ route('admin.stock-contract.show', $contract->id) }}">
-                                            <i class="fa fa-eye me-1"></i>
-                                            مشاهده
-                                        </a>
-                                        <a class="dropdown-item" href="{{ route('admin.stock-contract.edit', $contract->id) }}">
-                                            <i class="fa fa-edit me-1"></i>
-                                            ویرایش
-                                        </a>
-                                        <form action="{{ route('admin.stock-contract.destroy', $contract->id) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="dropdown-item" onclick="return confirm('آیا از حذف این قرارداد اطمینان دارید؟')">
-                                                <i class="fa fa-trash me-1"></i>
-                                                حذف
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
+                                </form>
                             </td>
                         </tr>
                     @endforeach
@@ -229,11 +227,4 @@
         </div>
     </div>
 
-@endsection
-@section('vendor-script')
-    @vite([
-          ])
-@endsection
-@section('vendor-style')
-    @vite([])
 @endsection

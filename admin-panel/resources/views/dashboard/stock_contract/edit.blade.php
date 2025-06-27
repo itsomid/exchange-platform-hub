@@ -21,7 +21,7 @@
 
                 <div class="col-md-6">
                     <label class="form-label mt-5" for="stock_id">سهام :</label>
-                    <select name="stock_id" id="stock_id" class="form-control @error('stock_id') is-invalid @enderror" required>
+                    <select name="stock_id" id="stock_id" class="form-control @error('stock_id') is-invalid @enderror" disabled="1" required>
                         <option value="">انتخاب سهام</option>
                         @foreach($stocks as $stock)
                             <option value="{{ $stock->id }}" {{ old('stock_id', $stockContract->stock_id) == $stock->id ? 'selected' : '' }}>
@@ -43,6 +43,7 @@
                            value="{{ old('amount', $stockContract->amount) }}"
                            placeholder="تعداد سهم را وارد کنید"
                            min="1"
+                           disabled="1"
                            required>
                     @error('amount')
                         <small class="text-danger">{{ $message }}</small>
