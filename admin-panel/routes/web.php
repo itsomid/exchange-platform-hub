@@ -116,7 +116,15 @@ Route::get('pdf-test', function () {
 //        'stock' => $stock,
 //    ]);
 
-
+    return Pdf::html('<h1>Test</h1>')
+        ->format('a4')
+        ->withBrowsershot(function (\Spatie\Browsershot\Browsershot $browsershot) {
+            $browsershot
+                ->noSandbox()
+                ->setOption('timeout', 120000)
+                ->setOption('protocolTimeout', 60000);
+        })
+        ->save(storage_path('app/public/contracts/stock/test.pdf'));
     return Pdf::view('dashboard.stock_contract.contract_pdf', [
         'contract' => $contract,
         'stock' => $stock,
@@ -124,7 +132,7 @@ Route::get('pdf-test', function () {
     ->format('a4')
     ->withBrowsershot(function ($browsershot) {
         $browsershot->noSandbox();
-        $browsershot->setOption('timeout', 120000); // 120 ثانیه
+//        $browsershot->setOption('timeout', 120000); // 120 ثانیه
     })
     ->save(storage_path('app/public/contracts/stock/test.pdf'));
 });
