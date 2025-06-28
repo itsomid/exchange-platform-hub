@@ -2,10 +2,21 @@
 
 use App\Models\ReferralCode;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Mail; // Add this line
-use Illuminate\Support\Facades\Log; // Add this line if not already present
-use Illuminate\Support\Str; // Add this line if not already present for S3 test
-use Illuminate\Support\Facades\Storage; // Add this line if not already present for S3 test
+use Illuminate\Support\Facades\Mail;
+
+// Add this line
+use Illuminate\Support\Facades\Log;
+
+// Add this line if not already present
+use Illuminate\Support\Str;
+
+// Add this line if not already present for S3 test
+use Illuminate\Support\Facades\Storage;
+
+// Add this line if not already present for S3 test
+use Spatie\LaravelPdf\Facades\Pdf;
+
+// Add this line for PDF generation
 
 //Route::view('/', 'welcome');
 
@@ -23,7 +34,7 @@ Route::get('test-omid', function () {
     $asset = \App\Services\Exchanges\Asset\AssetFactory::make('coinex');
 
     foreach ($asset->getBalance() as $balance) {
-        echo 'currency:'.$balance->getCcy().' available:'.$balance->getAvailable().' frozen:'.$balance->getFrozen().'<br>'.PHP_EOL;
+        echo 'currency:' . $balance->getCcy() . ' available:' . $balance->getAvailable() . ' frozen:' . $balance->getFrozen() . '<br>' . PHP_EOL;
     }
 });
 
@@ -32,11 +43,11 @@ Route::get('test-omid-withdraw', function () {
     $asset = \App\Services\Exchanges\Asset\AssetFactory::make('coinex');
     $res = $asset->withdraw(
         resolve(\App\Services\Exchanges\Asset\DTO\WithdrawRequestDTO::class)
-        ->setCurrency('DOGE')
+            ->setCurrency('DOGE')
 //        ->setChain('TRX')
-        ->setAmount("1")
-        ->setWithdrawMethod(\App\Services\Exchanges\Asset\Enum\WithdrawMethodEnum::INTER_USER)
-        ->setAddress("o.shabani@hotmail.com")
+            ->setAmount("1")
+            ->setWithdrawMethod(\App\Services\Exchanges\Asset\Enum\WithdrawMethodEnum::INTER_USER)
+            ->setAddress("o.shabani@hotmail.com")
     );
     dd($res);
 });
@@ -73,7 +84,7 @@ Route::get('/test-email', function () {
     try {
         Mail::raw('This is a test email from Laravel.', function ($message) {
             $message->to(['o.shabani@hotmail.com', 'omid.it.shabani@gmail.com']) // Replace 'another@example.com' with the second recipient's email
-                    ->subject('Test Email');
+            ->subject('Test Email');
         });
         return 'Test email sent successfully!';
     } catch (\Exception $e) {
@@ -91,4 +102,28 @@ Route::get('clean-spot', function () {
     DB::statement('SET FOREIGN_KEY_CHECKS=1;'); // Re-enable foreign key checks
 
     return response()->json(['message' => 'Spot tables truncated successfully.']);
+});
+
+Route::get('pdf-test', function () {
+    // Get a sample contract (latest)
+    $contract = \App\Models\StockContract::with(['user', 'stock'])->latest()->first();
+    if (!$contract) {
+        return 'No contract found.';
+    }
+     $stock = $contract->stock;
+//    return view('dashboard.stock_contract.contract_pdf', [
+//        'contract' => $contract,
+//        'stock' => $stock,
+//    ]);
+
+
+    return Pdf::view('dashboard.stock_contract.contract_pdf', [
+        'contract' => $contract,
+        'stock' => $stock,
+    ])
+    ->format('a4')
+    ->withBrowsershot(function ($browsershot) {
+        $browsershot->noSandbox();
+    })
+    ->save(storage_path('app/public/contracts/stock/test.pdf'));
 });
