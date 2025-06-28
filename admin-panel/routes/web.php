@@ -124,6 +124,7 @@ Route::get('pdf-test', function () {
     ->format('a4')
     ->withBrowsershot(function ($browsershot) {
         $browsershot->noSandbox();
+        $browsershot->setOption('timeout', 120000); // 120 ثانیه
     })
     ->save(storage_path('app/public/contracts/stock/test.pdf'));
 });

@@ -31,10 +31,6 @@ RUN apk add --no-cache \
     ttf-freefont \
     && rm -rf /var/cache/apk/*
 
-# Set Puppeteer to use system Chromium
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
-
 # Installing php extensions
 RUN apk update && apk upgrade
 RUN docker-php-ext-install pdo pdo_mysql bcmath
