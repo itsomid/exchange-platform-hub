@@ -117,7 +117,11 @@ class StockContractController extends Controller
         Pdf::view('dashboard.stock_contract.contract_pdf', [
             'contract' => $contract,
             'stock' => $stock,
-        ])->save(storage_path('app/public/contracts/stock/' . $pdfPath));
+        ])
+        ->withBrowsershot(function ($browsershot) {
+            $browsershot->noSandbox();
+        })
+        ->save(storage_path('app/public/contracts/stock/' . $pdfPath));
         $contract->update(['contract_file' => $pdfPath]);
 
         return redirect()->route('admin.stock-contract.index')->with('success', 'قرارداد با موفقیت ایجاد شد.');
@@ -190,7 +194,7 @@ class StockContractController extends Controller
 
     public function destroy(StockContract $stockContract)
     {
-        return $stockContract;
+
         $stockContract->delete();
         return redirect()->route('admin.stock-contract.index')->with('success', 'قرارداد با موفقیت حذف شد.');
     }

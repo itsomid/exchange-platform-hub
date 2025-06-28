@@ -18,8 +18,22 @@ RUN sed -i "s/user = www-data/user = ${USER}/g" /usr/local/etc/php-fpm.d/www.con
 RUN sed -i "s/group = www-data/group = ${USER}/g" /usr/local/etc/php-fpm.d/www.conf
 RUN echo "php_admin_flag[log_errors] = on" >> /usr/local/etc/php-fpm.d/www.conf
 
-# Install Node.js and npm
-RUN apk add --no-cache nodejs npm
+# Install Node.js, npm, and Chrome dependencies
+RUN apk add --no-cache \
+    nodejs \
+    npm \
+    chromium \
+    nss \
+    freetype \
+    freetype-dev \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    && rm -rf /var/cache/apk/*
+
+# Set Puppeteer to use system Chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Installing php extensions
 RUN apk update && apk upgrade
@@ -44,6 +58,10 @@ RUN apk add --no-cache $PHPIZE_DEPS \
 
 # Install Puppeteer globally
 RUN npm install -g puppeteer
+
+# Create Chrome cache directory and set permissions
+RUN mkdir -p /home/${USER}/.cache/puppeteer && \
+    chown -R ${USER}:${USER} /home/${USER}
 
 # Set permissions for Laravel storage and cache directories
 RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache && \

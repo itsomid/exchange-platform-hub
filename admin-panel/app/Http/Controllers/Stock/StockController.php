@@ -26,7 +26,7 @@ class StockController extends Controller
     public function show($id)
     {
         $stock = Stock::findOrFail($id);
-        return response()->json($stock);
+        return view('dashboard.stock.show', compact('stock'));
     }
 
 
@@ -41,7 +41,7 @@ class StockController extends Controller
             'status' => 'required|in:active,inactive',
         ]);
         $stock = Stock::create($validated);
-        return response()->json($stock, Response::HTTP_CREATED);
+        return redirect()->route('admin.stock.index')->with('success', 'سهام با موفقیت ایجاد شد.');
     }
 
     public function update(Request $request, $id)
@@ -56,14 +56,14 @@ class StockController extends Controller
             'status' => 'sometimes|required|in:active,inactive',
         ]);
         $stock->update($validated);
-        return response()->json($stock);
+        return redirect()->route('admin.stock.index')->with('success', 'سهام با موفقیت بروزرسانی شد.');
     }
 
     public function destroy($id)
     {
         $stock = Stock::findOrFail($id);
         $stock->delete();
-        return response()->json(['message' => 'Stock deleted successfully']);
+        return redirect()->route('admin.stock.index')->with('success', 'سهام با موفقیت حذف شد.');
     }
 
     public function create()
