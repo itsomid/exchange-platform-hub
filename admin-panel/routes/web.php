@@ -13,10 +13,8 @@ use Illuminate\Support\Str;
 // Add this line if not already present for S3 test
 use Illuminate\Support\Facades\Storage;
 
-// Add this line if not already present for S3 test
-use Spatie\LaravelPdf\Facades\Pdf;
-
 // Add this line for PDF generation
+use ZanySoft\LaravelPDF\Facades\PDF;
 
 //Route::view('/', 'welcome');
 
@@ -110,29 +108,77 @@ Route::get('pdf-test', function () {
     if (!$contract) {
         return 'No contract found.';
     }
-     $stock = $contract->stock;
-//    return view('dashboard.stock_contract.contract_pdf', [
-//        'contract' => $contract,
-//        'stock' => $stock,
-//    ]);
 
-    return Pdf::html('<h1>Test</h1>')
-        ->format('a4')
-        ->withBrowsershot(function (\Spatie\Browsershot\Browsershot $browsershot) {
-            $browsershot
-                ->noSandbox()
-                ->setOption('timeout', 120000)
-                ->setOption('protocolTimeout', 60000);
-        })
-        ->save(storage_path('app/public/contracts/stock/test.pdf'));
-    return Pdf::view('dashboard.stock_contract.contract_pdf', [
+    // Font configuration
+    $fontdata = array(
+        'iransans' => [
+            'R' => 'IRANSansWeb.ttf',      // regular font
+            'B' => 'IRANSansWeb.ttf',      // bold font (using same file)
+            'I' => 'IRANSansWeb.ttf',      // italic font (using same file)
+            'BI' => 'IRANSansWeb.ttf',     // bold italic font (using same file)
+        ]
+    );
+
+    // Create PDF instance
+    $pdf = PDF::make();
+    $pdf->addCustomFont($fontdata, true);
+
+    // Load the view
+    $pdf->loadView('dashboard.stock_contract.contract_pdf', [
         'contract' => $contract,
-        'stock' => $stock,
-    ])
-    ->format('a4')
-    ->withBrowsershot(function ($browsershot) {
-        $browsershot->noSandbox();
-//        $browsershot->setOption('timeout', 120000); // 120 ثانیه
-    })
-    ->save(storage_path('app/public/contracts/stock/test.pdf'));
+    ]);
+
+    // Ensure directory exists
+    $directory = storage_path('app/public/contracts/stock');
+    if (!file_exists($directory)) {
+        mkdir($directory, 0755, true);
+    }
+
+    // Save the PDF
+    $filename = 'contract_' . $contract->contract_number . '.pdf';
+    $filepath = storage_path('app/public/contracts/stock/' . $filename);
+
+    try {
+        // Use the correct mPDF Output method to save to file
+        $pdf->Output($filepath, \Mpdf\Output\Destination::FILE);
+
+        // Check if file was created
+        if (file_exists($filepath)) {
+            return 'PDF saved successfully! File: ' . $filepath . ' Size: ' . filesize($filepath) . ' bytes';
+        } else {
+            return 'PDF save failed - file not created';
+        }
+    } catch (\Exception $e) {
+        return 'PDF save error: ' . $e->getMessage();
+    }
+});
+
+Route::get('pdf-stream', function () {
+    // Get a sample contract (latest)
+    $contract = \App\Models\StockContract::with(['user', 'stock'])->latest()->first();
+    if (!$contract) {
+        return 'No contract found.';
+    }
+
+    // Font configuration
+    $fontdata = array(
+        'iransans' => [
+            'R' => 'IRANSansWeb.ttf',
+            'B' => 'IRANSansWeb_Bold.ttf',
+            'I' => 'IRANSansWeb.ttf',
+            'BI' => 'IRANSansWeb.ttf',
+        ]
+    );
+
+    // Create PDF instance
+    $pdf = PDF::make();
+    $pdf->addCustomFont($fontdata, true);
+
+    // Load the view
+    $pdf->loadView('dashboard.stock_contract.contract_pdf', [
+        'contract' => $contract,
+    ]);
+
+    // Stream the PDF
+    return $pdf->stream('contract_' . $contract->contract_number . '.pdf');
 });

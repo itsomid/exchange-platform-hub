@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Stock;
 
-use App\Enums\DepositStatusEnum;
 use App\Enums\StockContractStatusEnum;
 use App\Enums\StockTypeEnum;
 use App\Enums\TransactionStatusEnum;
@@ -11,24 +10,26 @@ use App\Enums\TransactionTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Stock\StockContractStoreRequest;
 use App\Http\Requests\Stock\StockContractUpdateRequest;
-use App\Models\Deposit;
+
 use App\Models\Stock;
 use App\Models\StockContract;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Services\Wallet\WalletService;
 use Illuminate\Support\Facades\Storage;
-use Spatie\LaravelPdf\Facades\Pdf;
+use App\Services\Stock\StockService;
 
 class StockContractController extends Controller
 {
     protected $walletService;
+    protected $stockService;
     protected $exchangeUserId;
 
-    public function __construct(WalletService $walletService)
+    public function __construct(WalletService $walletService, StockService $stockService)
     {
         $this->exchangeUserId = config('exchange.exchange_user_id', 1);
         $this->walletService = $walletService;
+        $this->stockService = $stockService;
     }
 
     public function index()
@@ -108,21 +109,17 @@ class StockContractController extends Controller
         ]);
 
         $username = $contract->user->username ?? 'user';
-        $relativeDir = 'contracts/stock';
-        // Ensure directory exists in public disk
-        if (!Storage::disk('public')->exists($relativeDir)) {
-            Storage::disk('public')->makeDirectory($relativeDir);
-        }
         $pdfPath = $username . '_' . $contract->contract_number . '.pdf';
-        Pdf::view('dashboard.stock_contract.contract_pdf', [
-            'contract' => $contract,
-            'stock' => $stock,
-        ])
-        ->withBrowsershot(function ($browsershot) {
-            $browsershot->noSandbox();
-        })
-        ->save(storage_path('app/public/contracts/stock/' . $pdfPath));
-        $contract->update(['contract_file' => $pdfPath]);
+
+        // Generate PDF using service
+        $generatedPdfPath = $this->stockService->generateContractPdf($contract, $stock, $pdfPath);
+
+        if ($generatedPdfPath) {
+            $contract->update(['contract_file' => $generatedPdfPath]);
+        } else {
+            \Log::error('Failed to generate PDF for contract: ' . $contract->id);
+            return redirect()->back()->withErrors(['pdf' => 'خطا در ایجاد فایل قرارداد.']);
+        }
 
         return redirect()->route('admin.stock-contract.index')->with('success', 'قرارداد با موفقیت ایجاد شد.');
     }
