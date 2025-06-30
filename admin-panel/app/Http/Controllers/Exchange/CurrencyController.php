@@ -23,7 +23,19 @@ class CurrencyController extends Controller
     {
 
         $currencies = Currency::query()->with('chains')->filterBy(request()->all())->get();
-        return view('dashboard.exchange.currency.index', ['currencies' => $currencies]);
+
+        $currenciesWithChainsCount = $currencies->filter(function($currency) {
+            return $currency->chains->isNotEmpty();
+        })->count();
+        $currenciesWithoutChainsCount = $currencies->filter(function($currency) {
+            return $currency->chains->isEmpty();
+        })->count();
+
+        return view('dashboard.exchange.currency.index', [
+            'currencies' => $currencies,
+            'currenciesWithChainsCount' => $currenciesWithChainsCount,
+            'currenciesWithoutChainsCount' => $currenciesWithoutChainsCount,
+        ]);
     }
 
     /**

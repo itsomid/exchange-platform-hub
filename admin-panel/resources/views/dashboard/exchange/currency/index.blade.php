@@ -27,7 +27,8 @@
                         <div class="content-left">
                             <span>کوین های فعال</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{$currencies->where('is_active')->count()}}</h4>
+
+                                <h4 class="mb-0 me-2">{{$currenciesWithChainsCount}}</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-success rounded p-2">
@@ -44,7 +45,7 @@
                         <div class="content-left">
                             <span>کوین های غیر فعال</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{$currencies->where('is_active', false)->count()}}</h4>
+                                <h4 class="mb-0 me-2">{{$currenciesWithoutChainsCount}}</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-warning rounded p-2">
