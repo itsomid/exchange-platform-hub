@@ -255,23 +255,25 @@ Route::middleware(['admin.2fa'])->group(function () {
 
     // *********STOCKS*********//
     Route::prefix('stocks')->group(function () {
-        Route::get('/', [StockController::class, 'index'])->name('stock.index');
-        Route::get('/create', [StockController::class, 'create'])->name('stock.create');
-        Route::post('/', [StockController::class, 'store'])->name('stock.store');
-        Route::get('/{stock}', [StockController::class, 'show'])->name('stock.show');
-        Route::get('/{stock}/edit', [StockController::class, 'edit'])->name('stock.edit');
-        Route::patch('/{stock}', [StockController::class, 'update'])->name('stock.update');
-        Route::delete('/{stock}', [StockController::class, 'destroy'])->name('stock.destroy');
+        Route::get('/', [StockController::class, 'index'])->name('stock.index')->can('stock');
+        Route::get('/create', [StockController::class, 'create'])->name('stock.create')->can('stock');
+        Route::post('/', [StockController::class, 'store'])->name('stock.store')->can('stock');
+        Route::get('/{stock}', [StockController::class, 'show'])->name('stock.show')->can('stock');
+        Route::get('/{stock}/edit', [StockController::class, 'edit'])->name('stock.edit')->can('stock');
+        Route::patch('/{stock}', [StockController::class, 'update'])->name('stock.update')->can('stock');
+        Route::delete('/{stock}', [StockController::class, 'destroy'])->name('stock.destroy')->can('stock');
     });
 
     // *********STOCK CONTRACTS*********//
     Route::prefix('stock-contracts')->group(function () {
-        Route::get('/', [StockContractController::class, 'index'])->name('stock-contract.index');
-        Route::get('/create', [StockContractController::class, 'create'])->name('stock-contract.create');
-        Route::post('/', [StockContractController::class, 'store'])->name('stock-contract.store');
-        Route::get('/{stockContract}', [StockContractController::class, 'show'])->name('stock-contract.show');
-        Route::get('/{stockContract}/edit', [StockContractController::class, 'edit'])->name('stock-contract.edit');
-        Route::patch('/{stockContract}', [StockContractController::class, 'update'])->name('stock-contract.update');
-        Route::delete('/{stockContract}', [StockContractController::class, 'destroy'])->name('stock-contract.destroy');
+        Route::get('/', [StockContractController::class, 'index'])->name('stock-contract.index')->can('stock');
+        Route::get('/create', [StockContractController::class, 'create'])->name('stock-contract.create')->can('stock');
+        Route::post('/', [StockContractController::class, 'store'])->name('stock-contract.store')->can('stock');
+        Route::get('/{stockContract}', [StockContractController::class, 'show'])->name('stock-contract.show')->can('stock');
+        Route::get('/{stockContract}/edit', [StockContractController::class, 'edit'])->name('stock-contract.edit')->can('stock');
+        Route::patch('/{stockContract}', [StockContractController::class, 'update'])->name('stock-contract.update')->can('stock');
+        Route::delete('/{stockContract}', [StockContractController::class, 'destroy'])->name('stock-contract.destroy')->can('stock');
+        Route::post('/{stockContract}/regenerate-pdf', [StockContractController::class, 'regeneratePdf'])->name('stock-contract.regenerate-pdf')->can('stock');
+//        Route::post('/generate-missing-pdfs', [StockContractController::class, 'generateMissingPdfs'])->name('stock-contract.generate-missing-pdfs');
     });
 });
