@@ -109,6 +109,7 @@ return [
         'email' => 'ایمیل',
         'gender' => 'جنسیت',
         'mobile' => 'تلفن همراه',
+        'national_code' => 'کد ملی',
         'password' => 'پسورد',
         'verification_code' => 'کد تایید',
         'label' => 'عنوان',

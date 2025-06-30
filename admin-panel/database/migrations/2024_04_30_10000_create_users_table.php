@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('password');
             $table->string('mobile')->unique()->nullable();
-            $table->string('national_id')->unique()->nullable();
+            $table->string('national_code')->unique()->nullable();
 
             $table->enum('status', ['active', 'suspended', 'inactive'])->default('active');
 

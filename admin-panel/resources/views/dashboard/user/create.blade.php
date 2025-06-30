@@ -60,6 +60,18 @@
 
                     </div>
 
+                    <div class="col-md-6 mt-3">
+
+                            <label for="national_code" class="form-label">کد ملی</label>
+                            <input name="national_code" id="national_code"
+                                   @class(['form-control','is-invalid' => $errors->has('national_code')])
+                                   placeholder="کد ملی را وارد کنید."
+                                   value="{{old('national_code')}}">
+                            @error('national_code')
+                                <small class="text-danger">{{$message}}</small>
+                            @enderror
+
+                    </div>
 
                     <div class="col-md-6 mb-1">
                         <div class="form-group mt-3">

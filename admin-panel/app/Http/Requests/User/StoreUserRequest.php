@@ -27,6 +27,7 @@ class StoreUserRequest extends FormRequest
             'email' => 'required|email|unique:users,email|max:255',
             'username' => 'string|unique:users,username|max:255',
             'mobile' => 'nullable|string|unique:users,mobile|max:15',
+            'national_code' => 'nullable|string|unique:users,national_code|max:20',
             'status' => 'required|in:active,suspended,inactive',
             'password' => 'required|string|min:8',
             'kyc_status' => 'required|in:pending,approved,rejected',

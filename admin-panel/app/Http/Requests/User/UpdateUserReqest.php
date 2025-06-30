@@ -25,6 +25,7 @@ class UpdateUserReqest extends FormRequest
             'first_name' => 'nullable|string|max:255',
             'last_name' => 'nullable|string|max:255',
             'mobile' => 'nullable|string|unique:users,mobile,'.$this->user->id.'|max:15',
+            'national_code' => 'nullable|string|unique:users,national_code,'.$this->user->id.'|max:20',
             'status' => 'required|in:active,suspended,inactive',
             'kyc_status' => 'required|in:pending,approved,rejected',
             'introducer_code' => 'nullable|exists:referral_codes,code',

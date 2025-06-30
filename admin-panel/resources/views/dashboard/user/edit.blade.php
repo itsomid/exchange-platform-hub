@@ -73,6 +73,20 @@
                         </div>
                     </div>
 
+                    <div class="col-md-6">
+                        <div class="form-group mt-3">
+                            <label for="national_code">کد ملی</label>
+                            <input name="national_code"
+                                   id="national_code"
+                                   class="form-control"
+                                   placeholder="کد ملی را وارد کنید."
+                                   value="{{$user->national_code}}"
+                            >
+                            @error('national_code')
+                            <small class="text-danger">{{$message}}</small>
+                            @enderror
+                        </div>
+                    </div>
 
                     <div class="col-md-6 mb-1">
                         <div class="form-group mt-3">

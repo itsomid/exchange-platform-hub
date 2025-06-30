@@ -12,8 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->unsignedBigInteger('introducer_code')->nullable()->after('national_code'); //Stores the user's referral code
-            $table->foreign('introducer_code')->references('id')->on('referral_codes')->nullOnDelete();
+            $table->renameColumn('national_id', 'national_code');
         });
     }
 
@@ -23,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign(['referral_id']);
+            $table->renameColumn('national_code', 'national_id');
         });
     }
 };
