@@ -140,7 +140,7 @@
                 </a>
             </li>
         @endcan
-        @can('spot')
+        @can('stock')
             <li class="menu-item @if(request()->is('admin/stock*')) active open @endif">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">
                     <i class="menu-icon  fa-regular fa-chart-waterfall"></i>
