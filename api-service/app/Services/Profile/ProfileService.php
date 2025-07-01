@@ -39,6 +39,7 @@ readonly class ProfileService
             'first_name' => $requestDTO->getFirstName(),
             'last_name' => $requestDTO->getLastName(),
             'mobile' => $requestDTO->getMobile(),
+            'national_code' => $requestDTO->getNationalCode(),
         ]);
     }
 

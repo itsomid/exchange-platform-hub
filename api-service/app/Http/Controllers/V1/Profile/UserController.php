@@ -128,10 +128,13 @@ class UserController extends Controller
                 ->setFirstName($validated['first_name'])
                 ->setLastName($validated['last_name'])
                 ->setMobile($validated['mobile'])
+                ->setNationalCode($validated['national_code'])
+
         );
 
         return response([
             'status' => __('user.profile.updated'),
+            'data' => new UserProfileResource(Auth::user())
         ]);
     }
 

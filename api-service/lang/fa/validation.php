@@ -223,7 +223,7 @@ return [
         'file' => 'فایل',
         'fullname' => 'نام کامل',
         'melli_code' => 'کد ملی',
-        'national_number' => 'کد ملی',
+        'national_code' => 'کد ملی',
         'postal_code' => 'کد پستی',
         'zip_code' => 'کد پستی',
         'passport_number' => 'شماره پاسپورت',

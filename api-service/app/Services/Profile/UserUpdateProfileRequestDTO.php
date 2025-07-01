@@ -12,6 +12,8 @@ class UserUpdateProfileRequestDTO
 
     private string $mobile;
 
+    private string $nationalCode;
+
     public function setFirstName(string $firstName): UserUpdateProfileRequestDTO
     {
         $this->firstName = $firstName;
@@ -58,5 +60,17 @@ class UserUpdateProfileRequestDTO
     public function getUserId(): int
     {
         return $this->userId;
+    }
+
+    public function setNationalCode(string $nationalCode): self
+    {
+        $this->nationalCode = $nationalCode;
+
+        return $this;
+    }
+
+    public function getNationalCode(): string
+    {
+        return $this->nationalCode;
     }
 }

@@ -8,6 +8,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * @property string $first_name
  * @property string $last_name
+ * @property string $national_code
+ * @property string $mobile
  * @property string $email
  * @property string $username
  */
@@ -38,6 +40,8 @@ class UserResource extends JsonResource
         return [
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
+            'national_code' => $this->national_code,
+            'mobile' => $this->mobile,
             'email' => $this->email,
             'username' => $this->username,
             'has_two_factor' => ! empty($this->two_factor_secret),

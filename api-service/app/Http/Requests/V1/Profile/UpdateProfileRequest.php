@@ -48,7 +48,15 @@ class UpdateProfileRequest extends FormRequest
         return [
             'first_name' => ['required', 'string', 'max:30'],
             'last_name' => ['required', 'string', 'max:30'],
-            'mobile' => ['required', 'string', 'max:11'],
+            'national_code' => ['required', 'string', 'size:10', 'regex:/^[0-9]{10}$/', 'unique:users,national_code,' . $this->user()->id],
+            'mobile' => ['required', 'string', 'unique:users,mobile,' . $this->user()->id],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'national_code.unique' => 'کد ملی وارد شده اشتباه است.',
         ];
     }
 }

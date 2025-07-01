@@ -31,7 +31,7 @@ readonly class RegisterService
             $referralCodeModel = $this->referralCodeRepository->getReferralCodeByCode($registerRequestDTO->getIntroducerCode());
         }
 
-        //If user is exists and not verified then update all columns otherwise create new records
+        //If user is existing and not verified then update all columns otherwise create new records
         $userCreatedModel = $this->userRepository->registerOrUpdate(
             resolve(UserRegisterRequestDTO::class)
                 ->setUsername($this->generateUsername($registerRequestDTO->getEmail()))
