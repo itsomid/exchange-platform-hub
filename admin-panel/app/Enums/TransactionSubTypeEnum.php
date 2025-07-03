@@ -8,6 +8,7 @@ enum TransactionSubTypeEnum: string
     case USER_INITIATED = 'user_initiated';
     case OTC = 'otc';
     case SPOT = 'spot';
+    case STOCK = 'stock';
     case REFERRAL_INTRODUCER = 'introducer';
     case REFERRAL_FRIEND = 'friend';
     case COINEX = 'coinex';
@@ -20,7 +21,7 @@ enum TransactionSubTypeEnum: string
     case REF_EXCHANGE_BUY_FEE = 'ref_exchange_buy_fee';
     case REF_EXCHANGE_WITHDRAWAL = 'ref_exchange_withdrawal';
     case REF_EXCHANGE_WITHDRAWAL_FEE = 'ref_exchange_withdrawal_fee';
-    case STOCK = 'stock';
+
 
     const array TYPE_LABEL = [
         self::MANUAL_ADMIN->value => 'ادمین',

@@ -17,6 +17,12 @@
                             <i class="fa fa-download mx-2"></i> دانلود قرارداد
                         </a>
                     @endif
+                    <form action="{{ route('admin.stock-contract.regenerate-pdf', $stockContract->id) }}" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-warning" onclick="return confirm('آیا از بازسازی فایل قرارداد اطمینان دارید؟')">
+                            <i class="fa fa-refresh mx-2"></i> بازسازی PDF
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

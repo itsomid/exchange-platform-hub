@@ -114,6 +114,12 @@
             <div class="card-title header-elements">
                 <h5 class="m-0 me-2">لیست قراردادها</h5>
                 <div class="card-title-elements ms-auto">
+{{--                    <form action="{{ route('admin.stock-contract.generate-missing-pdfs') }}" method="POST" class="d-inline me-2">--}}
+{{--                        @csrf--}}
+{{--                        <button type="submit" class="btn btn-warning" onclick="return confirm('آیا از ایجاد فایل‌های قرارداد گمشده اطمینان دارید؟')">--}}
+{{--                            <i class="fa fa-refresh mx-2"></i> ایجاد PDF های گمشده--}}
+{{--                        </button>--}}
+{{--                    </form>--}}
                     <a href="{{ route('admin.stock-contract.create') }}" class="btn btn-primary">
                         <i class="fa fa-plus mx-2"></i> ایجاد قرارداد جدید
                     </a>
@@ -177,10 +183,18 @@
                                 </div>
                             </td>
                             <td>
-                                <a href="{{ asset('storage/contracts/stock/' . $contract->contract_file) }}" target="_blank" class="fw-medium font-number">
-                                    <i class="fa-thin fa-file-certificate fa-lg"></i>
-                                    {{ $contract->contract_number }}
-                                </a>
+                                @if($contract->contract_file && file_exists(storage_path('app/public/contracts/stock/' . $contract->contract_file)))
+                                    <a href="{{ asset('storage/contracts/stock/' . $contract->contract_file) }}" target="_blank" class="fw-medium font-number">
+                                        <i class="fa-thin fa-file-certificate fa-lg"></i>
+                                        {{ $contract->contract_number }}
+                                    </a>
+                                @else
+                                    <span class="fw-medium font-number text-muted">
+                                        <i class="fa-thin fa-file-certificate fa-lg"></i>
+                                        {{ $contract->contract_number }}
+                                        <small class="text-danger">(PDF موجود نیست)</small>
+                                    </span>
+                                @endif
                             </td>
                             <td>
                                 <span class="fw-medium">{{ $contract->stock->name ?? 'نامشخص' }}</span>

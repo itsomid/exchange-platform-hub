@@ -19,12 +19,11 @@ return new class extends Migration
             $table->string('contract_file')->nullable();
             $table->decimal('amount', 18, 2);
             $table->decimal('total_value', 18, 4);
-            $table->string('contract_status')->default('active');
             $table->decimal('cancellation_fee', 18, 2)->default(0);
             $table->timestamp('cancelled_at')->nullable();
             $table->timestamp('sold_at')->nullable();
             $table->text('description')->nullable();
-            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->string('contract_status')->default('active');
             $table->timestamps();
         });
     }

@@ -102,7 +102,7 @@ class StockContractController extends Controller
             'wallet_id' => $wallet->id,
             'amount' => -$totalValue,
             'balance' => $wallet->balance,
-            'type' => TransactionTypeEnum::WITHDRAWAL,
+            'type' => TransactionTypeEnum::BUY,
             'subtype' => TransactionSubTypeEnum::STOCK,
             'status' => TransactionStatusEnum::SUCCESS,
             'description' => 'خرید سهام توسط ادمین (ID: #' . auth()->id() . ',' . \Auth::guard('admin')->user()->fullname() . ') - شماره قرارداد: ' . $contract->contract_number,
@@ -127,7 +127,95 @@ class StockContractController extends Controller
     public function show(StockContract $stockContract)
     {
         $stockContract->load(['user', 'stock']);
+
+        // Generate PDF if it doesn't exist
+        $this->generateContractPdfIfNotExists($stockContract);
+
         return view('dashboard.stock_contract.show', compact('stockContract'));
+    }
+
+    /**
+     * Generate contract PDF if it doesn't exist
+     *
+     * @param StockContract $stockContract
+     * @return bool
+     */
+    public function generateContractPdfIfNotExists(StockContract $stockContract)
+    {
+        // Check if contract file already exists
+        if ($stockContract->contract_file && $this->stockService->contractPdfExists($stockContract->contract_file)) {
+            return true;
+        }
+
+        // Generate new PDF
+        $username = $stockContract->user->username ?? 'user';
+        $pdfPath = $username . '_' . $stockContract->contract_number . '.pdf';
+
+        // Generate PDF using service
+        $generatedPdfPath = $this->stockService->generateContractPdf($stockContract, $stockContract->stock, $pdfPath);
+
+        if ($generatedPdfPath) {
+            $stockContract->update(['contract_file' => $generatedPdfPath]);
+            return true;
+        } else {
+            \Log::error('Failed to generate PDF for contract: ' . $stockContract->id);
+            return false;
+        }
+    }
+
+    /**
+     * Regenerate contract PDF (force new generation)
+     *
+     * @param StockContract $stockContract
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function regeneratePdf(StockContract $stockContract)
+    {
+        // Delete existing PDF if it exists
+        if ($stockContract->contract_file) {
+            $this->stockService->deleteContractPdf($stockContract->contract_file);
+        }
+
+        // Generate new PDF
+        $success = $this->generateContractPdfIfNotExists($stockContract);
+
+        if ($success) {
+            return redirect()->back()->with('success', 'فایل قرارداد با موفقیت بازسازی شد.');
+        } else {
+            return redirect()->back()->withErrors(['pdf' => 'خطا در بازسازی فایل قرارداد.']);
+        }
+    }
+
+    /**
+     * Generate PDFs for all contracts that don't have files
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function generateMissingPdfs()
+    {
+        $contractsWithoutPdf = StockContract::whereNull('contract_file')
+            ->orWhere('contract_file', '')
+            ->with(['user', 'stock'])
+            ->get();
+
+        $successCount = 0;
+        $errorCount = 0;
+
+        foreach ($contractsWithoutPdf as $contract) {
+            $success = $this->generateContractPdfIfNotExists($contract);
+            if ($success) {
+                $successCount++;
+            } else {
+                $errorCount++;
+            }
+        }
+
+        $message = "تعداد {$successCount} فایل قرارداد با موفقیت ایجاد شد.";
+        if ($errorCount > 0) {
+            $message .= " تعداد {$errorCount} فایل با خطا مواجه شد.";
+        }
+
+        return redirect()->back()->with('success', $message);
     }
 
     public function edit(StockContract $stockContract)
@@ -163,7 +251,7 @@ class StockContractController extends Controller
                     'wallet_id' => $wallet->id,
                     'amount' => $refundAmount,
                     'balance' => $wallet->balance,
-                    'type' => TransactionTypeEnum::DEPOSIT,
+                    'type' => TransactionTypeEnum::SELL,
                     'subtype' => TransactionSubTypeEnum::STOCK,
                     'status' => TransactionStatusEnum::SUCCESS,
                     'description' => 'بازگشت وجه ابطال قرارداد سهام' . $stockContract->contract_number,
@@ -174,7 +262,7 @@ class StockContractController extends Controller
                     'wallet_id' => $ExchangeWallet->id,
                     'amount' => $stockContract->cancellation_fee,
                     'balance' => $ExchangeWallet->balance,
-                    'type' => TransactionTypeEnum::DEPOSIT,
+                    'type' => TransactionTypeEnum::FEE,
                     'subtype' => TransactionSubTypeEnum::STOCK,
                     'status' => TransactionStatusEnum::SUCCESS,
                     'description' => 'کارمزد ابطال قرارداد' . $stockContract->contract_number,
