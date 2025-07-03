@@ -21,7 +21,10 @@ class FinancialWithdrawalBlockMiddleware
 
         $blockState = $service->getUserBlockedState(auth()->id(), FinancialBlockActionEnum::WITHDRAW);
         if ($blockState->isBlock()) {
-            return response()->json(['message' => __('messages.user_financial_block.withdrawal', ['date' => $blockState->getRestrictUntil()->diffForHumans()])], 403);
+            return response()->json([
+                'message' => __('messages.user_financial_block.withdrawal', ['date' => $blockState->getRestrictUntil()->diffForHumans()]),
+                'error_code' => 'WITHDRAWAL_BLOCKED'
+            ], 403);
         }
 
         return $next($request);

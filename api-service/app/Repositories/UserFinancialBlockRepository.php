@@ -25,6 +25,7 @@ class UserFinancialBlockRepository implements UserFinancialBlockRepositoryInterf
         return UserFinancialBlock::query()
             ->where('user_id', $userId)
             ->where('action', $action)
+            ->activeRestriction()
             ->latest()
             ->first();
     }

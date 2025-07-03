@@ -23,7 +23,7 @@ use Symfony\Component\HttpFoundation\Response;
 class WalletController extends Controller
 {
     public function __construct(
-        private readonly WalletService $service,
+        private readonly WalletService $walletService,
         private readonly DepositService $depositService
     ) {}
 
@@ -69,7 +69,7 @@ class WalletController extends Controller
         $validated = $request->validated();
         $userId = Auth::id();
 
-        $res = $this->service->generateAddress(
+        $res = $this->walletService->generateAddress(
             resolve(GenerateAddressRequestDTO::class)
                 ->setUserId($userId)
                 ->setCurrency($validated['currency'])
@@ -119,7 +119,7 @@ class WalletController extends Controller
      */
     public function lists()
     {
-        $responseDTO = $this->service->getLists(
+        $responseDTO = $this->walletService->getLists(
             resolve(WalletListsRequestDTO::class)
                 ->setUserId(Auth::id())
         );
@@ -154,7 +154,7 @@ class WalletController extends Controller
     public function show(GetOneWalletRequest $request)
     {
         $symbol = $request->input('currencySymbol');
-        $walletDTO = $this->service->getWallet(
+        $walletDTO = $this->walletService->getWallet(
             resolve(GetOneWalletRequestDTO::class)
                 ->setCurrencySymbol($symbol)
                 ->setUserId(Auth::id())
@@ -204,7 +204,7 @@ class WalletController extends Controller
      */
     public function assetsUSDTValue()
     {
-        $assetDTO = $this->service->walletUSDTValue(
+        $assetDTO = $this->walletService->walletUSDTValue(
             resolve(WalletValueUSDTRequestDTO::class)
                 ->setUserId(Auth::id())
         );

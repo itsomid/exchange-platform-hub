@@ -15,7 +15,10 @@ class CustomEnsureEmailIsVerified
             ($request->user() instanceof MustVerifyEmail &&
             ! $request->user()->hasVerifiedEmail())) {
             return $request->expectsJson()
-                ? abort(403, __('حساب کاربری شما تایید نشده است'))
+                ? response()->json([
+                    'message' => __('حساب کاربری شما تایید نشده است'),
+                    'error_code' => 'EMAIL_NOT_VERIFIED'
+                ], 403)
                 : Redirect::guest(URL::route($redirectToRoute ?: 'verification.notice'));
         }
         return $next($request);

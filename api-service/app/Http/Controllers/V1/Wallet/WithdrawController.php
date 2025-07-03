@@ -210,4 +210,41 @@ class WithdrawController extends Controller
             'data' => $data,
         ]);
     }
+
+    /**
+     * @OA\Get(
+     *     path="/api/v1/wallets/check-withdrawal-limit",
+     *     summary="Check if the user is limited for withdrawal",
+     *     description="Returns whether the authenticated user is currently blocked from making withdrawals.",
+     *     tags={"Wallet"},
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Withdrawal limit status returned successfully.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="is_blocked", type="boolean", example=true),
+     *             @OA\Property(property="restrict_until", type="string", format="date-time", nullable=true, example="2025-02-19T15:30:00Z")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Unauthorized")
+     *         )
+     *     )
+     * )
+     */
+    public function checkWithdrawalLimit()
+    {
+        $service = resolve(\App\Services\User\FinancialBlockService::class);
+        $blockState = $service->getUserBlockedState(Auth::id(), \App\Enums\FinancialBlockActionEnum::WITHDRAW);
+
+        return response()->json([
+            'is_blocked' => $blockState->isBlock(),
+            'restrict_until' => $blockState->isBlock() ? $blockState->getRestrictUntil()->toDateTimeString() : null,
+        ]);
+    }
 }
