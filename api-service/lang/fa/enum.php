@@ -48,5 +48,12 @@ return [
             \App\Enums\SpotOrderStatusEnum::CANCELED->name => 'لغو شده',
             \App\Enums\SpotOrderStatusEnum::PARTIALLY_FILLED_CANCELED->name => 'قسمتی تکمیل و لغو شده',
         ],
+    ],
+    'stock' => [
+        'contract-status' => [
+            \App\Enums\StockContractStatusEnum::ACTIVE->name => 'فعال',
+            \App\Enums\StockContractStatusEnum::CANCELED->name => 'لغو شده',
+            \App\Enums\StockContractStatusEnum::SOLD->name => 'فروخته شده',
+        ],
     ]
 ];

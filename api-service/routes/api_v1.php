@@ -5,6 +5,12 @@ use App\Http\Controllers\V1\Wallet\WalletController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
+use App\Http\Controllers\V1\Stock\StockContractController;
+use App\Http\Controllers\V1\Stock\StockTradeController;
+use App\Http\Controllers\V1\Stock\StockController;
+
+
+
 
 Route::get('/captcha', [\App\Http\Controllers\CaptchaController::class, '__invoke'])->withoutMiddleware(['auth:sanctum', 'verified']);
 
@@ -59,11 +65,11 @@ Route::prefix('/wallets')->group(function () {
     Route::post('/refresh', [WalletController::class, 'refresh'])->name('wallets.refresh')->middleware(['throttle:wallet-check']);
     Route::get('/lists', [WalletController::class, 'lists'])->name('wallets.lists');
     Route::get('/value-usdt', [WalletController::class, 'assetsUSDTValue'])->name('wallets.value-usdt');
+    Route::get('/check-withdrawal-limit', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, 'checkWithdrawalLimit']);
     Route::get('/{currencySymbol}', [WalletController::class, 'show'])->name('wallets.show');
     Route::post('/withdrawal', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, '__invoke'])->name('wallets.withdraw')->middleware([\App\Http\Middleware\FinancialWithdrawalBlockMiddleware::class]);
     Route::post('/check-withdrawal', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, 'checkWithdrawal'])->name('wallets.check-withdrawal')
         ->middleware(['throttle:'.config('bitexroom.withdrawal.check_wallet_attempts.max_attempts').','.config('bitexroom.withdrawal.check_wallet_attempts.minutes')]);
-
 });
 Route::prefix('saved-addresses')->group(function () {
     Route::get('/addresses', [\App\Http\Controllers\V1\Wallet\SavedAddressController::class, 'lists']);
@@ -95,7 +101,7 @@ Route::prefix('/otc')->group(function () {
 });
 
 Route::prefix('authorization')->group(function () {
-    Route::post('/otp-code/{action}', [\App\Http\Controllers\V1\Authorization\EmailOTPController::class, 'send']);
+    Route::post('/otp-code/{action}', [\App\Http\Controllers\V1\Authorization\EmailOTPController::class, 'send'])->middleware([\App\Http\Middleware\FinancialWithdrawalBlockMiddleware::class]);
 });
 
 // Notifications
@@ -130,3 +136,25 @@ Route::prefix('/spot')->group(function () {
 
     Route::get('/trades/{marketId}/latest', [\App\Http\Controllers\V1\Spot\TradeController::class, 'getLatestMatched']);
 });
+
+// Stock Trading
+Route::prefix('/stocks')->group(function () {
+    // Get user's active contracts
+    Route::get('/list', [StockController::class, 'index']);
+    Route::get('/contracts', [StockContractController::class, 'index'])
+        ->name('stocks.contracts');
+
+    // Stock purchase
+    Route::post('/buy', [StockTradeController::class, 'buy'])
+        ->name('stocks.buy')
+        ->middleware([\App\Http\Middleware\CompleteProfileMiddleware::class]);
+
+    // Stock sale
+    Route::post('/sell/{contractId}', [StockTradeController::class, 'sell'])
+        ->name('stocks.sell');
+
+
+});
+
+
+

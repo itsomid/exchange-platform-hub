@@ -34,6 +34,8 @@ use App\Repositories\ReferralCodeRepository;
 use App\Repositories\ReferralCodeUsageRepository;
 use App\Repositories\SpotOrderRepository;
 use App\Repositories\SpotTradeRepository;
+use App\Repositories\Stock\StockRepository;
+use App\Repositories\Stock\StockRepositoryInterface;
 use App\Repositories\TransactionRepository;
 use App\Repositories\UserEmailVerificationRepository;
 use App\Repositories\UserRepository;
@@ -69,6 +71,7 @@ class RepositoryServiceProvider extends ServiceProvider
         app()->bind(SpotOrderRepositoryInterface::class, SpotOrderRepository::class);
         app()->bind(SpotTradeRepositoryInterface::class, SpotTradeRepository::class);
         app()->bind(ExchangeRepositoryInterface::class, ExchangeRepository::class);
+        app()->bind(StockRepositoryInterface::class, StockRepository::class);
 
     }
 

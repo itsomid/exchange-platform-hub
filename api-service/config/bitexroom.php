@@ -14,4 +14,7 @@ return [
             'max_attempts' => 20,
         ],
     ],
+    'contracts' => [
+        'base_url' => env('CONTRACTS_BASE_URL', 'http://127.0.0.1:8000'),
+    ],
 ];

@@ -25,4 +25,11 @@ return [
             \App\Enums\OTCOrderTypeEnum::SELL->name => 'sell',
         ],
     ],
+    'stock' => [
+        'contract-status' => [
+            \App\Enums\StockContractStatusEnum::ACTIVE->name => 'active',
+            \App\Enums\StockContractStatusEnum::CANCELED->name => 'canceled',
+            \App\Enums\StockContractStatusEnum::SOLD->name => 'sold',
+        ],
+    ]
 ];
