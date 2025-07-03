@@ -7,7 +7,7 @@ use App\Enums\SpotOrderSideEnum;
 use App\Enums\SpotOrderStatusEnum;
 use App\Enums\SpotOrderTypeEnum;
 use App\Events\OrderBookUpdated;
-use App\Exceptions\V1\OTC\InsufficientBalanceException;
+use App\Exceptions\V1\Wallet\InsufficientBalanceException;
 use App\Helpers\Math;
 use App\Models\LockedBalanceDetail;
 use App\Repositories\DTO\SpotOrder\SpotOrderCreateRequestDTO;

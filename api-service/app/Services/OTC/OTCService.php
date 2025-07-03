@@ -10,7 +10,7 @@ use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Exceptions\V1\OTC\BuyTradeWasFiledException;
-use App\Exceptions\V1\OTC\InsufficientBalanceException;
+use App\Exceptions\V1\InsufficientBalanceException;
 use App\Helpers\Math;
 use App\Models\Currency;
 use App\Models\Market;

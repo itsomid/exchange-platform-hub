@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Exceptions\V1\OTC;
+namespace App\Exceptions\V1\Wallet;
 
 use App\Exceptions\ServiceException;
 
