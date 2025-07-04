@@ -150,10 +150,12 @@ Route::prefix('/stocks')->group(function () {
         ->middleware([\App\Http\Middleware\CompleteProfileMiddleware::class]);
 
     // Stock sale
-    Route::post('/sell/{contractId}', [StockTradeController::class, 'sell'])
+    Route::post('/contracts/{contractId}/sell', [StockTradeController::class, 'sell'])
         ->name('stocks.sell');
 
-
+    // Generate contract PDF
+    Route::post('/contracts/{contractId}/generate-pdf', [StockContractController::class, 'generatePdf'])
+        ->name('stocks.contracts.generate-pdf');
 });
 
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\Stock\StockService;
 use Illuminate\Http\JsonResponse;
 use App\Exceptions\InsufficientBalanceException;
+use App\Exceptions\V1\Stock\InvalidContractException;
 use App\Http\Requests\V1\Stock\StockPurchaseRequest;
 use Illuminate\Support\Facades\Auth;
 use App\Services\Wallet\WalletService;
@@ -37,20 +38,22 @@ class StockTradeController extends Controller
         }
     }
 
-    public function sell(): JsonResponse
+    public function sell(string $contractId)
     {
         try {
-//            $result = $this->stockService->sellStock(auth()->user());
+            $this->stockService->sellStock(Auth::user(), $contractId);
 
             return response()->json([
-                'success' => true,
-                'message' => 'Stock sale successful',
-            ]);
+                'message' => __('stock.stock_sale_successful'),
+            ], Response::HTTP_OK);
+        } catch (InvalidContractException $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], Response::HTTP_BAD_REQUEST);
         } catch (\Exception $e) {
             return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 400);
+                'message' => 'An error occurred while processing the sale'
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }

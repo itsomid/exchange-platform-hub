@@ -55,5 +55,10 @@ return [
             \App\Enums\StockContractStatusEnum::CANCELED->name => 'لغو شده',
             \App\Enums\StockContractStatusEnum::SOLD->name => 'فروخته شده',
         ],
+        'stock_type' => [
+            \App\Enums\StockTypeEnum::NORMAL->name => 'عادی',
+            \App\Enums\StockTypeEnum::GIFT->name => 'هدیه',
+            \App\Enums\StockTypeEnum::PARTNER->name => 'همکار',
+        ],
     ]
 ];

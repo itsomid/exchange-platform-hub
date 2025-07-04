@@ -14,6 +14,7 @@ return [
     \App\Exceptions\V1\OTC\BuyTradeWasFiledException::class => 'Trading buy on :marketName is not possible at the moment.',
     \App\Exceptions\V1\OTC\SellTradeWasFiledException::class => 'Trading sell on :marketName is not possible at the moment.',
     \App\Exceptions\V1\Wallet\UserDoesNotHaveWalletAddress::class => 'You do not have an active wallet address. Please create a wallet address first.',
+    \App\Exceptions\V1\Stock\InvalidContractException::class => 'Invalid contract or contract not found.',
     \App\Exceptions\V1\Auth\UserNotVerifiedException::class => 'Your account has not been verified.',
     \App\Exceptions\V1\Auth\UserIsSuspendException::class => 'Your account is suspended.',
     \App\Exceptions\ReferralCodeSystemDisabledException::class => 'Referral code system is disabled.',

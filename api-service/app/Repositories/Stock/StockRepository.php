@@ -7,6 +7,7 @@ use App\Models\Stock;
 use App\Models\StockContract;
 use Illuminate\Database\Eloquent\Collection;
 
+
 class StockRepository implements StockRepositoryInterface
 {
     public function getStocks(): Collection
@@ -49,22 +50,27 @@ class StockRepository implements StockRepositoryInterface
     public function getContractById(string $contractId): ?StockContract
     {
         return StockContract::where('id', $contractId)
-            ->where('status', 'active')
             ->first();
     }
 
     public function cancelContract(StockContract $contract): bool
     {
         return $contract->update([
-            'status' => 'cancelled',
+            'contract_status' => 'cancelled',
             'cancelled_at' => now()
+        ]);
+    }
+    public function sellContract(StockContract $contract): bool
+    {
+        return $contract->update([
+            'contract_status' => 'sold',
+            'sold_at' => now()
         ]);
     }
 
     public function getUserPortfolioValue(User $user): float
     {
         return StockContract::where('user_id', $user->id)
-            ->where('status', 'active')
             ->sum('total_value');
     }
 

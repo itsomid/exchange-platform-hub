@@ -174,7 +174,14 @@ class WalletService
             return false;
         }
     }
-
+    public function increaseBalance(int $userId, string $currencySymbol, float $amount): bool
+    {
+        return DB::transaction(function () use ($userId, $currencySymbol, $amount) {
+            $wallet = $this->walletRepository->getWalletWithLock($currencySymbol, $userId);
+            $wallet->increment('balance', $amount);
+            return true;
+        });
+    }
     public function walletUSDTValue(WalletValueUSDTRequestDTO $requestDTO)
     {
         $wallets = $this->walletRepository->getLists($requestDTO->getUserId());

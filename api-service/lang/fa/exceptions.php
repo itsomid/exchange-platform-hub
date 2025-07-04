@@ -14,6 +14,7 @@ return [
     \App\Exceptions\V1\OTC\BuyTradeWasFiledException::class => 'در حال حاضر خرید روی :marketName ممکن نیست.',
     \App\Exceptions\V1\OTC\SellTradeWasFiledException::class => 'در حال حاضر فروش روی :marketName ممکن نیست.',
     \App\Exceptions\V1\Wallet\UserDoesNotHaveWalletAddress::class => 'شما آدرس ولت فعالی ندارید. لطفاً ابتدا یک آدرس ولت ایجاد کنید.',
+    \App\Exceptions\V1\Stock\InvalidContractException::class => 'قرارداد نامعتبر یا قرارداد یافت نشد.',
     \App\Exceptions\V1\Wallet\UserDoesNotHaveWalletChainAddress::class => 'شما آدرس واریز فعالی ندارید. لطفاً ابتدا یک آدرس واریز ایجاد کنید.',
     \App\Exceptions\V1\Auth\UserNotVerifiedException::class => 'حساب کاربری شما تایید نشده است.',
     \App\Exceptions\V1\Auth\UserIsSuspendException::class => 'حساب کاربری شما تعلیق شده است.',

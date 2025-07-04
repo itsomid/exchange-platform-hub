@@ -31,5 +31,10 @@ return [
             \App\Enums\StockContractStatusEnum::CANCELED->name => 'canceled',
             \App\Enums\StockContractStatusEnum::SOLD->name => 'sold',
         ],
+        'stock_type' => [
+            \App\Enums\StockTypeEnum::NORMAL->name => 'normal',
+            \App\Enums\StockTypeEnum::GIFT->name => 'gift',
+            \App\Enums\StockTypeEnum::PARTNER->name => 'partner',
+        ],
     ]
 ];

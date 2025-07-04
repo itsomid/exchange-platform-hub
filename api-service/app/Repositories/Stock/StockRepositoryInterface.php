@@ -45,6 +45,11 @@ interface StockRepositoryInterface
     public function cancelContract(StockContract $contract): bool;
 
     /**
+     * Sell contract
+     */
+    public function sellContract(StockContract $contract): bool;
+
+    /**
      * Get user's total stock portfolio value
      */
     public function getUserPortfolioValue(User $user): float;

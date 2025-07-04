@@ -3,24 +3,22 @@
 namespace App\Services\Stock;
 
 use App\Models\User;
-use App\Models\StockContract;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Repositories\Stock\StockRepositoryInterface;
-use App\Http\DTOs\Stock\StockSaleDTO;
 use Illuminate\Support\Facades\DB;
 use App\Exceptions\V1\Wallet\InsufficientBalanceException;
-use App\Exceptions\InvalidContractException;
+use App\Exceptions\V1\Stock\InvalidContractException;
 use App\Models\Stock;
 use Illuminate\Database\Eloquent\Collection;
 use App\Services\Wallet\WalletService;
 use ZanySoft\LaravelPDF\Facades\PDF;
 use Mpdf\Output\Destination;
-
 use App\Repositories\Interfaces\TransactionRepositoryInterface;
 use App\Repositories\DTO\Transaction\CreateTransactionRequestDTO;
 use App\Enums\TransactionTypeEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionStatusEnum;
+use App\Enums\StockTypeEnum;
 
 class StockService
 {
@@ -86,7 +84,7 @@ class StockService
                 ->setCoinPrice(1)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
                 ->setBalance($walletBaseCurrency->balance)
-                ->setDescription('شماره قرارداد: ' . $stockContract->contract_number)
+                ->setDescription('خرید سهام به شماره قرارداد ' . $stockContract->contract_number)
                 ->setSubtype(TransactionSubTypeEnum::STOCK)
                 ->setWalletId($walletBaseCurrency->id)
             );
@@ -102,43 +100,54 @@ class StockService
         });
     }
 
-    public function sellStock(User $user, StockSaleDTO $dto): array
+    public function sellStock(User $user, string $contractId): void
     {
-        return DB::transaction(function () use ($user, $dto) {
-            $contract = $this->stockRepository->getContractById($dto->contractId);
+        DB::transaction(function () use ($user, $contractId) {
+            $stockContract = $this->stockRepository->getContractById($contractId);
 
-            if (!$contract || $contract->user_id !== $user->id) {
-                throw new InvalidContractException('Invalid contract');
+            if (!$stockContract || $stockContract->user_id !== $user->id) {
+                throw new InvalidContractException('قرارداد یافت نشد');
             }
 
-            if ($contract->is_gift) {
-                throw new InvalidContractException('Gift contracts cannot be sold');
+            if ($stockContract->stock->type === StockTypeEnum::GIFT) {
+                throw new InvalidContractException('قرارداد هدیه نمی تواند فروخته شود');
             }
 
-            // Calculate fees
-            $cancellationFee = $contract->amount * ($contract->cancellation_fee_percentage / 100);
-            $returnAmount = $contract->amount - $cancellationFee;
+            $returnAmount = $stockContract->total_value - $stockContract->cancellation_fee;
+            if ($returnAmount > 0) {
+                $user = $stockContract->user;
+                $wallet = $this->walletRepository->getOneByCurrency('USDT', $user->id);
+                $ExchangeWallet = $this->walletRepository->getOneByCurrency('USDT', config('bitexroom.user_id'));
 
-            // Cancel contract
-            $this->stockRepository->cancelContract($contract);
+                // Create transaction record
+                $this->transactionRepository->create(
+                    resolve(CreateTransactionRequestDTO::class)
+                    ->setUserId($user->id)
+                    ->setWalletId($wallet->id)
+                    ->setAmount($returnAmount)
+                    ->setBalance($wallet->balance)
+                    ->setType(TransactionTypeEnum::SELL)
+                    ->setSubtype(TransactionSubTypeEnum::STOCK)
+                    ->setStatus(TransactionStatusEnum::SUCCESS)
+                    ->setDescription('بازگشت وجه ابطال قرارداد سهام ' . $stockContract->contract_number)
+                );
 
-            // Return funds to wallet (minus fees)
-            $this->walletService->credit(
-                user: $user,
-                amount: $returnAmount,
-                currency: 'USDT',
-                description: 'Stock Sale',
-                metadata: [
-                    'type' => 'stock_sale',
-                    'contract_id' => $contract->id
-                ]
-            );
+                $this->transactionRepository->create(
+                    resolve(CreateTransactionRequestDTO::class)
+                    ->setUserId(config('bitexroom.user_id'))
+                    ->setWalletId($ExchangeWallet->id)
+                    ->setAmount($stockContract->cancellation_fee)
+                    ->setBalance($ExchangeWallet->balance)
+                    ->setType(TransactionTypeEnum::FEE)
+                    ->setSubtype(TransactionSubTypeEnum::STOCK)
+                    ->setStatus(TransactionStatusEnum::SUCCESS)
+                    ->setDescription('کارمزد ابطال قرارداد' . $stockContract->contract_number)
+                );
 
-            return [
-                'success' => true,
-                'returned_amount' => $returnAmount,
-                'fee_amount' => $cancellationFee
-            ];
+                $this->stockRepository->sellContract($stockContract);
+
+                $this->walletService->increaseBalance($user->id, 'USDT', $returnAmount);
+            }
         });
     }
 
