@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Exceptions\Auth\IncompleteProfileException;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,9 +20,7 @@ class CompleteProfileMiddleware
     {
         $user = $request->user();
         if (! $user || empty($user->first_name) || empty($user->last_name) || empty($user->mobile) || empty($user->national_code)) {
-            return response()->json([
-                'message' => __('Please complete your profile information (first name, last name, mobile, national code).')
-            ], 403);
+            throw new IncompleteProfileException();
         }
         return $next($request);
     }

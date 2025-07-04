@@ -15,6 +15,6 @@ return [
         ],
     ],
     'contracts' => [
-        'base_url' => env('CONTRACTS_BASE_URL', 'http://127.0.0.1:8000'),
+        'base_url' => env('CONTRACTS_BASE_URL', 'http://127.0.0.1:8001'),
     ],
 ];

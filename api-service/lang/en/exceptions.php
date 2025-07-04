@@ -17,5 +17,6 @@ return [
     \App\Exceptions\V1\Stock\InvalidContractException::class => 'Invalid contract or contract not found.',
     \App\Exceptions\V1\Auth\UserNotVerifiedException::class => 'Your account has not been verified.',
     \App\Exceptions\V1\Auth\UserIsSuspendException::class => 'Your account is suspended.',
+    \App\Exceptions\Auth\IncompleteProfileException::class => 'Please complete your profile information (first name, last name, mobile, national code).',
     \App\Exceptions\ReferralCodeSystemDisabledException::class => 'Referral code system is disabled.',
 ];
