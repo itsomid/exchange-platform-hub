@@ -15,7 +15,10 @@ class StockContractResource extends JsonResource
     public function toArray($request)
     {
         return [
+            'id' => $this->id,
             'stock_name' => $this->stock?->name ?? null,
+            'stock_type' => $this->stock?->type ?? null,
+            'stock_type_name' => __('enum.stock.stock_type.' . $this->stock->type->name ),
             'contract_number' => $this->contract_number,
             'contract_file' => $this->contract_file_url,
             'amount' => $this->amount,

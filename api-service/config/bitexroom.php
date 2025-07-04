@@ -3,7 +3,7 @@
 return [
     'scale_precision' => env('BITEXROOM_SCALE_PRECISION', 8),
     'deposit_watching_per_minutes' => env('BITEXROOM_DEPOSIT_WATCHING_PER_MINUTES', 60 * 8), //Default is 8H
-    'bitexroom_user_id' => env('BITEXROOM_USER_ID', 1),
+    'user_id' => env('BITEXROOM_USER_ID', 1),
     'wallet_refresh' => [
         'minutes' => 2,
         'max_attempts' => 5,

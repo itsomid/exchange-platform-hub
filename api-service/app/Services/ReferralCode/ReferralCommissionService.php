@@ -112,7 +112,7 @@ class ReferralCommissionService
             $exchangeWallet->decrement('balance', $commissionAmount);
 
             Transaction::query()->create([
-                'user_id' => config('bitexroom.bitexroom_user_id'), // Admin or exchange user ID
+                'user_id' => config('bitexroom.user_id'), // Admin or exchange user ID
                 'wallet_id' => $exchangeWallet->id,
                 'otc_order_id' => $otcOrder->id,
                 'balance' => $exchangeWallet->balance,

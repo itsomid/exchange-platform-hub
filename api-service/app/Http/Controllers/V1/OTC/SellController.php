@@ -86,7 +86,7 @@ class SellController
                     resolve(OTCSellRequestDTO::class)
                         ->setMarketId($validateData['market_id'])
                         ->setSellerUserId(Auth::id())
-                        ->setBuyerUserId(config('bitexroom.bitexroom_user_id'))
+                        ->setBuyerUserId(config('bitexroom.user_id'))
                         ->setQuantity($validateData['quantity'])
                 );
 

@@ -204,13 +204,13 @@ class WithdrawalService
 
             $wallet = Wallet::query()
                 ->where('currency_symbol', $baseCoinChain->currency->symbol)
-                ->where('user_id', config('bitexroom.bitexroom_user_id'))
+                ->where('user_id', config('bitexroom.user_id'))
                 ->first();
 
             //HD Wallet Fee
             Transaction::query()
                 ->create([
-                    'user_id' => config('bitexroom.bitexroom_user_id'),
+                    'user_id' => config('bitexroom.user_id'),
                     'wallet_id' => $wallet->id,
                     'withdrawal_id' => $withdrawal->id,
                     'amount' => -$hdWalletNetworkFee,
@@ -241,7 +241,7 @@ class WithdrawalService
         $exchangeNetworkFee = $withdrawal->network_fee;
         if ($exchangeWithdrawalFee > 0) {
             Transaction::query()->create([
-                'user_id' => config('bitexroom.bitexroom_user_id'),
+                'user_id' => config('bitexroom.user_id'),
                 'wallet_id' => $exchangeWallet->id,
                 'withdrawal_id' => $withdrawal->id,
                 'balance' => $exchangeWallet->balance,
@@ -257,7 +257,7 @@ class WithdrawalService
         if ($exchangeNetworkFee > 0) {
             // Exchange Network Fee
             Transaction::query()->create([
-                'user_id' => config('bitexroom.bitexroom_user_id'),
+                'user_id' => config('bitexroom.user_id'),
                 'wallet_id' => $exchangeWallet->id,
                 'withdrawal_id' => $withdrawal->id,
                 'amount' => $exchangeNetworkFee,

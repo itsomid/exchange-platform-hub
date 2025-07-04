@@ -80,7 +80,7 @@ class OTCService
 
         $wallet = $this->walletRepository->getOneByCurrency(
             $market->base_currency,
-            config('bitexroom.bitexroom_user_id')
+            config('bitexroom.user_id')
         );
 
         return $wallet->available_balance;
@@ -154,7 +154,7 @@ class OTCService
                     resolve(CompletedOrderRequestDTO::class)
                         ->setOtcId($otc_order->id)
                         ->setBuyerUserId(Auth::id())
-                        ->setSellerUserId(config('bitexroom.bitexroom_user_id'))
+                        ->setSellerUserId(config('bitexroom.user_id'))
                 );
                 if ($otc_order->user->introducer_code) {
                     $this->referralCommissionService->processReferralCommission($otc_order, $fee);
@@ -375,7 +375,7 @@ class OTCService
                         'USDT'
                     );
                 $chargeUSDTTransaction = $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
-                    ->setUserId(config('bitexroom.bitexroom_user_id'))
+                    ->setUserId(config('bitexroom.user_id'))
                     ->setWalletId($usdtWallet->id)
                     ->setOtcOrderId($otc_order->id)
                     ->setAmount($receivedAmount)
@@ -401,7 +401,7 @@ class OTCService
             $this->completeSellOrder(
                 resolve(CompletedOrderRequestDTO::class)
                     ->setOtcId($otc_order->id)
-                    ->setBuyerUserId(config('bitexroom.bitexroom_user_id'))
+                    ->setBuyerUserId(config('bitexroom.user_id'))
                     ->setSellerUserId(Auth::id())
             );
             if ($otc_order->user->introducer_code) {
@@ -546,7 +546,7 @@ class OTCService
 
         // Commission Transaction
         $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
-            ->setUserId(config('bitexroom.bitexroom_user_id'))
+            ->setUserId(config('bitexroom.user_id'))
             ->setWalletId($buyerQuoteWallet->id)
             ->setOtcOrderId($otc->id)
             ->setBalance($buyerQuoteWallet->balance)

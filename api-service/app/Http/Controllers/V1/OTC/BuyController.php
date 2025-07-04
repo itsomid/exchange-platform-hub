@@ -80,7 +80,7 @@ class BuyController extends Controller
                     resolve(OTCBuyRequestDTO::class)
                         ->setMarketId($validateData['market_id'])
                         ->setBuyerUserId(Auth::id())
-                        ->setSellerUserId(config('bitexroom.bitexroom_user_id'))
+                        ->setSellerUserId(config('bitexroom.user_id'))
                         ->setQuantity($validateData['quantity'])
                 );
 
