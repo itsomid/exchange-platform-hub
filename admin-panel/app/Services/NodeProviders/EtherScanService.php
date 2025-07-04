@@ -37,7 +37,7 @@ class EtherScanService
 
                 if ($data['status'] === '1') {
                     $balanceWei = $data['result']; // Balance in smallest unit
-                    $balance = bcdiv($balanceWei, bcpow('10', 5), 5); // Convert to USDT
+                    $balance = bcdiv($balanceWei, bcpow('10', 6), 6); // Convert to USDT (6 decimal places)
                     return [
                         'amount' => $balance
                     ];
