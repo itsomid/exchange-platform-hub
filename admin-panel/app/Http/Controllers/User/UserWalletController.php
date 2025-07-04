@@ -34,7 +34,7 @@ class UserWalletController extends Controller
         $this->withdrawalService = $withdrawalService;
         $this->otcService = $otcService;
         $this->transactionService = $transactionService;
-        $this->exchangeUserId = config('exchange.exchange_user_id', 1);
+        $this->bitexroomUserId = config('bitexroom.user_id', 1);
     }
 
     public function userWallets(User $user)
@@ -170,7 +170,7 @@ class UserWalletController extends Controller
 
         $lastWithdrawDate = $lastWithdraw ? \App\Helpers\DateFormatter::convertToPersianDate($lastWithdraw->created_at, '%d %B %Y') : 'بدون برداشت';
 
-        if ($user->id !== $this->exchangeUserId) {
+        if ($user->id !== $this->bitexroomUserId) {
             $totalOtcSell = $this->otcService->totalOTCOrder($user->id, $wallet->currency_symbol, OTCOrderTypeEnum::SELL);
             $totalOtcSellValue = $this->otcService->totalOTCOrderValue($user->id, $wallet->currency_symbol, OTCOrderTypeEnum::SELL);
 

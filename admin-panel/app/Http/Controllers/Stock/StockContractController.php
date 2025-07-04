@@ -27,7 +27,7 @@ class StockContractController extends Controller
 
     public function __construct(WalletService $walletService, StockService $stockService)
     {
-        $this->exchangeUserId = config('exchange.exchange_user_id', 1);
+        $this->bitexroomUserId = config('bitexroom.user_id', 1);
         $this->walletService = $walletService;
         $this->stockService = $stockService;
     }
@@ -258,7 +258,7 @@ class StockContractController extends Controller
                 ]);
 
                 Transaction::create([
-                    'user_id' => $this->exchangeUserId,
+                    'user_id' => $this->bitexroomUserId,
                     'wallet_id' => $ExchangeWallet->id,
                     'amount' => $stockContract->cancellation_fee,
                     'balance' => $ExchangeWallet->balance,

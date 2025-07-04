@@ -40,10 +40,10 @@
 
                     </div>
                     <div class="card-body border-top">
-                        <a href="{{route('admin.wallet.detail',['user'=> config('exchange.exchange_user_id'),'wallet'=>$wallet->id,'type'=>'deposit'])}}"
+                        <a href="{{route('admin.wallet.detail',['user'=> config('bitexroom.user_id'),'wallet'=>$wallet->id,'type'=>'deposit'])}}"
                            class="btn btn-label-primary me-2">مشاهده جزئیات</a>
                         <a class="btn btn-icon btn-primary"
-                           href="{{route('admin.wallet.increase-credit.form',['currency'=>$wallet->currency_symbol , 'user'=>config('exchange.exchange_user_id')])}}">
+                           href="{{route('admin.wallet.increase-credit.form',['currency'=>$wallet->currency_symbol , 'user'=>config('bitexroom.user_id')])}}">
                             <i class="fa-regular fa-plus fa-xl"></i>
                         </a>
                     </div>

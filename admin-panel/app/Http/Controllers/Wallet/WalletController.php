@@ -32,7 +32,7 @@ class WalletController extends Controller
     public function __construct()
     {
 
-        $this->exchangeUserId = config('exchange.exchange_user_id', 1);
+        $this->bitexroomUserId = config('bitexroom.user_id', 1);
     }
 
     public function increaseCreditForm(Request $request)
@@ -97,10 +97,10 @@ class WalletController extends Controller
             }
 
 
-            if ($request->user == $this->exchangeUserId) {
+            if ($request->user == $this->bitexroomUserId) {
 
                 $transactionService->increaseDecreaseAdminWalletCredit(
-                    userId: $this->exchangeUserId,
+                    userId: $this->bitexroomUserId,
                     amount: $request->amount,
                     currency: $currency,
                     currencyChain: $currencyChain,
@@ -112,12 +112,12 @@ class WalletController extends Controller
                 );
 
                 Toast::message('واریز اعتبار با موفقیت انجام شد.')->success()->notify();
-                return redirect()->route('admin.wallet.index', ['user' => $this->exchangeUserId]);
+                return redirect()->route('admin.wallet.index', ['user' => $this->bitexroomUserId]);
 
             } else {
 
                 $transactionService->transferBetweenWallets(
-                    fromUserId: $this->exchangeUserId,
+                    fromUserId: $this->bitexroomUserId,
                     toUserId: $request->user,
                     amount: $request->amount,
                     transactionHash: $request->transaction_hash,
@@ -164,10 +164,10 @@ class WalletController extends Controller
             }
 
 
-            if ($request->user == $this->exchangeUserId) {
+            if ($request->user == $this->bitexroomUserId) {
 
                 $transactionService->increaseDecreaseAdminWalletCredit(
-                    userId: $this->exchangeUserId,
+                    userId: $this->bitexroomUserId,
                     amount: $request->amount,
                     currency: $currency,
                     currencyChain: $currencyChain,
@@ -179,16 +179,16 @@ class WalletController extends Controller
                 );
 
                 Toast::message('برداشت اعتبار با موفقیت انجام شد.')->success()->notify();
-                return redirect()->route('admin.wallet.index', ['user' => $this->exchangeUserId]);
+                return redirect()->route('admin.wallet.index', ['user' => $this->bitexroomUserId]);
 
             } else {
                 // Check if the wallet for the specified currency exists
                 $fromUserId = $request->user;
-                $toUserId = $this->exchangeUserId;
+                $toUserId = $this->bitexroomUserId;
 
                 $transactionService->transferBetweenWallets(
                     fromUserId: $request->user,
-                    toUserId: $this->exchangeUserId,
+                    toUserId: $this->bitexroomUserId,
                     amount: $request->amount,
                     transactionHash: $request->transaction_hash,
                     currency: $currency,

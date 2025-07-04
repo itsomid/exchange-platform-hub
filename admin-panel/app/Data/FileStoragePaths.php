@@ -6,11 +6,11 @@ class FileStoragePaths
 {
     public static function PROFILE_DOWNLOAD_URL($file = null)
     {
-        return config('bitex.bitex_file_upload_url_4').'/filepond/user_profile/'.$file;
+        return config('bitexroom.file_upload_url_4').'/filepond/user_profile/'.$file;
     }
 
     public static function PROFILE_UPLOAD_URL()
     {
-        return config('bitex.bitex_file_upload_url_4').'/api/upload/user_profile';
+        return config('bitexroom.file_upload_url_4').'/api/upload/user_profile';
     }
 }

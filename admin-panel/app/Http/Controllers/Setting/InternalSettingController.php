@@ -16,7 +16,7 @@ class InternalSettingController extends Controller
     protected $exchangeUserId;
     public function __construct(WalletService $walletService)
     {
-        $this->exchangeUserId = config('exchange.exchange_user_id', 1);
+        $this->bitexroomUserId = config('bitexroom.user_id', 1);
         $this->walletService = $walletService;
     }
     public function index()

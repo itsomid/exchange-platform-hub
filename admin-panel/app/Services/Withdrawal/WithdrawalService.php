@@ -23,7 +23,7 @@ class WithdrawalService
     public function __construct(WalletService $walletService)
     {
         $this->walletService = $walletService;
-        $this->exchangeUserId = config('exchange.exchange_user_id', 1);
+        $this->bitexroomUserId = config('bitexroom.user_id', 1);
     }
 
     /**
@@ -256,7 +256,7 @@ class WithdrawalService
             $exchangeWithdrawalFee = CurrencyChain::whereChain($currency_chain)->value('exchange_withdrawal_fee');
             if ($exchangeWithdrawalFee > 0){
                 Transaction::query()->create([
-                    'user_id' => $this->exchangeUserId,
+                    'user_id' => $this->bitexroomUserId,
                     'wallet_id' => $exchangeWallet->id,
                     'withdrawal_id' => $withdrawal->id,
                     'balance' => $exchangeWallet->balance,

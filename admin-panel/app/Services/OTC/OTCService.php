@@ -30,7 +30,7 @@ class OTCService
 
     public function __construct(ReferralCommissionService $referralCommissionService)
     {
-        $this->exchangeUserId = config('exchange.exchange_user_id');
+        $this->bitexroomUserId = config('bitexroom.user_id');
         $this->referralCommissionService = $referralCommissionService;
     }
 
@@ -313,7 +313,7 @@ class OTCService
         // Seller receives quote currency
         $sellerQuoteWallet->increment('balance', $amountInQuoteCurrency);
         $this->createTransaction(
-            $this->exchangeUserId,
+            $this->bitexroomUserId,
             $sellerQuoteWallet,
             $otcOrder,
             $amountInQuoteCurrency,
@@ -325,7 +325,7 @@ class OTCService
         // Seller loses base currency
         $sellerWallet->decrement('balance', $receivedAmount);
         $this->createTransaction(
-            $this->exchangeUserId,
+            $this->bitexroomUserId,
             $sellerWallet,
             $otcOrder,
             -$receivedAmount,
@@ -383,7 +383,7 @@ class OTCService
         // Buyer pays quote currency
         $buyerQuoteWallet->decrement('balance', $receivedAmount);
         $this->createTransaction(
-            $this->exchangeUserId,
+            $this->bitexroomUserId,
             $buyerQuoteWallet,
             $otcOrder,
             -$receivedAmount,
@@ -395,7 +395,7 @@ class OTCService
         // Buyer receives base currency
         $buyerWallet->increment('balance', $quantity);
         $this->createTransaction(
-            $this->exchangeUserId,
+            $this->bitexroomUserId,
             $buyerWallet,
             $otcOrder,
             $quantity,
@@ -453,7 +453,7 @@ class OTCService
     ): void
     {
         Transaction::query()->create([
-            'user_id' => $this->exchangeUserId,
+            'user_id' => $this->bitexroomUserId,
             'wallet_id' => $wallet->id,
             'otc_order_id' => $otcOrder->id,
             'balance' => $wallet->balance,

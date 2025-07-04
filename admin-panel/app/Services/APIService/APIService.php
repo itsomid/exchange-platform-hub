@@ -15,7 +15,7 @@ class APIService
 
         try {
             Http::withHeader('Authorization', 'Bearer '.$token)
-                ->post(config('bitex.api_service.base_url').'/api/v1/wallets/check-withdrawal');
+                ->post(config('bitexroom.api_service.base_url').'/api/v1/wallets/check-withdrawal');
         } catch (Throwable $exception) {
 
         }

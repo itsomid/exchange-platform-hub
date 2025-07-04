@@ -73,7 +73,7 @@ class ExchangeService
             $cetPrice = $cetMarket ? $cetMarket->activeExchangePrice->price : 0;
             // CET
             Transaction::query()->create([
-                'user_id' => config('exchange.exchange_user_id'),
+                'user_id' => config('bitexroom.user_id'),
                 'wallet_id' => $cetWallet->id,
                 'amount' => $response->getFee(),
                 'coin_price' =>  $cetPrice,
@@ -88,7 +88,7 @@ class ExchangeService
             ]);
             //Base Currency
             Transaction::query()->create([
-                'user_id' => config('exchange.exchange_user_id'),
+                'user_id' => config('bitexroom.user_id'),
                 'wallet_id' => $baseCurrencyWallet->id,
                 'amount' => $response->getAmount(),
                 'coin_price' =>  $market->activeExchangePrice->price,

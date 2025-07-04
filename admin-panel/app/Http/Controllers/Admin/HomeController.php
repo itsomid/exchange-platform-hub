@@ -20,7 +20,7 @@ class HomeController extends Controller
 
     public function __cunstruct()
     {
-        $this->exchangeUserId = config('exchange.exchange_user_id', 1);
+        $this->bitexroomUserId = config('bitexroom.user_id', 1);
     }
 
     public function index()
@@ -37,7 +37,7 @@ class HomeController extends Controller
         //مجموع برداشت های کاربران
         $withdrawalSums = Withdrawal::selectRaw('currency_symbol, SUM(amount) as total_amount')
             ->where('status', WithdrawalStatusEnum::COMPLETED)
-            ->where('user_id', '!=', $this->exchangeUserId)
+            ->where('user_id', '!=', $this->bitexroomUserId)
             ->groupBy('currency_symbol')
             ->get();
 

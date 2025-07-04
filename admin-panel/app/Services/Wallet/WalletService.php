@@ -21,7 +21,7 @@ class WalletService
     public function __construct()
     {
         // Load exchange user ID from config
-        $this->exchangeUserId = config('exchange.exchange_user_id', 1);
+        $this->bitexroomUserId = config('bitexroom.user_id', 1);
     }
     /**
      * Calculate the total assets value for a user's wallets.
@@ -44,18 +44,18 @@ class WalletService
      */
     public function getExchangeWallet(string $currency): ?Wallet
     {
-        return Wallet::where('user_id', $this->exchangeUserId)
+        return Wallet::where('user_id', $this->bitexroomUserId)
             ->where('currency_symbol', $currency)
             ->first();
     }
 
     public function getExchangeAllWallet()
     {
-        return Wallet::where('user_id', $this->exchangeUserId)->get();
+        return Wallet::where('user_id', $this->bitexroomUserId)->get();
     }
     public function getExchangeAllWalletExceptUSDT()
     {
-        return Wallet::where('user_id', $this->exchangeUserId)->where('currency_symbol','!=','USDT')->get();
+        return Wallet::where('user_id', $this->bitexroomUserId)->where('currency_symbol','!=','USDT')->get();
     }
 
     public function getExchangeAllWalletChain()
@@ -157,27 +157,27 @@ class WalletService
         // Get yesterday and the day before
         $yesterday = now()->subDay();
         $dayBefore = now()->subDays(2);
-        
+
         // Initialize values
         $yesterdayValue = 0;
         $dayBeforeValue = 0;
-        
+
         // Loop through each wallet
         foreach ($user->wallets as $wallet) {
             // Get the market for the wallet's currency
             $market = $wallet->currency->baseMarket;
-            
+
             // Skip if no market (like USDT)
             if (!$market) {
                 continue;
             }
-   
+
             // Get market history for yesterday
              $yesterdayHistory = MarketHistory::where('market_id', $market->id)
                 ->whereDate('timestamp', $yesterday)
                 ->latest()
                 ->first();
-                
+
             // Get market history for day before
              $dayBeforeHistory = MarketHistory::where('market_id', $market->id)
                 ->whereDate('timestamp', $dayBefore)
@@ -188,20 +188,20 @@ class WalletService
             if ($yesterdayHistory) {
                 $yesterdayValue += $wallet->balance * $yesterdayHistory->close;
             }
-            
+
             if ($dayBeforeHistory) {
                 $dayBeforeValue += $wallet->balance * $dayBeforeHistory->close;
             }
         }
-        
+
         // Calculate profit/loss
         $profitLoss = $yesterdayValue - $dayBeforeValue;
 
         // Calculate percentage
-        $profitLossPercentage = $dayBeforeValue > 0 
-            ? ($profitLoss / $dayBeforeValue) * 100 
+        $profitLossPercentage = $dayBeforeValue > 0
+            ? ($profitLoss / $dayBeforeValue) * 100
             : 0;
-            
+
         return [
             'value' => $profitLoss,
             'percentage' => $profitLossPercentage
