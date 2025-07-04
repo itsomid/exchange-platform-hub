@@ -183,8 +183,8 @@
                                 </div>
                             </td>
                             <td>
-                                @if($contract->contract_file && file_exists(storage_path('app/public/contracts/stock/' . $contract->contract_file)))
-                                    <a href="{{ asset('storage/contracts/stock/' . $contract->contract_file) }}" target="_blank" class="fw-medium font-number">
+                                @if($contract->contract_file )
+                                    <a href="{{ \App\Data\FileStoragePaths::CONTRACT_DOWNLOAD_URL($contract->contract_file) }}" target="_blank" class="fw-medium font-number">
                                         <i class="fa-thin fa-file-certificate fa-lg"></i>
                                         {{ $contract->contract_number }}
                                     </a>

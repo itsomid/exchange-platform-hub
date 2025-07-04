@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Stock;
 
+use App\Data\FileStoragePaths;
 use App\Enums\StockContractStatusEnum;
 use App\Enums\StockTypeEnum;
 use App\Enums\TransactionStatusEnum;
@@ -16,8 +17,9 @@ use App\Models\StockContract;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Services\Wallet\WalletService;
-use Illuminate\Support\Facades\Storage;
 use App\Services\Stock\StockService;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class StockContractController extends Controller
 {
@@ -62,62 +64,84 @@ class StockContractController extends Controller
         return view('dashboard.stock_contract.create', compact('stocks', 'users'));
     }
 
+    /**
+     * Call external API to generate contract PDF
+     * @param int $contractId
+     * @return string|null  PDF path or null on failure
+     */
+    private function callExternalPdfApi($contractId, $userId)
+    {
+        $baseUrl = config('bitexroom.contracts.base_url');
+        $url = $baseUrl . "/api/v1/stocks/contracts/{$contractId}/generate-pdf";
+
+        $token = User::find($userId)->generateAccessToken(10);
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $token,
+            ])->post($url);
+
+            if ($response->successful() && isset($response->json()['filename'])) {
+                return $response->json()['filename'];
+            } else {
+                Log::error('PDF API error', ['response' => $response->body()]);
+            }
+        } catch (\Exception $e) {
+            Log::error('PDF API exception', ['error' => $e->getMessage()]);
+        }
+        return null;
+    }
+
     public function store(StockContractStoreRequest $request)
     {
-        $stock = Stock::findOrFail($request->stock_id);
-        $totalValue = $stock->value * $request->amount;
+        $stock = Stock::findOrFail($request['stock_id']);
+        $totalValue = $stock->value * $request['amount'];
 
-        $wallet = $this->walletService->getUserWallet($request->user_id, 'USDT');
+        $wallet = $this->walletService->getUserWallet($request['user_id'], 'USDT');
 
         if ($stock->type !== StockTypeEnum::GIFT) {
-
-            $hasBalance = $this->walletService->checkAndDecreaseBalance($request->user_id, 'USDT', $totalValue);
+            $hasBalance = $this->walletService->checkAndDecreaseBalance($request['user_id'], 'USDT', $totalValue);
             if (!$hasBalance) {
                 return redirect()->back()->withErrors(['balance' => 'موجودی کیف پول کاربر کافی نیست.']);
             }
-
         }
 
         $contractData = [
-            'user_id' => $request->user_id,
-            'stock_id' => $request->stock_id,
+            'user_id' => $request['user_id'],
+            'stock_id' => $request['stock_id'],
             'contract_number' => StockContract::generateContractNumber(),
-            'amount' => $request->amount,
+            'amount' => $request['amount'],
             'total_value' => $totalValue,
-            'contract_status' => $request->contract_status,
+            'contract_status' => $request['contract_status'],
             'cancellation_fee' => $stock->cancellation_fee,
-            'description' => $request->description,
+            'description' => $request['description'],
         ];
 
-        if ($request->contract_status === 'sold') {
+        if ($request['contract_status'] === 'sold') {
             $contractData['sold_at'] = now();
-        } elseif ($request->contract_status === 'canceled') {
+        } elseif ($request['contract_status'] === 'canceled') {
             $contractData['cancelled_at'] = now();
         }
 
         $contract = StockContract::create($contractData);
 
         Transaction::create([
-            'user_id' => $request->user_id,
+            'user_id' => $request['user_id'],
             'wallet_id' => $wallet->id,
             'amount' => -$totalValue,
             'balance' => $wallet->balance,
             'type' => TransactionTypeEnum::BUY,
             'subtype' => TransactionSubTypeEnum::STOCK,
             'status' => TransactionStatusEnum::SUCCESS,
-            'description' => 'خرید سهام توسط ادمین (ID: #' . auth()->id() . ',' . \Auth::guard('admin')->user()->fullname() . ') - شماره قرارداد: ' . $contract->contract_number,
+            'description' => 'خرید سهام توسط ادمین (UserID: #' . $request['user_id'] . ') - شماره قرارداد: ' . $contract->contract_number,
         ]);
 
-        $username = $contract->user->username ?? 'user';
-        $pdfPath = $username . '_' . $contract->contract_number . '.pdf';
+        // Generate PDF using external API
+        $generatedPdfFilename    = $this->callExternalPdfApi($contract->id, $request['user_id']);
 
-        // Generate PDF using service
-        $generatedPdfPath = $this->stockService->generateContractPdf($contract, $stock, $pdfPath);
-
-        if ($generatedPdfPath) {
-            $contract->update(['contract_file' => $generatedPdfPath]);
+        if ($generatedPdfFilename) {
+            $contract->update(['contract_file' => $generatedPdfFilename]);
         } else {
-            \Log::error('Failed to generate PDF for contract: ' . $contract->id);
+            Log::error('Failed to generate PDF for contract: ' . $contract->id);
             return redirect()->back()->withErrors(['pdf' => 'خطا در ایجاد فایل قرارداد.']);
         }
 
@@ -128,8 +152,6 @@ class StockContractController extends Controller
     {
         $stockContract->load(['user', 'stock']);
 
-        // Generate PDF if it doesn't exist
-        $this->generateContractPdfIfNotExists($stockContract);
 
         return view('dashboard.stock_contract.show', compact('stockContract'));
     }
@@ -138,84 +160,27 @@ class StockContractController extends Controller
      * Generate contract PDF if it doesn't exist
      *
      * @param StockContract $stockContract
-     * @return bool
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function generateContractPdfIfNotExists(StockContract $stockContract)
     {
-        // Check if contract file already exists
-        if ($stockContract->contract_file && $this->stockService->contractPdfExists($stockContract->contract_file)) {
-            return true;
-        }
-
-        // Generate new PDF
-        $username = $stockContract->user->username ?? 'user';
-        $pdfPath = $username . '_' . $stockContract->contract_number . '.pdf';
-
-        // Generate PDF using service
-        $generatedPdfPath = $this->stockService->generateContractPdf($stockContract, $stockContract->stock, $pdfPath);
-
-        if ($generatedPdfPath) {
-            $stockContract->update(['contract_file' => $generatedPdfPath]);
-            return true;
-        } else {
-            \Log::error('Failed to generate PDF for contract: ' . $stockContract->id);
-            return false;
-        }
-    }
-
-    /**
-     * Regenerate contract PDF (force new generation)
-     *
-     * @param StockContract $stockContract
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function regeneratePdf(StockContract $stockContract)
-    {
-        // Delete existing PDF if it exists
         if ($stockContract->contract_file) {
-            $this->stockService->deleteContractPdf($stockContract->contract_file);
-        }
-
-        // Generate new PDF
-        $success = $this->generateContractPdfIfNotExists($stockContract);
-
-        if ($success) {
-            return redirect()->back()->with('success', 'فایل قرارداد با موفقیت بازسازی شد.');
-        } else {
-            return redirect()->back()->withErrors(['pdf' => 'خطا در بازسازی فایل قرارداد.']);
-        }
-    }
-
-    /**
-     * Generate PDFs for all contracts that don't have files
-     *
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function generateMissingPdfs()
-    {
-        $contractsWithoutPdf = StockContract::whereNull('contract_file')
-            ->orWhere('contract_file', '')
-            ->with(['user', 'stock'])
-            ->get();
-
-        $successCount = 0;
-        $errorCount = 0;
-
-        foreach ($contractsWithoutPdf as $contract) {
-            $success = $this->generateContractPdfIfNotExists($contract);
-            if ($success) {
-                $successCount++;
-            } else {
-                $errorCount++;
+            $fileUrl = FileStoragePaths::CONTRACT_DOWNLOAD_URL($stockContract->contract_file);
+            $response = Http::head($fileUrl);
+            if ($response->ok()) {
+                return redirect()->back()->with('success', 'فایل قرارداد موجود است');
             }
         }
 
-        $message = "تعداد {$successCount} فایل قرارداد با موفقیت ایجاد شد.";
-        if ($errorCount > 0) {
-            $message .= " تعداد {$errorCount} فایل با خطا مواجه شد.";
-        }
+        $generatedPdfFilename = $this->callExternalPdfApi($stockContract->id, $stockContract->user_id);
 
-        return redirect()->back()->with('success', $message);
+        if ($generatedPdfFilename) {
+            $stockContract->update(['contract_file' => $generatedPdfFilename]);
+            return redirect()->back()->with('success', 'فایل با موفقیت بازسازی شد');
+        } else {
+            Log::error('Failed to generate PDF for contract: ' . $stockContract->id);
+            return redirect()->back()->withErrors(['pdf' => 'خطا در بازسازی فایل قرارداد']);
+        }
     }
 
     public function edit(StockContract $stockContract)

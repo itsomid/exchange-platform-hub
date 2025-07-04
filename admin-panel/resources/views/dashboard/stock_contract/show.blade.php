@@ -13,7 +13,7 @@
                         <i class="fa fa-edit mx-2"></i> ویرایش
                     </a>
                     @if($stockContract->contract_file)
-                        <a href="{{ asset('storage/contracts/stock/' . $stockContract->contract_file) }}" class="btn btn-success" target="_blank">
+                        <a href="{{ \App\Data\FileStoragePaths::CONTRACT_DOWNLOAD_URL($stockContract->contract_file) }}" class="btn btn-success" target="_blank">
                             <i class="fa fa-download mx-2"></i> دانلود قرارداد
                         </a>
                     @endif
@@ -139,4 +139,4 @@
             </div>
         </div>
     </div>
-@endsection 
+@endsection

@@ -273,7 +273,7 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::get('/{stockContract}/edit', [StockContractController::class, 'edit'])->name('stock-contract.edit')->can('stock');
         Route::patch('/{stockContract}', [StockContractController::class, 'update'])->name('stock-contract.update')->can('stock');
         Route::delete('/{stockContract}', [StockContractController::class, 'destroy'])->name('stock-contract.destroy')->can('stock');
-        Route::post('/{stockContract}/regenerate-pdf', [StockContractController::class, 'regeneratePdf'])->name('stock-contract.regenerate-pdf')->can('stock');
-//        Route::post('/generate-missing-pdfs', [StockContractController::class, 'generateMissingPdfs'])->name('stock-contract.generate-missing-pdfs');
+        Route::post('/{stockContract}/regenerate-pdf', [StockContractController::class, 'generateContractPdfIfNotExists'])->name('stock-contract.regenerate-pdf')->can('stock');
+
     });
 });

@@ -4,13 +4,13 @@ namespace App\Data;
 
 class FileStoragePaths
 {
-    public static function PROFILE_DOWNLOAD_URL($file = null)
+    public static function CONTRACT_DOWNLOAD_URL($file = null)
     {
-        return config('bitexroom.file_upload_url_4').'/filepond/user_profile/'.$file;
+        return config('bitexroom.contracts.base_url').'/storage/contracts/stock/'.$file;
     }
 
-    public static function PROFILE_UPLOAD_URL()
+    public static function CONTRACT_UPLOAD_URL($file = null)
     {
-        return config('bitexroom.file_upload_url_4').'/api/upload/user_profile';
+        return config('bitexroom.contracts.base_url').'/storage/contracts/stock/'.$file;
     }
 }

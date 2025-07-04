@@ -2,6 +2,7 @@
 
 namespace App\Services\Stock;
 
+use App\Data\FileStoragePaths;
 use ZanySoft\LaravelPDF\Facades\PDF;
 use Mpdf\Output\Destination;
 
@@ -112,16 +113,6 @@ class StockService
         return $pdf->stream($filename);
     }
 
-    /**
-     * Get stock contract PDF file path
-     *
-     * @param string $filename
-     * @return string
-     */
-    public function getContractPdfPath($filename)
-    {
-        return storage_path('app/public/contracts/stock/' . $filename);
-    }
 
     /**
      * Check if stock contract PDF exists
@@ -131,23 +122,8 @@ class StockService
      */
     public function contractPdfExists($filename)
     {
-        return file_exists($this->getContractPdfPath($filename));
+        return file_exists(FileStoragePaths::CONTRACT_DOWNLOAD_URL($filename));
     }
 
-    /**
-     * Delete stock contract PDF file
-     *
-     * @param string $filename
-     * @return bool
-     */
-    public function deleteContractPdf($filename)
-    {
-        $filepath = $this->getContractPdfPath($filename);
 
-        if (file_exists($filepath)) {
-            return unlink($filepath);
-        }
-
-        return false;
-    }
 }
