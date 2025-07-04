@@ -5,6 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Enums\DepositStatusEnum;
 use App\Enums\OTCOrderTypeEnum;
 use App\Enums\TransactionTypeEnum;
+use App\Enums\WithdrawalStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
 use App\Models\OTCOrder;
@@ -158,7 +159,9 @@ class UserWalletController extends Controller
 
 
         // Fetch the total withdraw amount and the last withdraw date
-        $totalWithdraws = Withdrawal::where('currency_symbol', $wallet->currency_symbol)->where('user_id', $user->id)
+        $totalWithdraws = Withdrawal::where('currency_symbol', $wallet->currency_symbol)
+            ->where('user_id', $user->id)
+            ->where('status',WithdrawalStatusEnum::COMPLETED)
             ->sum('amount');
 
         $totalWithdrawValue = $this->withdrawalService->totalWithdrawalValueBasedCurrency($wallet->currency_symbol, $user->id);

@@ -478,6 +478,7 @@ class OTCService
         return OTCOrder::where('user_id', $userId)
             ->where('market_id', $market->id)
             ->where('type', $type)
+            ->where('status',OTCOrderStatusEnum::SUCCESS)
             ->sum('quantity');
     }
 
@@ -491,6 +492,7 @@ class OTCService
         return OTCOrder::where('user_id', $userId)
             ->where('market_id', $market->id)
             ->where('type', $type)
+            ->where('status',OTCOrderStatusEnum::SUCCESS)
             ->sum(DB::raw('quantity * price'));
     }
 
