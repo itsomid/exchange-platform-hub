@@ -16,7 +16,7 @@ use App\Models\MarketHistory;
 
 class WalletService
 {
-    protected $exchangeUserId;
+    protected $bitexroomUserId;
 
     public function __construct()
     {

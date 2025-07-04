@@ -23,7 +23,7 @@ class StockContractController extends Controller
 {
     protected $walletService;
     protected $stockService;
-    protected $exchangeUserId;
+    protected $bitexroomUserId;
 
     public function __construct(WalletService $walletService, StockService $stockService)
     {

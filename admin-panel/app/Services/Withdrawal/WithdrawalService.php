@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 class WithdrawalService
 {
     protected $walletService;
-    protected $exchangeUserId;
+    protected $bitexroomUserId;
 
     public function __construct(WalletService $walletService)
     {

@@ -16,7 +16,7 @@ use Carbon\Carbon;
 
 class HomeController extends Controller
 {
-    protected $exchangeUserId;
+    protected $bitexroomUserId;
 
     public function __cunstruct()
     {

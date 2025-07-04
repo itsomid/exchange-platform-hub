@@ -13,7 +13,7 @@ use Spatie\Permission\Models\Permission;
 class InternalSettingController extends Controller
 {
 
-    protected $exchangeUserId;
+    protected $bitexroomUserId;
     public function __construct(WalletService $walletService)
     {
         $this->bitexroomUserId = config('bitexroom.user_id', 1);

@@ -25,7 +25,7 @@ class UserWalletController extends Controller
     protected $withdrawalService;
     protected $otcService;
     protected $transactionService;
-    protected $exchangeUserId;
+    protected $bitexroomUserId;
 
     public function __construct(WalletService $walletService, DepositService $depositService, WithdrawalService $withdrawalService, OTCService $otcService, TransactionService $transactionService)
     {

@@ -20,19 +20,19 @@ class OTCBuySeeder extends Seeder
         $otcService = app(OTCService::class);
         $buyerUserId = User::find(4)->id;
         $sellerUserId = User::find(3)->id;
-        $exchangeUserId = config('bitexroom.user_id', 1);
+        $bitexroomUserId = config('bitexroom.user_id', 1);
         $firstMarket = Market::whereBaseCurrency('ETH')->first();
         $secondMarket = Market::whereBaseCurrency('BNB')->first();
         // Create a OTCRequestDTO with sample data
         $buyRequestDTO = (new OTCRequestDTO())
             ->setBuyerUserId($buyerUserId) // Example buyer user ID
-            ->setSellerUserId($exchangeUserId) // Example seller user ID
+            ->setSellerUserId($bitexroomUserId) // Example seller user ID
             ->setMarketId($firstMarket->id) // Example market ID
             ->setQuantity('0.1');
 
 
         $sellRequestDTO = (new OTCRequestDTO())
-            ->setBuyerUserId($exchangeUserId) // Example buyer user ID
+            ->setBuyerUserId($bitexroomUserId) // Example buyer user ID
             ->setSellerUserId($sellerUserId) // Example seller user ID
             ->setMarketId($secondMarket->id) // Example market ID
             ->setQuantity('1');

@@ -27,7 +27,7 @@ use Illuminate\Support\Facades\DB;
 
 class WalletController extends Controller
 {
-    protected $exchangeUserId;
+    protected $bitexroomUserId;
 
     public function __construct()
     {

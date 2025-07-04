@@ -19,7 +19,7 @@ class ReferralCommissionService
 {
 
     protected $walletService;
-    protected int $exchangeUserId;
+    protected int $bitexroomUserId;
     public function __construct(WalletService $walletService)
     {
         $this->walletService = $walletService;

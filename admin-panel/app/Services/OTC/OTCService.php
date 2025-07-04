@@ -25,7 +25,7 @@ class OTCService
      *
      * @var int
      */
-    protected int $exchangeUserId;
+    protected int $bitexroomUserId;
     protected $referralCommissionService;
 
     public function __construct(ReferralCommissionService $referralCommissionService)
