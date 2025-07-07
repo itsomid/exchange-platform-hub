@@ -199,6 +199,7 @@
             نموده یا از طریق رمز ارز به کیف پول مضارب انتقال داده است، که در صورت تمایل طرفین قابل افزایش بوده و در صورت
             افزایش مفاد این قرارداد نسبت به مابه‌التفاوت مذکور نیز اعمال خواهد شد که این مبالغ در این قرارداد به عنوان
             (سرمایه) ذکر خواهد شد.</p>
+        <p class="note">توضیحات: {{$contract->description??'ندارد'}}</p>
     </div>
 
     <h2>ماده ۳: زمینه فعالیت و مدت قرارداد</h2>
@@ -312,10 +313,10 @@
                     <table class="stamp-signature-table">
                         <tr>
                             <td class="stamp">
-                                <img src="{{ public_path('images/contract/stamp.jpg') }}" width="150" height="150">
+                                <img src="{{ public_path('images/contract/stamp.jpg') }}" width="150" height="150" style="margin-right: 30px;">
                             </td>
                             <td class="signature">
-                                <img src="{{ public_path('images/contract/signature.png') }}" width="100" height="100">
+                                <img src="{{ public_path('images/contract/signature.png') }}" width="100" height="100" style="margin-right: 10px;">
                             </td>
                         </tr>
                     </table>
