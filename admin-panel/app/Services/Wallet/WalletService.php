@@ -293,14 +293,14 @@ class WalletService
     }
 
     /**
-     * Check if user has sufficient balance and decrease it if possible.
+     * Check if user has sufficient balance.
      *
      * @param int $userId
      * @param string $currencySymbol
      * @param float $amount
-     * @return bool True if balance was sufficient and decremented, false otherwise
+     * @return bool True if balance is sufficient, false otherwise
      */
-    public function checkAndDecreaseBalance(int $userId, string $currencySymbol, float $amount): bool
+    public function checkBalance(int $userId, string $currencySymbol, float $amount): bool
     {
         try {
             return DB::transaction(function () use ($userId, $currencySymbol, $amount) {
@@ -308,9 +308,36 @@ class WalletService
                     ->where('currency_symbol', $currencySymbol)
                     ->lockForUpdate()
                     ->first();
+                
+                return $wallet && $wallet->balance >= $amount;
+            });
+        } catch (\Throwable $exception) {
+            report($exception);
+            return false;
+        }
+    }
+
+    /**
+     * Decrease user's balance by the specified amount.
+     *
+     * @param int $userId
+     * @param string $currencySymbol
+     * @param float $amount
+     * @return bool True if balance was decremented successfully, false otherwise
+     */
+    public function decreaseBalance(int $userId, string $currencySymbol, float $amount): bool
+    {
+        try {
+            return DB::transaction(function () use ($userId, $currencySymbol, $amount) {
+                $wallet = Wallet::where('user_id', $userId)
+                    ->where('currency_symbol', $currencySymbol)
+                    ->lockForUpdate()
+                    ->first();
+                
                 if (!$wallet || $wallet->balance < $amount) {
                     return false;
                 }
+                
                 $wallet->decrement('balance', $amount);
                 return true;
             });
@@ -319,6 +346,7 @@ class WalletService
             return false;
         }
     }
+
     public function increaseBalance(int $userId, string $currencySymbol, float $amount): bool
     {
         return DB::transaction(function () use ($userId, $currencySymbol, $amount) {
