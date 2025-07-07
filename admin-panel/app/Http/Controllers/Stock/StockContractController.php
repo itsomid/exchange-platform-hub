@@ -37,23 +37,29 @@ class StockContractController extends Controller
     public function index()
     {
         $contracts = StockContract::with(['user', 'stock'])->get();
-
         // Dashboard statistics
         $totalContracts = $contracts->count();
+
+        $activeAmount = $contracts->where('contract_status', StockContractStatusEnum::ACTIVE)->sum('total_value');
         $soldContracts = $contracts->where('contract_status', StockContractStatusEnum::SOLD)->count();
         $canceledContracts = $contracts->where('contract_status', StockContractStatusEnum::CANCELED)->count();
+
         $soldAmount = $contracts->where('contract_status', StockContractStatusEnum::SOLD)->sum('total_value');
         $canceledAmount = $contracts->where('contract_status', StockContractStatusEnum::CANCELED)->sum('total_value');
-        $cancellationFees = $contracts->where('contract_status', StockContractStatusEnum::CANCELED)->sum('cancellation_fee');
+
+        $cancellationSoldFees = $contracts->filter(function($contract) {
+            return in_array($contract->contract_status, [StockContractStatusEnum::SOLD, StockContractStatusEnum::CANCELED]);
+        })->sum('cancellation_fee');
 
         return view('dashboard.stock_contract.index', [
             'contracts' => $contracts,
             'totalContracts' => $totalContracts,
+            'activeAmount' => $activeAmount,
             'soldContracts' => $soldContracts,
             'canceledContracts' => $canceledContracts,
             'soldAmount' => $soldAmount,
             'canceledAmount' => $canceledAmount,
-            'cancellationFees' => $cancellationFees,
+            'cancellationSoldFees' => $cancellationSoldFees,
         ]);
     }
 
@@ -98,13 +104,6 @@ class StockContractController extends Controller
 
         $wallet = $this->walletService->getUserWallet($request['user_id'], 'USDT');
 
-        if ($stock->type !== StockTypeEnum::GIFT) {
-            $hasBalance = $this->walletService->checkAndDecreaseBalance($request['user_id'], 'USDT', $totalValue);
-            if (!$hasBalance) {
-                return redirect()->back()->withErrors(['balance' => 'موجودی کیف پول کاربر کافی نیست.']);
-            }
-        }
-
         $contractData = [
             'user_id' => $request['user_id'],
             'stock_id' => $request['stock_id'],
@@ -112,28 +111,32 @@ class StockContractController extends Controller
             'amount' => $request['amount'],
             'total_value' => $totalValue,
             'contract_status' => $request['contract_status'],
-            'cancellation_fee' => $stock->cancellation_fee,
+            'cancellation_fee' => $stock->calculateCancellationFeeAmount($totalValue),
             'description' => $request['description'],
         ];
 
-        if ($request['contract_status'] === 'sold') {
-            $contractData['sold_at'] = now();
-        } elseif ($request['contract_status'] === 'canceled') {
-            $contractData['cancelled_at'] = now();
-        }
-
         $contract = StockContract::create($contractData);
 
-        Transaction::create([
-            'user_id' => $request['user_id'],
-            'wallet_id' => $wallet->id,
-            'amount' => -$totalValue,
-            'balance' => $wallet->balance,
-            'type' => TransactionTypeEnum::BUY,
-            'subtype' => TransactionSubTypeEnum::STOCK,
-            'status' => TransactionStatusEnum::SUCCESS,
-            'description' => 'خرید سهام توسط ادمین (UserID: #' . $request['user_id'] . ') - شماره قرارداد: ' . $contract->contract_number,
-        ]);
+        if ($stock->type !== StockTypeEnum::GIFT) {
+            $hasBalance = $this->walletService->checkBalance($request['user_id'], 'USDT', $totalValue);
+            if (!$hasBalance) {
+                return redirect()->back()->withErrors(['balance' => 'موجودی کیف پول کاربر کافی نیست.']);
+            }
+
+            Transaction::create([
+                'user_id' => $request['user_id'],
+                'wallet_id' => $wallet->id,
+                'amount' => -$totalValue,
+                'balance' => $wallet->balance,
+                'type' => TransactionTypeEnum::BUY,
+                'subtype' => TransactionSubTypeEnum::STOCK,
+                'status' => TransactionStatusEnum::SUCCESS,
+                'description' => 'خرید سهام توسط ادمین (UserID: #' . $request['user_id'] . ') - شماره قرارداد: ' . $contract->contract_number,
+            ]);
+
+            $this->walletService->decreaseBalance($request['user_id'], 'USDT', $totalValue);
+        }
+
 
         // Generate PDF using external API
         $generatedPdfFilename    = $this->callExternalPdfApi($contract->id, $request['user_id']);
@@ -193,24 +196,31 @@ class StockContractController extends Controller
     public function update(StockContractUpdateRequest $request, StockContract $stockContract)
     {
         $updateData = [
-            'contract_status' => $request->contract_status,
-            'description' => $request->description,
+            'contract_status' => $request['contract_status'],
+            'description' => $request['description'],
         ];
 
         // Handle status changes and timestamps
-        if ($request->contract_status === 'sold' && $stockContract->contract_status !== StockContractStatusEnum::SOLD) {
-            $updateData['sold_at'] = now();
-        } elseif ($request->contract_status === 'canceled' && $stockContract->contract_status !== StockContractStatusEnum::CANCELED) {
+        if  ($request['contract_status'] === 'canceled' && $stockContract->contract_status !== StockContractStatusEnum::CANCELED) {
             $updateData['cancelled_at'] = now();
 
-            // Refund logic
-            $refundAmount = $stockContract->total_value - $stockContract->cancellation_fee;
+            // Check if stock type is GIFT
+            $stock = $stockContract->stock;
+            if ($stock && $stock->type === StockTypeEnum::GIFT) {
+                // For GIFT type, do not perform any transaction or wallet operation
+                $stockContract->update($updateData);
+                return redirect()->route('admin.stock-contract.index')->with('success', 'قرارداد با موفقیت بروزرسانی شد.');
+            }
+
+            // Refund logic for non-GIFT
+            $deductFee = isset($request['deduct_cancellation_fee']);
+            $refundAmount = $deductFee ? ($stockContract->total_value - $stockContract->cancellation_fee) : $stockContract->total_value;
             if ($refundAmount > 0) {
                 $user = $stockContract->user;
                 $wallet = $this->walletService->getUserWallet($user->id, 'USDT');
                 $ExchangeWallet = $this->walletService->getExchangeWallet('USDT');
 
-                // Create transaction record
+                // Create transaction record for refund
                 Transaction::create([
                     'user_id' => $user->id,
                     'wallet_id' => $wallet->id,
@@ -219,22 +229,28 @@ class StockContractController extends Controller
                     'type' => TransactionTypeEnum::SELL,
                     'subtype' => TransactionSubTypeEnum::STOCK,
                     'status' => TransactionStatusEnum::SUCCESS,
-                    'description' => 'بازگشت وجه ابطال قرارداد سهام' . $stockContract->contract_number,
+                    'description' => 'بازگشت وجه ابطال قرارداد سهام ' . $stockContract->contract_number,
                 ]);
 
-                Transaction::create([
-                    'user_id' => $this->bitexroomUserId,
-                    'wallet_id' => $ExchangeWallet->id,
-                    'amount' => $stockContract->cancellation_fee,
-                    'balance' => $ExchangeWallet->balance,
-                    'type' => TransactionTypeEnum::FEE,
-                    'subtype' => TransactionSubTypeEnum::STOCK,
-                    'status' => TransactionStatusEnum::SUCCESS,
-                    'description' => 'کارمزد ابطال قرارداد' . $stockContract->contract_number,
-                ]);
+                // Only create fee transaction if fee is deducted
+                if ($deductFee) {
+                    Transaction::create([
+                        'user_id' => $this->bitexroomUserId,
+                        'wallet_id' => $ExchangeWallet->id,
+                        'amount' => $stockContract->cancellation_fee,
+                        'balance' => $ExchangeWallet->balance,
+                        'type' => TransactionTypeEnum::FEE,
+                        'subtype' => TransactionSubTypeEnum::STOCK,
+                        'status' => TransactionStatusEnum::SUCCESS,
+                        'description' => 'کارمزد ابطال قرارداد ' . $stockContract->contract_number,
+                    ]);
+                }
 
                 // Update wallet balance using WalletService
                 $this->walletService->increaseBalance($user->id, 'USDT', $refundAmount);
+                if ($deductFee) {
+                    $this->walletService->increaseBalance($this->bitexroomUserId, 'USDT', $stockContract->cancellation_fee);
+                }
             }
         }
         $stockContract->update($updateData);

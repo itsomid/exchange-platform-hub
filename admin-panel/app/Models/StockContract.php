@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Enums\StockContractStatusEnum;
+use App\Filters\Filterable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class StockContract extends Model
 {
-    use HasFactory;
+    use Filterable,HasFactory;
+
+    public $filterNameSpace = 'App\Filters\StockContractFilter';
 
     protected $casts = [
         'contract_status' => StockContractStatusEnum::class,

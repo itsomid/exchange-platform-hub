@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->decimal('value', 18, 2);
             $table->enum('type', ['normal', 'gift', 'partner']);
-            $table->decimal('cancellation_fee', 18, 2)->default(0);
+            $table->decimal('cancellation_fee',  5, 2)->comment('Percentage value (0-100)')->default(0);
             $table->text('description')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();

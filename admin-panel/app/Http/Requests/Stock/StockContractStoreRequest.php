@@ -17,7 +17,7 @@ class StockContractStoreRequest extends FormRequest
             'user_id' => 'required|exists:users,id',
             'stock_id' => 'required|exists:stocks,id',
             'amount' => 'required|numeric|min:1',
-            'contract_status' => 'required|in:active,sold,canceled',
+            'contract_status' => 'required|in:active',
             'description' => 'nullable|string',
         ];
     }

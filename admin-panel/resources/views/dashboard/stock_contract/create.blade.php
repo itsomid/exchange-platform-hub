@@ -40,6 +40,7 @@
                            value="{{ old('amount') }}"
                            placeholder="تعداد سهم را وارد کنید"
                            min="1"
+                           step="1"
                            required>
                     @error('amount')
                         <small class="text-danger">{{ $message }}</small>
@@ -50,8 +51,6 @@
                     <label class="form-label" for="contract_status">وضعیت قرارداد:</label>
                     <select name="contract_status" id="contract_status" class="form-control @error('contract_status') is-invalid @enderror" required>
                         <option value="active" {{ old('contract_status') == 'active' ? 'selected' : '' }}>فعال</option>
-                        <option value="sold" {{ old('contract_status') == 'sold' ? 'selected' : '' }}>فروخته شده</option>
-                        <option value="canceled" {{ old('contract_status') == 'canceled' ? 'selected' : '' }}>لغو شده</option>
                     </select>
                     @error('contract_status')
                         <small class="text-danger">{{ $message }}</small>

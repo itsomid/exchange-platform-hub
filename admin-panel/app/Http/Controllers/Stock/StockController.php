@@ -12,7 +12,7 @@ class StockController extends Controller
 
     public function index()
     {
-        $stocks = Stock::all();
+        $stocks = Stock::with('contracts')->get();
         $totalStocks = $stocks->count();
         $activeStocks = $stocks->where('status', 'active')->count();
         return view('dashboard.stock.index',[
@@ -36,7 +36,7 @@ class StockController extends Controller
             'name' => 'required|string|max:255',
             'value' => 'required|numeric',
             'type' => 'required|in:normal,gift,partner',
-            'cancellation_fee' => 'required|numeric',
+            'cancellation_fee' => 'required|numeric|min:0|max:100',
             'description' => 'nullable|string',
             'status' => 'required|in:active,inactive',
         ]);
@@ -51,7 +51,7 @@ class StockController extends Controller
             'name' => 'sometimes|required|string|max:255',
             'value' => 'sometimes|required|numeric',
             'type' => 'sometimes|required|in:normal,gift,partner',
-            'cancellation_fee' => 'sometimes|required|numeric',
+            'cancellation_fee' => 'sometimes|required|numeric|min:0|max:100',
             'description' => 'nullable|string',
             'status' => 'sometimes|required|in:active,inactive',
         ]);

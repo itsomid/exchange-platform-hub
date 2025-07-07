@@ -43,13 +43,19 @@
                     @enderror
                 </div>
                 <div class="col-md-6 mt-3">
-                    <label class="form-label" for="cancellation_fee">کارمزد ابطال:</label>
-                    <input type="number"
-                           name="cancellation_fee"
-                           id="cancellation_fee"
-                           class="form-control"
-                           value="{{old('cancellation_fee', $stock->cancellation_fee)}}"
-                           placeholder="کارمزد ابطال را وارد کنید">
+                    <label class="form-label" for="cancellation_fee">کارمزد ابطال (درصد):</label>
+                    <div class="input-group">
+                        <input type="number"
+                               name="cancellation_fee"
+                               id="cancellation_fee"
+                               class="form-control"
+                               value="{{old('cancellation_fee', $stock->cancellation_fee)}}"
+                               step="0.01"
+                               min="0"
+                               max="100"
+                               placeholder="درصد کارمزد ابطال را وارد کنید">
+                        <span class="input-group-text">%</span>
+                    </div>
                     @error('cancellation_fee')
                     <small class="text-danger">{{$message}}</small>
                     @enderror
