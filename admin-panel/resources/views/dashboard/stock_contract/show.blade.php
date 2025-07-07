@@ -72,15 +72,15 @@
                             </div>
                             <div class="d-flex justify-content-between">
                                 <span class="text-muted">ارزش هر سهم:</span>
-                                <span class="font-number" dir="ltr">{{ number_format($stockContract->stock->value ?? 0) }} USDT</span>
+                                <span class="font-number" dir="ltr">{{ formatNumberTrimZeros($stockContract->stock->value ?? 0) }} USDT</span>
                             </div>
                             <div class="d-flex justify-content-between">
                                 <span class="text-muted">ارزش کل قرارداد:</span>
-                                <span class="font-number" dir="ltr">{{ number_format($stockContract->total_value) }} USDT</span>
+                                <span class="font-number" dir="ltr">{{ formatNumberTrimZeros($stockContract->total_value,2) }} USDT</span>
                             </div>
                             <div class="d-flex justify-content-between">
                                 <span class="text-muted">کارمزد ابطال:</span>
-                                <span class="font-number" dir="ltr">{{ number_format($stockContract->cancellation_fee) }} USDT</span>
+                                <span class="font-number" dir="ltr">{{ formatNumberTrimZeros($stockContract->cancellation_fee) }} USDT</span>
                             </div>
                         </div>
                     </div>

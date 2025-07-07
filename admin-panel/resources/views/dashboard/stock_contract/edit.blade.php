@@ -62,6 +62,15 @@
                     @enderror
                 </div>
 
+                <div class="col-md-12 mt-6">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" name="deduct_cancellation_fee" id="deduct_cancellation_fee" value="1" {{ old('deduct_cancellation_fee') ? 'checked' : '' }}>
+                        <label class="form-check-label" for="deduct_cancellation_fee">
+                            کارمزد ابطال از مبلغ برگشتی به مشتری کم شود
+                        </label>
+                    </div>
+                </div>
+
                 <div class="col-md-12 mt-3">
                     <label class="form-label" for="description">توضیحات:</label>
                     <textarea name="description"

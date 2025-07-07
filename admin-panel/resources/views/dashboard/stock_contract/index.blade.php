@@ -13,8 +13,27 @@
                                 <h4 class="mb-0 me-2">{{ $totalContracts }}</h4>
                             </div>
                         </div>
-                        <span class="badge bg-label-danger rounded p-2">
-                            <i class="fa-light fa-money-bill-wave fa-lg"></i>
+                        <span class="badge bg-label-info rounded p-2">
+                            <i class="fa-solid fa-file-contract fa-lg"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 col-xl-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                            <span>ارزش قراردادهای فعال</span>
+                            <div class="d-flex align-items-center my-1">
+                                <h4 class="mb-0 me-2">{{ number_format($activeAmount) }}
+                                    <small class="text-muted fw-medium">USDT</small>
+                                </h4>
+                            </div>
+                        </div>
+                        <span class="badge bg-label-info rounded p-2">
+                            <i class="fa-solid fa-coins fa-lg"></i>
                         </span>
                     </div>
                 </div>
@@ -32,7 +51,26 @@
                             </div>
                         </div>
                         <span class="badge bg-label-info rounded p-2">
-                          <i class="fa-regular fa-hand-holding-dollar fa-lg"></i>
+                          <i class="fa-solid fa-box fa-lg"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 col-xl-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                            <span>مبلغ قراردادهای فروخته شده</span>
+                            <div class="d-flex align-items-center my-1">
+                                <h4 class="mb-0 me-2">{{ number_format($soldAmount) }}
+                                    <small class="text-muted fw-medium">USDT</small>
+                                </h4>
+                            </div>
+                        </div>
+                        <span class="badge bg-label-info rounded p-2">
+                          <i class="fa-solid fa-sack-dollar fa-lg"></i>
                         </span>
                     </div>
                 </div>
@@ -49,7 +87,7 @@
                             </div>
                         </div>
                         <span class="badge bg-label-info rounded p-2">
-                          <i class="fa-regular fa-hand-holding-dollar fa-lg"></i>
+                          <i class="fa-solid fa-file-circle-xmark fa-lg"></i>
                         </span>
                     </div>
                 </div>
@@ -60,47 +98,36 @@
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
-                            <span>مبلغ فروخته شده</span>
+                            <span>مبلغ قراردادهای ابطال شده</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{ number_format($soldAmount) }}</h4>
+                                <h4 class="mb-0 me-2">{{ number_format($canceledAmount) }}
+                                    <small class="text-muted fw-medium">USDT</small>
+                                </h4>
                             </div>
                         </div>
                         <span class="badge bg-label-info rounded p-2">
-                          <i class="fa-regular fa-hand-holding-dollar fa-lg"></i>
+                          <i class="fa-solid fa-coins fa-lg"></i>
                         </span>
                     </div>
                 </div>
             </div>
         </div>
+
+
         <div class="col-sm-12 col-xl-3">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
-                            <span>مبلغ ابطال شده</span>
+                            <span> کارمزد دریافتی ابطال (فروخته و کنسل شده)</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{ number_format($canceledAmount) }}</h4>
+                                <h4 class="mb-0 me-2">{{ number_format($cancellationSoldFees) }}
+                                    <small class="text-muted fw-medium">USDT</small>
+                                </h4>
                             </div>
                         </div>
                         <span class="badge bg-label-info rounded p-2">
-                          <i class="fa-regular fa-hand-holding-dollar fa-lg"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-12 col-xl-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
-                        <div class="content-left">
-                            <span>مبلغ کارمزد ابطال</span>
-                            <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{ number_format($cancellationFees) }}</h4>
-                            </div>
-                        </div>
-                        <span class="badge bg-label-info rounded p-2">
-                          <i class="fa-regular fa-hand-holding-dollar fa-lg"></i>
+                          <i class="fa-solid fa-receipt fa-lg"></i>
                         </span>
                     </div>
                 </div>
@@ -114,12 +141,12 @@
             <div class="card-title header-elements">
                 <h5 class="m-0 me-2">لیست قراردادها</h5>
                 <div class="card-title-elements ms-auto">
-{{--                    <form action="{{ route('admin.stock-contract.generate-missing-pdfs') }}" method="POST" class="d-inline me-2">--}}
-{{--                        @csrf--}}
-{{--                        <button type="submit" class="btn btn-warning" onclick="return confirm('آیا از ایجاد فایل‌های قرارداد گمشده اطمینان دارید؟')">--}}
-{{--                            <i class="fa fa-refresh mx-2"></i> ایجاد PDF های گمشده--}}
-{{--                        </button>--}}
-{{--                    </form>--}}
+                    {{--                    <form action="{{ route('admin.stock-contract.generate-missing-pdfs') }}" method="POST" class="d-inline me-2">--}}
+                    {{--                        @csrf--}}
+                    {{--                        <button type="submit" class="btn btn-warning" onclick="return confirm('آیا از ایجاد فایل‌های قرارداد گمشده اطمینان دارید؟')">--}}
+                    {{--                            <i class="fa fa-refresh mx-2"></i> ایجاد PDF های گمشده--}}
+                    {{--                        </button>--}}
+                    {{--                    </form>--}}
                     <a href="{{ route('admin.stock-contract.create') }}" class="btn btn-primary">
                         <i class="fa fa-plus mx-2"></i> ایجاد قرارداد جدید
                     </a>
@@ -184,7 +211,8 @@
                             </td>
                             <td>
                                 @if($contract->contract_file )
-                                    <a href="{{ \App\Data\FileStoragePaths::CONTRACT_DOWNLOAD_URL($contract->contract_file) }}" target="_blank" class="fw-medium font-number">
+                                    <a href="{{ \App\Data\FileStoragePaths::CONTRACT_DOWNLOAD_URL($contract->contract_file) }}"
+                                       target="_blank" class="fw-medium font-number">
                                         <i class="fa-thin fa-file-certificate fa-lg"></i>
                                         {{ $contract->contract_number }}
                                     </a>
@@ -219,16 +247,20 @@
                                 </span>
                             </td>
                             <td>
-                                <a class="text-secondary me-1" href="{{ route('admin.stock-contract.show', $contract->id) }}">
+                                <a class="text-secondary me-1"
+                                   href="{{ route('admin.stock-contract.show', $contract->id) }}">
                                     <i class="fa fa-eye"></i>
                                 </a>
-                                <a class="text-secondary me-1" href="{{ route('admin.stock-contract.edit', $contract->id) }}">
+                                <a class="text-secondary me-1"
+                                   href="{{ route('admin.stock-contract.edit', $contract->id) }}">
                                     <i class="fa fa-edit"></i>
                                 </a>
-                                <form action="{{ route('admin.stock-contract.destroy', $contract->id) }}" method="POST" class="d-inline">
+                                <form action="{{ route('admin.stock-contract.destroy', $contract->id) }}" method="POST"
+                                      class="d-inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-link text-danger p-0 m-0" onclick="return confirm('آیا از حذف این قرارداد اطمینان دارید؟')">
+                                    <button type="submit" class="btn btn-link text-danger p-0 m-0"
+                                            onclick="return confirm('آیا از حذف این قرارداد اطمینان دارید؟')">
                                         <i class="fa-light fa-trash-alt"></i>
                                     </button>
                                 </form>

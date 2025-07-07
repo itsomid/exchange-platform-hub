@@ -107,21 +107,22 @@
                                 {{$stock->type->label()}}
                             </td>
                             <td dir="ltr">
-                                {{$stock->cancellation_fee}}
+                                {{$stock->cancellation_fee}}%
                             </td>
-                            <td >
+                            <td>
                                 {{$stock->description}}
                             </td>
                             <td>
                                 {{\App\Helpers\DateFormatter::convertToPersianDate($stock->created_at,'H:i:s %Y/%m/%d')}}
                             </td>
-                            <td >
+                            <td>
                                 <span class="badge bg-label-{{$stock->status->color()}} rounded p-2">
                                     {{$stock->status->label()}}
                                 </span>
                             </td>
                             <td>
-                                <a href="{{route('admin.stock.edit', $stock->id)}}" class="btn btn-icon btn-text-secondary">
+                                <a href="{{route('admin.stock.edit', $stock->id)}}"
+                                   class="btn btn-icon btn-text-secondary">
                                     <i class="fa-regular fa-pen-to-square fa-lg"></i>
                                 </a>
                                 <a href="#" class="btn btn-icon btn-text-secondary" data-bs-toggle="modal"
@@ -150,22 +151,64 @@
                                                 </div>
                                                 <div
                                                     class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
-                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">تعداد قراردادهای این سهم</h6>
-                                                    <div class="d-flex  gap-4 align-items-center">
-                                                        <span class="font-number">{{$stock->contracts->count()}}</span>
+                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">ارزش سهام</h6>
+                                                    <div class="text-wrap font-number">
+                                                        {{$stock->value}} USDT
                                                     </div>
                                                 </div>
                                                 <div
                                                     class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
-                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">ارزش سهام</h6>
-                                                    <div class="text-wrap font-number">
-                                                        {{$stock->value}}
+                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">تعداد قراردادهای فعال این
+                                                        سهم</h6>
+                                                    <div class="d-flex  gap-4 align-items-center">
+                                                        <span
+                                                            class="font-number">{{$stock->contracts->where('contract_status', \App\Enums\StockContractStatusEnum::ACTIVE)->count()}}</span>
                                                     </div>
                                                 </div>
-                                                <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
-                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">ارزش خریداری شده این سهم تا کنون</h6>
+                                                <div
+                                                    class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">تعداد قراردادهای ابطال شده این
+                                                        سهم</h6>
+                                                    <div class="d-flex  gap-4 align-items-center">
+                                                        <span
+                                                            class="font-number">{{$stock->contracts->where('contract_status', \App\Enums\StockContractStatusEnum::CANCELED)->count()}}</span>
+                                                    </div>
+                                                </div>
+                                                <div
+                                                    class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">تعداد قراردادهای فروخته شده این
+                                                        سهم</h6>
+                                                    <div class="d-flex  gap-4 align-items-center">
+                                                        <span
+                                                            class="font-number">{{$stock->contracts->where('contract_status', \App\Enums\StockContractStatusEnum::SOLD)->count()}}</span>
+                                                    </div>
+                                                </div>
+
+                                                <div
+                                                    class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">ارزش قراردادهای فعال این سهم تا
+                                                        کنون</h6>
                                                     <div class="text-wrap font-number">
-                                                        {{$stock->contracts->sum('total_value')}}
+                                                        {{$stock->contracts->where('contract_status', \App\Enums\StockContractStatusEnum::ACTIVE)->sum('total_value')}}
+                                                        USDT
+                                                    </div>
+                                                </div>
+                                                <div
+                                                    class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">ارزش قراردادهای ابطال شده این سهم
+                                                        تا کنون</h6>
+                                                    <div class="text-wrap font-number">
+                                                        {{$stock->contracts->where('contract_status', \App\Enums\StockContractStatusEnum::CANCELED)->sum('total_value')}}
+                                                        USDT
+                                                    </div>
+                                                </div>
+                                                <div
+                                                    class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">ارزش قراردادهای فروخته شده این
+                                                        سهم تا کنون</h6>
+                                                    <div class="text-wrap font-number">
+                                                        {{$stock->contracts->where('contract_status', \App\Enums\StockContractStatusEnum::SOLD)->sum('total_value')}}
+                                                        USDT
                                                     </div>
                                                 </div>
                                                 <div
@@ -191,11 +234,11 @@
                 </tbody>
             </table>
         </div>
-{{--        <div class="row mt-4">--}}
-{{--            <div class="col-md-12">--}}
-{{--                {{$stocks->appends(request()->all())->links()}}--}}
-{{--            </div>--}}
-{{--        </div>--}}
+        {{--        <div class="row mt-4">--}}
+        {{--            <div class="col-md-12">--}}
+        {{--                {{$stocks->appends(request()->all())->links()}}--}}
+        {{--            </div>--}}
+        {{--        </div>--}}
     </div>
 
 @endsection
