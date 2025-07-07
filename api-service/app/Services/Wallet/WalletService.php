@@ -158,7 +158,20 @@ class WalletService
                     Math::mul($wallet->exchangePrice->price, $wallet->locked_balance) : $wallet->locked_balance
             );
     }
-    public function checkAndDecreaseBalance(int $userId, string $currencySymbol, float $amount): bool
+    public function checkBalance(int $userId, string $currencySymbol, float $amount): bool
+    {
+        try {
+            return DB::transaction(function () use ($userId, $currencySymbol, $amount) {
+                $wallet = $this->walletRepository->getWalletWithLock($currencySymbol, $userId);
+                return $wallet && $wallet->balance >= $amount;
+            });
+        } catch (\Throwable $exception) {
+            report($exception);
+            return false;
+        }
+    }
+
+    public function decreaseBalance(int $userId, string $currencySymbol, float $amount): bool
     {
         try {
             return DB::transaction(function () use ($userId, $currencySymbol, $amount) {

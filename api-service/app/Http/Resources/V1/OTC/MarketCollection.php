@@ -94,6 +94,8 @@ class MarketCollection extends ResourceCollection
             'market_id' => $DTO->getMarketId(),
             'precision' => $DTO->getPrecision(),
             'base_currency' => $DTO->getBaseCurrency(),
+            'currency_name' => $DTO->getCurrencyName(),
+            'currency_persian_name' => $DTO->getCurrencyPersianName(),
             'quote_currency' => $DTO->getQuoteCurrency(),
             'is_active' => $DTO->getIsActive(),
             'sell_price' => $DTO->getSellPrice(),

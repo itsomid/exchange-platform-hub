@@ -26,6 +26,10 @@ class MarketResponseDTO
 
     private int $precision;
 
+    private string $currencyName;
+
+    private string $currencyPersianName;
+
     public function setBaseCurrency(string $baseCurrency): self
     {
         $this->baseCurrency = $baseCurrency;
@@ -156,5 +160,29 @@ class MarketResponseDTO
     public function getPrecision(): int
     {
         return $this->precision;
+    }
+
+    public function setCurrencyName(string $currencyName): MarketResponseDTO
+    {
+        $this->currencyName = $currencyName;
+
+        return $this;
+    }
+
+    public function getCurrencyName(): string
+    {
+        return $this->currencyName;
+    }
+
+    public function setCurrencyPersianName(string $currencyPersianName): MarketResponseDTO
+    {
+        $this->currencyPersianName = $currencyPersianName;
+
+        return $this;
+    }
+
+    public function getCurrencyPersianName(): string
+    {
+        return $this->currencyPersianName;
     }
 }

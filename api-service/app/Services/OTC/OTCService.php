@@ -63,6 +63,8 @@ class OTCService
             ->setMarketId($market->id)
             ->setBaseCurrency($market->base_currency)
             ->setPrecision($market->currency->precision)
+            ->setCurrencyName($market->currency->name)
+            ->setCurrencyPersianName($market->currency->persian_name)
             ->setQuoteCurrency($market->quote_currency)
             ->setIsActive($market->is_active)
             ->setSellPrice(Math::mul($market->exchangePrice->price, (($market->exchangePrice->exchange_profit_buy / 100) + 1)))
