@@ -27,4 +27,12 @@ class Stock extends Model
     {
         return $this->hasMany(StockContract::class);
     }
+
+    /**
+     * Calculate the actual cancellation fee amount based on a given value
+     */
+    public function calculateCancellationFeeAmount($value)
+    {
+        return ($value * $this->cancellation_fee) / 100;
+    }
 } 

@@ -42,7 +42,7 @@ class StockRepository implements StockRepositoryInterface
             'user_id' => $user->id,
             'amount' => $amount,
             'contract_number' => $this->generateContractNumber(),
-            'cancellation_fee' => $stock->cancellation_fee,
+            'cancellation_fee' => $stock->calculateCancellationFeeAmount($totalValue),
             'total_value' => $totalValue,
         ]);
     }

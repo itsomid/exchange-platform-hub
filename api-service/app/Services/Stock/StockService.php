@@ -63,7 +63,7 @@ class StockService
             // Check wallet balance
             $stock = $this->stockRepository->getStockById($data['stock_id']);
             $totalValue = $data['amount']*$stock->value;
-            $hasBalance = $this->walletService->checkAndDecreaseBalance($user->id, 'USDT', $totalValue);
+            $hasBalance = $this->walletService->checkBalance($user->id, 'USDT', $totalValue);
             if (!$hasBalance) {
                 throw new InsufficientBalanceException('Insufficient balance in wallet');
             }
@@ -89,7 +89,10 @@ class StockService
                 ->setWalletId($walletBaseCurrency->id)
             );
 
+            $this->walletService->decreaseBalance($user->id, 'USDT', $totalValue);
+
             $generatedPdfPath = $this->generateContractPdf($stockContract, $stock);
+            
             if ($generatedPdfPath) {
                 $stockContract->update(['contract_file' => $generatedPdfPath]);
             } else {
@@ -144,9 +147,11 @@ class StockService
                     ->setDescription('کارمزد ابطال قرارداد' . $stockContract->contract_number)
                 );
 
-                $this->stockRepository->sellContract($stockContract);
-
+      
                 $this->walletService->increaseBalance($user->id, 'USDT', $returnAmount);
+                $this->walletService->increaseBalance(config('bitexroom.user_id'), 'USDT', $stockContract->cancellation_fee);
+
+                $this->stockRepository->sellContract($stockContract);
             }
         });
     }
