@@ -75,7 +75,7 @@ class ExchangeService
             Transaction::query()->create([
                 'user_id' => config('bitexroom.user_id'),
                 'wallet_id' => $cetWallet->id,
-                'amount' => $response->getFee(),
+                'amount' => -$response->getFee(),
                 'coin_price' =>  $cetPrice,
                 'exchange_id' => $market->activeExchange->id,
                 'type' => TransactionTypeEnum::ًREF_EXCHANGE,
