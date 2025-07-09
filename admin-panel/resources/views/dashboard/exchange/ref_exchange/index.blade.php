@@ -11,7 +11,7 @@
                             <small>تعداد صرافی های پشتیبانی شده</small>
                         </div>
                         <span class="badge bg-label-danger rounded-circle p-3">
-                            <i class="fa-light fa-users fa-xl"></i>
+                            <i class="fa-light fa-bank fa-xl"></i>
                         </span>
                     </div>
                 </div>
@@ -26,7 +26,7 @@
                             <small>صرافی فعال</small>
                         </div>
                         <span class="badge bg-label-success rounded-circle p-3">
-                            <i class="fa-light fa-gift fa-xl"></i>
+                            <i class="fa-light fa-bank fa-xl"></i>
                         </span>
                     </div>
                 </div>
@@ -66,12 +66,13 @@
                                 {{$exchange->slug}}
                             </td>
                             <td>
-                                {{$exchange->is_active}}
+                                <span class="badge bg-label-{{$exchange->is_active ? 'success' : 'danger'}}  p-2">
+                                    {{$exchange->is_active ? 'فعال' : 'غیر فعال'}}
+                                </span>
                             </td>
                             <td>
                                {{$exchange->priority}}
                             </td>
-
 
                             <td>
                                 <div class="d-flex align-items-center">

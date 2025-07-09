@@ -62,8 +62,12 @@ class RefExchangeController extends Controller
         $exchange->name = $validated['name'];
         $exchange->slug = $validated['slug'];
         $exchange->priority = $validated['priority'];
-        $exchange->is_active = $request->has('is_active');
-        $exchange->save();
+        if ($request->has('is_active')) {
+            Exchange::setActiveExchange($exchange);
+        } else {
+            $exchange->is_active = false;
+            $exchange->save();
+        }
         return redirect()->route('admin.exchange.index')->with('success', 'صرافی با موفقیت ویرایش شد.');
     }
 }
