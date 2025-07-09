@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Exchange;
 use App\Models\ExchangeAssetsWithdrawal;
 use App\Models\ExchangeTransaction;
+use Illuminate\Http\Request;
 
 class RefExchangeController extends Controller
 {
@@ -18,6 +19,12 @@ class RefExchangeController extends Controller
             'exchanges' => $exchanges,
             'activeExchange' => $activeExchange
         ]);
+    }
+
+    public function edit($id)
+    {
+        $exchange = Exchange::find($id);
+        return view('dashboard.exchange.ref_exchange.edit', ['exchange' => $exchange]);
     }
 
     public function boughtHistory()
@@ -42,5 +49,21 @@ class RefExchangeController extends Controller
             'totalExchangeBoughtValue' => $totalExchangeBoughtValue,
         ]);
 
+    }
+
+    public function update(Request $request, $id)
+    {
+        $exchange = Exchange::findOrFail($id);
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'slug' => 'required|string|max:255|unique:exchanges,slug,' . $exchange->id,
+            'priority' => 'required|integer',
+        ]);
+        $exchange->name = $validated['name'];
+        $exchange->slug = $validated['slug'];
+        $exchange->priority = $validated['priority'];
+        $exchange->is_active = $request->has('is_active');
+        $exchange->save();
+        return redirect()->route('admin.exchange.index')->with('success', 'صرافی با موفقیت ویرایش شد.');
     }
 }

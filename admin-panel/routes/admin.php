@@ -185,6 +185,8 @@ Route::middleware(['admin.2fa'])->group(function () {
 
     Route::prefix('ref-exchanges')->group(function () {
         Route::get('/', [RefExchangeController::class, 'index'])->name('exchange.index')->can('ref-exchanges');
+        Route::get('/edit/{id}', [RefExchangeController::class, 'edit'])->name('exchange.ref.edit')->can('ref-exchanges');
+        Route::patch('/update/{id}', [RefExchangeController::class, 'update'])->name('exchange.ref.update')->can('ref-exchanges');
         Route::get('/assets-gathering-to-hd-wallet', [ExchangeAssetsWithdrawalController::class, 'index'])->name('ref-exchange.assets-gathering-to-hd-wallet.index');
         Route::get('/assets-gathering-to-hd-wallet/create', [ExchangeAssetsWithdrawalController::class, 'create'])->name('ref-exchange.assets-gathering-to-hd-wallet.create');
         Route::post('/assets-gathering-to-hd-wallet/', [ExchangeAssetsWithdrawalController::class, 'store'])->name('ref-exchange.assets-gathering-to-hd-wallet.store');

@@ -76,8 +76,7 @@
                             <td>
                                 <div class="d-flex align-items-center">
 
-                                    <a class="text-secondary me-3"
-                                       disabled="">
+                                    <a class="text-secondary me-3" href="{{ route('admin.exchange.ref.edit', $exchange->id) }}">
                                         <i class="fa-light fa-pen-to-square fa-lg"></i>
                                     </a>
 
