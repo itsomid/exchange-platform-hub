@@ -71,6 +71,7 @@ class TransactionService
                     type: TransactionTypeEnum::DEPOSIT->value,
                     adminId: $adminId,
                     depositId: $deposit->id, // No deposit ID for admin direct actions
+                    coinPrice:  $currency->exchangePrice,
                     description: 'Exchange Wallet credit increase',
                     admin_description: $admin_description
                 );
@@ -199,6 +200,7 @@ class TransactionService
                 type: TransactionTypeEnum::WITHDRAWAL->value,
                 adminId: $adminId,
                 withdrawalId: $withdrawal->id, // No deposit ID for admin direct actions
+                coinPrice: $currency->exchangePrice,
                 description: $description ?? 'Funds withdrawn.',
                 admin_description: $admin_description
             );
@@ -212,6 +214,7 @@ class TransactionService
                 type: TransactionTypeEnum::DEPOSIT->value,
                 adminId: $adminId,
                 depositId: $deposit->id, // No deposit ID for admin direct actions
+                coinPrice: $currency->exchangePrice,
                 description: $description ?? 'Funds deposited.',
                 admin_description: $admin_description
             );
@@ -238,6 +241,7 @@ class TransactionService
         ?int    $adminId,
         ?int    $depositId = null,
         ?int    $withdrawalId = null,
+        float   $coinPrice = null,
         ?string $description = null,
         ?string $admin_description = null
     ): void
@@ -250,6 +254,7 @@ class TransactionService
             'withdrawal_id' => $withdrawalId,
             'amount' => $amount,
             'balance' => $wallet->balance,
+            'coin_price' => $coinPrice,
             'type' => $type,
             'subtype' => TransactionSubTypeEnum::MANUAL_ADMIN,
             'status' => TransactionStatusEnum::SUCCESS,
