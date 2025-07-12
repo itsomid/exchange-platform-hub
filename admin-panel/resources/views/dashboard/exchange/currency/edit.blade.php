@@ -30,6 +30,20 @@
                             </div>
                             <div class="col-lg-4 mt-5">
                                 <div class="form-group">
+                                    <label class="form-label"  for="persian_name">نام فارسی</label>
+                                    <input name="persian_name"
+                                           id="persian_name"
+                                           class="form-control"
+                                           placeholder="نام فارسی را وارد کنید."
+                                           value="{{$currency->persian_name}}"
+                                           required>
+                                    @error('persian_name')
+                                    <small class="text-danger">{{$message}}</small>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-lg-4 mt-5">
+                                <div class="form-group">
                                     <label class="form-label"  for="symbol">Symbol</label>
                                     <input name="symbol" id="symbol" class="form-control"
                                            placeholder="Symbol را وارد کنید." value="{{$currency->symbol}}" required>

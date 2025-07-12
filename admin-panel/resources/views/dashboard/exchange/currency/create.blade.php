@@ -27,16 +27,32 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
+                                    <label for="persian_name">نام فارسی</label>
+                                    <input name="persian_name"
+                                           id="persian_name"
+                                           class="form-control"
+                                           placeholder="نام فارسی را وارد کنید."
+                                           value="{{old('persian_name')}}"
+                                           required>
+                                    @error('persian_name')
+                                    <small class="text-danger">{{$message}}</small>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-6">
+                            <div class="col-md-6">
+                                <div class="form-group">
                                     <label for="symbol">Symbol</label>
                                     <input name="symbol" id="symbol" class="form-control"
-                                           placeholder="Symbol را وارد کنید."   value="{{old('name')}}" required>
-                                    @error('Symbol')
+                                           placeholder="Symbol را وارد کنید."   value="{{old('symbol')}}" required>
+                                    @error('symbol')
                                     <small class="text-danger">{{$message}}</small>
                                     @enderror
                                 </div>
                             </div>
 
-
+                            
                             <div class="col-md-6 mb-1">
                                 <div class="form-group mt-3">
                                     <label class="form-label" for="logo">تصویر کوین:</label>
@@ -45,7 +61,7 @@
                                     @error('img_filename')<small class="text-danger">{{$message}}</small>@enderror
                                 </div>
                             </div>
-
+                        </div>
                             <div class="row">
                                 <div class="col-md-6 mt-5">
                                     <label class="switch  switch-lg">

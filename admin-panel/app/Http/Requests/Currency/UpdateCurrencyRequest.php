@@ -23,6 +23,7 @@ class UpdateCurrencyRequest extends FormRequest
     {
         return [
             'name' => 'required',
+            'persian_name' => 'required',
             'symbol' => 'required|unique:currencies,symbol,'.$this->currency->id,
             'inter_transfer_enabled' => 'boolean',
             'max_auto_withdraw_amount' => 'required',
