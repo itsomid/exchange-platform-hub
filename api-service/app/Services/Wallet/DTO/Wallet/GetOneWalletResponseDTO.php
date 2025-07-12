@@ -14,6 +14,8 @@ class GetOneWalletResponseDTO
 
     private string $usdtLockedBalance;
 
+    private string $availableBalance;
+
     public function setCurrencySymbol(string $currencySymbol): self
     {
         $this->currencySymbol = $currencySymbol;
@@ -72,5 +74,17 @@ class GetOneWalletResponseDTO
     public function getUsdtLockedBalance(): string
     {
         return $this->usdtLockedBalance;
+    }
+
+    public function setAvailableBalance(string $availableBalance): self
+    {
+        $this->availableBalance = $availableBalance;
+
+        return $this;
+    }
+
+    public function getAvailableBalance(): string
+    {
+        return $this->availableBalance;
     }
 }

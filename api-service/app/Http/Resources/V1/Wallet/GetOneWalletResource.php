@@ -38,8 +38,9 @@ class GetOneWalletResource extends JsonResource
             'currency' => $this->getCurrencySymbol(),
             'balance' => $this->getBalance(),
             'frozen_balance' => $this->getLockedBalance(),
+            'available_balance' => $this->getAvailableBalance(),
             'usdt_balance' => $this->getUsdtBalance(),
-            'usdt_frozen_balance' => $this->getUsdtLockedBalance(),
+            'usdt_frozen_balance' => $this->getUsdtLockedBalance()
         ];
     }
 }

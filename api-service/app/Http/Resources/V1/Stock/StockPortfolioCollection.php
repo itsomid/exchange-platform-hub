@@ -18,8 +18,7 @@ class StockPortfolioCollection extends ResourceCollection
             'data' => [
                 'contracts' => StockContractResource::collection($this->collection['contracts']),
                 'total_value' => $this->collection['total_value'],
-                'wallet_balance' => $this->collection['wallet_balance'],
             ]
         ];
     }
-} 
+}

@@ -16,6 +16,8 @@ class WalletListsResponseDTO
 
     private string $usdtLockedBalance;
 
+    private string $availableBalance;
+
     public function setId(?int $id): WalletListsResponseDTO
     {
         $this->id = $id;
@@ -86,5 +88,17 @@ class WalletListsResponseDTO
     public function getUsdtLockedBalance(): string
     {
         return $this->usdtLockedBalance;
+    }
+
+    public function setAvailableBalance(string $availableBalance): WalletListsResponseDTO
+    {
+        $this->availableBalance = $availableBalance;
+
+        return $this;
+    }
+
+    public function getAvailableBalance(): string
+    {
+        return $this->availableBalance;
     }
 }

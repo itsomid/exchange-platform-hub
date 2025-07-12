@@ -149,6 +149,7 @@ class WalletService
             ->setCurrencySymbol($wallet->currency_symbol)
             ->setBalance($wallet->balance)
             ->setLockedBalance($wallet->locked_balance)
+            ->setAvailableBalance($wallet->available_balance ?? 0)
             ->setUsdtBalance(
                 $wallet->exchangePrice ?
                     Math::mul($wallet->exchangePrice->price, $wallet->balance) : $wallet->balance
@@ -163,7 +164,7 @@ class WalletService
         try {
             return DB::transaction(function () use ($userId, $currencySymbol, $amount) {
                 $wallet = $this->walletRepository->getWalletWithLock($currencySymbol, $userId);
-                return $wallet && $wallet->balance >= $amount;
+                return $wallet && $wallet->available_balance >= $amount;
             });
         } catch (\Throwable $exception) {
             report($exception);
@@ -218,6 +219,7 @@ class WalletService
                 ->setCurrency($market->base_currency)
                 ->setBalance('0')
                 ->setLockedBalance('0')
+                ->setAvailableBalance('0')
                 ->setUsdtLockedBalance('0')
                 ->setUsdtBalance('0')
                 ->setId(null);
@@ -229,6 +231,7 @@ class WalletService
             ->setCurrency($wallet->currency_symbol ?? $market->base_currency)
             ->setBalance($wallet->balance ?? 0)
             ->setLockedBalance($wallet->locked_balance ?? 0)
+            ->setAvailableBalance($wallet->available_balance ?? 0)
             ->setUsdtBalance(
                 $wallet && $wallet->exchangePrice ?
                     Math::mul($wallet->exchangePrice->price, $wallet->balance ?? 0) : $wallet->balance

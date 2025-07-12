@@ -33,6 +33,7 @@ class WalletListsCollection extends ResourceCollection
             'currency' => $walletListsResponseDTO->getCurrency(),
             'balance' => $walletListsResponseDTO->getBalance(),
             'frozen_balance' => $walletListsResponseDTO->getLockedBalance(),
+            'available_balance' => $walletListsResponseDTO->getAvailableBalance(),
             'usdt_balance' => $walletListsResponseDTO->getUsdtBalance(),
             'usdt_frozen_balance' => $walletListsResponseDTO->getUsdtLockedBalance(),
         ])->toArray();
