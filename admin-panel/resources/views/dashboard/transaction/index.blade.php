@@ -373,14 +373,24 @@
                                                 </div>
                                                 <div
                                                     class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">قیمت کوین هنگام تراکنش</h6>
+                                                    <div class="d-flex gap-4 align-items-center">
+                                                 
+                                                        <span class="font-number text-info">
+                                                            {{ formatNumberTrimZeros($transaction->coin_price) }} USDT
+                                                        </span>
+                                                        <img src="{{ asset($transaction->wallet->currency->coinLogo()) }}" width="30"/>
+                                                    </div>
+                                                </div>
+                                                <div
+                                                    class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
 
                                                     <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی کاربر قبل از تراکنش</h6>
                                                     <div class="d-flex  gap-4 align-items-center">
-                                                        <img
-                                                            src="{{asset($transaction->wallet->currency->coinLogo())}}"
-                                                            width="30"/>
+                                                       
                                                         <span
                                                             class="font-number">{{formatNumberTrimZeros($transaction->balance)}}</span>
+                                                            <img src="{{asset($transaction->wallet->currency->coinLogo())}}" width="30"/>
                                                     </div>
                                                 </div>
                                                 <div
@@ -388,10 +398,10 @@
 
                                                     <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی کاربر پس از تراکنش</h6>
                                                     <div class="d-flex  gap-4 align-items-center">
-                                                        <img src="{{asset($transaction->wallet->currency->coinLogo())}}"
-                                                             width="30"/>
-                                                        <span
-                                                            class="font-number text-primary">{{formatNumberTrimZeros($transaction->balance + $transaction->amount)}}</span>
+                                                          <span
+                                                            class="font-number text-primary" dir="ltr">{{formatNumberTrimZeros($transaction->balance + $transaction->amount)}}</span>
+                                                            <img src="{{asset($transaction->wallet->currency->coinLogo())}}"
+                                                            width="30"/>
                                                     </div>
                                                 </div>
 
