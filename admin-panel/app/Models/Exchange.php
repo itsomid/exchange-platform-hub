@@ -12,6 +12,11 @@ class Exchange extends Model
         return $this->hasMany(ExchangePrice::class);
     }
 
+    public function exchangeTransactions()
+    {
+        return $this->hasMany(ExchangeTransaction::class);
+    }
+
     // The relationship between Exchange and Market through ExchangePrice
     public function markets()
     {

@@ -21,6 +21,12 @@ class ExchangeTransaction extends Model {
     {
         return $this->belongsTo(Market::class, 'currency_symbol','base_currency');
     }
+
+    public function exchange()
+    {
+        return $this->belongsTo(Exchange::class, 'exchange_id');
+    }
+
     public function getFormattedCreatedAtAttribute()
     {
         return Carbon::createFromTimestampMs($this->response->data->created_at)->timezone('Asia/Tehran')->format('H:i:s Y-m-d');

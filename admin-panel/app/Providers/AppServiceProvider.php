@@ -3,8 +3,12 @@
 namespace App\Providers;
 
 use App\Models\Admin;
-use App\Repositories\Interfaces\MarketRepositoryInterface;
+use App\Repositories\ExchangeRepository;
+use App\Repositories\WalletRepository;
 use App\Repositories\MarketRepository;
+use App\Repositories\Interfaces\ExchangeRepositoryInterface;
+use App\Repositories\Interfaces\MarketRepositoryInterface;
+use App\Repositories\Interfaces\WalletRepositoryInterface;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\URL;
@@ -17,6 +21,8 @@ class AppServiceProvider extends ServiceProvider
     {
         //
         $this->app->bind(MarketRepositoryInterface::class, MarketRepository::class);
+        $this->app->bind(ExchangeRepositoryInterface::class, ExchangeRepository::class);
+        $this->app->bind(WalletRepositoryInterface::class, WalletRepository::class);
     }
 
     public function boot(): void

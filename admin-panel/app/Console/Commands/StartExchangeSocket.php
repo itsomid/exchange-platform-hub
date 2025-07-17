@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Exchange;
+use App\Repositories\ExchangeRepository;
 use App\Services\Socket\CoinExSocketService;
 use App\Services\Socket\MexcSocketService;
 use Illuminate\Console\Command;
@@ -12,9 +12,16 @@ class StartExchangeSocket extends Command
     protected $signature = 'exchange:listen';
     protected $description = 'Start listening to active exchange WebSocket(s) for price updates';
 
+    public function __construct(
+        protected ExchangeRepository $exchangeRepository
+    ) {
+        parent::__construct();
+    }
+
     public function handle(CoinExSocketService $coinExSocketService, MexcSocketService $mexcSocketService)
     {
-        $activeExchanges = Exchange::query()->where('is_active', true)->pluck('slug')->toArray();
+        $activeExchange = $this->exchangeRepository->getActiveExchange();
+        $activeExchanges = $activeExchange ? [$activeExchange->slug] : [];
         $started = false;
 
         if (in_array('coinex', $activeExchanges)) {
@@ -33,4 +40,4 @@ class StartExchangeSocket extends Command
             $this->warn('No supported active exchange found (coinex, mexc).');
         }
     }
-} 
+}

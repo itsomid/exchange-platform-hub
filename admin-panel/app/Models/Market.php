@@ -16,7 +16,8 @@ class Market extends Model
         'max_trade_amount',
         'min_otc_amount',
         'max_otc_amount',
-        'is_active'
+        'is_active',
+        'price_update_enabled'
     ];
 
     protected $appends = [
