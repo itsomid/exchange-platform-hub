@@ -9,13 +9,10 @@ use App\Models\WalletChain;
 use App\Services\NodeProviders\BlockchairService;
 use App\Services\NodeProviders\BscScanService;
 use App\Services\NodeProviders\CryptoAPIService;
-use App\Services\Exchanges\Asset\Coinex\Authentication\MethodEnum;
-use App\Services\Exchanges\Asset\Coinex\CoinexRequest;
 use App\Services\NodeProviders\EtherScanService;
 use App\Services\NodeProviders\TronScanService;
 use App\Services\Wallet\WalletService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Cache;
 
 class ExchangeWalletController extends Controller
@@ -106,57 +103,6 @@ class ExchangeWalletController extends Controller
         Cache::put('wallet_balances', $balances, 3600);
     }
 
-    public function coinexWallets()
-    {
-        $response = CoinexRequest::send(MethodEnum::GET, "/v2/assets/spot/balance");
-        if ($response->json('code') !== 0) {
-            \Log::error('API Error:', $response->json());
-
-            return 'امکان ارتباط با صرافی مرجع نیست (ارور: ' . $response->json('code') . ' - ' . $response->json('message') . ')';
-        }
-
-        $data = $response->json('data');
-        if (!is_array($data) || empty($data)) {
-            return [];
-        }
-
-        // Filter the data first to include only assets present in the Currency model
-        $filteredData = collect($data)->filter(function ($item) {
-            return Currency::where('symbol', $item['ccy'])->exists();
-        });
-
-        // Convert the filtered array to a collection of objects and add coinLogo
-        $supportCoinexAssets = $filteredData->map(function ($item) {
-            $asset = (object)$item;
-            // Fetch the currency logo using the Currency model (we know it exists from the filter)
-            $currency = Currency::where('symbol', $asset->ccy)->first();
-
-            // Add the coinLogo property to the asset object
-            $asset->coinLogo = $currency->coinLogo(); // No need for default as we filtered
-
-            return $asset;
-        });
-
-        // Filter the data for assets *not* present in the Currency model
-        $unsupportedData = collect($data)->filter(function ($item) {
-            return !Currency::where('symbol', $item['ccy'])->exists();
-        });
-
-        // Convert the unsupported array to a collection of objects
-        $unsupportCoinexAssets = $unsupportedData->map(function ($item) {
-            $asset = (object)$item;
-            // Assign a default logo for unsupported assets
-            $asset->coinLogo = asset('images/logo/logo.svg');
-            return $asset;
-        });
-
-
-        return view('dashboard.exchange.wallet.exchange-coinex-wallets', [
-            'supportCoinexAssets' => $supportCoinexAssets,
-            'unsupportCoinexAssets' => $unsupportCoinexAssets,
-        ]);
-
-    }
 
     public function localWallets()
     {

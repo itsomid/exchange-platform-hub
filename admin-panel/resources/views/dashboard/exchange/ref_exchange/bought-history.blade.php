@@ -171,6 +171,3 @@
 
 @endsection
 
-@section('vendor-script')
-
-@endsection

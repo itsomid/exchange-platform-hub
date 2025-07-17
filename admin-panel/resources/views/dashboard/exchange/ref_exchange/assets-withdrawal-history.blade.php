@@ -92,6 +92,8 @@
                                             <i class="fa-regular fa-clone"></i>
                                         </a>
                                         <small class="font-number">{{ shorten_hash($withdraw->hd_wallet_address) }}</small>
+                                    @elseif($withdraw->hd_wallet_address)   
+                                        <span>{{$withdraw->hd_wallet_address}}</span>
                                     @else
                                         <span>N/A Address</span>
                                     @endif

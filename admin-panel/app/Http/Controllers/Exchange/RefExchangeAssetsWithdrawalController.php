@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Exchange;
 
 use App\Enums\OTCRefExchangeWithdrawalStatusEnum;
-use App\Enums\WithdrawalStatusEnum;
 use App\Exceptions\Exchange\CoinexWithdrawalException;
 use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
@@ -11,20 +10,22 @@ use App\Models\Currency;
 use App\Models\CurrencyChain;
 use App\Models\ExchangeAssetsWithdrawal;
 use App\Models\OTCRefExchangeWithdrawal;
-use App\Models\Setting;
-use App\Models\Wallet;
-use App\Models\WalletChain;
-use App\Models\Withdrawal;
+use App\Models\Exchange;
 use App\Services\Exchanges\Asset\AssetFactory;
-use App\Services\Exchanges\Asset\DTO\WithdrawRequestDTO;
-use App\Services\Exchanges\Asset\Enum\WithdrawMethodEnum;
-use App\Services\Exchanges\DTO\ChargeUSDTRequestDTO;
+use App\Services\Exchanges\DTO\ChargeCurrencyRequestDTO;
+use App\Repositories\ExchangeRepository;
 use App\Services\Exchanges\ExchangeService;
+use App\Services\Wallet\WalletService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
-class ExchangeAssetsWithdrawalController extends Controller
+class RefExchangeAssetsWithdrawalController extends Controller
 {
+    public function __construct(
+        private readonly WalletService $walletService,
+        private readonly ExchangeRepository $exchangeRepository,
+    ) {}
     public function index()
     {
         $withdraws = ExchangeAssetsWithdrawal::with('currency')->orderBy('id','desc')->get();
@@ -40,26 +41,58 @@ class ExchangeAssetsWithdrawalController extends Controller
 
     public function create(Request $request)
     {
+        
         if ($request->has('currency_symbol')) {
             $currency_symbol = $request->currency_symbol;
         } else {
             $currency_symbol = 'USDT';
         }
+        if ($request->has('exchange')) {
+            $exchange = Exchange::where('slug', $request->exchange)->first();
+            $exchangeName = $exchange->name;
+        } else {
+            $exchangeName = 'coinex';
+        }
         $currency = Currency::whereSymbol($currency_symbol)->first();
 
         $currencyChains = $currency->chains;
-        $wallet = Wallet::where('currency_symbol', $currency->symbol)->first();
 
+        
+        $wallet = $this->walletService->getExchangeWallet($currency->symbol);
 
-        $walletChains = $wallet->walletChains;
+        $walletChains = $wallet?->walletChains;
 
+        // Get balance from exchange using AssetFactory
+        $exchangeBalance = null;
+        try {
+            $exchangeSlug = $request->exchange ?? 'coinex';
+            $assetService = AssetFactory::make($exchangeSlug);
+            $balances = $assetService->getBalance();
+            
+            // Find balance for the specific currency
+            foreach ($balances as $balance) {
+                if ($balance->getCcy() === $currency->symbol) {
+                    $exchangeBalance = $balance;
+                    break;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Log error but continue - balance will be null
+            report($e);
+        }
 
-        ///TODO: complete Withdrawal
+        // Get all exchanges for selection
+        $exchanges = Exchange::all();
+        $selectedExchange = $request->exchange ?? 'coinex';
 
         return view('dashboard.exchange.ref_exchange.assets-withdrawal-request-form', [
             'currency' => $currency,
             'currencyChains' => $currencyChains,
             'walletChains' => $walletChains,
+            'exchangeName' => $exchangeName,
+            'exchangeBalance' => $exchangeBalance,
+            'exchanges' => $exchanges,
+            'selectedExchange' => $selectedExchange,
         ]);
     }
 
@@ -67,12 +100,13 @@ class ExchangeAssetsWithdrawalController extends Controller
     {
 
         $request->validate([
+            'exchange_slug' => ['required', Rule::exists(Exchange::class, 'slug')],
             'currency_symbol' => ['required', Rule::exists(Currency::class, 'symbol')],
             'currency_chain' => ['required', Rule::exists(CurrencyChain::class, 'chain')],
             'amount' => ['required', 'numeric'],
             'withdrawal_address' => 'required',
         ]);
-
+        
         $currency = Currency::where('symbol', $request->currency_symbol)->first();
 
         if (!$currency) {
@@ -88,11 +122,18 @@ class ExchangeAssetsWithdrawalController extends Controller
         try {
 
             $exchangeService = resolve(ExchangeService::class);
+            $selectedExchange = $this->exchangeRepository->getExchangeBySlug($request->input('exchange_slug'));
+            
+            if (!$selectedExchange) {
+                return redirect()->back()->withErrors(['exchange_slug' => 'صرافی انتخاب شده معتبر نیست.']);
+            }
+            
             $exchangeService->chargeCurrency(
-                resolve(ChargeUSDTRequestDTO::class)
+                resolve(ChargeCurrencyRequestDTO::class)
                     ->setCurrency($currency->symbol)
                     ->setCurrencyChain($request->input('currency_chain'))
                     ->setQuantity($request->input('amount'))
+                    ->setExchangeSlug($selectedExchange->slug)
             );
 
             Toast::message('درخواست برداشت ثبت شد و تا دقایقی دیگر منتقل می گردد.')
@@ -125,7 +166,7 @@ class ExchangeAssetsWithdrawalController extends Controller
 
         $pendingWithdrawals = OTCRefExchangeWithdrawal::select(
             'otc_ref_exchange_withdrawals.currency_id',
-            \DB::raw('SUM(transactions.amount) as total_withdraw_amount')
+            DB::raw('SUM(transactions.amount) as total_withdraw_amount')
         )
             ->join('transactions', 'transactions.id', '=', 'otc_ref_exchange_withdrawals.transaction_id')
             ->where('otc_ref_exchange_withdrawals.status', OTCRefExchangeWithdrawalStatusEnum::PENDING->value)

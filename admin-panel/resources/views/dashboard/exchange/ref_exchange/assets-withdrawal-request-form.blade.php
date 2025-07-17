@@ -6,15 +6,52 @@
         <div class="card-header d-flex justify-content-between">
             <div class="col-md-7 mb-md-0 mb-6 ps-0 d-flex align-items-center">
                 <img src="{{$currency->coinLogo()}}" width="60px">
-                <h5 class="mb-0 ms-3 card-title">فرم برداشت ({{$currency->name}}) از Coinex</h5>
+                <h5 class="mb-0 ms-3 card-title">فرم برداشت ({{$currency->name}}) از {{$exchangeName}}</h5>
             </div>
+            <div class="col-md-5 col-8 pe-0 ps-0 ps-md-2">
 
+                <dl class="row mb-0 gx-4">
+
+           
+                        <dt class="col-sm-5 mb-2 d-md-flex align-items-center justify-content-end">
+                            <span class="fw-bold text-primary ">موجودی</span>
+                        </dt>
+                        <dd class="col-sm-7">
+                            <div class="input-group">
+
+                                <input type="text" class="form-control font-number fw-bold" readonly="readonly"
+                                       dir="ltr"
+                                       value="{{formatNumberTrimZeros($exchangeBalance->getAvailable())}}">
+                                <span class="input-group-text text-primary fw-bold "> {{$exchangeBalance->getCcy()}}</span>
+                            </div>
+                        </dd>
+                
+
+                </dl>
+            </div>
         </div>
         <div class="card-body">
             <form action="{{route('admin.ref-exchange.assets-gathering-to-hd-wallet.store')}}" method="post">
                 @csrf
                 <div class="row">
 
+                    <div class="col-xl-4 mb-4">
+                        <div class="form-group">
+                            <label class="form-label" for="exchange_slug">صرافی مرجع:</label>
+                            <select id="exchange_slug" class="form-select" name="exchange_slug"
+                                    data-placeholder="لطفا صرافی مرجع را انتخاب کنید."
+                                    onchange="updateExchange()">
+                                @foreach($exchanges as $exchange)
+                                    <option value="{{$exchange->slug}}" 
+                                        {{$selectedExchange == $exchange->slug ? 'selected' : ''}}>
+                                        {{$exchange->name}}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('exchange_slug')<small class="text-danger">{{$message}}</small>@enderror
+                        </div>
+                    </div>
+                    <div class="w-100"></div>
                     <div class="col-xl-4 mb-4">
                         <div class="form-group">
                             <label class="form-label" for="currency_symbol">کوین مورد نظر:</label>
@@ -41,7 +78,10 @@
                     <div class="col-xl-4 mb-4">
                         <div class="form-group">
                             <label class="form-label" for="amount">مقدار را وارد کنید:</label>
-                            <input type="text" name="amount" id="amount" class="form-control" placeholder="مقدار">
+                            <div class="input-group">
+                                <input type="text" name="amount" id="amount" class="form-control" placeholder="مقدار">
+                                <button type="button" class="btn btn-outline-primary" onclick="setMaxAmount()">ALL</button>
+                            </div>
                             @error('currency')<small class="text-danger">{{$message}}</small>@enderror
                         </div>
                     </div>
@@ -72,16 +112,21 @@
     </div>
 
 @endsection
-@section('vendor-script')
-    @vite([
-            'resources/assets/vendor/libs/apex-charts/apexcharts.js',
-             'resources/assets/js/config.js',
-            'resources/assets/js/wallet.js'
-         ])
-@endsection
 
-@section('vendor-style')
-    @vite([
-    'resources/assets/vendor/libs/apex-charts/apex-charts.scss',
-])
-@endsection
+
+@push('scripts')
+<script>
+function setMaxAmount() {
+    const maxAmount = "{{formatNumberTrimZeros($exchangeBalance->getAvailable())}}";
+    document.getElementById('amount').value = maxAmount;
+}
+
+function updateExchange() {
+    const selectedExchange = document.getElementById('exchange_slug').value;
+    const currentUrl = new URL(window.location);
+    currentUrl.searchParams.set('exchange', selectedExchange);
+    currentUrl.searchParams.set('currency_symbol', '{{$currency->symbol}}');
+    window.location.href = currentUrl.toString();
+}
+</script>
+@endpush

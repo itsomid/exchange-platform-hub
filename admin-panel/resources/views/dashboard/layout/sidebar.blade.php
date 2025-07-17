@@ -249,10 +249,16 @@
                             <div>داخلی</div>
                         </a>
                     </li>
-                    <li class="menu-item @if(request()->is('admin/exchange/wallets/coinexWallets*')) active @endif">
-                        <a href="{{route('admin.exchange.coinex-wallet')}}" class="menu-link">
+                    <li class="menu-item @if(request()->is('admin/ref-exchanges/wallets/coinex*')) active @endif">
+                        <a href="{{route('admin.exchange.wallet', ['exchange' => 'coinex'])}}" class="menu-link">
                             <i class="menu-icon fa-light fa-user fa-sm"></i>
                             <div>صرافی مرجع (Coinex)</div>
+                        </a>
+                    </li>
+                    <li class="menu-item @if(request()->is('admin/ref-exchanges/wallets/mexc*')) active @endif">
+                        <a href="{{route('admin.exchange.wallet', ['exchange' => 'mexc'])}}" class="menu-link">
+                            <i class="menu-icon fa-light fa-user fa-sm"></i>
+                            <div>صرافی مرجع (Mexc)</div>
                         </a>
                     </li>
                     <li class="menu-item @if(request()->is('admin/exchange/wallets/hotWallets*')) active @endif">

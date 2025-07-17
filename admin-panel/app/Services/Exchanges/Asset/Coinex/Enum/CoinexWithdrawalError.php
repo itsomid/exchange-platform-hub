@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Exchanges\Enums;
+namespace App\Services\Exchanges\Asset\Coinex\Enum;
 
 enum CoinexWithdrawalError: int
 {

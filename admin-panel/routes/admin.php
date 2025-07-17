@@ -18,6 +18,7 @@ use App\Http\Controllers\Exchange\ExchangeWalletController;
 use App\Http\Controllers\Exchange\MarketController;
 use App\Http\Controllers\Exchange\NodeProviderController;
 use App\Http\Controllers\Exchange\RefExchangeController;
+use App\Http\Controllers\Exchange\RefExchangeAssetsWithdrawalController;
 use App\Http\Controllers\OTCOrder\OTCOrderController;
 use App\Http\Controllers\SpotTrade\SpotTradeController;
 use App\Http\Controllers\SpotOrder\SpotOrderController;
@@ -177,7 +178,7 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::patch('/markets/{market}', [MarketController::class, 'update'])->name('market.update')->can('market');
 
         Route::get('/wallets/localWallets', [ExchangeWalletController::class, 'localWallets'])->name('exchange.local-wallet');
-        Route::get('/wallets/coinexWallets', [ExchangeWalletController::class, 'coinexWallets'])->name('exchange.coinex-wallet');
+
         Route::get('/wallets/hotWallets', [ExchangeWalletController::class, 'hotWallets'])->name('exchange.hot-wallet');
         Route::post('/wallets/refresh-hot-wallet-balance', [ExchangeWalletController::class, 'refreshHotWalletBalance'])->name('refresh.balance');
         Route::get('/wallets/hotWallets/assets-gathering-to-cold-wallet', [ExchangeWalletController::class, 'assetsGatheringToColdWallet'])->name('wallet.assets-gathering-to-cold-wallet');
@@ -187,10 +188,11 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::get('/', [RefExchangeController::class, 'index'])->name('exchange.index')->can('ref-exchanges');
         Route::get('/edit/{id}', [RefExchangeController::class, 'edit'])->name('exchange.ref.edit')->can('ref-exchanges');
         Route::patch('/update/{id}', [RefExchangeController::class, 'update'])->name('exchange.ref.update')->can('ref-exchanges');
-        Route::get('/assets-gathering-to-hd-wallet', [ExchangeAssetsWithdrawalController::class, 'index'])->name('ref-exchange.assets-gathering-to-hd-wallet.index');
-        Route::get('/assets-gathering-to-hd-wallet/create', [ExchangeAssetsWithdrawalController::class, 'create'])->name('ref-exchange.assets-gathering-to-hd-wallet.create');
-        Route::post('/assets-gathering-to-hd-wallet/', [ExchangeAssetsWithdrawalController::class, 'store'])->name('ref-exchange.assets-gathering-to-hd-wallet.store');
-        Route::get('/assets-gathering-to-hd-wallet/pending-withdrawal/', [ExchangeAssetsWithdrawalController::class, 'getPendingRefExchangeWithdrawal'])->name('ref-exchange.assets-gathering-to-hd-wallet.pending-withdrawal');
+        Route::get('/wallets/{exchange}', [RefExchangeController::class, 'exchangeWallets'])->name('exchange.wallet');
+        Route::get('/assets-gathering-to-hd-wallet', [RefExchangeAssetsWithdrawalController::class, 'index'])->name('ref-exchange.assets-gathering-to-hd-wallet.index');
+        Route::get('/assets-gathering-to-hd-wallet/create', [RefExchangeAssetsWithdrawalController::class, 'create'])->name('ref-exchange.assets-gathering-to-hd-wallet.create');
+        Route::post('/assets-gathering-to-hd-wallet/', [RefExchangeAssetsWithdrawalController::class, 'store'])->name('ref-exchange.assets-gathering-to-hd-wallet.store');
+        Route::get('/assets-gathering-to-hd-wallet/pending-withdrawal/', [RefExchangeAssetsWithdrawalController::class, 'getPendingRefExchangeWithdrawal'])->name('ref-exchange.assets-gathering-to-hd-wallet.pending-withdrawal');
     });
 
     Route::prefix('transactions')->group(function () {

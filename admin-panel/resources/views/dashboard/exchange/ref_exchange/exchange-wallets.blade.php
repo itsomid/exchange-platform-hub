@@ -1,15 +1,15 @@
 @extends('dashboard.layout.master')
-@section('title', 'مدیریت کیف پول های صرافی')
+@section('title', 'مدیریت کیف پول های صرافی - ' . $exchangeName)
 @section('content')
 
     <div class="card">
         <div class="card-body">
-            <h4 class="mb-0">دارایی در صرافی مرجع (Coinex)</h4>
+            <h4 class="mb-0">دارایی در صرافی مرجع ({{$exchangeName}})</h4>
         </div>
     </div>
 
     <div class="row g-6 mt-1">
-        @foreach($supportCoinexAssets as $asset)
+        @foreach($supportedAssets as $asset)
             <div class="col-lg-3 col-sm-6">
                 <div class="card card-border-shadow-success">
                     <div class="card-body">
@@ -34,7 +34,7 @@
                     <div class="card-body border-top">
                         @if(\App\Models\Currency::whereSymbol($asset->ccy)->exists())
                             @if(\App\Models\Currency::whereSymbol($asset->ccy)->first()->chains->isNotEmpty())
-                                <a href="{{route('admin.ref-exchange.assets-gathering-to-hd-wallet.create',['currency_symbol'=>$asset->ccy,'amount'=>$asset->available])}}"
+                                <a href="{{route('admin.ref-exchange.assets-gathering-to-hd-wallet.create',['currency_symbol'=>$asset->ccy,'amount'=>$asset->available,'exchange'=>$exchange])}}"
                                    class="btn btn-primary">
                                     <i class="fa-regular fa-arrow-up-right fa-xl mx-2"></i>
                                     برداشت دارایی
@@ -51,12 +51,12 @@
     </div>
     <div class="card mt-5">
         <div class="card-body">
-            <h4 class="mb-0">دارایی های پشتیبانی نشده در صرافی مرجع (Coinex)</h4>
+            <h4 class="mb-0">دارایی های پشتیبانی نشده در صرافی مرجع ({{$exchangeName}})</h4>
         </div>
     </div>
 
     <div class="row g-6 mt-2">
-        @foreach($unsupportCoinexAssets as $asset)
+        @foreach($unsupportedAssets as $asset)
             <div class="col-lg-3 col-sm-6">
                 <div class="card card-border-shadow-success">
                     <div class="card-body">
@@ -81,7 +81,7 @@
                     <div class="card-body border-top">
                         @if(\App\Models\Currency::whereSymbol($asset->ccy)->exists())
                             @if(\App\Models\Currency::whereSymbol($asset->ccy)->first()->chains->isNotEmpty())
-                                <a href="{{route('admin.ref-exchange.assets-gathering-to-hd-wallet.create',['currency_symbol'=>$asset->ccy,'amount'=>$asset->available])}}"
+                                <a href="{{route('admin.ref-exchange.assets-gathering-to-hd-wallet.create',['currency_symbol'=>$asset->ccy,'amount'=>$asset->available,'exchange'=>$exchange])}}"
                                    class="btn btn-primary">
                                     <i class="fa-regular fa-arrow-up-right fa-xl mx-2"></i>
                                     برداشت دارایی

@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Services\Exchanges\Asset\Enum;
+namespace App\Services\Exchanges\Asset\Coinex\Enum;
 
-enum WithdrawStatusEnum: string
+enum CoinexWithdrawStatusEnum: string
 {
     case CREATED = 'created';
     case AUDIT_REQUIRED = 'audit_required';
@@ -13,4 +13,4 @@ enum WithdrawStatusEnum: string
     case cancelled = 'cancelled';
     case CANCELLATION_FAILED = 'cancellation_failed';
     case FAILED = 'failed';
-}
+} 
