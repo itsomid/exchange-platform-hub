@@ -19,7 +19,7 @@ class MarketController extends Controller
     {
         $activeExchange = Exchange::query()->active()->first();
         $markets = Market::with(['baseCurrency', 'quoteCurrency', 'activeExchangePrice.exchange'])->get();
-//        return $markets[0]->activeExchangePrices->price;
+        //        return $markets[0]->activeExchangePrices->price;
         return view('dashboard.exchange.market.index', [
             'markets' => $markets,
             'activeExchange' => $activeExchange
@@ -51,7 +51,6 @@ class MarketController extends Controller
                 ->route('admin.market.create')
                 ->withInput()
                 ->withErrors(['symbol' => 'بازار با جفت ارز ' . $baseCurrency->symbol . '-' . $quoteCurrency->symbol . ' قبلاً ایجاد شده است.']);
-
         }
 
         // Create the market
@@ -98,6 +97,7 @@ class MarketController extends Controller
             'min_trade_amount' => $request->min_trade_amount,
             'max_trade_amount' => $request->max_trade_amount,
             'is_active' => $request->has('is_active') ? $request->is_active : false,
+            'price_update_enabled' => $request->has('price_update_enabled') ? $request->price_update_enabled : false,
         ]);
         $market->activeExchangePrice->exchange_profit_sell = $request->exchange_profit_sell;
         $market->activeExchangePrice->exchange_profit_buy = $request->exchange_profit_buy;
