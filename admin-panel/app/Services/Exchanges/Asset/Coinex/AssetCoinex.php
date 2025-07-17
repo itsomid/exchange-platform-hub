@@ -11,7 +11,7 @@ use App\Services\Exchanges\Asset\Contract\AssetInterface;
 use App\Services\Exchanges\Asset\DTO\BalanceResponseDTO;
 use App\Services\Exchanges\Asset\DTO\WithdrawRequestDTO;
 use App\Services\Exchanges\Asset\DTO\WithdrawResponseDTO;
-use App\Services\Exchanges\Enums\CoinexWithdrawalError;
+use App\Services\Exchanges\Asset\Coinex\Enum\CoinexWithdrawalError; 
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Log;
 use Throwable;

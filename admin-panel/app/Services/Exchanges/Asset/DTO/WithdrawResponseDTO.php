@@ -2,13 +2,11 @@
 
 namespace App\Services\Exchanges\Asset\DTO;
 
-use App\Services\Exchanges\Asset\Enum\WithdrawMethodEnum;
-use App\Services\Exchanges\Asset\Enum\WithdrawStatusEnum;
 use Carbon\Carbon;
 
 class WithdrawResponseDTO
 {
-    private int $withdrawId;
+    private string $withdrawId;
     private Carbon $createdAt;
     private string $currency;
     private string $chain;
@@ -16,26 +14,26 @@ class WithdrawResponseDTO
     private string $actualAmount;
     private string $fee;
     private ?string $currencyFee = null;
-    private WithdrawMethodEnum $withdrawMethod;
+    private ?string $withdrawMethod = null;
     private string $address;
     private int $confirmationCount;
     private string $exploreAddress;
-    private WithdrawStatusEnum $status;
+    private string $status;
 
-    public function setWithdrawId(int $withdrawId): WithdrawResponseDTO
+    public function setWithdrawId(string $withdrawId): WithdrawResponseDTO
     {
         $this->withdrawId = $withdrawId;
         return $this;
     }
 
-    public function getWithdrawId(): int
+    public function getWithdrawId(): string
     {
         return $this->withdrawId;
     }
 
     public function setCreatedAt(int $createdAt): WithdrawResponseDTO
     {
-        $this->createdAt = Carbon::createFromTimestampMs($createdAt);
+        $this->createdAt = Carbon::createFromTimestampMs($createdAt)->setTimezone(config('app.timezone', 'Asia/Tehran'));
         return $this;
     }
 
@@ -88,13 +86,13 @@ class WithdrawResponseDTO
         return $this->actualAmount;
     }
 
-    public function setWithdrawMethod(string $withdrawMethod): WithdrawResponseDTO
+    public function setWithdrawMethod(?string $withdrawMethod): WithdrawResponseDTO
     {
-        $this->withdrawMethod = WithdrawMethodEnum::from(strtolower($withdrawMethod));
+        $this->withdrawMethod = "on_chain";
         return $this;
     }
 
-    public function getWithdrawMethod(): WithdrawMethodEnum
+    public function getWithdrawMethod(): ?string
     {
         return $this->withdrawMethod;
     }
@@ -134,11 +132,11 @@ class WithdrawResponseDTO
 
     public function setStatus(string $status): WithdrawResponseDTO
     {
-        $this->status = WithdrawStatusEnum::from($status);
+        $this->status = $status;
         return $this;
     }
 
-    public function getStatus(): WithdrawStatusEnum
+    public function getStatus(): string
     {
         return $this->status;
     }

@@ -9,13 +9,14 @@ use App\Exceptions\Exchange\CoinexWithdrawalException;
 use App\Models\ExchangeAssetsWithdrawal;
 use App\Models\Transaction;
 use App\Models\WalletChain;
+use App\Repositories\ExchangeRepository;
 use App\Repositories\Interfaces\MarketRepositoryInterface;
+use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Services\Exchanges\Asset\AssetFactory;
 use App\Services\Exchanges\Asset\DTO\WithdrawRequestDTO;
 use App\Services\Exchanges\Asset\Enum\WithdrawMethodEnum;
-use App\Services\Exchanges\Asset\Enum\WithdrawStatusEnum;
-use App\Services\Exchanges\DTO\ChargeUSDTRequestDTO;
-use App\Services\Exchanges\DTO\ChargeUSDTResponseDTO;
+use App\Services\Exchanges\DTO\ChargeCurrencyRequestDTO;
+use App\Services\Exchanges\DTO\ChargeCurrencyResponseDTO;
 use App\Services\Wallet\WalletService;
 use Throwable;
 
@@ -24,12 +25,17 @@ class ExchangeService
     public function __construct(
         private readonly WalletService $walletService,
         private readonly MarketRepositoryInterface $marketRepository,
+        private readonly ExchangeRepository $exchangeRepository,
+        private readonly WalletRepositoryInterface $walletRepository,
     ) {}
 
-    public function chargeCurrency(ChargeUSDTRequestDTO $requestDTO): ChargeUSDTResponseDTO
+    public function chargeCurrency(ChargeCurrencyRequestDTO $requestDTO): ChargeCurrencyResponseDTO
     {
         try {
-            $asset = AssetFactory::make('coinex');
+
+            $exchange = $this->exchangeRepository->getActiveExchange();
+
+            $asset = AssetFactory::make($exchange->slug);
 
             $bitexroomWallet = $this->walletService->getExchangeWallet($requestDTO->getCurrency());
 
@@ -38,7 +44,8 @@ class ExchangeService
                     [
                         'wallet_id' => $bitexroomWallet->id,
                         'currency_chain' => $requestDTO->getCurrencyChain(),
-                    ]);
+                    ]
+                );
 
             $response = $asset->withdraw(
                 resolve(WithdrawRequestDTO::class)
@@ -53,7 +60,7 @@ class ExchangeService
             ExchangeAssetsWithdrawal::query()
                 ->create([
                     'withdrawal_id' => $response->getWithdrawId(),
-                    'exchange' => 'coinex',
+                    'exchange' => $exchange->slug,
                     'currency_symbol' => $bitexroomWallet->currency_symbol,
                     'currency_chain' => $requestDTO->getCurrencyChain(),
                     'fee_currency' => $response->getCurrencyFee(),
@@ -65,56 +72,61 @@ class ExchangeService
                     'explore_address_url' => $response->getExploreAddress(),
                 ]);
 
-            $baseCurrencyWallet = $this->walletService->getExchangeWallet($bitexroomWallet->currency_symbol);
-            $cetWallet = $this->walletService->getExchangeWallet('CET');
 
-            $market = $this->marketRepository->getMarketBySymbol($bitexroomWallet->currency_symbol,'USDT');
-            $cetMarket = $this->marketRepository->getMarketBySymbol('CET','USDT');
-            $cetPrice = $cetMarket ? $cetMarket->activeExchangePrice->price : 0;
-            // CET
-            Transaction::query()->create([
-                'user_id' => config('bitexroom.user_id'),
-                'wallet_id' => $cetWallet->id,
-                'amount' => -$response->getFee(),
-                'coin_price' =>  $cetPrice,
-                'exchange_id' => $market->activeExchange->id,
-                'type' => TransactionTypeEnum::ًREF_EXCHANGE,
-                'subtype' => TransactionSubTypeEnum::REF_EXCHANGE_WITHDRAWAL_FEE,
-                'status' => TransactionStatusEnum::SUCCESS,
-                'description' => sprintf('استفاده CET به مقدار %s برای برداشت از صرافی مرجع (%s)',
-                    formatNumberTrimZeros((float) $response->getFee()),
-                    $market->activeExchange->name
-                ),
-            ]);
+            $feeCurrency = $response->getCurrencyFee();
+            $baseCurrency = $bitexroomWallet->currency_symbol;
+
+            $feeCurrencyWallet = $this->walletService->getExchangeWallet($feeCurrency);
+
+            $baseMarket = $this->marketRepository->getMarketBySymbol($baseCurrency, 'USDT');
+            $feeMarket = $this->marketRepository->getMarketBySymbol($feeCurrency, 'USDT');
+
+
+
             //Base Currency
             Transaction::query()->create([
                 'user_id' => config('bitexroom.user_id'),
-                'wallet_id' => $baseCurrencyWallet->id,
+                'wallet_id' => $bitexroomWallet->id,
                 'amount' => $response->getAmount(),
-                'coin_price' =>  $market->activeExchangePrice->price,
-                'exchange_id' => $market->activeExchange->id,
+                'coin_price' =>  $baseMarket->activeExchangePrice->price,
+                'exchange_id' => $exchange->id,
                 'type' => TransactionTypeEnum::ًREF_EXCHANGE,
                 'subtype' => TransactionSubTypeEnum::REF_EXCHANGE_WITHDRAWAL,
                 'status' => TransactionStatusEnum::SUCCESS,
-                'description' => sprintf('برداشت از صرافی مرجع (%s) به مقدار %s',
-                    $market->activeExchange->name,
+                'description' => sprintf(
+                    'برداشت از صرافی مرجع (%s) به مقدار %s',
+                    $exchange->name,
                     formatNumberTrimZeros((float) $response->getAmount())
                 ),
             ]);
-            if ($requestDTO->getCurrency() === 'USDT') {
-                $currencyWallet = $this->walletService->getExchangeWallet($requestDTO->getCurrency());
-                // USDT
-                $currencyWallet->increment('balance', (float) $response->getActualAmount());
-            }
 
+            // Create fee transaction if there's a fee
+            if ((float)$response->getFee() > 0) {
+                Transaction::query()->create([
+                    'user_id' => config('bitexroom.user_id'),
+                    'wallet_id' => $feeCurrencyWallet->id,
+                    'amount' => -$response->getFee(),
+                    'coin_price' =>  $feeMarket ? $feeMarket->activeExchangePrice->price : 0,
+                    'exchange_id' => $exchange->id,
+                    'type' => TransactionTypeEnum::ًREF_EXCHANGE,
+                    'subtype' => TransactionSubTypeEnum::REF_EXCHANGE_WITHDRAWAL_FEE,
+                    'status' => TransactionStatusEnum::SUCCESS,
+                    'description' => sprintf(
+                        'استفاده %s به مقدار %s برای برداشت از صرافی مرجع (%s)',
+                        $feeCurrency,
+                        formatNumberTrimZeros((float) $response->getFee()),
+                        $exchange->name
+                    ),
+                ]);
+            }
         } catch (CoinexWithdrawalException $exception) {
             throw $exception;
-        }catch (Throwable $exception) {
-            report("sss:".$exception);
+        } catch (Throwable $exception) {
+            report("sss:" . $exception);
             throw $exception;
         }
 
-        return resolve(ChargeUSDTResponseDTO::class)
+        return resolve(ChargeCurrencyResponseDTO::class)
             ->setWithdrawStatus($response->getStatus());
     }
 }

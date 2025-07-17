@@ -7,8 +7,8 @@ use App\Helpers\Math;
 use App\Models\Currency;
 use App\Models\OTCRefExchangeWithdrawal;
 use App\Models\Setting;
-use App\Services\Exchanges\Asset\Enum\WithdrawStatusEnum;
-use App\Services\Exchanges\DTO\ChargeUSDTRequestDTO;
+
+use App\Services\Exchanges\DTO\ChargeCurrencyRequestDTO;
 use App\Services\Exchanges\ExchangeService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
@@ -53,7 +53,7 @@ class TransferToHotWallet extends Command
             $this->processTimeBased();
         } elseif ($withdrawalType === self::EXCHANGE_WITHDRAWAL_PERIOD_BUY) {
             $this->processCountBased();
-        }elseif ($withdrawalType === self::EXCHANGE_WITHDRAWAL_BOTH_TYPE){
+        } elseif ($withdrawalType === self::EXCHANGE_WITHDRAWAL_BOTH_TYPE) {
             $this->processBothTypes(); // Changed from processCountBased() then processTimeBased()
         }
     }
@@ -86,7 +86,6 @@ class TransferToHotWallet extends Command
         }
 
         Cache::put(self::CACHE_KEY, now(), now()->addMinutes($this->getPeriodTime()));
-
     }
 
     private function processCountBased(): void
@@ -99,14 +98,15 @@ class TransferToHotWallet extends Command
             ->get();
 
         foreach ($currencies as $currency) {
-            if (OTCRefExchangeWithdrawal::query()
+            if (
+                OTCRefExchangeWithdrawal::query()
                 ->where('currency_id', $currency->id)
                 ->where('status', OTCRefExchangeWithdrawalStatusEnum::PENDING)
-                ->count() >= $countBuy) {
+                ->count() >= $countBuy
+            ) {
                 $this->transferCurrency($currency, self::TRIGGER_TYPE_COUNT);
             }
         }
-
     }
 
     private function isTimeConditionMet(): bool
@@ -188,8 +188,7 @@ class TransferToHotWallet extends Command
             ->get();
 
         if ($pendingLists->count() === 0) {
-            $this->info('Bitexroom does not have need to charge '.$currency->name);
-
+            $this->info('Bitexroom does not have need to charge ' . $currency->name);
             return;
         }
 
@@ -201,30 +200,30 @@ class TransferToHotWallet extends Command
 
         try {
             $exchangeService = resolve(ExchangeService::class);
+
             $chargeFromRefExchange = $exchangeService->chargeCurrency(
-                resolve(ChargeUSDTRequestDTO::class)
+                resolve(ChargeCurrencyRequestDTO::class)
                     ->setCurrency($currency->symbol)
                     ->setCurrencyChain($chain->chain->value)
                     ->setQuantity($quantityNeeded)
             );
 
-            if ($chargeFromRefExchange->getWithdrawStatus() !== WithdrawStatusEnum::FAILED) {
+            if ($chargeFromRefExchange->getWithdrawStatus() !== 'failed') {
                 OTCRefExchangeWithdrawal::query()
                     ->whereIn('id', $pendingLists->pluck('id'))
                     ->update([
                         'status' => OTCRefExchangeWithdrawalStatusEnum::COMPLETED,
                     ]);
-                $this->info($currency->symbol.' Withdrawal successful. status : '.$chargeFromRefExchange->getWithdrawStatus()->value);
+                $this->info($currency->symbol . ' Withdrawal successful. status : ' . $chargeFromRefExchange->getWithdrawStatus());
                 Log::channel('ref-exchange')->info(
-                    "Assets Gathering for {$currency->symbol} triggered by {$triggerType}. Amount: {$quantityNeeded}. Status: {$chargeFromRefExchange->getWithdrawStatus()->value}"
+                    "Assets Gathering for {$currency->symbol} triggered by {$triggerType}. Amount: {$quantityNeeded}. Status: {$chargeFromRefExchange->getWithdrawStatus()}"
                 );
             } else {
-                $this->error($currency->symbol.' Withdrawal failed. status : '.$chargeFromRefExchange->getWithdrawStatus()->value);
+                $this->error($currency->symbol . ' Withdrawal failed. status : ' . $chargeFromRefExchange->getWithdrawStatus());
             }
         } catch (Throwable $exception) {
             report($exception);
             $this->error($exception->getMessage());
         }
-
     }
 }
