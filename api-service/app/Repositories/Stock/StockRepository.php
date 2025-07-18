@@ -70,7 +70,7 @@ class StockRepository implements StockRepositoryInterface
 
     public function getUserPortfolioValue(User $user): float
     {
-        return StockContract::where('user_id', $user->id)
+        return StockContract::where('user_id', $user->id)->where('contract_status', 'active')
             ->sum('total_value');
     }
 
