@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\V1\OTC;
 
+use App\Exceptions\V1\OTC\MaxOTCAmountException;
+use App\Exceptions\V1\OTC\MinOTCAmountException;
 use App\Models\Market;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -43,14 +45,31 @@ class OTCBuyRequest extends FormRequest
      */
     public function rules(): array
     {
-        $market = Market::query()->find($this->input('market_id'));
-
         return [
             'market_id' => ['required', 'integer', 'exists:markets,id'],
-            'quantity' => array_merge(
-                ['required', 'numeric'],
-                $market ? ['min:'.$market->min_otc_amount, 'max:'.$market->max_otc_amount] : []
-            ),
+            'quantity' => ['required', 'numeric'],
         ];
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $marketId = $this->input('market_id');
+            $quantity = $this->input('quantity');
+
+            if ($marketId && $quantity) {
+                $market = Market::find($marketId);
+
+                if ($market) {
+                    if ($quantity < $market->min_otc_amount) {
+                        throw new MinOTCAmountException("The quantity must be at least {$market->min_otc_amount}.");
+                    }
+
+                    if ($quantity > $market->max_otc_amount) {
+                        throw new MaxOTCAmountException("The quantity may not be greater than {$market->max_otc_amount}.");
+                    }
+                }
+            }
+        });
     }
 }

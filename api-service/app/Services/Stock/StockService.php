@@ -52,8 +52,7 @@ class StockService
 
         return [
             'contracts' => $contracts,
-            'total_value' => $totalValue,
-            'wallet_balance' => $this->walletRepository->getOneOrCreateByCurrencyWithLock('USDT', $user->id)
+            'total_value' => $totalValue
         ];
     }
 
@@ -92,7 +91,7 @@ class StockService
             $this->walletService->decreaseBalance($user->id, 'USDT', $totalValue);
 
             $generatedPdfPath = $this->generateContractPdf($stockContract, $stock);
-            
+
             if ($generatedPdfPath) {
                 $stockContract->update(['contract_file' => $generatedPdfPath]);
             } else {
@@ -147,7 +146,7 @@ class StockService
                     ->setDescription('کارمزد ابطال قرارداد' . $stockContract->contract_number)
                 );
 
-      
+
                 $this->walletService->increaseBalance($user->id, 'USDT', $returnAmount);
                 $this->walletService->increaseBalance(config('bitexroom.user_id'), 'USDT', $stockContract->cancellation_fee);
 
