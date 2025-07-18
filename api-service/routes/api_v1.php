@@ -64,9 +64,10 @@ Route::prefix('/wallets')->group(function () {
     Route::post('/generate-address', [WalletController::class, 'generateAddress'])->name('wallets.generate-address');
     Route::post('/refresh', [WalletController::class, 'refresh'])->name('wallets.refresh')->middleware(['throttle:wallet-check']);
     Route::get('/lists', [WalletController::class, 'lists'])->name('wallets.lists');
+    Route::get('/{currencySymbol}', [WalletController::class, 'show'])->name('wallets.show');
     Route::get('/value-usdt', [WalletController::class, 'assetsUSDTValue'])->name('wallets.value-usdt');
     Route::get('/check-withdrawal-limit', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, 'checkWithdrawalLimit']);
-    Route::get('/{currencySymbol}', [WalletController::class, 'show'])->name('wallets.show');
+
     Route::post('/withdrawal', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, '__invoke'])->name('wallets.withdraw')->middleware([\App\Http\Middleware\FinancialWithdrawalBlockMiddleware::class]);
     Route::post('/check-withdrawal', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, 'checkWithdrawal'])->name('wallets.check-withdrawal')
         ->middleware(['throttle:'.config('bitexroom.withdrawal.check_wallet_attempts.max_attempts').','.config('bitexroom.withdrawal.check_wallet_attempts.minutes')]);
@@ -90,10 +91,9 @@ Route::prefix('/portfolio')->group(function () {
 Route::prefix('/otc')->group(function () {
     // get-markets
     Route::get('/markets', [\App\Http\Controllers\V1\OTC\MarketController::class, 'lists'])->name('otc.markets')->withoutMiddleware(['auth:sanctum', 'verified']);
-    // get bitexroom available balance
-    Route::get('/bitexroom-available-balance', [\App\Http\Controllers\V1\OTC\MarketController::class, 'bitexroomAvailableBalance'])->name('otc.bitexroom-available-balance');
-    Route::post('/buy', [\App\Http\Controllers\V1\OTC\BuyController::class, 'create'])->name('otc.buy')->middleware(['throttle:10,1', \App\Http\Middleware\FinancialTradeBlockMiddleware::class]);
-    Route::post('/sell', [\App\Http\Controllers\V1\OTC\SellController::class, 'create'])->name('otc.sell')->middleware([\App\Http\Middleware\FinancialTradeBlockMiddleware::class]);
+
+    Route::post('/buy', [\App\Http\Controllers\V1\OTC\BuyController::class, 'create'])->name('otc.buy')->middleware(['throttle:'.config('bitexroom.otc.buy_attempts.max_attempts').','.config('bitexroom.otc.buy_attempts.minutes'), \App\Http\Middleware\FinancialTradeBlockMiddleware::class]);
+    Route::post('/sell', [\App\Http\Controllers\V1\OTC\SellController::class, 'create'])->name('otc.sell')->middleware(['throttle:'.config('bitexroom.otc.sell_attempts.max_attempts').','.config('bitexroom.otc.sell_attempts.minutes'), \App\Http\Middleware\FinancialTradeBlockMiddleware::class]);
 
     Route::get('/fee', [\App\Http\Controllers\V1\OTC\SettingController::class, 'fee']);
 

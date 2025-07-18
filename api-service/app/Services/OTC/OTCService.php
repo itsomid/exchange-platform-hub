@@ -100,8 +100,8 @@ class OTCService
             DB::beginTransaction();
             //Find Market
             $market = $this->marketRepository->getMarketById($requestDTO->getMarketId());
-            $activeExchange = $this->exchangeRepository->getActiveExchange();
-
+            $activeExchange = $market->exchangePrice->exchange;
+        
             $sellerWallet = $this->walletRepository
                 ->getOneOrCreateByCurrencyWithLock(
                     $market->base_currency,
@@ -119,7 +119,7 @@ class OTCService
             $receivedAmount = Math::sub($buyAmount, $fee);
 
             if (Math::comp($buyerQuoteWallet->available_balance, $amountInQuoteCurrency) === -1) {
-                throw new InsufficientBalanceException(__('otc.buyer_insufficient_balance', ['currency' => $market->quote_currency]));
+                throw new \App\Exceptions\V1\Wallet\InsufficientBalanceException(__('otc.buyer_insufficient_balance', ['currency' => $market->quote_currency]));
             }
 
             $otc_order = $this->otcOrderRepository->create(resolve(CreateOTCOrderRequestDTO::class)
@@ -136,7 +136,7 @@ class OTCService
             $doComplete = true;
             if (Math::comp($sellerWallet->available_balance, $receivedAmount) === -1) {
 
-               // $chain = $market->currency->chains->sort(fn($a, $b) => $a->network_fee <=> $b->network_fee)->first();
+                // $chain = $market->currency->chains->sort(fn($a, $b) => $a->network_fee <=> $b->network_fee)->first();
                 // amountForBuy = (receivedAmount - exchange_withdrawal_fee) + network_fee
                 //$amountForBuy = Math::sub($receivedAmount, $chain->network_fee);
 
@@ -148,6 +148,7 @@ class OTCService
                         ->setOtcId($otc_order->id)
                         ->setQuantity($amountForBuy)
                 );
+
                 $doComplete = $resultBuyRefExchange->isDone();
             }
 
@@ -168,7 +169,7 @@ class OTCService
                     $exchangeName = $otc_order->exchange->name;
                     $description = 'به علت نداشتن موجودی تتری در ' . $exchangeName . ' سفارش لغو شد.';
                 } else {
-                    $description = $resultBuyRefExchange->getErrorMessage();
+                    $description = $resultBuyRefExchange->getErrorMessage() .'- Code: '.$resultBuyRefExchange->getErrorCode();
                 }
                 $otc_order->update([
                     'status' => OTCOrderStatusEnum::CANCELED,
@@ -221,6 +222,7 @@ class OTCService
                 $market->quote_currency,
                 $requestDTO->getBuyerUserId()
             );
+
         // Buyer transaction (Base currency)
         $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
             ->setUserId($requestDTO->getBuyerUserId())
@@ -278,7 +280,8 @@ class OTCService
                     $market->quote_currency)
             )
         );
-        $sellerQuoteWallet->increment('balance', (float)$amountInQuoteCurrency);
+
+        $sellerQuoteWallet->increment('balance', $amountInQuoteCurrency);
 
         // Seller transaction (Base currency)
         $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
@@ -301,7 +304,7 @@ class OTCService
             )
         );
 
-        $sellerWallet->decrement('balance', (float)$receivedAmount);
+        $sellerWallet->decrement('balance', $receivedAmount);
 
         // 3. Commission Transaction
         $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
@@ -376,6 +379,7 @@ class OTCService
                     ->getBitexroomWallet(
                         'USDT'
                     );
+                    
                 $chargeUSDTTransaction = $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
                     ->setUserId(config('bitexroom.user_id'))
                     ->setWalletId($usdtWallet->id)

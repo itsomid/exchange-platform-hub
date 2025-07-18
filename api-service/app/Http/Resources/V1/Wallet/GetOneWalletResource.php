@@ -22,6 +22,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * @method string getCurrencySymbol()
  * @method string getBalance()
  * @method string getLockedBalance()
+ * @method string getAvailableBalance()
  * @method string getUsdtBalance()
  * @method string getUsdtLockedBalance()
  */

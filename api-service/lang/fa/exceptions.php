@@ -20,4 +20,6 @@ return [
     \App\Exceptions\V1\Auth\UserIsSuspendException::class => 'حساب کاربری شما تعلیق شده است.',
     \App\Exceptions\Auth\IncompleteProfileException::class => 'لطفاً اطلاعات پروفایل خود را تکمیل کنید (نام، نام خانوادگی، شماره موبایل، کد ملی).',
     \App\Exceptions\ReferralCodeSystemDisabledException::class => 'ساخت کد معرف غیرفعال است.',
+    \App\Exceptions\V1\OTC\MinOTCAmountException::class => 'حداقل مقدار باید :min باشد',
+    \App\Exceptions\V1\OTC\MaxOTCAmountException::class => 'حداکثر مقدار باید :max باشد',
 ];

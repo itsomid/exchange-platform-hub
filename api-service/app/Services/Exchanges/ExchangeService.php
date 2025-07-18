@@ -44,7 +44,7 @@ class ExchangeService
         $market = $this->marketRepository->getMarketById($requestDTO->getMarketId());
         $exchangeName = $market->exchangePrice->exchange->slug;
         $asset = AssetFactory::make($exchangeName);
-
+        
         $response = $asset->placeOrder(
             resolve(BuyDTORequest::class)
                 ->setSide('buy')
@@ -54,10 +54,12 @@ class ExchangeService
                 ->setOrderType('market')
                 ->setCurrency($market->base_currency)
         );
+
         if ($response->isDone()) {
             $otcOrder = $this->otcOrderRepository->getOneById($requestDTO->getOtcId());
             $otcOrder->refExchangeTransactions()->create([
                 'order_id' => $response->getOrderId(),
+                'exchange_id' => $market->exchangePrice->exchange->id,
                 'market' => $response->getMarket(),
                 'currency_symbol' => $response->getCurrencySymbol(),
                 'amount' => $response->getAmount(),
@@ -67,10 +69,13 @@ class ExchangeService
                 'response' => $response->getResponseBody(),
             ]);
 
-            $cetWallet = $this->walletRepository
+            // Get fee currency based on exchange type
+            $feeCurrency = $this->getFeeCurrencyForExchange($exchangeName);
+            
+            $feeWallet = $this->walletRepository
                 ->getOrCreateWallet(
                     config('bitexroom.user_id'),
-                    'CET'
+                    $feeCurrency
                 );
             $usdtWallet = $this->walletRepository
                 ->getOrCreateWallet(
@@ -82,39 +87,50 @@ class ExchangeService
                     $market->base_currency,
                     config('bitexroom.user_id')
                 );
-            // Get CET market price
-            $cetMarket = $this->marketRepository->getMarketBySymbol('CET', 'USDT');
-            $cetPrice = $cetMarket ? $cetMarket->exchangePrice->price : 0;
 
-            //CET
-            $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
-                ->setUserId(config('bitexroom.user_id'))
-                ->setWalletId($cetWallet->id)
-                ->setOtcOrderId($otcOrder->id)
-                ->setAmount(-$response->getDiscountFee())
-                ->setCoinPrice($cetPrice)
-                ->setExchangeId($market->exchangePrice->exchange->id)
-                ->setType(TransactionTypeEnum::REF_EXCHANGE)
-                ->setSubtype(TransactionSubTypeEnum::REF_EXCHANGE_BUY_FEE)
-                ->setStatus(TransactionStatusEnum::SUCCESS)
-                ->setDescription(sprintf('استفاده CET به مقدار %s برای خرید از صرافی مرجع (%s)',
-                    formatNumberTrimZeros((float)$response->getDiscountFee()),
-                    $market->exchangePrice->exchange->name
-                ),
-                ));
-            //USDT
+            // Get fee currency market price
+            $feeMarket = $this->marketRepository->getMarketBySymbol($feeCurrency, 'USDT');
+            $feePrice = $feeMarket ? $feeMarket->exchangePrice->price : 0;
+
+            // Create fee transaction if there's a fee
+            if ((float)$response->getDiscountFee() > 0) {
+                $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
+                    ->setUserId(config('bitexroom.user_id'))
+                    ->setWalletId($feeWallet->id)
+                    ->setOtcOrderId($otcOrder->id)
+                    ->setAmount(-$response->getDiscountFee())
+                    ->setCoinPrice($feeCurrency === 'USDT' ? "1" : $feePrice)
+                    ->setExchangeId($market->exchangePrice->exchange->id)
+                    ->setType(TransactionTypeEnum::REF_EXCHANGE)
+                    ->setSubtype(TransactionSubTypeEnum::REF_EXCHANGE_BUY_FEE)
+                    ->setStatus(TransactionStatusEnum::SUCCESS)
+                    ->setDescription(sprintf('استفاده %s به مقدار %s برای فی خرید از صرافی مرجع (%s)',
+                        $feeCurrency,
+                        formatNumberTrimZeros((float)$response->getDiscountFee()),
+                        $market->exchangePrice->exchange->name
+                    ),
+                    ));
+            }
+
+            //USDT - adjust amount if fee currency is USDT to avoid double counting
+            $usdtAmount = $response->getFilledValue();
+            if ($feeCurrency === 'USDT' && (float)$response->getDiscountFee() > 0) {
+                // If fee is paid in USDT, subtract it from the main transaction to avoid double counting
+                $usdtAmount = bcsub($usdtAmount, $response->getDiscountFee(), 8);
+            }
+            
             $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
                 ->setUserId(config('bitexroom.user_id'))
                 ->setWalletId($usdtWallet->id)
                 ->setOtcOrderId($otcOrder->id)
-                ->setAmount(-$response->getFilledValue())
+                ->setAmount(-$usdtAmount)
                 ->setCoinPrice("1")
                 ->setExchangeId($market->exchangePrice->exchange->id)
                 ->setType(TransactionTypeEnum::REF_EXCHANGE)
                 ->setSubtype(TransactionSubTypeEnum::REF_EXCHANGE_BUY)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
                 ->setDescription(sprintf('استفاده USDT به مقدار %s در خرید از صرافی مرجع (%s)',
-                    formatNumberTrimZeros((float)$response->getFilledValue()),
+                    formatNumberTrimZeros((float)$usdtAmount),
                     $market->exchangePrice->exchange->name
                 ),
                 ));
@@ -153,9 +169,9 @@ class ExchangeService
             ->setSpotStatus($response->getSpotStatus());
     }
 
+
     public function chargeUSDT(ChargeUSDTRequestDTO $requestDTO): ChargeUSDTResponse
     {
-
         $cetMarket = $this->marketRepository->getMarketBySymbol('CET', 'USDT');
         try {
             $asset = AssetFactory::make('coinex');
@@ -224,7 +240,7 @@ class ExchangeService
                 ->setSubtype(TransactionSubTypeEnum::REF_EXCHANGE_BUY)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
                 ->setDescription(sprintf('استفاده USDT به مقدار %s',
-                        formatNumberTrimZeros((float)$response->getFilledValue())
+                        formatNumberTrimZeros((float)$response->getActualAmount())
                     )
                 ));
             $exchangeUSDTWallet->increment('balance', (float)$response->getActualAmount());
@@ -237,5 +253,14 @@ class ExchangeService
 
         return resolve(ChargeUSDTResponse::class)
             ->setWithdrawStatus($response->getStatus());
+    }
+
+    
+    /**
+     * Get fee currency for different exchanges
+     */
+    private function getFeeCurrencyForExchange(string $exchangeName): string
+    {
+        return config("exchanges.{$exchangeName}.fee_currency", 'USDT');
     }
 }

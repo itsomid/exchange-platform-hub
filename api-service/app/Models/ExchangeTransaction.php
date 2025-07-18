@@ -10,6 +10,7 @@ class ExchangeTransaction extends Model
     protected $fillable = [
         'order_id',
         'market',
+        'exchange_id',
         'currency_symbol',
         'amount',
         'fee',

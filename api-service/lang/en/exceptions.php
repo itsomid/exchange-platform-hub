@@ -19,4 +19,7 @@ return [
     \App\Exceptions\V1\Auth\UserIsSuspendException::class => 'Your account is suspended.',
     \App\Exceptions\Auth\IncompleteProfileException::class => 'Please complete your profile information (first name, last name, mobile, national code).',
     \App\Exceptions\ReferralCodeSystemDisabledException::class => 'Referral code system is disabled.',
+    \App\Exceptions\V1\OTC\MinOTCAmountException::class => 'The quantity must be at least :min.',
+    \App\Exceptions\V1\OTC\MaxOTCAmountException::class => 'The quantity may not be greater than :max.',
+    
 ];

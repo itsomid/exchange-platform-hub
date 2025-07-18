@@ -9,7 +9,10 @@ class BuyDTOResponse
 {
     private bool $isDone;
 
-    private int $orderId;
+    /**
+     * @var int|string
+     */
+    private $orderId;
 
     private string $market;
 
@@ -87,14 +90,21 @@ class BuyDTOResponse
         return $this->side;
     }
 
-    public function setOrderId(int $orderId): BuyDTOResponse
+    /**
+     * @param int|string $orderId
+     * @return BuyDTOResponse
+     */
+    public function setOrderId($orderId): BuyDTOResponse
     {
         $this->orderId = $orderId;
 
         return $this;
     }
 
-    public function getOrderId(): int
+    /**
+     * @return int|string
+     */
+    public function getOrderId()
     {
         return $this->orderId;
     }
