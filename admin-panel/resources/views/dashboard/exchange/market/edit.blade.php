@@ -272,7 +272,13 @@
                                     <input type="checkbox" class="switch-input" name="price_update_enabled"
                                         value="1" {{ $market->price_update_enabled ? 'checked' : '' }} />
                                     <span class="switch-toggle-slider"></span>
-                                    <span class="switch-label">بارگیری قیمت از صرافی مرجع (فعال/غیرفعال)</span>
+                                    <span class="switch-label">بارگیری قیمت از صرافی مرجع (فعال/غیرفعال)
+
+                                        <small class="text-muted">
+                                            با فعال کردن این گزینه، قیمت بازار بعد از یک دقیقه شروع به بارگیری از صرافی مرجع
+                                            می کند.
+                                        </small>
+                                    </span>
 
                                 </label>
                             </div>
