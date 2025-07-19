@@ -197,7 +197,7 @@ class TransferToHotWallet extends Command
             $quantityNeeded = Math::add($quantityNeeded, $data->transaction->amount);
         }
 
-        $quantityNeeded = formatNumber($quantityNeeded, $currency->precision);
+        $quantityNeeded = number_format($quantityNeeded, $currency->precision, '.', '');
 
         try {
             $exchangeService = resolve(ExchangeService::class);
