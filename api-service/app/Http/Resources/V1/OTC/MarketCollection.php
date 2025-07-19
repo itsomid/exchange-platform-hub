@@ -90,12 +90,13 @@ class MarketCollection extends ResourceCollection
      */
     public function toArray(Request $request): array
     {
-        return $this->collection->map(fn (MarketResponseDTO $DTO) => [
+        return $this->collection->map(fn(MarketResponseDTO $DTO) => [
             'market_id' => $DTO->getMarketId(),
             'precision' => $DTO->getPrecision(),
             'base_currency' => $DTO->getBaseCurrency(),
             'currency_name' => $DTO->getCurrencyName(),
             'currency_persian_name' => $DTO->getCurrencyPersianName(),
+            'currency_logo' => $DTO->getCurrencyLogo(),
             'quote_currency' => $DTO->getQuoteCurrency(),
             'is_active' => $DTO->getIsActive(),
             'sell_price' => $DTO->getSellPrice(),

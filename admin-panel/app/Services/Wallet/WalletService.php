@@ -55,7 +55,7 @@ class WalletService
     }
     public function getExchangeAllWalletExceptUSDT()
     {
-        return Wallet::where('user_id', $this->bitexroomUserId)->where('currency_symbol','!=','USDT')->get();
+        return Wallet::where('user_id', $this->bitexroomUserId)->where('currency_symbol', '!=', 'USDT')->get();
     }
 
     public function getExchangeAllWalletChain()
@@ -63,14 +63,12 @@ class WalletService
         $allExchangeWallet = $this->getExchangeAllWallet();
         $walletIds = $allExchangeWallet->pluck('id')->toArray();
         return WalletChain::with('wallet')->whereIn('wallet_id', $walletIds)->get();
-
     }
     public function getExchangeAllWalletChainExceptUSDT()
     {
         $allExchangeWallet = $this->getExchangeAllWalletExceptUSDT();
         $walletIds = $allExchangeWallet->pluck('id')->toArray();
-        return WalletChain::with(['wallet','wallet.currency'])->whereIn('wallet_id', $walletIds)->get();
-
+        return WalletChain::with(['wallet', 'wallet.currency'])->whereIn('wallet_id', $walletIds)->get();
     }
     public function totalAssetsValue(User $user)
     {
@@ -85,7 +83,7 @@ class WalletService
             $currencyPrice = $market ? $market->activeExchangePrice->price : 1;
 
             $totalAssetsValue += $wallet->balance * $currencyPrice;
-//
+            //
         }
 
         return $totalAssetsValue;
@@ -104,7 +102,7 @@ class WalletService
             $currencyPrice = $market ? $market->activeExchangePrice->price : 1;
 
             $totalAssetsValue += ($wallet->balance - $wallet->locked_balance) * $currencyPrice;
-//
+            //
         }
 
         return $totalAssetsValue;
@@ -123,7 +121,7 @@ class WalletService
             $currencyPrice = $market ? $market->activeExchangePrice->price : 1;
 
             $totalAssetsValue += $wallet->locked_balance * $currencyPrice;
-//
+            //
         }
 
         return $totalAssetsValue;
@@ -173,13 +171,13 @@ class WalletService
             }
 
             // Get market history for yesterday
-             $yesterdayHistory = MarketHistory::where('market_id', $market->id)
+            $yesterdayHistory = MarketHistory::where('market_id', $market->id)
                 ->whereDate('timestamp', $yesterday)
                 ->latest()
                 ->first();
 
             // Get market history for day before
-             $dayBeforeHistory = MarketHistory::where('market_id', $market->id)
+            $dayBeforeHistory = MarketHistory::where('market_id', $market->id)
                 ->whereDate('timestamp', $dayBefore)
                 ->latest()
                 ->first();
@@ -262,7 +260,7 @@ class WalletService
             if (!$existingChain) {
 
                 //TODO: give it from HD Wallet
-//                $depositAddress = $this->generateUniqueAddress();
+                //                $depositAddress = $this->generateUniqueAddress();
 
                 // Create the wallet chain record
                 $existingChain = WalletChain::create([
@@ -270,7 +268,7 @@ class WalletService
                     'currency_chain' => $currencyChain,
                     'address' => null,
                 ]);
-//                throw new \Exception("A deposit address for this currency chain already exists.");
+                //                throw new \Exception("A deposit address for this currency chain already exists.");
             } else {
                 echo "A deposit address for this currency chain already exists.\n";
             }
@@ -308,7 +306,7 @@ class WalletService
                     ->where('currency_symbol', $currencySymbol)
                     ->lockForUpdate()
                     ->first();
-                
+
                 return $wallet && $wallet->balance >= $amount;
             });
         } catch (\Throwable $exception) {
@@ -333,11 +331,11 @@ class WalletService
                     ->where('currency_symbol', $currencySymbol)
                     ->lockForUpdate()
                     ->first();
-                
+
                 if (!$wallet || $wallet->balance < $amount) {
                     return false;
                 }
-                
+
                 $wallet->decrement('balance', $amount);
                 return true;
             });
@@ -360,5 +358,114 @@ class WalletService
             $wallet->increment('balance', $amount);
             return true;
         });
+    }
+
+    /**
+     * Create exchange wallet for a specific currency if it doesn't exist.
+     *
+     * @param string $currencySymbol
+     * @return Wallet|null
+     */
+    public function createExchangeWallet(string $currencySymbol): ?Wallet
+    {
+        try {
+            return DB::transaction(function () use ($currencySymbol) {
+                // Check if exchange wallet already exists
+                $existingWallet = $this->getExchangeWallet($currencySymbol);
+                if ($existingWallet) {
+                    return $existingWallet;
+                }
+
+                // Create new exchange wallet
+                $wallet = Wallet::create([
+                    'user_id' => $this->bitexroomUserId,
+                    'currency_symbol' => $currencySymbol,
+                    'balance' => 0,
+                    'locked_balance' => 0,
+                ]);
+
+                return $wallet;
+            });
+        } catch (\Throwable $exception) {
+            report($exception);
+            return null;
+        }
+    }
+
+    /**
+     * Create exchange wallets for all currencies that don't have exchange wallets.
+     *
+     * @return array Array of created wallets
+     */
+    public function createMissingExchangeWallets(): array
+    {
+        $createdWallets = [];
+
+        try {
+            // Get all currencies
+            $currencies = \App\Models\Currency::all();
+
+            foreach ($currencies as $currency) {
+                $existingWallet = $this->getExchangeWallet($currency->symbol);
+
+                if (!$existingWallet) {
+                    $wallet = $this->createExchangeWallet($currency->symbol);
+                    if ($wallet) {
+                        $createdWallets[] = $wallet;
+                    }
+                }
+            }
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
+
+        return $createdWallets;
+    }
+
+    /**
+     * Ensure exchange wallet exists for a currency, create if missing.
+     *
+     * @param string $currencySymbol
+     * @return Wallet|null
+     */
+    public function ensureExchangeWalletExists(string $currencySymbol): ?Wallet
+    {
+        $wallet = $this->getExchangeWallet($currencySymbol);
+
+        if (!$wallet) {
+            $wallet = $this->createExchangeWallet($currencySymbol);
+        }
+
+        return $wallet;
+    }
+
+    /**
+     * Create exchange wallets for currencies that have chains but no exchange wallet.
+     *
+     * @return array Array of created wallets
+     */
+    public function createExchangeWalletsForCurrenciesWithChains(): array
+    {
+        $createdWallets = [];
+
+        try {
+            // Get currencies that have chains but no exchange wallet
+            $currencies = \App\Models\Currency::has('chains')->get();
+
+            foreach ($currencies as $currency) {
+                $existingWallet = $this->getExchangeWallet($currency->symbol);
+
+                if (!$existingWallet) {
+                    $wallet = $this->createExchangeWallet($currency->symbol);
+                    if ($wallet) {
+                        $createdWallets[] = $wallet;
+                    }
+                }
+            }
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
+
+        return $createdWallets;
     }
 }

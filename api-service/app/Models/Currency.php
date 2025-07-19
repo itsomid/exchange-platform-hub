@@ -17,9 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  */
 class Currency extends Model
 {
-    protected $fillable = [
-
-    ];
+    protected $fillable = [];
 
     public function baseMarket(): HasOne
     {

@@ -30,6 +30,8 @@ class MarketResponseDTO
 
     private string $currencyPersianName;
 
+    private string $currencyLogo;
+
     public function setBaseCurrency(string $baseCurrency): self
     {
         $this->baseCurrency = $baseCurrency;
@@ -184,5 +186,17 @@ class MarketResponseDTO
     public function getCurrencyPersianName(): string
     {
         return $this->currencyPersianName;
+    }
+
+    public function setCurrencyLogo(string $currencyLogo): MarketResponseDTO
+    {
+        $this->currencyLogo = $currencyLogo;
+
+        return $this;
+    }
+
+    public function getCurrencyLogo(): string
+    {
+        return $this->currencyLogo;
     }
 }

@@ -18,6 +18,8 @@ class WalletListsResponseDTO
 
     private string $availableBalance;
 
+    private string $currencyLogo;
+
     public function setId(?int $id): WalletListsResponseDTO
     {
         $this->id = $id;
@@ -100,5 +102,17 @@ class WalletListsResponseDTO
     public function getAvailableBalance(): string
     {
         return $this->availableBalance;
+    }
+
+    public function setCurrencyLogo(string $currencyLogo): WalletListsResponseDTO
+    {
+        $this->currencyLogo = $currencyLogo;
+
+        return $this;
+    }
+
+    public function getCurrencyLogo(): string
+    {
+        return $this->currencyLogo;
     }
 }

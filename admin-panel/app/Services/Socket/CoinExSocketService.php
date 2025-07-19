@@ -32,8 +32,8 @@ class CoinExSocketService
         if (is_null($this->coinexID)) {
             $coinExExchange = Exchange::query()
                 ->where('slug', 'coinex')
-                ->where('is_active', true)
                 ->first();
+
             $this->coinexID = $coinExExchange->id;
         }
 

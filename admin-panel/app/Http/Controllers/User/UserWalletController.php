@@ -18,6 +18,7 @@ use App\Services\OTC\OTCService;
 use App\Services\Transaction\TransactionService;
 use App\Services\Wallet\WalletService;
 use App\Services\Withdrawal\WithdrawalService;
+use Illuminate\Support\Facades\DB;
 
 class UserWalletController extends Controller
 {
@@ -40,6 +41,11 @@ class UserWalletController extends Controller
 
     public function userWallets(User $user)
     {
+        // If this is the exchange user (user ID 1), ensure all currencies have exchange wallets
+        if ($user->id === $this->bitexroomUserId) {
+            $this->ensureExchangeWalletsExist();
+        }
+
         $wallets = $user->wallets()->with('walletChains')->get();
 
         $totalAssetsValue = $this->walletService->totalAssetsValue($user);
@@ -65,7 +71,7 @@ class UserWalletController extends Controller
 
         $OTCOrderCount = OTCOrder::where('user_id', $user->id)->count();
         $totalOTCOrderValue = OTCOrder::where('user_id', $user->id)
-            ->sum(\DB::raw('quantity * price'));
+            ->sum(DB::raw('quantity * price'));
 
 
         return view('dashboard.wallet.user-wallets', [
@@ -106,40 +112,34 @@ class UserWalletController extends Controller
                 ->where('user_id', $user->id)
                 ->orderBy('created_at', 'desc')
                 ->get();
-
-
         } else if ($type === 'withdrawal') {
             $withdrawals = Withdrawal::where('currency_symbol', $wallet->currency_symbol)
                 ->where('user_id', $user->id)
                 ->orderBy('created_at', 'desc')
                 ->get();
-
         } else if ($type === 'otcBuy') {
 
             $otcBuy = OTCOrder::where('user_id', $user->id)
-                ->whereHas('market', function($query) use ($wallet) {
+                ->whereHas('market', function ($query) use ($wallet) {
                     $query->where('base_currency', $wallet->currency_symbol);
                 })
                 ->where('type', OTCOrderTypeEnum::BUY)
                 ->orderBy('created_at', 'desc')
                 ->get();
-
         } else if ($type === 'otcSell') {
 
             $otcSell = OTCOrder::where('user_id', $user->id)
-                ->whereHas('market', function($query) use ($wallet) {
+                ->whereHas('market', function ($query) use ($wallet) {
                     $query->where('base_currency', $wallet->currency_symbol);
                 })
                 ->where('type', OTCOrderTypeEnum::SELL)
                 ->orderBy('created_at', 'desc')
                 ->get();
-
         } else if ($type === 'lockedBalanceDetails') {
             $lockedBalanceDetails = $wallet->lockedBalanceDetails()
                 ->withTrashed()
                 ->orderBy('created_at', 'desc')
                 ->get();
-
         }
 
         // Fetch the total deposit amount and the last deposit date
@@ -161,7 +161,7 @@ class UserWalletController extends Controller
         // Fetch the total withdraw amount and the last withdraw date
         $totalWithdraws = Withdrawal::where('currency_symbol', $wallet->currency_symbol)
             ->where('user_id', $user->id)
-            ->where('status',WithdrawalStatusEnum::COMPLETED)
+            ->where('status', WithdrawalStatusEnum::COMPLETED)
             ->sum('amount');
 
         $totalWithdrawValue = $this->withdrawalService->totalWithdrawalValueBasedCurrency($wallet->currency_symbol, $user->id);
@@ -179,9 +179,8 @@ class UserWalletController extends Controller
 
             $totalOtcBuy = $this->otcService->totalOTCOrder($user->id, $wallet->currency_symbol, OTCOrderTypeEnum::BUY);
             $totalOtcBuyValue = $this->otcService->totalOTCOrderValue($user->id, $wallet->currency_symbol, OTCOrderTypeEnum::BUY);
-
         } else {
-//            TODO: calculate exchange OTC from Transaction
+            //            TODO: calculate exchange OTC from Transaction
             $totalOtcSell = $this->transactionService->totalTransactionsBasedType($user->id, $wallet->currency_symbol, [TransactionTypeEnum::SELL]);
             $totalOtcSellValue = $this->transactionService->totalTransactionsValueBasedType($user->id, $wallet->currency_symbol, [TransactionTypeEnum::SELL]);
 
@@ -228,5 +227,22 @@ class UserWalletController extends Controller
         ]);
     }
 
+    /**
+     * Ensure all currencies have exchange wallets.
+     * This method is called when viewing the exchange user's wallets.
+     */
+    private function ensureExchangeWalletsExist(): void
+    {
+        try {
+            $createdWallets = $this->walletService->createMissingExchangeWallets();
 
+            if (!empty($createdWallets)) {
+                $currencySymbols = collect($createdWallets)->pluck('currency_symbol')->implode(', ');
+                \App\Functions\FlashMessages\Toast::message("کیف پول‌های صرافی برای ارزهای زیر ساخته شد: {$currencySymbols}")->success()->notify();
+            }
+        } catch (\Throwable $exception) {
+            report($exception);
+            \App\Functions\FlashMessages\Toast::message('خطا در ساخت کیف پول‌های صرافی')->danger()->notify();
+        }
+    }
 }

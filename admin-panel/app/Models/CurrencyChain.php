@@ -12,6 +12,7 @@ class CurrencyChain extends Model
     protected $fillable = [
         'currency_id',
         'chain',
+        'chain_name',
         'blockchain_name',
         'min_deposit_amount',
         'min_withdraw_amount',

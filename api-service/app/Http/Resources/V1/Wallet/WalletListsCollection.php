@@ -28,9 +28,10 @@ class WalletListsCollection extends ResourceCollection
      */
     public function toArray(Request $request): array
     {
-        return $this->collection->map(fn (WalletListsResponseDTO $walletListsResponseDTO) => [
+        return $this->collection->map(fn(WalletListsResponseDTO $walletListsResponseDTO) => [
             'id' => $walletListsResponseDTO->getId(),
             'currency' => $walletListsResponseDTO->getCurrency(),
+            'currency_logo' => $walletListsResponseDTO->getCurrencyLogo(),
             'balance' => $walletListsResponseDTO->getBalance(),
             'frozen_balance' => $walletListsResponseDTO->getLockedBalance(),
             'available_balance' => $walletListsResponseDTO->getAvailableBalance(),

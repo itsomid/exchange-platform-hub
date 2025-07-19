@@ -9,6 +9,7 @@ use App\Http\Requests\Currency\CreateCurrencyRequest;
 use App\Http\Requests\Currency\UpdateCurrencyRequest;
 use App\Models\Currency;
 use App\Models\CurrencyChain;
+use App\Services\Wallet\WalletService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -24,10 +25,10 @@ class CurrencyController extends Controller
 
         $currencies = Currency::query()->with('chains')->filterBy(request()->all())->get();
 
-        $currenciesWithChainsCount = $currencies->filter(function($currency) {
+        $currenciesWithChainsCount = $currencies->filter(function ($currency) {
             return $currency->chains->isNotEmpty();
         })->count();
-        $currenciesWithoutChainsCount = $currencies->filter(function($currency) {
+        $currenciesWithoutChainsCount = $currencies->filter(function ($currency) {
             return $currency->chains->isEmpty();
         })->count();
 
@@ -44,7 +45,8 @@ class CurrencyController extends Controller
     public function create()
     {
         $currencies_type = CurrencyChainEnum::cases();
-        return view('dashboard.exchange.currency.create',
+        return view(
+            'dashboard.exchange.currency.create',
             ['currencies_type' => $currencies_type]
         );
     }
@@ -54,20 +56,30 @@ class CurrencyController extends Controller
      */
     public function store(CreateCurrencyRequest $request)
     {
-
         $currency = Currency::create([
             'name' => $request->name,
-            'persian_name'=>$request->persian_name,
+            'persian_name' => $request->persian_name,
             'symbol' => $request->symbol,
             'is_active' => $request->is_active
         ]);
+
         if ($request->hasFile('logo')) {
             $timestamp = now()->timestamp;
-            $imageName = $currency->id . '_' . $currency->symbol .'_'.$timestamp. '.' . $request->file('logo')->getClientOriginalExtension();
+            $imageName = $currency->id . '_' . $currency->symbol . '_' . $timestamp . '.' . $request->file('logo')->getClientOriginalExtension();
             $request->file('logo')->storeAs('coins', $imageName, ['disk' => 'public']);
             $currency->update(['logo' => $imageName]);
         }
-        Toast::message('ارز مورد نظر با موفقیت ایجاد شد.')->success()->notify();
+
+        // Automatically create exchange wallet for the new currency
+        $walletService = app(WalletService::class);
+        $exchangeWallet = $walletService->createExchangeWallet($currency->symbol);
+
+        if ($exchangeWallet) {
+            Toast::message('ارز مورد نظر با موفقیت ایجاد شد و کیف پول صرافی نیز ساخته شد.')->success()->notify();
+        } else {
+            Toast::message('ارز مورد نظر ایجاد شد اما در ساخت کیف پول صرافی مشکلی پیش آمد.')->warning()->notify();
+        }
+
         return redirect()->route('admin.currency.index');
     }
 
@@ -88,7 +100,8 @@ class CurrencyController extends Controller
         $currencies_type = CurrencyChainEnum::cases();
 
         $currency->load('chains');
-        return view('dashboard.exchange.currency.edit',
+        return view(
+            'dashboard.exchange.currency.edit',
             ['currencies_type' => $currencies_type],
             ['currency' => $currency]
         );
@@ -104,7 +117,7 @@ class CurrencyController extends Controller
         $oldImage = $currency->logo;
         if ($request->hasFile('logo')) {
             $timestamp = now()->timestamp;
-            $imageName = $currency->id . '_' . $currency->symbol .'_'.$timestamp .'.' . $request->file('logo')->getClientOriginalExtension();
+            $imageName = $currency->id . '_' . $currency->symbol . '_' . $timestamp . '.' . $request->file('logo')->getClientOriginalExtension();
             $request->file('logo')->storeAs('coins', $imageName, ['disk' => 'public']);
             $currency->update(['logo' => $imageName]);
         }

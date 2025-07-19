@@ -21,6 +21,7 @@ use Illuminate\Http\Resources\Json\ResourceCollection;
  *              example="2.5",
  *              description="The maximum amount for automatic withdrawal. If the withdrawal amount exceeds this value, the withdrawal status will be set to 'awaiting admin approval'."
  *          ),
+ *          @OA\Property(property="logo", type="string", example="BTC", description="Currency logo."),
  *          @OA\Property(property="inter_transfer_enabled", type="boolean", example=true, description="Whether inter-transfer is enabled for this currency.")
  *      ),
  *      @OA\Property(
@@ -54,9 +55,10 @@ class ConfigCollection extends ResourceCollection
      */
     public function toArray(Request $request): array
     {
-        return $this->collection->map(fn ($configResponseDTO) => [
+        return $this->collection->map(fn($configResponseDTO) => [
             'asset' => [
                 'ccy' => $configResponseDTO->getSymbol(),
+                'currency_logo' => $configResponseDTO->getCurrencyLogo(),
                 'inter_transfer_enabled' => $configResponseDTO->getInterTransferEnabled(),
                 'max_auto_withdraw_amount' => $configResponseDTO->getMaxAutoWithdrawAmount(),
                 'precision' => $configResponseDTO->getPrecision(),

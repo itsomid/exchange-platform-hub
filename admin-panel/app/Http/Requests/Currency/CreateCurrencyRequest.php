@@ -23,6 +23,7 @@ class CreateCurrencyRequest extends FormRequest
     {
         return [
             'name' => 'required',
+            'persian_name' => 'required',
             'symbol' => 'required|unique:currencies,symbol',
             'is_active' => 'boolean',
             'logo' => 'image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',

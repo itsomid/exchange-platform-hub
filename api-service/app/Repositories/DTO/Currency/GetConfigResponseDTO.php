@@ -16,6 +16,8 @@ class GetConfigResponseDTO
 
     private array $chains;
 
+    private string $currencyLogo;
+
     public function setName(string $name): self
     {
         $this->name = $name;
@@ -86,5 +88,17 @@ class GetConfigResponseDTO
     public function getPrecision(): int
     {
         return $this->precision;
+    }
+
+    public function setCurrencyLogo(string $currencyLogo): GetConfigResponseDTO
+    {
+        $this->currencyLogo = $currencyLogo;
+
+        return $this;
+    }
+
+    public function getCurrencyLogo(): string
+    {
+        return $this->currencyLogo;
     }
 }

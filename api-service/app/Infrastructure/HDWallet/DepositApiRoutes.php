@@ -2,7 +2,7 @@
 
 namespace App\Infrastructure\HDWallet;
 
-class DepositApiRoutes
+    class DepositApiRoutes
 {
     const array ROUTES = [
         'bnb.BINANCE' => '/api/v1/wallet/deposits/bnb/{user_address}/all',
@@ -13,6 +13,7 @@ class DepositApiRoutes
         'trx.TRON' => '/api/v1/wallet/deposits/trx/{user_address}/all',
         'eth.ETHEREUM' => '/api/v1/wallet/deposits/eth/{user_address}/all',
         'usdt.ETHEREUM' => '/api/v1/wallet/deposits/eth/usdt/{user_address}/all',
+        'audio.ETHEREUM' => '/api/v1/wallet/deposits/eth/audio/{user_address}/all'
     ];
 
     public static function get(string $currencySymbol, string $blockchain, string $walletAddress): string

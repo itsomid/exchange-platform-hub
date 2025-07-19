@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Currency;
 use App\Models\CurrencyChain;
 use Illuminate\Http\Request;
+use App\Enums\CurrencyChainEnum;
 
 class CurrencyChainController extends Controller
 {
@@ -62,6 +63,8 @@ class CurrencyChainController extends Controller
         $currencyChain = CurrencyChain::query()->create([
             'currency_id' => $currency->id,
             'chain' => $request->chain,
+            'chain_name' => CurrencyChainEnum::from($request->chain)->chain_name(),
+            'blockchain_name' => CurrencyChainEnum::from($request->chain)->blockchain_name(),
             'min_deposit_amount' => $request->min_deposit_amount,
             'min_withdraw_amount' => $request->min_withdraw_amount,
             'deposit_delay_minutes' => $request->deposit_delay_minutes,

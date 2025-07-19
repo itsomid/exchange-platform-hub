@@ -114,7 +114,6 @@ class WalletService
 
             return false;
         }
-
     }
 
     public function getLists(DTO\Wallet\WalletListsRequestDTO $requestDTO): array
@@ -205,7 +204,6 @@ class WalletService
         $wallets->map(function ($wallet) use (&$sumAmount) {
             $sumAmount += $wallet->exchangePrice ?
                 Math::mul($wallet->exchangePrice->price, $wallet->available_balance, 8) : $wallet->available_balance;
-
         });
 
         return resolve(WalletValueUSDTResponseDTO::class)
@@ -214,21 +212,23 @@ class WalletService
 
     public function SetWalletDTO(?\App\Models\Wallet $wallet, ?Market $market = null): WalletListsResponseDTO
     {
+
         if (is_null($wallet)) {
             return resolve(WalletListsResponseDTO::class)
                 ->setCurrency($market->base_currency)
+                ->setCurrencyLogo($market->baseCurrency->logo ?? '')
                 ->setBalance('0')
                 ->setLockedBalance('0')
                 ->setAvailableBalance('0')
                 ->setUsdtLockedBalance('0')
                 ->setUsdtBalance('0')
                 ->setId(null);
-
         }
 
         return resolve(WalletListsResponseDTO::class)
             ->setId($wallet->id ?? null)
             ->setCurrency($wallet->currency_symbol ?? $market->base_currency)
+            ->setCurrencyLogo($wallet->currency->logo ?? '')
             ->setBalance($wallet->balance ?? 0)
             ->setLockedBalance($wallet->locked_balance ?? 0)
             ->setAvailableBalance($wallet->available_balance ?? 0)
