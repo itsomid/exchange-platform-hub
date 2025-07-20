@@ -12,7 +12,7 @@ use Spatie\Permission\Models\Permission;
 
 class InternalSettingController extends Controller
 {
-
+    protected $walletService;
     protected $bitexroomUserId;
     public function __construct(WalletService $walletService)
     {
@@ -66,7 +66,7 @@ class InternalSettingController extends Controller
         // Update referral profit status
         Setting::updateOrCreate(
             ['key' => 'referral_profit_status'],
-            ['value' => $request->has('referral_profit_status') ? $request->input('referral_profit_status'): false]
+            ['value' => $request->has('referral_profit_status') ? $request->input('referral_profit_status') : false]
         );
 
         // Update referral profit percentage
@@ -149,7 +149,7 @@ class InternalSettingController extends Controller
 
         Setting::updateOrCreate(
             ['key' => 'exchange_withdrawal_status'],
-            ['value' => $request->has('exchange_withdrawal_status') ? $request->input('exchange_withdrawal_status'): false]
+            ['value' => $request->has('exchange_withdrawal_status') ? $request->input('exchange_withdrawal_status') : false]
         );
 
 
@@ -157,5 +157,4 @@ class InternalSettingController extends Controller
         // Redirect with success message
         return redirect()->back();
     }
-
 }

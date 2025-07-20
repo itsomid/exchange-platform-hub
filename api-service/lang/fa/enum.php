@@ -21,6 +21,8 @@ return [
         \App\Enums\WithdrawalStatusEnum::COMPLETED->name => 'انجام شده',
         \App\Enums\DepositStatusEnum::PENDING->name => 'در حال انجام',
         \App\Enums\DepositStatusEnum::CONFIRMED->name => 'انجام شده',
+        \App\Enums\DepositStatusEnum::TOO_SMALL->name => 'کمتر از حد مجاز',
+        \App\Enums\DepositStatusEnum::FAILED->name => 'لغو شده',
     ],
     'otc' => [
         'status' => [
@@ -33,7 +35,7 @@ return [
             \App\Enums\OTCOrderTypeEnum::SELL->name => 'فروش',
         ],
     ],
-    'spot' =>[
+    'spot' => [
         'type' => [
             \App\Enums\SpotOrderTypeEnum::MARKET->name => 'سریع',
             \App\Enums\SpotOrderTypeEnum::LIMIT->name => 'تعیین قیمت',

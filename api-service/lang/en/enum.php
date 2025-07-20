@@ -14,6 +14,16 @@ return [
         \App\Enums\TransactionStatusEnum::FAILED->name => 'failed',
         \App\Enums\TransactionStatusEnum::PENDING->name => 'pending',
     ],
+    'deposit-withdrawal' => [
+        \App\Enums\WithdrawalStatusEnum::PENDING->name => 'pending',
+        \App\Enums\WithdrawalStatusEnum::FAILED->name => 'failed',
+        \App\Enums\WithdrawalStatusEnum::AWAITING_APPROVAL->name => 'awaiting_approval',
+        \App\Enums\WithdrawalStatusEnum::COMPLETED->name => 'completed',
+        \App\Enums\DepositStatusEnum::PENDING->name => 'pending',
+        \App\Enums\DepositStatusEnum::CONFIRMED->name => 'confirmed',
+        \App\Enums\DepositStatusEnum::TOO_SMALL->name => 'too_small',
+        \App\Enums\DepositStatusEnum::FAILED->name => 'canceled',
+    ],
     'otc' => [
         'status' => [
             \App\Enums\OTCOrderStatusEnum::SUCCESS->name => 'success',
