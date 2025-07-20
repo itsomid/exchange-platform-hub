@@ -24,6 +24,7 @@ use App\Http\Controllers\SpotTrade\SpotTradeController;
 use App\Http\Controllers\SpotOrder\SpotOrderController;
 use App\Http\Controllers\RolePermission\PermissionController;
 use App\Http\Controllers\RolePermission\RoleController;
+use App\Http\Controllers\Setting\DockerController;
 use App\Http\Controllers\Setting\ExternalSettingController;
 use App\Http\Controllers\Setting\InternalSettingController;
 use App\Http\Controllers\Setting\ThemeController;
@@ -95,7 +96,7 @@ Route::middleware(['admin.2fa'])->group(function () {
     });
 
 
-    Route::prefix('users')->group(function (){
+    Route::prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index'])->name('user.index')->can('user.index');
         Route::get('/create', [UserController::class, 'create'])->name('user.create')->can('user.create');
         Route::post('/', [UserController::class, 'store'])->name('user.store')->can('user.create');
@@ -104,7 +105,7 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::patch('/{user}/toggle-status', [UserController::class, 'suspendUser'])->name('user.toggle-status')->can('user.index');
         Route::patch('/{user}/active-user', [UserController::class, 'activeUser'])->name('user.active-user')->can('user.index');
 
-        Route::post('excel_export',[UserController::class,'exportExcel'])->name('user.excel-export')->can('user.index');
+        Route::post('excel_export', [UserController::class, 'exportExcel'])->name('user.excel-export')->can('user.index');
 
         Route::get('/{user}/update-password', [UserSecurityController::class, 'passwordEdit'])->name('user.password.edit');
         Route::patch('/{user}/update-password', [UserSecurityController::class, 'passwordUpdate'])->name('user.password.update');
@@ -235,6 +236,11 @@ Route::middleware(['admin.2fa'])->group(function () {
     Route::get('/external-settings', [ExternalSettingController::class, 'index'])->name('external-setting.index')->can('setting.ext.index');
     Route::post('/external-settings/update-ref-address', [ExternalSettingController::class, 'updateRefAddress'])->name('setting.ext.update-ref-address')->can('setting.ext.index');
 
+    Route::get('/docker', [DockerController::class, 'index'])->name('docker.index')->can('setting.int.index');
+    Route::post('/docker/restart-exchange-listen', [DockerController::class, 'restartExchangeListen'])->name('docker.restart-exchange-listen')->can('setting.int.index');
+    Route::get('/docker/container-status', [DockerController::class, 'getContainerStatus'])->name('docker.container-status')->can('setting.int.index');
+    Route::get('/docker/exchange-listen-logs', [DockerController::class, 'getExchangeListenLogs'])->name('docker.exchange-listen-logs')->can('setting.int.index');
+
     Route::prefix('wallet')->group(function () {
         Route::get('increase-credit', [WalletController::class, 'increaseCreditForm'])->name('wallet.increase-credit.form')->can('wallet');
         Route::post('increase-credit', [WalletController::class, 'increaseCredit'])->name('wallet.increase-credit')->can('wallet');
@@ -278,6 +284,5 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::patch('/{stockContract}', [StockContractController::class, 'update'])->name('stock-contract.update')->can('stock');
         Route::delete('/{stockContract}', [StockContractController::class, 'destroy'])->name('stock-contract.destroy')->can('stock');
         Route::post('/{stockContract}/regenerate-pdf', [StockContractController::class, 'generateContractPdfIfNotExists'])->name('stock-contract.regenerate-pdf')->can('stock');
-
     });
 });

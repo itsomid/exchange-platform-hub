@@ -30,7 +30,7 @@ services:
       - database
       - admin-queue
       - laravel-admin-cron
-#      - phpmyadmin
+    #      - phpmyadmin
     networks:
       - laravel
 
@@ -108,7 +108,6 @@ services:
     networks:
       - laravel
 
-
   # Laravel Cron Jobs
   laravel-admin-cron:
     build:
@@ -144,7 +143,7 @@ services:
     depends_on:
       - database
     working_dir: /var/www/html
-#    entrypoint: /bin/sh -c "while true; do php artisan schedule:run >> /dev/null 2>&1; sleep 60; done"
+    #    entrypoint: /bin/sh -c "while true; do php artisan schedule:run >> /dev/null 2>&1; sleep 60; done"
     entrypoint: /bin/sh -c "while true; do echo \"[ $(date) ] Running schedule...\"; php artisan schedule:run; sleep 60; done"
     networks:
       - laravel
@@ -193,7 +192,7 @@ services:
       - "host.docker.internal:host-gateway"
 
   # Laravel Queue Workers
-  coinex-listen:
+  exchange-listen:
     build:
       context: ./dockerfiles
       dockerfile: php.dockerfile
@@ -201,7 +200,7 @@ services:
         - UID=${UID:-1000}
         - GID=${GID:-1000}
         - USER=${USER:-f}
-    container_name: coinex-listen
+    container_name: exchange-listen
     volumes:
       - ./admin-panel:/var/www/html:delegated
       - ./env/admin_panel.env:/var/www/html/.env
@@ -209,16 +208,16 @@ services:
       - database
       - redis
     working_dir: /var/www/html
-    entrypoint: [ 'php', '/var/www/html/artisan', 'coinex:listen' ]
+    entrypoint: [ 'php', '/var/www/html/artisan', 'exchange:listen' ]
     networks:
       - laravel
     restart: always
-    
+
   api-reverb:
     build:
       context: ./dockerfiles
       dockerfile: php.dockerfile
-      args: 
+      args:
         - UID=${UID:-1000}
         - GID=${GID:-1000}
         - USER=${USER:-f}
@@ -253,7 +252,7 @@ services:
       - database
     profiles: [ "migrate-seed" ]
     working_dir: /var/www/html
-    entrypoint: [ "/bin/sh","-c" ]
+    entrypoint: [ "/bin/sh", "-c" ]
     command:
       - |
         php artisan migrate
@@ -364,7 +363,6 @@ services:
       - 6380:6379
     networks:
       - laravel
-
     #  phpmyadmin:
     #    image: phpmyadmin:5.2.0
     #    container_name: phpmyadmin

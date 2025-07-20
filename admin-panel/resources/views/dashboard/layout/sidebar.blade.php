@@ -1,12 +1,12 @@
 <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
     <div class="app-brand demo">
         <a href="" class="app-brand-link layout-menu-toggle" draggable="false">
-            <img src="{{asset('images/logo/logo.svg')}}" class="img-fluid w-50">
+            <img src="{{ asset('images/logo/logo.svg') }}" class="img-fluid w-50">
         </a>
         <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
-            {{--            <i class="ti menu-toggle-icon d-none d-xl-block ti-sm align-middle"></i>--}}
+            {{--            <i class="ti menu-toggle-icon d-none d-xl-block ti-sm align-middle"></i> --}}
             <i class="fa-solid fa-scrubber d-none d-xl-block align-middle "></i>
-            {{--            <i class="fa-solid fa-scrubber"></i>--}}
+            {{--            <i class="fa-solid fa-scrubber"></i> --}}
             <i class="fa-light fa-xmark d-block d-xl-none ti-sm align-middle"></i>
         </a>
     </div>
@@ -14,9 +14,9 @@
     <div class="menu-inner-shadow"></div>
 
     <ul class="menu-inner py-1">
-        <li class="menu-item @if(request()->is('admin')) active @endif">
-            <a href="{{route('admin.dashboard')}}" class="menu-link">
-                {{--                    <i class=" tf-icons ti ti-users"></i>--}}
+        <li class="menu-item @if (request()->is('admin')) active @endif">
+            <a href="{{ route('admin.dashboard') }}" class="menu-link">
+                {{--                    <i class=" tf-icons ti ti-users"></i> --}}
                 <i class="menu-icon  fa-regular fa-chart-pie-simple fa-sm"></i>
                 <div>داشبورد</div>
             </a>
@@ -26,9 +26,9 @@
             <span class="menu-header-text">افراد و دپارتمان ها</span>
         </li>
         @can('admin.index')
-            <li class="menu-item @if(request()->is('admin/admins')) active @endif">
-                <a href="{{route('admin.admin.index')}}" class="menu-link">
-                    {{--                    <i class=" tf-icons ti ti-users"></i>--}}
+            <li class="menu-item @if (request()->is('admin/admins')) active @endif">
+                <a href="{{ route('admin.admin.index') }}" class="menu-link">
+                    {{--                    <i class=" tf-icons ti ti-users"></i> --}}
 
                     <i class="menu-icon fa-solid fa-user-tie-hair fa-lg"></i>
                     <div>مدیریت همکاران</div>
@@ -37,24 +37,24 @@
         @endcan
 
         @can('user.index')
-            <li class="menu-item @if(request()->is('admin/users*') && !request()->is('admin/users/financial-status*')) active @endif">
-                <a href="{{route('admin.user.index')}}" class="menu-link">
+            <li class="menu-item @if (request()->is('admin/users*') && !request()->is('admin/users/financial-status*')) active @endif">
+                <a href="{{ route('admin.user.index') }}" class="menu-link">
                     <i class="menu-icon fa-light fa-users fa-lg"></i>
                     <div>مدیریت کاربران</div>
                 </a>
             </li>
         @endcan
         @can('user.index')
-            <li class="menu-item @if(request()->is('admin/users/financial-status*')) active @endif">
-                <a href="{{route('admin.user.financial-status')}}" class="menu-link">
+            <li class="menu-item @if (request()->is('admin/users/financial-status*')) active @endif">
+                <a href="{{ route('admin.user.financial-status') }}" class="menu-link">
                     <i class="menu-icon fa-regular fa-user-lock fa-lg"></i>
                     <div>کاربران مسدود شده</div>
                 </a>
             </li>
         @endcan
         @can('user.index')
-            <li class="menu-item @if(request()->is('admin/inquiry*')) active @endif">
-                <a disabled="" href="{{route('admin.inquiry.index')}}" class="menu-link">
+            <li class="menu-item @if (request()->is('admin/inquiry*')) active @endif">
+                <a disabled="" href="{{ route('admin.inquiry.index') }}" class="menu-link">
                     <i class="menu-icon fa-light fa-user-alt fa-lg"></i>
                     <div>استعلام کاربر</div>
                     <span class="badge new-badge ms-auto">New</span>
@@ -68,8 +68,8 @@
             <span class="menu-header-text">بخش مدیریت فروش</span>
         </li>
         @can('referral_code.index')
-            <li class="menu-item @if(request()->is('admin/referral-codes*')) active @endif">
-                <a href="{{route('admin.referral_code.index')}}" class="menu-link">
+            <li class="menu-item @if (request()->is('admin/referral-codes*')) active @endif">
+                <a href="{{ route('admin.referral_code.index') }}" class="menu-link">
                     <i class="menu-icon fa-regular fa-user-tag fa-sm"></i>
                     <div>کدهای معرف</div>
                 </a>
@@ -78,45 +78,45 @@
         <li class="menu-header small text-uppercase">
             <span class="menu-header-text">مالی و خرید ها</span>
         </li>
-        {{--        @can('order.index')--}}
-        {{--            <li class="menu-item @if(request()->is('admin/exchange/market123123*')) active @endif">--}}
-        {{--                <a href="{{route('admin.wallet.index')}}" class="menu-link">--}}
-        {{--                    <i class="menu-icon fa-regular fa-wallet"></i>--}}
-        {{--                    <div>مدیریت کیف پول ها</div>--}}
-        {{--                </a>--}}
-        {{--            </li>--}}
-        {{--        @endcan--}}
+        {{--        @can('order.index') --}}
+        {{--            <li class="menu-item @if (request()->is('admin/exchange/market123123*')) active @endif"> --}}
+        {{--                <a href="{{route('admin.wallet.index')}}" class="menu-link"> --}}
+        {{--                    <i class="menu-icon fa-regular fa-wallet"></i> --}}
+        {{--                    <div>مدیریت کیف پول ها</div> --}}
+        {{--                </a> --}}
+        {{--            </li> --}}
+        {{--        @endcan --}}
         @can('transaction')
-            <li class="menu-item @if(request()->is('admin/transactions*')) active @endif">
-                <a href="{{route('admin.transaction.index')}}" class="menu-link">
+            <li class="menu-item @if (request()->is('admin/transactions*')) active @endif">
+                <a href="{{ route('admin.transaction.index') }}" class="menu-link">
                     <i class="menu-icon fa-regular fa-chart-candlestick"></i>
                     <div>لیست تراکنش ها</div>
                 </a>
             </li>
         @endcan
         @can('otc_order')
-            <li class="menu-item @if(request()->is('admin/otc*')) active @endif">
-                <a href="{{route('admin.otc_orders.index')}}" class="menu-link">
+            <li class="menu-item @if (request()->is('admin/otc*')) active @endif">
+                <a href="{{ route('admin.otc_orders.index') }}" class="menu-link">
                     <i class="menu-icon  fa-regular fa-swap"></i>
                     <div>معاملات OTC</div>
                 </a>
             </li>
         @endcan
         @can('spot')
-            <li class="menu-item @if(request()->is('admin/spot*')) active open @endif">
+            <li class="menu-item @if (request()->is('admin/spot*')) active open @endif">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">
                     <i class="menu-icon  fa-regular fa-chart-waterfall"></i>
                     <div>مدیریت اسپات</div>
                 </a>
                 <ul class="menu-sub">
-                    <li class="menu-item @if(request()->is('admin/spot/orders*')) active @endif">
-                        <a href="{{route('admin.spot_orders.index')}}" class="menu-link">
+                    <li class="menu-item @if (request()->is('admin/spot/orders*')) active @endif">
+                        <a href="{{ route('admin.spot_orders.index') }}" class="menu-link">
                             <i class="menu-icon  fa-regular fa-chart-waterfall"></i>
                             <div>سفارشات اسپات</div>
                         </a>
                     </li>
-                    <li class="menu-item @if(request()->is('admin/spot/trades*')) active @endif">
-                        <a href="{{route('admin.spot_trades.index')}}" class="menu-link">
+                    <li class="menu-item @if (request()->is('admin/spot/trades*')) active @endif">
+                        <a href="{{ route('admin.spot_trades.index') }}" class="menu-link">
                             <i class="menu-icon  fa-regular fa-chart-waterfall"></i>
                             <div>معاملات اسپات</div>
                         </a>
@@ -125,36 +125,36 @@
             </li>
         @endcan
         @can('deposit')
-            <li class="menu-item @if(request()->is('admin/deposits*')) active @endif">
-                <a href="{{route('admin.deposit.index')}}" class="menu-link">
+            <li class="menu-item @if (request()->is('admin/deposits*')) active @endif">
+                <a href="{{ route('admin.deposit.index') }}" class="menu-link">
                     <i class="menu-icon fa-regular fa-square-arrow-down-left"></i>
                     <div>لیست واریزی ها</div>
                 </a>
             </li>
         @endcan
         @can('withdrawal')
-            <li class="menu-item @if(request()->is('admin/withdrawal*')) active @endif">
-                <a href="{{route('admin.withdrawal.index')}}" class="menu-link">
+            <li class="menu-item @if (request()->is('admin/withdrawal*')) active @endif">
+                <a href="{{ route('admin.withdrawal.index') }}" class="menu-link">
                     <i class="menu-icon fa-regular fa-square-arrow-up-right"></i>
                     <div>لیست برداشت ها</div>
                 </a>
             </li>
         @endcan
         @can('stock')
-            <li class="menu-item @if(request()->is('admin/stock*')) active open @endif">
+            <li class="menu-item @if (request()->is('admin/stock*')) active open @endif">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">
                     <i class="menu-icon  fa-regular fa-chart-waterfall"></i>
                     <div>مدیریت معجزه قرن</div>
                 </a>
                 <ul class="menu-sub">
-                    <li class="menu-item @if(request()->is('admin/stocks*')) active @endif">
-                        <a href="{{route('admin.stock.index')}}" class="menu-link">
+                    <li class="menu-item @if (request()->is('admin/stocks*')) active @endif">
+                        <a href="{{ route('admin.stock.index') }}" class="menu-link">
                             <i class="menu-icon  fa-regular fa-chart-waterfall"></i>
                             <div>مدیریت سهم ها</div>
                         </a>
                     </li>
-                    <li class="menu-item @if(request()->is('admin/stock-contracts*')) active @endif">
-                        <a href="{{route('admin.stock-contract.index')}}" class="menu-link">
+                    <li class="menu-item @if (request()->is('admin/stock-contracts*')) active @endif">
+                        <a href="{{ route('admin.stock-contract.index') }}" class="menu-link">
                             <i class="menu-icon fa-regular fa-chart-waterfall"></i>
                             <div>مدیریت قراردادها</div>
                         </a>
@@ -163,24 +163,24 @@
             </li>
         @endcan
 
-        @canany(['currency', 'market','ref-exchanges'])
+        @canany(['currency', 'market', 'ref-exchanges'])
             <li class="menu-header small text-uppercase">
                 <span class="menu-header-text">مدیریت Exchange</span>
             </li>
-            <li class="menu-item @if(request()->is('admin/exchange/currencies*')) active @endif">
-                <a href="{{route('admin.currency.index')}}" class="menu-link">
+            <li class="menu-item @if (request()->is('admin/exchange/currencies*')) active @endif">
+                <a href="{{ route('admin.currency.index') }}" class="menu-link">
                     <i class="menu-icon fa-regular fa-circle-dollar"></i>
                     <div>Currency</div>
                 </a>
             </li>
-            <li class="menu-item @if(request()->is('admin/exchange/market*')) active @endif">
-                <a href="{{route('admin.market.index')}}" class="menu-link">
+            <li class="menu-item @if (request()->is('admin/exchange/market*')) active @endif">
+                <a href="{{ route('admin.market.index') }}" class="menu-link">
                     <i class="menu-icon fa-regular fa-shop"></i>
                     <div>Market</div>
                 </a>
             </li>
-            <li class="menu-item @if(request()->is('admin/ref-exchanges')) active @endif">
-                <a href="{{route('admin.exchange.index')}}" class="menu-link">
+            <li class="menu-item @if (request()->is('admin/ref-exchanges')) active @endif">
+                <a href="{{ route('admin.exchange.index') }}" class="menu-link">
                     <i class="menu-icon fa-regular fa-display-chart-up-circle-dollar"></i>
                     <div>مدیریت صرافی های مرجع</div>
                 </a>
@@ -190,7 +190,7 @@
             <li class="menu-header small text-uppercase">
                 <span class="menu-header-text">بخش ارتباط با کاربر</span>
             </li>
-            <li class="menu-item @if(request()->is('admin/tickets*')) active open @endif">
+            <li class="menu-item @if (request()->is('admin/tickets*')) active open @endif">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">
                     <div class="d-inline-flex position-relative">
                         <i class="menu-icon  fa-regular fa-headset "></i>
@@ -203,7 +203,8 @@
                 </a>
                 <ul class="menu-sub">
                     <li class="menu-item @if (request()->routeIs('admin.tickets.index') && request('status') === \App\Enums\TicketStatusEnum::OPEN->value) active @endif">
-                        <a href="{{ route('admin.tickets.index', ['status' => \App\Enums\TicketStatusEnum::OPEN]) }}" class="menu-link">
+                        <a href="{{ route('admin.tickets.index', ['status' => \App\Enums\TicketStatusEnum::OPEN]) }}"
+                            class="menu-link">
                             <i class="menu-icon fa-light fa-user fa-sm"></i>
                             <div>تیکت های جدید</div>
                         </a>
@@ -217,14 +218,16 @@
                     </li>
 
                     <li class="menu-item @if (request()->routeIs('admin.tickets.index') && request('status') === \App\Enums\TicketStatusEnum::InProgress->value) active @endif">
-                        <a href="{{ route('admin.tickets.index', ['status' => \App\Enums\TicketStatusEnum::InProgress]) }}" class="menu-link">
+                        <a href="{{ route('admin.tickets.index', ['status' => \App\Enums\TicketStatusEnum::InProgress]) }}"
+                            class="menu-link">
                             <i class="menu-icon fa-light fa-key fa-sm"></i>
                             <div>تیکت های فعال</div>
                         </a>
                     </li>
 
                     <li class="menu-item @if (request()->routeIs('admin.tickets.index') && request('status') === \App\Enums\TicketStatusEnum::CLOSED->value) active @endif">
-                        <a href="{{ route('admin.tickets.index', ['status' => \App\Enums\TicketStatusEnum::CLOSED]) }}" class="menu-link">
+                        <a href="{{ route('admin.tickets.index', ['status' => \App\Enums\TicketStatusEnum::CLOSED]) }}"
+                            class="menu-link">
                             <i class="menu-icon fa-light fa-key fa-sm"></i>
                             <div>بسته شده</div>
                         </a>
@@ -237,32 +240,32 @@
                 <span class="menu-header-text">مدیریت کیف پول‌ها</span>
             </li>
 
-            <li class="menu-item @if(request()->is('admin/exchange/wallets*')) active open @endif">
+            <li class="menu-item @if (request()->is('admin/exchange/wallets*')) active open @endif">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">
                     <i class="menu-icon fa-regular fa-wallet"></i>
                     <div>کیف پول های صرافی</div>
                 </a>
                 <ul class="menu-sub">
-                    <li class="menu-item @if(request()->is('admin/exchange/wallets/localWallets')) active @endif">
-                        <a href="{{route('admin.exchange.local-wallet')}}" class="menu-link">
+                    <li class="menu-item @if (request()->is('admin/exchange/wallets/localWallets')) active @endif">
+                        <a href="{{ route('admin.exchange.local-wallet') }}" class="menu-link">
                             <i class="menu-icon fa-light fa-key fa-sm"></i>
                             <div>داخلی</div>
                         </a>
                     </li>
-                    <li class="menu-item @if(request()->is('admin/ref-exchanges/wallets/coinex*')) active @endif">
-                        <a href="{{route('admin.exchange.wallet', ['exchange' => 'coinex'])}}" class="menu-link">
+                    <li class="menu-item @if (request()->is('admin/ref-exchanges/wallets/coinex*')) active @endif">
+                        <a href="{{ route('admin.exchange.wallet', ['exchange' => 'coinex']) }}" class="menu-link">
                             <i class="menu-icon fa-light fa-user fa-sm"></i>
                             <div>صرافی مرجع (Coinex)</div>
                         </a>
                     </li>
-                    <li class="menu-item @if(request()->is('admin/ref-exchanges/wallets/mexc*')) active @endif">
-                        <a href="{{route('admin.exchange.wallet', ['exchange' => 'mexc'])}}" class="menu-link">
+                    <li class="menu-item @if (request()->is('admin/ref-exchanges/wallets/mexc*')) active @endif">
+                        <a href="{{ route('admin.exchange.wallet', ['exchange' => 'mexc']) }}" class="menu-link">
                             <i class="menu-icon fa-light fa-user fa-sm"></i>
                             <div>صرافی مرجع (Mexc)</div>
                         </a>
                     </li>
-                    <li class="menu-item @if(request()->is('admin/exchange/wallets/hotWallets*')) active @endif">
-                        <a href="{{route('admin.exchange.hot-wallet')}}" class="menu-link">
+                    <li class="menu-item @if (request()->is('admin/exchange/wallets/hotWallets*')) active @endif">
+                        <a href="{{ route('admin.exchange.hot-wallet') }}" class="menu-link">
                             <i class="menu-icon fa-light fa-key fa-sm"></i>
                             <div>Hot Wallet</div>
                         </a>
@@ -270,20 +273,22 @@
                 </ul>
 
             </li>
-            <li class="menu-item @if(request()->is('admin/ref-exchanges/assets-gathering-to-hd-wallet*')) active open @endif">
+            <li class="menu-item @if (request()->is('admin/ref-exchanges/assets-gathering-to-hd-wallet*')) active open @endif">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">
                     <i class="menu-icon fa-regular fa-wallet"></i>
                     <div>تجمیع دارایی</div>
                 </a>
                 <ul class="menu-sub">
-                    <li class="menu-item @if(request()->is('admin/ref-exchanges/assets-gathering-to-hd-wallet')) active @endif">
-                        <a href="{{route('admin.ref-exchange.assets-gathering-to-hd-wallet.index')}}" class="menu-link">
+                    <li class="menu-item @if (request()->is('admin/ref-exchanges/assets-gathering-to-hd-wallet')) active @endif">
+                        <a href="{{ route('admin.ref-exchange.assets-gathering-to-hd-wallet.index') }}"
+                            class="menu-link">
                             <i class="menu-icon fa-regular fa-wallet"></i>
                             <div>سابقه تجمیع HDWallet</div>
                         </a>
                     </li>
-                    <li class="menu-item @if(request()->is('admin/ref-exchanges/assets-gathering-to-hd-wallet/pending-withdrawal')) active @endif">
-                        <a href="{{route('admin.ref-exchange.assets-gathering-to-hd-wallet.pending-withdrawal')}}" class="menu-link">
+                    <li class="menu-item @if (request()->is('admin/ref-exchanges/assets-gathering-to-hd-wallet/pending-withdrawal')) active @endif">
+                        <a href="{{ route('admin.ref-exchange.assets-gathering-to-hd-wallet.pending-withdrawal') }}"
+                            class="menu-link">
                             <i class="menu-icon fa-regular fa-wallet"></i>
                             <div>تجمیع های تکمیل نشده</div>
                         </a>
@@ -295,27 +300,27 @@
             <li class="menu-header small text-uppercase">
                 <span class="menu-header-text">گزارشات</span>
             </li>
-            <li class="menu-item @if(request()->is('admin/report/deposit*')) active @endif">
-                <a href="{{route('admin.report.deposit')}}" class="menu-link">
+            <li class="menu-item @if (request()->is('admin/report/deposit*')) active @endif">
+                <a href="{{ route('admin.report.deposit') }}" class="menu-link">
                     <i class="menu-icon fa-solid fa-chart-line-up"></i>
                     <div>گزارش واریز</div>
                 </a>
             </li>
-            <li class="menu-item @if(request()->is('admin/report/withdrawal*')) active @endif">
-                <a href="{{route('admin.report.withdrawal')}}" class="menu-link">
+            <li class="menu-item @if (request()->is('admin/report/withdrawal*')) active @endif">
+                <a href="{{ route('admin.report.withdrawal') }}" class="menu-link">
                     <i class="menu-icon fa-solid fa-chart-line-down"></i>
 
                     <div>گزارش برداشت</div>
                 </a>
             </li>
-            <li class="menu-item @if(request()->is('admin/report/user-registration-report*')) active @endif">
-                <a href="{{route('admin.report.getUserRegistrationState')}}" class="menu-link">
+            <li class="menu-item @if (request()->is('admin/report/user-registration-report*')) active @endif">
+                <a href="{{ route('admin.report.getUserRegistrationState') }}" class="menu-link">
                     <i class="menu-icon fa-solid fa-chart-user"></i>
                     <div>گزارش ثبت نام کاربران</div>
                 </a>
             </li>
-            <li class="menu-item @if(request()->is('admin/report/ref-exchange/bought-history*')) active @endif">
-                <a href="{{route('admin.report.ref-exchange.bought-history')}}" class="menu-link">
+            <li class="menu-item @if (request()->is('admin/report/ref-exchange/bought-history*')) active @endif">
+                <a href="{{ route('admin.report.ref-exchange.bought-history') }}" class="menu-link">
                     <i class="menu-icon fa-regular fa-display-chart-up-circle-dollar"></i>
                     <div>گزارش خرید از صرافی‌ مرجع</div>
                 </a>
@@ -326,32 +331,32 @@
                 <span class="menu-header-text">مدیریت سیستم</span>
             </li>
 
-            <li class="menu-item @if(request()->is('admin/admins/notification*')) active @endif">
-                <a href="{{route('admin.admin.notifications.index')}}" class="menu-link">
+            <li class="menu-item @if (request()->is('admin/admins/notification*')) active @endif">
+                <a href="{{ route('admin.admin.notifications.index') }}" class="menu-link">
                     <i class="menu-icon fa-regular fa-bell"></i>
                     <div>اعلان های مدیریت</div>
-                    @if($unreadCount > 0)
-                        <div class="badge bg-danger rounded-pill ms-auto">{{$unreadCount}}</div>
+                    @if ($unreadCount > 0)
+                        <div class="badge bg-danger rounded-pill ms-auto">{{ $unreadCount }}</div>
                     @endif
 
                 </a>
             </li>
 
             @can('roles.permissions')
-                <li class="menu-item @if(request()->is(['admin/roles*','admin/permissions*'])) active open @endif">
+                <li class="menu-item @if (request()->is(['admin/roles*', 'admin/permissions*'])) active open @endif">
                     <a href="javascript:void(0);" class="menu-link menu-toggle">
                         <i class="menu-icon fa-regular fa-user-group fa-sm"></i>
                         <div>نقش ها و مجوزها</div>
                     </a>
                     <ul class="menu-sub">
-                        <li class="menu-item @if(request()->is('admin/roles*')) active @endif">
-                            <a href="{{route('admin.role.index')}}" class="menu-link">
+                        <li class="menu-item @if (request()->is('admin/roles*')) active @endif">
+                            <a href="{{ route('admin.role.index') }}" class="menu-link">
                                 <i class="menu-icon fa-light fa-user fa-sm"></i>
                                 <div>نقش ها</div>
                             </a>
                         </li>
-                        <li class="menu-item @if(request()->is('admin/permissions*')) active @endif">
-                            <a href="{{route('admin.permission.index')}}" class="menu-link">
+                        <li class="menu-item @if (request()->is('admin/permissions*')) active @endif">
+                            <a href="{{ route('admin.permission.index') }}" class="menu-link">
                                 <i class="menu-icon fa-light fa-key fa-sm"></i>
                                 <div>مجوزها</div>
                             </a>
@@ -360,49 +365,53 @@
 
                 </li>
             @endcan
-            <li class="menu-item @if(request()->is('admin/internal-settings*')) active open @endif">
+            <li class="menu-item @if (request()->is('admin/internal-settings*') || request()->is('admin/docker*')) active open @endif">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">
                     <i class="menu-icon fa-regular fa-cog fa-sm"></i>
                     <div> پیکربندی سیستم</div>
                 </a>
                 <ul class="menu-sub">
                     @can('setting.int.index')
-                        <li class="menu-item  @if(request()->is('admin/internal-settings*')) active @endif">
-                            <a href="{{route('admin.internal.setting.index')}}" class="menu-link">
+                        <li class="menu-item  @if (request()->is('admin/internal-settings*')) active @endif">
+                            <a href="{{ route('admin.internal.setting.index') }}" class="menu-link">
                                 <div>تنظیمات داخلی</div>
                             </a>
                         </li>
+                        <li class="menu-item  @if (request()->is('admin/docker*')) active @endif">
+                            <a href="{{ route('admin.docker.index') }}" class="menu-link">
+                                <div>مدیریت کانتینرهای داکر</div>
+                            </a>
+                        </li>
                     @endcan
-                    {{--                    @can('setting.ext.index')--}}
-                    {{--                        <li class="menu-item  @if(request()->is('admin/external-settings*')) active @endif">--}}
-                    {{--                            <a href="{{route('admin.external-setting.index')}}" disabled="disabled" class="menu-link">--}}
-                    {{--                                <div>تنظیمات خارجی</div>--}}
-                    {{--                            </a>--}}
-                    {{--                        </li>--}}
-                    {{--                    @endcan--}}
+                    {{--                    @can('setting.ext.index') --}}
+                    {{--                        <li class="menu-item  @if (request()->is('admin/external-settings*')) active @endif"> --}}
+                    {{--                            <a href="{{route('admin.external-setting.index')}}" disabled="disabled" class="menu-link"> --}}
+                    {{--                                <div>تنظیمات خارجی</div> --}}
+                    {{--                            </a> --}}
+                    {{--                        </li> --}}
+                    {{--                    @endcan --}}
                 </ul>
             </li>
         @endcan
         @can('view-logs')
             @if (!app()->environment('production') && Route::has('telescope'))
-                <li class="menu-item @if(request()->route()->getName() == 'telescope') active @endif">
-                    <a href="{{route('telescope')}}" class="menu-link">
+                <li class="menu-item @if (request()->route()->getName() == 'telescope') active @endif">
+                    <a href="{{ route('telescope') }}" class="menu-link">
                         <i class="menu-icon fa-light fa-telescope fa-sm"></i>
                         <div> تلسکوپ</div>
                     </a>
                 </li>
-
             @endif
 
-            <li class="menu-item @if(request()->is('/pulse*')) active @endif">
-                <a href="{{url('./pulse')}}" class="menu-link">
+            <li class="menu-item @if (request()->is('/pulse*')) active @endif">
+                <a href="{{ url('./pulse') }}" class="menu-link">
                     <i class="menu-icon fa-regular  fa-monitor-heart-rate fa-sm"></i>
                     <div> Pulse</div>
                 </a>
             </li>
 
-            <li class="menu-item @if(request()->is('/log-viewer*')) active @endif">
-                <a href="{{url('./log-viewer')}}" class="menu-link">
+            <li class="menu-item @if (request()->is('/log-viewer*')) active @endif">
+                <a href="{{ url('./log-viewer') }}" class="menu-link">
                     <i class="menu-icon  fa-regular  fa-circle-exclamation fa-sm"></i>
                     <div> Logs and Errors</div>
                 </a>
@@ -412,5 +421,3 @@
 
     </ul>
 </aside>
-
-
