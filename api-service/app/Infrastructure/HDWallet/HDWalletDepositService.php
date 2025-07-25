@@ -15,8 +15,18 @@ class HDWalletDepositService
     public function getDepositLists(GetDepositListsRequestDTO $requestDTO)
     {
         try {
-            $route = DepositApiRoutes::get($requestDTO->getCurrencySymbol(), $requestDTO->getBlockchain(), $requestDTO->getWalletAddress());
-            $response = Http::get(HDWallet::getBaseUrl().$route);
+            // Map the blockchain name to network name
+            $network = ContractAddressMapper::mapNetworkName($requestDTO->getBlockchain());
+
+            $contractAddress = $requestDTO->getContractAddress();
+            $requestBody = [
+                'network' => $network,
+                'token_symbol' => $requestDTO->getCurrencySymbol(),
+                'contract_address' => $contractAddress,
+                'address' => $requestDTO->getWalletAddress(),
+                'limit' => $requestDTO->getLimit() ?? 50
+            ];
+            $response = Http::post(HDWallet::getBaseUrl() . '/api/v1/universal/deposit/transaction-history', $requestBody);
         } catch (ConnectionException $exception) {
             report($exception);
             throw new HDDWalletUnavailable;
@@ -29,20 +39,43 @@ class HDWalletDepositService
 
         $data = $response->json();
         if (! $response->ok()) {
-            Log::channel('hd-wallet')->error('HD Wallet Response Changed:'.$response->body());
+            Log::channel('hd-wallet')->error('HD Wallet Response Changed:' . $response->body());
             throw new InternalWalletHasProblemException;
         }
 
-        return array_map(fn (array $item) => resolve(GetDepositListsResponseDTO::class)
-            ->setWalletId($item['wallet_id'])
-            ->setUserId($item['user_id'])
-            ->setTimestamp($item['timestamp'])
-            ->setCryptocurrency($item['cryptocurrency'])
-            ->setAmount((string) $item['deposit_amount'])
-            ->setTransactionHash($item['transaction_hash'])
-            ->setStatus($item['status'])
-            ->setConfirmationBlocks($item['confirmation_blocks'])
-            ->setBlockChain(CurrencyMapEnum::tryFrom($item['blockchain'])->name)
-            ->setWalletAddress($item['wallet_address']), $data);
+        // Check if the response has an error
+        if (isset($data['error']) && $data['error'] !== null) {
+            Log::channel('hd-wallet')->error('HD Wallet API Error: ' . $data['error']);
+            throw new InternalWalletHasProblemException;
+        }
+
+        // Check if response status is success
+        if (isset($data['status']) && $data['status'] !== 'success') {
+            Log::channel('hd-wallet')->error('HD Wallet API Status Error: ' . ($data['status'] ?? 'unknown'));
+            throw new InternalWalletHasProblemException;
+        }
+
+        $transactions = $data['transactions'] ?? [];
+
+        return array_map(function (array $item) use ($requestDTO, $network) {
+            $tokenSymbol = $item['token_symbol'] ?? $requestDTO->getCurrencySymbol();
+
+            return resolve(GetDepositListsResponseDTO::class)
+                ->setTimestamp($item['timestamp'])
+                ->setCryptocurrency($tokenSymbol)
+                ->setAmount((string) $item['value'])
+                ->setTransactionHash($item['hash'])
+                ->setStatus($item['status'])
+                ->setConfirmationBlocks($item['confirmations'])
+                ->setBlockChain(strtoupper($network))
+                ->setWalletAddress($item['to'])
+                ->setContractAddress($item['contract_address'] ?? null)
+                ->setType($item['type'])
+                ->setBlockNumber($item['block_number'])
+                ->setFrom($item['from'])
+                ->setTo($item['to'])
+                ->setGasPrice($item['gas_price'])
+                ->setGasUsed($item['gas_used']);
+        }, $transactions);
     }
 }

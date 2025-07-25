@@ -31,6 +31,7 @@ class DepositRepository implements DepositRepositoryInterface
     public function getPendingDeposits(): Collection
     {
         return Deposit::query()
+            ->with('currencyChain')
             ->where('status', DepositStatusEnum::PENDING)
             ->where('expiration_date', '>', now())
             ->get();

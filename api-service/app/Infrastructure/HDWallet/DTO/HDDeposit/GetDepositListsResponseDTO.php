@@ -6,9 +6,6 @@ use Carbon\Carbon;
 
 class GetDepositListsResponseDTO
 {
-    private int $walletId;
-
-    private int $userId;
 
     private Carbon $timestamp;
 
@@ -26,33 +23,24 @@ class GetDepositListsResponseDTO
 
     private string $walletAddress;
 
-    public function setWalletId(int $walletId): GetDepositListsResponseDTO
+    private ?string $contractAddress = null;
+
+    private string $type;
+
+    private int $blockNumber;
+
+    private string $from;
+
+    private string $to;
+
+    private float $gasPrice;
+
+    private int $gasUsed;
+
+
+    public function setTimestamp(int $timestamp): GetDepositListsResponseDTO
     {
-        $this->walletId = $walletId;
-
-        return $this;
-    }
-
-    public function getWalletId(): int
-    {
-        return $this->walletId;
-    }
-
-    public function setUserId(int $userId): GetDepositListsResponseDTO
-    {
-        $this->userId = $userId;
-
-        return $this;
-    }
-
-    public function getUserId(): int
-    {
-        return $this->userId;
-    }
-
-    public function setTimestamp(string $timestamp): GetDepositListsResponseDTO
-    {
-        $this->timestamp = Carbon::parse($timestamp);
+        $this->timestamp = Carbon::createFromTimestamp($timestamp);
 
         return $this;
     }
@@ -74,9 +62,9 @@ class GetDepositListsResponseDTO
         return $this->cryptocurrency;
     }
 
-    public function setAmount(string $amount): GetDepositListsResponseDTO
+    public function setAmount(string|float $amount): GetDepositListsResponseDTO
     {
-        $this->amount = $amount;
+        $this->amount = (string) $amount;
 
         return $this;
     }
@@ -144,5 +132,89 @@ class GetDepositListsResponseDTO
     public function getWalletAddress(): string
     {
         return $this->walletAddress;
+    }
+
+    public function setContractAddress(?string $contractAddress): GetDepositListsResponseDTO
+    {
+        $this->contractAddress = $contractAddress;
+
+        return $this;
+    }
+
+    public function getContractAddress(): ?string
+    {
+        return $this->contractAddress;
+    }
+
+    public function setType(string $type): GetDepositListsResponseDTO
+    {
+        $this->type = $type;
+
+        return $this;
+    }
+
+    public function getType(): string
+    {
+        return $this->type;
+    }
+
+    public function setBlockNumber(int $blockNumber): GetDepositListsResponseDTO
+    {
+        $this->blockNumber = $blockNumber;
+
+        return $this;
+    }
+
+    public function getBlockNumber(): int
+    {
+        return $this->blockNumber;
+    }
+
+    public function setFrom(string $from): GetDepositListsResponseDTO
+    {
+        $this->from = $from;
+
+        return $this;
+    }
+
+    public function getFrom(): string
+    {
+        return $this->from;
+    }
+
+    public function setTo(string $to): GetDepositListsResponseDTO
+    {
+        $this->to = $to;
+
+        return $this;
+    }
+
+    public function getTo(): string
+    {
+        return $this->to;
+    }
+
+    public function setGasPrice(float $gasPrice): GetDepositListsResponseDTO
+    {
+        $this->gasPrice = $gasPrice;
+
+        return $this;
+    }
+
+    public function getGasPrice(): float
+    {
+        return $this->gasPrice;
+    }
+
+    public function setGasUsed(int $gasUsed): GetDepositListsResponseDTO
+    {
+        $this->gasUsed = $gasUsed;
+
+        return $this;
+    }
+
+    public function getGasUsed(): int
+    {
+        return $this->gasUsed;
     }
 }

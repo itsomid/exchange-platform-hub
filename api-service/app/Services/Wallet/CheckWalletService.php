@@ -47,7 +47,7 @@ class CheckWalletService
         $hasNewTransaction = false;
         $user = $this->userRepository->getUserById($requestDTO->getUserId());
         $wallet = $this->walletRepository->getOneByCurrency($requestDTO->getCurrencySymbol(), $requestDTO->getUserId());
-        $activeExchange = $this->exchangeRepository->getActiveExchange();
+
 
         if (is_null($wallet)) {
 
@@ -55,24 +55,28 @@ class CheckWalletService
         }
         $wallet = $wallet->load('chains.wallet.currency.chains');
 
-        $chains = $wallet->chains;
+        $walletChains = $wallet->chains;
 
-        if (! $chains->contains(fn ($chain) => ! empty($chain->address))) {
+        if (! $walletChains->contains(fn($chain) => ! empty($chain->address))) {
             throw new UserDoesNotHaveWalletChainAddress;
         }
 
         $hdDeposit = resolve(HDWalletDepositService::class);
 
-        foreach ($chains as $chain) {
-            if (empty($chain->address)) {
+        foreach ($walletChains as $walletChain) {
+
+            $currencyChain = $walletChain->wallet->currency->chains->where('chain', $walletChain->currency_chain)->first();
+
+            if (empty($walletChain->address) || !$currencyChain->deposit_enabled) {
                 continue;
             }
-            $currencyChain = $chain->wallet->currency->chains->where('chain', $chain->currency_chain)->first();
+
             $transactions = $hdDeposit->getDepositLists(
                 resolve(GetDepositListsRequestDTO::class)
                     ->setCurrencySymbol($wallet->currency_symbol)
-                    ->setWalletAddress($chain->address)
+                    ->setWalletAddress($walletChain->address)
                     ->setBlockchain($currencyChain->blockchain_name->value)
+                    ->setContractAddress($currencyChain->contract_address)
             );
 
             foreach ($transactions as $transaction) {
@@ -91,30 +95,32 @@ class CheckWalletService
                     $currency = Currency::whereSymbol($transaction->getCryptocurrency())->first();
                     $usdtValue = Math::mul($currency->exchangePrice, $transaction->getAmount());
 
-                    $deposit = $this->depositRepository->create(resolve(CreateDepositRequestDTO::class)
-                        ->setUserId($transaction->getUserId())
-                        ->setCurrencySymbol($transaction->getCryptocurrency())
-                        ->setCurrencyChainId($currencyChain->id)
-                        ->setAmount($transaction->getAmount())
-                        ->setAddress($transaction->getWalletAddress())
-                        ->setTransactionHash($transaction->getTransactionHash())
-                        ->setConfirmedAt($transaction->getTimestamp())
-                        ->setStatus($depositStatus)
-                        ->setUsdtValue($usdtValue)
+                    $deposit = $this->depositRepository->create(
+                        resolve(CreateDepositRequestDTO::class)
+                            ->setUserId($requestDTO->getUserId())
+                            ->setCurrencySymbol($transaction->getCryptocurrency())
+                            ->setCurrencyChainId($currencyChain->id)
+                            ->setAmount($transaction->getAmount())
+                            ->setAddress($transaction->getWalletAddress())
+                            ->setTransactionHash($transaction->getTransactionHash())
+                            ->setConfirmedAt($transaction->getTimestamp())
+                            ->setStatus($depositStatus)
+                            ->setUsdtValue($usdtValue)
                     );
 
-                    $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
-                        ->setUserId($requestDTO->getUserId())
-                        ->setDepositId($deposit->id)
-                        ->setWalletId($wallet->id)
-                        ->setBalance($wallet->balance)
-                        ->setAmount($transaction->getAmount())
-                        ->setCoinPrice($currency->exchangePrice)
-                        ->setExchangeId(null)
-                        ->setType(TransactionTypeEnum::DEPOSIT)
-                        ->setSubtype(TransactionSubTypeEnum::USER_INITIATED)
-                        ->setStatus(TransactionStatusEnum::SUCCESS)
-                        ->setDescription('واریز به آدرس: '.$deposit->address.' هش تراکنش: '.$transactionHash)
+                    $this->transactionRepository->create(
+                        resolve(CreateTransactionRequestDTO::class)
+                            ->setUserId($requestDTO->getUserId())
+                            ->setDepositId($deposit->id)
+                            ->setWalletId($wallet->id)
+                            ->setBalance($wallet->balance)
+                            ->setAmount($transaction->getAmount())
+                            ->setCoinPrice($currency->exchangePrice)
+                            ->setExchangeId(null)
+                            ->setType(TransactionTypeEnum::DEPOSIT)
+                            ->setSubtype(TransactionSubTypeEnum::USER_INITIATED)
+                            ->setStatus(TransactionStatusEnum::SUCCESS)
+                            ->setDescription('واریز به آدرس: ' . $deposit->address . ' هش تراکنش: ' . $transactionHash)
                     );
                     if ($depositStatus === DepositStatusEnum::CONFIRMED) {
                         $wallet->increment('balance', $transaction->getAmount());
@@ -128,7 +134,6 @@ class CheckWalletService
                     throw $exception;
                 }
             }
-
         }
 
         return $hasNewTransaction;
@@ -145,23 +150,25 @@ class CheckWalletService
                 resolve(GetDepositListsRequestDTO::class)
                     ->setCurrencySymbol($deposit->currency_symbol)
                     ->setWalletAddress($deposit->address)
+                    ->setBlockchain($deposit->currencyChain->blockchain_name->value)
+                    ->setCurrencyChain($deposit->currencyChain)
             );
 
             foreach ($transactions as $transaction) {
                 if ($this->depositRepository->isDepositExists($transaction->getTransactionHash())) {
                     continue;
                 }
-                $this->depositRepository->create(resolve(CreateDepositRequestDTO::class)
-                    ->setUserId($transaction->getUserId())
-                    ->setCurrencySymbol($transaction->getCryptocurrency())
-                    ->setCurrencyChainId($transaction->getBlockChain())
-                    ->setAmount($transaction->getAmount())
-                    ->setAddress($transaction->getWalletAddress())
-                    ->setTransactionHash($transaction->getTransactionHash())
-                    ->setConfirmedAt($transaction->getTimestamp())
-                    ->setStatus(DepositStatusEnum::CONFIRMED)
+                $this->depositRepository->create(
+                    resolve(CreateDepositRequestDTO::class)
+                        ->setUserId($transaction->getUserId())
+                        ->setCurrencySymbol($transaction->getCryptocurrency())
+                        ->setCurrencyChainId($transaction->getBlockChain())
+                        ->setAmount($transaction->getAmount())
+                        ->setAddress($transaction->getWalletAddress())
+                        ->setTransactionHash($transaction->getTransactionHash())
+                        ->setConfirmedAt($transaction->getTimestamp())
+                        ->setStatus(DepositStatusEnum::CONFIRMED)
                 );
-
             }
         }
     }
