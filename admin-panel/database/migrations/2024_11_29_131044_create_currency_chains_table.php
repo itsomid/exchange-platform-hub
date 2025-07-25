@@ -34,6 +34,8 @@ return new class extends Migration
             $table->string('contract_address')->nullable();
             $table->boolean('is_base_coin')->default(false); // Is this the main chain for the currency
             $table->timestamps();
+
+            $table->foreign('currency_id')->references('id')->on('currencies')->onDelete('cascade');
         });
     }
 

@@ -40,7 +40,7 @@ $(function () {
                     var balanceElement = card.find('.hot-balance');
                     balanceElement.html(data.amount);
                     card.unblock();
-                    $this
+                    var $alert = $this
                         .closest('.card')
                         .find('.card-alert')
                         .html(
@@ -48,6 +48,13 @@ $(function () {
                             '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
                             '<span class="fw-medium">اطلاعات با موفقیت به روز رسانی شد</div>'
                         );
+                    
+                    // Auto-hide the alert after 5 seconds
+                    setTimeout(function() {
+                        $alert.find('.alert').fadeOut('slow', function() {
+                            $(this).remove();
+                        });
+                    }, 5000);
 
 
                 },
@@ -55,7 +62,7 @@ $(function () {
                     console.error('Error refreshing balance:', xhr.responseJSON);
                     card.unblock();
                     // Optional: Show an error message to the user
-                    $this
+                    var $alert = $this
                         .closest('.card')
                         .find('.card-alert')
                         .html(
@@ -63,6 +70,13 @@ $(function () {
                             '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
                             '<span class="fw-medium">خطا در دریافت اطلاعات.</div>'
                         );
+                        
+                    // Auto-hide the alert after 5 seconds
+                    setTimeout(function() {
+                        $alert.find('.alert').fadeOut('slow', function() {
+                            $(this).remove();
+                        });
+                    }, 5000);
                 }
             });
         });

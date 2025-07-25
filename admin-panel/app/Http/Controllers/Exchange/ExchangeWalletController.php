@@ -56,17 +56,13 @@ class ExchangeWalletController extends Controller
      */
     protected function fetchBalanceData(string $currency, string $chain, string $address)
     {
-        if ($currency === 'USDT') {
-            if ($chain === 'BSC') {
-                return $this->bscScan->getUsdtBalance($address);
-            } elseif ($chain === 'TRC20') {
-                return $this->tronScan->getUsdtBalance($address);
-            } elseif ($chain === 'ERC20') {
-                return $this->etherScan->getUsdtBalance($address);
-            }
-        } elseif ($currency === 'DOGE') {
-            return $this->blockchair->getBalance($currency, $address);
-        } elseif ($currency === 'BTC') {
+        if($chain === 'ERC20'){
+            return $this->etherScan->getBalance($currency, $address);
+        }elseif($chain === 'TRC20'){
+            return $this->tronScan->getBalance($currency, $address);
+        }elseif($chain === 'BSC'){
+            return $this->bscScan->getBalance($currency, $address);
+        }elseif ($chain === 'DOGE' || $chain === 'BTC') {
             return $this->blockchair->getBalance($currency, $address);
         }else {
             return $this->cryptoApi->getBalance($currency, $address);

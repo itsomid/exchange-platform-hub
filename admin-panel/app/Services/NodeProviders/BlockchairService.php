@@ -29,7 +29,7 @@ class BlockchairService
                     $addressData = $data['data'][$address];
 
                     // Extract balance based on currency
-                    $balance = $this->extractBalanceFromResponse($currency_symbol, $addressData);
+                    $balance = $this->extractBalanceFromResponse($addressData);
 
                     return [
                         'amount' => $balance
@@ -83,21 +83,8 @@ class BlockchairService
     /**
      * Extract balance from response based on currency
      */
-    private function extractBalanceFromResponse(string $currency_symbol, array $addressData): string
+    private function extractBalanceFromResponse(array $addressData): string
     {
-        // Different currencies might have different response structures
-        if ($currency_symbol === 'DOGE') {
-            // For DOGE, balance is typically in 'address.balance'
-            return isset($addressData['address']['balance'])
-                ? bcdiv((string)$addressData['address']['balance'], '100000000', 8)
-                : '0';
-        } elseif ($currency_symbol === 'TRX') {
-            // For TRON, balance might be in a different location
-            return isset($addressData['address']['balance'])
-                ? bcdiv((string)$addressData['address']['balance'], '1000000', 6)
-                : '0';
-        }
-
         // Default case - most blockchains store balance in satoshis (10^8)
         return isset($addressData['address']['balance'])
             ? bcdiv((string)$addressData['address']['balance'], '100000000', 8)
