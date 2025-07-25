@@ -15,11 +15,11 @@
 
 
         @foreach ($exchangeHotWallets as $walletChain)
-            <div class="col-lg-3 col-sm-6">
+            <div class="col-lg-4 col-sm-6">
                 <div class="card card-action card-border-shadow-success" data-wallet-chain-id="{{ $walletChain->id }}">
                     <div class="card-alert"></div>
                     <div class="card-header">
-                        <h5 class="card-action-title mb-0">
+                        <div class="card-action-title mb-0">
                             <div class="d-flex align-items-center">
                                 <div class="avatar me-4">
                                     <div class="avatar flex-shrink-0 me-4">
@@ -27,10 +27,10 @@
                                              width="50px">
                                     </div>
                                 </div>
-                                <h4 class="mb-0">کیف پول {{ $walletChain->wallet->currency_symbol }}
-                                    ({{$walletChain->currency_chain}})</h4>
+                                <h5 class="mb-0">کیف پول {{ $walletChain->wallet->currency_symbol }}
+                                    ({{$walletChain->currency_chain}})</h5>
                             </div>
-                        </h5>
+                        </div>
                         <div class="card-action-element">
                             <ul class="list-inline mb-0">
                                 <li class="list-inline-item">
@@ -42,14 +42,14 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <h3 class="mt-2 mb-4 ">
+                        <h4 class="mt-2 mb-4 ">
                             <span
                                 class="font-number hot-balance">{{formatNumberTrimZeros($balances[$walletChain->wallet->currency_symbol][$walletChain->currency_chain])}}</span>
                             <span class="text-muted h6 me-3">{{ $walletChain->wallet->currency_symbol }}</span>
-                        </h3>
+                        </h4>
                         <div class="mb-0 d-flex flex-column align-items-end">
                             <a href="{{$walletChain->explorer_address_url}}" target="_blank"
-                               class="text-primary font-number fw-bolder text-decoration-underline">
+                               class="text-primary font-number fs-tiny text-decoration-underline">
                                 {{ $walletChain->address }}
                                 <i class="fa-regular fa-clone"></i>
                             </a>

@@ -10,7 +10,7 @@
     </div>
     <div class="row g-6 mt-3">
         @foreach($exchangeWallets as $wallet)
-            <div class="col-lg-3 col-sm-6">
+            <div class="col-lg-4 col-sm-6">
                 <div class="card card-border-shadow-success">
                     <div class="card-body">
                         <div class="d-flex align-items-center ">
@@ -19,11 +19,11 @@
                                     <img src="{{$wallet->currency->coinLogo()}}" class="img-fluid" width="50px">
                                 </div>
                             </div>
-                            <h4 class="mb-0">کیف پول {{$wallet->currency->name}}</h4>
+                            <h5 class="mb-0">کیف پول {{$wallet->currency->name}}</h5>
                         </div>
-                        <h3 class="mt-4 mb-1 font-number">{{formatNumberTrimZeros($wallet->balance)}}
-                            <span class="text-muted h4">{{$wallet->currency_symbol}}</span>
-                        </h3>
+                        <h4 class="mt-4 mb-1 font-number">{{formatNumberTrimZeros($wallet->balance)}}
+                            <span class="text-muted h6">{{$wallet->currency_symbol}}</span>
+                        </h4>
                         <p class="mb-2">
                             <small class="text-muted fw-light">USDT</small>
                             <span class="text-primary me-2 font-number">{{formatNumber($wallet->assetValue,2)}}</span>
