@@ -42,7 +42,7 @@ class CurrencyChainController extends Controller
             'min_withdraw_amount' => 'required|numeric',
             'contract_address' => 'required|string',
             'explorer_address_url' => 'required|string',
-            'explorer_transaction_url' => 'required|string',
+            'explorer_tx_url' => 'required|string',
             'deposit_delay_minutes' => 'required|integer',
             'safe_confirmations' => 'required|integer',
             'exchange_withdrawal_fee' => 'required|numeric',
@@ -75,7 +75,7 @@ class CurrencyChainController extends Controller
             'exchange_withdrawal_fee' => $request->exchange_withdrawal_fee,
             'contract_address' => $request->contract_address,
             'explorer_address_url' => $request->explorer_address_url,
-            'explorer_transaction_url' => $request->explorer_transaction_url,
+            'explorer_tx_url' => $request->explorer_transaction_url,
             'network_fee' => $request->network_fee,
             'deposit_enabled' => $request->has('deposit_enabled'),  // Convert checkbox to boolean
             'withdraw_enabled' => $request->has('withdraw_enabled'),  // Convert checkbox to boolean
@@ -90,7 +90,7 @@ class CurrencyChainController extends Controller
             return redirect()->back();
         }
     }
-    
+
 
 
     /**
@@ -118,7 +118,7 @@ class CurrencyChainController extends Controller
             'chains.*.min_deposit_amount' => 'required|numeric|min:0',
             'chains.*.contract_address' => 'required|string',
             'chains.*.explorer_address_url' => 'required|string',
-            'chains.*.explorer_transaction_url' => 'required|string',
+            'chains.*.explorer_tx_url' => 'required|string',
             'chains.*.min_withdraw_amount' => 'required|numeric|min:0',
             'chains.*.deposit_delay_minutes' => 'required|integer|min:0',
             'chains.*.safe_confirmations' => 'required|integer|min:0',
@@ -139,7 +139,7 @@ class CurrencyChainController extends Controller
                     'contract_address' => $chainData['contract_address'],
                     'min_withdraw_amount' => $chainData['min_withdraw_amount'],
                     'explorer_address_url' => $chainData['explorer_address_url'],
-                    'explorer_transaction_url' => $chainData['explorer_transaction_url'],
+                    'explorer_tx_url' => $chainData['explorer_tx_url'],
                     'deposit_delay_minutes' => $chainData['deposit_delay_minutes'],
                     'safe_confirmations' => $chainData['safe_confirmations'],
                     'exchange_withdrawal_fee' => $chainData['exchange_withdrawal_fee'],
