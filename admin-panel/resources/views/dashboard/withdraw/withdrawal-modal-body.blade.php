@@ -32,7 +32,12 @@
         <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی کاربر پس از برداشت</h6>
         <div class="d-flex gap-4 align-items-center">
             <small> {{$withdraw->currency_symbol}}</small>
-            <span class="font-number text-primary">{{ formatNumberTrimZeros($withdraw->transaction->balance) }}</span>
+            @if($withdraw->transaction)
+                <span class="font-number text-primary">{{ formatNumberTrimZeros($withdraw->transaction->balance) }}</span>
+            @else
+                <span class="font-number text-warning">تراکنش یافت نشد</span>
+                <!-- Debug info: Transaction is null for withdraw ID: {{ $withdraw->id }} -->
+            @endif
         </div>
     </div>
     <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
@@ -93,4 +98,6 @@
             {{$withdraw->transaction->admin_description}}
         </div>
     </div>
+@else
+    <!-- Debug info: No transaction found for withdraw ID: {{ $withdraw->id }} -->
 @endif
