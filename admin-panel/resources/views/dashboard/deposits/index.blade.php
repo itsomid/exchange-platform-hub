@@ -10,7 +10,7 @@
                             <span>تعداد واریزی ها</span>
 
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{$deposits->total()}}</h4>
+                                <h4 class="mb-0 me-2">{{ $deposits->total() }}</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-success rounded p-2">
@@ -27,7 +27,7 @@
                         <div class="content-left">
                             <span>ارزش واریزی ها</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{formatNumberTrimZeros($totalDepositsValue)}}
+                                <h4 class="mb-0 me-2">{{ formatNumberTrimZeros($totalDepositsValue) }}
                                     <small>USDT</small>
                                 </h4>
                             </div>
@@ -45,9 +45,10 @@
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
                             <span>تعداد واریزی های امروز</span>
-                            <span class="ms-2">({{\App\Helpers\DateFormatter::convertToPersianDate(now(),'%d %B')}})</span>
+                            <span
+                                class="ms-2">({{ \App\Helpers\DateFormatter::convertToPersianDate(now(), '%d %B') }})</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{$todayDepositsCount}}</h4>
+                                <h4 class="mb-0 me-2">{{ $todayDepositsCount }}</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-warning rounded">
@@ -63,9 +64,10 @@
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
                             <span>ارزش واریزی های امروز</span>
-                            <span class="ms-2">({{\App\Helpers\DateFormatter::convertToPersianDate(now(),'%d %B')}})</span>
+                            <span
+                                class="ms-2">({{ \App\Helpers\DateFormatter::convertToPersianDate(now(), '%d %B') }})</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{formatNumberTrimZeros($todayDepositsValue)}}</h4>
+                                <h4 class="mb-0 me-2">{{ formatNumberTrimZeros($todayDepositsValue) }}</h4>
                                 <small>USDT</small>
                             </div>
                         </div>
@@ -84,17 +86,17 @@
                             <span class="text-white">کاربران با بیشترین واریزی</span>
                             <div class="d-flex align-items-baseline my-1">
                                 <small class="text-white mx-2">مجموع: </small>
-                                <h4 class="mb-0 me-2 text-primary">{{formatNumber($totalTopUsersDeposit,2)}}</h4>
+                                <h4 class="mb-0 me-2 text-primary">{{ formatNumber($totalTopUsersDeposit, 2) }}</h4>
                                 <small class="text-primary">USDT</small>
                             </div>
                         </div>
                         <ul class="list-unstyled avatar-group d-flex my-0">
-                            @if(count($topUsers))
-                                @foreach($topUsers as $topUser)
+                            @if (count($topUsers))
+                                @foreach ($topUsers as $topUser)
                                     <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-html='true'
                                         data-bs-placement="top" class="avatar pull-up"
                                         title="<span class='fw-medium'>نام:</span>
-                                                    {{ $topUser['user']->fullname()}}</span>
+                                                    {{ $topUser['user']->fullname() }}</span>
                                                     <br> <span class='fw-medium'>شناسه کاربری:</span>
                                                     <span class='fw-medium font-monospace'>({{ $topUser['user']->id }}#)</span>
                                                     <br> <span class='fw-medium'>نام کاربری:</span>
@@ -105,7 +107,7 @@
                                         <div class="avatar me-2">
                                             @php
                                                 // Define your color array
-                                                $colors = ['primary', 'info', 'danger', 'warning','success'];
+                                                $colors = ['primary', 'info', 'danger', 'warning', 'success'];
 
                                                 // Get a random index from the array
                                                 $randomIndex = array_rand($colors);
@@ -114,9 +116,9 @@
                                                 $randomColor = $colors[$randomIndex];
                                             @endphp
                                             <span
-                                                class="avatar-initial rounded-circle bg-label-{{$randomColor}}">{{$topUser['user']->avatar_user_name}}</span>
+                                                class="avatar-initial rounded-circle bg-label-{{ $randomColor }}">{{ $topUser['user']->avatar_user_name }}</span>
                                         </div>
-                                        {{--                                        <img class="rounded-circle" src="{{ $topUser['user']->avatar_url ?? 'http://127.0.0.1:8000/images/avatars/male/2.png' }}">--}}
+                                        {{--                                        <img class="rounded-circle" src="{{ $topUser['user']->avatar_url ?? 'http://127.0.0.1:8000/images/avatars/male/2.png' }}"> --}}
                                     </li>
                                 @endforeach
                             @else
@@ -133,7 +135,7 @@
         <div class="card-body">
             <h5 class="card-title">خروجی اکسل</h5>
             <form class="row mt-3 d-flex align-items-end"
-                  action="{{route('admin.deposit.excel-export',request()->query())}}" method="POST">
+                action="{{ route('admin.deposit.excel-export', request()->query()) }}" method="POST">
                 @csrf
                 <div class="col-md-2 user_role">
                     <label class="form-label" for="UserRole">از آیدی :</label>
@@ -154,17 +156,17 @@
             <div class="card-title header-elements">
                 <h5 class="m-0 me-2">فیلتر</h5>
             </div>
-            <form action="{{route('admin.deposit.index')}}" method="get">
+            <form action="{{ route('admin.deposit.index') }}" method="get">
                 <div class="row">
                     <div class="col-md-3 mt-3">
                         <div class="form-group">
                             <label class="form-label" for="type">وضعیت واریز:</label>
                             <select name="status" class="form-control" id="type">
                                 <option value="">همه</option>
-                                @foreach(\App\Enums\DepositStatusEnum::cases() as $case)
-                                    <option
-                                        value="{{$case->value}}" {{request()->has('status') && request()->input('status') == $case->value ? 'selected' : "" }}>
-                                        {{\App\Enums\DepositStatusEnum::TYPE_LABEL[$case->value]}}
+                                @foreach (\App\Enums\DepositStatusEnum::cases() as $case)
+                                    <option value="{{ $case->value }}"
+                                        {{ request()->has('status') && request()->input('status') == $case->value ? 'selected' : '' }}>
+                                        {{ \App\Enums\DepositStatusEnum::TYPE_LABEL[$case->value] }}
                                     </option>
                                 @endforeach
                             </select>
@@ -172,15 +174,11 @@
                     </div>
                     <div class="col-md-6 mt-3">
                         <label class="form-label" for="user">کاربر :</label>
-                        <x-user-selection-component
-                            input-name="user"
-                            multiple="0"
-                            selected="{{ request()->filled('user')?$deposits[0]->user->id : '' }}"
+                        <x-user-selection-component input-name="user" multiple="0"
+                            selected="{{ request()->filled('user') ? $deposits[0]->user->id : '' }}"
                             selected-label="{{ request()->filled('user')
-                                ? '('.$deposits[0]->user->id.'#) '.$deposits[0]->user->fullname().' | '.$deposits[0]->user->email
-                                : '' }}"
-
-                        ></x-user-selection-component>
+                                ? '(' . $deposits[0]->user->id . '#) ' . $deposits[0]->user->fullname() . ' | ' . $deposits[0]->user->email
+                                : '' }}"></x-user-selection-component>
                     </div>
                     <div class="col-md-2  mt-3">
                         <div class="form-group"><br>
@@ -206,284 +204,307 @@
         <div class="table-responsive text-nowrap">
             <table class="table table-striped">
                 <thead>
-                <tr>
-                    <th>
-                        @php
-                            $currentParams = request()->except('sortById');
-                            $currentSortDirection = request()->input('sortById', 'desc');
+                    <tr>
+                        <th>
+                            @php
+                                $currentParams = request()->except('sortById');
+                                $currentSortDirection = request()->input('sortById', 'desc');
 
-                            $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
-                        @endphp
-                        <a href="{{ route('admin.deposit.index', array_merge($currentParams, ['sortById' => $newSortDirection])) }}"
-                           class="text-black">
-                            ID
-                            @if($currentSortDirection === 'asc')
-                                <span><i class="fa-solid fa-arrow-up"></i></span>
-                            @else
-                                <span><i class="fa-solid fa-arrow-down"></i></span>
-                            @endif
-                        </a>
-                    </th>
-                    <th>کاربر</th>
-                    <th>Coin</th>
-                    <th>شبکه</th>
-                    <th>
-                        @php
-                            $currentParams = request()->except('sortByAmount');
-                            $currentSortDirection = request()->input('sortByAmount', 'asc');
-                            $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
-                        @endphp
-                        <a href="{{ route('admin.deposit.index', array_merge($currentParams, ['sortByAmount' => $newSortDirection])) }}"
-                           class="text-black">
-                            مقدار
-                            @if($currentSortDirection === 'asc')
-                                <span><i class="fa-solid fa-arrow-up"></i></span>
-                            @else
-                                <span><i class="fa-solid fa-arrow-down"></i></span>
-                            @endif
-                        </a>
-                    </th>
-                    <th>ارزش</th>
-                    <th>آدرس</th>
-                    <th>(TxID) لینک تراکنش</th>
-                    <th>
-                        @php
-                            $currentParams = request()->except('sortByCreatedAt');
-                            $currentSortDirection = request()->input('sortByCreatedAt', 'asc');
-                            $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
-                        @endphp
-                        <a href="{{ route('admin.deposit.index', array_merge($currentParams, ['sortByCreatedAt' => $newSortDirection])) }}"
-                           class="text-black">
-                            تاریخ ایجاد
-                            @if($currentSortDirection === 'asc')
-                                <span><i class="fa-solid fa-arrow-up"></i></span>
-                            @else
-                                <span><i class="fa-solid fa-arrow-down"></i></span>
-                            @endif
-                        </a>
-                    </th>
-                    <th>
-                        @php
-                            $currentParams = request()->except('sortByConfirmedAt');
-                            $currentSortDirection = request()->input('sortByConfirmedAt', 'asc');
-                            $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
-                        @endphp
-                        <a href="{{ route('admin.deposit.index', array_merge($currentParams, ['sortByConfirmedAt' => $newSortDirection])) }}"
-                           class="text-black">
-                            تاریخ تایید
-                            @if($currentSortDirection === 'asc')
-                                <span><i class="fa-solid fa-arrow-up"></i></span>
-                            @else
-                                <span><i class="fa-solid fa-arrow-down"></i></span>
-                            @endif
-                        </a>
+                                $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
+                            @endphp
+                            <a href="{{ route('admin.deposit.index', array_merge($currentParams, ['sortById' => $newSortDirection])) }}"
+                                class="text-black">
+                                ID
+                                @if ($currentSortDirection === 'asc')
+                                    <span><i class="fa-solid fa-arrow-up"></i></span>
+                                @else
+                                    <span><i class="fa-solid fa-arrow-down"></i></span>
+                                @endif
+                            </a>
+                        </th>
+                        <th>کاربر</th>
+                        <th>Coin</th>
+                        <th>شبکه</th>
+                        <th>
+                            @php
+                                $currentParams = request()->except('sortByAmount');
+                                $currentSortDirection = request()->input('sortByAmount', 'asc');
+                                $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
+                            @endphp
+                            <a href="{{ route('admin.deposit.index', array_merge($currentParams, ['sortByAmount' => $newSortDirection])) }}"
+                                class="text-black">
+                                مقدار
+                                @if ($currentSortDirection === 'asc')
+                                    <span><i class="fa-solid fa-arrow-up"></i></span>
+                                @else
+                                    <span><i class="fa-solid fa-arrow-down"></i></span>
+                                @endif
+                            </a>
+                        </th>
+                        <th>ارزش</th>
+                        <th>آدرس واریز</th>
+                        <th>(TxID) لینک تراکنش</th>
+                        <th>
+                            @php
+                                $currentParams = request()->except('sortByCreatedAt');
+                                $currentSortDirection = request()->input('sortByCreatedAt', 'asc');
+                                $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
+                            @endphp
+                            <a href="{{ route('admin.deposit.index', array_merge($currentParams, ['sortByCreatedAt' => $newSortDirection])) }}"
+                                class="text-black">
+                                تاریخ ایجاد
+                                @if ($currentSortDirection === 'asc')
+                                    <span><i class="fa-solid fa-arrow-up"></i></span>
+                                @else
+                                    <span><i class="fa-solid fa-arrow-down"></i></span>
+                                @endif
+                            </a>
+                        </th>
+                        <th>
+                            @php
+                                $currentParams = request()->except('sortByConfirmedAt');
+                                $currentSortDirection = request()->input('sortByConfirmedAt', 'asc');
+                                $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
+                            @endphp
+                            <a href="{{ route('admin.deposit.index', array_merge($currentParams, ['sortByConfirmedAt' => $newSortDirection])) }}"
+                                class="text-black">
+                                تاریخ تایید (شبکه)
+                                @if ($currentSortDirection === 'asc')
+                                    <span><i class="fa-solid fa-arrow-up"></i></span>
+                                @else
+                                    <span><i class="fa-solid fa-arrow-down"></i></span>
+                                @endif
+                            </a>
 
-                    </th>
-                    <th>وضعیت</th>
-                    <th>عملیات</th>
-                </tr>
+                        </th>
+                        <th>وضعیت</th>
+                        <th>عملیات</th>
+                    </tr>
                 </thead>
                 <tbody class="table-border-bottom-0">
-                @if($deposits->isEmpty())
-                    <tr>
-                        <td colspan="11" class="text-center">واریزی یافت نشد.</td>
-                    </tr>
-                @else
-
-                    @foreach($deposits as $deposit)
+                    @if ($deposits->isEmpty())
                         <tr>
-                            <td>{{$deposit->id}}</td>
+                            <td colspan="11" class="text-center">واریزی یافت نشد.</td>
+                        </tr>
+                    @else
+                        @foreach ($deposits as $deposit)
+                            <tr>
+                                <td>{{ $deposit->id }}</td>
 
-                            <td>
-                                <div class="d-flex flex-column">
-                                    <a href="" class="text-heading text-truncate">
-                                        <span class="fw-medium">{{$deposit->user->email}}</span>
-                                    </a>
-                                    <small>{{$deposit->user->username}}</small>
-                                </div>
-                            </td>
-
-                            <td class="text-heading fw-medium">
-                                <img src="{{asset($deposit->currency->coinLogo())}}"
-                                     class="rounded-circle img-fluid" width="30">
-                                {{$deposit->currency_symbol}}
-                            </td>
-
-                            <td>
-                                {{$deposit->currencyChain->chain_name}}
-                            </td>
-
-                            <td class="font-number" dir="ltr">
-                                <h6 class="mb-0">{{formatNumberTrimZeros($deposit->amount)}}</h6>
-                            </td>
-
-                            <td dir="ltr">
-                                <h6 class="font-number text-heading mb-0">
-                                    @if($deposit->usdt_value)
-                                        <span class="ms-1">{{formatNumberTrimZeros($deposit->usdt_value)}}</span>
-                                        <small class="text-muted">USDT</small>
-                                    @else
-                                        <span>N/A</span>
-                                    @endif
-                                </h6>
-                            </td>
-
-                            <td class="font-number">
-                                <h6 class="mb-0">
-                                    @if($deposit->explorer_address_url)
-                                        <a  href="javascript:void(0);" class="clipboard-btn mx-1" data-clipboard-action="copy"
-                                            data-clipboard-target="#deposit{{$deposit->address}}">
-                                            <i class="fa-regular fa-clone"></i>
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <a href="" class="text-heading text-truncate">
+                                            <span class="fw-medium">{{ $deposit->user->email }}</span>
                                         </a>
-                                        <input type="hidden"
-                                               value="{{$deposit->address}}"
-                                               id="deposit{{$deposit->address}}"
-                                               class="form-control text-left" placeholder="کد معرف شما"
-                                               aria-label="Username"
-                                               readonly>
+                                        <small>{{ $deposit->user->username }}</small>
+                                    </div>
+                                </td>
 
-                                        <a href="{{ $deposit->explorer_address_url }}" target="_blank">
-                                            <small>{{ shorten_hash($deposit->address) }}</small>
+                                <td class="text-heading fw-medium">
+                                    <img src="{{ asset($deposit->currency->coinLogo()) }}"
+                                        class="rounded-circle img-fluid" width="30">
+                                    {{ $deposit->currency_symbol }}
+                                </td>
+
+                                <td>
+                                    {{ $deposit->currencyChain->chain_name }}
+                                </td>
+
+                                <td class="font-number" dir="ltr">
+                                    <h6 class="mb-0">{{ formatNumberTrimZeros($deposit->amount) }}</h6>
+                                </td>
+
+                                <td dir="ltr">
+                                    <h6 class="font-number text-heading mb-0">
+                                        @if ($deposit->usdt_value)
+                                            <span class="ms-1">{{ formatNumberTrimZeros($deposit->usdt_value) }}</span>
+                                            <small class="text-muted">USDT</small>
+                                        @else
+                                            <span>N/A</span>
+                                        @endif
+                                    </h6>
+                                </td>
+
+                                <td class="font-number">
+                                    <h6 class="mb-0">
+                                        @if ($deposit->explorer_address_url)
+                                            <a href="javascript:void(0);" class="clipboard-btn mx-1"
+                                                data-clipboard-action="copy"
+                                                data-clipboard-target="#deposit{{ $deposit->address }}">
+                                                <i class="fa-regular fa-clone"></i>
+                                            </a>
+                                            <input type="hidden" value="{{ $deposit->address }}"
+                                                id="deposit{{ $deposit->address }}" class="form-control text-left"
+                                                placeholder="آدرس واریز" aria-label="Username" readonly>
+
+                                            <a href="{{ $deposit->explorer_address_url }}" target="_blank">
+                                                <small>{{ shorten_hash($deposit->address) }}</small>
+                                            </a>
+                                        @elseif($deposit->address)
+                                            <a href="javascript:void(0);" class="clipboard-btn mx-1"
+                                                data-clipboard-action="copy"
+                                                data-clipboard-target="#deposit{{ $deposit->address }}">
+                                                <i class="fa-regular fa-clone"></i>
+                                            </a>
+                                            <input type="hidden" value="{{ $deposit->address }}"
+                                                id="deposit{{ $deposit->address }}" class="form-control text-left"
+                                                placeholder="آدرس واریز" aria-label="Username" readonly>
+                                            <a href="javascript:void(0);">
+                                                <small>{{ shorten_hash($deposit->address) }}</small>
+                                            </a>
+                                        @else
+                                            <span>N/A Address</span>
+                                        @endif
+                                    </h6>
+                                </td>
+
+                                <td class="font-number">
+
+                                    <h6 class="mb-0">
+                                        @if ($deposit->explorer_tx_url && $deposit->transaction_hash)
+                                            <a href="javascript:void(0);" class="clipboard-btn mx-1"
+                                                data-clipboard-action="copy"
+                                                data-clipboard-target="#deposit{{ $deposit->transaction_hash }}">
+                                                <i class="fa-regular fa-clone"></i>
+                                            </a>
+                                            <input type="hidden" value="{{ $deposit->transaction_hash }}"
+                                                id="deposit{{ $deposit->transaction_hash }}"
+                                                class="form-control text-left" placeholder="هش تراکنش"
+                                                aria-label="هش تراکنش" readonly>
+                                            <a href="{{ $deposit->explorer_tx_url }}" target="_blank">
+                                                <small>{{ shorten_hash($deposit->transaction_hash) }}</small>
+                                            </a>
+                                        @elseif($deposit->transaction_hash)
+                                            <a href="javascript:void(0);" class="clipboard-btn mx-1"
+                                                data-clipboard-action="copy"
+                                                data-clipboard-target="#deposit{{ $deposit->transaction_hash }}">
+                                                <i class="fa-regular fa-clone"></i>
+                                            </a>
+                                            <input type="hidden" value="{{ $deposit->transaction_hash }}"
+                                                id="deposit{{ $deposit->transaction_hash }}"
+                                                class="form-control text-left" placeholder="هش تراکنش"
+                                                aria-label="هش تراکنش" readonly>
+                                            <a href="{{ $deposit->explorer_tx_url }}" target="_blank">
+                                                <small>{{ shorten_hash($deposit->transaction_hash) }}</small>
+                                            </a>
+                                        @else
+                                            <span>N/A TxID</span>
+                                        @endif
+                                    </h6>
+
+                                </td>
+                                <td class="font-number">
+                                    {{ \App\Helpers\DateFormatter::convertToPersianDate($deposit->created_at, 'H:i:s %Y/%m/%d') }}
+                                </td>
+                                <td class="font-number">
+                                    {{ \App\Helpers\DateFormatter::convertToPersianDate($deposit->confirmed_at, 'H:i:s %Y/%m/%d') }}
+                                </td>
+                                <td>
+                                    <span
+                                        class="badge bg-label-{{ $deposit->status->color() }}">{{ $deposit->status->label() }}</span>
+                                </td>
+                                <td>
+                                    @if ($deposit->status === \App\Enums\DepositStatusEnum::CONFIRMED)
+                                        <a href="" class="btn btn-icon btn-text-secondary" data-bs-toggle="modal"
+                                            data-bs-target="#deposit-{{ $deposit->id }}">
+                                            <i class="fa-regular fa-eye fa-xl"></i>
                                         </a>
-
-                                    @else
-                                        <span>N/A Address</span>
-                                    @endif
-                                </h6>
-                            </td>
-
-                            <td class="font-number">
-
-                                <h6 class="mb-0">
-                                    @if($deposit->explorer_tx_url && $deposit->transaction_hash)
-                                        <a  href="javascript:void(0);" class="clipboard-btn mx-1" data-clipboard-action="copy"
-                                            data-clipboard-target="#deposit{{$deposit->transaction_hash}}">
-                                            <i class="fa-regular fa-clone"></i>
-                                        </a>
-                                        <input type="hidden"
-                                               value="{{$deposit->transaction_hash}}"
-                                               id="deposit{{$deposit->transaction_hash}}"
-                                               class="form-control text-left" placeholder="هش تراکنش"
-                                               aria-label="Username"
-                                               readonly>
-                                        <a href="{{ $deposit->explorer_tx_url }}" target="_blank">
-                                            <small>{{ shorten_hash($deposit->transaction_hash) }}</small>
-                                        </a>
-                                    @else
-                                        <span>N/A TxID</span>
-                                    @endif
-                                </h6>
-
-                            </td>
-                            <td class="font-number">
-                                {{\App\Helpers\DateFormatter::convertToPersianDate($deposit->created_at,'H:i:s %Y/%m/%d')}}
-                            </td>
-                            <td class="font-number">
-                                {{\App\Helpers\DateFormatter::convertToPersianDate($deposit->confirmed_at,'H:i:s %Y/%m/%d')}}
-                            </td>
-                            <td>
-                                <span
-                                    class="badge bg-label-{{$deposit->status->color()}}">{{$deposit->status->label()}}</span>
-                            </td>
-                            <td>
-                                @if($deposit->status === \App\Enums\DepositStatusEnum::CONFIRMED)
-                                    <a href="" class="btn btn-icon btn-text-secondary" data-bs-toggle="modal"
-                                       data-bs-target="#deposit-{{$deposit->id}}">
-                                        <i class="fa-regular fa-eye fa-xl"></i>
-                                    </a>
-                                    <div class="modal fade" id="deposit-{{$deposit->id}}" tabindex="-1"
-                                         aria-model="true">
-                                        <div class="modal-dialog" role="document">
-                                            <div class="modal-content">
-                                                <div class="modal-header" dir="ltr">
-                                                    <h5 class="modal-title font-number">Deposit #{{$deposit->id}}</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        <div class="modal fade" id="deposit-{{ $deposit->id }}" tabindex="-1"
+                                            aria-model="true">
+                                            <div class="modal-dialog" role="document">
+                                                <div class="modal-content">
+                                                    <div class="modal-header" dir="ltr">
+                                                        <h5 class="modal-title font-number">Deposit #{{ $deposit->id }}
+                                                        </h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
                                                             aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
+                                                    </div>
+                                                    <div class="modal-body">
 
-                                                    <div
-                                                        class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom py-4 mb-4">
-                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">شناسه تراکنش</h6>
-                                                        <div class="d-flex flex-wrap gap-4 font-number">
-                                                            Transaction #{{$deposit->transaction->id}}
+                                                        <div
+                                                            class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom py-4 mb-4">
+                                                            <h6 class="m-0 mb-2 mb-md-0 me-12">شناسه تراکنش</h6>
+                                                            <div class="d-flex flex-wrap gap-4 font-number">
+                                                                Transaction #{{ $deposit->transaction->id }}
+                                                            </div>
+                                                        </div>
+                                                        <div
+                                                            class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+                                                            <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی کاربر قبل از
+                                                                واریز</h6>
+                                                            <div class="d-flex  gap-2 align-items-end">
+                                                                <small> {{ $deposit->currency_symbol }}</small>
+
+                                                                <span
+                                                                    class="font-number">{{ formatNumberTrimZeros($deposit->transaction->balance) }}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div
+                                                            class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+
+                                                            <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی کاربر پس از واریز
+                                                            </h6>
+                                                            <div class="d-flex  gap-2 align-items-end">
+                                                                <small> {{ $deposit->currency_symbol }}</small>
+
+                                                                <span
+                                                                    class="font-number text-success">{{ formatNumberTrimZeros($deposit->transaction->balance + $deposit->transaction->amount) }}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div
+                                                            class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+
+                                                            <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات واریز</h6>
+                                                            <div class="text-wrap font-number w-60 text-end">
+                                                                {{ $deposit->description }}
+                                                            </div>
+                                                        </div>
+                                                        <div
+                                                            class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+
+                                                            <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات تراکنش</h6>
+                                                            <div class="text-wrap font-number w-60 text-end">
+                                                                {{ $deposit->transaction->description }}
+                                                            </div>
+                                                        </div>
+                                                        <div
+                                                            class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+
+                                                            <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات ادمین</h6>
+                                                            <div class="text-wrap font-number">
+                                                                {{ $deposit->transaction->admin_description }}
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                    <div
-                                                        class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
-                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی کاربر قبل از
-                                                            واریز</h6>
-                                                        <div class="d-flex  gap-2 align-items-end">
-                                                            <small> {{$deposit->currency_symbol}}</small>
-
-                                                                <span class="font-number">{{formatNumberTrimZeros($deposit->transaction->balance)}}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div
-                                                        class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
-
-                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی کاربر پس از واریز</h6>
-                                                        <div class="d-flex  gap-2 align-items-end">
-                                                            <small> {{$deposit->currency_symbol}}</small>
-
-                                                            <span
-                                                                class="font-number text-success">{{formatNumberTrimZeros($deposit->transaction->balance + $deposit->transaction->amount)}}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div
-                                                        class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
-
-                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات واریز</h6>
-                                                        <div class="text-wrap font-number w-60 text-end">
-                                                            {{$deposit->description}}
-                                                        </div>
-                                                    </div>
-                                                    <div
-                                                        class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
-
-                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات تراکنش</h6>
-                                                        <div class="text-wrap font-number w-60 text-end">
-                                                            {{$deposit->transaction->description}}
-                                                        </div>
-                                                    </div>
-                                                    <div
-                                                        class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
-
-                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات ادمین</h6>
-                                                        <div class="text-wrap font-number">
-                                                            {{$deposit->transaction->admin_description}}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-label-secondary"
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-label-secondary"
                                                             data-bs-dismiss="modal">بستن
-                                                    </button>
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                @endif
+                                    @endif
 
 
-                            </td>
-                        </tr>
-                    @endforeach
-                @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    @endif
                 </tbody>
             </table>
         </div>
         <div class="row mt-4">
             <div class="col-md-12">
-                {{$deposits->appends(request()->all())->links()}}
+                {{ $deposits->appends(request()->all())->links() }}
             </div>
         </div>
     </div>
 
 @endsection
 @section('vendor-script')
- <script>
-        $(document).ready(function () {
+    <script>
+        $(document).ready(function() {
             $('[data-bs-toggle="tooltip"]').tooltip();
 
             // Handle copy functionality
