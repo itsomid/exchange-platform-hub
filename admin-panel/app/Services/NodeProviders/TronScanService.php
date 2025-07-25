@@ -2,7 +2,6 @@
 
 namespace App\Services\NodeProviders;
 
-use App\Infrastructure\HDWallet\ContractAddressMapper;
 use App\Models\Currency;
 use App\Models\CurrencyChain;
 use App\Enums\CurrencyChainEnum;
@@ -120,7 +119,7 @@ class TronScanService
                     return [
                         'amount' => $balance
                     ];
-                } else {        
+                } else {
                     // If no data found, try alternative approach with contract address
                     return $this->getTokenBalanceByContract($currency, $address);
                 }
@@ -163,13 +162,13 @@ class TronScanService
 
             if ($response->successful()) {
                 $data = $response->json();
-                
+
                 if (isset($data['constant_result']) && is_array($data['constant_result']) && count($data['constant_result']) > 0) {
                     $balanceHex = $data['constant_result'][0];
                     $balanceWei = hexdec($balanceHex);
                     $decimals = $this->tokenDecimals[$currency] ?? 6;;
                     $balance = bcdiv($balanceWei, bcpow('10', $decimals), $decimals);
-                    
+
                     return [
                         'amount' => $balance
                     ];
@@ -199,7 +198,7 @@ class TronScanService
                 $currencyChain = CurrencyChain::where('currency_id', $currencyModel->id)
                     ->where('chain', CurrencyChainEnum::TRC20)
                     ->first();
-                
+
                 if ($currencyChain && $currencyChain->contract_address) {
                     return $currencyChain->contract_address;
                 }
@@ -223,7 +222,7 @@ class TronScanService
                 $currencyChain = CurrencyChain::where('currency_id', $currencyModel->id)
                     ->where('chain', CurrencyChainEnum::TRC20)
                     ->first();
-                
+
                 if ($currencyChain && $currencyChain->withdrawal_precision) {
                     return $currencyChain->withdrawal_precision;
                 }

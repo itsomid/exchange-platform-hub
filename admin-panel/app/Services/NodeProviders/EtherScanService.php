@@ -2,7 +2,6 @@
 
 namespace App\Services\NodeProviders;
 
-use App\Infrastructure\HDWallet\ContractAddressMapper;
 use App\Models\Currency;
 use App\Models\CurrencyChain;
 use App\Enums\CurrencyChainEnum;
