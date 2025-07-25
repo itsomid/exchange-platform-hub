@@ -2,7 +2,6 @@
 
 namespace App\Services\NodeProviders;
 
-use App\Infrastructure\HDWallet\ContractAddressMapper;
 use App\Models\Currency;
 use App\Models\CurrencyChain;
 use App\Enums\CurrencyChainEnum;
@@ -154,7 +153,7 @@ class BscScanService
                 $currencyChain = CurrencyChain::where('currency_id', $currencyModel->id)
                     ->where('chain', CurrencyChainEnum::BEP20)
                     ->first();
-                
+
                 if ($currencyChain && $currencyChain->contract_address) {
                     return $currencyChain->contract_address;
                 }
@@ -163,12 +162,6 @@ class BscScanService
             // Log error but continue with fallback
         }
 
-        // Fallback: try to get from ContractAddressMapper
-        $contractAddress = ContractAddressMapper::getContractAddress('binance', $currency);
-        
-        if ($contractAddress) {
-            return $contractAddress;
-        }
 
         return null;
     }
@@ -185,7 +178,7 @@ class BscScanService
                 $currencyChain = CurrencyChain::where('currency_id', $currencyModel->id)
                     ->where('chain', CurrencyChainEnum::BEP20)
                     ->first();
-                
+
                 if ($currencyChain && $currencyChain->withdrawal_precision) {
                     return $currencyChain->withdrawal_precision;
                 }
