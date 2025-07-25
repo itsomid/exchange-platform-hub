@@ -62,6 +62,7 @@ class MarketController extends Controller
             'min_trade_amount' => $request->min_trade_amount,
             'max_trade_amount' => $request->max_trade_amount,
             'is_active' => $request->has('is_active') ? $request->is_active : false,
+            'price_update_enabled' => $request->has('price_update_enabled') ? $request->price_update_enabled : false,
         ]);
 
         // Create the exchange price record
@@ -72,6 +73,7 @@ class MarketController extends Controller
             'exchange_profit_buy' => $request->exchange_profit_buy,
             'price' => 0, // Initial price will be updated by the price fetching service
             'open_price' => 0, // Initial open price
+            'price_update_enabled' => $request->has('price_update_enabled') ? $request->price_update_enabled : false,
         ]);
 
         // Redirect back with a success message

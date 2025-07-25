@@ -31,6 +31,7 @@ class StoreMarketRequest extends FormRequest
             'exchange_profit_sell' => 'required|numeric|min:0',
             'exchange_profit_buy' => 'required|numeric',
             'is_active' => 'sometimes|boolean',
+            'price_update_enabled' => 'sometimes|boolean',
         ];
     }
 
