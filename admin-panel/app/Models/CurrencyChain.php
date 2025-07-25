@@ -6,6 +6,7 @@ use App\Enums\CurrencyBlockChainNameEnum;
 use App\Enums\CurrencyChainEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 
 class CurrencyChain extends Model
 {
@@ -23,12 +24,23 @@ class CurrencyChain extends Model
         'deposit_enabled',
         'withdraw_enabled',
         'withdrawal_precision',
+        'memo',
+        'is_memo_required_for_deposit',
+        'explorer_address_url',
+        'explorer_tx_url',
+        'contract_address',
         'is_base_coin',
     ];
 
     protected $casts = [
         'network_fee' => 'float',
         'exchange_withdrawal_fee' => 'float',
+        'min_deposit_amount' => 'float',
+        'min_withdraw_amount' => 'float',
+        'deposit_enabled' => 'boolean',
+        'withdraw_enabled' => 'boolean',
+        'is_memo_required_for_deposit' => 'boolean',
+        'is_base_coin' => 'boolean',
         'chain' => CurrencyChainEnum::class,
         'blockchain_name' => CurrencyBlockChainNameEnum::class,
     ];
@@ -51,6 +63,6 @@ class CurrencyChain extends Model
     public function scopeTotalWithdrawalFee($query, $currencyChain)
     {
         return $query->where('chain', $currencyChain)
-            ->sum(\DB::raw('network_fee + exchange_withdrawal_fee'));
+            ->sum(DB::raw('network_fee + exchange_withdrawal_fee'));
     }
 }

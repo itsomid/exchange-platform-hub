@@ -105,6 +105,7 @@ class CurrencyChainController extends Controller
     {
         $validated = $request->validate([
             'chains.*.min_deposit_amount' => 'required|numeric|min:0',
+            'chains.*.contract_address' => 'required|string',
             'chains.*.min_withdraw_amount' => 'required|numeric|min:0',
             'chains.*.deposit_delay_minutes' => 'required|integer|min:0',
             'chains.*.safe_confirmations' => 'required|integer|min:0',
@@ -122,6 +123,7 @@ class CurrencyChainController extends Controller
                 // Update chain attributes
                 $chain->update([
                     'min_deposit_amount' => $chainData['min_deposit_amount'],
+                    'contract_address' => $chainData['contract_address'],
                     'min_withdraw_amount' => $chainData['min_withdraw_amount'],
                     'deposit_delay_minutes' => $chainData['deposit_delay_minutes'],
                     'safe_confirmations' => $chainData['safe_confirmations'],
