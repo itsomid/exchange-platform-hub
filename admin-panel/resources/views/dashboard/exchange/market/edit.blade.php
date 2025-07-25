@@ -152,7 +152,7 @@
                                 </div>
                             </div>
                             <div class="w-100 mb-4"></div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-label" for="symbol">کوین پایه</label>
                                     <input name="symbol" id="symbol" class="form-control"
@@ -163,7 +163,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-label" for="symbol">ارز متقابل </label>
                                     <input name="symbol" id="symbol" class="form-control"
@@ -175,7 +175,7 @@
                             </div>
                         </div>
                         <div class="row mt-5">
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-label" for="min_otc_amount">حداقل مقدار معامله OTC در این
                                         بازار</label>
@@ -187,7 +187,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-label" for="max_otc_amount">حداکثر مقدار معامله OTC در این
                                         بازار</label>
@@ -201,7 +201,7 @@
                             </div>
                         </div>
                         <div class="row mt-5">
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-label" for="min_trade_amount">حداقل مقدار معامله SPOT در این
                                         بازار</label>
@@ -213,7 +213,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-label" for="max_trade_amount">حداکثر مقدار معامله SPOT در این
                                         بازار</label>
@@ -227,7 +227,7 @@
                             </div>
                         </div>
                         <div class="row mt-5">
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-label" for="exchange_profit_sell">سود صرافی از محل خرید از صرافی
                                         مرجع (فروش به مشتری) (درصد)</label>
@@ -241,7 +241,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-label" for="exchange_profit_buy">سود صرافی از محل فروش به صرافی
                                         مرجع (خرید از مشتری)</label>

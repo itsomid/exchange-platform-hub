@@ -28,7 +28,7 @@
                                 </div>
                             </div>
                             <div class="w-100 mb-4"></div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
 
                                 <div class="form-group">
                                     <label class="form-label" for="symbol">کوین پایه:</label>
@@ -53,7 +53,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-label" for="symbol">ارز متقابل </label>
                                     <input name="symbol" id="symbol" class="form-control"
@@ -65,7 +65,7 @@
                             </div>
                         </div>
                         <div class="row mt-5">
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-label" for="min_otc_amount">حداقل مقدار معامله OTC در این
                                         بازار</label>
@@ -79,7 +79,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-label" for="max_otc_amount">حداکثر مقدار معامله OTC در این
                                         بازار</label>
@@ -94,7 +94,7 @@
                             </div>
                         </div>
                         <div class="row mt-5">
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-label" for="min_trade_amount">حداقل مقدار معامله SPOT در این
                                         بازار</label>
@@ -108,7 +108,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-label" for="max_trade_amount">حداکثر مقدار معامله SPOT در این
                                         بازار</label>
@@ -123,7 +123,7 @@
                             </div>
                         </div>
                         <div class="row mt-5">
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-label" for="exchange_profit_sell">سود صرافی از محل خرید از صرافی
                                         مرجع (فروش به مشتری) (درصد)</label>
@@ -137,7 +137,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-label" for="exchange_profit_buy">سود صرافی از محل فروش به صرافی
                                         مرجع (خرید از مشتری)</label>
@@ -159,6 +159,23 @@
                                            value="1"/>
                                     <span class="switch-toggle-slider"></span>
                                     <span class="switch-label">وضعیت بازار(فعال/غیرفعال)</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mt-5">
+                                <label class="switch  switch-lg">
+                                    <input type="checkbox" class="switch-input" name="price_update_enabled"
+                                           value="1" {{ old('price_update_enabled') ? 'checked' : '' }} />
+                                    <span class="switch-toggle-slider"></span>
+                                    <span class="switch-label">بارگیری قیمت از صرافی مرجع (فعال/غیرفعال)
+
+                                        <small class="text-muted">
+                                            با فعال کردن این گزینه، قیمت بازار بعد از یک دقیقه شروع به بارگیری از صرافی مرجع
+                                            می کند.
+                                        </small>
+                                    </span>
+
                                 </label>
                             </div>
                         </div>

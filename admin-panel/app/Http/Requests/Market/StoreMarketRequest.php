@@ -33,4 +33,14 @@ class StoreMarketRequest extends FormRequest
             'is_active' => 'sometimes|boolean',
         ];
     }
+
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'min_otc_amount' => str_replace(',', '', $this->min_otc_amount),
+            'max_otc_amount' => str_replace(',', '', $this->max_otc_amount),
+            'min_trade_amount' => str_replace(',', '', $this->min_trade_amount),
+            'max_trade_amount' => str_replace(',', '', $this->max_trade_amount),
+        ]);
+    }
 }
