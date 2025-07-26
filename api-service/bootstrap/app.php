@@ -9,9 +9,9 @@ use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__.'/../routes/web.php',
-        commands: __DIR__.'/../routes/console.php',
-        channels: __DIR__.'/../routes/channels.php',
+        web: __DIR__ . '/../routes/web.php',
+        commands: __DIR__ . '/../routes/console.php',
+        channels: __DIR__ . '/../routes/channels.php',
         health: '/up',
         then: function () {
             Route::middleware('api')
@@ -27,7 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
         }
     )
     ->withBroadcasting(
-        __DIR__.'/../routes/channels.php',
+        __DIR__ . '/../routes/channels.php',
         ['middleware' => ['auth:sanctum', 'verified']]
     )
     ->withMiddleware(function (Middleware $middleware) {
@@ -41,6 +41,12 @@ return Application::configure(basePath: dirname(__DIR__))
             ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
+        $exceptions->renderable(function (\Illuminate\Auth\AuthenticationException $e, $request) {
+            if ($request->is('api/*')) {
+                return response()->json(['message' => $e->getMessage()], 401);
+            }
+        });
+
         $exceptions->renderable(function (ThrottleRequestsException $e) {
             return response([
                 'message' => __('auth.too_many_attempts'),
@@ -56,5 +62,4 @@ return Application::configure(basePath: dirname(__DIR__))
                 'error' => $e->getMessage(),
             ], $e->getCode());
         });
-
     })->create();
