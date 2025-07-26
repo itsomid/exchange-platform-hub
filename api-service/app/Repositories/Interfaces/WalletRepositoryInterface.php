@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Collection;
 
 interface WalletRepositoryInterface
 {
-    public function createOrGetWallet(string $symbol, int $userId): Wallet;
 
     public function getWalletWithLock(string $symbol, int $userId): Wallet;
 

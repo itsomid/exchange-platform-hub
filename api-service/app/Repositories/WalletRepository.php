@@ -17,17 +17,6 @@ class WalletRepository implements WalletRepositoryInterface
             ->first();
     }
 
-    public function createOrGetWallet(string $symbol, int $userId): Wallet
-    {
-        return Wallet::query()
-            ->firstOrCreate([
-                'user_id' => $userId,
-                'currency_symbol' => $symbol,
-            ], [
-                'balance' => 0,
-                'locked_balance' => 0,
-            ]);
-    }
 
     public function getWalletWithLock(string $symbol, int $userId): Wallet
     {
