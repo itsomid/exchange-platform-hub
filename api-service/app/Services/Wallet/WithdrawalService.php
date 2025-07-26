@@ -12,19 +12,21 @@ use App\Infrastructure\HDWallet\DTO\Withdrawal\GetWithdrawalStatusRequestDTO;
 use App\Infrastructure\HDWallet\DTO\Withdrawal\WithdrawRequestDTO;
 use App\Infrastructure\HDWallet\Exceptions\NotFoundException;
 use App\Infrastructure\HDWallet\HDWalletWithdrawalService;
-use App\Models\CurrencyChain;
 use App\Models\Transaction;
 use App\Models\Wallet;
 use App\Models\Withdrawal;
 use App\Notifications\WithdrawalSuccessful;
 use App\Repositories\Interfaces\CurrencyRepositoryInterface;
 use App\Repositories\Interfaces\LockedBalanceRepositoryInterface;
+use App\Repositories\Interfaces\TransactionRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Repositories\Interfaces\WithdrawalRepositoryInterface;
+use App\Repositories\Interfaces\ExchangeRepositoryInterface;
 use App\Services\Exchanges\AdminNotification;
 use App\Services\Wallet\DTO\Withdrawal\CheckWithdrawalResponseDTO;
 use App\Services\Wallet\DTO\Withdrawal\CreateWithdrawalRequestDTO;
 use App\Services\Wallet\DTO\Withdrawal\CreateWithdrawalResponseDTO;
+use App\Repositories\DTO\Transaction\CreateTransactionRequestDTO;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -37,7 +39,8 @@ class WithdrawalService
         private readonly WithdrawalRepositoryInterface $withdrawalRepository,
         private readonly HDWalletWithdrawalService $withdrawalService,
         private readonly LockedBalanceRepositoryInterface $lockedBalanceRepository,
-
+        private readonly TransactionRepositoryInterface $transactionRepository,
+        private readonly ExchangeRepositoryInterface $exchangeRepository,
     ) {}
 
     public function createWithdrawal(CreateWithdrawalRequestDTO $requestDTO): CreateWithdrawalResponseDTO
@@ -152,126 +155,6 @@ class WithdrawalService
         }
     }
 
-    private function confirmWithdrawal(Withdrawal $withdrawal, string $transactionHash, string $hdWalletNetworkFee): void
-    {
-
-        try {
-
-            $this->lockedBalanceRepository->deleteWithdrawalLockedBalance($withdrawal->id);
-
-
-            DB::beginTransaction();
-            $wallet = Wallet::query()
-                ->where('user_id', $withdrawal->user_id)
-                ->where('currency_symbol', $withdrawal->currency_symbol)
-                ->lockForUpdate()
-                ->first();
-
-
-
-            // Update withdrawal record
-            $withdrawal->update([
-                'transaction_hash' => $transactionHash,
-                'status' => WithdrawalStatusEnum::COMPLETED,
-                'hd_wallet_network_fee' => $hdWalletNetworkFee,
-                'confirmed_at' => now(),
-                'description' => 'Withdraw Completed',
-            ]);
-
-
-            // Unlock funds and deduct locked balance
-            $wallet->decrement('balance', $withdrawal->amount);
-            $wallet->decrement('locked_balance', $withdrawal->amount);
-
-            // Create the transaction record
-            Transaction::query()->create([
-                'user_id' => $withdrawal->user_id,
-                'wallet_id' => $wallet->id,
-                'withdrawal_id' => $withdrawal->id,
-                'amount' => -$withdrawal->amount,
-                'balance' => Math::add($wallet->balance, $withdrawal->amount),
-                'type' => TransactionTypeEnum::WITHDRAWAL,
-                'subtype' => TransactionSubTypeEnum::USER_INITIATED,
-                'status' => TransactionStatusEnum::SUCCESS,
-                'description' => 'برداشت به آدرس: '.$withdrawal->address.' هش تراکنش: '.$transactionHash,
-                'admin_description' => ''
-            ]);
-
-            $baseCoinChain = CurrencyChain::query()
-                ->where('chain', $withdrawal->currencyChain->chain)
-                ->where('is_base_coin', 1)
-                ->first();
-
-            $wallet = Wallet::query()
-                ->where('currency_symbol', $baseCoinChain->currency->symbol)
-                ->where('user_id', config('bitexroom.user_id'))
-                ->first();
-
-            //HD Wallet Fee
-            Transaction::query()
-                ->create([
-                    'user_id' => config('bitexroom.user_id'),
-                    'wallet_id' => $wallet->id,
-                    'withdrawal_id' => $withdrawal->id,
-                    'amount' => -$hdWalletNetworkFee,
-                    'balance' => null,
-                    'type' => TransactionTypeEnum::FEE,
-                    'subtype' => TransactionSubTypeEnum::HD_WALLET_FEE,
-                    'status' => TransactionStatusEnum::SUCCESS,
-                    'description' => 'کارمزد پرداخت شده به شبکه برای برداشت از HD Wallet.',
-                ]);
-
-            $this->createExchangeWithdrawalFee($withdrawal, $hdWalletNetworkFee);
-
-            DB::commit();
-        } catch (Throwable $e) {
-
-            DB::rollBack();
-            report($e);
-            throw $e;
-        }
-    }
-
-    private function createExchangeWithdrawalFee($withdrawal, $hdWalletNetworkFee): void
-    {
-
-        $exchangeWallet = $this->walletRepository->getBitexroomWalletWithLock($withdrawal->currency_symbol);
-
-        $exchangeWithdrawalFee = $withdrawal->exchange_fee;
-        $exchangeNetworkFee = $withdrawal->network_fee;
-        if ($exchangeWithdrawalFee > 0) {
-            Transaction::query()->create([
-                'user_id' => config('bitexroom.user_id'),
-                'wallet_id' => $exchangeWallet->id,
-                'withdrawal_id' => $withdrawal->id,
-                'balance' => $exchangeWallet->balance,
-                'amount' => $exchangeWithdrawalFee,
-                'type' => TransactionTypeEnum::FEE,
-                'subtype' => TransactionSubTypeEnum::EXCHANGE_WITHDRAWAL_FEE,
-                'status' => TransactionStatusEnum::SUCCESS,
-                'description' => "کارمزد برداشت صرافی  {$exchangeWallet->currency_symbol} کاربر  "."(#{$withdrawal->user->id}) ".$withdrawal->user->username,
-            ]);
-
-            $exchangeWallet->increment('balance', $exchangeWithdrawalFee);
-        }
-        if ($exchangeNetworkFee > 0) {
-            // Exchange Network Fee
-            Transaction::query()->create([
-                'user_id' => config('bitexroom.user_id'),
-                'wallet_id' => $exchangeWallet->id,
-                'withdrawal_id' => $withdrawal->id,
-                'amount' => $exchangeNetworkFee,
-                'balance' => $exchangeWallet->balance,
-                'type' => TransactionTypeEnum::FEE,
-                'subtype' => TransactionSubTypeEnum::NETWORK_WITHDRAWAL_FEE,
-                'status' => TransactionStatusEnum::SUCCESS,
-                'description' => "کارمزد شبکه صرافی  {$exchangeWallet->currency_symbol} کاربر  "."(#{$withdrawal->user->id}) ".$withdrawal->user->username,
-                'admin_description' => '',
-            ]);
-            $exchangeWallet->increment('balance', Math::sub($exchangeNetworkFee, $hdWalletNetworkFee));
-        }
-    }
-
     public function checkWithdrawal(Collection $pendingWithdrawal): CheckWithdrawalResponseDTO
     {
         $checkWithdrawalResponseDTO = resolve(CheckWithdrawalResponseDTO::class);
@@ -310,7 +193,6 @@ class WithdrawalService
                         ->setTransactionHash($responseDTO->getTransactionHash());
 
                     AdminNotification::sendHotWalletNotEnoughBalance($responseDTO->getCurrencySymbol(), $responseDTO->getAmount(), $user);
-
                 }
 
                 if ($responseDTO->getStatus() === 'completed') {
@@ -322,12 +204,9 @@ class WithdrawalService
                     $checkWithdrawalResponseDTO->setStatus(WithdrawalStatusEnum::COMPLETED)
                         ->setTransactionHash($responseDTO->getTransactionHash())
                         ->setConfirmedAt($withdrawal->confirmed_at);
-
-
                 }
-
             } catch (NotFoundException) {
-                report(new \Exception('Withdrawal #'.$withdrawal->id.' not found in HD wallet Service'));
+                report(new \Exception('Withdrawal #' . $withdrawal->id . ' not found in HD wallet Service'));
                 $withdrawal->update([
                     'status' => WithdrawalStatusEnum::FAILED,
                 ]);
@@ -337,11 +216,129 @@ class WithdrawalService
 
                 continue;
             }
-
         }
 
         return $checkWithdrawalResponseDTO;
     }
+
+    private function confirmWithdrawal(Withdrawal $withdrawal, string $transactionHash, string $hdWalletNetworkFee): void
+    {
+
+        try {
+
+            $this->lockedBalanceRepository->deleteWithdrawalLockedBalance($withdrawal->id);
+
+
+            DB::beginTransaction();
+            $wallet = Wallet::query()
+                ->where('user_id', $withdrawal->user_id)
+                ->where('currency_symbol', $withdrawal->currency_symbol)
+                ->lockForUpdate()
+                ->first();
+
+
+
+            // Update withdrawal record
+            $withdrawal->update([
+                'transaction_hash' => $transactionHash,
+                'status' => WithdrawalStatusEnum::COMPLETED,
+                'hd_wallet_network_fee' => $hdWalletNetworkFee,
+                'confirmed_at' => now(),
+                'description' => 'Withdraw Completed',
+            ]);
+
+
+            // Unlock funds and deduct locked balance
+            $wallet->decrement('balance', $withdrawal->amount);
+            $wallet->decrement('locked_balance', $withdrawal->amount);
+
+            // Create the transaction record
+            $this->transactionRepository->create(
+                resolve(CreateTransactionRequestDTO::class)
+                    ->setUserId($withdrawal->user_id)
+                    ->setWalletId($wallet->id)
+                    ->setWithdrawalId($withdrawal->id)
+                    ->setAmount(-$withdrawal->amount)
+                    ->setBalance(Math::add($wallet->balance, $withdrawal->amount))
+                    ->setCoinPrice($withdrawal->currency->exchangePrice)
+                    ->setType(TransactionTypeEnum::WITHDRAWAL)
+                    ->setSubtype(TransactionSubTypeEnum::USER_INITIATED)
+                    ->setStatus(TransactionStatusEnum::SUCCESS)
+                    ->setDescription('برداشت به آدرس: ' . $withdrawal->address . ' هش تراکنش: ' . $transactionHash)
+            );
+
+            $bitexroomWallet = $this->walletRepository->getBitexroomWalletWithLock($withdrawal->currency_symbol);
+
+            //HD Wallet Fee
+            $this->transactionRepository->create(
+                resolve(CreateTransactionRequestDTO::class)
+                    ->setUserId(config('bitexroom.user_id'))
+                    ->setWalletId($bitexroomWallet->id)
+                    ->setWithdrawalId($withdrawal->id)
+                    ->setAmount(-$hdWalletNetworkFee)
+                    ->setBalance(null)
+                    ->setCoinPrice($withdrawal->currency->exchangePrice)
+                    ->setType(TransactionTypeEnum::FEE)
+                    ->setSubtype(TransactionSubTypeEnum::HD_WALLET_FEE)
+                    ->setStatus(TransactionStatusEnum::SUCCESS)
+                    ->setDescription('کارمزد پرداخت شده به شبکه برای برداشت از HD Wallet.')
+            );
+
+            if ($withdrawal->exchange_fee > 0 || $withdrawal->network_fee > 0) {
+                $this->createExchangeWithdrawalFee($withdrawal, $hdWalletNetworkFee, $bitexroomWallet);
+            }
+
+            DB::commit();
+        } catch (Throwable $e) {
+
+            DB::rollBack();
+            report($e);
+            throw $e;
+        }
+    }
+
+    private function createExchangeWithdrawalFee($withdrawal, $hdWalletNetworkFee, $bitexroomWallet): void
+    {
+
+        $exchangeWithdrawalFee = $withdrawal->exchange_fee;
+        $exchangeNetworkFee = $withdrawal->network_fee;
+        if ($exchangeWithdrawalFee > 0) {
+            $this->transactionRepository->create(
+                resolve(CreateTransactionRequestDTO::class)
+                    ->setUserId(config('bitexroom.user_id'))
+                    ->setWalletId($bitexroomWallet->id)
+                    ->setWithdrawalId($withdrawal->id)
+                    ->setAmount($exchangeWithdrawalFee)
+                    ->setBalance(null)
+                    ->setCoinPrice($withdrawal->currency->exchangePrice)
+                    ->setType(TransactionTypeEnum::FEE)
+                    ->setSubtype(TransactionSubTypeEnum::EXCHANGE_WITHDRAWAL_FEE)
+                    ->setStatus(TransactionStatusEnum::SUCCESS)
+                    ->setDescription("کارمزد برداشت صرافی  {$bitexroomWallet->currency_symbol} کاربر  " . "(#{$withdrawal->user->id}) " . $withdrawal->user->username)
+            );
+
+            $bitexroomWallet->increment('balance', $exchangeWithdrawalFee);
+        }
+        if ($exchangeNetworkFee > 0) {
+            $this->transactionRepository->create(
+                resolve(CreateTransactionRequestDTO::class)
+                    ->setUserId(config('bitexroom.user_id'))
+                    ->setWalletId($bitexroomWallet->id)
+                    ->setWithdrawalId($withdrawal->id)
+                    ->setAmount($exchangeNetworkFee)
+                    ->setBalance(null)
+                    ->setExchangeId($this->exchangeRepository->getActiveExchange()->id)
+                    ->setCoinPrice($withdrawal->currency->exchangePrice)
+                    ->setType(TransactionTypeEnum::FEE)
+                    ->setSubtype(TransactionSubTypeEnum::NETWORK_WITHDRAWAL_FEE)
+                    ->setStatus(TransactionStatusEnum::SUCCESS)
+                    ->setDescription("کارمزد شبکه صرافی  {$bitexroomWallet->currency_symbol} کاربر  " . "(#{$withdrawal->user->id}) " . $withdrawal->user->username)
+            );
+            $bitexroomWallet->increment('balance', Math::sub($exchangeNetworkFee, $hdWalletNetworkFee));
+        }
+    }
+
+
 
     public function lockBalance(Wallet $wallet, string $amount, int $withdrawalId): void
     {

@@ -33,7 +33,7 @@ class WalletService
 
     public function createWallet(int $userId, string $currencySymbol): void
     {
-        $this->walletRepository->createOrGetWallet($currencySymbol, $userId);
+        $this->walletRepository->getOrCreateWallet($currencySymbol, $userId);
     }
 
     /**
@@ -46,7 +46,7 @@ class WalletService
 
         try {
             DB::beginTransaction();
-            $wallet = $this->walletRepository->createOrGetWallet(
+            $wallet = $this->walletRepository->getOrCreateWallet(
                 $requestDTO->getCurrency(),
                 $requestDTO->getUserId()
             );
