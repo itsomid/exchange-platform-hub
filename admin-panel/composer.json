@@ -25,7 +25,7 @@
         "maatwebsite/excel": "^3.1.55",
         "mews/captcha": "^3.3",
         "morilog/jalali": "3.*",
-        "opcodesio/log-viewer": "^v3.11.2",
+        "opcodesio/log-viewer": "^v3.19.0",
         "predis/predis": "^2.0",
         "ratchet/pawl": "^v0.4.3",
         "spatie/laravel-backup": "^9.3",
