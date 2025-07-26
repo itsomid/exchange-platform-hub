@@ -33,7 +33,7 @@ class WalletService
 
     public function createWallet(int $userId, string $currencySymbol): void
     {
-        $this->walletRepository->createOrGetWallet($currencySymbol, $userId);
+        $this->walletRepository->getOrCreateWallet($userId, $currencySymbol);
     }
 
     /**
@@ -46,9 +46,9 @@ class WalletService
 
         try {
             DB::beginTransaction();
-            $wallet = $this->walletRepository->createOrGetWallet(
-                $requestDTO->getCurrency(),
-                $requestDTO->getUserId()
+            $wallet = $this->walletRepository->getOrCreateWallet(
+                $requestDTO->getUserId(),
+                $requestDTO->getCurrency()
             );
 
             $chain = $this->walletChainRepository->createOrGetChain(
@@ -215,8 +215,8 @@ class WalletService
 
         if (is_null($wallet)) {
             return resolve(WalletListsResponseDTO::class)
-                ->setCurrency($market->base_currency)
-                ->setCurrencyLogo($market->baseCurrency->logo ?? '')
+                ->setCurrency($market ? $market->base_currency : 'USDT')
+                ->setCurrencyLogo($market ? $market->baseCurrency->logo : 'usdt.svg')
                 ->setBalance('0')
                 ->setLockedBalance('0')
                 ->setAvailableBalance('0')
