@@ -17,7 +17,7 @@ class GetDepositListsResponseDTO
 
     private string $status;
 
-    private int $confirmationBlocks;
+    private ?int $confirmationBlocks = null;
 
     private string $blockChain;
 
@@ -25,17 +25,17 @@ class GetDepositListsResponseDTO
 
     private ?string $contractAddress = null;
 
-    private string $type;
+    private ?string $type = null;
 
-    private int $blockNumber;
+    private ?int $blockNumber = null;
 
     private string $from;
 
-    private string $to;
+    private ?string $to = null;
 
-    private float $gasPrice;
+    private ?float $gasPrice = null;
 
-    private int $gasUsed;
+    private ?int $gasUsed = null;
 
 
     public function setTimestamp(int $timestamp): GetDepositListsResponseDTO
@@ -98,14 +98,14 @@ class GetDepositListsResponseDTO
         return $this->status;
     }
 
-    public function setConfirmationBlocks(int $confirmationBlocks): GetDepositListsResponseDTO
+    public function setConfirmationBlocks(?int $confirmationBlocks): GetDepositListsResponseDTO
     {
         $this->confirmationBlocks = $confirmationBlocks;
 
         return $this;
     }
 
-    public function getConfirmationBlocks(): int
+    public function getConfirmationBlocks(): ?int
     {
         return $this->confirmationBlocks;
     }
@@ -146,26 +146,26 @@ class GetDepositListsResponseDTO
         return $this->contractAddress;
     }
 
-    public function setType(string $type): GetDepositListsResponseDTO
+    public function setType(?string $type): GetDepositListsResponseDTO
     {
         $this->type = $type;
 
         return $this;
     }
 
-    public function getType(): string
+    public function getType(): ?string
     {
         return $this->type;
     }
 
-    public function setBlockNumber(int $blockNumber): GetDepositListsResponseDTO
+    public function setBlockNumber(?int $blockNumber): GetDepositListsResponseDTO
     {
         $this->blockNumber = $blockNumber;
 
         return $this;
     }
 
-    public function getBlockNumber(): int
+    public function getBlockNumber(): ?int
     {
         return $this->blockNumber;
     }
@@ -182,38 +182,38 @@ class GetDepositListsResponseDTO
         return $this->from;
     }
 
-    public function setTo(string $to): GetDepositListsResponseDTO
+    public function setTo(?string $to): GetDepositListsResponseDTO
     {
         $this->to = $to;
 
         return $this;
     }
 
-    public function getTo(): string
+    public function getTo(): ?string
     {
         return $this->to;
     }
 
-    public function setGasPrice(float $gasPrice): GetDepositListsResponseDTO
+    public function setGasPrice(?float $gasPrice): GetDepositListsResponseDTO
     {
         $this->gasPrice = $gasPrice;
 
         return $this;
     }
 
-    public function getGasPrice(): float
+    public function getGasPrice(): ?float
     {
         return $this->gasPrice;
     }
 
-    public function setGasUsed(int $gasUsed): GetDepositListsResponseDTO
+    public function setGasUsed(?int $gasUsed): GetDepositListsResponseDTO
     {
         $this->gasUsed = $gasUsed;
 
         return $this;
     }
 
-    public function getGasUsed(): int
+    public function getGasUsed(): ?int
     {
         return $this->gasUsed;
     }

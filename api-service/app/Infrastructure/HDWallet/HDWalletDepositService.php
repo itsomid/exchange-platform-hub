@@ -15,10 +15,12 @@ class HDWalletDepositService
     public function getDepositLists(GetDepositListsRequestDTO $requestDTO)
     {
         try {
-            // Map the blockchain name to network name
-            $network = ContractAddressMapper::mapNetworkName($requestDTO->getBlockchain());
 
+            // Map the blockchain name to network name
+
+            $network = $requestDTO->getBlockchain();
             $contractAddress = $requestDTO->getContractAddress();
+
             $requestBody = [
                 'network' => $network,
                 'token_symbol' => $requestDTO->getCurrencySymbol(),
@@ -26,6 +28,7 @@ class HDWalletDepositService
                 'address' => $requestDTO->getWalletAddress(),
                 'limit' => $requestDTO->getLimit() ?? 50
             ];
+
             $response = Http::post(HDWallet::getBaseUrl() . '/api/v1/universal/deposit/transaction-history', $requestBody);
         } catch (ConnectionException $exception) {
             report($exception);
@@ -66,16 +69,16 @@ class HDWalletDepositService
                 ->setAmount((string) $item['value'])
                 ->setTransactionHash($item['hash'])
                 ->setStatus($item['status'])
-                ->setConfirmationBlocks($item['confirmations'])
+                ->setConfirmationBlocks(isset($item['confirmations']) ? $item['confirmations'] : null)
                 ->setBlockChain(strtoupper($network))
-                ->setWalletAddress($item['to'])
-                ->setContractAddress($item['contract_address'] ?? null)
-                ->setType($item['type'])
-                ->setBlockNumber($item['block_number'])
+                ->setWalletAddress($requestDTO->getWalletAddress())
+                ->setContractAddress(isset($item['contract_address']) ? $item['contract_address'] : null)
+                ->setType(isset($item['type']) ? $item['type'] : null)
+                ->setBlockNumber(isset($item['block_number']) ? $item['block_number'] : null)
                 ->setFrom($item['from'])
-                ->setTo($item['to'])
-                ->setGasPrice($item['gas_price'])
-                ->setGasUsed($item['gas_used']);
+                ->setTo($requestDTO->getWalletAddress())
+                ->setGasPrice(isset($item['gas_price']) ? $item['gas_price'] : null)
+                ->setGasUsed(isset($item['gas_used']) ? $item['gas_used'] : null);
         }, $transactions);
     }
 }

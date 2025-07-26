@@ -55,28 +55,26 @@ class CheckWalletService
         }
         $wallet = $wallet->load('chains.wallet.currency.chains');
 
-        $walletChains = $wallet->chains;
+        $chains = $wallet->chains;
 
-        if (! $walletChains->contains(fn($chain) => ! empty($chain->address))) {
+        if (! $chains->contains(fn($chain) => ! empty($chain->address))) {
             throw new UserDoesNotHaveWalletChainAddress;
         }
 
         $hdDeposit = resolve(HDWalletDepositService::class);
 
-        foreach ($walletChains as $walletChain) {
-
-            $currencyChain = $walletChain->wallet->currency->chains->where('chain', $walletChain->currency_chain)->first();
-
-            if (empty($walletChain->address) || !$currencyChain->deposit_enabled) {
+        foreach ($chains as $chain) {
+            if (empty($chain->address)) {
                 continue;
             }
+            $currencyChain = $chain->wallet->currency->chains->where('chain', $chain->currency_chain)->first();
 
             $transactions = $hdDeposit->getDepositLists(
                 resolve(GetDepositListsRequestDTO::class)
                     ->setCurrencySymbol($wallet->currency_symbol)
-                    ->setWalletAddress($walletChain->address)
+                    ->setWalletAddress($chain->address)
                     ->setBlockchain($currencyChain->blockchain_name->value)
-                    ->setContractAddress($currencyChain->contract_address)
+                    ->setContractAddress($currencyChain->contract_address ?? null)
             );
 
             foreach ($transactions as $transaction) {
@@ -97,7 +95,7 @@ class CheckWalletService
 
                     $deposit = $this->depositRepository->create(
                         resolve(CreateDepositRequestDTO::class)
-                            ->setUserId($requestDTO->getUserId())
+                            ->setUserId($user->id)
                             ->setCurrencySymbol($transaction->getCryptocurrency())
                             ->setCurrencyChainId($currencyChain->id)
                             ->setAmount($transaction->getAmount())
@@ -150,8 +148,6 @@ class CheckWalletService
                 resolve(GetDepositListsRequestDTO::class)
                     ->setCurrencySymbol($deposit->currency_symbol)
                     ->setWalletAddress($deposit->address)
-                    ->setBlockchain($deposit->currencyChain->blockchain_name->value)
-                    ->setCurrencyChain($deposit->currencyChain)
             );
 
             foreach ($transactions as $transaction) {
