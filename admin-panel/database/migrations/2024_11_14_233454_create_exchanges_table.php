@@ -15,10 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('name'); // e.g., Binance, CoinEx
             $table->string('slug')->unique(); // Unique identifier for the exchange (e.g., binance, coinex)
-            $table->boolean('is_active')->unique()->default(false);
+            $table->boolean('is_active')->default(false);
             $table->unsignedInteger('priority');
             $table->timestamps();
-
         });
     }
 
