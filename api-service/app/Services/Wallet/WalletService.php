@@ -215,8 +215,8 @@ class WalletService
 
         if (is_null($wallet)) {
             return resolve(WalletListsResponseDTO::class)
-                ->setCurrency($market->base_currency)
-                ->setCurrencyLogo($market->baseCurrency->logo ?? '')
+                ->setCurrency($market ? $market->base_currency : 'USDT')
+                ->setCurrencyLogo($market ? $market->baseCurrency->logo : 'usdt.svg')
                 ->setBalance('0')
                 ->setLockedBalance('0')
                 ->setAvailableBalance('0')
