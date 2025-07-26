@@ -18,7 +18,24 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Transaction extends Model
 {
     protected $fillable = [
-        'user_id', 'admin_id', 'wallet_id', 'deposit_id', 'withdrawal_id', 'otc_order_id', 'spot_trade_id', 'amount', 'balance','coin_price', 'exchange_id', 'type', 'subtype', 'description', 'admin_description', 'status', 'journal_entry_number',
+        'user_id',
+        'admin_id',
+        'wallet_id',
+        'deposit_id',
+        'withdrawal_id',
+        'otc_order_id',
+        'spot_trade_id',
+        'stock_contract_id',
+        'amount',
+        'balance',
+        'coin_price',
+        'exchange_id',
+        'type',
+        'subtype',
+        'description',
+        'admin_description',
+        'status',
+        'journal_entry_number',
     ];
 
     protected function casts(): array
@@ -49,17 +66,17 @@ class Transaction extends Model
     {
         return $this->belongsTo(Wallet::class);
     }
-    public function OTCOrder() : BelongsTo
+    public function OTCOrder(): BelongsTo
     {
-        return $this->belongsTo(OTCOrder::class,'otc_order_id');
+        return $this->belongsTo(OTCOrder::class, 'otc_order_id');
     }
-    public function spotTrade() : BelongsTo
+    public function spotTrade(): BelongsTo
     {
-        return $this->belongsTo(SpotTrade::class,'spot_trade_id');
+        return $this->belongsTo(SpotTrade::class, 'spot_trade_id');
     }
 
-    public function exchange() : BelongsTo
+    public function exchange(): BelongsTo
     {
-        return $this->belongsTo(Exchange::class,'exchange_id');
+        return $this->belongsTo(Exchange::class, 'exchange_id');
     }
 }

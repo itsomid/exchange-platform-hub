@@ -27,8 +27,7 @@ class StockService
         private readonly WalletRepositoryInterface $walletRepository,
         private readonly WalletService $walletService,
         private readonly TransactionRepositoryInterface $transactionRepository
-    ) {
-    }
+    ) {}
 
     public function getStocks(): Collection
     {
@@ -61,7 +60,7 @@ class StockService
         return DB::transaction(function () use ($user, $data) {
             // Check wallet balance
             $stock = $this->stockRepository->getStockById($data['stock_id']);
-            $totalValue = $data['amount']*$stock->value;
+            $totalValue = $data['amount'] * $stock->value;
             $hasBalance = $this->walletService->checkBalance($user->id, 'USDT', $totalValue);
             if (!$hasBalance) {
                 throw new InsufficientBalanceException('Insufficient balance in wallet');
@@ -77,15 +76,16 @@ class StockService
             // create transaction
             $this->transactionRepository->create(
                 resolve(CreateTransactionRequestDTO::class)
-                ->setUserId($user->id)
-                ->setType(TransactionTypeEnum::BUY)
-                ->setAmount(-$totalValue)
-                ->setCoinPrice(1)
-                ->setStatus(TransactionStatusEnum::SUCCESS)
-                ->setBalance($walletBaseCurrency->balance)
-                ->setDescription('خرید سهام به شماره قرارداد ' . $stockContract->contract_number)
-                ->setSubtype(TransactionSubTypeEnum::STOCK)
-                ->setWalletId($walletBaseCurrency->id)
+                    ->setUserId($user->id)
+                    ->setType(TransactionTypeEnum::BUY)
+                    ->setAmount(-$totalValue)
+                    ->setCoinPrice(1)
+                    ->setStatus(TransactionStatusEnum::SUCCESS)
+                    ->setBalance($walletBaseCurrency->balance)
+                    ->setDescription('خرید سهام به شماره قرارداد ' . $stockContract->contract_number)
+                    ->setSubtype(TransactionSubTypeEnum::STOCK)
+                    ->setWalletId($walletBaseCurrency->id)
+                    ->setStockContractId($stockContract->id)
             );
 
             $this->walletService->decreaseBalance($user->id, 'USDT', $totalValue);
@@ -124,26 +124,30 @@ class StockService
                 // Create transaction record
                 $this->transactionRepository->create(
                     resolve(CreateTransactionRequestDTO::class)
-                    ->setUserId($user->id)
-                    ->setWalletId($wallet->id)
-                    ->setAmount($returnAmount)
-                    ->setBalance($wallet->balance)
-                    ->setType(TransactionTypeEnum::SELL)
-                    ->setSubtype(TransactionSubTypeEnum::STOCK)
-                    ->setStatus(TransactionStatusEnum::SUCCESS)
-                    ->setDescription('بازگشت وجه ابطال قرارداد سهام ' . $stockContract->contract_number)
+                        ->setUserId($user->id)
+                        ->setWalletId($wallet->id)
+                        ->setStockContractId($stockContract->id)
+                        ->setCoinPrice(1)
+                        ->setAmount($returnAmount)
+                        ->setBalance($wallet->balance)
+                        ->setType(TransactionTypeEnum::SELL)
+                        ->setSubtype(TransactionSubTypeEnum::STOCK)
+                        ->setStatus(TransactionStatusEnum::SUCCESS)
+                        ->setDescription('بازگشت وجه ابطال قرارداد سهام ' . $stockContract->contract_number)
                 );
 
                 $this->transactionRepository->create(
                     resolve(CreateTransactionRequestDTO::class)
-                    ->setUserId(config('bitexroom.user_id'))
-                    ->setWalletId($ExchangeWallet->id)
-                    ->setAmount($stockContract->cancellation_fee)
-                    ->setBalance($ExchangeWallet->balance)
-                    ->setType(TransactionTypeEnum::FEE)
-                    ->setSubtype(TransactionSubTypeEnum::STOCK)
-                    ->setStatus(TransactionStatusEnum::SUCCESS)
-                    ->setDescription('کارمزد ابطال قرارداد' . $stockContract->contract_number)
+                        ->setUserId(config('bitexroom.user_id'))
+                        ->setWalletId($ExchangeWallet->id)
+                        ->setStockContractId($stockContract->id)
+                        ->setCoinPrice(1)
+                        ->setAmount($stockContract->cancellation_fee)
+                        ->setBalance($ExchangeWallet->balance)
+                        ->setType(TransactionTypeEnum::FEE)
+                        ->setSubtype(TransactionSubTypeEnum::STOCK)
+                        ->setStatus(TransactionStatusEnum::SUCCESS)
+                        ->setDescription('کارمزد ابطال قرارداد' . $stockContract->contract_number)
                 );
 
 
@@ -203,7 +207,6 @@ class StockService
             }
 
             return false;
-
         } catch (\Exception $e) {
             \Log::error('Stock contract PDF generation failed: ' . $e->getMessage(), [
                 'contract_id' => $contract->id ?? 'unknown',
