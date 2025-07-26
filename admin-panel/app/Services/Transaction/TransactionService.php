@@ -88,8 +88,9 @@ class TransactionService
                 $this->logTransaction(
                     wallet: $exchangeWallet,
                     amount: $amount,
-                    type: TransactionTypeEnum::DEPOSIT->value,
+                    type: TransactionTypeEnum::WITHDRAWAL->value,
                     adminId: $adminId,
+                    coinPrice: $currency->exchangePrice,
                     withdrawalId: $withdraw->id, // No deposit ID for admin direct actions
                     description: 'Exchange Wallet credit decrease by',
                     admin_description: $admin_description
