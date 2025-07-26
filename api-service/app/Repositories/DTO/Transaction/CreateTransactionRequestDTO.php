@@ -20,6 +20,8 @@ class CreateTransactionRequestDTO
 
     private ?int $spotTradeId = null;
 
+    private ?int $stockContractId = null;
+
     private ?string $balance = null;
 
     private string $amount;
@@ -198,5 +200,15 @@ class CreateTransactionRequestDTO
         return $this->spotTradeId;
     }
 
+    public function setStockContractId(?int $stockContractId): CreateTransactionRequestDTO
+    {
+        $this->stockContractId = $stockContractId;
 
+        return $this;
+    }
+
+    public function getStockContractId(): ?int
+    {
+        return $this->stockContractId;
+    }
 }

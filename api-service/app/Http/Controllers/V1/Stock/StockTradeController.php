@@ -4,12 +4,10 @@ namespace App\Http\Controllers\V1\Stock;
 
 use App\Http\Controllers\Controller;
 use App\Services\Stock\StockService;
-use Illuminate\Http\JsonResponse;
-use App\Exceptions\InsufficientBalanceException;
+use App\Exceptions\V1\Wallet\InsufficientBalanceException;
 use App\Exceptions\V1\Stock\InvalidContractException;
 use App\Http\Requests\V1\Stock\StockPurchaseRequest;
 use Illuminate\Support\Facades\Auth;
-use App\Services\Wallet\WalletService;
 use Illuminate\Http\Response;
 
 class StockTradeController extends Controller
@@ -30,7 +28,6 @@ class StockTradeController extends Controller
                 'message' => __('stock.stock_purchase_successful'),
                 'data' => $stockContract
             ], Response::HTTP_CREATED);
-
         } catch (InsufficientBalanceException $e) {
             return response([
                 'message' => $e->getMessage()

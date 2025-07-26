@@ -2,7 +2,6 @@
 
 namespace App\Services\Transaction;
 
-use App\Enums\BalanceOperationEnum;
 use App\Enums\DepositStatusEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
@@ -16,8 +15,6 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\Withdrawal;
-use App\Services\Deposit\DepositService;
-use App\Services\Wallet\DTO\UpdateBalanceRequestDTO;
 use App\Services\Wallet\WalletService;
 
 class TransactionService
@@ -39,8 +36,7 @@ class TransactionService
         ?int          $adminId = null,
         ?string       $description = null,
         ?string       $admin_description = null
-    )
-    {
+    ) {
         \DB::transaction(function () use ($userId, $amount, $transactionHash, $currency, $currencyChain, $type, $adminId, $description, $admin_description) {
             // Fetch the wallet
             $exchangeWallet = $this->walletService->getExchangeWallet($currency->symbol);
@@ -71,12 +67,11 @@ class TransactionService
                     type: TransactionTypeEnum::DEPOSIT->value,
                     adminId: $adminId,
                     depositId: $deposit->id, // No deposit ID for admin direct actions
-                    coinPrice:  $currency->exchangePrice,
+                    coinPrice: $currency->exchangePrice,
                     description: 'Exchange Wallet credit increase',
                     admin_description: $admin_description
                 );
                 $exchangeWallet->increment('balance', $amount);
-
             } else {
 
                 $withdraw = Withdrawal::create([
@@ -134,13 +129,12 @@ class TransactionService
         ?int          $adminId = null,
         ?string       $description = null,
         ?string       $admin_description = null
-    ): void
-    {
+    ): void {
 
         \DB::transaction(function () use ($fromUserId, $toUserId, $amount, $transactionHash, $currency, $currencyChain, $type, $adminId, $description, $admin_description) {
             // Fetch wallets
 
-             $fromWallet = Wallet::firstOrCreate(
+            $fromWallet = Wallet::firstOrCreate(
                 ['user_id' => $fromUserId, 'currency_symbol' => $currency->symbol],
                 ['balance' => 0]
             );
@@ -157,7 +151,6 @@ class TransactionService
                 } else {
                     throw new \Exception('موجودی ناکافی کیف پول کاربر برای برداشت.');
                 }
-
             }
 
             $deposit = Deposit::create([
@@ -169,7 +162,8 @@ class TransactionService
                 'address' => null,
                 'transaction_hash' => $transactionHash,
                 'confirmed_at' => now(),
-                'description' => sprintf('manual deposit by admin: (#%d) %s: (#%s)',
+                'description' => sprintf(
+                    'manual deposit by admin: (#%d) %s: (#%s)',
                     $adminId,
                     $type === TransactionTypeEnum::DEPOSIT->value ? 'to' : 'from',
                     User::find($type === TransactionTypeEnum::DEPOSIT->value ? $toUserId : $fromUserId)->username
@@ -186,7 +180,8 @@ class TransactionService
                 'address' => null,
                 'transaction_hash' => $transactionHash,
                 'confirmed_at' => now(),
-                'description' => sprintf('manual withdrawal by admin: (#%d) %s: (#%s)',
+                'description' => sprintf(
+                    'manual withdrawal by admin: (#%d) %s: (#%s)',
                     $adminId,
                     $type === TransactionTypeEnum::WITHDRAWAL->value ? 'from' : 'to',
                     User::find($type === TransactionTypeEnum::WITHDRAWAL->value ? $fromUserId : $toUserId)->username
@@ -241,11 +236,10 @@ class TransactionService
         ?int    $adminId,
         ?int    $depositId = null,
         ?int    $withdrawalId = null,
-        float   $coinPrice = null,
+        ?float  $coinPrice = null,
         ?string $description = null,
         ?string $admin_description = null
-    ): void
-    {
+    ): void {
         Transaction::create([
             'user_id' => $wallet->user_id,
             'admin_id' => $adminId,
@@ -294,5 +288,4 @@ class TransactionService
         // Calculate the value in USDT
         return abs($totalTransactions * $currency->exchangePrice);
     }
-
 }

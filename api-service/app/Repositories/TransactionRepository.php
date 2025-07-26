@@ -21,6 +21,7 @@ class TransactionRepository implements TransactionRepositoryInterface
             'withdrawal_id' => $requestDTO->getWithdrawalId(),
             'otc_order_id' => $requestDTO->getOtcOrderId(),
             'spot_trade_id' => $requestDTO->getSpotTradeId(),
+            'stock_contract_id' => $requestDTO->getStockContractId(),
             'balance' => $requestDTO->getBalance(),
             'amount' => $requestDTO->getAmount(),
             'coin_price' => $requestDTO->getCoinPrice(),
@@ -50,13 +51,13 @@ class TransactionRepository implements TransactionRepositoryInterface
         if ($currencySymbol) {
             $transactions->where(function ($q) use ($transactionType, $currencySymbol) {
                 if (in_array(TransactionTypeEnum::DEPOSIT, $transactionType)) {
-                    $q->whereHas('deposit', fn (Builder $q) => $q->where('currency_symbol', $currencySymbol));
+                    $q->whereHas('deposit', fn(Builder $q) => $q->where('currency_symbol', $currencySymbol));
                 }
                 if (in_array(TransactionTypeEnum::WITHDRAWAL, $transactionType)) {
                     if (in_array(TransactionTypeEnum::DEPOSIT, $transactionType)) {
-                        $q->orWhereHas('withdrawal', fn (Builder $q) => $q->where('currency_symbol', $currencySymbol));
+                        $q->orWhereHas('withdrawal', fn(Builder $q) => $q->where('currency_symbol', $currencySymbol));
                     } else {
-                        $q->WhereHas('withdrawal', fn (Builder $q) => $q->where('currency_symbol', $currencySymbol));
+                        $q->WhereHas('withdrawal', fn(Builder $q) => $q->where('currency_symbol', $currencySymbol));
                     }
                 }
             });
