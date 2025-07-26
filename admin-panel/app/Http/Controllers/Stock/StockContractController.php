@@ -36,7 +36,7 @@ class StockContractController extends Controller
 
     public function index()
     {
-        $contracts = StockContract::with(['user', 'stock'])->get();
+        $contracts = StockContract::with(['user', 'stock'])->orderBy('created_at', 'desc')->get();
         // Dashboard statistics
         $totalContracts = $contracts->count();
 
@@ -47,7 +47,7 @@ class StockContractController extends Controller
         $soldAmount = $contracts->where('contract_status', StockContractStatusEnum::SOLD)->sum('total_value');
         $canceledAmount = $contracts->where('contract_status', StockContractStatusEnum::CANCELED)->sum('total_value');
 
-        $cancellationSoldFees = $contracts->filter(function($contract) {
+        $cancellationSoldFees = $contracts->filter(function ($contract) {
             return in_array($contract->contract_status, [StockContractStatusEnum::SOLD, StockContractStatusEnum::CANCELED]);
         })->sum('cancellation_fee');
 
@@ -126,12 +126,15 @@ class StockContractController extends Controller
             Transaction::create([
                 'user_id' => $request['user_id'],
                 'wallet_id' => $wallet->id,
+                'admin_id' => auth()->user()->id,
+                'stock_contract_id' => $contract->id,
                 'amount' => -$totalValue,
                 'balance' => $wallet->balance,
+                'coin_price' => "1",
                 'type' => TransactionTypeEnum::BUY,
                 'subtype' => TransactionSubTypeEnum::STOCK,
                 'status' => TransactionStatusEnum::SUCCESS,
-                'description' => 'خرید سهام توسط ادمین (UserID: #' . $request['user_id'] . ') - شماره قرارداد: ' . $contract->contract_number,
+                'description' => 'خرید سهام توسط ادمین (AdminId: #' . auth()->user()->id . ', AdminName: ' . auth()->user()->fullname() . ') - شماره قرارداد: ' . $contract->contract_number,
             ]);
 
             $this->walletService->decreaseBalance($request['user_id'], 'USDT', $totalValue);
@@ -201,7 +204,7 @@ class StockContractController extends Controller
         ];
 
         // Handle status changes and timestamps
-        if  ($request['contract_status'] === 'canceled' && $stockContract->contract_status !== StockContractStatusEnum::CANCELED) {
+        if ($request['contract_status'] === 'canceled' && $stockContract->contract_status !== StockContractStatusEnum::CANCELED) {
             $updateData['cancelled_at'] = now();
 
             // Check if stock type is GIFT
@@ -224,8 +227,11 @@ class StockContractController extends Controller
                 Transaction::create([
                     'user_id' => $user->id,
                     'wallet_id' => $wallet->id,
+                    'admin_id' => auth()->user()->id,
+                    'stock_contract_id' => $stockContract->id,
                     'amount' => $refundAmount,
                     'balance' => $wallet->balance,
+                    'coin_price' => "1",
                     'type' => TransactionTypeEnum::SELL,
                     'subtype' => TransactionSubTypeEnum::STOCK,
                     'status' => TransactionStatusEnum::SUCCESS,
@@ -237,8 +243,11 @@ class StockContractController extends Controller
                     Transaction::create([
                         'user_id' => $this->bitexroomUserId,
                         'wallet_id' => $ExchangeWallet->id,
+                        'admin_id' => auth()->user()->id,
+                        'stock_contract_id' => $stockContract->id,
                         'amount' => $stockContract->cancellation_fee,
                         'balance' => $ExchangeWallet->balance,
+                        'coin_price' => "1",
                         'type' => TransactionTypeEnum::FEE,
                         'subtype' => TransactionSubTypeEnum::STOCK,
                         'status' => TransactionStatusEnum::SUCCESS,

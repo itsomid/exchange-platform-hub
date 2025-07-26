@@ -20,6 +20,7 @@ return new class extends Migration
             $table->unsignedBigInteger('withdrawal_id')->nullable(); // Foreign key
             $table->unsignedBigInteger('otc_order_id')->nullable(); // Foreign key
             $table->unsignedBigInteger('spot_trade_id')->nullable(); // Foreign key
+            $table->unsignedBigInteger('stock_contract_id')->nullable(); // Foreign key
             $table->decimal('amount', 20, 8); // To handle precise values like cryptocurrency
             $table->decimal('balance', 18, 8)->nullable(); // balance after transaction
             $table->string('type', 50); // Status of transaction
@@ -39,6 +40,7 @@ return new class extends Migration
             $table->foreign('withdrawal_id')->references('id')->on('withdrawals')->onDelete('set null');
             $table->foreign('otc_order_id')->references('id')->on('otc_orders')->onDelete('set null');
             $table->foreign('spot_trade_id')->references('id')->on('spot_trades')->onDelete('set null');
+            $table->foreign('stock_contract_id')->references('id')->on('stock_contracts')->onDelete('set null');
         });
     }
 

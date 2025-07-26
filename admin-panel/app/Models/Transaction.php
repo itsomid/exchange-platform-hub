@@ -19,7 +19,22 @@ class Transaction extends Model
     public $filterNameSpace = 'App\Filters\TransactionFilter';
 
     protected $fillable = [
-        'user_id', 'admin_id', 'wallet_id', 'deposit_id', 'withdrawal_id', 'otc_order_id', 'amount', 'balance', 'coin_price', 'exchange_id', 'type', 'subtype', 'description', 'admin_description', 'status'
+        'user_id',
+        'admin_id',
+        'stock_contract_id',
+        'wallet_id',
+        'deposit_id',
+        'withdrawal_id',
+        'otc_order_id',
+        'amount',
+        'balance',
+        'coin_price',
+        'exchange_id',
+        'type',
+        'subtype',
+        'description',
+        'admin_description',
+        'status'
     ];
 
     protected function casts(): array
@@ -69,5 +84,10 @@ class Transaction extends Model
     public function spotTrade()
     {
         return $this->belongsTo(SpotTrade::class, 'spot_trade_id');
+    }
+
+    public function stockContract()
+    {
+        return $this->belongsTo(StockContract::class, 'stock_contract_id');
     }
 }
