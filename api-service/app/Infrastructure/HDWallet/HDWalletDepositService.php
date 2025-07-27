@@ -16,8 +16,6 @@ class HDWalletDepositService
     {
         try {
 
-            // Map the blockchain name to network name
-
             $network = $requestDTO->getBlockchain();
             $contractAddress = $requestDTO->getContractAddress();
 

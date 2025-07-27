@@ -6,7 +6,6 @@ enum CurrencyChainEnum: string
 {
     case BTC = 'BTC';         // Bitcoin blockchain
     case ERC20 = 'ERC20';     // Ethereum ERC-20 token standard
-    case BEP20 = 'BEP20';     // Binance Smart Chain (BSC) BEP-20 token standard
     case TRC20 = 'TRC20';     // TRON TRC-20 token standard
     case BSC = 'BSC';         // Binance Smart Chain (Native chain)
     case DOGE = 'DOGE';       // Dogecoin blockchain
@@ -27,7 +26,6 @@ enum CurrencyChainEnum: string
         return match ($this) {
             self::BTC => 'Bitcoin',
             self::ERC20 => 'Ethereum (ERC20)',
-            self::BEP20 => 'BSC (BEP20)',
             self::TRC20 => 'TRON (TRC20)',
             self::BSC => 'BSC (BEP20)',
             self::DOGE => 'Dogecoin',
@@ -50,7 +48,7 @@ enum CurrencyChainEnum: string
         return match ($this) {
             self::BTC => 'BITCOIN',
             self::ERC20 => 'ETHEREUM',
-            self::BEP20 => 'BSC',
+            self::BSC => 'BINANCE',
             self::TRC20 => 'TRON',
             self::DOGE => 'DOGECOIN',
             self::SOL => 'SOLANA',
