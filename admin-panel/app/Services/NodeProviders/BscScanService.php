@@ -151,7 +151,7 @@ class BscScanService
             $currencyModel = Currency::where('symbol', $currency)->first();
             if ($currencyModel) {
                 $currencyChain = CurrencyChain::where('currency_id', $currencyModel->id)
-                    ->where('chain', CurrencyChainEnum::BEP20)
+                    ->where('chain', CurrencyChainEnum::BSC)
                     ->first();
 
                 if ($currencyChain && $currencyChain->contract_address) {
@@ -176,7 +176,7 @@ class BscScanService
             $currencyModel = Currency::where('symbol', $currency)->first();
             if ($currencyModel) {
                 $currencyChain = CurrencyChain::where('currency_id', $currencyModel->id)
-                    ->where('chain', CurrencyChainEnum::BEP20)
+                    ->where('chain', CurrencyChainEnum::BSC)
                     ->first();
 
                 if ($currencyChain && $currencyChain->withdrawal_precision) {

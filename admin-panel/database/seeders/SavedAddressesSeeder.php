@@ -20,7 +20,7 @@ class SavedAddressesSeeder extends Seeder
             [
                 'user_id' => $userId,
                 'name' => 'Binance USDT Wallet',
-                'chain' => CurrencyChainEnum::BEP20,
+                'chain' => CurrencyChainEnum::BSC,
                 'address' => '0x123456789abcdef123456789abcdef123456789a',
             ],
             [
