@@ -45,6 +45,11 @@ class StockContract extends Model
         return $this->belongsTo(Stock::class);
     }
 
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class, 'stock_contract_id');
+    }
+
     public static function generateContractNumber()
     {
         $datePart = now()->format('Ymd');
