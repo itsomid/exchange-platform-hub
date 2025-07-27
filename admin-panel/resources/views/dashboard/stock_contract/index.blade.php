@@ -51,7 +51,7 @@
                             </div>
                         </div>
                         <span class="badge bg-label-info rounded p-2">
-                          <i class="fa-solid fa-box fa-lg"></i>
+                            <i class="fa-solid fa-box fa-lg"></i>
                         </span>
                     </div>
                 </div>
@@ -70,7 +70,7 @@
                             </div>
                         </div>
                         <span class="badge bg-label-info rounded p-2">
-                          <i class="fa-solid fa-sack-dollar fa-lg"></i>
+                            <i class="fa-solid fa-sack-dollar fa-lg"></i>
                         </span>
                     </div>
                 </div>
@@ -87,7 +87,7 @@
                             </div>
                         </div>
                         <span class="badge bg-label-info rounded p-2">
-                          <i class="fa-solid fa-file-circle-xmark fa-lg"></i>
+                            <i class="fa-solid fa-file-circle-xmark fa-lg"></i>
                         </span>
                     </div>
                 </div>
@@ -106,7 +106,7 @@
                             </div>
                         </div>
                         <span class="badge bg-label-info rounded p-2">
-                          <i class="fa-solid fa-coins fa-lg"></i>
+                            <i class="fa-solid fa-coins fa-lg"></i>
                         </span>
                     </div>
                 </div>
@@ -127,7 +127,7 @@
                             </div>
                         </div>
                         <span class="badge bg-label-info rounded p-2">
-                          <i class="fa-solid fa-receipt fa-lg"></i>
+                            <i class="fa-solid fa-receipt fa-lg"></i>
                         </span>
                     </div>
                 </div>
@@ -141,12 +141,6 @@
             <div class="card-title header-elements">
                 <h5 class="m-0 me-2">لیست قراردادها</h5>
                 <div class="card-title-elements ms-auto">
-                    {{--                    <form action="{{ route('admin.stock-contract.generate-missing-pdfs') }}" method="POST" class="d-inline me-2">--}}
-                    {{--                        @csrf--}}
-                    {{--                        <button type="submit" class="btn btn-warning" onclick="return confirm('آیا از ایجاد فایل‌های قرارداد گمشده اطمینان دارید؟')">--}}
-                    {{--                            <i class="fa fa-refresh mx-2"></i> ایجاد PDF های گمشده--}}
-                    {{--                        </button>--}}
-                    {{--                    </form>--}}
                     <a href="{{ route('admin.stock-contract.create') }}" class="btn btn-primary">
                         <i class="fa fa-plus mx-2"></i> ایجاد قرارداد جدید
                     </a>
@@ -157,117 +151,246 @@
         <div class="table-responsive text-nowrap">
             <table class="table table-striped">
                 <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>کاربر</th>
-                    <th>شماره قرارداد</th>
-                    <th>نوع سهام</th>
-                    <th>تعداد</th>
-                    <th>ارزش قرارداد</th>
-                    <th>
-                        @php
-                            $currentParams = request()->except('sortByCreatedAt');
-                            $currentSortDirection = request()->input('sortByCreatedAt', 'asc');
-                            $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
-                        @endphp
-                        <a href="{{ route('admin.stock-contract.index', array_merge($currentParams, ['sortByCreatedAt' => $newSortDirection])) }}"
-                           class="text-black">
-                            تاریخ ایجاد
-                            @if($currentSortDirection === 'asc')
-                                <span><i class="fa-solid fa-arrow-up"></i></span>
-                            @else
-                                <span><i class="fa-solid fa-arrow-down"></i></span>
-                            @endif
-                        </a>
-                    </th>
+                    <tr>
+                        <th>ID</th>
+                        <th>کاربر</th>
+                        <th>شماره قرارداد</th>
+                        <th>نوع سهام</th>
+                        <th>تعداد</th>
+                        <th>ارزش قرارداد</th>
+                        <th>
+                            @php
+                                $currentParams = request()->except('sortByCreatedAt');
+                                $currentSortDirection = request()->input('sortByCreatedAt', 'asc');
+                                $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
+                            @endphp
+                            <a href="{{ route('admin.stock-contract.index', array_merge($currentParams, ['sortByCreatedAt' => $newSortDirection])) }}"
+                                class="text-black">
+                                تاریخ ایجاد
+                                @if ($currentSortDirection === 'asc')
+                                    <span><i class="fa-solid fa-arrow-up"></i></span>
+                                @else
+                                    <span><i class="fa-solid fa-arrow-down"></i></span>
+                                @endif
+                            </a>
+                        </th>
 
-                    <th>وضعیت قرارداد</th>
-                    <th>عملیات</th>
-                </tr>
+                        <th>وضعیت قرارداد</th>
+                        <th>عملیات</th>
+                    </tr>
                 </thead>
                 <tbody class="table-border-bottom-0">
-                @if($contracts->isEmpty())
-                    <tr>
-                        <td colspan="8" class="text-center">قراردادی یافت نشد.</td>
-                    </tr>
-                @else
-                    @foreach($contracts as $contract)
+                    @if ($contracts->isEmpty())
                         <tr>
-                            <td>{{ $contract->id }}</td>
-                            <td>
-                                <div class="d-flex justify-content-start align-items-center">
-                                    <div class="avatar-wrapper">
-                                        <div class="avatar avatar-sm me-3">
-                                            <span class="avatar-initial rounded-circle bg-label-primary">
-                                                {{ substr($contract->user->username ?? 'کاربر', 0, 1) }}
-                                            </span>
+                            <td colspan="8" class="text-center">قراردادی یافت نشد.</td>
+                        </tr>
+                    @else
+                        @foreach ($contracts as $contract)
+                            <tr>
+                                <td>{{ $contract->id }}</td>
+                                <td>
+                                    <div class="d-flex justify-content-start align-items-center">
+                                        <div class="avatar-wrapper">
+                                            <div class="avatar avatar-sm me-3">
+                                                <span class="avatar-initial rounded-circle bg-label-primary">
+                                                    {{ substr($contract->user->username ?? 'کاربر', 0, 1) }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex flex-column">
+                                            <h6 class="mb-0">{{ $contract->user->fullname() ?? 'کاربر' }}</h6>
+                                            <small class="text-muted">{{ $contract->user->email ?? '' }}</small>
                                         </div>
                                     </div>
-                                    <div class="d-flex flex-column">
-                                        <h6 class="mb-0">{{ $contract->user->fullname() ?? 'کاربر' }}</h6>
-                                        <small class="text-muted">{{ $contract->user->email ?? '' }}</small>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                @if($contract->contract_file )
-                                    <a href="{{ \App\Data\FileStoragePaths::CONTRACT_DOWNLOAD_URL($contract->contract_file) }}"
-                                       target="_blank" class="fw-medium font-number">
-                                        <i class="fa-thin fa-file-certificate fa-lg"></i>
-                                        {{ $contract->contract_number }}
-                                    </a>
-                                @else
-                                    <span class="fw-medium font-number text-muted">
-                                        <i class="fa-thin fa-file-certificate fa-lg"></i>
-                                        {{ $contract->contract_number }}
-                                        <small class="text-danger">(PDF موجود نیست)</small>
+                                </td>
+                                <td>
+                                    @if ($contract->contract_file)
+                                        <a href="{{ \App\Data\FileStoragePaths::CONTRACT_DOWNLOAD_URL($contract->contract_file) }}"
+                                            target="_blank" class="fw-medium font-number">
+                                            <i class="fa-thin fa-file-certificate fa-lg"></i>
+                                            {{ $contract->contract_number }}
+                                        </a>
+                                    @else
+                                        <span class="fw-medium font-number text-muted">
+                                            <i class="fa-thin fa-file-certificate fa-lg"></i>
+                                            {{ $contract->contract_number }}
+                                            <small class="text-danger">(PDF موجود نیست)</small>
+                                        </span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <span class="fw-medium">{{ $contract->stock->name ?? 'نامشخص' }}</span>
+                                </td>
+                                <td>
+                                    <span class="font-number"
+                                        dir="ltr">{{ number_format($contract->amount) }}</span>
+                                </td>
+                                <td>
+                                    <span class="font-number" dir="ltr">
+                                        <h6 class="font-number text-heading mb-0">
+                                            <span class="ms-1">{{ number_format($contract->total_value, 2) }}</span>
+                                            <small class="text-muted">USDT</small>
+                                        </h6>
                                     </span>
-                                @endif
-                            </td>
-                            <td>
-                                <span class="fw-medium">{{ $contract->stock->name ?? 'نامشخص' }}</span>
-                            </td>
-                            <td>
-                                <span class="font-number" dir="ltr">{{ number_format($contract->amount) }}</span>
-                            </td>
-                            <td>
-                                <span class="font-number" dir="ltr">
-                                    <h6 class="font-number text-heading mb-0">
-                                        <span class="ms-1">{{ number_format($contract->total_value,2) }}</span>
-                                        <small class="text-muted">USDT</small>
-                                    </h6>
-                                </span>
-                            </td>
-                            <td>
-                                {{\App\Helpers\DateFormatter::convertToPersianDate($contract->created_at,'H:i:s - %d %B %Y')}}
-                            </td>
-                            <td>
-                                <span class="badge bg-label-{{ $contract->contract_status->color() }} rounded p-2">
-                                    {{ $contract->contract_status->label() }}
-                                </span>
-                            </td>
-                            <td>
-                                <a class="text-secondary me-1"
-                                   href="{{ route('admin.stock-contract.show', $contract->id) }}">
-                                    <i class="fa fa-eye"></i>
-                                </a>
-                                <a class="text-secondary me-1"
-                                   href="{{ route('admin.stock-contract.edit', $contract->id) }}">
-                                    <i class="fa fa-edit"></i>
-                                </a>
-                                <form action="{{ route('admin.stock-contract.destroy', $contract->id) }}" method="POST"
-                                      class="d-inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-link text-danger p-0 m-0"
-                                            onclick="return confirm('آیا از حذف این قرارداد اطمینان دارید؟')">
-                                        <i class="fa-light fa-trash-alt"></i>
+                                </td>
+                                <td>
+                                    {{ \App\Helpers\DateFormatter::convertToPersianDate($contract->created_at, 'H:i:s - %d %B %Y') }}
+                                </td>
+                                <td>
+                                    <span class="badge bg-label-{{ $contract->contract_status->color() }} rounded p-2">
+                                        {{ $contract->contract_status->label() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a class="text-secondary me-1"
+                                        href="{{ route('admin.stock-contract.show', $contract->id) }}">
+                                        <i class="fa fa-eye"></i>
+                                    </a>
+                                    <a class="text-secondary me-1"
+                                        href="{{ route('admin.stock-contract.edit', $contract->id) }}">
+                                        <i class="fa fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-link text-info p-0 m-0 me-1"
+                                        data-bs-toggle="modal" data-bs-target="#stock-contract-{{ $contract->id }}">
+                                        <i class="fa fa-exchange-alt"></i>
                                     </button>
-                                </form>
-                            </td>
-                        </tr>
-                    @endforeach
-                @endif
+                                    <form action="{{ route('admin.stock-contract.destroy', $contract->id) }}"
+                                        method="POST" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-link text-danger p-0 m-0"
+                                            onclick="return confirm('آیا از حذف این قرارداد اطمینان دارید؟')">
+                                            <i class="fa-light fa-trash-alt"></i>
+                                        </button>
+                                    </form>
+                                    <div class="modal fade" id="stock-contract-{{ $contract->id }}" tabindex="-1"
+                                        aria-model="true" role="dialog">
+                                        <div class="modal-dialog modal-xl" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header justify-content-between">
+                                                    <h5 class="modal-title font-number" id="exampleModalLabel4">تراکنش های
+                                                        قرارداد #{{ $contract->id }}</h5>
+                                                    <div class="d-flex flex-column ">
+                                                        <a href="" class="text-heading text-truncate">
+                                                            <span class="h6 fw-medium">{{ $contract->user->email }}</span>
+                                                            <span class="me-2">({{ $contract->user->username }})</span>
+                                                        </a>
+
+                                                    </div>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="table-responsive text-nowrap">
+                                                        <table class="table table-striped">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>شناسه</th>
+                                                                    <th>نوع تراکنش</th>
+                                                                    <th>رمز ارز</th>
+                                                                    <th>مقدار</th>
+
+                                                                    <th>توضیحات</th>
+                                                                    <th>تاریخ و زمان</th>
+                                                                    <th>وضعیت</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody class="table-border-bottom-0">
+                                                                @if ($contract->transactions->isEmpty())
+                                                                    <tr>
+                                                                        <td colspan="9" class="text-center">تراکنشی
+                                                                            یافت نشد.
+                                                                        </td>
+                                                                    </tr>
+                                                                @else
+                                                                    @foreach ($contract->transactions as $transaction)
+                                                                        <tr>
+                                                                            <td>{{ $transaction->id }}</td>
+                                                                            <td class="text-heading fw-medium">
+                                                                                <div
+                                                                                    class="d-flex justify-content-start align-items-center">
+                                                                                    <div
+                                                                                        class="trans-avatar-group d-flex align-items-center assigned-avatar">
+                                                                                        <div class="avatar avatar-md ">
+                                                                                            <img src="{{ asset($transaction->wallet->currency->coinLogo()) }}"
+                                                                                                class="rounded-circle">
+                                                                                        </div>
+                                                                                        <div class="avatar avatar-md">
+                                                                                            <span
+                                                                                                class="avatar-initial rounded-circle bg-label-{{ $transaction->type->color() }}">
+                                                                                                <i
+                                                                                                    class="fa-regular fa-{{ $transaction->type->icon() }} mx-3"></i>
+                                                                                            </span>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div
+                                                                                        class="d-flex flex-column align-items-start">
+                                                                                        <span
+                                                                                            class="badge bg-label-{{ $transaction->type->color() }} ms-2">
+                                                                                            {{ $transaction->type->label() }}
+                                                                                        </span>
+                                                                                        @if ($transaction->subtype->value != 'user_initiated')
+                                                                                            <span
+                                                                                                class="badge bg-label-secondary ms-2 mt-2">
+                                                                                                {{ $transaction->subtype->label() }}
+                                                                                            </span>
+                                                                                        @endif
+                                                                                    </div>
+                                                                                </div>
+                                                                            </td>
+
+
+                                                                            <td>{{ $transaction->wallet->currency_symbol }}
+                                                                            </td>
+                                                                            <td class="font-number" dir="ltr">
+                                                                                <h6
+                                                                                    class="mb-0 {{ $transaction->amount > 0 ? 'text-success' : 'text-danger' }}">
+                                                                                    {{ formatNumberTrimZeros($transaction->amount) }}
+                                                                                </h6>
+                                                                            </td>
+
+                                                                            <td class="font-number text-wrap">
+                                                                                <span>{{ $transaction->description }}</span>
+                                                                                @if ($transaction->admin_id)
+                                                                                    <p class="text-muted">توسط ادمین
+                                                                                        ({{ $transaction->admin->last_name }})
+                                                                                    </p>
+                                                                                @endif
+
+                                                                            </td>
+                                                                            <td class="font-number">
+                                                                                {{ \App\Helpers\DateFormatter::convertToPersianDate($transaction->created_at, 'H:i:s %Y/%m/%d') }}
+                                                                            </td>
+
+                                                                            <td>
+                                                                                <span
+                                                                                    class="badge bg-label-{{ $transaction->status->color() }}">
+                                                                                    {{ $transaction->status->label() }}
+                                                                                </span>
+                                                                            </td>
+                                                                        </tr>
+                                                                    @endforeach
+                                                                @endif
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <a type="button"
+                                                        href="{{ route('admin.transaction.index', ['stock_contract_id' => $contract->id]) }}"
+                                                        class="btn btn-primary">لیست تراکنش ها</a>
+                                                    <button type="button" class="btn btn-label-secondary waves-effect"
+                                                        data-bs-dismiss="modal">بستن
+                                                    </button>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    @endif
                 </tbody>
             </table>
         </div>

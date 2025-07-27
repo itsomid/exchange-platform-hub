@@ -36,7 +36,7 @@ class StockContractController extends Controller
 
     public function index()
     {
-        $contracts = StockContract::with(['user', 'stock'])->orderBy('created_at', 'desc')->get();
+        $contracts = StockContract::with(['user', 'stock', 'transactions'])->orderBy('created_at', 'desc')->get();
         // Dashboard statistics
         $totalContracts = $contracts->count();
 
