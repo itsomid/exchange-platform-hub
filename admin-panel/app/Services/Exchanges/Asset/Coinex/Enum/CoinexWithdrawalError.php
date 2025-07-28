@@ -9,6 +9,7 @@ enum CoinexWithdrawalError: int
     case Asset_Insufficient = 11008;
     case Exceeding_Withdrawal_Decimal_Limit = 11029;
     case Amount_too_Small = 3127;
+    case CET_Balance_Insufficient = 10001;
 
     public static function mapErrorToResponse(CoinexWithdrawalError $errorEnum): string
     {
@@ -18,6 +19,7 @@ enum CoinexWithdrawalError: int
             CoinexWithdrawalError::Asset_Insufficient => 'عدم موجودی کافی (فی برداشت) برای انجام فرآیند تجمیع.',
             CoinexWithdrawalError::Exceeding_Withdrawal_Decimal_Limit => 'تعداد اعشار مقدار برداشت بیشتر از حد مجار است.',
             CoinexWithdrawalError::Amount_too_Small => 'مقدار معامله کوچکتر از حد مجاز است.',
+            CoinexWithdrawalError::CET_Balance_Insufficient => 'موجودی CET برای پرداخت کارمزد کافی نیست.',
             default => 'خطای ناشناخته، لطفا دوباره تلاش کنید.',
         };
     }
