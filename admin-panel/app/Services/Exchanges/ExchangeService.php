@@ -88,7 +88,7 @@ class ExchangeService
                 'user_id' => config('bitexroom.user_id'),
                 'wallet_id' => $bitexroomWallet->id,
                 'amount' => $response->getAmount(),
-                'coin_price' =>  $baseMarket->activeExchangePrice->price,
+                'coin_price' =>  $baseMarket ? $baseMarket->activeExchangePrice->price : 1,
                 'exchange_id' => $exchange->id,
                 'type' => TransactionTypeEnum::ًREF_EXCHANGE,
                 'subtype' => TransactionSubTypeEnum::REF_EXCHANGE_WITHDRAWAL,
