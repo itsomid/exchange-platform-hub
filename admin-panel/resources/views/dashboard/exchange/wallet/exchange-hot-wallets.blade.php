@@ -49,7 +49,7 @@
                         </h4>
                         <div class="mb-0 d-flex flex-column align-items-end">
                             <a href="{{$walletChain->explorer_address_url}}" target="_blank"
-                               class="text-primary font-number fs-tiny text-decoration-underline">
+                               class="text-primary font-number text-decoration-underline">
                                 {{ $walletChain->address }}
                                 <i class="fa-regular fa-clone"></i>
                             </a>
