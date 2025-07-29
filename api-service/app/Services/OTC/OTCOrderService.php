@@ -21,10 +21,10 @@ class OTCOrderService
             if ($order->type === OTCOrderTypeEnum::BUY) {
                 $receivedAmount = Math::sub($order->quantity, $order->fee);
             } else {
-                $receivedAmount = Math::mul(Math::sub(
-                    $order->quantity,
-                    $order->fee
-                ), $order->price);
+                $receivedAmount = Math::sub(Math::mul(
+                    $order->price,
+                    $order->quantity
+                ), $order->fee);
             }
 
             return resolve(OTCOrderListsResponseDTO::class)
