@@ -27,7 +27,7 @@ return [
     'otc' => [
         'status' => [
             \App\Enums\OTCOrderStatusEnum::SUCCESS->name => 'موفق',
-            \App\Enums\OTCOrderStatusEnum::PENDING->name => 'موفق',
+            \App\Enums\OTCOrderStatusEnum::PENDING->name => 'در حال انجام',
             \App\Enums\OTCOrderStatusEnum::CANCELED->name => 'لغو شده',
         ],
         'type' => [

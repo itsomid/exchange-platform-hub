@@ -86,10 +86,11 @@ class OrdersListsCollection extends ResourceCollection
      */
     public function toArray(Request $request): array
     {
-        return $this->collection->map(fn (OTCOrderListsResponseDTO $responseDTO) => [
+        return $this->collection->map(fn(OTCOrderListsResponseDTO $responseDTO) => [
             'created_at' => $responseDTO->getCreatedAt(),
             'type' => $responseDTO->getType()->value,
-            'status' => __('enum.otc.status.'.$responseDTO->getStatus()->name),
+            'status' => $responseDTO->getStatus()->value,
+            'status_label' => __('enum.otc.status.' . $responseDTO->getStatus()->name),
             'quantity' => $responseDTO->getQuantity(),
             'price' => $responseDTO->getPrice(),
             'fee' => $responseDTO->getFee(),
