@@ -69,6 +69,7 @@ services:
       - php-api
       - database
       - api-queue
+      - api-market-queue
       - laravel-api-cron
     networks:
       - laravel
@@ -186,6 +187,27 @@ services:
       - database
     working_dir: /var/www/html
     entrypoint: [ 'php', '/var/www/html/artisan', 'queue:work', '--tries=20', '--timeout=60', '--queue=api-service,api-email' ]
+    networks:
+      - laravel
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  api-market-queue:
+    build:
+      context: ./dockerfiles
+      dockerfile: php.dockerfile
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - USER=${USER:-laraveluser}
+    container_name: api-market-queue
+    volumes:
+      - "./api-service:/var/www/html:delegated"
+      - "./env/api_service.env:/var/www/html/.env"
+    depends_on:
+      - database
+    working_dir: /var/www/html
+    entrypoint: [ 'php', '/var/www/html/artisan', 'queue:work', '--tries=1', '--timeout=10', '--queue=api-market' ]
     networks:
       - laravel
     extra_hosts:
