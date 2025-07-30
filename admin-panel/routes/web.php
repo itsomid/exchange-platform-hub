@@ -16,7 +16,6 @@ use Illuminate\Support\Facades\Storage;
 // Add this line for PDF generation
 use ZanySoft\LaravelPDF\Facades\PDF;
 
-//Route::view('/', 'welcome');
 
 Route::redirect('', '/admin/login');
 

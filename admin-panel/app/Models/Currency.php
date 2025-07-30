@@ -42,6 +42,10 @@ class Currency extends Model
     {
         return $this->hasOne(Market::class, 'quote_currency', 'symbol');
     }
+    public function spotBotSetting(): HasOne
+    {
+        return $this->hasOne(SpotBotSetting::class, 'currency_id');
+    }
 
     public function getExchangePriceAttribute()
     {

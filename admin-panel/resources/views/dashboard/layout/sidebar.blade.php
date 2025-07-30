@@ -382,6 +382,11 @@
                                 <div>مدیریت کانتینرهای داکر</div>
                             </a>
                         </li>
+                        <li class="menu-item  @if (request()->is('admin/bot*')) active @endif">
+                            <a href="{{ route('admin.setting.spot-bot.index') }}" class="menu-link">
+                                <div>مدیریت بات ها</div>
+                            </a>
+                        </li>
                     @endcan
                     {{--                    @can('setting.ext.index') --}}
                     {{--                        <li class="menu-item  @if (request()->is('admin/external-settings*')) active @endif"> --}}
