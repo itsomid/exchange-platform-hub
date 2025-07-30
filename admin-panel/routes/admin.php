@@ -13,7 +13,6 @@ use App\Http\Controllers\Deposit\DepositController;
 use App\Http\Controllers\Deposit\DepositReportController;
 use App\Http\Controllers\Exchange\CurrencyChainController;
 use App\Http\Controllers\Exchange\CurrencyController;
-use App\Http\Controllers\Exchange\ExchangeAssetsWithdrawalController;
 use App\Http\Controllers\Exchange\ExchangeWalletController;
 use App\Http\Controllers\Exchange\MarketController;
 use App\Http\Controllers\Exchange\NodeProviderController;
@@ -42,6 +41,7 @@ use App\Http\Controllers\Withdrawal\WithdrawalController;
 use App\Http\Controllers\Withdrawal\WithdrawalReportController;
 use App\Http\Controllers\Stock\StockController;
 use App\Http\Controllers\Stock\StockContractController;
+use App\Http\Controllers\Setting\SpotBotSettingController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -240,6 +240,13 @@ Route::middleware(['admin.2fa'])->group(function () {
     Route::post('/docker/restart-exchange-listen', [DockerController::class, 'restartExchangeListen'])->name('docker.restart-exchange-listen')->can('setting.int.index');
     Route::get('/docker/container-status', [DockerController::class, 'getContainerStatus'])->name('docker.container-status')->can('setting.int.index');
     Route::get('/docker/exchange-listen-logs', [DockerController::class, 'getExchangeListenLogs'])->name('docker.exchange-listen-logs')->can('setting.int.index');
+
+    # *********SPOT BOT SETTINGS*********#
+    Route::prefix('bot')->group(function () {
+        Route::get('/settings', [SpotBotSettingController::class, 'index'])->name('setting.spot-bot.index')->can('setting.int.index');
+        Route::get('/settings/{currency}/edit', [SpotBotSettingController::class, 'edit'])->name('setting.spot-bot.edit')->can('setting.int.index');
+        Route::put('/settings/{currency}', [SpotBotSettingController::class, 'update'])->name('setting.spot-bot.update')->can('setting.int.index');
+    });
 
     Route::prefix('wallet')->group(function () {
         Route::get('increase-credit', [WalletController::class, 'increaseCreditForm'])->name('wallet.increase-credit.form')->can('wallet');
