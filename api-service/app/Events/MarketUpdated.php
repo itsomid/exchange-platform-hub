@@ -8,10 +8,12 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Bus\Queueable;
+use DateTime;
 
 class MarketUpdated implements ShouldBroadcast, ShouldQueue
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable, InteractsWithSockets, SerializesModels, Queueable;
 
     /**
      * The number of times the job may be attempted.
@@ -24,17 +26,11 @@ class MarketUpdated implements ShouldBroadcast, ShouldQueue
     public int $timeout = 5;
 
     /**
-     * Determine the time at which the job should timeout.
-     */
-    public int $retryUntil;
-
-    /**
      * Create a new event instance.
      */
     public function __construct(private readonly int $marketId, private readonly array $data)
     {
-        // Set retry until to 10 seconds from now
-        $this->retryUntil = now()->addSeconds(10)->timestamp;
+        $this->onQueue('api-market');
     }
 
     /**
@@ -45,21 +41,13 @@ class MarketUpdated implements ShouldBroadcast, ShouldQueue
     public function broadcastOn(): array
     {
         return [
-            new Channel('market.'.$this->marketId),
+            new Channel('market.' . $this->marketId),
         ];
     }
 
     public function broadcastWith(): array
     {
         return $this->data;
-    }
-
-    /**
-     * Get the queue the event should be dispatched to.
-     */
-    public function viaQueue(): string
-    {
-        return 'api-market';
     }
 
     /**
