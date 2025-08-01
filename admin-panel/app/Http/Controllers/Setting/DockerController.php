@@ -45,44 +45,171 @@ class DockerController extends Controller
 
     private function findDockerPath()
     {
-        // مسیرهای معمول Docker
-        $possiblePaths = [
-            '/usr/bin/docker',
-            '/usr/local/bin/docker',
-            '/opt/homebrew/bin/docker',
-            'docker' // اگر در PATH باشه
-        ];
-
-        foreach ($possiblePaths as $path) {
-            $result = Process::run("which $path");
-            if ($result->successful() && !empty(trim($result->output()))) {
-                return $path;
+        // تشخیص سیستم عامل
+        $isWindows = PHP_OS_FAMILY === 'Windows';
+  
+        if ($isWindows) {
+            // مسیرهای معمول Docker در Windows
+            $possiblePaths = [
+                'C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe',
+                'C:\\Program Files\\Docker\\Docker\\resources\\docker.exe',
+                'docker' // اگر در PATH باشه
+            ];
+            
+            foreach ($possiblePaths as $path) {
+                if ($path !== 'docker' && file_exists($path)) {
+                    return '"' . $path . '"'; // برای مسیرهای دارای فاصله
+                }
             }
-        }
+            
+            // تست docker در PATH
+            try {
+                $result = Process::run('docker --version');
+                if ($result->successful()) {
+                    return 'docker';
+                }
+            } catch (\Exception $e) {
+                // ادامه
+            }
+            
+            return 'docker';
+        } else {
+            // مسیرهای معمول Docker در Linux/Unix
+            $possiblePaths = [
+                '/usr/bin/docker',
+                '/usr/local/bin/docker',
+                '/opt/homebrew/bin/docker',
+                '/snap/bin/docker',
+                'docker'
+            ];
 
-        // اگر هیچ کدام پیدا نشد، از docker استفاده کن
-        return 'docker';
+            // ابتدا بررسی کنیم که فایل‌ها وجود دارند و قابل اجرا هستند
+            foreach ($possiblePaths as $path) {
+                if ($path !== 'docker' && file_exists($path) && is_executable($path)) {
+                    return $path;
+                }
+            }
+
+            // اگر فایل‌ها پیدا نشدند، از which استفاده کن
+            $whichCommands = ['which', 'command -v', 'type -p'];
+            
+            foreach ($whichCommands as $whichCmd) {
+                foreach ($possiblePaths as $path) {
+                    try {
+                        $result = Process::run("$whichCmd $path 2>/dev/null");
+                        if ($result->successful() && !empty(trim($result->output()))) {
+                            $foundPath = trim($result->output());
+                            if (file_exists($foundPath) && is_executable($foundPath)) {
+                                return $foundPath;
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        continue;
+                    }
+                }
+            }
+
+            // تلاش برای پیدا کردن docker در PATH
+            try {
+                $result = Process::run('docker --version 2>/dev/null');
+                if ($result->successful()) {
+                    return 'docker';
+                }
+            } catch (\Exception $e) {
+                // ادامه
+            }
+
+            // اگر هیچ کدام پیدا نشد، از مسیر پیش‌فرض Ubuntu استفاده کن
+            return '/usr/bin/docker';
+        }
     }
 
     private function findDockerComposePath()
     {
-        // مسیرهای معمول Docker Compose
-        $possiblePaths = [
-            '/usr/bin/docker-compose',
-            '/usr/local/bin/docker-compose',
-            '/opt/homebrew/bin/docker-compose',
-            'docker-compose' // اگر در PATH باشه
-        ];
-
-        foreach ($possiblePaths as $path) {
-            $result = Process::run("which $path");
-            if ($result->successful() && !empty(trim($result->output()))) {
-                return $path;
+        // تشخیص سیستم عامل
+        $isWindows = PHP_OS_FAMILY === 'Windows';
+        
+        if ($isWindows) {
+            // در Windows، معمولاً از docker compose استفاده می‌شود
+            try {
+                $result = Process::run('docker compose version');
+                if ($result->successful()) {
+                    return 'docker compose';
+                }
+            } catch (\Exception $e) {
+                // ادامه
             }
-        }
+            
+            // تست docker-compose در PATH
+            try {
+                $result = Process::run('docker-compose --version');
+                if ($result->successful()) {
+                    return 'docker-compose';
+                }
+            } catch (\Exception $e) {
+                // ادامه
+            }
+            
+            return 'docker compose';
+        } else {
+            // مسیرهای معمول Docker Compose در Linux/Unix
+            $possiblePaths = [
+                '/usr/bin/docker-compose',
+                '/usr/local/bin/docker-compose',
+                '/opt/homebrew/bin/docker-compose',
+                '/snap/bin/docker-compose',
+                'docker-compose'
+            ];
 
-        // اگر هیچ کدام پیدا نشد، از docker-compose استفاده کن
-        return 'docker-compose';
+            // ابتدا بررسی کنیم که فایل‌ها وجود دارند و قابل اجرا هستند
+            foreach ($possiblePaths as $path) {
+                if ($path !== 'docker-compose' && file_exists($path) && is_executable($path)) {
+                    return $path;
+                }
+            }
+
+            // اگر فایل‌ها پیدا نشدند، از which استفاده کن
+            $whichCommands = ['which', 'command -v', 'type -p'];
+            
+            foreach ($whichCommands as $whichCmd) {
+                foreach ($possiblePaths as $path) {
+                    try {
+                        $result = Process::run("$whichCmd $path 2>/dev/null");
+                        if ($result->successful() && !empty(trim($result->output()))) {
+                            $foundPath = trim($result->output());
+                            if (file_exists($foundPath) && is_executable($foundPath)) {
+                                return $foundPath;
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        continue;
+                    }
+                }
+            }
+
+            // تلاش برای پیدا کردن docker-compose در PATH
+            try {
+                $result = Process::run('docker-compose --version 2>/dev/null');
+                if ($result->successful()) {
+                    return 'docker-compose';
+                }
+            } catch (\Exception $e) {
+                // ادامه
+            }
+
+            // بررسی docker compose (بدون خط تیره)
+            try {
+                $result = Process::run('docker compose version 2>/dev/null');
+                if ($result->successful()) {
+                    return 'docker compose';
+                }
+            } catch (\Exception $e) {
+                // ادامه
+            }
+
+            // اگر هیچ کدام پیدا نشد، از مسیر پیش‌فرض Ubuntu استفاده کن
+            return '/usr/bin/docker-compose';
+        }
     }
 
     private function isRunningInDocker()
@@ -145,6 +272,119 @@ class DockerController extends Controller
                     'error' => $result->errorOutput()
                 ]);
             }
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function debugDockerPaths()
+    {
+        try {
+            $debug = [];
+            
+            // اطلاعات سیستم عامل
+            $debug['system'] = [
+                'os_family' => PHP_OS_FAMILY,
+                'os' => PHP_OS,
+                'is_windows' => PHP_OS_FAMILY === 'Windows'
+            ];
+            
+            // بررسی مسیرهای مختلف Docker بر اساس سیستم عامل
+            if (PHP_OS_FAMILY === 'Windows') {
+                $possiblePaths = [
+                    'C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe',
+                    'C:\\Program Files\\Docker\\Docker\\resources\\docker.exe'
+                ];
+            } else {
+                $possiblePaths = [
+                    '/usr/bin/docker',
+                    '/usr/local/bin/docker',
+                    '/opt/homebrew/bin/docker',
+                    '/snap/bin/docker'
+                ];
+            }
+
+            foreach ($possiblePaths as $path) {
+                $debug['paths'][$path] = [
+                    'exists' => file_exists($path),
+                    'executable' => file_exists($path) ? is_executable($path) : false
+                ];
+            }
+
+            // بررسی دستورات which بر اساس سیستم عامل
+            if (PHP_OS_FAMILY === 'Windows') {
+                $whichCommands = ['where docker'];
+            } else {
+                $whichCommands = ['which docker', 'command -v docker', 'type -p docker'];
+            }
+            
+            foreach ($whichCommands as $cmd) {
+                try {
+                    if (PHP_OS_FAMILY === 'Windows') {
+                        $result = Process::run($cmd);
+                    } else {
+                        $result = Process::run($cmd . ' 2>/dev/null');
+                    }
+                    $debug['which_commands'][$cmd] = [
+                        'successful' => $result->successful(),
+                        'output' => trim($result->output()),
+                        'error' => $result->errorOutput()
+                    ];
+                } catch (\Exception $e) {
+                    $debug['which_commands'][$cmd] = [
+                        'error' => $e->getMessage()
+                    ];
+                }
+            }
+
+            // بررسی docker --version
+            try {
+                if (PHP_OS_FAMILY === 'Windows') {
+                    $result = Process::run('docker --version');
+                } else {
+                    $result = Process::run('docker --version 2>/dev/null');
+                }
+                $debug['docker_version'] = [
+                    'successful' => $result->successful(),
+                    'output' => trim($result->output()),
+                    'error' => $result->errorOutput()
+                ];
+            } catch (\Exception $e) {
+                $debug['docker_version'] = [
+                    'error' => $e->getMessage()
+                ];
+            }
+
+            // بررسی docker compose version
+            try {
+                if (PHP_OS_FAMILY === 'Windows') {
+                    $result = Process::run('docker compose version');
+                } else {
+                    $result = Process::run('docker compose version 2>/dev/null');
+                }
+                $debug['docker_compose_version'] = [
+                    'successful' => $result->successful(),
+                    'output' => trim($result->output()),
+                    'error' => $result->errorOutput()
+                ];
+            } catch (\Exception $e) {
+                $debug['docker_compose_version'] = [
+                    'error' => $e->getMessage()
+                ];
+            }
+
+            // مسیر پیدا شده
+            $debug['found_docker_path'] = $this->findDockerPath();
+            $debug['found_docker_compose_path'] = $this->findDockerComposePath();
+
+            return response()->json([
+                'success' => true,
+                'debug' => $debug
+            ]);
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

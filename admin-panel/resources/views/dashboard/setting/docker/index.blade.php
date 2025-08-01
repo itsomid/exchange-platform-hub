@@ -36,8 +36,11 @@
                                 <div class="card-body">
                                     <h5 class="card-title">وضعیت کانتینرها</h5>
                                     <p class="card-text">نمایش وضعیت فعلی تمام کانتینرهای داکر</p>
-                                    <button type="button" class="btn btn-light" onclick="refreshContainerStatus()">
+                                    <button type="button" class="btn btn-light me-2" onclick="refreshContainerStatus()">
                                         <i class="fas fa-sync-alt me-1"></i> بروزرسانی وضعیت
+                                    </button>
+                                    <button type="button" class="btn btn-outline-light" onclick="debugDockerPaths()">
+                                        <i class="fas fa-bug me-1"></i> Debug مسیرها
                                     </button>
                                 </div>
                             </div>
@@ -186,6 +189,57 @@
         function hideLogs() {
             const logsSection = document.getElementById('logs-section');
             logsSection.style.display = 'none';
+        }
+
+        function debugDockerPaths() {
+            fetch('{{ route('admin.docker.debug-paths') }}')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        let debugInfo = '<h6>اطلاعات Debug:</h6>';
+                        debugInfo += '<pre class="bg-light p-3 rounded text-end ltr" style="font-size: 12px; max-height: 400px; overflow-y: auto;">';
+                        debugInfo += JSON.stringify(data.debug, null, 2);
+                        debugInfo += '</pre>';
+                        
+                        // نمایش در modal یا alert
+                        const modalHtml = `
+                            <div class="modal fade" id="debugModal" tabindex="-1">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Debug اطلاعات Docker</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body" dir="ltr">
+                                            ${debugInfo}
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">بستن</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // حذف modal قبلی اگر وجود داشته باشد
+                        const existingModal = document.getElementById('debugModal');
+                        if (existingModal) {
+                            existingModal.remove();
+                        }
+                        
+                        // اضافه کردن modal جدید
+                        document.body.insertAdjacentHTML('beforeend', modalHtml);
+                        
+                        // نمایش modal
+                        const modal = new bootstrap.Modal(document.getElementById('debugModal'));
+                        modal.show();
+                    } else {
+                        alert('خطا در دریافت اطلاعات debug: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    alert('خطا در ارتباط با سرور: ' + error.message);
+                });
         }
 
         // بارگذاری اولیه وضعیت کانتینرها

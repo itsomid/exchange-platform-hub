@@ -241,6 +241,7 @@ Route::middleware(['admin.2fa'])->group(function () {
     Route::post('/docker/restart-exchange-listen', [DockerController::class, 'restartExchangeListen'])->name('docker.restart-exchange-listen')->can('setting.int.index');
     Route::get('/docker/container-status', [DockerController::class, 'getContainerStatus'])->name('docker.container-status')->can('setting.int.index');
     Route::get('/docker/exchange-listen-logs', [DockerController::class, 'getExchangeListenLogs'])->name('docker.exchange-listen-logs')->can('setting.int.index');
+    Route::get('/docker/debug-paths', [DockerController::class, 'debugDockerPaths'])->name('docker.debug-paths')->can('setting.int.index');
 
     # *********SPOT BOT SETTINGS*********#
     Route::prefix('bot')->group(function () {
