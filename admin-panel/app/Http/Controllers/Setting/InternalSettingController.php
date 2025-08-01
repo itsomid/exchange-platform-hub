@@ -33,6 +33,8 @@ class InternalSettingController extends Controller
         $exchangeWithdrawalPeriodBuy = Setting::where('key', 'exchange_withdrawal_period_buy')->first();
         $exchangeWithdrawalType = Setting::where('key', 'exchange_withdrawal_type')->first();
         $exchangeWithdrawalStatus = Setting::where('key', 'exchange_withdrawal_status')->first();
+        $spotTickerEnabled = Setting::where('key', 'spot_ticker_enabled')->first();
+        $orderMatchingEnabled = Setting::where('key', 'order_matching_enabled')->first();
 
         $exchangeWalletChains = $this->walletService->getExchangeAllWalletChain();
 
@@ -49,6 +51,8 @@ class InternalSettingController extends Controller
             'exchangeWithdrawalPeriodBuy' => $exchangeWithdrawalPeriodBuy,
             'exchangeWithdrawalType' => $exchangeWithdrawalType,
             'exchangeWithdrawalStatus' => $exchangeWithdrawalStatus,
+            'spotTickerEnabled' => $spotTickerEnabled,
+            'orderMatchingEnabled' => $orderMatchingEnabled,
             'exchangeWalletChains' => $exchangeWalletChains,
 
         ]);
@@ -154,6 +158,31 @@ class InternalSettingController extends Controller
 
 
         Toast::message('تنظیمات فرآیند تجمیع با موفقیت ذخیره شد.')->success()->notify();
+        // Redirect with success message
+        return redirect()->back();
+    }
+
+    public function updateSpotSettings(Request $request)
+    {
+        // Update spot ticker enabled status
+        Setting::updateOrCreate(
+            ['key' => 'spot_ticker_enabled'],
+            [
+                'value' => $request->has('spot_ticker_enabled') ? $request->input('spot_ticker_enabled') : false,
+                'name' => 'وضعیت فعال‌سازی Spot Ticker'
+            ]
+        );
+
+        // Update order matching enabled status
+        Setting::updateOrCreate(
+            ['key' => 'order_matching_enabled'],
+            [
+                'value' => $request->has('order_matching_enabled') ? $request->input('order_matching_enabled') : false,
+                'name' => 'وضعیت فعال‌سازی Order Matching'
+            ]
+        );
+
+        Toast::message('تنظیمات اسپات با موفقیت ذخیره شد')->success()->notify();
         // Redirect with success message
         return redirect()->back();
     }

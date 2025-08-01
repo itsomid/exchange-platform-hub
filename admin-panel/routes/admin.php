@@ -232,6 +232,7 @@ Route::middleware(['admin.2fa'])->group(function () {
     Route::post('/internal-settings/update-otc-setting', [InternalSettingController::class, 'updateOTCSetting'])->name('setting.int.update-otc-setting')->can('setting.int.index');
     Route::post('/internal-settings/update-referral-setting', [InternalSettingController::class, 'updateReferralSetting'])->name('setting.int.update-referral-setting')->can('setting.int.index');
     Route::post('/internal-settings/update-exchange-withdrawal-setting', [InternalSettingController::class, 'updateExchangeWithdrawalSetting'])->name('setting.int.update-exchange-withdrawal-setting')->can('setting.int.index');
+    Route::post('/internal-settings/update-spot-settings', [InternalSettingController::class, 'updateSpotSettings'])->name('setting.int.update-spot-settings')->can('setting.int.index');
 
     Route::get('/external-settings', [ExternalSettingController::class, 'index'])->name('external-setting.index')->can('setting.ext.index');
     Route::post('/external-settings/update-ref-address', [ExternalSettingController::class, 'updateRefAddress'])->name('setting.ext.update-ref-address')->can('setting.ext.index');

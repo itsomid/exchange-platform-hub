@@ -8,7 +8,7 @@ class Setting extends Model
 {
     const REF_DEFAULT_HEADER = ['Accept' => 'application/json'];
 
-    protected $fillable = ['key', 'value'];
+    protected $fillable = ['key', 'value', 'name'];
 
 
     public static function getSetting(string $key): ?string

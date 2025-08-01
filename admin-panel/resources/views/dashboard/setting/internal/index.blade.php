@@ -188,6 +188,47 @@
             <div class="card">
                 <div class="card-body">
                     <div class="card-title header-elements">
+                        <h5 class="m-0 me-2">تنظیمات اسپات</h5>
+                    </div>
+                    <form action="{{route('admin.setting.int.update-spot-settings')}}" method="post">
+                        @csrf
+                        <div class="row mt-5">
+                            <div class="col-xl-6 mt-3">
+                                <label class="switch switch-lg">
+                                    <input type="checkbox" class="switch-input"
+                                           name="spot_ticker_enabled"
+                                           value="1" {{ $spotTickerEnabled && $spotTickerEnabled->value ? 'checked' : '' }}/>
+                                    <span class="switch-toggle-slider"></span>
+                                    <span class="switch-label">فعال‌سازی Spot Ticker</span>
+                                </label>
+                                <small class="text-muted d-block mt-2">این گزینه نمایش قیمت‌های لحظه‌ای را کنترل می‌کند</small>
+                            </div>
+                            <div class="col-xl-6 mt-3">
+                                <label class="switch switch-lg">
+                                    <input type="checkbox" class="switch-input"
+                                           name="order_matching_enabled"
+                                           value="1" {{ $orderMatchingEnabled && $orderMatchingEnabled->value ? 'checked' : '' }}/>
+                                    <span class="switch-toggle-slider"></span>
+                                    <span class="switch-label">فعال‌سازی Order Matching</span>
+                                </label>
+                                <small class="text-muted d-block mt-2">این گزینه سیستم تطبیق خودکار سفارشات را کنترل می‌کند</small>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-start mt-5">
+                            <button class="btn btn-primary">
+                                <i class="fa fa-save mx-2"></i>
+                                ذخیره
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title header-elements">
                         <h5 class="m-0 me-2">تنظیمات تجمیع و برداشت از صرافی های مرجع
                             <span class="text-{{$exchangeWithdrawalStatus->value ? 'success' : 'danger'}}">({{$exchangeWithdrawalStatus->value ? 'فعال' : 'غیرفعال'}})</span>
                         </h5>
