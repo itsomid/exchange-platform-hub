@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Events\MarketUpdated;
 use App\Models\Market;
+use App\Models\Setting;
 use App\Models\SpotTrade;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
@@ -29,6 +30,14 @@ class SpotTicker extends Command
      */
     public function handle(): void
     {
+        // بررسی اینکه آیا کامند فعال است یا نه
+        if (!Setting::isEnabled('spot_ticker_enabled')) {
+            $this->info('Spot ticker command is disabled.');
+            return;
+        }
+
+        $this->info('Running spot ticker...');
+
         $markets = Market::query()->where('is_active', true)->get();
 
         $marketQueryStrings = $markets->map(function ($market) {
@@ -56,7 +65,8 @@ class SpotTicker extends Command
                 'open' => $data['open'],
                 'price_change_percentage' => round((($data['last'] - $data['open']) / $data['open']) * 100, 2),
             ]);
-
         }
+
+        $this->info('Spot ticker completed successfully.');
     }
 }
