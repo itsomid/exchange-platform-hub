@@ -75,7 +75,7 @@ class CurrencyChainController extends Controller
             'exchange_withdrawal_fee' => $request->exchange_withdrawal_fee,
             'contract_address' => $request->contract_address,
             'explorer_address_url' => $request->explorer_address_url,
-            'explorer_tx_url' => $request->explorer_transaction_url,
+            'explorer_tx_url' => $request->explorer_tx_url,
             'network_fee' => $request->network_fee,
             'deposit_enabled' => $request->has('deposit_enabled'),  // Convert checkbox to boolean
             'withdraw_enabled' => $request->has('withdraw_enabled'),  // Convert checkbox to boolean
