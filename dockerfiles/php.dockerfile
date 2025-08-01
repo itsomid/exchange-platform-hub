@@ -38,12 +38,16 @@ RUN apk update && apk upgrade \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp --with-xpm \
     && docker-php-ext-install gd zip pdo pdo_mysql bcmath pcntl \
     && apk del freetype-dev libjpeg-turbo-dev libpng-dev libwebp-dev libxpm-dev
+    
 
 # Install Redis extension
 RUN apk add --no-cache $PHPIZE_DEPS \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && apk del $PHPIZE_DEPS
+
+# Install Docker CLI to allow running docker commands inside the container
+RUN apk add --no-cache docker-cli
 
 # Set permissions for Laravel storage and cache directories
 RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache && \

@@ -48,6 +48,7 @@ services:
       - "./admin-panel:/var/www/html:delegated"
       - "./env/admin_panel.env:/var/www/html/.env"
       - "./admin-panel/storage:/var/www/html/storage"
+      - "/var/run/docker.sock:/var/run/docker.sock"  # دسترسی به Docker daemon
     networks:
       - laravel
 
