@@ -70,18 +70,30 @@ class InternalSettingController extends Controller
         // Update referral profit status
         Setting::updateOrCreate(
             ['key' => 'referral_profit_status'],
-            ['value' => $request->has('referral_profit_status') ? $request->input('referral_profit_status') : false]
+            [
+                'value' => $request->has('referral_profit_status') ? $request->input('referral_profit_status') : false,
+                'name' => 'وضعیت فعال‌سازی رفرال',
+                'type' => 'boolean'
+            ]
         );
 
         // Update referral profit percentage
         Setting::updateOrCreate(
             ['key' => 'referral_profit_percentage'],
-            ['value' => $request->input('referral_profit_percentage')]
+            [
+                'value' => $request->input('referral_profit_percentage'),
+                'name' => 'نرخ کارمزد اهدایی به کاربر از طریق کد دعوت',
+                'type' => 'integer'
+            ]
         );
 
         Setting::updateOrCreate(
             ['key' => 'referral_usage_limit_count'],
-            ['value' => $request->input('referral_usage_limit_count')]
+            [
+                'value' => $request->input('referral_usage_limit_count'),
+                'name' => 'حداکثر تعداد استفاده کاربر از کد دعوت',
+                'type' => 'integer'
+            ]
         );
         Toast::message('تنظیمات رفرال با موفقیت ذخیره شد')->success()->notify();
         // Redirect with success message
@@ -148,12 +160,20 @@ class InternalSettingController extends Controller
 
         Setting::updateOrCreate(
             ['key' => 'exchange_withdrawal_type'],
-            ['value' => $request->input('exchange_withdrawal_type')]
+            [
+                'value' => $request->input('exchange_withdrawal_type'),
+                'type' => 'string',
+                'name' => '(زمان/تعداد) مدل تجمیع و برداشت از صرافی مرجع',
+            ]
         );
 
         Setting::updateOrCreate(
             ['key' => 'exchange_withdrawal_status'],
-            ['value' => $request->has('exchange_withdrawal_status') ? $request->input('exchange_withdrawal_status') : false]
+            [
+                'value' => $request->has('exchange_withdrawal_status') ? $request->input('exchange_withdrawal_status') : false,
+                'name' => 'وضعیت فعال‌سازی فرآیند تجمیع',
+                'type' => 'boolean'
+            ]
         );
 
 
@@ -169,7 +189,8 @@ class InternalSettingController extends Controller
             ['key' => 'spot_ticker_enabled'],
             [
                 'value' => $request->has('spot_ticker_enabled') ? $request->input('spot_ticker_enabled') : false,
-                'name' => 'وضعیت فعال‌سازی Spot Ticker'
+                'name' => 'وضعیت فعال‌سازی Spot Ticker',
+                'type' => 'boolean'
             ]
         );
 
@@ -178,7 +199,8 @@ class InternalSettingController extends Controller
             ['key' => 'order_matching_enabled'],
             [
                 'value' => $request->has('order_matching_enabled') ? $request->input('order_matching_enabled') : false,
-                'name' => 'وضعیت فعال‌سازی Order Matching'
+                'name' => 'وضعیت فعال‌سازی Order Matching',
+                'type' => 'boolean'
             ]
         );
 
