@@ -255,3 +255,6 @@
         }
     </style>
 @endsection
+@section('vendor-script')
+    <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
+@endsection
