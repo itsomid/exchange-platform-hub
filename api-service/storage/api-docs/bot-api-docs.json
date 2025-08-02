@@ -1,0 +1,1014 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Bot API Documentation",
+        "description": "API documentation for Bot services",
+        "contact": {
+            "email": "support@exchange.com"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/api/bot/v1",
+            "description": "Bot API Server"
+        }
+    ],
+    "paths": {
+        "/token/generate": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Generate JWT token for bot authentication",
+                "description": "Generate a JWT token with the provided payload for bot or accounting services",
+                "operationId": "generateToken",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "secret_key",
+                                    "payload"
+                                ],
+                                "properties": {
+                                    "type": {
+                                        "description": "Type of service requesting the token",
+                                        "type": "string",
+                                        "default": "bot",
+                                        "enum": [
+                                            "accounting",
+                                            "bot"
+                                        ]
+                                    },
+                                    "secret_key": {
+                                        "description": "Secret key for authentication",
+                                        "type": "string"
+                                    },
+                                    "payload": {
+                                        "description": "Additional payload data for the token",
+                                        "required": [
+                                            "email"
+                                        ],
+                                        "properties": {
+                                            "email": {
+                                                "description": "Email address for the token",
+                                                "type": "string",
+                                                "format": "email"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Token generated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "token": {
+                                            "description": "Generated JWT token",
+                                            "type": "string"
+                                        },
+                                        "expires_at": {
+                                            "description": "Token expiration date",
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "expiry_days": {
+                                            "description": "Number of days until expiration",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid secret key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid secret key"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation failed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation failed"
+                                        },
+                                        "errors": {
+                                            "description": "Validation errors",
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "An error occurred"
+                                        },
+                                        "error": {
+                                            "description": "Error details",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/status/{currency_id}": {
+            "get": {
+                "tags": [
+                    "Spot Bot Status"
+                ],
+                "summary": "Get bot status for specific currency",
+                "description": "Retrieve the current status and settings of the spot bot for a specific currency",
+                "operationId": "getBotStatus",
+                "parameters": [
+                    {
+                        "name": "currency_id",
+                        "in": "path",
+                        "description": "Currency ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Bot status retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/BotSetting"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Currency or bot settings not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/settings": {
+            "get": {
+                "tags": [
+                    "Spot Bot Settings"
+                ],
+                "summary": "Get all bot settings",
+                "description": "Retrieve all bot settings for all currencies",
+                "operationId": "getAllBotSettings",
+                "responses": {
+                    "200": {
+                        "description": "Bot settings retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/BotSetting"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/settings/{currency_id}": {
+            "get": {
+                "tags": [
+                    "Spot Bot Settings"
+                ],
+                "summary": "Get bot settings for specific currency",
+                "description": "Retrieve bot settings for a specific currency",
+                "operationId": "getBotSettings",
+                "parameters": [
+                    {
+                        "name": "currency_id",
+                        "in": "path",
+                        "description": "Currency ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Bot settings retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/BotSetting"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Currency or bot settings not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/sync-orders/{currency_id}": {
+            "post": {
+                "tags": [
+                    "Spot Bot Operations"
+                ],
+                "summary": "Sync orders for specific currency",
+                "description": "Synchronize bot orders for a specific currency",
+                "operationId": "syncOrdersForCurrency",
+                "parameters": [
+                    {
+                        "name": "currency_id",
+                        "in": "path",
+                        "description": "Currency ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Orders synchronized successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bot is not active for this currency",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Currency not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/cancel-old-orders/{currency_id}": {
+            "post": {
+                "tags": [
+                    "Spot Bot Operations"
+                ],
+                "summary": "Cancel old orders for specific currency",
+                "description": "Cancel old bot orders for a specific currency",
+                "operationId": "cancelOldOrdersForCurrency",
+                "parameters": [
+                    {
+                        "name": "currency_id",
+                        "in": "path",
+                        "description": "Currency ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Old orders cancelled successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bot is not active for this currency",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Currency not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/generate-orders/{currency_id}": {
+            "post": {
+                "tags": [
+                    "Spot Bot Operations"
+                ],
+                "summary": "Generate orders for specific currency",
+                "description": "Generate new bot orders for a specific currency. You can optionally specify the number of buy and sell orders to generate. If not provided, the values from bot settings will be used.",
+                "operationId": "generateOrdersForCurrency",
+                "parameters": [
+                    {
+                        "name": "currency_id",
+                        "in": "path",
+                        "description": "Currency ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Optional parameters to override bot settings",
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "buy_orders_count": {
+                                        "description": "Number of buy orders to generate (optional, defaults to bot setting)",
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "example": 5
+                                    },
+                                    "sell_orders_count": {
+                                        "description": "Number of sell orders to generate (optional, defaults to bot setting)",
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "example": 5
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Orders generated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Orders generated successfully for Bitcoin"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "currency": {
+                                                    "type": "string",
+                                                    "example": "BTC"
+                                                },
+                                                "market_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "current_price": {
+                                                    "type": "string",
+                                                    "example": "45000.00000000"
+                                                },
+                                                "total_orders_generated": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "buy_orders_count": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "sell_orders_count": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "order_margin": {
+                                                    "type": "string",
+                                                    "example": "0.5"
+                                                },
+                                                "orders": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "side": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "buy",
+                                                                    "sell"
+                                                                ],
+                                                                "example": "buy"
+                                                            },
+                                                            "price": {
+                                                                "type": "string",
+                                                                "example": "44775.00000000"
+                                                            },
+                                                            "quantity": {
+                                                                "type": "string",
+                                                                "example": "0.05000000"
+                                                            },
+                                                            "order_id": {
+                                                                "type": "integer",
+                                                                "example": 123
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "errors": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "example": []
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bot is not active for this currency or market not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Currency not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error during order generation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/match-order/{currency_id}": {
+            "post": {
+                "tags": [
+                    "Spot Bot Operations"
+                ],
+                "summary": "Match order for specific currency",
+                "description": "Match bot orders for a specific currency",
+                "operationId": "matchOrderForCurrency",
+                "parameters": [
+                    {
+                        "name": "currency_id",
+                        "in": "path",
+                        "description": "Currency ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Order matched successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bot is not active for this currency",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Currency not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/sync-all-orders": {
+            "post": {
+                "tags": [
+                    "Spot Bot Bulk Operations"
+                ],
+                "summary": "Sync orders for all active currencies",
+                "description": "Synchronize bot orders for all active currencies",
+                "operationId": "syncAllOrders",
+                "responses": {
+                    "200": {
+                        "description": "Orders synchronized successfully for all active currencies",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BulkOperationResult"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "No active bot settings found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/cancel-all-old-orders": {
+            "post": {
+                "tags": [
+                    "Spot Bot Bulk Operations"
+                ],
+                "summary": "Cancel old orders for all active currencies",
+                "description": "Cancel old bot orders for all active currencies",
+                "operationId": "cancelAllOldOrders",
+                "responses": {
+                    "200": {
+                        "description": "Old orders cancelled successfully for all active currencies",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BulkOperationResult"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "No active bot settings found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/generate-all-orders": {
+            "post": {
+                "tags": [
+                    "Spot Bot Bulk Operations"
+                ],
+                "summary": "Generate orders for all active currencies",
+                "description": "Generate new bot orders for all active currencies",
+                "operationId": "generateAllOrders",
+                "responses": {
+                    "200": {
+                        "description": "Orders generated successfully for all active currencies",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BulkOperationResult"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "No active bot settings found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "BotSetting": {
+                "properties": {
+                    "id": {
+                        "description": "Setting ID",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "currency_id": {
+                        "description": "Currency ID",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "currency_symbol": {
+                        "description": "Currency symbol",
+                        "type": "string",
+                        "example": "BTC"
+                    },
+                    "is_active": {
+                        "description": "Whether bot is active",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "price_interval_seconds": {
+                        "description": "Price update interval in seconds",
+                        "type": "integer",
+                        "example": 60
+                    },
+                    "order_margin": {
+                        "description": "Order margin percentage",
+                        "type": "string",
+                        "example": "0.5"
+                    },
+                    "buy_orders_count": {
+                        "description": "Number of buy orders",
+                        "type": "integer",
+                        "example": 10
+                    },
+                    "sell_orders_count": {
+                        "description": "Number of sell orders",
+                        "type": "integer",
+                        "example": 10
+                    },
+                    "created_at": {
+                        "description": "Creation timestamp",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "description": "Last update timestamp",
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "SuccessResponse": {
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Operation completed successfully"
+                    }
+                },
+                "type": "object"
+            },
+            "ErrorResponse": {
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "An error occurred"
+                    }
+                },
+                "type": "object"
+            },
+            "UnauthorizedResponse": {
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "Unauthorized"
+                    }
+                },
+                "type": "object"
+            },
+            "BulkOperationResult": {
+                "properties": {
+                    "currency_id": {
+                        "description": "Currency ID",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "currency_name": {
+                        "description": "Currency name",
+                        "type": "string",
+                        "example": "Bitcoin"
+                    },
+                    "status": {
+                        "description": "Operation status",
+                        "type": "string",
+                        "example": "completed"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "BearerAuth": {
+                "type": "http",
+                "description": "Enter JWT token in format: Bearer {token}",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Authentication",
+            "description": "Authentication"
+        },
+        {
+            "name": "Spot Bot Status",
+            "description": "Spot Bot Status"
+        },
+        {
+            "name": "Spot Bot Settings",
+            "description": "Spot Bot Settings"
+        },
+        {
+            "name": "Spot Bot Operations",
+            "description": "Spot Bot Operations"
+        },
+        {
+            "name": "Spot Bot Bulk Operations",
+            "description": "Spot Bot Bulk Operations"
+        }
+    ]
+}
