@@ -35,4 +35,9 @@ class Currency extends Model
     {
         return $this->hasMany(CurrencyChain::class);
     }
+
+    public function spotBotSetting(): HasOne
+    {
+        return $this->hasOne(SpotBotSetting::class);
+    }
 }
