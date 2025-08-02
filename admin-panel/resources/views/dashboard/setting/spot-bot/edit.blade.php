@@ -179,7 +179,7 @@
                                 <input type="number" class="form-control @error('min_order_size') is-invalid @enderror"
                                     id="min_order_size" name="min_order_size"
                                     value="{{ old('min_order_size', $spotBotSetting->min_order_size ?? 10) }}"
-                                    step="0.01" min="0" required>
+                                    step="0.0001" min="0" required>
                                 @error('min_order_size')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
