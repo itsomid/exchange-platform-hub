@@ -24,6 +24,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
             Route::middleware(['api'])->prefix('/api/accounting/v1')
                 ->group(base_path('routes/accounting_v1.php'));
+
+            Route::middleware(['api'])->prefix('/api/bot/v1')
+                ->group(base_path('routes/bot_v1.php'));
         }
     )
     ->withBroadcasting(
@@ -38,6 +41,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 'check.user.status' => \App\Http\Middleware\CheckUserStatus::class,
                 'jwt.auth' => \App\Http\Middleware\JwtAuthMiddleware::class,
                 'verified' => \App\Http\Middleware\CustomEnsureEmailIsVerified::class,
+                'basic.auth' => \App\Http\Middleware\BasicAuthMiddleware::class,
             ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
