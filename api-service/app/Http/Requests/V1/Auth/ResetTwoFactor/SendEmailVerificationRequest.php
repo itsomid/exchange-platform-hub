@@ -15,7 +15,7 @@ use Illuminate\Foundation\Http\FormRequest;
  *         type="string",
  *         format="email",
  *         description="The email address of the user requesting to disable two-factor authentication.",
- *         example="mehdints@gmail.com"
+ *         example="o.shabani@hotmail.com"
  *     ),
  * )
  */

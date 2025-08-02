@@ -9,7 +9,7 @@ namespace App\Http\Controllers;
  *     description="Description of your API",
  *
  *     @OA\Contact(
- *         email="mehdints@gmail.com"
+ *         email="o.shabani@hotmail.com"
  *     )
  * )
  *
