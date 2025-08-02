@@ -160,12 +160,11 @@ class OrderController extends Controller
      *          @OA\Parameter(
      *          name="status",
      *          in="query",
-     *          description="Filter by order status. 'completed' also includes 'partially_filled_canceled'.", // Updated description
+     *          description="Filter by order status. 'completed' also includes 'partially_filled_canceled'.",
      *          required=false,
      *
      *          @OA\Schema(
      *              type="string",
-     *              // Ensure these enum values match your actual status strings
      *              enum={"open", "completed", "canceled", "partially_filled", "partially_filled_canceled"}
      *          )
      *      ),

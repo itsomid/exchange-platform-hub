@@ -1,8 +1,8 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "title": "Bitexroom Main api",
-        "description": "Description of your API",
+        "title": "Bitexroom API",
+        "description": "Main API documentation for Bitexroom exchange platform",
         "contact": {
             "email": "o.shabani@hotmail.com"
         },
@@ -15,62 +15,6 @@
         }
     ],
     "paths": {
-        "/api/v1/captcha": {
-            "get": {
-                "tags": [
-                    "Captcha"
-                ],
-                "summary": "Get CAPTCHA",
-                "description": "Retrieve a CAPTCHA image and its associated key for user verification.",
-                "operationId": "getCaptcha",
-                "responses": {
-                    "200": {
-                        "description": "CAPTCHA retrieved successfully.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "is_fishy": {
-                                            "description": "Indicates if the CAPTCHA generation triggered anti-fraud logic.",
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "image": {
-                                            "description": "The CAPTCHA image in SVG format.",
-                                            "type": "string",
-                                            "format": "binary",
-                                            "example": "<svg xmlns='http://www.w3.org/2000/svg' ...>"
-                                        },
-                                        "captcha_key": {
-                                            "description": "The unique key associated with the CAPTCHA.",
-                                            "type": "string",
-                                            "example": "k39d8flc"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Unable to generate CAPTCHA."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/auth/email/veiry": {
             "post": {
                 "tags": [
@@ -1273,7 +1217,7 @@
                         "description": "Filter history by market id (e.g., deposit, withdrawal).",
                         "required": false,
                         "schema": {
-                            "type": "int",
+                            "type": "integer",
                             "example": "1"
                         }
                     },
@@ -1867,13 +1811,16 @@
                     {
                         "name": "status",
                         "in": "query",
-                        "description": "Filter by order status",
+                        "description": "Filter by order status. 'completed' also includes 'partially_filled_canceled'.",
                         "required": false,
                         "schema": {
                             "type": "string",
                             "enum": [
                                 "open",
-                                "completed"
+                                "completed",
+                                "canceled",
+                                "partially_filled",
+                                "partially_filled_canceled"
                             ]
                         }
                     }
@@ -3955,40 +3902,30 @@
                 ]
             }
         },
-        "/api/v1/authorization/otp-code/{action}": {
-            "post": {
+        "/api/v1/wallets/check-withdrawal-limit": {
+            "get": {
                 "tags": [
-                    "Authorization"
+                    "Wallet"
                 ],
-                "summary": "Send OTP Code",
-                "description": "Send an OTP code via email for a specific action, such as withdrawal or two-factor setup.",
-                "operationId": "370b180a74b344c907a72f7c214c2ada",
-                "parameters": [
-                    {
-                        "name": "action",
-                        "in": "path",
-                        "description": "The action for which the OTP code is being sent. Possible values: `two-factor-setup`, `withdrawal`.",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "two-factor-setup",
-                                "withdrawal"
-                            ],
-                            "example": "withdrawal"
-                        }
-                    }
-                ],
+                "summary": "Check if the user is limited for withdrawal",
+                "description": "Returns whether the authenticated user is currently blocked from making withdrawals.",
+                "operationId": "ecc99c4a4e6745ffab38c3b3a34e299c",
                 "responses": {
                     "200": {
-                        "description": "OTP code sent successfully.",
+                        "description": "Withdrawal limit status returned successfully.",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "message": {
+                                        "is_blocked": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "restrict_until": {
                                             "type": "string",
-                                            "example": "email send successfully"
+                                            "format": "date-time",
+                                            "example": "2025-02-19T15:30:00Z",
+                                            "nullable": true
                                         }
                                     },
                                     "type": "object"
@@ -3997,38 +3934,14 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthorized. User is not authenticated.",
+                        "description": "Unauthorized",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Unauthenticated."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Invalid action parameter.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "The given data was invalid."
-                                        },
-                                        "errors": {
-                                            "type": "object",
-                                            "example": {
-                                                "action": [
-                                                    "The action field must be one of `two-factor-setup`, `withdrawal`."
-                                                ]
-                                            }
+                                            "example": "Unauthorized"
                                         }
                                     },
                                     "type": "object"
@@ -4736,6 +4649,11 @@
                                 "type": "string",
                                 "example": "2.5"
                             },
+                            "logo": {
+                                "description": "Currency logo.",
+                                "type": "string",
+                                "example": "BTC"
+                            },
                             "inter_transfer_enabled": {
                                 "description": "Whether inter-transfer is enabled for this currency.",
                                 "type": "boolean",
@@ -5109,6 +5027,14 @@
                     },
                     "last_name": {
                         "description": "The user's last name.",
+                        "type": "string"
+                    },
+                    "national_code": {
+                        "description": "The user's national code.",
+                        "type": "string"
+                    },
+                    "mobile": {
+                        "description": "The user's mobile.",
                         "type": "string"
                     },
                     "email": {
@@ -5769,16 +5695,20 @@
                 },
                 "type": "object"
             }
+        },
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "description": "Enter JWT token in format: Bearer {token}",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            }
         }
     },
     "tags": [
         {
             "name": "Two-Factor Authentication",
             "description": "APIs related to two-factor authentication (2FA)."
-        },
-        {
-            "name": "Captcha",
-            "description": "Captcha"
         },
         {
             "name": "Authentication",
@@ -5831,10 +5761,6 @@
         {
             "name": "Wallet",
             "description": "Wallet"
-        },
-        {
-            "name": "Authorization",
-            "description": "Authorization"
         }
     ]
 }
