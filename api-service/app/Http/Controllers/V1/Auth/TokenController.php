@@ -21,14 +21,17 @@ class TokenController extends Controller
         try {
             // Validate the request payload
             $validated = $request->validate([
+                'type' => 'nullable|string|in:accounting,bot',
                 'secret_key' => 'required|string',
                 'payload' => 'required|array',
                 'payload.email' => 'required|email',
-                'expiry_days' => 'nullable|integer|min:1|max:365', // Maximum 1 year
             ]);
 
+            // Set default type to accounting if not provided
+            $validated['type'] = $validated['type'] ?? 'accounting';
+
             // Verify secret key
-            $validSecretKey = config('accounting.auth.secret_key');
+            $validSecretKey = config($validated['type'] . '.auth.secret_key');
             if ($validated['secret_key'] !== $validSecretKey) {
                 return response()->json([
                     'message' => 'Invalid secret key'
@@ -36,9 +39,9 @@ class TokenController extends Controller
             }
 
             // Calculate expiration timestamp (default: 30 days)
-            $expiryDays = $validated['expiry_days'] ?? 30;
+            $expiryDays = config($validated['type'] . '.auth.expiry_days');
             $exp = now()->addDays($expiryDays)->timestamp;
-            
+
             // Prepare the final payload
             $payload = array_merge($validated['payload'], [
                 'exp' => $exp,
@@ -55,7 +58,6 @@ class TokenController extends Controller
                 'expires_at' => date('Y-m-d H:i:s', $exp),
                 'expiry_days' => $expiryDays
             ]);
-
         } catch (ValidationException $e) {
             return response()->json([
                 'message' => 'Validation failed',
