@@ -21,5 +21,7 @@ return [
     \App\Exceptions\ReferralCodeSystemDisabledException::class => 'Referral code system is disabled.',
     \App\Exceptions\V1\OTC\MinOTCAmountException::class => 'The quantity must be at least :min.',
     \App\Exceptions\V1\OTC\MaxOTCAmountException::class => 'The quantity may not be greater than :max.',
-    
+    \App\Infrastructure\HDWallet\Exceptions\HDDWalletUnavailable::class => 'Wallet service is temporarily unavailable. Please try again later.',
+    \App\Infrastructure\HDWallet\Exceptions\HDDWalletServerError::class => 'Wallet service error. Please try again later.',
+    \App\Infrastructure\HDWallet\Exceptions\NotFoundException::class => 'The requested information was not found.',
 ];

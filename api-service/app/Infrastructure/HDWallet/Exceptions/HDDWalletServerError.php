@@ -2,4 +2,9 @@
 
 namespace App\Infrastructure\HDWallet\Exceptions;
 
-class HDDWalletServerError extends HDWalletException {}
+use App\Exceptions\ServiceException;
+
+class HDDWalletServerError extends ServiceException
+{
+    protected $code = 500;
+}

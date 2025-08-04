@@ -22,4 +22,7 @@ return [
     \App\Exceptions\ReferralCodeSystemDisabledException::class => 'ساخت کد معرف غیرفعال است.',
     \App\Exceptions\V1\OTC\MinOTCAmountException::class => 'حداقل مقدار باید :min باشد',
     \App\Exceptions\V1\OTC\MaxOTCAmountException::class => 'حداکثر مقدار باید :max باشد',
+    \App\Infrastructure\HDWallet\Exceptions\HDDWalletUnavailable::class => 'سرویس کیف پول موقتاً در دسترس نیست. لطفاً بعداً تلاش کنید.',
+    \App\Infrastructure\HDWallet\Exceptions\HDDWalletServerError::class => 'خطا در سرویس کیف پول. لطفاً بعداً تلاش کنید.',
+    \App\Infrastructure\HDWallet\Exceptions\NotFoundException::class => 'اطلاعات مورد نظر یافت نشد.',
 ];
