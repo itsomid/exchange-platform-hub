@@ -22,7 +22,7 @@ class DepositController extends Controller
             ->whereDate('created_at', $today)// Assuming `currency` has the price
             ->get()
             ->sum(function ($deposit) {
-                return $deposit->amount * $deposit->currency->exchange_price; // Multiply amount by coin price
+                return $deposit->amount * ($deposit->currency?->exchange_price ?? 0); // Multiply amount by coin price
             });
 
         $totalDepositsValue = Deposit::with('currency')

@@ -29,8 +29,12 @@
                                         <td>{{ $deposit->id }}</td>
                                         <td class="text-heading fw-medium">
                                             <div class="avatar avatar-sm">
-                                                <img src="{{ asset($deposit->currency->coinLogo()) }}"
-                                                     class="rounded-circle">
+                                                @if($deposit->currency)
+                                                    <img src="{{ asset($deposit->currency->coinLogo()) }}"
+                                                         class="rounded-circle">
+                                                @else
+                                                    <span class="avatar-initial rounded-circle bg-label-secondary">{{ substr($deposit->currency_symbol, 0, 2) }}</span>
+                                                @endif
                                             </div>
                                         </td>
                                         <td>
@@ -68,8 +72,12 @@
                                         <td>{{ $withdrawal->id }}</td>
                                         <td class="text-heading fw-medium">
                                             <div class="avatar avatar-sm">
-                                                <img src="{{ asset($withdrawal->currency->coinLogo()) }}"
-                                                     class="rounded-circle">
+                                                @if($withdrawal->currency)
+                                                    <img src="{{ asset($withdrawal->currency->coinLogo()) }}"
+                                                         class="rounded-circle">
+                                                @else
+                                                    <span class="avatar-initial rounded-circle bg-label-secondary">{{ substr($withdrawal->currency_symbol, 0, 2) }}</span>
+                                                @endif
                                             </div>
                                         </td>
                                         <td>
