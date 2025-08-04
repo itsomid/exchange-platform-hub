@@ -85,14 +85,14 @@ class HomeController extends Controller
             ->whereBetween('created_at', [now()->startOfWeek(Carbon::SATURDAY), now()->endOfWeek()])
             ->get()
             ->sum(function ($deposit) {
-                return $deposit->amount * $deposit->currency->exchange_price;
+                return $deposit->amount * ($deposit->currency?->exchange_price ?? 0);
             });
 
         $totalWithdrawalValue = Withdrawal::with('currency')
             ->whereBetween('created_at', [now()->startOfWeek(Carbon::SATURDAY), now()->endOfWeek()])
             ->get()
             ->sum(function ($withdraw) {
-                return $withdraw->amount * $withdraw->currency->exchange_price;
+                return $withdraw->amount * ($withdraw->currency?->exchange_price ?? 0);
             });
 
 
