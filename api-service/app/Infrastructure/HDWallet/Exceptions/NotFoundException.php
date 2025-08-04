@@ -2,6 +2,9 @@
 
 namespace App\Infrastructure\HDWallet\Exceptions;
 
-use Exception;
+use App\Exceptions\ServiceException;
 
-class NotFoundException extends Exception {}
+class NotFoundException extends ServiceException
+{
+    protected $code = 404;
+}

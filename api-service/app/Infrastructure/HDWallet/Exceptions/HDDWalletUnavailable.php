@@ -2,4 +2,9 @@
 
 namespace App\Infrastructure\HDWallet\Exceptions;
 
-class HDDWalletUnavailable extends HDWalletException {}
+use App\Exceptions\ServiceException;
+
+class HDDWalletUnavailable extends ServiceException
+{
+    protected $code = 503;
+}
