@@ -18,7 +18,6 @@ class HDWalletDepositService
 
             $network = $requestDTO->getBlockchain();
             $contractAddress = $requestDTO->getContractAddress();
-
             $requestBody = [
                 'network' => $network,
                 'token_symbol' => $requestDTO->getCurrencySymbol(),
@@ -59,7 +58,7 @@ class HDWalletDepositService
         $transactions = $data['transactions'] ?? [];
 
         return array_map(function (array $item) use ($requestDTO, $network) {
-            $tokenSymbol = $item['token_symbol'] ?? $requestDTO->getCurrencySymbol();
+            $tokenSymbol = $requestDTO->getCurrencySymbol();
 
             return resolve(GetDepositListsResponseDTO::class)
                 ->setTimestamp($item['timestamp'])
