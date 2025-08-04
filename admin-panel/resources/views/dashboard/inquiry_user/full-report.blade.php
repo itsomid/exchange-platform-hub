@@ -760,9 +760,13 @@
                                             <td>{{$deposit->id}}</td>
 
                                             <td class="text-heading fw-medium">
-                                                <img src="{{asset($deposit->currency->coinLogo())}}"
-                                                     class="rounded-circle img-fluid" width="30">
-                                                {{$deposit->currency_symbol}}
+                                                @if($deposit->currency)
+                                                    <img src="{{asset($deposit->currency->coinLogo())}}"
+                                                         class="rounded-circle img-fluid" width="30">
+                                                    {{$deposit->currency_symbol}}
+                                                @else
+                                                    <span class="text-muted">{{$deposit->currency_symbol}}</span>
+                                                @endif
                                             </td>
                                             <td>{{$deposit->currencyChain->chain_name}}</td>
                                             <td class="font-number" dir="ltr">
