@@ -405,7 +405,7 @@
                 ]
             }
         },
-        "/cancel-old-orders/{currency_id}": {
+        "/cancel-all-orders/{currency_id}": {
             "post": {
                 "tags": [
                     "Spot Bot Operations"

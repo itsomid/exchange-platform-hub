@@ -4,7 +4,7 @@ namespace App\Http\Controllers\SpotBot;
 
 /**
  * SpotBot API Documentation
- * 
+ *
  * @OA\Info(
  *     title="Bot API Documentation",
  *     version="1.0.0",
@@ -13,12 +13,12 @@ namespace App\Http\Controllers\SpotBot;
  *         email="support@exchange.com"
  *     )
  * )
- * 
+ *
  * @OA\Server(
  *     url="/api/bot/v1",
  *     description="Bot API Server"
  * )
- * 
+ *
  * @OA\SecurityScheme(
  *     securityScheme="BearerAuth",
  *     type="http",
@@ -26,7 +26,7 @@ namespace App\Http\Controllers\SpotBot;
  *     bearerFormat="JWT",
  *     description="Enter JWT token in format: Bearer {token}"
  * )
- * 
+ *
  * @OA\Schema(
  *     schema="BotSetting",
  *     type="object",
@@ -41,27 +41,27 @@ namespace App\Http\Controllers\SpotBot;
  *     @OA\Property(property="created_at", type="string", format="date-time", description="Creation timestamp"),
  *     @OA\Property(property="updated_at", type="string", format="date-time", description="Last update timestamp")
  * )
- * 
+ *
  * @OA\Schema(
  *     schema="SuccessResponse",
  *     type="object",
  *     @OA\Property(property="success", type="boolean", example=true),
  *     @OA\Property(property="message", type="string", example="Operation completed successfully")
  * )
- * 
+ *
  * @OA\Schema(
  *     schema="ErrorResponse",
  *     type="object",
  *     @OA\Property(property="success", type="boolean", example=false),
  *     @OA\Property(property="message", type="string", example="An error occurred")
  * )
- * 
+ *
  * @OA\Schema(
  *     schema="UnauthorizedResponse",
  *     type="object",
  *     @OA\Property(property="message", type="string", example="Unauthorized")
  * )
- * 
+ *
  * @OA\Schema(
  *     schema="BulkOperationResult",
  *     type="object",
@@ -72,7 +72,7 @@ namespace App\Http\Controllers\SpotBot;
  */
 class SpotBotDocumentation
 {
-    
+
     /**
      * @OA\Post(
      *     path="/token/generate",
@@ -297,10 +297,10 @@ class SpotBotDocumentation
 
     /**
      * @OA\Post(
-     *     path="/cancel-old-orders/{currency_id}",
-     *     summary="Cancel old orders for specific currency",
-     *     description="Cancel old bot orders for a specific currency",
-     *     operationId="cancelOldOrdersForCurrency",
+     *     path="/cancel-orders/{currency_id}",
+     *     summary="Cancel orders for specific currency",
+     *     description="Cancel bot orders for a specific currency",
+     *     operationId="cancelOrdersForCurrency",
      *     tags={"Spot Bot Operations"},
      *     security={{"BearerAuth":{}}},
      *     @OA\Parameter(
@@ -312,7 +312,7 @@ class SpotBotDocumentation
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Old orders cancelled successfully",
+     *         description="Orders cancelled successfully",
      *         @OA\JsonContent(ref="#/components/schemas/SuccessResponse")
      *     ),
      *     @OA\Response(
@@ -497,15 +497,15 @@ class SpotBotDocumentation
 
     /**
      * @OA\Post(
-     *     path="/cancel-all-old-orders",
-     *     summary="Cancel old orders for all active currencies",
-     *     description="Cancel old bot orders for all active currencies",
-     *     operationId="cancelAllOldOrders",
+     *     path="/cancel-all-orders",
+     *     summary="Cancel all orders for all active currencies",
+     *     description="Cancel all bot orders for all active currencies",
+     *     operationId="cancelAllOrders",
      *     tags={"Spot Bot Bulk Operations"},
      *     security={{"BearerAuth":{}}},
      *     @OA\Response(
      *         response=200,
-     *         description="Old orders cancelled successfully for all active currencies",
+     *         description="All orders cancelled successfully for all active currencies",
      *         @OA\JsonContent(ref="#/components/schemas/BulkOperationResult")
      *     ),
      *     @OA\Response(
@@ -548,5 +548,4 @@ class SpotBotDocumentation
      * )
      */
     public function generateAllOrdersDocumentation() {}
-
 }
