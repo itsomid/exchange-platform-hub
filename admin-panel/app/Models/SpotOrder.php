@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\SpotOrderRoleEnum;
 use App\Enums\SpotOrderSideEnum;
+use App\Enums\SpotOrderSourceEnum;
 use App\Enums\SpotOrderStatusEnum;
 use App\Enums\SpotOrderTypeEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -23,6 +24,7 @@ class SpotOrder extends Model
             'side' => SpotOrderSideEnum::class,
             'type' => SpotOrderTypeEnum::class,
             'status' => SpotOrderStatusEnum::class,
+            'source' => SpotOrderSourceEnum::class,
         ];
     }
 
