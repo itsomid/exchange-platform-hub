@@ -4,6 +4,7 @@ namespace App\Http\Controllers\V1\Spot;
 
 use App\Enums\SpotOrderSideEnum;
 use App\Enums\SpotOrderTypeEnum;
+use App\Enums\SpotOrderSourceEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Spot\CreateOrderRequest;
 use App\Http\Requests\V1\Spot\ListOrderRequest;
@@ -100,13 +101,20 @@ class OrderController extends Controller
                         ->setSide(SpotOrderSideEnum::tryFrom($validated['side']))
                         ->setPrice($validated['price'])
                         ->setMarketId($validated['market_id'])
+                        ->setSource(SpotOrderSourceEnum::USER)
                 );
 
                 $orderMatchingEngine = resolve(OrderMatchingEngine::class);
+                $spotOrder = $response->getSpotOrderModel();
+                
+                if ($spotOrder === null) {
+                    throw new \RuntimeException('Failed to create spot order');
+                }
+                
                 if ($type === SpotOrderTypeEnum::MARKET) {
-                    $orderMatchingEngine->market($response->getSpotOrderModel());
+                    $orderMatchingEngine->market($spotOrder);
                 } elseif ($type === SpotOrderTypeEnum::LIMIT) {
-                    $orderMatchingEngine->limit($response->getSpotOrderModel());
+                    $orderMatchingEngine->limit($spotOrder);
                 }
 
                 return response([

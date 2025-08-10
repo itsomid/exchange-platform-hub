@@ -4,6 +4,7 @@ namespace App\Services\Spot\DTO;
 
 use App\Enums\SpotOrderSideEnum;
 use App\Enums\SpotOrderTypeEnum;
+use App\Enums\SpotOrderSourceEnum;
 
 class SpotOrderRequestDTO
 {
@@ -18,6 +19,20 @@ class SpotOrderRequestDTO
     private string $quantity;
 
     private ?string $price = null;
+
+    private ?SpotOrderSourceEnum $source = null;
+
+    public function setSource(SpotOrderSourceEnum $source): SpotOrderRequestDTO
+    {
+        $this->source = $source;
+
+        return $this;
+    }
+
+    public function getSource(): SpotOrderSourceEnum
+    {
+        return $this->source;
+    }
 
     public function setUserId(int $userId): SpotOrderRequestDTO
     {

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\SpotOrderSourceEnum;
 use App\Enums\SpotOrderRoleEnum;
 use App\Enums\SpotOrderSideEnum;
 use App\Enums\SpotOrderStatusEnum;
@@ -18,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property SpotOrderTypeEnum   $type
  * @property SpotOrderSideEnum   $side
  * @property SpotOrderStatusEnum $status
+ * @property OrderSourceEnum     $source
  * @property string              $quantity
  * @property string              $price
  * @property string              $filled_quantity
@@ -38,6 +40,7 @@ class SpotOrder extends Model
         'price',
         'status',
         'filled_quantity',
+        'source',
     ];
 
     protected function casts(): array
@@ -46,6 +49,7 @@ class SpotOrder extends Model
             'side' => SpotOrderSideEnum::class,
             'type' => SpotOrderTypeEnum::class,
             'status' => SpotOrderStatusEnum::class,
+            'source' => SpotOrderSourceEnum::class,
         ];
     }
 
@@ -57,6 +61,11 @@ class SpotOrder extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function botSetting(): BelongsTo
+    {
+        return $this->belongsTo(SpotBotSetting::class, 'bot_setting_id');
     }
 
     public function makerTrades(): HasMany
@@ -120,6 +129,7 @@ class SpotOrder extends Model
             );
         }, $filledValue);
     }
+
     public function getRoleAttribute(): SpotOrderRoleEnum
     {
         if ($this->type === SpotOrderTypeEnum::MARKET) {
@@ -132,4 +142,5 @@ class SpotOrder extends Model
 
         return $this->takerTrades()->exists() ? SpotOrderRoleEnum::TAKER : SpotOrderRoleEnum::PENDING;
     }
+    
 }

@@ -93,6 +93,7 @@ class SpotService
                     ->setFilledQuantity(0)
                     ->setType($type)
                     ->setUserId($requestDTO->getUserId())
+                    ->setSource($requestDTO->getSource())
             );
 
             $response->setSpotOrderModel($spotOrder);
@@ -110,6 +111,7 @@ class SpotService
             OrderBookUpdated::dispatch($requestDTO->getMarketId());
         } catch (Throwable $exception) {
             report($exception);
+            throw $exception; // Re-throw the exception instead of silently continuing
         }
 
         return $response;

@@ -25,6 +25,7 @@ class SpotOrderRepository implements SpotOrderRepositoryInterface
                 'price' => $requestDTO->getPrice(),
                 'status' => $requestDTO->getStatus(),
                 'filled_quantity' => $requestDTO->getFilledQuantity(),
+                'source' => $requestDTO->getSource(),
             ]);
     }
 

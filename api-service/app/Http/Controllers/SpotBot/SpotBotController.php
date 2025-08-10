@@ -5,6 +5,7 @@ namespace App\Http\Controllers\SpotBot;
 use App\Enums\SpotOrderSideEnum;
 use App\Enums\SpotOrderStatusEnum;
 use App\Enums\SpotOrderTypeEnum;
+use App\Enums\SpotOrderSourceEnum;
 use App\Exceptions\V1\Wallet\InsufficientBalanceException;
 use App\Http\Controllers\Controller;
 use App\Helpers\Math;
@@ -292,6 +293,7 @@ class SpotBotController extends Controller
                         ->setSide($side)
                         ->setPrice($price)
                         ->setMarketId($marketId)
+                        ->setSource(SpotOrderSourceEnum::BOT)
                 );
 
                 $orderMatchingEngine = resolve(OrderMatchingEngine::class);

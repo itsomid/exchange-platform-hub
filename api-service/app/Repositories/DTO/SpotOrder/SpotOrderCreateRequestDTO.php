@@ -2,6 +2,7 @@
 
 namespace App\Repositories\DTO\SpotOrder;
 
+use App\Enums\SpotOrderSourceEnum;
 use App\Enums\SpotOrderSideEnum;
 use App\Enums\SpotOrderStatusEnum;
 use App\Enums\SpotOrderTypeEnum;
@@ -23,6 +24,8 @@ class SpotOrderCreateRequestDTO
     private SpotOrderStatusEnum $status;
 
     private int $filledQuantity;
+
+    private ?SpotOrderSourceEnum $source = null;
 
     public function setUserId(int $userId): SpotOrderCreateRequestDTO
     {
@@ -118,5 +121,17 @@ class SpotOrderCreateRequestDTO
     public function getQuantity(): string
     {
         return $this->quantity;
+    }
+
+    public function setSource(SpotOrderSourceEnum $source): SpotOrderCreateRequestDTO
+    {
+        $this->source = $source;
+
+        return $this;
+    }
+
+    public function getSource(): SpotOrderSourceEnum
+    {
+        return $this->source;
     }
 }
