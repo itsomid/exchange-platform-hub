@@ -71,7 +71,7 @@ class SpotService
         $wallet = $this->walletRepository->getOneOrCreateByCurrencyWithLock($currency, $requestDTO->getUserId());
 
         if (Math::comp($wallet->available_balance, $tradeAmount) === -1) {
-            throw new InsufficientBalanceException;
+            throw new InsufficientBalanceException("Insufficient {$currency} balance.");
         }
 
         // Update wallet balances only if it's not a market order
@@ -86,7 +86,6 @@ class SpotService
             $spotOrder = $this->spotOrderRepository->create(
                 resolve(SpotOrderCreateRequestDTO::class)
                     ->setSide($side)
-//                    ->setPrice($type === SpotOrderTypeEnum::MARKET ? null : $price)
                     ->setPrice($price)
                     ->setStatus(SpotOrderStatusEnum::OPEN)
                     ->setMarketId($market->id)
@@ -126,9 +125,9 @@ class SpotService
                 ->setUserId($requestDTO->getUserId())
         )->map(function ($order) {
 
-//            $filledValue = $order->makerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0);
-//            $filledValue = Math::add($filledValue, $order->takerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0));
-            $filledValue = formatNumberTrimZeros(bcmul($order->price , $order->filled_quantity, 8 ));
+            //            $filledValue = $order->makerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0);
+            //            $filledValue = Math::add($filledValue, $order->takerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0));
+            $filledValue = formatNumberTrimZeros(bcmul($order->price, $order->filled_quantity, 8));
             return resolve(SpotOrderListsResponseDTO::class)
                 ->setId($order->id)
                 ->setStatus($order->status)
@@ -161,9 +160,9 @@ class SpotService
             orderId: $orderId
         );
 
-//        $filledValue = $order->makerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0);
-//        $filledValue = Math::add($filledValue, $order->takerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0));
-        $filledValue = formatNumberTrimZeros(bcmul($order->price , $order->filled_quantity, 8 ));
+        //        $filledValue = $order->makerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0);
+        //        $filledValue = Math::add($filledValue, $order->takerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0));
+        $filledValue = formatNumberTrimZeros(bcmul($order->price, $order->filled_quantity, 8));
         return resolve(SpotOrderListsResponseDTO::class)
             ->setId($order->id)
             ->setStatus($order->status)
@@ -216,11 +215,9 @@ class SpotService
             ]);
             DB::commit();
             OrderBookUpdated::dispatch($market->id);
-
         } catch (Throwable $exception) {
             report($exception);
             DB::rollBack();
         }
-
     }
 }

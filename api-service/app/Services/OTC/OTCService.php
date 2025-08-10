@@ -10,7 +10,7 @@ use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Exceptions\V1\OTC\BuyTradeWasFiledException;
-use App\Exceptions\V1\InsufficientBalanceException;
+use App\Exceptions\V1\Wallet\InsufficientBalanceException;
 use App\Helpers\Math;
 use App\Models\Currency;
 use App\Models\Market;
@@ -119,7 +119,7 @@ class OTCService
             $receivedAmount = Math::sub($buyAmount, $fee);
 
             if (Math::comp($buyerQuoteWallet->available_balance, $amountInQuoteCurrency) === -1) {
-                throw new \App\Exceptions\V1\Wallet\InsufficientBalanceException(__('otc.buyer_insufficient_balance', ['currency' => $market->quote_currency]));
+                throw new \App\Exceptions\V1\Wallet\InsufficientBalanceException("Insufficient {$market->quote_currency} balance.");
             }
 
             $otc_order = $this->otcOrderRepository->create(
@@ -376,7 +376,7 @@ class OTCService
             $receivedAmount = Math::sub($amountInQuoteCurrency, $fee);
 
             if (Math::comp($sellerWallet->available_balance, $sellAmount) === -1) {
-                throw new InsufficientBalanceException(__('otc.seller_insufficient_balance', ['currency' => $market->base_currency]));
+                throw new InsufficientBalanceException("Insufficient {$market->base_currency} balance.");
             }
 
             $otc_order = $this->otcOrderRepository->create(
