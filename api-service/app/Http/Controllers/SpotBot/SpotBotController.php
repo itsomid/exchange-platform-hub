@@ -5,7 +5,9 @@ namespace App\Http\Controllers\SpotBot;
 use App\Enums\SpotOrderSideEnum;
 use App\Enums\SpotOrderStatusEnum;
 use App\Enums\SpotOrderTypeEnum;
+use App\Exceptions\V1\Wallet\InsufficientBalanceException;
 use App\Http\Controllers\Controller;
+use App\Helpers\Math;
 use App\Models\Currency;
 use App\Models\Market;
 use App\Models\SpotBotSetting;
@@ -13,6 +15,7 @@ use App\Models\SpotOrder;
 use App\Services\Spot\DTO\SpotOrderRequestDTO;
 use App\Services\Spot\OrderMatchingEngine;
 use App\Services\Spot\SpotService;
+use App\Repositories\Interfaces\WalletRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -152,54 +155,87 @@ class SpotBotController extends Controller
         $generatedOrders = [];
         $errors = [];
 
+        // Pre-check both buy and sell balances before creating any orders
+        try {
+            $this->ensureSufficientBalances($setting, $market, $currentPrice);
+        } catch (InsufficientBalanceException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 400);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to validate balances: ' . $e->getMessage()
+            ], 500);
+        }
+
         try {
             // Generate buy orders
             for ($i = 0; $i < $buyOrdersCount; $i++) {
-                $buyPrice = $this->calculateOrderPrice($currentPrice, $setting->order_margin, 'buy', $i);
-                $quantity = $this->calculateOrderQuantity($setting);
+                try {
+                    $buyPrice = $this->calculateOrderPrice($currentPrice, $setting->order_margin, 'buy', $i);
+                    $quantity = $this->calculateOrderQuantity($setting);
 
-                $buyOrder = $this->createBotOrder(
-                    $setting->fake_user_id,
-                    $market->id,
-                    $quantity,
-                    $buyPrice,
-                    SpotOrderSideEnum::BUY,
-                    SpotOrderTypeEnum::LIMIT
-                );
+                    $buyOrder = $this->createBotOrder(
+                        $setting->fake_user_id,
+                        $market->id,
+                        $quantity,
+                        $buyPrice,
+                        SpotOrderSideEnum::BUY,
+                        SpotOrderTypeEnum::LIMIT
+                    );
 
-                if ($buyOrder) {
-                    $generatedOrders[] = [
-                        'side' => 'buy',
-                        'price' => $buyPrice,
-                        'quantity' => $quantity,
-                        'order_id' => $buyOrder->id ?? null
-                    ];
+                    if ($buyOrder) {
+                        $generatedOrders[] = [
+                            'side' => 'buy',
+                            'price' => $buyPrice,
+                            'quantity' => $quantity,
+                            'order_id' => $buyOrder->id ?? null
+                        ];
+                    }
+                } catch (\Throwable $e) {
+                    $errors[] = "Buy order {$i}: " . $e->getMessage();
                 }
             }
 
             // Generate sell orders
             for ($i = 0; $i < $sellOrdersCount; $i++) {
-                $sellPrice = $this->calculateOrderPrice($currentPrice, $setting->order_margin, 'sell', $i);
-                $quantity = $this->calculateOrderQuantity($setting);
+                try {
+                    $sellPrice = $this->calculateOrderPrice($currentPrice, $setting->order_margin, 'sell', $i);
+                    $quantity = $this->calculateOrderQuantity($setting);
 
-                $sellOrder = $this->createBotOrder(
-                    $setting->fake_user_id,
-                    $market->id,
-                    $quantity,
-                    $sellPrice,
-                    SpotOrderSideEnum::SELL,
-                    SpotOrderTypeEnum::LIMIT
-                );
+                    $sellOrder = $this->createBotOrder(
+                        $setting->fake_user_id,
+                        $market->id,
+                        $quantity,
+                        $sellPrice,
+                        SpotOrderSideEnum::SELL,
+                        SpotOrderTypeEnum::LIMIT
+                    );
 
-                if ($sellOrder) {
-                    $generatedOrders[] = [
-                        'side' => 'sell',
-                        'price' => $sellPrice,
-                        'quantity' => $quantity,
-                        'order_id' => $sellOrder->id ?? null
-                    ];
+                    if ($sellOrder) {
+                        $generatedOrders[] = [
+                            'side' => 'sell',
+                            'price' => $sellPrice,
+                            'quantity' => $quantity,
+                            'order_id' => $sellOrder->id ?? null
+                        ];
+                    }
+                } catch (\Throwable $e) {
+                    $errors[] = "Sell order {$i}: " . $e->getMessage();
                 }
             }
+
+            Log::channel('spot-bot')->info('Bot orders generated successfully', [
+                'currency_id' => $currency_id,
+                'currency_symbol' => $currency->symbol,
+                'market_id' => $market->id,
+                'total_orders_generated' => count($generatedOrders),
+                'buy_orders_count' => $buyOrdersCount,
+                'sell_orders_count' => $sellOrdersCount,
+                'order_margin' => $setting->order_margin
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -217,7 +253,7 @@ class SpotBotController extends Controller
                 ]
             ]);
         } catch (Throwable $exception) {
-            Log::error('Bot order generation failed', [
+            Log::channel('spot-bot')->error('Bot order generation failed', [
                 'currency_id' => $currency_id,
                 'error' => $exception->getMessage(),
                 'trace' => $exception->getTraceAsString()
@@ -267,7 +303,7 @@ class SpotBotController extends Controller
 
                 return $response->getSpotOrderModel();
             } catch (Throwable $exception) {
-                Log::error('Bot order creation failed', [
+                Log::channel('spot-bot')->error('Bot order creation failed', [
                     'user_id' => $userId,
                     'market_id' => $marketId,
                     'side' => $side->value,
@@ -280,6 +316,30 @@ class SpotBotController extends Controller
         }
 
         throw new \Exception('Could not acquire lock for bot order creation');
+    }
+
+    /**
+     * Ensure both sides (buy and sell) have sufficient balances before creating any orders
+     */
+    private function ensureSufficientBalances(SpotBotSetting $setting, Market $market, string $currentPrice): void
+    {
+        $wallets = resolve(WalletRepositoryInterface::class);
+
+        // BUY side check: need quote currency balance for total buy value of a representative order
+        $buyQuantity = $this->calculateOrderQuantity($setting);
+        $buyPricePreview = $this->calculateOrderPrice($currentPrice, $setting->order_margin, 'buy', 0);
+        $totalBuyValue = Math::mul($buyQuantity, $buyPricePreview);
+        $quoteWallet = $wallets->getOneOrCreateByCurrencyWithLock($market->quote_currency, $setting->fake_user_id);
+        if (Math::comp($quoteWallet->available_balance, $totalBuyValue) === -1) {
+            throw new InsufficientBalanceException("Insufficient {$market->quote_currency} balance.");
+        }
+
+        // SELL side check: need base currency quantity for a representative order
+        $sellQuantity = $this->calculateOrderQuantity($setting);
+        $baseWallet = $wallets->getOneOrCreateByCurrencyWithLock($market->base_currency, $setting->fake_user_id);
+        if (Math::comp($baseWallet->available_balance, $sellQuantity) === -1) {
+            throw new InsufficientBalanceException("Insufficient {$market->base_currency} balance.");
+        }
     }
 
     /**
@@ -473,7 +533,7 @@ class SpotBotController extends Controller
                         'status' => 'cancelled'
                     ];
                 } catch (Throwable $exception) {
-                    Log::error('Bot order cancellation failed', [
+                    Log::channel('spot-bot')->error('Bot order cancellation failed', [
                         'order_id' => $order->id,
                         'user_id' => $setting->fake_user_id,
                         'market_id' => $market->id,
@@ -485,6 +545,15 @@ class SpotBotController extends Controller
                     ];
                 }
             }
+
+            Log::channel('spot-bot')->info('Bot orders cancelled successfully', [
+                'currency_id' => $currency_id,
+                'currency_symbol' => $currency->symbol,
+                'market_id' => $market->id,
+                'total_orders_found' => $openOrders->count(),
+                'cancelled_orders_count' => count($cancelledOrders),
+                'failed_orders_count' => count($errors)
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -499,9 +568,8 @@ class SpotBotController extends Controller
                     'errors' => $errors
                 ]
             ]);
-
         } catch (Throwable $exception) {
-            Log::error('Bot order cancellation process failed', [
+            Log::channel('spot-bot')->error('Bot order cancellation process failed', [
                 'currency_id' => $currency_id,
                 'error' => $exception->getMessage(),
                 'trace' => $exception->getTraceAsString()
@@ -571,7 +639,7 @@ class SpotBotController extends Controller
                         $spotService->cancel($setting->fake_user_id, $order->id);
                         $cancelledCount++;
                     } catch (Throwable $exception) {
-                        Log::error('Bot order cancellation failed', [
+                        Log::channel('spot-bot')->error('Bot order cancellation failed', [
                             'order_id' => $order->id,
                             'user_id' => $setting->fake_user_id,
                             'market_id' => $market->id,
@@ -593,9 +661,8 @@ class SpotBotController extends Controller
                     'cancelled_orders_count' => $cancelledCount,
                     'failed_orders_count' => $errorCount
                 ];
-
             } catch (Throwable $exception) {
-                Log::error('Bot order cancellation process failed for currency', [
+                Log::channel('spot-bot')->error('Bot order cancellation process failed for currency', [
                     'currency_id' => $setting->currency_id,
                     'error' => $exception->getMessage()
                 ]);
@@ -683,7 +750,21 @@ class SpotBotController extends Controller
                 $generatedOrders = [];
                 $orderErrors = [];
 
-                // Generate buy orders
+                // Pre-check both sides' balances; if either side insufficient, skip all orders for this currency
+                try {
+                    $this->ensureSufficientBalances($setting, $market, $currentPrice);
+                } catch (InsufficientBalanceException $exception) {
+                    Log::channel('spot-bot')->warning('Skipping orders due to insufficient balance', [
+                        'currency_id' => $setting->currency_id,
+                        'market_id' => $market->id,
+                        'error' => $exception->getMessage()
+                    ]);
+                    $orderErrors[] = $exception->getMessage();
+                    // Skip to next setting (no orders)
+                    continue;
+                }
+
+                // Pre-check both sides already done; proceed to normal generation with no side flags
                 for ($i = 0; $i < $setting->buy_orders_count; $i++) {
                     try {
                         $buyPrice = $this->calculateOrderPrice($currentPrice, $setting->order_margin, 'buy', $i);
@@ -707,7 +788,7 @@ class SpotBotController extends Controller
                             ];
                         }
                     } catch (Throwable $exception) {
-                        Log::error('Bot buy order generation failed', [
+                        Log::channel('spot-bot')->error('Bot buy order generation failed', [
                             'currency_id' => $setting->currency_id,
                             'market_id' => $market->id,
                             'order_index' => $i,
@@ -717,7 +798,6 @@ class SpotBotController extends Controller
                     }
                 }
 
-                // Generate sell orders
                 for ($i = 0; $i < $setting->sell_orders_count; $i++) {
                     try {
                         $sellPrice = $this->calculateOrderPrice($currentPrice, $setting->order_margin, 'sell', $i);
@@ -741,7 +821,7 @@ class SpotBotController extends Controller
                             ];
                         }
                     } catch (Throwable $exception) {
-                        Log::error('Bot sell order generation failed', [
+                        Log::channel('spot-bot')->error('Bot sell order generation failed', [
                             'currency_id' => $setting->currency_id,
                             'market_id' => $market->id,
                             'order_index' => $i,
@@ -772,12 +852,11 @@ class SpotBotController extends Controller
                     'orders' => $generatedOrders,
                     'errors' => $orderErrors
                 ];
-
             } catch (Throwable $exception) {
-                Log::error('Bot order generation process failed for currency', [
+                Log::channel('spot-bot')->error('Bot order generation process failed for currency', [
                     'currency_id' => $setting->currency_id,
                     'error' => $exception->getMessage(),
-                    'trace' => $exception->getTraceAsString()
+                    'trace' => $exception->getMessage()
                 ]);
 
                 $results[] = [
