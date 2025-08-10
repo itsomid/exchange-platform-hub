@@ -19,7 +19,38 @@
                 </div>
             </div>
         </div>
+    </div>
 
+    <!-- Tab Navigation -->
+    <div class="card mb-4">
+        <div class="card-body p-3">
+            <ul class="nav nav-pills nav-fill gap-2" id="orderTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link d-flex align-items-center justify-content-center gap-2 py-3 px-4 rounded-pill fw-semibold transition-all-3 {{ (!request()->has('source') || request()->input('source') === 'user') ? 'active shadow-lg' : '' }}" 
+                       href="{{ route('admin.spot_orders.index', array_merge(request()->except('source'), ['source' => 'user'])) }}"
+                       style="{{ (!request()->has('source') || request()->input('source') === 'user') ? 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;' : 'background: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6;' }}">
+                        <i class="fa-light fa-user fs-5"></i>
+                        <span class="fw-bold">سفارشات کاربران</span>
+                        <span class="badge bg-white text-primary ms-2 px-2 py-1 rounded-pill" 
+                              style="font-size: 0.75rem; font-weight: 700;">
+                            {{ number_format($userOrdersCount ?? 0) }}
+                        </span>
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link d-flex align-items-center justify-content-center gap-2 py-3 px-4 rounded-pill fw-semibold transition-all-3 {{ request()->input('source') === 'bot' ? 'active shadow-lg' : '' }}" 
+                       href="{{ route('admin.spot_orders.index', array_merge(request()->except('source'), ['source' => 'bot'])) }}"
+                       style="{{ request()->input('source') === 'bot' ? 'background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border: none;' : 'background: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6;' }}">
+                        <i class="fa-light fa-robot fs-5"></i>
+                        <span class="fw-bold">سفارشات ربات معاملاتی</span>
+                        <span class="badge bg-white text-danger ms-2 px-2 py-1 rounded-pill" 
+                              style="font-size: 0.75rem; font-weight: 700;">
+                            {{ number_format($botOrdersCount ?? 0) }}
+                        </span>
+                    </a>
+                </li>
+            </ul>
+        </div>
     </div>
 
     <div class="card">
@@ -28,6 +59,9 @@
                 <h5 class="m-0 me-2">فیلتر</h5>
             </div>
             <form action="{{route('admin.spot_orders.index')}}" method="get">
+                <!-- Hidden input to maintain current source -->
+                <input type="hidden" name="source" value="{{ request()->input('source', 'user') }}">
+                
                 <div class="row">
                     <div class="col-md-3 mt-3">
                         <div class="form-group">
@@ -43,6 +77,8 @@
                             </select>
                         </div>
                     </div>
+                    
+                    @if(request()->input('source', 'user') === 'user')
                     <div class="col-md-6 mt-3">
                         <label class="form-label" for="user">کاربر :</label>
                         <x-user-selection-component
@@ -54,6 +90,8 @@
                                 : '' }}"
                         ></x-user-selection-component>
                     </div>
+                    @endif
+                    
                     <div class="col-md-2 mt-3">
                         <div class="form-group"><br>
                             <button class="btn btn-success text-white" type="submit">
@@ -66,11 +104,16 @@
         </div>
     </div>
 
-
     <div class="card mt-3">
         <div class="card-header">
             <div class="card-title header-elements">
-                <h5 class="m-0 me-2">لیست سفارشات اسپات</h5>
+                <h5 class="m-0 me-2">
+                    @if(request()->input('source', 'user') === 'bot')
+                        لیست سفارشات ربات معاملاتی
+                    @else
+                        لیست سفارشات کاربران
+                    @endif
+                </h5>
             </div>
         </div>
         <div class="table-responsive text-nowrap">
@@ -113,7 +156,11 @@
                         </a>
                     </th>
                     <th>قیمت سفارش (USDT)</th>
+                    @if(request()->input('source', 'user') === 'user')
                     <th>کاربر</th>
+                    @else
+                    <th>منبع</th>
+                    @endif
                     <th>مقدار اجرا شده</th>
                     <th>
                         @php
@@ -141,7 +188,6 @@
                         <td colspan="14" class="text-center">سفارشی یافت نشد.</td>
                     </tr>
                 @else
-
                     @foreach($spotOrders as $spotOrder)
                         <tr class="table-striped">
                             <td>{{$spotOrder->id}}</td>
@@ -374,11 +420,18 @@
                 </tbody>
             </table>
         </div>
+        
+        <!-- Pagination Section -->
+        @if($spotOrders->hasPages())
         <div class="row mt-4">
-            <div class="col-md-12">
-                {{--                {{$spotOrders->appends(request()->all())->links()}}--}}
+        
+            <div class="col-md-6">
+                <div class="d-flex justify-content-end">
+                    {{ $spotOrders->appends(request()->all())->links() }}
+                </div>
             </div>
         </div>
+        @endif
     </div>
 
 @endsection
@@ -388,4 +441,40 @@
             $('[data-bs-toggle="tooltip"]').tooltip();
         });
     </script>
+@section('page-style')
+<style>
+
+     .transition-all-3 {
+        transition: all 0.3s ease;
+    }
+    
+    #orderTabs .nav-link:not(.active):hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    #orderTabs .nav-link.active {
+        transform: translateY(-1px);
+    }
+    
+    .nav-pills .nav-link {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .nav-pills .nav-link::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s;
+    }
+    
+    .nav-pills .nav-link:hover::before {
+        left: 100%;
+    }
+</style>
 @endsection

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\SpotOrder;
 
 use App\Enums\SpotOrderSideEnum;
+use App\Enums\SpotOrderSourceEnum;
 use App\Enums\SpotOrderStatusEnum;
 use App\Enums\SpotOrderTypeEnum;
 use App\Http\Controllers\Controller;
@@ -36,6 +37,14 @@ class SpotOrderController extends Controller
             $query->where('user_id', $request->user);
         }
 
+        // Filter by source - default to USER, but allow BOT if specified
+        $source = $request->input('source', 'user');
+        if ($source === 'bot') {
+            $query->where('source', SpotOrderSourceEnum::BOT->value);
+        } else {
+            $query->where('source', SpotOrderSourceEnum::USER->value);
+        }
+
         // Sort by ID
         if ($request->filled('sortById')) {
             $query->orderBy('id', $request->sortById);
@@ -53,7 +62,7 @@ class SpotOrderController extends Controller
             $query->orderBy('created_at', $request->sortByCreatedAt);
         }
 
-         $spotOrders = $query->get();
+         $spotOrders = $query->paginate(10);
 
         // Calculate commission values for each order's trades
         foreach ($spotOrders as $order) {
@@ -89,8 +98,15 @@ class SpotOrderController extends Controller
             }
         }
 //        return $spotOrders;
+        // Add these counts to your index method
+        $userOrdersCount = SpotOrder::where('source', SpotOrderSourceEnum::USER->value)->count();
+        $botOrdersCount = SpotOrder::where('source', SpotOrderSourceEnum::BOT->value)->count();
+
         return view('dashboard.spot_order.index', [
-            'spotOrders' => $spotOrders
+            'spotOrders' => $spotOrders,
+            'currentSource' => $source,
+            'userOrdersCount' => $userOrdersCount,
+            'botOrdersCount' => $botOrdersCount
         ]);
     }
 
