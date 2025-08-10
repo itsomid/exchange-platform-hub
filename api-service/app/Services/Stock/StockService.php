@@ -63,7 +63,7 @@ class StockService
             $totalValue = $data['amount'] * $stock->value;
             $hasBalance = $this->walletService->checkBalance($user->id, 'USDT', $totalValue);
             if (!$hasBalance) {
-                throw new InsufficientBalanceException('Insufficient balance in wallet');
+                throw new InsufficientBalanceException("Insufficient USDT balance.");
             }
 
             $stockContract = $this->stockRepository->createContract(
