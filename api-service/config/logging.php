@@ -89,7 +89,7 @@ return [
             'handler_with' => [
                 'host' => env('PAPERTRAIL_URL'),
                 'port' => env('PAPERTRAIL_PORT'),
-                'connectionString' => 'tls://'.env('PAPERTRAIL_URL').':'.env('PAPERTRAIL_PORT'),
+                'connectionString' => 'tls://' . env('PAPERTRAIL_URL') . ':' . env('PAPERTRAIL_PORT'),
             ],
             'processors' => [PsrLogMessageProcessor::class],
         ],
@@ -133,6 +133,12 @@ return [
         'ref-exchange' => [
             'driver' => 'single',
             'path' => storage_path('logs/ref-exchange.log'),
+        ],
+
+        'spot-bot' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/spot-bot.log'),
+            'replace_placeholders' => true,
         ],
 
     ],
