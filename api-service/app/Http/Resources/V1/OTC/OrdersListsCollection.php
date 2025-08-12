@@ -98,6 +98,7 @@ class OrdersListsCollection extends ResourceCollection
             'market_name' => $responseDTO->getMarket(),
             'base_currency' => $responseDTO->getBaseCurrency(),
             'quote_currency' => $responseDTO->getQuoteCurrency(),
+            'currency_logo' => $responseDTO->getCurrencyLogo(),
         ])->toArray();
     }
 }

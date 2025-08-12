@@ -36,6 +36,7 @@ class OTCOrderService
                 ->setReceivedAmount($receivedAmount)
                 ->setFee($order->fee)
                 ->setStatus($order->status)
+                ->setCurrencyLogo($order->market->currency->logo)
                 ->setBaseCurrency($order->market->base_currency)
                 ->setQuoteCurrency($order->market->quote_currency);
         })->toArray();

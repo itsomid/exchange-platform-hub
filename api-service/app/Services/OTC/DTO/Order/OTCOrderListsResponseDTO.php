@@ -28,6 +28,8 @@ class OTCOrderListsResponseDTO
 
     private OTCOrderStatusEnum $status;
 
+    private string $currencyLogo;
+
     public function setCreatedAt(Carbon $created_at): OTCOrderListsResponseDTO
     {
         $this->created_at = $created_at;
@@ -146,5 +148,17 @@ class OTCOrderListsResponseDTO
     public function getReceivedAmount(): string
     {
         return $this->receivedAmount;
+    }
+
+    public function getCurrencyLogo(): string
+    {
+        return $this->currencyLogo;
+    }
+
+    public function setCurrencyLogo(string $currencyLogo): OTCOrderListsResponseDTO
+    {
+        $this->currencyLogo = $currencyLogo;
+
+        return $this;
     }
 }
