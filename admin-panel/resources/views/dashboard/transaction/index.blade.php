@@ -147,7 +147,7 @@
                                 @foreach (\App\Enums\TransactionTypeEnum::cases() as $case)
                                     <option value="{{ $case->value }}"
                                         {{ request()->has('type') && request()->input('type') == $case->value ? 'selected' : '' }}>
-                                        {{ $case->label() }}
+                                        {{ $case->label() }} ({{ $case->value }})
                                     </option>
                                 @endforeach
                             </select>
@@ -155,13 +155,13 @@
                     </div>
                     <div class="col-md-3 mt-3">
                         <div class="form-group">
-                            <label class="form-label" for="subtype">نوع تراکنش:</label>
+                            <label class="form-label" for="subtype">نوع زیر تراکنش:</label>
                             <select name="subtype" class="form-control" id="subtype">
-                                <option value=" ">همه</option>
+                                <option value="">همه</option>
                                 @foreach (\App\Enums\TransactionSubTypeEnum::cases() as $case)
                                     <option value="{{ $case->value }}"
                                         {{ request()->has('subtype') && request()->input('subtype') == $case->value ? 'selected' : '' }}>
-                                        {{ $case->label() }}
+                                        {{ $case->label() }} ({{ $case->value }})
                                     </option>
                                 @endforeach
                             </select>
