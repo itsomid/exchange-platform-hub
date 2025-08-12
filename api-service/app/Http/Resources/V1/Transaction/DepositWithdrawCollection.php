@@ -34,17 +34,18 @@ class DepositWithdrawCollection extends ResourceCollection
      */
     public function toArray(Request $request): array
     {
-        return $this->collection->map(fn (GetAllDepositWithdrawResponseDTO $responseDTO) => [
+        return $this->collection->map(fn(GetAllDepositWithdrawResponseDTO $responseDTO) => [
             'id' => $responseDTO->getId(),
             'amount' => $responseDTO->getAmount(),
             'currency_symbol' => $responseDTO->getCurrencySymbol(),
             'currency_chain' => $responseDTO->getCurrencyChain(),
+            'currency_logo' => $responseDTO->getCurrencyLogo(),
             'transaction_hash' => $responseDTO->getTransactionHashed(),
             'wallet_address' => $responseDTO->getAddress(),
             'type' => $responseDTO->getType()->value,
-            'type_lang' => __('enum.transaction-type.'.$responseDTO->getType()->name),
+            'type_lang' => __('enum.transaction-type.' . $responseDTO->getType()->name),
             'status' => $responseDTO->getStatus(),
-            'status_lang' => __('enum.deposit-withdrawal.'.$responseDTO->getStatus()),
+            'status_lang' => __('enum.deposit-withdrawal.' . $responseDTO->getStatus()),
             'explorer_address_url' => $responseDTO->getExplorerAddressUrl(),
             'explorer_tx_url' => $responseDTO->getExplorerTxUrl(),
             'confirmed_at' => $responseDTO->getConfirmedAt(),

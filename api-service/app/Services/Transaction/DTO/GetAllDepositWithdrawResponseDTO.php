@@ -31,6 +31,8 @@ class GetAllDepositWithdrawResponseDTO
 
     private ?string $explorerTxUrl;
 
+    private string $currencyLogo;
+
     public function setCurrencySymbol(string $currencySymbol): self
     {
         $this->currencySymbol = $currencySymbol;
@@ -173,5 +175,17 @@ class GetAllDepositWithdrawResponseDTO
     public function getExplorerTxUrl(): ?string
     {
         return $this->explorerTxUrl;
+    }
+
+    public function getCurrencyLogo(): string
+    {
+        return $this->currencyLogo;
+    }
+
+    public function setCurrencyLogo(string $currencyLogo): self
+    {
+        $this->currencyLogo = $currencyLogo;
+
+        return $this;
     }
 }
