@@ -15,9 +15,9 @@ class subType implements FilterContract
 
     public function handle($value = null): void
     {
-    
+
         if (! is_null($value)) {
-            $this->query->where('subType', $value);
+            $this->query->where('subtype', $value);
         }
     }
 }
