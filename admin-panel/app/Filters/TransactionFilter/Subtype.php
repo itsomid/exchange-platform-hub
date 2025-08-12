@@ -4,7 +4,7 @@ namespace App\Filters\TransactionFilter;
 
 use App\Filters\FilterContract;
 
-class Subtypeee implements FilterContract
+class Subtype implements FilterContract
 {
     protected $query;
 
