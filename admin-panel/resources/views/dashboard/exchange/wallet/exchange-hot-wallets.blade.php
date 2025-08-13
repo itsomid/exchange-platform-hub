@@ -48,11 +48,16 @@
                             <span class="text-muted h6 me-3">{{ $walletChain->wallet->currency_symbol }}</span>
                         </h4>
                         <div class="mb-0 d-flex flex-column align-items-end">
-                            <a href="{{$walletChain->explorer_address_url}}" target="_blank"
-                               class="text-primary font-number">
-                                {{ $walletChain->address }}
-                                <i class="fa-regular fa-clone"></i>
-                            </a>
+                            @if($walletChain->address)
+                                <a href="{{$walletChain->explorer_address_url}}" target="_blank"
+                                   class="text-primary font-number">
+                                    {{ $walletChain->address }}
+                                    <i class="fa-regular fa-clone"></i>
+                                </a>
+                            @else
+                                بدون آدرس
+                            @endif
+
                         </div>
                     </div>
                     <div class="card-body border-top">

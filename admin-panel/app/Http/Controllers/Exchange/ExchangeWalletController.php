@@ -33,8 +33,7 @@ class ExchangeWalletController extends Controller
         TronScanService   $tronScan,
         EtherScanService  $etherScan,
 
-    )
-    {
+    ) {
         $this->walletService = $walletService;
         $this->cryptoApi = $cryptoApi;
         $this->blockchair = $blockchair;
@@ -51,24 +50,27 @@ class ExchangeWalletController extends Controller
      *
      * @param string $currency
      * @param string $chain
-     * @param string $address
+     * @param string|null $address
      * @return array
      */
-    protected function fetchBalanceData(string $currency, string $chain, string $address)
+    protected function fetchBalanceData(string $currency, string $chain, ?string $address)
     {
-        if($chain === 'ERC20'){
+        // If address is not yet available, avoid calling providers and return zero balance
+        if (empty($address)) {
+            return ['amount' => '0'];
+        }
+        if ($chain === 'ERC20') {
             return $this->etherScan->getBalance($currency, $address);
-        }elseif($chain === 'TRC20'){
+        } elseif ($chain === 'TRC20') {
             return $this->tronScan->getBalance($currency, $address);
-        }elseif($chain === 'BSC'){
+        } elseif ($chain === 'BSC') {
             return $this->bscScan->getBalance($currency, $address);
-        }elseif ($chain === 'DOGE' || $chain === 'BTC') {
+        } elseif ($chain === 'DOGE' || $chain === 'BTC') {
             return $this->blockchair->getBalance($currency, $address);
-        }else {
+        } else {
             return $this->cryptoApi->getBalance($currency, $address);
         }
 
-        return ['error' => 'Unsupported currency or chain'];
     }
 
     protected function cacheBalances()
@@ -106,7 +108,6 @@ class ExchangeWalletController extends Controller
         return view('dashboard.exchange.wallet.exchange-local-wallets', [
             'exchangeWallets' => $exchangeWallets,
         ]);
-
     }
 
 
@@ -114,7 +115,7 @@ class ExchangeWalletController extends Controller
     {
 
         $exchangeWalletChains = $this->walletService->getExchangeAllWalletChain();
-        return $exchangeWalletChains;
+
         $balances = Cache::get('wallet_balances', []);
         $formattedBalances = [];
 
@@ -135,7 +136,6 @@ class ExchangeWalletController extends Controller
             'exchangeWalletChains' => $exchangeWalletChains,
             'balances' => $formattedBalances,
         ]);
-
     }
 
     public function refreshHotWalletBalance(Request $request)
@@ -170,7 +170,7 @@ class ExchangeWalletController extends Controller
         // Update the balance for the specific chain
 
         $balances[$currency][$chain] = formatNumberTrimZeros($balanceData['amount']);
-//        return $balances;
+        //        return $balances;
         Cache::put('wallet_balances', $balances, 3600);
 
         // Return the balance data as JSON
@@ -203,8 +203,5 @@ class ExchangeWalletController extends Controller
         $walletChain = WalletChain::where('currency_chain', $chainName)->first();
 
         $coldWalletAddress = $request->input('cold_wallet_address');
-
-
     }
-
 }
