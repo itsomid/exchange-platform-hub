@@ -9,8 +9,10 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WalletChain;
+use App\Models\CurrencyChain;
 use App\Services\Wallet\DTO\UpdateBalanceRequestDTO;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 use App\Models\MarketHistory;
 
@@ -72,18 +74,41 @@ class WalletService
     }
     public function totalAssetsValue(User $user)
     {
-        // Initialize the total assets value
+
         $totalAssetsValue = 0;
 
-        // Loop through each wallet and calculate its value
-        foreach ($user->wallets as $wallet) {
-            // Get the current market price for the wallet's currency
-            $market = $wallet->currency->baseMarket; // Assuming you have a relationship in the Currency model
+        $user->loadMissing('wallets.currency.baseMarket.activeExchangePrice');
 
-            $currencyPrice = $market ? $market->activeExchangePrice->price : 1;
+        foreach ($user->wallets as $wallet) {
+            $currency = $wallet->currency;
+            if (!$currency) {
+                Log::warning('Wallet currency missing', [
+                    'user_id' => $user->id,
+                    'wallet_id' => $wallet->id,
+                    'currency_symbol' => $wallet->currency_symbol,
+                ]);
+                $currencyPrice = 1;
+            } else {
+                $market = $currency->baseMarket;
+                if (!$market) {
+                    Log::warning('Currency has no base market', [
+                        'currency_symbol' => $currency->symbol,
+                        'user_id' => $user->id,
+                        'wallet_id' => $wallet->id,
+                    ]);
+                }
+                $currencyPrice = $market && $market->activeExchangePrice ? $market->activeExchangePrice->price : 1;
+                if ($market && !$market->activeExchangePrice) {
+                    Log::info('Market has no active exchange price, defaulting to 1', [
+                        'currency_symbol' => $currency->symbol,
+                        'market_id' => $market->id,
+                        'user_id' => $user->id,
+                        'wallet_id' => $wallet->id,
+                    ]);
+                }
+            }
 
             $totalAssetsValue += $wallet->balance * $currencyPrice;
-            //
         }
 
         return $totalAssetsValue;
@@ -94,12 +119,37 @@ class WalletService
         // Initialize the total assets value
         $totalAssetsValue = 0;
 
+        $user->loadMissing('wallets.currency.baseMarket.activeExchangePrice');
+
         // Loop through each wallet and calculate its value
         foreach ($user->wallets as $wallet) {
-            // Get the current market price for the wallet's currency
-            $market = $wallet->currency->baseMarket; // Assuming you have a relationship in the Currency model
-
-            $currencyPrice = $market ? $market->activeExchangePrice->price : 1;
+            $currency = $wallet->currency;
+            if (!$currency) {
+                Log::warning('Wallet currency missing', [
+                    'user_id' => $user->id,
+                    'wallet_id' => $wallet->id,
+                    'currency_symbol' => $wallet->currency_symbol,
+                ]);
+                $currencyPrice = 1;
+            } else {
+                $market = $currency->baseMarket;
+                if (!$market) {
+                    Log::warning('Currency has no base market', [
+                        'currency_symbol' => $currency->symbol,
+                        'user_id' => $user->id,
+                        'wallet_id' => $wallet->id,
+                    ]);
+                }
+                $currencyPrice = $market && $market->activeExchangePrice ? $market->activeExchangePrice->price : 1;
+                if ($market && !$market->activeExchangePrice) {
+                    Log::info('Market has no active exchange price, defaulting to 1', [
+                        'currency_symbol' => $currency->symbol,
+                        'market_id' => $market->id,
+                        'user_id' => $user->id,
+                        'wallet_id' => $wallet->id,
+                    ]);
+                }
+            }
 
             $totalAssetsValue += ($wallet->balance - $wallet->locked_balance) * $currencyPrice;
             //
@@ -113,12 +163,37 @@ class WalletService
         // Initialize the total assets value
         $totalAssetsValue = 0;
 
+        $user->loadMissing('wallets.currency.baseMarket.activeExchangePrice');
+
         // Loop through each wallet and calculate its value
         foreach ($user->wallets as $wallet) {
-            // Get the current market price for the wallet's currency
-            $market = $wallet->currency->baseMarket; // Assuming you have a relationship in the Currency model
-
-            $currencyPrice = $market ? $market->activeExchangePrice->price : 1;
+            $currency = $wallet->currency;
+            if (!$currency) {
+                Log::warning('Wallet currency missing', [
+                    'user_id' => $user->id,
+                    'wallet_id' => $wallet->id,
+                    'currency_symbol' => $wallet->currency_symbol,
+                ]);
+                $currencyPrice = 1;
+            } else {
+                $market = $currency->baseMarket;
+                if (!$market) {
+                    Log::warning('Currency has no base market', [
+                        'currency_symbol' => $currency->symbol,
+                        'user_id' => $user->id,
+                        'wallet_id' => $wallet->id,
+                    ]);
+                }
+                $currencyPrice = $market && $market->activeExchangePrice ? $market->activeExchangePrice->price : 1;
+                if ($market && !$market->activeExchangePrice) {
+                    Log::info('Market has no active exchange price, defaulting to 1', [
+                        'currency_symbol' => $currency->symbol,
+                        'market_id' => $market->id,
+                        'user_id' => $user->id,
+                        'wallet_id' => $wallet->id,
+                    ]);
+                }
+            }
 
             $totalAssetsValue += $wallet->locked_balance * $currencyPrice;
             //
@@ -138,8 +213,34 @@ class WalletService
         }
 
         // Get the current market price for the wallet's currency
-        $market = $wallet->currency->baseMarket;
-        $currencyPrice = $market ? $market->activeExchangePrice->price : 1;
+        $wallet->loadMissing('currency.baseMarket.activeExchangePrice');
+        $currency = $wallet->currency;
+        if (!$currency) {
+            Log::warning('Wallet currency missing', [
+                'user_id' => $user->id,
+                'wallet_id' => $wallet->id,
+                'currency_symbol' => $wallet->currency_symbol,
+            ]);
+            $currencyPrice = 1;
+        } else {
+            $market = $currency->baseMarket;
+            if (!$market) {
+                Log::warning('Currency has no base market', [
+                    'currency_symbol' => $currency->symbol,
+                    'user_id' => $user->id,
+                    'wallet_id' => $wallet->id,
+                ]);
+            }
+            $currencyPrice = $market && $market->activeExchangePrice ? $market->activeExchangePrice->price : 1;
+            if ($market && !$market->activeExchangePrice) {
+                Log::info('Market has no active exchange price, defaulting to 1', [
+                    'currency_symbol' => $currency->symbol,
+                    'market_id' => $market->id,
+                    'user_id' => $user->id,
+                    'wallet_id' => $wallet->id,
+                ]);
+            }
+        }
 
         return $wallet->balance * $currencyPrice;
     }
@@ -160,13 +261,30 @@ class WalletService
         $yesterdayValue = 0;
         $dayBeforeValue = 0;
 
+        $user->loadMissing('wallets.currency.baseMarket');
+
         // Loop through each wallet
         foreach ($user->wallets as $wallet) {
+            $currency = $wallet->currency;
+            if (!$currency) {
+                Log::warning('Wallet currency missing', [
+                    'user_id' => $user->id,
+                    'wallet_id' => $wallet->id,
+                    'currency_symbol' => $wallet->currency_symbol,
+                ]);
+                continue;
+            }
+
             // Get the market for the wallet's currency
-            $market = $wallet->currency->baseMarket;
+            $market = $currency->baseMarket;
 
             // Skip if no market (like USDT)
             if (!$market) {
+                Log::warning('Currency has no base market', [
+                    'currency_symbol' => $currency->symbol,
+                    'user_id' => $user->id,
+                    'wallet_id' => $wallet->id,
+                ]);
                 continue;
             }
 
@@ -423,42 +541,37 @@ class WalletService
     }
 
     /**
-     * Ensure exchange wallet exists for a currency, create if missing.
+     * Create missing wallet chains for all exchange wallets based on defined currency chains.
      *
-     * @param string $currencySymbol
-     * @return Wallet|null
+     * @return array<int, array<string, mixed>> List of created chains with wallet and chain info
      */
-    public function ensureExchangeWalletExists(string $currencySymbol): ?Wallet
+    public function createMissingExchangeWalletChains(): array
     {
-        $wallet = $this->getExchangeWallet($currencySymbol);
-
-        if (!$wallet) {
-            $wallet = $this->createExchangeWallet($currencySymbol);
-        }
-
-        return $wallet;
-    }
-
-    /**
-     * Create exchange wallets for currencies that have chains but no exchange wallet.
-     *
-     * @return array Array of created wallets
-     */
-    public function createExchangeWalletsForCurrenciesWithChains(): array
-    {
-        $createdWallets = [];
-
+        $createdChains = [];
         try {
-            // Get currencies that have chains but no exchange wallet
-            $currencies = \App\Models\Currency::has('chains')->get();
+            $exchangeWallets = Wallet::where('user_id', $this->bitexroomUserId)
+                ->with(['currency.chains', 'walletChains'])
+                ->get();
 
-            foreach ($currencies as $currency) {
-                $existingWallet = $this->getExchangeWallet($currency->symbol);
+            foreach ($exchangeWallets as $wallet) {
+                if (!$wallet->currency) {
+                    continue;
+                }
 
-                if (!$existingWallet) {
-                    $wallet = $this->createExchangeWallet($currency->symbol);
-                    if ($wallet) {
-                        $createdWallets[] = $wallet;
+                $existingChainNames = $wallet->walletChains->pluck('currency_chain')->toArray();
+                foreach ($wallet->currency->chains as $currencyChain) {
+                    $chainValue = $currencyChain->chain->value;
+                    if (!in_array($chainValue, $existingChainNames, true)) {
+                        $walletChain = WalletChain::create([
+                            'wallet_id' => $wallet->id,
+                            'currency_chain' => $chainValue,
+                            'address' => null,
+                        ]);
+                        $createdChains[] = [
+                            'wallet_id' => $wallet->id,
+                            'currency_symbol' => $wallet->currency_symbol,
+                            'currency_chain' => $walletChain->currency_chain,
+                        ];
                     }
                 }
             }
@@ -466,6 +579,48 @@ class WalletService
             report($exception);
         }
 
-        return $createdWallets;
+        return $createdChains;
+    }
+
+    /**
+     * Create one wallet chain for the exchange wallet matching the provided currency chain.
+     */
+    public function createExchangeWalletChain(CurrencyChain $currencyChain): ?WalletChain
+    {
+        try {
+            return DB::transaction(function () use ($currencyChain) {
+                // Resolve currency symbol
+                $currency = $currencyChain->currency ?: Currency::find($currencyChain->currency_id);
+                if (!$currency) {
+                    return null;
+                }
+
+                // Ensure exchange wallet exists
+                $wallet = $this->createExchangeWallet($currency->symbol);
+                if (!$wallet) {
+                    return null;
+                }
+
+                // Chain value can be enum or string
+                $chainValue = is_string($currencyChain->chain) ? $currencyChain->chain : $currencyChain->chain->value;
+
+                // Skip if already exists
+                $existing = WalletChain::where('wallet_id', $wallet->id)
+                    ->where('currency_chain', $chainValue)
+                    ->first();
+                if ($existing) {
+                    return $existing;
+                }
+
+                return WalletChain::create([
+                    'wallet_id' => $wallet->id,
+                    'currency_chain' => $chainValue,
+                    'address' => null,
+                ]);
+            });
+        } catch (\Throwable $exception) {
+            report($exception);
+            return null;
+        }
     }
 }

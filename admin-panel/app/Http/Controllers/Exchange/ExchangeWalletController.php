@@ -114,6 +114,7 @@ class ExchangeWalletController extends Controller
     {
 
         $exchangeWalletChains = $this->walletService->getExchangeAllWalletChain();
+        return $exchangeWalletChains;
         $balances = Cache::get('wallet_balances', []);
         $formattedBalances = [];
 
@@ -131,7 +132,7 @@ class ExchangeWalletController extends Controller
         }
 
         return view('dashboard.exchange.wallet.exchange-hot-wallets', [
-            'exchangeHotWallets' => $exchangeWalletChains,
+            'exchangeWalletChains' => $exchangeWalletChains,
             'balances' => $formattedBalances,
         ]);
 

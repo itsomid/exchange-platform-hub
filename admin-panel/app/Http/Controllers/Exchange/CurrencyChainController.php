@@ -8,9 +8,18 @@ use App\Models\Currency;
 use App\Models\CurrencyChain;
 use Illuminate\Http\Request;
 use App\Enums\CurrencyChainEnum;
+use App\Services\Wallet\WalletService;
 
 class CurrencyChainController extends Controller
 {
+
+    protected WalletService $walletService;
+
+    public function __construct(WalletService $walletService)
+    {
+        $this->walletService = $walletService;
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -26,6 +35,7 @@ class CurrencyChainController extends Controller
      */
     public function createChain(Currency $currency)
     {
+
         return view('dashboard.exchange.currency.create-chain', ['currency' => $currency]);
     }
 
@@ -81,8 +91,11 @@ class CurrencyChainController extends Controller
             'withdraw_enabled' => $request->has('withdraw_enabled'),  // Convert checkbox to boolean
         ]);
 
-        if ($currencyChain) {
-            Toast::message(" با موفقیت ایجاد شد.'{$currency->name}' شبکه بر بستر کوین ")->success()->notify();
+        $walletChain = $this->walletService->createExchangeWalletChain($currencyChain);
+
+        if ($walletChain) {
+            Toast::message("شبکه بر بستر کوین  با موفقیت ایجاد شد.")->success()->notify();
+
             // Redirect back with a success message
             return redirect()->back();
         } else {
