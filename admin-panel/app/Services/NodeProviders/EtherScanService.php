@@ -33,6 +33,7 @@ class EtherScanService
         'BAL' => 18,
         'MATIC' => 18,
         'ETH' => 18, // Native ETH
+        'TLM' => 4
     ];
 
     /**

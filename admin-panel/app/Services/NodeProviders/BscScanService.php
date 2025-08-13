@@ -19,15 +19,15 @@ class BscScanService
         'USDT' => 18,
         'USDC' => 18,
         'BUSD' => 18,
-        'BNB' => 18, // Native BNB
+        'BNB' => 10, // Native BNB
         'WBNB' => 18,
         'CAKE' => 18,
         'ADA' => 18,
         'DOT' => 18,
         'LINK' => 18,
         'UNI' => 18,
-        'DOGE' => 8,
         'SHIB' => 18,
+        'TLM' => 4
     ];
 
     /**
@@ -73,6 +73,7 @@ class BscScanService
 
                 if ($data['status'] === '1') {
                     $balanceWei = $data['result']; // Balance in smallest unit
+
                     $balance = bcdiv($balanceWei, bcpow('10', $decimals), $decimals);
                     return [
                         'amount' => $balance
@@ -118,6 +119,7 @@ class BscScanService
 
                 if ($data['status'] === '1') {
                     $balanceWei = $data['result']; // Balance in Wei (10^18)
+
                     $balance = bcdiv($balanceWei, bcpow('10', '18'), 18); // Convert to BNB
                     return [
                         'amount' => $balance
