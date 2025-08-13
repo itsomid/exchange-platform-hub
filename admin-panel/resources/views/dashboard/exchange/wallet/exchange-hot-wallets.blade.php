@@ -14,7 +14,7 @@
     <div class="row g-6 mt-3">
 
 
-        @foreach ($exchangeHotWallets as $walletChain)
+        @foreach ($exchangeWalletChains as $walletChain)
             <div class="col-lg-4 col-sm-6">
                 <div class="card card-action card-border-shadow-success" data-wallet-chain-id="{{ $walletChain->id }}">
                     <div class="card-alert"></div>
@@ -49,7 +49,7 @@
                         </h4>
                         <div class="mb-0 d-flex flex-column align-items-end">
                             <a href="{{$walletChain->explorer_address_url}}" target="_blank"
-                               class="text-primary font-number text-decoration-underline">
+                               class="text-primary font-number">
                                 {{ $walletChain->address }}
                                 <i class="fa-regular fa-clone"></i>
                             </a>

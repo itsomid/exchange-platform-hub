@@ -235,10 +235,18 @@ class UserWalletController extends Controller
     {
         try {
             $createdWallets = $this->walletService->createMissingExchangeWallets();
+            $createdChains = $this->walletService->createMissingExchangeWalletChains();
 
             if (!empty($createdWallets)) {
                 $currencySymbols = collect($createdWallets)->pluck('currency_symbol')->implode(', ');
                 \App\Functions\FlashMessages\Toast::message("کیف پول‌های صرافی برای ارزهای زیر ساخته شد: {$currencySymbols}")->success()->notify();
+            }
+
+            if (!empty($createdChains)) {
+                $chainsSummary = collect($createdChains)
+                    ->map(fn($c) => $c['currency_symbol'] . ':' . $c['currency_chain'])
+                    ->implode(', ');
+                \App\Functions\FlashMessages\Toast::message("چین‌های کیف پول صرافی که ساخته شدند: {$chainsSummary}")->success()->notify();
             }
         } catch (\Throwable $exception) {
             report($exception);
