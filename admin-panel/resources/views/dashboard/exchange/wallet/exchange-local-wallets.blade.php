@@ -10,7 +10,7 @@
     </div>
     <div class="row g-6 mt-3">
         @foreach($exchangeWallets as $wallet)
-            <div class="col-lg-4 col-sm-6">
+            <div class="col-xl-4 col-lg-6 col-sm-6">
                 <div class="card card-border-shadow-success">
                     <div class="card-body">
                         <div class="d-flex align-items-center ">

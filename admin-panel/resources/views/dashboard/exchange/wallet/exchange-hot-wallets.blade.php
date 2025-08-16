@@ -15,7 +15,7 @@
 
 
         @foreach ($exchangeWalletChains as $walletChain)
-            <div class="col-lg-4 col-sm-6">
+            <div class="col-xl-4 col-lg-6 col-sm-6">
                 <div class="card card-action card-border-shadow-success" data-wallet-chain-id="{{ $walletChain->id }}">
                     <div class="card-alert"></div>
                     <div class="card-header">

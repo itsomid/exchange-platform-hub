@@ -6,8 +6,9 @@
             <div class="card mb-6">
                 <div class="user-profile-header d-flex flex-column flex-lg-row text-sm-start text-center m-2">
                     <div class="d-flex align-items-center">
-                        <img class="img-fluid rounded" src="http://127.0.0.1:8000/images/avatars/avatar.webp" height="50"
-                            width="50" alt="User avatar">
+                        <img class="img-fluid rounded" src="http://127.0.0.1:8000/images/avatars/avatar.webp"
+                             height="50"
+                             width="50" alt="User avatar">
                     </div>
                     <div class="flex-grow-1">
                         <div
@@ -63,9 +64,9 @@
                         <div class="col-12 col-md-4 d-flex flex-column">
                             <div class="d-flex gap-2 align-items-center mb-3 flex-wrap">
 
-                                <h2 class="mb-0 font-number">{{ formatNumber($totalAssetsValue, 2) }}
+                                <h3 class="mb-0 font-number">{{ formatNumber($totalAssetsValue, 2) }}
                                     <small class="text-muted fw-light">USDT</small>
-                                </h2>
+                                </h3>
                                 <div class="badge rounded bg-label-success">0%</div>
                             </div>
 
@@ -85,11 +86,10 @@
                                     </div>
                                     <h6 class="mb-0 fw-normal">موجودی در دسترس</h6>
                                 </div>
-                                <h4 class="my-2">
+                                <h5 class="my-2">
                                     <small>USDT</small>
                                     {{ formatNumberTrimZeros($totalAvailableAssetsValue) }}
-
-                                </h4>
+                                </h5>
                             </div>
                             <div class="col-12 col-sm-3">
                                 <div class="d-flex gap-2 align-items-center">
@@ -98,10 +98,10 @@
                                     </div>
                                     <h6 class="mb-0 fw-normal">موجودی مسدود شده</h6>
                                 </div>
-                                <h4 class="my-2">
+                                <h5 class="my-2">
                                     <small>USDT</small>
                                     {{ $totalBlockedAssetsValue }}
-                                </h4>
+                                </h5>
                             </div>
                             <div class="col-12 col-sm-3">
                                 <div class="d-flex gap-2 align-items-center">
@@ -110,7 +110,7 @@
                                     </div>
                                     <h6 class="mb-0 fw-normal">موجودی در سفارش</h6>
                                 </div>
-                                <h4 class="my-2">0</h4>
+                                <h5 class="my-2">0</h5>
                             </div>
 
                             <div class="col-12 col-sm-3">
@@ -120,10 +120,10 @@
                                     </div>
                                     <h6 class="mb-0 fw-normal">حجم معامله OTC</h6>
                                 </div>
-                                <h4 class="my-2">
+                                <h5 class="my-2">
                                     <small>USDT</small>
                                     {{ formatNumberTrimZeros($totalOTCOrderValue) }}
-                                </h4>
+                                </h5>
                             </div>
                             <div class="col-12 col-sm-3">
                                 <div class="d-flex gap-2 align-items-center">
@@ -132,7 +132,7 @@
                                     </div>
                                     <h6 class="mb-0 fw-normal">تعداد کیف پول</h6>
                                 </div>
-                                <h4 class="my-2">{{ count($wallets) }}</h4>
+                                <h5 class="my-2">{{ count($wallets) }}</h5>
                             </div>
                             <div class="col-12 col-sm-3">
                                 <div class="d-flex gap-2 align-items-center">
@@ -141,9 +141,9 @@
                                     </div>
                                     <h6 class="mb-0 fw-normal">ارزش واریزهای کاربر</h6>
                                 </div>
-                                <h4 class="my-2">{{ formatNumberTrimZeros($totalDepositsValue) }}
+                                <h5 class="my-2">{{ formatNumberTrimZeros($totalDepositsValue) }}
                                     <small>USDT</small>
-                                </h4>
+                                </h5>
                             </div>
                             <div class="col-12 col-sm-3">
                                 <div class="d-flex gap-2 align-items-center">
@@ -152,9 +152,9 @@
                                     </div>
                                     <h6 class="mb-0 fw-normal">ارزش برداشت های کاربر</h6>
                                 </div>
-                                <h4 class="my-2">{{ formatNumberTrimZeros($totalWithdrawalsValue) }}
+                                <h5 class="my-2">{{ formatNumberTrimZeros($totalWithdrawalsValue) }}
                                     <small>USDT</small>
-                                </h4>
+                                </h5>
                             </div>
                             <div class="col-12 col-sm-3">
                                 <div class="d-flex gap-2 align-items-center">
@@ -163,7 +163,7 @@
                                     </div>
                                     <h6 class="mb-0 fw-normal">تعداد معامله OTC</h6>
                                 </div>
-                                <h4 class="my-2">{{ $OTCOrderCount }}</h4>
+                                <h5 class="my-2">{{ $OTCOrderCount }}</h5>
                             </div>
                         </div>
                     </div>
@@ -173,7 +173,7 @@
     </div>
     <div class="row g-6 mt-3">
         @foreach ($wallets as $wallet)
-            <div class="col-lg-3 col-sm-6">
+            <div class="col-xl-4 col-lg-6 col-sm-6">
                 <div class="card card-border-shadow-success">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-2">
@@ -186,7 +186,6 @@
                                 <h5 class="mb-0 ">کیف پول {{ $wallet->currency->name }}</h5>
                             </div>
 
-
                             @if ($wallet->walletChains->isNotEmpty())
                                 <div class="mb-0 d-flex flex-column align-items-end">
                                     <small class="text-primary fw-bolder text-decoration-underline">دارای آدرس
@@ -196,43 +195,42 @@
                         </div>
                         <h4 class="mt-4 mb-1 font-number">{{ formatNumberTrimZeros($wallet->balance) }}
                             <span class="text-muted h5">{{ $wallet->currency_symbol }}</span>
-                            </h3>
-                            <p class="mb-5">
+                        </h4>
+                        <p class="mb-5">
 
-                                <small class="text-muted fw-light">USDT</small>
-                                <span
-                                    class="text-primary me-2 font-number">{{ formatNumber($wallet->assetValue, 2) }}</span>
-
+                            <small class="text-muted fw-light">USDT</small>
+                            <span
+                                class="text-primary me-2 font-number">{{ formatNumber($wallet->assetValue, 2) }}</span>
+                        </p>
+                        @if ($wallet->locked_balance != 0)
+                            <p class="mb-0">
+                                <small class="text-danger">موجودی مسدود شده:</small>
+                                <small
+                                    class="text-danger fw-bold ms-2 font-number">{{ formatNumberTrimZeros($wallet->locked_balance) }}
+                                    <span class="text-danger ">{{ $wallet->currency_symbol }}</span>
+                                </small>
                             </p>
-                            @if ($wallet->locked_balance != 0)
-                                <p class="mb-0">
-                                    <small class="text-danger">موجودی مسدود شده:</small>
-                                    <small
-                                        class="text-danger fw-bold ms-2 font-number">{{ formatNumberTrimZeros($wallet->locked_balance) }}
-                                        <span class="text-danger ">{{ $wallet->currency_symbol }}</span>
-                                    </small>
-                                </p>
-                            @endif
+                        @endif
 
                     </div>
                     <div class="card-body border-top">
                         <a href="{{ route('admin.wallet.detail', ['user' => $user->id, 'wallet' => $wallet->id, 'type' => 'deposit']) }}"
-                            class="btn btn-label-primary me-2">مشاهده جزئیات</a>
-                        <a class="btn btn-icon btn-success"
-                            href="{{ route('admin.wallet.increase-credit.form', ['currency' => $wallet->currency_symbol, 'user' => $user]) }}">
-                            <i class="fa-regular fa-arrow-down-left fa-xl"></i>
+                           class="btn btn-label-primary me-2 btn-sm">مشاهده جزئیات</a>
+                        <a class="btn btn-icon btn-success btn-xs"
+                           href="{{ route('admin.wallet.increase-credit.form', ['currency' => $wallet->currency_symbol, 'user' => $user]) }}">
+                            <i class="fa-regular fa-arrow-down-left fa-lg"></i>
                         </a>
-                        <a class="btn btn-icon btn-google-plus ms-2"
-                            href="{{ route('admin.wallet.decrease-credit.form', ['currency' => $wallet->currency_symbol, 'user' => $user]) }}">
-                            <i class="fa-regular fa-arrow-up-right fa-xl"></i>
+                        <a class="btn btn-icon btn-google-plus ms-2 btn-xs"
+                           href="{{ route('admin.wallet.decrease-credit.form', ['currency' => $wallet->currency_symbol, 'user' => $user]) }}">
+                            <i class="fa-regular fa-arrow-up-right fa-lg"></i>
                         </a>
-                        <a class="btn btn-icon btn-outline-success ms-2"
-                            href="{{ route('admin.wallet.unblock-balance.form', ['wallet' => $wallet, 'user' => $user]) }}">
-                            <i class="fa-regular fa-lock-open fa-xl"></i>
+                        <a class="btn btn-icon btn-outline-success ms-2 btn-xs"
+                           href="{{ route('admin.wallet.unblock-balance.form', ['wallet' => $wallet, 'user' => $user]) }}">
+                            <i class="fa-regular fa-lock-open fa-lg"></i>
                         </a>
-                        <a class="btn btn-icon btn-outline-danger ms-2"
-                            href="{{ route('admin.wallet.block-balance.form', ['wallet' => $wallet, 'user' => $user]) }}">
-                            <i class="fa-regular fa-ban fa-xl"></i>
+                        <a class="btn btn-icon btn-outline-danger ms-2 btn-xs"
+                           href="{{ route('admin.wallet.block-balance.form', ['wallet' => $wallet, 'user' => $user]) }}">
+                            <i class="fa-regular fa-ban fa-lg"></i>
                         </a>
 
 
