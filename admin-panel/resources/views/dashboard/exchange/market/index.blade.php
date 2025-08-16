@@ -10,7 +10,7 @@
                         <div class="content-left">
                             <span>تعداد بازار</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{$markets->count()}}</h4>
+                                <h4 class="mb-0 me-2">{{ $markets->count() }}</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-primary rounded p-2">
@@ -27,7 +27,7 @@
                         <div class="content-left">
                             <span>بازار های فعال</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{$markets->where('is_active')->count()}}</h4>
+                                <h4 class="mb-0 me-2">{{ $markets->where('is_active')->count() }}</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-success rounded p-2">
@@ -44,12 +44,12 @@
                         <div class="content-left">
                             <span>بازار های غیر فعال</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{$markets->where('is_active', false)->count()}}</h4>
+                                <h4 class="mb-0 me-2">{{ $markets->where('is_active', false)->count() }}</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-warning rounded p-2">
-                                <i class="fa-solid fa-user-xmark"></i>
-                            </span>
+                            <i class="fa-solid fa-user-xmark"></i>
+                        </span>
                     </div>
                 </div>
             </div>
@@ -62,7 +62,7 @@
             <h5 class="card-title">جست و جو</h5>
 
             <form class="row mt-3 d-flex align-items-end justify-content-between"
-                  action="{{route('admin.currency.index')}}" method="get">
+                action="{{ route('admin.currency.index') }}" method="get">
 
                 <div class="col-md-4 user_status ">
                     <label class="form-label" for="status">وضعیت بازار :</label>
@@ -83,9 +83,9 @@
     <div class="card">
         <div class="card-body">
             <div class="card-title header-elements">
-                <h5 class="m-0 me-2">لیست بازارها ({{$activeExchange->name}})</h5>
+                <h5 class="m-0 me-2">لیست بازارها ({{ $activeExchange->name }})</h5>
                 <div class="card-title-elements ms-auto">
-                    <a href="{{route('admin.market.create')}}" class="btn btn-primary">
+                    <a href="{{ route('admin.market.create') }}" class="btn btn-primary">
                         <i class="fa fa-plus mx-2"></i>
                         افزودن بازار جدید
                     </a>
@@ -94,110 +94,112 @@
             <div class="table-responsive text-nowrap">
                 <table class="table">
                     <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>کوین</th>
-                        <th>آخرین قیمت (USDT)</th>
-                        <th>تغییرات (۲۴ ساعت)</th>
-                        <th>قیمت صرافی (فروش به مشتری)</th>
-                        <th>قیمت صرافی (خرید از مشتری)</th>
-                        <th>صرافی مرجع</th>
-                        <th>حداقل مقدار معامله</th>
-                        <th>حداکثر مقدار معامله</th>
-                        <th>وضعیت</th>
-                        <th>عملیات</th>
-                    </tr>
+                        <tr>
+                            <th>#</th>
+                            <th>کوین</th>
+                            <th>آخرین قیمت (USDT)</th>
+                            <th>تغییرات (۲۴ ساعت)</th>
+                            <th>قیمت صرافی (فروش به مشتری)</th>
+                            <th>قیمت صرافی (خرید از مشتری)</th>
+                            <th>صرافی مرجع</th>
+                            <th>حداقل مقدار معامله</th>
+                            <th>حداکثر مقدار معامله</th>
+                            <th>وضعیت</th>
+                            <th>عملیات</th>
+                        </tr>
                     </thead>
                     <tbody class="table-border-bottom-0">
-                    @foreach($markets as $market)
+                        @foreach ($markets as $market)
+                            <tr>
+                                <td class="">{{ $market->id }}</td>
+                                <td class="text-heading fw-medium">
+                                    <div class="d-flex justify-content-start align-items-center">
+                                        <div class="avatar-group d-flex align-items-center assigned-avatar">
 
-                        <tr>
-                            <td class="">{{$market->id}}</td>
-                            <td class="text-heading fw-medium">
-                                <div class="d-flex justify-content-start align-items-center">
-                                    <div class="avatar-group d-flex align-items-center assigned-avatar">
-
-                                        <div class="avatar avatar-md">
-                                            <img src="{{asset($market->quoteCurrency->coinLogo())}}"
-                                                 class="rounded-circle">
+                                            <div class="avatar avatar-md">
+                                                <img src="{{ asset($market->quoteCurrency->coinLogo()) }}"
+                                                    class="rounded-circle">
+                                            </div>
+                                            <div class="avatar avatar-md">
+                                                <img src="{{ asset($market->baseCurrency->coinLogo()) }}"
+                                                    class="rounded-circle  ">
+                                            </div>
                                         </div>
-                                        <div class="avatar avatar-md">
-                                            <img src="{{asset($market->baseCurrency->coinLogo())}}"
-                                                 class="rounded-circle  ">
+                                        <div class="ms-3">{{ $market->base_currency }}/{{ $market->quote_currency }}
                                         </div>
                                     </div>
-                                    <div class="ms-3">{{$market->base_currency}}/{{$market->quote_currency}}</div>
-                                </div>
-                            </td>
+                                </td>
 
-                            <td class="">
-                                <h4 class="font-number text-heading h5">
+                                <td class="">
+                                    <h4 class="font-number text-heading h5">
 
+                                        <span
+                                            class="ms-1">{{ formatNumberTrimZeros($market->activeExchangePrice->price) }}</span>
+
+                                        <small class="text-muted">USDT</small>
+                                    </h4>
+
+                                </td>
+                                <td class="font-number">
+                                    <div class="badge rounded bg-label-{{ $market->activeExchangePrice->price_change_percentage < 0 ? 'danger' : 'success' }}"
+                                        dir="ltr">
+                                        {{ $market->activeExchangePrice->price_change_percentage > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->price_change_percentage) }}
+                                        %
+                                    </div>
+                                </td>
+                                <td class="font-number text-heading">
+                                    <div class="badge rounded bg-label-{{ $market->activeExchangePrice->exchange_profit_sell < 0 ? 'danger' : 'success' }} me-3"
+                                        dir="ltr">
+                                        {{ $market->activeExchangePrice->exchange_profit_sell > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->exchange_profit_sell) }}
+                                        %
+                                    </div>
                                     <span
-                                        class="ms-1">{{formatNumberTrimZeros($market->activeExchangePrice->price)}}</span>
-
+                                        class="ms-1 h5">{{ formatNumberTrimZeros($market->activeExchangePrice->exchange_sell_price) }}</span>
                                     <small class="text-muted">USDT</small>
-                                </h4>
 
-                            </td>
-                            <td class="font-number">
-                                <div
-                                    class="badge rounded bg-label-{{ $market->activeExchangePrice->price_change_percentage < 0 ? 'danger' : 'success' }}"
-                                    dir="ltr">
-                                    {{ $market->activeExchangePrice->price_change_percentage > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->price_change_percentage) }}
-                                    %
-                                </div>
-                            </td>
-                            <td class="font-number text-heading">
-                                <div
-                                    class="badge rounded bg-label-{{ $market->activeExchangePrice->exchange_profit_sell < 0 ? 'danger' : 'success' }} me-3"
-                                    dir="ltr">
-                                    {{ $market->activeExchangePrice->exchange_profit_sell > 0 ? '+' : '' }}{{formatNumber($market->activeExchangePrice->exchange_profit_sell )}}
-                                    %
-                                </div>
-                                <span
-                                    class="ms-1 h5">{{formatNumberTrimZeros($market->activeExchangePrice->exchange_sell_price)}}</span>
-                                <small class="text-muted">USDT</small>
-
-                            </td>
-                            <td class="font-number text-heading ">
-                                <div
-                                    class="badge rounded bg-label-{{ $market->activeExchangePrice->exchange_profit_buy < 0 ? 'danger' : 'success' }} me-3"
-                                    dir="ltr">
-                                    {{ $market->activeExchangePrice->exchange_profit_buy > 0 ? '+' : '' }}{{formatNumber($market->activeExchangePrice->exchange_profit_buy) }}
-                                    %
-                                </div>
-                                <span
-                                    class="ms-1 h5">{{formatNumberTrimZeros($market->activeExchangePrice->exchange_buy_price)}}</span>
-                                <small class="text-muted">USDT</small>
-                            </td>
-                            <td class="fw-bold">
-                                {{ $market->activeExchangePrice->exchange->name }}
-                            </td>
-                            <td class="font-number ">
-                                {{formatNumberTrimZeros($market->min_otc_amount)}}
-                            </td>
-                            <td class="font-number">
-                                {{formatNumberTrimZeros($market->max_otc_amount)}}
-                            </td>
-                            <td>
-                                <span class="badge bg-label-{{$market->is_active?'success':'danger'}} me-1">
-                                    {{$market->is_active?'فعال':'غیرفعال'}}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <a class="text-secondary me-3"
-                                       href="{{ route('admin.market.edit', ['market' => $market->id]) }}">
-                                        <i class="fa-light fa-pen-to-square fa-lg"></i>
-                                    </a>
-                                    <a class="text-secondary me-3" href="">
-                                        <i class="fa-light fa-eye fa-lg"></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforeach
+                                </td>
+                                <td class="font-number text-heading ">
+                                    <div class="badge rounded bg-label-{{ $market->activeExchangePrice->exchange_profit_buy < 0 ? 'danger' : 'success' }} me-3"
+                                        dir="ltr">
+                                        {{ $market->activeExchangePrice->exchange_profit_buy > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->exchange_profit_buy) }}
+                                        %
+                                    </div>
+                                    <span
+                                        class="ms-1 h5">{{ formatNumberTrimZeros($market->activeExchangePrice->exchange_buy_price) }}</span>
+                                    <small class="text-muted">USDT</small>
+                                </td>
+                                <td class="fw-bold">
+                                    {{ $market->activeExchangePrice->exchange->name }}
+                                </td>
+                                <td class="font-number ">
+                                    {{ formatNumberTrimZeros($market->min_otc_amount) }}
+                                </td>
+                                <td class="font-number">
+                                    {{ formatNumberTrimZeros($market->max_otc_amount) }}
+                                </td>
+                                <td class="d-flex flex-column align-items-start gap-1">
+                                    <span class="badge bg-label-{{ $market->is_active ? 'success' : 'danger' }} me-1">
+                                        {{ $market->is_active ? 'فعال' : 'غیرفعال' }}
+                                    </span>
+                                    @if (!$market->price_update_enabled)
+                                        <span class="badge bg-label-danger me-1">
+                                            عدم بروزرسانی قیمت
+                                        </span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <a class="text-secondary me-3"
+                                            href="{{ route('admin.market.edit', ['market' => $market->id]) }}">
+                                            <i class="fa-light fa-pen-to-square fa-lg"></i>
+                                        </a>
+                                        <a class="text-secondary me-3" href="">
+                                            <i class="fa-light fa-eye fa-lg"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
                     </tbody>
                 </table>
             </div>
