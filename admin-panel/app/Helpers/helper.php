@@ -6,7 +6,7 @@ use Morilog\Jalali\Jalalian;
 
 function generatePhone(): string
 {
-    return '09'.Arr::random(['02', '10', '38', '35', '90', '22', '12', '15', '19']).rand(1000000, 9999999);
+    return '09' . Arr::random(['02', '10', '38', '35', '90', '22', '12', '15', '19']) . rand(1000000, 9999999);
 }
 
 if (! function_exists('generateComplexPassword')) {
@@ -19,10 +19,10 @@ if (! function_exists('generateComplexPassword')) {
         $letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $numbers = '0123456789';
         $symbols = '!@#$%&?';
-        $allCharacters = $letters.$numbers.$symbols;
+        $allCharacters = $letters . $numbers . $symbols;
 
         // Start with one letter and one number
-        $password = $letters[random_int(0, strlen($letters) - 1)].
+        $password = $letters[random_int(0, strlen($letters) - 1)] .
             $numbers[random_int(0, strlen($numbers) - 1)];
 
         // Fill the rest with random characters
@@ -42,7 +42,7 @@ if (! function_exists('formatNumber')) {
      * @param float $number
      * @return string
      */
-    function formatNumber( $number , $decimal = 2, $char =',')
+    function formatNumber($number, $decimal = 2, $char = ',')
     {
         $number = number_format($number, $decimal, '.', $char); // Format the number with commas
 
@@ -62,19 +62,29 @@ if (! function_exists('formatNumberTrimZeros')) {
      * @param string           $decimal  The decimal separator (default ".")
      * @return string
      */
-    function formatNumberTrimZeros($number, $thousand = ',', $decimal = '.')
+    function formatNumberTrimZeros($number, $decimalDigits = 8, $thousand = ',', $decimal = '.')
     {
-        // Convert to string to avoid float rounding issues
-        $numberString = (string) $number;
+        // Handle scientific notation by converting to fixed decimal notation
+        $num = (float) $number;
+        if (is_nan($num)) return (string) $number;
+
+        // Convert to string first to preserve precision, then handle as string
+        $numStr = (string) $number;
+
+        // Handle scientific notation if present
+        if (strpos($numStr, 'e') !== false || strpos($numStr, 'E') !== false) {
+            $numStr = number_format($num, 20, '.', '');
+        }
 
         // Split into integer and decimal parts
-        $parts = explode('.', $numberString);
+        $parts = explode('.', $numStr);
         $integerPart = $parts[0];
         $decimalPart = isset($parts[1]) ? $parts[1] : '';
 
-        if ($number < 1) {
+        if ($num < 1) {
             // Trim trailing zeros
             $decimalPart = rtrim($decimalPart, '0');
+
             // Count leading zeros in the decimal part
             $leadingZeros = strspn($decimalPart, '0');
 
@@ -82,13 +92,13 @@ if (! function_exists('formatNumberTrimZeros')) {
                 // Keep all digits (preserve significant digits after 4 zeros)
                 // No truncation needed since trailing zeros are already trimmed
             } else {
-                // Truncate to 4 digits and trim any new trailing zeros
-                $decimalPart = substr($decimalPart, 0, 8);
+                // Truncate to decimalDigits and trim any new trailing zeros
+                $decimalPart = substr($decimalPart, 0, $decimalDigits);
                 $decimalPart = rtrim($decimalPart, '0');
             }
         } else {
-            // For numbers >= 1, truncate to 2 digits and trim trailing zeros
-            $decimalPart = substr($decimalPart, 0, 8);
+            // For numbers >= 1, truncate to decimalDigits and trim trailing zeros
+            $decimalPart = substr($decimalPart, 0, $decimalDigits);
             $decimalPart = rtrim($decimalPart, '0');
         }
 
@@ -105,8 +115,8 @@ if (! function_exists('formatNumberTrimZeros')) {
     }
 }
 if (!function_exists('shorten_hash')) {
-    function shorten_hash($hash, $prefix_length = 8, $suffix_length = 6) {
+    function shorten_hash($hash, $prefix_length = 8, $suffix_length = 6)
+    {
         return substr($hash, 0, $prefix_length) . '...' . substr($hash, -$suffix_length);
     }
 }
-

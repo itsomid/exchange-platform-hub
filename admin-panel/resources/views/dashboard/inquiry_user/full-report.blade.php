@@ -86,17 +86,7 @@
             </div>
 
             <div class="card  mt-4">
-                <div class="card-header">
-                    {{--                    <div class="card-title header-elements"> --}}
-                    {{--                        <h5 class="m-0 me-2">لیست ارز ها</h5> --}}
-                    {{--                        <div class="card-title-elements ms-auto"> --}}
-                    {{--                            <a href="{{route('admin.wallet.refresh')}}" class="btn btn-primary"> --}}
-                    {{--                                <i class="fa-solid fa-rotate-right"></i>چک واریز --}}
-                    {{--                            </a> --}}
-                    {{--                        </div> --}}
-                    {{--                    </div> --}}
 
-                </div>
                 <div class="table-responsive text-nowrap">
                     <table class="table table-striped">
                         <thead>
