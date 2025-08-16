@@ -25,6 +25,8 @@ class WalletService
         // Load exchange user ID from config
         $this->bitexroomUserId = config('bitexroom.user_id', 1);
     }
+
+
     /**
      * Calculate the total assets value for a user's wallets.
      *
@@ -89,23 +91,7 @@ class WalletService
                 ]);
                 $currencyPrice = 1;
             } else {
-                $market = $currency->baseMarket;
-                if (!$market) {
-                    Log::warning('Currency has no base market', [
-                        'currency_symbol' => $currency->symbol,
-                        'user_id' => $user->id,
-                        'wallet_id' => $wallet->id,
-                    ]);
-                }
-                $currencyPrice = $market && $market->activeExchangePrice ? $market->activeExchangePrice->price : 1;
-                if ($market && !$market->activeExchangePrice) {
-                    Log::info('Market has no active exchange price, defaulting to 1', [
-                        'currency_symbol' => $currency->symbol,
-                        'market_id' => $market->id,
-                        'user_id' => $user->id,
-                        'wallet_id' => $wallet->id,
-                    ]);
-                }
+                $currencyPrice = $currency->exchangePrice;
             }
 
             $totalAssetsValue += $wallet->balance * $currencyPrice;
@@ -132,27 +118,10 @@ class WalletService
                 ]);
                 $currencyPrice = 1;
             } else {
-                $market = $currency->baseMarket;
-                if (!$market) {
-                    Log::warning('Currency has no base market', [
-                        'currency_symbol' => $currency->symbol,
-                        'user_id' => $user->id,
-                        'wallet_id' => $wallet->id,
-                    ]);
-                }
-                $currencyPrice = $market && $market->activeExchangePrice ? $market->activeExchangePrice->price : 1;
-                if ($market && !$market->activeExchangePrice) {
-                    Log::info('Market has no active exchange price, defaulting to 1', [
-                        'currency_symbol' => $currency->symbol,
-                        'market_id' => $market->id,
-                        'user_id' => $user->id,
-                        'wallet_id' => $wallet->id,
-                    ]);
-                }
+                $currencyPrice = $currency->exchangePrice;
             }
 
             $totalAssetsValue += ($wallet->balance - $wallet->locked_balance) * $currencyPrice;
-            //
         }
 
         return $totalAssetsValue;
@@ -176,27 +145,10 @@ class WalletService
                 ]);
                 $currencyPrice = 1;
             } else {
-                $market = $currency->baseMarket;
-                if (!$market) {
-                    Log::warning('Currency has no base market', [
-                        'currency_symbol' => $currency->symbol,
-                        'user_id' => $user->id,
-                        'wallet_id' => $wallet->id,
-                    ]);
-                }
-                $currencyPrice = $market && $market->activeExchangePrice ? $market->activeExchangePrice->price : 1;
-                if ($market && !$market->activeExchangePrice) {
-                    Log::info('Market has no active exchange price, defaulting to 1', [
-                        'currency_symbol' => $currency->symbol,
-                        'market_id' => $market->id,
-                        'user_id' => $user->id,
-                        'wallet_id' => $wallet->id,
-                    ]);
-                }
+                $currencyPrice = $currency->exchangePrice;
             }
 
             $totalAssetsValue += $wallet->locked_balance * $currencyPrice;
-            //
         }
 
         return $totalAssetsValue;
@@ -223,23 +175,7 @@ class WalletService
             ]);
             $currencyPrice = 1;
         } else {
-            $market = $currency->baseMarket;
-            if (!$market) {
-                Log::warning('Currency has no base market', [
-                    'currency_symbol' => $currency->symbol,
-                    'user_id' => $user->id,
-                    'wallet_id' => $wallet->id,
-                ]);
-            }
-            $currencyPrice = $market && $market->activeExchangePrice ? $market->activeExchangePrice->price : 1;
-            if ($market && !$market->activeExchangePrice) {
-                Log::info('Market has no active exchange price, defaulting to 1', [
-                    'currency_symbol' => $currency->symbol,
-                    'market_id' => $market->id,
-                    'user_id' => $user->id,
-                    'wallet_id' => $wallet->id,
-                ]);
-            }
+            $currencyPrice = $currency->exchangePrice;
         }
 
         return $wallet->balance * $currencyPrice;
