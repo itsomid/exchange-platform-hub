@@ -214,13 +214,12 @@ class WalletService
             // Get the market for the wallet's currency
             $market = $currency->baseMarket;
 
-            // Skip if no market (like USDT)
+            // Handle stablecoins like USDT that don't have base markets
             if (!$market) {
-                Log::warning('Currency has no base market', [
-                    'currency_symbol' => $currency->symbol,
-                    'user_id' => $user->id,
-                    'wallet_id' => $wallet->id,
-                ]);
+                // For stablecoins, use the exchange price (which defaults to 1 for USDT)
+                $currencyPrice = $currency->exchangePrice;
+                $yesterdayValue += $wallet->balance * $currencyPrice;
+                $dayBeforeValue += $wallet->balance * $currencyPrice;
                 continue;
             }
 
