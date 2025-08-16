@@ -930,6 +930,3 @@
     </div>
 
 @endsection
-@section('vendor-style')
-    <style>
-    @endsection
