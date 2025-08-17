@@ -24,4 +24,5 @@ return [
     \App\Infrastructure\HDWallet\Exceptions\HDDWalletUnavailable::class => 'Wallet service is temporarily unavailable. Please try again later.',
     \App\Infrastructure\HDWallet\Exceptions\HDDWalletServerError::class => 'Wallet service error. Please try again later.',
     \App\Infrastructure\HDWallet\Exceptions\NotFoundException::class => 'The requested information was not found.',
+    \App\Exceptions\V1\Wallet\InsufficientAmountForFeeException::class => 'Amount is not enough for fee.',
 ];

@@ -25,4 +25,5 @@ return [
     \App\Infrastructure\HDWallet\Exceptions\HDDWalletUnavailable::class => 'سرویس کیف پول موقتاً در دسترس نیست. لطفاً بعداً تلاش کنید.',
     \App\Infrastructure\HDWallet\Exceptions\HDDWalletServerError::class => 'خطا در سرویس کیف پول. لطفاً بعداً تلاش کنید.',
     \App\Infrastructure\HDWallet\Exceptions\NotFoundException::class => 'اطلاعات مورد نظر یافت نشد.',
+    \App\Exceptions\V1\Wallet\InsufficientAmountForFeeException::class => 'مقدار کافی برای کارمزد نیست.',
 ];
