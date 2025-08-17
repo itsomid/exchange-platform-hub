@@ -12,7 +12,7 @@ use App\Infrastructure\HDWallet\DTO\Withdrawal\GetWithdrawalStatusRequestDTO;
 use App\Infrastructure\HDWallet\DTO\Withdrawal\WithdrawRequestDTO;
 use App\Infrastructure\HDWallet\Exceptions\NotFoundException;
 use App\Infrastructure\HDWallet\HDWalletWithdrawalService;
-use App\Models\Transaction;
+use App\Exceptions\V1\Wallet\InsufficientAmountForFeeException;
 use App\Models\Wallet;
 use App\Models\Withdrawal;
 use App\Notifications\WithdrawalSuccessful;
@@ -59,6 +59,9 @@ class WithdrawalService
             $fee = Math::add($chain->network_fee, $chain->exchange_withdrawal_fee);
             $amount = $requestDTO->getAmount();
             $receivedAmount = Math::sub($amount, $fee);
+            if (Math::comp($receivedAmount, 0) === -1 || Math::comp($receivedAmount, 0) === 0) {
+                throw new InsufficientAmountForFeeException();
+            }
             $value_in_usdt = Math::mul($currency->exchangePrice, $amount);
 
             $withdrawalStatus = WithdrawalStatusEnum::PENDING;
