@@ -32,8 +32,12 @@ class ExchangeService
     public function chargeCurrency(ChargeCurrencyRequestDTO $requestDTO): ChargeCurrencyResponseDTO
     {
         try {
-
-            $exchange = $this->exchangeRepository->getActiveExchange();
+            
+            if ($requestDTO->getExchangeSlug()) {
+                $exchange = $this->exchangeRepository->getExchangeBySlug($requestDTO->getExchangeSlug());
+            } else {
+                $exchange = $this->exchangeRepository->getActiveExchange();
+            }
 
             $asset = AssetFactory::make($exchange->slug);
 

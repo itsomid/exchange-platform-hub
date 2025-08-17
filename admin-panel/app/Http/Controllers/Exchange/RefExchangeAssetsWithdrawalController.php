@@ -16,9 +16,9 @@ use App\Services\Exchanges\DTO\ChargeCurrencyRequestDTO;
 use App\Repositories\ExchangeRepository;
 use App\Services\Exchanges\ExchangeService;
 use App\Services\Wallet\WalletService;
+use App\Http\Requests\Exchange\RefExchangeAssetsWithdrawalRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 
 class RefExchangeAssetsWithdrawalController extends Controller
 {
@@ -28,7 +28,7 @@ class RefExchangeAssetsWithdrawalController extends Controller
     ) {}
     public function index()
     {
-        $withdraws = ExchangeAssetsWithdrawal::with('currency')->orderBy('id','desc')->get();
+        $withdraws = ExchangeAssetsWithdrawal::with('currency')->orderBy('id', 'desc')->get();
 
         $withdrawalFeeSum = ExchangeAssetsWithdrawal::sum('fee');
 
@@ -41,7 +41,7 @@ class RefExchangeAssetsWithdrawalController extends Controller
 
     public function create(Request $request)
     {
-        
+
         if ($request->has('currency_symbol')) {
             $currency_symbol = $request->currency_symbol;
         } else {
@@ -57,7 +57,7 @@ class RefExchangeAssetsWithdrawalController extends Controller
 
         $currencyChains = $currency->chains;
 
-        
+
         $wallet = $this->walletService->getExchangeWallet($currency->symbol);
 
         $walletChains = $wallet?->walletChains;
@@ -68,7 +68,7 @@ class RefExchangeAssetsWithdrawalController extends Controller
             $exchangeSlug = $request->exchange ?? 'coinex';
             $assetService = AssetFactory::make($exchangeSlug);
             $balances = $assetService->getBalance();
-            
+
             // Find balance for the specific currency
             foreach ($balances as $balance) {
                 if ($balance->getCcy() === $currency->symbol) {
@@ -96,18 +96,10 @@ class RefExchangeAssetsWithdrawalController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(RefExchangeAssetsWithdrawalRequest $request)
     {
 
-        $request->validate([
-            'exchange_slug' => ['required', Rule::exists(Exchange::class, 'slug')],
-            'currency_symbol' => ['required', Rule::exists(Currency::class, 'symbol')],
-            'currency_chain' => ['required', Rule::exists(CurrencyChain::class, 'chain')],
-            'amount' => ['required', 'numeric'],
-            'withdrawal_address' => 'required',
-        ]);
-        
-        $currency = Currency::where('symbol', $request->currency_symbol)->first();
+        $currency = Currency::where('symbol', $request->input('currency_symbol'))->first();
 
         if (!$currency) {
             return redirect()->back()->withErrors(['currency' => 'ارز انتخاب شده معتبر نیست.']);
@@ -116,18 +108,18 @@ class RefExchangeAssetsWithdrawalController extends Controller
         // Retrieve valid chains for this currency
         $validChains = $currency->chains()->pluck('chain')->map(fn($chain) => $chain->value)->toArray();
         // Check if the selected chain is valid
-        if (!in_array($request->currency_chain, $validChains)) {
+        if (!in_array($request->input('currency_chain'), $validChains)) {
             return redirect()->back()->withErrors(['chain' => 'شبکه انتخاب شده با ارز مطابقت ندارد.']);
         }
         try {
 
             $exchangeService = resolve(ExchangeService::class);
             $selectedExchange = $this->exchangeRepository->getExchangeBySlug($request->input('exchange_slug'));
-            
+
             if (!$selectedExchange) {
                 return redirect()->back()->withErrors(['exchange_slug' => 'صرافی انتخاب شده معتبر نیست.']);
             }
-            
+
             $exchangeService->chargeCurrency(
                 resolve(ChargeCurrencyRequestDTO::class)
                     ->setCurrency($currency->symbol)
@@ -141,7 +133,7 @@ class RefExchangeAssetsWithdrawalController extends Controller
                 ->notify();
 
             return redirect()->route('admin.ref-exchange.assets-gathering-to-hd-wallet.index');
-        }catch (CoinexWithdrawalException $e) {
+        } catch (CoinexWithdrawalException $e) {
             report($e);
             Toast::message('خطا در برداشت از صرافی: ' . $e->getMessage())
                 ->danger()
@@ -178,8 +170,7 @@ class RefExchangeAssetsWithdrawalController extends Controller
         return view('dashboard.exchange.ref_exchange.pending-assets-withdrawal-history', [
             'withdrawals' => $withdrawals,
             'pendingWithdrawals' => $pendingWithdrawals,
-//            '$pendingWithdrawalsCount' =>
+            //            '$pendingWithdrawalsCount' =>
         ]);
     }
-
 }
