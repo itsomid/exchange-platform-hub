@@ -20,7 +20,8 @@ class CurrencyService
             ->getCurrencyWithChains($requestDTO->getSymbol());
 
         return resolve(GetConfigResponseDTO::class)
-            ->setName($model->name)
+            ->setCurrencyName($model->name)
+            ->setCurrencyPersianName($model->persian_name)
             ->setSymbol($model->symbol)
             ->setInterTransferEnabled($model->inter_transfer_enabled)
             ->setChains($model->chains->map(
@@ -45,7 +46,8 @@ class CurrencyService
             ->getAllCurrencyWithChains();
 
         return $allCurrencies->map(fn(Currency $model) => resolve(GetConfigResponseDTO::class)
-            ->setName($model->name)
+            ->setCurrencyName($model->name)
+            ->setCurrencyPersianName($model->persian_name)
             ->setPrecision($model->precision)
             ->setSymbol($model->symbol)
             ->setMaxAutoWithdrawAmount($model->max_auto_withdraw_amount)

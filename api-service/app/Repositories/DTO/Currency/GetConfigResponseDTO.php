@@ -4,8 +4,6 @@ namespace App\Repositories\DTO\Currency;
 
 class GetConfigResponseDTO
 {
-    private string $name;
-
     private string $symbol;
 
     private string $maxAutoWithdrawAmount;
@@ -18,17 +16,10 @@ class GetConfigResponseDTO
 
     private string $currencyLogo;
 
-    public function setName(string $name): self
-    {
-        $this->name = $name;
+    private string $currencyPersianName;
 
-        return $this;
-    }
+    private string $currencyName;
 
-    public function getName(): string
-    {
-        return $this->name;
-    }
 
     public function setSymbol(string $symbol): self
     {
@@ -100,5 +91,29 @@ class GetConfigResponseDTO
     public function getCurrencyLogo(): string
     {
         return $this->currencyLogo;
+    }
+
+    public function setCurrencyPersianName(string $currencyPersianName): GetConfigResponseDTO
+    {
+        $this->currencyPersianName = $currencyPersianName;
+
+        return $this;
+    }
+
+    public function getCurrencyPersianName(): string
+    {
+        return $this->currencyPersianName;
+    }
+
+    public function setCurrencyName(string $currencyName): GetConfigResponseDTO
+    {
+        $this->currencyName = $currencyName;
+
+        return $this;
+    }
+
+    public function getCurrencyName(): string
+    {
+        return $this->currencyName;
     }
 }
