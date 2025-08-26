@@ -11,7 +11,9 @@ use App\Models\Currency;
 use App\Models\Exchange;
 use App\Models\ExchangePrice;
 use App\Models\Market;
+use App\Services\Exchanges\WithdrawalFee\ExchangeFactory;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 
 class MarketController extends Controller
 {
@@ -86,7 +88,18 @@ class MarketController extends Controller
     {
         $market->load(['baseCurrency', 'quoteCurrency', 'activeExchangePrice']);
         $exchanges = Exchange::query()->orderBy('priority')->get();
-        return view('dashboard.exchange.market.edit', ['market' => $market, 'exchanges' => $exchanges]);
+
+        // Fetch 7-day market history data
+        $marketHistory = \App\Models\MarketHistory::where('market_id', $market->id)
+            ->where('timestamp', '>=', now()->subDays(7))
+            ->orderBy('timestamp', 'asc')
+            ->get(['close', 'timestamp']);
+
+        return view('dashboard.exchange.market.edit', [
+            'market' => $market,
+            'exchanges' => $exchanges,
+            'marketHistory' => $marketHistory
+        ]);
     }
 
     public function update(UpdateMarketRequest $request, Market $market)
@@ -109,5 +122,36 @@ class MarketController extends Controller
         return redirect()
             ->route('admin.market.index')
             ->with('success', 'اطلاعات بازار با موفقیت به‌روز شد.');
+    }
+
+    /**
+     * Get CoinEx min OTC amount for a specific market
+     */
+    public function getCoinexMinOtcAmount(Market $market): JsonResponse
+    {
+        try {
+            $service = ExchangeFactory::make('coinex');
+            $fetchMarkets = collect($service->fetchMinTrade())->keyBy('base_ccy');
+
+            $minAmount = $fetchMarkets[$market->base_currency]['min_amount'] ?? null;
+
+            if ($minAmount === null) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'حداقل مقدار معامله برای این بازار در CoinEx یافت نشد'
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'min_amount' => $minAmount,
+                'formatted_amount' => formatNumberTrimZeros($minAmount)
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'خطا در دریافت اطلاعات از CoinEx: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

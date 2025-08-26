@@ -177,6 +177,7 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::post('/markets', [MarketController::class, 'store'])->name('market.store')->can('market');
         Route::get('/markets/{market}/edit', [MarketController::class, 'edit'])->name('market.edit')->can('market');
         Route::patch('/markets/{market}', [MarketController::class, 'update'])->name('market.update')->can('market');
+        Route::get('/markets/{market}/coinex-min-otc', [MarketController::class, 'getCoinexMinOtcAmount'])->name('market.coinex-min-otc')->can('market');
 
         Route::get('/wallets/localWallets', [ExchangeWalletController::class, 'localWallets'])->name('exchange.local-wallet');
 

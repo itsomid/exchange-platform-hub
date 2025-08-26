@@ -177,15 +177,17 @@
                                 <td class="font-number">
                                     {{ formatNumberTrimZeros($market->max_otc_amount) }}
                                 </td>
-                                <td class="d-flex flex-column align-items-start gap-1">
-                                    <span class="badge bg-label-{{ $market->is_active ? 'success' : 'danger' }} me-1">
-                                        {{ $market->is_active ? 'فعال' : 'غیرفعال' }}
-                                    </span>
-                                    @if (!$market->price_update_enabled)
-                                        <span class="badge bg-label-danger me-1">
-                                            عدم بروزرسانی قیمت
+                                <td class="">
+                                    <div class="d-flex flex-column align-items-start gap-1">
+                                        <span class="badge bg-label-{{ $market->is_active ? 'success' : 'danger' }} me-1">
+                                            {{ $market->is_active ? 'فعال' : 'غیرفعال' }}
                                         </span>
-                                    @endif
+                                        @if (!$market->price_update_enabled)
+                                            <span class="badge bg-label-danger me-1">
+                                                عدم بروزرسانی قیمت
+                                            </span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center">

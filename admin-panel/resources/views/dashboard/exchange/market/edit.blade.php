@@ -26,14 +26,13 @@
                             {{ $market->activeExchangePrice->price_change_percentage > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->price_change_percentage) }}
                             %
                         </div>
-                        <h2 class="mb-0">
+                        <h3 class="mb-0">
                             ${{ formatNumberTrimZeros($market->activeExchangePrice->price) }}
-                        </h2>
-
+                        </h3>
                     </div>
                 </div>
                 <div class="card-body px-0">
-                    <div id="averageDailySales"></div>
+                    <div id="marketWeeklyChart"></div>
                 </div>
             </div>
         </div>
@@ -63,19 +62,20 @@
 
 
                     <div class="d-flex gap-2 align-items-center my-3 justify-content-end font-number">
-                        <div class="badge rounded bg-label-{{ $market->price_change_percentage < 0 ? 'danger' : 'success' }}"
+                        <div class="badge rounded bg-label-{{ $market->activeExchangePrice->price_change_percentage < 0 ? 'danger' : 'success' }}"
                             dir="ltr">
-                            {{ $market->activeExchangePrice->price_change_percentage > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->price_change_percentage, 2) }}
+                            {{ $market->activeExchangePrice->price_change_percentage > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->price_change_percentage) }}
                             %
                         </div>
-                        <h2 class="mb-0">
+
+                        <h3 class="mb-0">
                             ${{ formatNumberTrimZeros($market->activeExchangePrice->exchange_sell_price) }}
-                        </h2>
+                        </h3>
 
                     </div>
                 </div>
                 <div class="card-body px-0">
-                    <div id="exchangePrice"></div>
+                    {{-- <div id="exchangePrice"></div> --}}
                 </div>
             </div>
         </div>
@@ -105,31 +105,58 @@
 
 
                     <div class="d-flex gap-2 align-items-center my-3 justify-content-end font-number">
-                        <div class="badge rounded bg-label-{{ $market->price_change_percentage < 0 ? 'danger' : 'success' }}"
+                        <div class="badge rounded bg-label-{{ $market->activeExchangePrice->price_change_percentage < 0 ? 'danger' : 'success' }}"
                             dir="ltr">
-                            {{ $market->activeExchangePrice->price_change_percentage > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->price_change_percentage, 2) }}
+                            {{ $market->activeExchangePrice->price_change_percentage > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->price_change_percentage) }}
                             %
                         </div>
-                        <h2 class="mb-0">
+                        <h3 class="mb-0">
                             ${{ formatNumberTrimZeros($market->activeExchangePrice->exchange_buy_price) }}
-                        </h2>
+                        </h3>
 
                     </div>
                 </div>
                 <div class="card-body px-0">
-                    <div id="exchangePrice"></div>
+                    {{-- <div id="exchangePrice"></div> --}}
                 </div>
             </div>
         </div>
         <div class="col-md-12">
             <div class="card">
-                <h4 class="card-header d-flex justify-content-between">
+                <div class="card-header d-flex justify-content-between">
                     <div>
-                        بازار{{ $market->baseCurrency->symbol }}/{{ $market->quoteCurrency->symbol }}
+                        بازار {{ $market->baseCurrency->symbol }}/{{ $market->quoteCurrency->symbol }}
                     </div>
 
+                    <div class="form-group">
+                        <div class="card border-info">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <small class="text-muted">حداقل مقدار معامله
+                                            {{ $market->baseCurrency->symbol }}/{{ $market->quoteCurrency->symbol }}
+                                            بر روی صرافی مرجع</small>
+                                        <div class="h6 mb-0 font-number" id="coinex-min-amount">
+                                            <span class="spinner-border spinner-border-sm" role="status"></span>
+                                            <span> در حال بارگیری...</span>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-info" id="refresh-coinex-min"
+                                        title="بروزرسانی">
+                                        <i class="fa fa-refresh"></i>
+                                    </button>
+                                </div>
 
-                </h4>
+                                <small class="text-info mt-2 d-block">
+                                    <i class="fa fa-info-circle"></i>
+                                    توجه داشته باشید که حتما حداقل مقدار معامله را برابر یا بزرگتر از صرافی مرجع قرار دهید
+
+                                </small>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="card-body">
 
                     <form action="{{ route('admin.market.update', ['market' => $market]) }}" method="post">
@@ -137,7 +164,8 @@
                         @csrf
                         <h6>اطلاعات بازار</h6>
                         <div class="row">
-                            <div class="col-md-3">
+                            <div class="col-md-8">
+
                                 <div class="form-group">
                                     <label class="form-label" for="exchange">صرافی مرجع</label>
                                     <select name="exchange_id" id="exchange" class="select2 form-control">
@@ -151,6 +179,7 @@
                                     @enderror
                                 </div>
                             </div>
+
                             <div class="w-100 mb-4"></div>
                             <div class="col-md-4">
                                 <div class="form-group">
@@ -187,6 +216,8 @@
                                     @enderror
                                 </div>
                             </div>
+
+
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-label" for="max_otc_amount">حداکثر مقدار معامله OTC در این
@@ -229,7 +260,8 @@
                         <div class="row mt-5">
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label class="form-label" for="exchange_profit_sell">سود صرافی از محل خرید از صرافی
+                                    <label class="form-label" for="exchange_profit_sell">سود صرافی از محل خرید از
+                                        صرافی
                                         مرجع (فروش به مشتری) (درصد)</label>
                                     <input name="exchange_profit_sell" id="exchange_profit_sell"
                                         class=" form-control font-number " dir="ltr"
@@ -275,7 +307,8 @@
                                     <span class="switch-label">بارگیری قیمت از صرافی مرجع (فعال/غیرفعال)
 
                                         <small class="text-muted">
-                                            با فعال کردن این گزینه، قیمت بازار بعد از یک دقیقه شروع به بارگیری از صرافی مرجع
+                                            با فعال کردن این گزینه، قیمت بازار بعد از یک دقیقه شروع به بارگیری از صرافی
+                                            مرجع
                                             می کند.
                                         </small>
                                     </span>
@@ -307,3 +340,78 @@
 @section('vendor-style')
     @vite(['resources/assets/vendor/libs/apex-charts/apex-charts.scss', 'resources/assets/vendor/libs/select2/select2.scss'])
 @endsection
+
+@push('scripts')
+    <script>
+        // Make marketHistoryData global so market.js can access it
+        window.marketHistoryData = @json(
+            $marketHistory->map(function ($item) {
+                return [
+                    'timestamp' => $item->timestamp->format('Y-m-d H:i:s'),
+                    'close' => (float) $item->close,
+                ];
+            }));
+
+        // Pass price change percentage for chart color
+        window.priceChangePercentage = {{ $market->activeExchangePrice->price_change_percentage ?? 0 }};
+
+        $(document).ready(function() {
+            const marketId = {{ $market->id }};
+            const coinexMinAmountElement = $('#coinex-min-amount');
+            const refreshButton = $('#refresh-coinex-min');
+
+            // Function to fetch CoinEx min OTC amount
+            function fetchCoinexMinAmount() {
+                coinexMinAmountElement.html(
+                    '<span class="spinner-border spinner-border-sm" role="status"></span> در حال بارگیری...');
+                refreshButton.prop('disabled', true);
+
+                $.ajax({
+                    url: `{{ route('admin.market.coinex-min-otc', ['market' => ':marketId']) }}`.replace(
+                        ':marketId', marketId),
+                    method: 'GET',
+                    success: function(response) {
+                        if (response.success) {
+                            coinexMinAmountElement.html(`
+                        <span class="text-success">
+                            <i class="fa fa-check-circle me-1"></i>
+                            ${response.formatted_amount}
+                        </span>
+                    `);
+                        } else {
+                            coinexMinAmountElement.html(`
+                        <span class="text-warning">
+                            <i class="fa fa-exclamation-triangle me-1"></i>
+                            ${response.message}
+                        </span>
+                    `);
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMessage = 'خطا در دریافت اطلاعات';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
+                        coinexMinAmountElement.html(`
+                    <span class="text-danger">
+                        <i class="fa fa-times-circle me-1"></i>
+                        ${errorMessage}
+                    </span>
+                `);
+                    },
+                    complete: function() {
+                        refreshButton.prop('disabled', false);
+                    }
+                });
+            }
+
+            // Initial load
+            fetchCoinexMinAmount();
+
+            // Refresh button click handler
+            refreshButton.on('click', function() {
+                fetchCoinexMinAmount();
+            });
+        });
+    </script>
+@endpush
