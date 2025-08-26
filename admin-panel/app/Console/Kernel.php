@@ -14,11 +14,11 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
         $schedule->command('fetch:market-history')->everyFiveMinutes();
-        $schedule->command('exchange:fetch-min-otc-amount coinex')->dailyAt('01:00');
+        // $schedule->command('exchange:fetch-min-otc-amount coinex')->dailyAt('01:00');
         $schedule->command('exchange:fetch-deposit-withdrawal-config coinex')->dailyAt('02:00');
         $schedule->command('bitexroom:transfer-to-hot-wallet')->everyFiveMinutes();
-//        $schedule->command('backup:clean')->daily()->at('03:00');
-//        $schedule->command('backup:run')->daily()->at('04:00');
+        //        $schedule->command('backup:clean')->daily()->at('03:00');
+        //        $schedule->command('backup:run')->daily()->at('04:00');
     }
 
     /**
@@ -26,7 +26,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands(): void
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }
