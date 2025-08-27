@@ -97,11 +97,11 @@
                         <div class="col-xl-4 mb-3">
                             <label for="withdrawal_address" class="form-label">
                                 <span>آدرس برداشت</span>
-                                <span class="mx-2">({{ $chain->currency_chain }})</span>
+                                <span class="mx-2">({{ $chain->currency_chain }})</span>ss
                             </label>
                             <input type="text" name="withdrawal_address" id="withdrawal_address"
                                 class="form-control font-number" dir="ltr" value="{{ $chain->address }}"
-                                placeholder="آدرس برداشت" disabled>
+                                placeholder="آدرس برداشت" readonly>
                         </div>
                         <div class="w-100"></div>
                     @endforeach
