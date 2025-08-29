@@ -6,6 +6,7 @@ use App\Enums\LockedBalanceTypeEnum;
 use App\Enums\SpotOrderSideEnum;
 use App\Enums\SpotOrderStatusEnum;
 use App\Enums\SpotOrderTypeEnum;
+use App\Enums\SpotOrderSourceEnum;
 use App\Events\OrderBookUpdated;
 use App\Exceptions\V1\Wallet\InsufficientBalanceException;
 use App\Helpers\Math;
@@ -99,7 +100,7 @@ class SpotService
             $response->setSpotOrderModel($spotOrder);
 
             // Record locked balance details
-            if ($type !== SpotOrderTypeEnum::MARKET) {
+            if ($type !== SpotOrderTypeEnum::MARKET && $requestDTO->getSource() !== SpotOrderSourceEnum::BOT) {
                 LockedBalanceDetail::query()->create([
                     'wallet_id' => $wallet->id,
                     'amount' => $tradeAmount,
@@ -192,34 +193,83 @@ class SpotService
             if ($order->status !== SpotOrderStatusEnum::OPEN) {
                 return;
             }
-            $lockedDetail = $this->lockedBalanceRepository->getOne($orderId, LockedBalanceTypeEnum::SPOT);
 
-            $amountRefund = $lockedDetail->amount;
-            //Partial Matched
-            if (Math::comp($order->filled_quantity, '0') !== 0) {
-                $amountRefund = Math::sub($lockedDetail->amount, $order->getFilledValue());
-            }
-
-            $market = $order->market;
-            $this->lockedBalanceRepository->deleteSpotOrderLockedBalance($orderId);
-
-            if ($order->side === SpotOrderSideEnum::BUY) {
-                $currency = $market->quote_currency;
+            // Check if this is a bot order
+            if ($order->source === SpotOrderSourceEnum::BOT) {
+                $this->cancelBotOrder($userId, $order);
             } else {
-                $currency = $market->base_currency;
+                $this->cancelRegularOrder($userId, $order);
             }
-            $wallet = $this->walletRepository->getWalletWithLock($currency, $userId);
 
-            $wallet->decrement('locked_balance', $amountRefund);
-
-            $order->update([
-                'status' => SpotOrderStatusEnum::CANCELED,
-            ]);
             DB::commit();
-            OrderBookUpdated::dispatch($market->id);
+            OrderBookUpdated::dispatch($order->market->id);
         } catch (Throwable $exception) {
-            report($exception);
             DB::rollBack();
+            throw $exception;
         }
+    }
+
+    /**
+     * Cancel regular user orders (non-bot orders)
+     */
+    private function cancelRegularOrder(int $userId, $order): void
+    {
+        $lockedDetail = $this->lockedBalanceRepository->getOne($order->id, LockedBalanceTypeEnum::SPOT);
+
+        $amountRefund = $lockedDetail->amount;
+        //Partial Matched
+        if (Math::comp($order->filled_quantity, '0') !== 0) {
+            $amountRefund = Math::sub($lockedDetail->amount, $order->getFilledValue());
+        }
+
+        $market = $order->market;
+        $this->lockedBalanceRepository->deleteSpotOrderLockedBalance($order->id);
+
+        if ($order->side === SpotOrderSideEnum::BUY) {
+            $currency = $market->quote_currency;
+        } else {
+            $currency = $market->base_currency;
+        }
+        $wallet = $this->walletRepository->getWalletWithLock($currency, $userId);
+
+        $wallet->decrement('locked_balance', $amountRefund);
+
+        $order->update([
+            'status' => SpotOrderStatusEnum::CANCELED,
+        ]);
+    }
+
+    /**
+     * Cancel bot orders - clears locked_balance since no locked_balance_details exist
+     */
+    public function cancelBotOrder(int $userId, $order): void
+    {
+        $market = $order->market;
+
+        // Calculate the amount that should be refunded
+        if ($order->side === SpotOrderSideEnum::BUY) {
+            $currency = $market->quote_currency;
+            $amountRefund = Math::mul($order->quantity, $order->price);
+            // For partial fills, subtract the filled value
+            if (Math::comp($order->filled_quantity, '0') !== 0) {
+                $amountRefund = Math::sub($amountRefund, $order->getFilledValue());
+            }
+        } else {
+            $currency = $market->base_currency;
+            $amountRefund = $order->quantity;
+            // For partial fills, subtract the filled quantity
+            if (Math::comp($order->filled_quantity, '0') !== 0) {
+                $amountRefund = Math::sub($amountRefund, $order->filled_quantity);
+            }
+        }
+
+        $wallet = $this->walletRepository->getWalletWithLock($currency, $userId);
+
+        // Set locked_balance to zero for bot orders
+        $wallet->update(['locked_balance' => '0']);
+
+        $order->update([
+            'status' => SpotOrderStatusEnum::CANCELED,
+        ]);
     }
 }
