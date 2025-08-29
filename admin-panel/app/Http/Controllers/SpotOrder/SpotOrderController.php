@@ -49,7 +49,7 @@ class SpotOrderController extends Controller
         if ($request->filled('sortById')) {
             $query->orderBy('id', $request->sortById);
         } else {
-            $query->orderBy('id', 'asc');
+            $query->orderBy('id', 'desc');
         }
 
         // Sort by quantity
@@ -62,7 +62,7 @@ class SpotOrderController extends Controller
             $query->orderBy('created_at', $request->sortByCreatedAt);
         }
 
-         $spotOrders = $query->paginate(10);
+         $spotOrders = $query->paginate(50);
 
         // Calculate commission values for each order's trades
         foreach ($spotOrders as $order) {
