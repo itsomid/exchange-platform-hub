@@ -7,8 +7,6 @@ use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Exceptions\V1\Wallet\InternalWalletHasProblemException;
-use App\Exceptions\V1\Wallet\UserDoesNotHaveWalletAddress;
-use App\Exceptions\V1\Wallet\UserDoesNotHaveWalletChainAddress;
 use App\Functions\FlashMessages\Toast;
 use App\Helpers\Math;
 use App\Infrastructure\HDWallet\DTO\HDDeposit\GetDepositListsRequestDTO;
@@ -18,8 +16,6 @@ use App\Models\Deposit;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
-use App\Repositories\ExchangeRepository;
-use App\Repositories\MarketRepository;
 use App\Services\Wallet\DTO\CheckWallet\CheckUserDepositRequestDTO;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -42,7 +38,7 @@ class CheckWalletService
 
         $chains = $wallet->chains;
 
-        if (! $chains->contains(fn ($chain) => ! empty($chain->address))) {
+        if (! $chains->contains(fn($chain) => ! empty($chain->address))) {
             Toast::message('کاربر آدرس زنجیره‌ای ندارد.')->warning()->notify();
             return false;
         }
@@ -54,12 +50,13 @@ class CheckWalletService
                 continue;
             }
             $currencyChain = $chain->wallet->currency->chains->where('chain', $chain->currency_chain)->first();
-            
+
             $transactions = $hdDeposit->getDepositLists(
                 resolve(GetDepositListsRequestDTO::class)
                     ->setCurrencySymbol($wallet->currency_symbol)
                     ->setWalletAddress($chain->address)
                     ->setBlockchain($currencyChain->blockchain_name->value)
+
             );
 
             foreach ($transactions as $transaction) {
@@ -100,9 +97,9 @@ class CheckWalletService
                         'type' => TransactionTypeEnum::DEPOSIT,
                         'subtype' => TransactionSubTypeEnum::USER_INITIATED,
                         'status' => TransactionStatusEnum::SUCCESS,
-                        'description' => 'واریز به آدرس: '.$deposit->address.' هش تراکنش: '.$transactionHash
+                        'description' => 'واریز به آدرس: ' . $deposit->address . ' هش تراکنش: ' . $transactionHash
                     ]);
-                    
+
                     if ($depositStatus === DepositStatusEnum::CONFIRMED) {
                         $wallet->increment('balance', $transaction->getAmount());
                         // TODO: Add notification when DepositSuccessful class is created
@@ -116,7 +113,6 @@ class CheckWalletService
                     throw $exception;
                 }
             }
-
         }
 
         return $hasNewTransaction;
@@ -149,7 +145,6 @@ class CheckWalletService
                     'confirmed_at' => $transaction->getTimestamp(),
                     'status' => DepositStatusEnum::CONFIRMED
                 ]);
-
             }
         }
     }

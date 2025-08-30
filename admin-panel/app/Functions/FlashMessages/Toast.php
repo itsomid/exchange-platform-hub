@@ -48,6 +48,12 @@ class Toast
 
         return $this;
     }
+    public function info(): static
+    {
+        $this->color = 'linear-gradient(to right, #3498db, #3498db)';
+
+        return $this;
+    }
 
     public function gravityTop(): static
     {

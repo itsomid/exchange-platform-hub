@@ -2,13 +2,12 @@
 
 namespace App\Infrastructure\HDWallet;
 
-use App\Exceptions\V1\Wallet\InternalWalletHasProblemException;
+use App\Functions\FlashMessages\Toast;
 use App\Infrastructure\HDWallet\DTO\Withdrawal\GetWithdrawalStatusRequestDTO;
 use App\Infrastructure\HDWallet\DTO\Withdrawal\GetWithdrawalStatusResponseDTO;
 use App\Infrastructure\HDWallet\DTO\Withdrawal\WithdrawRequestDTO;
 use App\Infrastructure\HDWallet\DTO\Withdrawal\WithdrawResponseDTO;
-use App\Infrastructure\HDWallet\Exceptions\HDDWalletUnavailable;
-use App\Infrastructure\HDWallet\Exceptions\NotFoundException;
+
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -29,10 +28,13 @@ class HDWalletWithdrawalService
                 // 'remarks' => $requestDTO->getWithdrawalId(),
             ];
 
-            $response = Http::post(HDWallet::getBaseUrl()."/api/v1/wallet/withdrawals?symbol={$requestDTO->getCurrencySymbol()}&blockchain={$requestDTO->getBlockchain()}", $requestBody);
+            $response = Http::post(HDWallet::getBaseUrl() . "/api/v1/wallet/withdrawals?symbol={$requestDTO->getCurrencySymbol()}&blockchain={$requestDTO->getBlockchain()}", $requestBody);
         } catch (ConnectionException $exception) {
             report($exception);
-            throw new HDDWalletUnavailable;
+            Toast::message('سرویس کیف پول موقتاً در دسترس نیست. لطفاً بعداً تلاش کنید.')
+                ->danger()
+                ->notify();
+            return null;
         }
         $data = $response->json();
         if (! $response->successful()) {
@@ -43,7 +45,10 @@ class HDWalletWithdrawalService
 
             report(json_encode($logMessage));
             Log::channel('hd-wallet')->error('HD Wallet Request and Response:', $logMessage);
-            throw new InternalWalletHasProblemException;
+            Toast::message('خطا در سرویس کیف پول. لطفاً بعداً تلاش کنید.')
+                ->danger()
+                ->notify();
+            return null;
         }
 
         return resolve(WithdrawResponseDTO::class)
@@ -64,20 +69,29 @@ class HDWalletWithdrawalService
     public function getStatus(GetWithdrawalStatusRequestDTO $requestDTO): GetWithdrawalStatusResponseDTO
     {
         try {
-            $response = Http::get(HDWallet::getBaseUrl()."/api/v1/wallet/withdrawals/{$requestDTO->getWithdrawalId()}?symbol={$requestDTO->getCurrencySymbol()}&blockchain={$requestDTO->getBlockchain()}");
+            $response = Http::get(HDWallet::getBaseUrl() . "/api/v1/wallet/withdrawals/{$requestDTO->getWithdrawalId()}?symbol={$requestDTO->getCurrencySymbol()}&blockchain={$requestDTO->getBlockchain()}");
         } catch (ConnectionException $exception) {
             report($exception);
-            throw new HDDWalletUnavailable;
+            Toast::message('سرویس کیف پول موقتاً در دسترس نیست. لطفاً بعداً تلاش کنید.')
+                ->danger()
+                ->notify();
+            return null;
         }
 
         if ($response->notFound()) {
-            throw new NotFoundException;
+            Toast::message('اطلاعات مورد نظر یافت نشد.')
+                ->warning()
+                ->notify();
+            return null;
         }
         $data = $response->json();
         if (! $response->successful()) {
             report($response->body());
-            Log::channel('hd-wallet')->error('HD Wallet Response Changed:'.$response->body());
-            throw new InternalWalletHasProblemException;
+            Log::channel('hd-wallet')->error('HD Wallet Response Changed:' . $response->body());
+            Toast::message('خطا در سرویس کیف پول. لطفاً بعداً تلاش کنید.')
+                ->danger()
+                ->notify();
+            return null;
         }
 
         Log::channel('hd-wallet')->info($response->body());

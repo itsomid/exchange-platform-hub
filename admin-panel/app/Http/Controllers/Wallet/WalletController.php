@@ -113,7 +113,6 @@ class WalletController extends Controller
 
                 Toast::message('واریز اعتبار با موفقیت انجام شد.')->success()->notify();
                 return redirect()->route('admin.wallet.index', ['user' => $this->bitexroomUserId]);
-
             } else {
 
                 $transactionService->transferBetweenWallets(
@@ -131,16 +130,12 @@ class WalletController extends Controller
 
                 Toast::message('واریز اعتبار با موفقیت انجام شد.')->success()->notify();
                 return redirect()->route('admin.wallet.index', ['user' => $request->user]);
-
             }
-
-
         } catch (\Throwable $exception) {
             report($exception);
 
             return redirect()->back()->withErrors(['general' => $exception->getMessage()]);
         }
-
     }
 
     public function decreaseCredit(IncreaseCreditRequest $request, TransactionService $transactionService)
@@ -180,7 +175,6 @@ class WalletController extends Controller
 
                 Toast::message('برداشت اعتبار با موفقیت انجام شد.')->success()->notify();
                 return redirect()->route('admin.wallet.index', ['user' => $this->bitexroomUserId]);
-
             } else {
                 // Check if the wallet for the specified currency exists
                 $fromUserId = $request->user;
@@ -201,14 +195,11 @@ class WalletController extends Controller
                 Toast::message('برداشت اعتبار با موفقیت انجام شد.')->success()->notify();
                 return redirect()->route('admin.wallet.index', ['user' => $request->user]);
             }
-
-
         } catch (\Throwable $exception) {
             report($exception);
 
             return redirect()->back()->withErrors(['general' => $exception->getMessage()]);
         }
-
     }
 
     public function blockBalanceForm(Wallet $wallet, User $user)
@@ -303,11 +294,11 @@ class WalletController extends Controller
         ]);
         Toast::message('آدرس با موفقیت به روز شد.')->success()->notify();
         return redirect()->back();
-
     }
 
     public function refresh(User $user, Wallet $wallet)
     {
+
         $hasNewTransaction = resolve(CheckWalletService::class)
             ->checkUserDeposit(
                 resolve(CheckUserDepositRequestDTO::class)
@@ -316,7 +307,12 @@ class WalletController extends Controller
             );
 
         if ($hasNewTransaction) {
-            Toast::message('تراکنش‌های جدید با موفقیت بررسی شدند.')->success()->notify();
+            Toast::message('واریزی های جدید با موفقیت به حساب کاربر اعمال شد')->success()->notify();
+        } else {
+            // Only show "no new deposits" message if there's no existing toast message
+            if (!session()->has('toast')) {
+                Toast::message('واریزی جدیدی یافت نشد.')->info()->notify();
+            }
         }
 
         return redirect()->back();
