@@ -585,6 +585,208 @@ class SpotBotController extends Controller
     }
 
     /**
+     * Replace bot orders for specific currency (atomic operation)
+     * This method cancels existing orders and immediately creates new ones
+     * to prevent orderbook from appearing empty
+     *
+     * @param Request $request
+     * @param int $currency_id
+     * @return JsonResponse
+     */
+    public function replaceOrders(Request $request, int $currency_id): JsonResponse
+    {
+        $currency = Currency::find($currency_id);
+
+        if (!$currency) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Currency not found'
+            ], 404);
+        }
+
+        $setting = SpotBotSetting::where('currency_id', $currency_id)->first();
+
+        if (!$setting || !$setting->is_active) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bot is not active for this currency'
+            ], 400);
+        }
+
+        // Find the market for this currency (assuming USDT as quote currency)
+        $market = Market::where('base_currency', $currency->symbol)
+            ->where('quote_currency', 'USDT')
+            ->where('is_active', true)
+            ->first();
+        if (!$market) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No active market found for this currency'
+            ], 400);
+        }
+
+        // Get current market price
+        $currentPrice = $market->exchangePrice?->price;
+        if (!$currentPrice) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Market price not available'
+            ], 400);
+        }
+
+        try {
+            // Pre-check balances before starting the replacement process
+            $this->ensureSufficientBalances($setting, $market, $currentPrice);
+
+            // Get optional parameters from request, fallback to settings
+            $buyOrdersCount = $request->input('buy_orders_count', $setting->buy_orders_count);
+            $sellOrdersCount = $request->input('sell_orders_count', $setting->sell_orders_count);
+
+            // Step 1: Generate new orders first (but don't place them yet)
+            $newOrders = [];
+            $errors = [];
+
+            // Prepare buy orders
+            for ($i = 0; $i < $buyOrdersCount; $i++) {
+                try {
+                    $buyPrice = $this->calculateOrderPrice($currentPrice, $setting->order_margin, 'buy', $i);
+                    $quantity = $this->calculateOrderQuantity($setting);
+                    
+                    $newOrders[] = [
+                        'side' => SpotOrderSideEnum::BUY,
+                        'price' => $buyPrice,
+                        'quantity' => $quantity,
+                        'type' => SpotOrderTypeEnum::LIMIT
+                    ];
+                } catch (\Throwable $e) {
+                    $errors[] = "Preparing buy order {$i}: " . $e->getMessage();
+                }
+            }
+
+            // Prepare sell orders
+            for ($i = 0; $i < $sellOrdersCount; $i++) {
+                try {
+                    $sellPrice = $this->calculateOrderPrice($currentPrice, $setting->order_margin, 'sell', $i);
+                    $quantity = $this->calculateOrderQuantity($setting);
+                    
+                    $newOrders[] = [
+                        'side' => SpotOrderSideEnum::SELL,
+                        'price' => $sellPrice,
+                        'quantity' => $quantity,
+                        'type' => SpotOrderTypeEnum::LIMIT
+                    ];
+                } catch (\Throwable $e) {
+                    $errors[] = "Preparing sell order {$i}: " . $e->getMessage();
+                }
+            }
+
+            // Step 2: Get existing orders to cancel
+            $existingOrders = SpotOrder::where('market_id', $market->id)
+                ->where('user_id', $setting->fake_user_id)
+                ->where('status', SpotOrderStatusEnum::OPEN)
+                ->get();
+
+            $spotService = resolve(SpotService::class);
+            $cancelledOrders = [];
+            $createdOrders = [];
+
+            // Step 3: Atomic replacement - cancel old and create new in quick succession
+            \DB::transaction(function () use (
+                $existingOrders, 
+                $newOrders, 
+                $setting, 
+                $market, 
+                $spotService, 
+                &$cancelledOrders, 
+                &$createdOrders, 
+                &$errors
+            ) {
+                // Cancel existing orders
+                foreach ($existingOrders as $order) {
+                    try {
+                        $spotService->cancel($setting->fake_user_id, $order->id);
+                        $cancelledOrders[] = [
+                            'order_id' => $order->id,
+                            'side' => $order->side->value,
+                            'price' => $order->price,
+                            'quantity' => $order->quantity,
+                            'status' => 'cancelled'
+                        ];
+                    } catch (\Throwable $e) {
+                        $errors[] = "Cancelling order {$order->id}: " . $e->getMessage();
+                    }
+                }
+
+                // Immediately create new orders
+                foreach ($newOrders as $orderData) {
+                    try {
+                        $newOrder = $this->createBotOrder(
+                            $setting->fake_user_id,
+                            $market->id,
+                            $orderData['quantity'],
+                            $orderData['price'],
+                            $orderData['side'],
+                            $orderData['type']
+                        );
+
+                        if ($newOrder) {
+                            $createdOrders[] = [
+                                'side' => $orderData['side']->value,
+                                'price' => $orderData['price'],
+                                'quantity' => $orderData['quantity'],
+                                'order_id' => $newOrder->id
+                            ];
+                        }
+                    } catch (\Throwable $e) {
+                        $errors[] = "Creating new {$orderData['side']->value} order: " . $e->getMessage();
+                    }
+                }
+            });
+
+            Log::channel('spot-bot')->info('Bot orders replaced successfully', [
+                'currency_id' => $currency_id,
+                'currency_symbol' => $currency->symbol,
+                'market_id' => $market->id,
+                'cancelled_orders_count' => count($cancelledOrders),
+                'created_orders_count' => count($createdOrders),
+                'errors_count' => count($errors)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Bot orders replaced successfully for {$currency->name}",
+                'data' => [
+                    'currency' => $currency->symbol,
+                    'market_id' => $market->id,
+                    'current_price' => $currentPrice,
+                    'cancelled_orders_count' => count($cancelledOrders),
+                    'created_orders_count' => count($createdOrders),
+                    'cancelled_orders' => $cancelledOrders,
+                    'created_orders' => $createdOrders,
+                    'errors' => $errors
+                ]
+            ]);
+
+        } catch (InsufficientBalanceException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 400);
+        } catch (\Throwable $exception) {
+            Log::channel('spot-bot')->error('Bot order replacement failed', [
+                'currency_id' => $currency_id,
+                'error' => $exception->getMessage(),
+                'trace' => $exception->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to replace bot orders: ' . $exception->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Cancel bot orders for all active currencies
      *
      * @param Request $request

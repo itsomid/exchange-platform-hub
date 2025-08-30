@@ -336,6 +336,103 @@ class SpotBotDocumentation
 
     /**
      * @OA\Post(
+     *     path="/replace-orders/{currency_id}",
+     *     summary="Replace orders for specific currency (atomic operation)",
+     *     description="Atomically cancel existing bot orders and create new ones for a specific currency to prevent orderbook from appearing empty. This is the recommended method instead of separate cancel and generate operations.",
+     *     operationId="replaceOrdersForCurrency",
+     *     tags={"Spot Bot Operations"},
+     *     security={{"BearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="currency_id",
+     *         in="path",
+     *         required=true,
+     *         description="Currency ID",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\RequestBody(
+     *         required=false,
+     *         description="Optional parameters to override bot settings",
+     *         @OA\JsonContent(
+     *             @OA\Property(
+     *                 property="buy_orders_count",
+     *                 type="integer",
+     *                 description="Number of buy orders to generate (optional, defaults to bot setting)",
+     *                 example=5,
+     *                 minimum=0
+     *             ),
+     *             @OA\Property(
+     *                 property="sell_orders_count",
+     *                 type="integer",
+     *                 description="Number of sell orders to generate (optional, defaults to bot setting)",
+     *                 example=5,
+     *                 minimum=0
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Orders replaced successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Bot orders replaced successfully for Bitcoin"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="currency", type="string", example="BTC"),
+     *                 @OA\Property(property="market_id", type="integer", example=1),
+     *                 @OA\Property(property="current_price", type="string", example="45000.00"),
+     *                 @OA\Property(property="cancelled_orders_count", type="integer", example=10),
+     *                 @OA\Property(property="created_orders_count", type="integer", example=10),
+     *                 @OA\Property(
+     *                     property="cancelled_orders",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         @OA\Property(property="order_id", type="integer", example=123),
+     *                         @OA\Property(property="side", type="string", example="buy"),
+     *                         @OA\Property(property="price", type="string", example="44500.00"),
+     *                         @OA\Property(property="quantity", type="string", example="0.001"),
+     *                         @OA\Property(property="status", type="string", example="cancelled")
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="created_orders",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         @OA\Property(property="order_id", type="integer", example=124),
+     *                         @OA\Property(property="side", type="string", example="buy"),
+     *                         @OA\Property(property="price", type="string", example="44800.00"),
+     *                         @OA\Property(property="quantity", type="string", example="0.001")
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="errors",
+     *                     type="array",
+     *                     @OA\Items(type="string")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bot is not active for this currency or insufficient balance",
+     *         @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Currency not found",
+     *         @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized",
+     *         @OA\JsonContent(ref="#/components/schemas/UnauthorizedResponse")
+     *     )
+     * )
+     */
+    public function replaceOrdersDocumentation() {}
+
+    /**
+     * @OA\Post(
      *     path="/generate-orders/{currency_id}",
      *     summary="Generate orders for specific currency",
      *     description="Generate new bot orders for a specific currency. You can optionally specify the number of buy and sell orders to generate. If not provided, the values from bot settings will be used.",

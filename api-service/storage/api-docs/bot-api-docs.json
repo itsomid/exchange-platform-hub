@@ -405,14 +405,14 @@
                 ]
             }
         },
-        "/cancel-all-orders/{currency_id}": {
+        "/cancel-orders/{currency_id}": {
             "post": {
                 "tags": [
                     "Spot Bot Operations"
                 ],
-                "summary": "Cancel old orders for specific currency",
-                "description": "Cancel old bot orders for a specific currency",
-                "operationId": "cancelOldOrdersForCurrency",
+                "summary": "Cancel orders for specific currency",
+                "description": "Cancel bot orders for a specific currency",
+                "operationId": "cancelOrdersForCurrency",
                 "parameters": [
                     {
                         "name": "currency_id",
@@ -427,7 +427,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Old orders cancelled successfully",
+                        "description": "Orders cancelled successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -438,6 +438,193 @@
                     },
                     "400": {
                         "description": "Bot is not active for this currency",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Currency not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/replace-orders/{currency_id}": {
+            "post": {
+                "tags": [
+                    "Spot Bot Operations"
+                ],
+                "summary": "Replace orders for specific currency (atomic operation)",
+                "description": "Atomically cancel existing bot orders and create new ones for a specific currency to prevent orderbook from appearing empty. This is the recommended method instead of separate cancel and generate operations.",
+                "operationId": "replaceOrdersForCurrency",
+                "parameters": [
+                    {
+                        "name": "currency_id",
+                        "in": "path",
+                        "description": "Currency ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Optional parameters to override bot settings",
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "buy_orders_count": {
+                                        "description": "Number of buy orders to generate (optional, defaults to bot setting)",
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "example": 5
+                                    },
+                                    "sell_orders_count": {
+                                        "description": "Number of sell orders to generate (optional, defaults to bot setting)",
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "example": 5
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Orders replaced successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Bot orders replaced successfully for Bitcoin"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "currency": {
+                                                    "type": "string",
+                                                    "example": "BTC"
+                                                },
+                                                "market_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "current_price": {
+                                                    "type": "string",
+                                                    "example": "45000.00"
+                                                },
+                                                "cancelled_orders_count": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "created_orders_count": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "cancelled_orders": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "order_id": {
+                                                                "type": "integer",
+                                                                "example": 123
+                                                            },
+                                                            "side": {
+                                                                "type": "string",
+                                                                "example": "buy"
+                                                            },
+                                                            "price": {
+                                                                "type": "string",
+                                                                "example": "44500.00"
+                                                            },
+                                                            "quantity": {
+                                                                "type": "string",
+                                                                "example": "0.001"
+                                                            },
+                                                            "status": {
+                                                                "type": "string",
+                                                                "example": "cancelled"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "created_orders": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "order_id": {
+                                                                "type": "integer",
+                                                                "example": 124
+                                                            },
+                                                            "side": {
+                                                                "type": "string",
+                                                                "example": "buy"
+                                                            },
+                                                            "price": {
+                                                                "type": "string",
+                                                                "example": "44800.00"
+                                                            },
+                                                            "quantity": {
+                                                                "type": "string",
+                                                                "example": "0.001"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "errors": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bot is not active for this currency or insufficient balance",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -772,17 +959,17 @@
                 ]
             }
         },
-        "/cancel-all-old-orders": {
+        "/cancel-all-orders": {
             "post": {
                 "tags": [
                     "Spot Bot Bulk Operations"
                 ],
-                "summary": "Cancel old orders for all active currencies",
-                "description": "Cancel old bot orders for all active currencies",
-                "operationId": "cancelAllOldOrders",
+                "summary": "Cancel all orders for all active currencies",
+                "description": "Cancel all bot orders for all active currencies",
+                "operationId": "cancelAllOrders",
                 "responses": {
                     "200": {
-                        "description": "Old orders cancelled successfully for all active currencies",
+                        "description": "All orders cancelled successfully for all active currencies",
                         "content": {
                             "application/json": {
                                 "schema": {

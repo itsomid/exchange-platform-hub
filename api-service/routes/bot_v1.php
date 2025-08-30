@@ -15,6 +15,7 @@ Route::get('/settings/{currency_id}', [SpotBotSettingController::class, 'getSett
 
 Route::post('/generate-orders/{currency_id}', [SpotBotController::class, 'generateOrders'])->middleware('jwt.auth');
 Route::post('/cancel-orders/{currency_id}', [SpotBotController::class, 'cancelOrders'])->middleware('jwt.auth');
+Route::post('/replace-orders/{currency_id}', [SpotBotController::class, 'replaceOrders'])->middleware('jwt.auth');
 
 Route::post('/sync-orders/{currency_id}', [SpotBotController::class, 'syncOrders'])->middleware('jwt.auth');
 Route::post('/match-order/{currency_id}', [SpotBotController::class, 'matchOrder'])->middleware('jwt.auth');
