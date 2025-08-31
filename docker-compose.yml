@@ -51,6 +51,8 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock"  # دسترسی به Docker daemon
     networks:
       - laravel
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   # NGINX for API Service
   nginx-api:
