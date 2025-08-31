@@ -31,6 +31,8 @@ class CheckWalletService
     {
 
         $hasNewTransaction = false;
+        $transactionCount = 0;
+        $totalDepositAmount = 0;
         $user = User::find($requestDTO->getUserId());
         $wallet = Wallet::where('user_id', $requestDTO->getUserId())->where('currency_symbol', $requestDTO->getCurrencySymbol())->first();
 
@@ -76,7 +78,7 @@ class CheckWalletService
                     $usdtValue = Math::mul($currency->exchangePrice, $transaction->getAmount());
 
                     $deposit = Deposit::create([
-                        'user_id' => $transaction->getUserId(),
+                        'user_id' => $requestDTO->getUserId(),
                         'currency_symbol' => $transaction->getCryptocurrency(),
                         'currency_chain_id' => $currencyChain->id,
                         'amount' => $transaction->getAmount(),
@@ -107,6 +109,8 @@ class CheckWalletService
                     }
                     DB::commit();
                     $hasNewTransaction = true;
+                    $transactionCount++;
+                    $totalDepositAmount = Math::add($totalDepositAmount, $transaction->getAmount());
                 } catch (Throwable $exception) {
                     DB::rollBack();
                     report($exception);
@@ -114,6 +118,13 @@ class CheckWalletService
                 }
             }
         }
+
+        // ذخیره اطلاعات در سشن
+        session([
+            'deposit_transaction_count' => $transactionCount,
+            'total_deposit_amount' => $totalDepositAmount,
+            'currency_symbol' => $requestDTO->getCurrencySymbol()
+        ]);
 
         return $hasNewTransaction;
     }

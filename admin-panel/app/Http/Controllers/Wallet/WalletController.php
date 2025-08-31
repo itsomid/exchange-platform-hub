@@ -307,7 +307,16 @@ class WalletController extends Controller
             );
 
         if ($hasNewTransaction) {
-            Toast::message('واریزی های جدید با موفقیت به حساب کاربر اعمال شد')->success()->notify();
+            $transactionCount = session('deposit_transaction_count', 0);
+            $totalAmount = session('total_deposit_amount', 0);
+            $currencySymbol = session('currency_symbol', '');
+
+            Toast::message('واریزی جدید برای کاربر یافت شد')->success()->notify();
+
+            // پاک کردن اطلاعات سشن
+            session()->forget(['deposit_transaction_count', 'total_deposit_amount', 'currency_symbol']);
+
+            return redirect()->back()->with('success', "واریزی های جدید با موفقیت به حساب کاربر اعمال شد. تعداد واریز: {$transactionCount}، مجموع واریزی: {$totalAmount} {$currencySymbol}");
         } else {
             // Only show "no new deposits" message if there's no existing toast message
             if (!session()->has('toast')) {
