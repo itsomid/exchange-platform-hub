@@ -65,7 +65,7 @@ class StockService
             if (!$hasBalance) {
                 throw new InsufficientBalanceException("Insufficient USDT balance.");
             }
-
+            $ExchangeWallet = $this->walletRepository->getOneByCurrency('USDT', config('bitexroom.user_id'));
             $stockContract = $this->stockRepository->createContract(
                 user: $user,
                 amount: $data['amount'],
@@ -86,6 +86,26 @@ class StockService
                     ->setSubtype(TransactionSubTypeEnum::STOCK)
                     ->setWalletId($walletBaseCurrency->id)
                     ->setStockContractId($stockContract->id)
+            );
+            $this->transactionRepository->create(
+                resolve(CreateTransactionRequestDTO::class)
+                    ->setUserId(config('bitexroom.user_id'))
+                    ->setType(TransactionTypeEnum::BUY)
+                    ->setWalletId($ExchangeWallet->id)
+                    ->setStockContractId($stockContract->id)
+                    ->setCoinPrice(1)
+                    ->setAmount($totalValue)
+                    ->setBalance($ExchangeWallet->balance)
+
+                    ->setSubtype(TransactionSubTypeEnum::STOCK)
+                    ->setStatus(TransactionStatusEnum::SUCCESS)
+                    ->setDescription(
+                        sprintf(
+                            'بابت خرید سهام شماره %s توسط %s',
+                            $stockContract->contract_number,
+                            $user->fullname()
+                        )
+                    )
             );
 
             $this->walletService->decreaseBalance($user->id, 'USDT', $totalValue);

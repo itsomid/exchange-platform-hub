@@ -13,8 +13,8 @@ enum TransactionTypeEnum: string
     case ًREF_EXCHANGE = 'ref_exchange';
 
     const array TYPE_LABEL = [
-        self::BUY->value => 'دریافت',//دریافت
-        self::SELL->value => 'پرداخت',//پرداخت
+        self::BUY->value => 'دریافت',
+        self::SELL->value => 'پرداخت',
         self::DEPOSIT->value => 'واریز',
         self::WITHDRAWAL->value => 'برداشت',
         self::REFERRAL->value => 'دعوت از دوستان',
