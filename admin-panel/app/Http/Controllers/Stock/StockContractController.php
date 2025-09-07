@@ -115,7 +115,7 @@ class StockContractController extends Controller
             'description' => $request['description'],
         ];
 
-        $contract = StockContract::create($contractData);
+
 
         if ($stock->type !== StockTypeEnum::GIFT) {
             $hasBalance = $this->walletService->checkBalance($request['user_id'], 'USDT', $totalValue);
@@ -123,6 +123,8 @@ class StockContractController extends Controller
                 return redirect()->back()->withErrors(['balance' => 'موجودی کیف پول کاربر کافی نیست.']);
             }
 
+            $contract = StockContract::create($contractData);
+            
             Transaction::create([
                 'user_id' => $request['user_id'],
                 'wallet_id' => $wallet->id,
