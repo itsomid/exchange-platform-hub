@@ -5,11 +5,13 @@ namespace App\Enums;
 use App\Models\Deposit;
 use App\Models\OTCOrder;
 use App\Models\Withdrawal;
+use App\Models\StockContract;
 
 enum TicketTypeEnum: string
 {
     case WITHDRAWAL = 'withdrawal';
     case DEPOSIT = 'deposit';
+    case STOCK = 'stock';
     case OTC_ORDER = 'otc_order';
 
     /**
@@ -21,6 +23,7 @@ enum TicketTypeEnum: string
             self::WITHDRAWAL => Withdrawal::class,
             self::DEPOSIT => Deposit::class,
             self::OTC_ORDER => OTCOrder::class,
+            self::STOCK => StockContract::class,
         };
     }
 
@@ -33,6 +36,7 @@ enum TicketTypeEnum: string
             'withdrawal' => self::WITHDRAWAL,
             'deposit' => self::DEPOSIT,
             'otc_order' => self::OTC_ORDER,
+            'stock' => self::STOCK,
             default => null,
         };
     }

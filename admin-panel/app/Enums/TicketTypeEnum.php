@@ -4,6 +4,7 @@ namespace App\Enums;
 
 use App\Models\Deposit;
 use App\Models\OTCOrder;
+use App\Models\StockContract;
 use App\Models\Withdrawal;
 
 enum TicketTypeEnum: string
@@ -11,6 +12,7 @@ enum TicketTypeEnum: string
     case WITHDRAWAL = 'withdrawal';
     case DEPOSIT = 'deposit';
     case OTC_ORDER = 'otc_order';
+    case STOCK = 'stock';
 
     case UNKNOWN = 'unknown';
 
@@ -24,6 +26,7 @@ enum TicketTypeEnum: string
             Withdrawal::class => self::WITHDRAWAL,
             Deposit::class => self::DEPOSIT,
             OTCOrder::class => self::OTC_ORDER,
+            StockContract::class => self::STOCK,
         ];
 
         return $classToEnumMap[$modelClass] ?? self::UNKNOWN;
@@ -43,6 +46,7 @@ enum TicketTypeEnum: string
         self::WITHDRAWAL->value => 'برداشت',
         self::DEPOSIT->value => 'واریز',
         self::OTC_ORDER->value => 'معامله',
+        self::STOCK->value => 'موجودی',
         self::UNKNOWN->value => 'نامشخص',
     ];
 
@@ -50,6 +54,7 @@ enum TicketTypeEnum: string
         self::WITHDRAWAL->value => 'danger',
         self::DEPOSIT->value => 'success',
         self::OTC_ORDER->value => 'info',
+        self::STOCK->value => 'primary',
         self::UNKNOWN->value => 'secondary',
 
     ];
@@ -69,5 +74,4 @@ enum TicketTypeEnum: string
     {
         return self::TYPE_COLOR[$this->value] ?? '';
     }
-
 }
