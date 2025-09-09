@@ -166,6 +166,7 @@ return [
     'invalid_2fa_code' => 'The Google 2FA code provided is invalid.',
     'invalid_otp_code' => 'The OTP code provided is invalid or expired.',
     'currency_chain_inactive' => 'The selected currency chain is inactive.',
+    'blockchain_address' => 'The :attribute is not a valid blockchain address.',
     /*
     |--------------------------------------------------------------------------
     | Custom Validation Language Lines
@@ -196,6 +197,7 @@ return [
 
     'attributes' => [
         'quantity' => 'Quantity',
+        'destination_address' => 'Destination Address',
     ],
 
 ];

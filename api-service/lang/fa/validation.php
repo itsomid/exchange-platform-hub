@@ -153,6 +153,7 @@ return [
     'invalid_2fa_code' => 'کد Google 2FA وارد شده نامعتبر است.',
     'invalid_otp_code' => 'کد OTP وارد شده نامعتبر یا منقضی شده است.',
     'currency_chain_inactive' => 'شبکه مورد نظر فعال نمی باشد',
+    'blockchain_address' => ':attribute یک آدرس بلاک چین معتبر نیست.',
 
     /*
     |--------------------------------------------------------------------------
@@ -237,5 +238,6 @@ return [
         'currency_symbol' => 'ارز',
         'currency_chain' => 'نام شبکه',
         'market_id' => 'بازار',
+        'destination_address' => 'آدرس مقصد',
     ],
 ];
