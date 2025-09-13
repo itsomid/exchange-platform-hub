@@ -75,11 +75,19 @@ class WithdrawRequest extends FormRequest
     public function rules(): array
     {
         $currency = Currency::query()->where('symbol', $this->input('currency'))->first(['id']);
-
+       
         $rules = [
             'currency' => ['required', Rule::exists(Currency::class, 'symbol')],
             'currency_chain' => ['required', Rule::exists(CurrencyChain::class, 'chain')->where('currency_id', $currency?->id)->where('withdraw_enabled', 1)],
-            'destination_address' => ['required', new GeneralBlockchainAddress],
+            'destination_address' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) {
+                    $chain = $this->input('currency_chain');
+                    $validator = new GeneralBlockchainAddress($chain);
+                    $validator->validate($attribute, $value, $fail);
+                },
+            ],
             'amount' => ['required', new CheckMinAmount($this->input('currency'), $this->input('currency_chain')), new CheckWalletBalance($this->input('currency'))],
         ];
 
@@ -100,7 +108,15 @@ class WithdrawRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'currency.required' => __('validation.required', ['attribute' => 'ارز']),
+            'currency.exists' => __('validation.exists', ['attribute' => 'ارز']),
+            'currency_chain.required' => __('validation.required', ['attribute' => 'شبکه ارز']),
             'currency_chain.exists' => __('validation.currency_chain_inactive'),
+            'destination_address.required' => __('validation.required', ['attribute' => 'آدرس مقصد']),
+            'destination_address.string' => __('validation.string', ['attribute' => 'آدرس مقصد']),
+            'amount.required' => __('validation.required', ['attribute' => 'مقدار']),
+            '2fa_code.required' => __('validation.required', ['attribute' => 'کد Google 2FA']),
+            'otp_code.required' => __('validation.required', ['attribute' => 'کد OTP']),
         ];
     }
 }

@@ -20,7 +20,7 @@ class CurrencyChain extends Model
         'exchange_withdrawal_fee' => 'float',
         'chain' => CurrencyChainEnum::class,
         'deposit_enabled' => 'boolean',
-        'withdrawal_enabled' => 'boolean',
+        'withdraw_enabled' => 'boolean',
         'blockchain_name' => CurrencyBlockChainNameEnum::class,
     ];
 

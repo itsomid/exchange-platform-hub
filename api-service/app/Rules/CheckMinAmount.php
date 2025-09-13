@@ -22,6 +22,11 @@ class CheckMinAmount implements ValidationRule
         $currency = Currency::query()
             ->where('symbol', $this->currency)
             ->first();
+        
+        if (!$currency) {
+            return; // Skip validation if currency doesn't exist, let exists rule handle it
+        }
+        
         $chain = CurrencyChain::query()
             ->where('chain', $this->currencyChain)
             ->where('currency_id', $currency->id)
