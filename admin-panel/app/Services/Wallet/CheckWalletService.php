@@ -38,26 +38,27 @@ class CheckWalletService
 
         $wallet = $wallet->load('chains.wallet.currency.chains');
 
-        $chains = $wallet->chains;
+        $walletChains = $wallet->chains;
 
-        if (! $chains->contains(fn($chain) => ! empty($chain->address))) {
+        if (! $walletChains->contains(fn($chain) => ! empty($chain->address))) {
             Toast::message('کاربر آدرس زنجیره‌ای ندارد.')->warning()->notify();
             return false;
         }
 
         $hdDeposit = resolve(HDWalletDepositService::class);
 
-        foreach ($chains as $chain) {
-            if (empty($chain->address)) {
+        foreach ($walletChains as $walletChain) {
+            if (empty($walletChain->address)) {
                 continue;
             }
-            $currencyChain = $chain->wallet->currency->chains->where('chain', $chain->currency_chain)->first();
+            $currencyChain = $walletChain->wallet->currency->chains->where('chain', $walletChain->currency_chain)->first();
 
             $transactions = $hdDeposit->getDepositLists(
                 resolve(GetDepositListsRequestDTO::class)
                     ->setCurrencySymbol($wallet->currency_symbol)
-                    ->setWalletAddress($chain->address)
+                    ->setWalletAddress($walletChain->address)
                     ->setBlockchain($currencyChain->blockchain_name->value)
+                    ->setContractAddress($currencyChain->contract_address ?? null)
 
             );
 

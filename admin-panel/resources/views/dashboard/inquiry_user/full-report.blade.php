@@ -173,8 +173,7 @@
                                     <td>
                                         <a href="{{ route('admin.wallet.refresh', ['user' => $user->id, 'wallet' => $wallet->id]) }}"
                                             class="btn btn-primary btn-xs me-2">
-                                            <i class="fa-solid fa-rotate-right me-1"></i>چک واریز
-                                        </a>
+                                            <i class="fa-solid fa-rotate-right me-1"></i>چک واریز</a>
                                         <a class="btn btn-link p-0 text-secondary me-2"
                                             href="{{ route('admin.wallet.detail', ['user' => $user->id, 'wallet' => $wallet->id, 'type' => 'deposit']) }}"><i
                                                 class="fa-light fa-eye fa-lg"></i></a>
