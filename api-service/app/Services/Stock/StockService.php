@@ -156,6 +156,21 @@ class StockService
                         ->setDescription('بازگشت وجه ابطال قرارداد سهام ' . $stockContract->contract_number)
                 );
 
+
+                $this->transactionRepository->create(
+                    resolve(CreateTransactionRequestDTO::class)
+                        ->setUserId(config('bitexroom.user_id'))
+                        ->setWalletId($ExchangeWallet->id)
+                        ->setStockContractId($stockContract->id)
+                        ->setCoinPrice(1)
+                        ->setAmount(-$returnAmount)
+                        ->setBalance($ExchangeWallet->balance)
+                        ->setType(TransactionTypeEnum::BUY)
+                        ->setSubtype(TransactionSubTypeEnum::STOCK)
+                        ->setStatus(TransactionStatusEnum::SUCCESS)
+                        ->setDescription('کسر از حساب صرافی بابت ابطال قرارداد ' . $stockContract->contract_number)
+                );
+
                 $this->transactionRepository->create(
                     resolve(CreateTransactionRequestDTO::class)
                         ->setUserId(config('bitexroom.user_id'))
