@@ -326,9 +326,7 @@
                                 </td>
 
                                 <td class="font-number text-wrap">
-                                    @if ($transaction->admin_id)
-                                        {{ $transaction->admin->last_name }}
-                                    @endif
+
                                     <span>{{ $transaction->description }}</span>
 
                                 </td>

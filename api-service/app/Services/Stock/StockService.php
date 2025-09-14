@@ -182,7 +182,7 @@ class StockService
                         ->setType(TransactionTypeEnum::FEE)
                         ->setSubtype(TransactionSubTypeEnum::STOCK)
                         ->setStatus(TransactionStatusEnum::SUCCESS)
-                        ->setDescription('کارمزد ابطال قرارداد' . $stockContract->contract_number)
+                        ->setDescription('کارمزد ابطال قرارداد ' . $stockContract->contract_number)
                 );
 
 

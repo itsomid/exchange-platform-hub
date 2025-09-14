@@ -103,6 +103,7 @@ class StockContractController extends Controller
         $totalValue = $stock->value * $request['amount'];
 
         $wallet = $this->walletService->getUserWallet($request['user_id'], 'USDT');
+        $ExchangeWallet = $this->walletService->getUserWallet($this->bitexroomUserId, 'USDT');
 
         $contractData = [
             'user_id' => $request['user_id'],
@@ -124,7 +125,7 @@ class StockContractController extends Controller
             }
 
             $contract = StockContract::create($contractData);
-            
+
             Transaction::create([
                 'user_id' => $request['user_id'],
                 'wallet_id' => $wallet->id,
@@ -136,7 +137,21 @@ class StockContractController extends Controller
                 'type' => TransactionTypeEnum::BUY,
                 'subtype' => TransactionSubTypeEnum::STOCK,
                 'status' => TransactionStatusEnum::SUCCESS,
-                'description' => 'خرید سهام توسط ادمین (AdminId: #' . auth()->user()->id . ', AdminName: ' . auth()->user()->fullname() . ') - شماره قرارداد: ' . $contract->contract_number,
+                'description' => 'خرید سهام توسط ادمین (#' . auth()->user()->id . '-' . auth()->user()->fullname() . ') - شماره قرارداد: ' . $contract->contract_number,
+            ]);
+
+            Transaction::create([
+                'user_id' => config('bitexroom.user_id'),
+                'wallet_id' => $ExchangeWallet->id,
+                'admin_id' => auth()->user()->id,
+                'stock_contract_id' => $contract->id,
+                'amount' => $totalValue,
+                'balance' => $ExchangeWallet->balance,
+                'coin_price' => "1",
+                'type' => TransactionTypeEnum::SELL,
+                'subtype' => TransactionSubTypeEnum::STOCK,
+                'status' => TransactionStatusEnum::SUCCESS,
+                'description' => 'خرید سهام توسط ادمین (#' . auth()->user()->id . '-' . auth()->user()->fullname() . ') - شماره قرارداد: ' . $contract->contract_number,
             ]);
 
             $this->walletService->decreaseBalance($request['user_id'], 'USDT', $totalValue);
