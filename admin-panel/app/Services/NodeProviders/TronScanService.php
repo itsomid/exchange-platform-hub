@@ -6,6 +6,7 @@ use App\Models\Currency;
 use App\Models\CurrencyChain;
 use App\Enums\CurrencyChainEnum;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Config;
 
 class TronScanService
 {
@@ -59,7 +60,9 @@ class TronScanService
         ];
 
         try {
-            $response = Http::get($url, $params);
+            $response = Http::withHeaders([
+                'TRON-PRO-API-KEY' => Config::get('tronscan.api_key')
+            ])->get($url, $params);
 
             if ($response->successful()) {
                 $data = $response->json();
@@ -102,7 +105,9 @@ class TronScanService
         ];
 
         try {
-            $response = Http::get($url, $params);
+            $response = Http::withHeaders([
+                'TRON-PRO-API-KEY' => Config::get('tronscan.api_key')
+            ])->get($url, $params);
 
             if ($response->successful()) {
                 $data = $response->json();
@@ -158,7 +163,9 @@ class TronScanService
         ];
 
         try {
-            $response = Http::post($url, $params);
+            $response = Http::withHeaders([
+                'TRON-PRO-API-KEY' => Config::get('tronscan.api_key')
+            ])->post($url, $params);
 
             if ($response->successful()) {
                 $data = $response->json();
@@ -234,5 +241,4 @@ class TronScanService
         // Fallback to hardcoded mapping
         return $this->tokenDecimals[$currency] ?? 6; // Default to 6 decimals for most TRC20 tokens
     }
-
 }
