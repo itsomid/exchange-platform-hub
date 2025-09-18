@@ -10,7 +10,8 @@ use Illuminate\Support\Facades\Config;
 
 class BscScanService
 {
-    protected $baseUrl = 'https://api.bscscan.com/api';
+    protected $baseUrl = 'https://api.etherscan.io/v2/api';
+    protected $chainId = 56; // BSC chain ID
 
     /**
      * Token decimal places mapping for common BEP20 tokens
@@ -54,10 +55,11 @@ class BscScanService
             ];
         }
 
-        $apiKey = Config::get('bscscan.api_key');
+        $apiKey = Config::get('etherscan.api_key');
         $decimals = $this->tokenDecimals[$currency] ?? 18;
 
         $params = [
+            'chainid' => $this->chainId,
             'module' => 'account',
             'action' => 'tokenbalance',
             'address' => $address,
@@ -102,9 +104,10 @@ class BscScanService
      */
     protected function getBnbBalance(string $address)
     {
-        $apiKey = Config::get('bscscan.api_key');
+        $apiKey = Config::get('etherscan.api_key');
 
         $params = [
+            'chainid' => $this->chainId,
             'module' => 'account',
             'action' => 'balance',
             'address' => $address,
@@ -192,5 +195,4 @@ class BscScanService
         // Fallback to hardcoded mapping
         return $this->tokenDecimals[$currency] ?? 18; // Default to 18 decimals for most BEP20 tokens
     }
-
 }
