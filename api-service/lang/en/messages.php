@@ -18,5 +18,6 @@ return [
     ],
     'otp' => [
         'send' => 'The verification code has been sent to your email.',
+        'rate_limit' => 'You must wait 60 seconds before requesting another verification code.',
     ],
 ];

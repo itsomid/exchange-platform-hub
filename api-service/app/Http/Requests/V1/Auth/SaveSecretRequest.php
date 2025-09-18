@@ -15,37 +15,6 @@ class SaveSecretRequest extends FormRequest
         return true;
     }
 
-    /**
-     * @OA\Schema(
-     *      schema="Save2FASecretRequest",
-     *      type="object",
-     *      title="Save 2FA Secret Request",
-     *      description="Request body for saving the 2FA secret.",
-     *      required={"2fa", "secret", "otp_code"},
-     *
-     *      @OA\Property(
-     *          property="2fa",
-     *          type="string",
-     *          description="The 2FA token entered by the user.",
-     *          example="123456"
-     *      ),
-     *      @OA\Property(
-     *          property="secret",
-     *          type="string",
-     *          description="The secret key used for generating 2FA tokens.",
-     *          example="JBSWY3DPEHPK3PXP"
-     *      ),
-     *     @OA\Property(
-     *     property="otp_code",
-     *     type="string",
-     *     description="The OTP code mailed to the user.",
-     *     example="123456"
-     *  )
-     *  ),
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [

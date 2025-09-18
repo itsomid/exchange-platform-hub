@@ -39,33 +39,6 @@ class TwoFactorController extends Controller
 
     ) {}
 
-    /**
-     * @OA\Get(
-     *     path="/api/v1/auth/2fa/setup",
-     *     summary="Setup Two-Factor Authentication",
-     *     description="Generates a QR code and secret key for setting up two-factor authentication (2FA).",
-     *     operationId="setup2FA",
-     *     tags={"Two-Factor Authentication"},
-     *     security={{"sanctum": {}}},
-     *
-     *     @OA\Response(
-     *         response=200,
-     *         description="QR code and secret key for setting up 2FA",
-     *
-     *         @OA\JsonContent(ref="#/components/schemas/TwoFactorSetupResponse")
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized. User is not authenticated.",
-     *
-     *         @OA\JsonContent(
-     *
-     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
-     *         )
-     *     )
-     * )
-     */
     public function setup(): TwoFactorSetupResource
     {
         $responseDTO = $this->twoFactorService->setup(
@@ -85,51 +58,6 @@ class TwoFactorController extends Controller
         return new TwoFactorSetupResource($responseDTO);
     }
 
-    /**
-     * @OA\Post(
-     *      path="/api/v1/auth/2fa/save-secret",
-     *      summary="Save Two-Factor Authentication Secret",
-     *      description="Validates and saves the 2FA secret key provided by the user.",
-     *      operationId="save2FASecret",
-     *      tags={"Two-Factor Authentication"},
-     *      security={{"sanctum": {}}},
-     *
-     *      @OA\RequestBody(
-     *          required=true,
-     *
-     *      @OA\JsonContent(ref="#/components/schemas/Save2FASecretRequest")
-     *      ),
-     *
-     *      @OA\Response(
-     *          response=200,
-     *          description="Secret saved successfully.",
-     *
-     *          @OA\JsonContent(
-     *
-     *              @OA\Property(
-     *                  property="message",
-     *                  type="string",
-     *                  example="Two-factor authentication secret saved successfully."
-     *              )
-     *          )
-     *      ),
-     *
-     *      @OA\Response(
-     *          response=400,
-     *          description="Validation error or invalid 2FA token.",
-     *
-     *          @OA\JsonContent(
-     *
-     *              @OA\Property(property="message", type="string", example="Invalid 2FA token or secret.")
-     *          )
-     *      )
-     *  )
-     *
-     * @throws IncompatibleWithGoogleAuthenticatorException
-     * @throws InvalidCharactersException
-     * @throws GoogleInvalidUserSecretKeyException
-     * @throws SecretKeyTooShortException
-     */
     public function saveSecret(SaveSecretRequest $request): Response
     {
         $validated = $request->validated();
@@ -146,50 +74,6 @@ class TwoFactorController extends Controller
         ]);
     }
 
-    /**
-     * @OA\Post(
-     *     path="/api/v1/auth/2fa/verify-login",
-     *     summary="Validate two-factor authentication code and generate access token",
-     *     description="This endpoint accepts a two-factor authentication (2FA) code from the user and validates it. If the code is correct, it generates and returns an access token that can be used to authenticate further requests. The API will reject any invalid or missing 2FA code with an error.",
-     *     operationId="validateTwoFactor",
-     *     tags={"Authentication"},
-     *
-     *     @OA\RequestBody(
-     *         required=true,
-     *
-     *         @OA\JsonContent(ref="#/components/schemas/ValidateTwoFactorRequest")
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=200,
-     *         description="Two-factor validation successful",
-     *
-     *         @OA\JsonContent(
-     *
-     *             @OA\Property(property="message", type="string", example="Login successful."),
-     *             @OA\Property(
-     *                 property="data",
-     *                 type="object",
-     *                 @OA\Property(property="token", ref="#/components/schemas/AccessTokenResource")
-     *             )
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=422,
-     *         description="Validation error",
-     *
-     *         @OA\JsonContent(
-     *
-     *             @OA\Property(property="message", type="string", example="The given data was invalid."),
-     *             @OA\Property(property="errors", type="object", additionalProperties={"type": "array", "items": {"type": "string"}})
-     *         )
-     *     ),
-     *     security={
-     *         {"sanctum": {}}
-     *     }
-     * )
-     */
     public function verifyLogin(ValidateTwoFactorRequest $request): Response
     {
         $validatedData = $request->validated();

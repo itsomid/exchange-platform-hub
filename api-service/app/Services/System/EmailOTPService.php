@@ -96,6 +96,16 @@ class EmailOTPService
      */
     public function send(SendOTPRequestDTO $requestDTO)
     {
+        // Check if a recent OTP was sent within the last 60 seconds
+        $lastToken = $this->emailOTPRepository->getLastToken(
+            $requestDTO->getEmail(),
+            $requestDTO->getAction()
+        );
+
+        if ($lastToken && now()->subSeconds(60)->lt($lastToken->created_at)) {
+            throw new \Exception(__('messages.otp.rate_limit'), 429);
+        }
+
         $code = RandomToken::generate(self::CODE_LENGTH);
 
         $this->emailOTPRepository->saveNewEmail(
@@ -108,7 +118,7 @@ class EmailOTPService
         $mailableClass = $requestDTO->getMailable() ?? OTPDefaultMail::class;
 
         Mail::to($requestDTO->getEmail())->send(
-            new $mailableClass($code, $requestDTO->getName(),$requestDTO->getAction())
+            new $mailableClass($code, $requestDTO->getName(), $requestDTO->getAction())
         );
     }
 

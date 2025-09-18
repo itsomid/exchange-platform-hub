@@ -78,7 +78,7 @@ Route::prefix('/otc')->group(function () {
 });
 
 Route::prefix('authorization')->group(function () {
-    Route::post('/otp-code/{action}', [\App\Http\Controllers\V1\Authorization\EmailOTPController::class, 'send'])->middleware([\App\Http\Middleware\FinancialWithdrawalBlockMiddleware::class]);
+    Route::post('/otp-code/{action}', [\App\Http\Controllers\V1\Authorization\EmailOTPController::class, 'send'])->middleware(['throttle:1,1', \App\Http\Middleware\FinancialWithdrawalBlockMiddleware::class]);
 });
 
 // Notifications
