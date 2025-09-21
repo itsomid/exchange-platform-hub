@@ -53,6 +53,7 @@ class PermissionList
             ['view-logs','لیست ارورها'],
 
             ['notifications','لیست اعلان های مدیریت'],
+            ['all_notifications','مشاهده تمام اعلان های مدیریت'],
             ['support','پشتیبانی کاربر'],
             ['viewTelescope','لاراول تلسکوپ'],
             ['viewPulse','لاراول پالس'],

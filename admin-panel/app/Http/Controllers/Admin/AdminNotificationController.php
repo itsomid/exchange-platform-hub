@@ -14,7 +14,7 @@ class AdminNotificationController extends Controller
     {
         $admin = auth()->user(); // Get authenticated admin
 
-        if ($admin->hasRole(['super_admin', 'admin'])) {
+        if ($admin->hasPermissionTo('all_notifications')) {
             $notifications = NotificationRecord::where('notifiable_type','App\Models\Admin')->filterBy(request()->all())->latest()->paginate(100);
         } else {
             $notifications = NotificationRecord::where('notifiable_id',$admin->id)->where('notifiable_type','App\Models\Admin')->filterBy(request()->all())->latest()->paginate(100);

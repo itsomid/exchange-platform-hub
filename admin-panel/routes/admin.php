@@ -82,10 +82,10 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::delete('/{admin}/sessions/{session}', [SessionController::class, 'destroy'])->name('session.destroy')->can('session.destroy');
         Route::delete('/{admin}/sessions/purge/all', [SessionController::class, 'purge'])->name('session.purge')->can('session.destroy');
 
-        Route::get('/notifications', [AdminNotificationController::class, 'index'])->name('admin.notifications.index');
-        Route::patch('/notifications/mark-read/{id}', [AdminNotificationController::class, 'markAsRead'])->name('admin.notifications.mark-read');
-        Route::get('/notifications/mark-all-read', [AdminNotificationController::class, 'markAllAsRead'])->name('admin.notifications.mark-all-read');
-        Route::delete('admin/notifications/destroyAll', [AdminNotificationController::class, 'destroyAll'])->name('admin.admin.notifications.destroyAll');
+        Route::get('/notifications', [AdminNotificationController::class, 'index'])->name('admin.notifications.index')->can('notifications');
+        Route::patch('/notifications/mark-read/{id}', [AdminNotificationController::class, 'markAsRead'])->name('admin.notifications.mark-read')->can('notifications');
+        Route::get('/notifications/mark-all-read', [AdminNotificationController::class, 'markAllAsRead'])->name('admin.notifications.mark-all-read')->can('notifications');
+        Route::delete('admin/notifications/destroyAll', [AdminNotificationController::class, 'destroyAll'])->name('admin.admin.notifications.destroyAll')->can('notifications');
     });
 
     Route::resource('/tickets', TicketController::class)->except(['ticket']);
