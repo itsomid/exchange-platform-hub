@@ -74,7 +74,13 @@ class RoleController extends Controller
             'name' => $input['name'],
             'persian_name' => $input['persian_name'],
         ]);
-        $role->syncPermissions($input['permissions']);
+        
+        if (isset($input['permissions'])) {
+            $role->syncPermissions($input['permissions']);
+        } else {
+            $role->syncPermissions([]); // Clear all permissions if none selected
+        }
+        
         Toast::message('نقش با موفقیت ویرایش شد')->success()->notify();
         return redirect()->route('admin.role.index');
     }
