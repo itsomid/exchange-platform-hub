@@ -47,9 +47,9 @@ class CoinexNotEnoughBalance extends Notification implements ShouldQueue
     private function getMessage(): string
     {
         if ($this->marketName === 'USDT') {
-            $message = 'صرافی ما برای انجام معامله '.$this->amount.' '.$this->marketName.' در کوینکس نیاز دارد.';
+            $message = 'صرافی ما برای انجام معامله '.formatNumberTrimZeros($this->amount).' '.$this->marketName.' در کوینکس نیاز دارد.';
         } else {
-            $message = 'صرافی ما برای انجام معامله OTC به مقدار '.$this->amount.' '.$this->marketName.' به مقدار تقریبی '.formatNumberTrimZeros($this->usdtValue).' تتر در کوینکس نیاز دارد.';
+            $message = 'صرافی ما برای انجام معامله OTC به مقدار '.formatNumberTrimZeros($this->amount).' '.$this->marketName.' به مقدار تقریبی '.formatNumberTrimZeros($this->usdtValue).' تتر در کوینکس نیاز دارد.';
         }
 
         return $message;

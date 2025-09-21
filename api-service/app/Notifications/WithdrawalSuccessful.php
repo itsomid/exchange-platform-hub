@@ -45,7 +45,7 @@ class WithdrawalSuccessful extends Notification implements ShouldQueue
     public function toDatabase($notifiable): array
     {
         return [
-            'message' => 'برداشت '.$this->currencySymbol.' به مقدار '.$this->amount.' با موفقیت انجام شد.',
+            'message' => 'برداشت '.$this->currencySymbol.' به مقدار '.formatNumberTrimZeros($this->amount).' با موفقیت انجام شد.',
             'url' => '/transactions', // Optional: URL to redirect to
         ];
     }
