@@ -29,6 +29,7 @@ class ListOrderRequest extends FormRequest
             'type' => ['sometimes', 'string', Rule::enum(SpotOrderTypeEnum::class)],
             'side' => ['sometimes', 'string', Rule::enum(SpotOrderSideEnum::class)],
             'status' => ['sometimes', 'string', Rule::enum(SpotOrderStatusEnum::class)],
+            'market_id' => ['sometimes', 'integer', 'exists:markets,id'],
         ];
     }
 }

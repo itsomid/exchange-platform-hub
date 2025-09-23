@@ -16,6 +16,9 @@ class SpotOrderListsRequestDTO
 
     private ?SpotOrderStatusEnum $status = null;
 
+    // Optional market filter
+    private ?int $marketId = null;
+
     public function setUserId(int $userId): SpotOrderListsRequestDTO
     {
         $this->userId = $userId;
@@ -62,5 +65,17 @@ class SpotOrderListsRequestDTO
     public function getStatus(): ?SpotOrderStatusEnum
     {
         return $this->status;
+    }
+
+    public function setMarketId(?int $marketId): SpotOrderListsRequestDTO
+    {
+        $this->marketId = $marketId;
+
+        return $this;
+    }
+
+    public function getMarketId(): ?int
+    {
+        return $this->marketId;
     }
 }

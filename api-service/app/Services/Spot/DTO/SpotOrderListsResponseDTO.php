@@ -33,7 +33,7 @@ class SpotOrderListsResponseDTO
 
     public function setMarketName(string $baseCurrency, string $quoteCurrency): SpotOrderListsResponseDTO
     {
-        $this->marketName = $baseCurrency.'|'.$quoteCurrency;
+        $this->marketName = $baseCurrency.'/'.$quoteCurrency;
 
         return $this;
     }

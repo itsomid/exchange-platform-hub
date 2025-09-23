@@ -16,6 +16,8 @@ class TradeListRequestDTO
 
     private ?SpotOrderStatusEnum $status = null;
 
+    private ?int $marketId = null;
+
     public function setUserId(int $userId): self
     {
         $this->userId = $userId;
@@ -62,5 +64,17 @@ class TradeListRequestDTO
     public function getStatus(): ?SpotOrderStatusEnum
     {
         return $this->status;
+    }
+
+    public function setMarketId(?int $marketId): self
+    {
+        $this->marketId = $marketId;
+
+        return $this;
+    }
+
+    public function getMarketId(): ?int
+    {
+        return $this->marketId;
     }
 }

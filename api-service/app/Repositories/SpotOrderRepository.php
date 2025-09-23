@@ -35,6 +35,7 @@ class SpotOrderRepository implements SpotOrderRepositoryInterface
             ->where('user_id', $requestDTO->getUserId())
             ->when($requestDTO->getSide(), fn (Builder $q) => $q->where('side', $requestDTO->getSide()))
             ->when($requestDTO->getType(), fn (Builder $q) => $q->where('type', $requestDTO->getType()))
+            ->when($requestDTO->getMarketId(), fn (Builder $q) => $q->where('market_id', $requestDTO->getMarketId()))
             ->when($requestDTO->getStatus(), function (Builder $q) use ($requestDTO) {
                 $status = $requestDTO->getStatus();
                 if ($status === SpotOrderStatusEnum::COMPLETED) {

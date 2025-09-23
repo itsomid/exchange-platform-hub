@@ -126,6 +126,7 @@ class SpotService
                 ->setSide($requestDTO->getSide())
                 ->setStatus($requestDTO->getStatus())
                 ->setUserId($requestDTO->getUserId())
+                ->setMarketId($requestDTO->getMarketId())
         )->map(function ($order) {
 
             //            $filledValue = $order->makerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0);
