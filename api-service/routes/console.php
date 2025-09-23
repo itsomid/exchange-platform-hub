@@ -11,4 +11,4 @@ use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('wallet:check-withdrawal')->hourly();
 Schedule::command('orders:match')->everyMinute();
-Schedule::command('spot:spot-ticker')->everyMinute();
+Schedule::command('spot:spot-ticker')->everyFiveSeconds();
