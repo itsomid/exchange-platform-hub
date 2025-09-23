@@ -50,7 +50,7 @@ class MexcRequest
             'symbol' => $params['symbol'],
             'side' => strtoupper($params['side']),
             'type' => strtoupper($params['type']),
-            'quantity' => formatNumberTrimZeros($params['quantity'],$params['precision'] ?? null),
+            'quantity' => formatNumberTrimZeros($params['quantity'],$params['amount_precision'] ?? null),
         ];
         
         // Add price parameter for LIMIT orders

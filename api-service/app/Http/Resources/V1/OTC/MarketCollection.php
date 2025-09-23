@@ -6,81 +6,7 @@ use App\Services\OTC\DTO\MarketResponseDTO;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
-/**
- * @OA\Schema(
- *     schema="Market",
- *     type="object",
- *     title="Market",
- *     description="Details of an OTC market.",
- *
- *     @OA\Property(
- *          property="market_id",
- *          type="integer",
- *          description="Market primary key",
- *          example="1"
- *      ),
- *     @OA\Property(
- *         property="base_currency",
- *         type="string",
- *         description="Base currency of the market.",
- *         example="BTC"
- *     ),
- *     @OA\Property(
- *         property="quote_currency",
- *         type="string",
- *         description="Quote currency of the market.",
- *         example="USDT"
- *     ),
- *     @OA\Property(
- *         property="is_active",
- *         type="boolean",
- *         description="Whether the market is active.",
- *         example=true
- *     ),
- *     @OA\Property(
- *         property="sell_price",
- *         type="number",
- *         format="float",
- *         description="Sell price in quote currency.",
- *         example=45000.50
- *     ),
- *     @OA\Property(
- *         property="buy_price",
- *         type="number",
- *         format="float",
- *         description="Buy price in quote currency.",
- *         example=44000.75
- *     ),
- *     @OA\Property(
- *         property="min_trade_amount",
- *         type="number",
- *         format="float",
- *         description="Minimum trade amount in base currency.",
- *         example=0.01
- *     ),
- *     @OA\Property(
- *         property="max_trade_amount",
- *         type="number",
- *         format="float",
- *         description="Maximum trade amount in base currency.",
- *         example=10.0
- *     ),
- *     @OA\Property(
- *          property="min_otc_amount",
- *          type="number",
- *          format="float",
- *          description="Minimum trade amount in base currency.",
- *          example=0.01
- *      ),
- *      @OA\Property(
- *          property="max_otc_amount",
- *          type="number",
- *          format="float",
- *          description="Maximum trade amount in base currency.",
- *          example=10.0
- *      )
- * )
- */
+
 class MarketCollection extends ResourceCollection
 {
     /**
@@ -92,13 +18,16 @@ class MarketCollection extends ResourceCollection
     {
         return $this->collection->map(fn(MarketResponseDTO $DTO) => [
             'market_id' => $DTO->getMarketId(),
-            'precision' => $DTO->getPrecision(),
+            'price_precision' => $DTO->getPricePrecision(),
+            'amount_precision' => $DTO->getAmountPrecision(),
+            'quote_precision' => $DTO->getQuotePrecision(),
             'base_currency' => $DTO->getBaseCurrency(),
             'currency_name' => $DTO->getCurrencyName(),
             'currency_persian_name' => $DTO->getCurrencyPersianName(),
             'currency_logo' => $DTO->getCurrencyLogo(),
             'quote_currency' => $DTO->getQuoteCurrency(),
             'is_active' => $DTO->getIsActive(),
+            'current_price' => $DTO->getCurrentPrice(),
             'sell_price' => $DTO->getSellPrice(),
             'buy_price' => $DTO->getBuyPrice(),
             'min_trade_amount' => $DTO->getMinTradeAmount(),

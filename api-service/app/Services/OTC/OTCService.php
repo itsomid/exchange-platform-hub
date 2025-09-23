@@ -36,6 +36,7 @@ use App\Services\OTC\DTO\OTCBuyRequestDTO;
 use App\Services\OTC\DTO\OTCBuyResponseDTO;
 use App\Services\OTC\DTO\OTCSellRequestDTO;
 use App\Services\ReferralCode\ReferralCommissionService;
+use App\Repositories\Interfaces\CurrencyRepositoryInterface;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -51,21 +52,29 @@ class OTCService
         private readonly ReferralCommissionService         $referralCommissionService,
         private readonly UserRepositoryInterface           $userRepository,
         private readonly OTCRefExchangeWithdrawalInterface $refExchangeWithdrawalRepository,
+        private readonly CurrencyRepositoryInterface       $currencyRepository,
     ) {}
 
     public function markets(): array
     {
         $markets = $this->marketRepository->getOTCMarkets();
 
+        // Get USDT currency precision from database
+        $usdtCurrency = $this->currencyRepository->getOne('USDT');
+        $usdtPrecision = $usdtCurrency ? $usdtCurrency->amount_precision : 8;
+
         return $markets->map(
             fn(Market $market) => resolve(MarketResponseDTO::class)
                 ->setMarketId($market->id)
                 ->setBaseCurrency($market->base_currency)
-                ->setPrecision($market->currency->precision)
+                ->setPricePrecision($market->currency->price_precision)
+                ->setAmountPrecision($market->currency->amount_precision)
+                ->setQuotePrecision($usdtPrecision)
                 ->setCurrencyName($market->currency->name)
                 ->setCurrencyPersianName($market->currency->persian_name)
                 ->setCurrencyLogo($market->currency->logo)
                 ->setQuoteCurrency($market->quote_currency)
+                ->setCurrentPrice($market->exchangePrice->price)
                 ->setIsActive($market->is_active)
                 ->setSellPrice(Math::mul($market->exchangePrice->price, (($market->exchangePrice->exchange_profit_buy / 100) + 1)))
                 ->setBuyPrice(Math::mul($market->exchangePrice->price, (($market->exchangePrice->exchange_profit_sell / 100) + 1)))

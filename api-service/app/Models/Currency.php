@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 /**
  * @property string     $max_auto_withdraw_amount
  * @property Collection $chains
- * @property int        $precision
+ * @property int        $price_precision
+ * @property int        $amount_precision
  * @property string     $symbol
  * @property string     $name
  * @property bool       $inter_transfer_enabled

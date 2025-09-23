@@ -25,66 +25,6 @@ class OrderController extends Controller
 {
     public function __construct(private readonly SpotService $spotService) {}
 
-    /**
-     * @OA\Post(
-     *     path="/api/v1/spot/orders",
-     *     tags={"Spot Orders"},
-     *     summary="Create a new trading order",
-     *     description="Create a new spot trading order in the exchange",
-     *     security={{"bearerAuth": {}}},
-     *
-     *     @OA\RequestBody(
-     *         required=true,
-     *
-     *         @OA\JsonContent(ref="#/components/schemas/OrderRequest")
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=201,
-     *         description="Order created successfully",
-     *
-     *         @OA\JsonContent(
-     *
-     *             @OA\Property(property="message", type="string", example="Order created successfully")
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthenticated",
-     *
-     *         @OA\JsonContent(
-     *
-     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=422,
-     *         description="Validation error",
-     *
-     *         @OA\JsonContent(
-     *
-     *             @OA\Property(property="message", type="string", example="The given data was invalid."),
-     *             @OA\Property(
-     *                 property="errors",
-     *                 type="object",
-     *                 example={"market_id": {"The market id field is required."}}
-     *             )
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=400,
-     *         description="Market validation error",
-     *
-     *         @OA\JsonContent(
-     *
-     *             @OA\Property(property="message", type="string", example="Invalid market selected")
-     *         )
-     *     )
-     * )
-     */
     public function store(CreateOrderRequest $request)
     {
         $validated = $request->validated();
@@ -379,55 +319,7 @@ class OrderController extends Controller
         ]);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/api/v1/spot/order-books/{marketId}",
-     *     tags={"Spot Orders"},
-     *     summary="Get market order book",
-     *     description="Returns the current order book (asks and bids) for a specific market",
-     *     operationId="getOrderBooks",
-     *
-     *     @OA\Parameter(
-     *         name="marketId",
-     *         in="path",
-     *         description="ID of the market",
-     *         required=true,
-     *
-     *         @OA\Schema(
-     *             type="integer",
-     *             format="int64",
-     *             example=1
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=200,
-     *         description="Successful operation",
-     *
-     *         @OA\JsonContent(ref="#/components/schemas/OrderBookResource")
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=404,
-     *         description="Market not found",
-     *
-     *         @OA\JsonContent(
-     *
-     *             @OA\Property(property="message", type="string", example="Market not found")
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=500,
-     *         description="Server error",
-     *
-     *         @OA\JsonContent(
-     *
-     *             @OA\Property(property="message", type="string", example="Internal server error")
-     *         )
-     *     )
-     * )
-     */
+
     public function getOrderBooks(int $marketId)
     {
         return new OrderBookResource($this->spotService->getLatestOrderBook(

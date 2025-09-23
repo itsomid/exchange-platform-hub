@@ -65,7 +65,9 @@ class ConfigCollection extends ResourceCollection
                 'currency_logo' => $configResponseDTO->getCurrencyLogo(),
                 'inter_transfer_enabled' => $configResponseDTO->getInterTransferEnabled(),
                 'max_auto_withdraw_amount' => $configResponseDTO->getMaxAutoWithdrawAmount(),
-                'precision' => $configResponseDTO->getPrecision(),
+                'price_precision' => $configResponseDTO->getPricePrecision(),
+                'amount_precision' => $configResponseDTO->getAmountPrecision(),
+                'quote_precision' => $configResponseDTO->getQuotePrecision(),
             ],
             'chains' => array_map(function (ChainResponseDTO $chain) {
                 return [

@@ -10,7 +10,11 @@ class GetConfigResponseDTO
 
     private bool $interTransferEnabled;
 
-    private int $precision;
+    private int $pricePrecision;
+
+    private int $amountPrecision;
+
+    private int $quotePrecision;
 
     private array $chains;
 
@@ -69,16 +73,40 @@ class GetConfigResponseDTO
         return $this->maxAutoWithdrawAmount;
     }
 
-    public function setPrecision(int $precision): GetConfigResponseDTO
+    public function setPricePrecision(int $pricePrecision): GetConfigResponseDTO
     {
-        $this->precision = $precision;
+        $this->pricePrecision = $pricePrecision;
 
         return $this;
     }
 
-    public function getPrecision(): int
+    public function getPricePrecision(): int
     {
-        return $this->precision;
+        return $this->pricePrecision;
+    }
+
+    public function setAmountPrecision(int $amountPrecision): GetConfigResponseDTO
+    {
+        $this->amountPrecision = $amountPrecision;
+
+        return $this;
+    }
+
+    public function getAmountPrecision(): int
+    {
+        return $this->amountPrecision;
+    }
+
+    public function setQuotePrecision(int $quotePrecision): GetConfigResponseDTO
+    {
+        $this->quotePrecision = $quotePrecision;
+
+        return $this;
+    }
+
+    public function getQuotePrecision(): int
+    {
+        return $this->quotePrecision;
     }
 
     public function setCurrencyLogo(string $currencyLogo): GetConfigResponseDTO

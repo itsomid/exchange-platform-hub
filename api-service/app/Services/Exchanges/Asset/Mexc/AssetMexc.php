@@ -100,10 +100,17 @@ class AssetMexc implements AssetInterface
 
             // Get currency precision
             $currency = (new CurrencyRepository())->getOne($request->getCurrency());
-            $precision = $currency ? $currency->precision : null;
+            $pricePrecision = $currency ? $currency->price_precision : null;
+            $amountPrecision = $currency ? $currency->amount_precision : null;
+            
+            // Get USDT precision from database
+            $usdtCurrency = (new CurrencyRepository())->getOne('USDT');
+            $quotePrecision = $usdtCurrency ? $usdtCurrency->amount_precision : 8;
 
             // Pass precision to MexcRequest
-            $params['precision'] = $precision;
+            $params['price_precision'] = $pricePrecision;
+            $params['amount_precision'] = $amountPrecision;
+            $params['quote_precision'] = $quotePrecision;
             $response = MexcRequest::send('POST', '/api/v3/order', $params);
          
         } catch (\Throwable $exception) {

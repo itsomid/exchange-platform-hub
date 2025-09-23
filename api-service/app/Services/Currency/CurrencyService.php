@@ -45,10 +45,16 @@ class CurrencyService
         $allCurrencies = $this->currencyRepository
             ->getAllCurrencyWithChains();
 
+        // Get USDT currency precision from database
+        $usdtCurrency = $this->currencyRepository->getOne('USDT');
+        $usdtPrecision = $usdtCurrency ? $usdtCurrency->amount_precision : 8;
+
         return $allCurrencies->map(fn(Currency $model) => resolve(GetConfigResponseDTO::class)
             ->setCurrencyName($model->name)
             ->setCurrencyPersianName($model->persian_name)
-            ->setPrecision($model->precision)
+            ->setPricePrecision($model->price_precision)
+            ->setAmountPrecision($model->amount_precision)
+            ->setQuotePrecision($usdtPrecision) // USDT precision from database
             ->setSymbol($model->symbol)
             ->setMaxAutoWithdrawAmount($model->max_auto_withdraw_amount)
             ->setCurrencyLogo($model->logo)

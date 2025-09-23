@@ -10,6 +10,8 @@ class MarketResponseDTO
 
     private string $quoteCurrency;
 
+    private string $currentPrice;
+
     private string $buyPrice;
 
     private string $sellPrice;
@@ -24,7 +26,11 @@ class MarketResponseDTO
 
     private string $maxOTCAmount;
 
-    private int $precision;
+    private int $pricePrecision;
+
+    private int $amountPrecision;
+
+    private int $quotePrecision;
 
     private string $currencyName;
 
@@ -54,6 +60,18 @@ class MarketResponseDTO
     public function getQuoteCurrency(): string
     {
         return $this->quoteCurrency;
+    }
+
+    public function setCurrentPrice(string $currentPrice): self
+    {
+        $this->currentPrice = $currentPrice;
+
+        return $this;
+    }
+
+    public function getCurrentPrice(): string
+    {
+        return $this->currentPrice;
     }
 
     public function setBuyPrice(string $buyPrice): self
@@ -152,16 +170,40 @@ class MarketResponseDTO
         return $this->maxOTCAmount;
     }
 
-    public function setPrecision(int $precision): MarketResponseDTO
+    public function setPricePrecision(int $pricePrecision): MarketResponseDTO
     {
-        $this->precision = $precision;
+        $this->pricePrecision = $pricePrecision;
 
         return $this;
     }
 
-    public function getPrecision(): int
+    public function getPricePrecision(): int
     {
-        return $this->precision;
+        return $this->pricePrecision;
+    }
+
+    public function setAmountPrecision(int $amountPrecision): MarketResponseDTO
+    {
+        $this->amountPrecision = $amountPrecision;
+
+        return $this;
+    }
+
+    public function getAmountPrecision(): int
+    {
+        return $this->amountPrecision;
+    }
+
+    public function setQuotePrecision(int $quotePrecision): MarketResponseDTO
+    {
+        $this->quotePrecision = $quotePrecision;
+
+        return $this;
+    }
+
+    public function getQuotePrecision(): int
+    {
+        return $this->quotePrecision;
     }
 
     public function setCurrencyName(string $currencyName): MarketResponseDTO
