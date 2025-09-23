@@ -27,7 +27,8 @@ class UpdateCurrencyRequest extends FormRequest
             'symbol' => 'required|unique:currencies,symbol,'.$this->currency->id,
             'inter_transfer_enabled' => 'boolean',
             'max_auto_withdraw_amount' => 'required',
-            'precision' => 'required|integer',
+            'price_precision' => 'required|integer',
+            'amount_precision' => 'required|integer',
             'logo' => 'image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
         ];
     }

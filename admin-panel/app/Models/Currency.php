@@ -23,7 +23,8 @@ class Currency extends Model
         'persian_name',
         'symbol',
         'logo',
-        'precision',
+        'price_precision',
+        'amount_precision',
         'inter_transfer_enabled',
         'max_auto_withdraw_amount',
     ];

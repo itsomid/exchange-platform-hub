@@ -125,7 +125,8 @@ class CurrencyController extends Controller
             'name' => $request->name,
             'persian_name' => $request->persian_name,
             'symbol' => $request->symbol,
-            'precision' => $request->precision,
+            'price_precision' => $request->price_precision,
+            'amount_precision' => $request->amount_precision,
             'inter_transfer_enabled' => isset($request->inter_transfer_enabled) && $request->inter_transfer_enabled == '1',
             'max_auto_withdraw_amount' => $request->max_auto_withdraw_amount,
         ]);
