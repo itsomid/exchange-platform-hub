@@ -46,11 +46,11 @@ class OrderController extends Controller
 
                 $orderMatchingEngine = resolve(OrderMatchingEngine::class);
                 $spotOrder = $response->getSpotOrderModel();
-                
+
                 if ($spotOrder === null) {
                     throw new \RuntimeException('Failed to create spot order');
                 }
-                
+
                 if ($type === SpotOrderTypeEnum::MARKET) {
                     $orderMatchingEngine->market($spotOrder);
                 } elseif ($type === SpotOrderTypeEnum::LIMIT) {
@@ -87,50 +87,7 @@ class OrderController extends Controller
         return SpotOrderResource::collection($lists);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/api/v1/spot/orders/{orderId}",
-     *     tags={"Spot Orders"},
-     *     summary="Get spot order details",
-     *     description="Retrieve order detilas",
-     *     security={{"bearerAuth": {}}},
-     *
-     *     @OA\Response(
-     *         response=200,
-     *         description="List of spot orders",
-     *
-     *     @OA\JsonContent(
-     *
-     *           @OA\Property(property="data",type="object", ref="#/components/schemas/SpotOrderResource"),
-     *     )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthenticated",
-     *
-     *         @OA\JsonContent(
-     *
-     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=422,
-     *         description="Validation error",
-     *
-     *         @OA\JsonContent(
-     *
-     *             @OA\Property(property="message", type="string", example="The given data was invalid."),
-     *             @OA\Property(
-     *                 property="errors",
-     *                 type="object",
-     *                 example={"type": {"The selected type is invalid."}}
-     *             )
-     *         )
-     *     )
-     * )
-     */
+
     public function show(SpotOrder $order)
     {
         if (! Gate::allows('update-spot-order', $order)) {

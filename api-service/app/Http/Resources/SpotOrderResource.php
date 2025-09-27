@@ -5,23 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/**
- * @OA\Schema(
- *     schema="SpotOrderResource",
- *
- *     @OA\Property(property="id", type="number", example="1", description="order id"),
- *     @OA\Property(property="market", type="string", example="BTC|USDT", description="Trading pair in BASE|QUOTE format"),
- *     @OA\Property(property="side", type="string", example="buy", enum={"buy", "sell"}),
- *     @OA\Property(property="type", type="string", example="limit", enum={"limit", "market"}),
- *     @OA\Property(property="quantity", type="number", format="float", example=0.5),
- *     @OA\Property(property="price", type="number", format="float", example=45000.50),
- *     @OA\Property(property="status", type="string", example="filled", description="Order status"),
- *     @OA\Property(property="filled_quantity", type="number", format="float", example=0.5),
- *     @OA\Property(property="commission", type="number", format="float", example=0.001),
- *     @OA\Property(property="filled_value", type="number", format="float", example=5.2, description="filled value in USDT"),
- *     @OA\Property(property="created_at", type="string", format="date-time", example="2023-12-21T14:00:00Z")
- * )
- */
+
 class SpotOrderResource extends JsonResource
 {
     /**
@@ -34,11 +18,14 @@ class SpotOrderResource extends JsonResource
         return [
             'id' => $this->getId(),
             'market' => $this->getMarketName(),
-            'side' => __('enum.spot.side.'.$this->getSide()->name),
-            'type' => __('enum.spot.type.'.$this->getType()->name),
+            'side' => $this->getSide()->value,
+            'side_label' => __('enum.spot.side.'.$this->getSide()->name),
+            'type' => $this->getType()->value,
+            'type_label' => __('enum.spot.type.'.$this->getType()->name),
             'quantity' => $this->getQuantity(),
             'price' => $this->getPrice(),
-            'status' => __('enum.spot.status.'.$this->getStatus()->name),
+            'status' => $this->getStatus()->value,
+            'status_label' => __('enum.spot.status.'.$this->getStatus()->name),
             'filled_quantity' => $this->getFilledQuantity(),
             'commission' => $this->getCommission(),
             'filled_value' => $this->getFilledValue(),
