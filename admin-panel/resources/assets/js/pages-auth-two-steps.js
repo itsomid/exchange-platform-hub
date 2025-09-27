@@ -32,6 +32,14 @@ document.addEventListener('DOMContentLoaded', function (e) {
           e.preventDefault();
         }
       };
+      // Better navigation on mobile/desktop with arrow keys
+      pin.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowLeft' && pin.previousElementSibling) {
+          pin.previousElementSibling.focus();
+        } else if (e.key === 'ArrowRight' && pin.nextElementSibling) {
+          pin.nextElementSibling.focus();
+        }
+      });
     }
 
       const form = document.querySelector('#twoStepsForm'); // Form element to submit
@@ -47,6 +55,35 @@ document.addEventListener('DOMContentLoaded', function (e) {
         });
         return otpValue;
       };
+
+      // Paste handling: allow pasting full OTP and distribute digits across inputs
+      maskWrapper.addEventListener('paste', function (evt) {
+        if (isSubmitting) return;
+        const clipboardData = (evt.clipboardData || window.clipboardData);
+        const text = clipboardData ? clipboardData.getData('text') : '';
+        const digits = (text || '').replace(/\D/g, '').slice(0, numeralMaskList.length);
+        if (!digits) return; // nothing to fill
+        evt.preventDefault();
+        // Fill inputs with pasted digits
+        let i = 0;
+        numeralMaskList.forEach(el => {
+          el.value = digits[i] || '';
+          i++;
+        });
+        // Update hidden input
+        if (hiddenOtpInput) hiddenOtpInput.value = composeOtp();
+        // Auto-submit if all digits provided
+        if (digits.length === numeralMaskList.length) {
+          isSubmitting = true;
+          numeralMaskList.forEach(el => (el.disabled = true));
+          const submitBtn = form.querySelector('[type="submit"]');
+          if (submitBtn) submitBtn.disabled = true;
+          form.submit();
+        } else {
+          // Focus next empty input
+          numeralMaskList[digits.length]?.focus();
+        }
+      });
 
       // Ensure code is composed on manual submit as well
       form.addEventListener('submit', function (evt) {
@@ -82,6 +119,42 @@ document.addEventListener('DOMContentLoaded', function (e) {
 
           numeralMaskList.forEach(numeralMaskEle => {
               numeralMaskEle.addEventListener('keyup', keyupHandler);
+              // Handle autofill or paste directly into an input (mobile one-time-code)
+              numeralMaskEle.addEventListener('input', function () {
+                  if (isSubmitting) return;
+                  const val = this.value || '';
+                  // If multiple digits land in a single box, distribute them
+                  if (val.length > 1) {
+                      const digits = val.replace(/\D/g, '');
+                      const startIndex = Array.from(numeralMaskList).indexOf(this);
+                      let idx = 0;
+                      for (let i = startIndex; i < numeralMaskList.length; i++) {
+                          numeralMaskList[i].value = digits[idx] || '';
+                          idx++;
+                      }
+                      hiddenOtpInput.value = composeOtp();
+                      const total = composeOtp();
+                      if (total.length === numeralMaskList.length) {
+                          isSubmitting = true;
+                          numeralMaskList.forEach(el => (el.disabled = true));
+                          const submitBtn = form.querySelector('[type="submit"]');
+                          if (submitBtn) submitBtn.disabled = true;
+                          form.submit();
+                      } else {
+                          // focus next empty input
+                          for (let i = startIndex; i < numeralMaskList.length; i++) {
+                              if (!numeralMaskList[i].value) {
+                                  numeralMaskList[i].focus();
+                                  break;
+                              }
+                          }
+                      }
+                  }
+              });
+              // Convenience: select text on focus for quicker overwrite
+              numeralMaskEle.addEventListener('focus', function () {
+                  try { this.select(); } catch (_) {}
+              });
           });
       }
 

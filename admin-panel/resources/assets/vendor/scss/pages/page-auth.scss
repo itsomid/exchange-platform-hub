@@ -108,6 +108,60 @@ $authentication-1-inner-max-width: 460px !default;
         padding-left: 0.4rem;
         padding-right: 0.4rem;
         font-size: light.$large-font-size;
+        
+        // Enhanced OTP input styling
+        height: 50px;
+        width: 50px;
+        text-align: center;
+        border: 2px solid #e6e6f2;
+        border-radius: 8px;
+        background-color: #fff;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        transition: all 0.2s ease-in-out;
+        box-shadow: 0 2px 4px rgba(115, 103, 240, 0.08);
+        
+        &:focus {
+            outline: none;
+            border-color: #7367f0;
+            box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.15);
+            transform: translateY(-1px);
+        }
+        
+        &:hover:not(:focus) {
+            border-color: #b8b4f0;
+        }
+        
+        // Filled state
+        &:not(:placeholder-shown) {
+            background-color: #f8f7ff;
+            border-color: #7367f0;
+            color: #7367f0;
+        }
+        
+        // Error state
+        &.is-invalid {
+            border-color: #ff4c51;
+            background-color: #fff5f5;
+            
+            &:focus {
+                border-color: #ff4c51;
+                box-shadow: 0 0 0 3px rgba(255, 76, 81, 0.15);
+            }
+        }
+    }
+    
+    // Enhanced wrapper styling
+    .auth-input-wrapper {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        margin: 2rem 0;
+        
+        @include light.media-breakpoint-down(sm) {
+            gap: 8px;
+            margin: 1.5rem 0;
+        }
     }
 }
 
@@ -123,6 +177,14 @@ $authentication-1-inner-max-width: 460px !default;
     .authentication-wrapper {
         .auth-input-wrapper .auth-input {
             font-size: light.$h5-font-size;
+            height: 45px;
+            width: 45px;
+            font-size: 1.1rem;
+        }
+        
+        .auth-input-wrapper {
+            gap: 6px;
+            margin: 1.2rem 0;
         }
     }
 }

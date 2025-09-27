@@ -36,27 +36,28 @@
                                 style="direction: ltr">
                                 <input type="text"
                                     class="form-control auth-input height-50 text-center numeral-mask mx-25 mb-1"
-                                    maxlength="1" autofocus="">
-
+                                    maxlength="1" autofocus="" inputmode="numeric" pattern="[0-9]*"
+                                    autocomplete="one-time-code" enterkeyhint="done" autocorrect="off" autocapitalize="off">
                                 <input type="text"
                                     class="form-control auth-input height-50 text-center numeral-mask mx-25 mb-1"
-                                    maxlength="1">
-
+                                    maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code"
+                                    enterkeyhint="done" autocorrect="off" autocapitalize="off">
                                 <input type="text"
                                     class="form-control auth-input height-50 text-center numeral-mask mx-25 mb-1"
-                                    maxlength="1">
-
+                                    maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code"
+                                    enterkeyhint="done" autocorrect="off" autocapitalize="off">
                                 <input type="text"
                                     class="form-control auth-input height-50 text-center numeral-mask mx-25 mb-1"
-                                    maxlength="1">
-
+                                    maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code"
+                                    enterkeyhint="done" autocorrect="off" autocapitalize="off">
                                 <input type="text"
                                     class="form-control auth-input height-50 text-center numeral-mask mx-25 mb-1"
-                                    maxlength="1">
-
+                                    maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code"
+                                    enterkeyhint="done" autocorrect="off" autocapitalize="off">
                                 <input type="text"
                                     class="form-control auth-input height-50 text-center numeral-mask mx-25 mb-1"
-                                    maxlength="1">
+                                    maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code"
+                                    enterkeyhint="done" autocorrect="off" autocapitalize="off">
                             </div>
                             <input type="hidden" name="code" class="code" />
                             @error('code')
