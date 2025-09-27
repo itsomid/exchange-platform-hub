@@ -37,16 +37,45 @@ document.addEventListener('DOMContentLoaded', function (e) {
       const form = document.querySelector('#twoStepsForm'); // Form element to submit
       const numeralMaskList = maskWrapper.querySelectorAll('.numeral-mask');
       const hiddenOtpInput = document.querySelector('.code');
+      let isSubmitting = false;
+
+      // Helper to compose code from inputs
+      const composeOtp = () => {
+        let otpValue = '';
+        numeralMaskList.forEach(numeralMaskEl => {
+          otpValue += numeralMaskEl.value;
+        });
+        return otpValue;
+      };
+
+      // Ensure code is composed on manual submit as well
+      form.addEventListener('submit', function (evt) {
+        if (isSubmitting) {
+          // prevent duplicate submissions
+          evt.preventDefault();
+          return;
+        }
+        const otpValue = composeOtp();
+        if (hiddenOtpInput) hiddenOtpInput.value = otpValue;
+        isSubmitting = true;
+        // Disable all inputs to avoid further edits triggering extra submits
+        numeralMaskList.forEach(el => (el.disabled = true));
+        const submitBtn = form.querySelector('[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
+      });
 
       if (hiddenOtpInput) {
           const keyupHandler = function () {
-              let otpValue = '';
-              numeralMaskList.forEach(numeralMaskEl => {
-                  otpValue += numeralMaskEl.value;
-              });
+              if (isSubmitting) return;
+              const otpValue = composeOtp();
               hiddenOtpInput.value = otpValue;
               // Submit the form if all 6 digits are filled
               if (otpValue.length === 6) {
+                  isSubmitting = true;
+                  // Disable inputs to prevent additional keyups causing resubmits
+                  numeralMaskList.forEach(el => (el.disabled = true));
+                  const submitBtn = form.querySelector('[type="submit"]');
+                  if (submitBtn) submitBtn.disabled = true;
                   form.submit();
               }
           };
