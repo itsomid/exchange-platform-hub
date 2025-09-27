@@ -20,7 +20,7 @@
                             @foreach ($currency->chains as $chain)
                                 <h6> اطلاعات شبکه {{ $chain->chain }}</h6>
                                 <div class="row">
-                                    <div class="col-md-3">
+                                    <div class="col-lg-3 mt-5 mt-lg-0">
                                         <div class="form-group">
                                             <label class="form-label" for="chain">نام شبکه</label>
                                             <input name="chain" id="chain" class="form-control"
@@ -30,7 +30,7 @@
                                             @enderror
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-lg-5 mt-5 mt-lg-0">
                                         <div class="form-group" dir="ltr">
                                             <label class="form-label" for="contract_address">Contract Address</label>
                                             <input name="chains[{{ $chain->id }}][contract_address]"
@@ -44,7 +44,7 @@
                                     </div>
                                 </div>
                                 <div class="row mt-5">
-                                    <div class="col-md-3">
+                                    <div class="col-lg-4 mt-5 mt-lg-0">
                                         <div class="form-group" dir="ltr">
                                             <label class="form-label" for="explorer_address_url_{{ $chain->id }}">آدرس
                                                 اکسپلورر</label>
@@ -54,7 +54,7 @@
                                                 value="{{ $chain->explorer_address_url }}">
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-lg-4 mt-5 mt-lg-0">
                                         <div class="form-group" dir="ltr">
                                             <label class="form-label" for="explorer_tx_url_{{ $chain->id }}">آدرس
                                                 اکسپلورر تراکنش</label>
@@ -64,7 +64,7 @@
                                                 value="{{ $chain->explorer_tx_url }}">
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-lg-4 mt-5 mt-lg-0">
                                         <div class="form-group">
                                             <label class="form-label" for="memo_{{ $chain->id }}">MEMO (اختیاری)</label>
                                             <input name="chains[{{ $chain->id }}][memo]" id="memo_{{ $chain->id }}"
@@ -74,7 +74,7 @@
                                     </div>
                                 </div>
                                 <div class="row mt-5">
-                                    <div class="col-md-3">
+                                    <div class="col-lg-4 mt-5 mt-lg-0">
                                         <div class="form-group">
                                             <label class="form-label" for="min_deposit_amount_{{ $chain->id }}">حداقل
                                                 مقدار واریز</label>
@@ -87,7 +87,7 @@
                                             @enderror
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-lg-4 mt-5 mt-lg-0">
                                         <div class="form-group">
                                             <label class="form-label" for="min_withdraw_amount_{{ $chain->id }}">حداقل
                                                 مقدار برداشت</label>
@@ -102,7 +102,7 @@
                                     </div>
                                 </div>
                                 <div class="row mt-5">
-                                    <div class="col-md-3">
+                                    <div class="col-lg-4 mt-5 mt-lg-0">
                                         <div class="form-group">
                                             <label class="form-label" for="deposit_delay_minutes_{{ $chain->id }}">تاخیر
                                                 در واریز به دقیقه</label>
@@ -120,7 +120,7 @@
                                             @enderror
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-lg-4 mt-5 mt-lg-0">
                                         <div class="form-group">
                                             <label class="form-label" for="safe_confirmations_{{ $chain->id }}">حداقل
                                                 تعداد تایید شبکه برای واریز</label>
@@ -152,36 +152,55 @@
                                     </div>
                                 </div>
                                 <div class="row mt-5">
-                                    <div class="col-md-3 ">
+                                    <div class="col-lg-4 mt-5 mt-lg-0">
                                         <div class="form-group">
                                             <label class="form-label"
                                                 for="exchange_withdrawal_fee_{{ $chain->id }}">فی
-                                                صرافی برای برداشت (واحد)</label>
-                                            <input type="text"
-                                                name="chains[{{ $chain->id }}][exchange_withdrawal_fee]"
-                                                id="exchange_withdrawal_fee_{{ $chain->id }}"
-                                                class="form-control font-number" placeholder="فی صرافیی را وارد کنید."
-                                                value="{{ formatNumber($chain->exchange_withdrawal_fee, $currency->precision) }}"
-                                                required>
+                                                بیتکس روم برای برداشت (واحد)</label>
+                                            <div class="input-group">
+                                                <input type="text"
+                                                    name="chains[{{ $chain->id }}][exchange_withdrawal_fee]"
+                                                    id="exchange_withdrawal_fee_{{ $chain->id }}"
+                                                    class="form-control font-number" placeholder="فی صرافیی را وارد کنید."
+                                                    value="{{ formatNumberTrimZeros($chain->exchange_withdrawal_fee) }}"
+                                                    required>
+                                                <span class="input-group-text">{{ $currency->symbol }}</span>
+                                            </div>
                                             @error('exchange_withdrawal_fee')
                                                 <small class="text-danger">{{ $message }}</small>
                                             @enderror
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-lg-4 mt-5 mt-lg-0">
                                         <div class="form-group">
-                                            <label class="form-label" for="network_fee_{{ $chain->id }}">فی
-                                                شبکه
-                                                برای
-                                                برداشت (واحد)</label>
-                                            <input name="chains[{{ $chain->id }}][network_fee]"
-                                                id="network_fee_{{ $chain->id }}" class="form-control font-number"
-                                                placeholder="فی شبکه."
-                                                value="{{ formatNumber($chain->network_fee, $currency->precision) }}"
-                                                disabled required>
+                                            <label class="form-label" for="network_fee">فی صرافی مرجع برای برداشت <b>(این
+                                                    فی از صرافی مرجع گرفته میشود)</b></label>
+                                            <div class="input-group">
+                                                <input name="chains[{{ $chain->id }}][network_fee]"
+                                                    id="network_fee_{{ $chain->id }}" class="form-control font-number"
+                                                    placeholder="فی شبکه."
+                                                    value="{{ formatNumberTrimZeros($chain->network_fee) }}" disabled
+                                                    required>
+                                                <span class="input-group-text">{{ $currency->symbol }}</span>
+                                            </div>
                                             @error('network_fee')
                                                 <small class="text-danger">{{ $message }}</small>
                                             @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4 mt-5 mt-lg-0">
+                                        <div class="form-group">
+                                            <label class="form-label">مجموع فی برداشت برای کاربر</label>
+                                            <div class="alert alert-info p-2 mb-0">
+                                                <strong id="total_withdrawal_fee_{{ $chain->id }}"
+                                                    class="font-number">
+                                                    {{ formatNumberTrimZeros($chain->network_fee + $chain->exchange_withdrawal_fee) }}
+                                                    <small class="ms-1">{{ $currency->symbol }}</small>
+                                                </strong>
+                                                <small class="d-block text-muted mt-1">
+                                                    فی صرافی مرجع + فی صرافی بیتکس روم = فی کل برداشت
+                                                </small>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="w-100"></div>

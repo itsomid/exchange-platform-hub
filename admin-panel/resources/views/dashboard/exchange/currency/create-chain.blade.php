@@ -120,7 +120,7 @@
                         <div class="row mt-5">
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label class="form-label" for="exchange_withdrawal_fee">فی صرافی برای برداشت
+                                    <label class="form-label" for="exchange_withdrawal_fee">فی بیتکس روم برای برداشت
                                         (واحد)</label>
                                     <input name="exchange_withdrawal_fee" id="exchange_withdrawal_fee"
                                         class="form-control" placeholder="فی صرافیی را وارد کنید."
@@ -132,8 +132,7 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label class="form-label" for="network_fee">فی شبکه برای برداشت
-                                        (واحد)</label>
+                                    <label class="form-label" for="network_fee">فی صرافی مرجع برای برداشت <b>(این فی از صرافی مرجع گرفته میشود)</b></label>
                                     <input name="network_fee" id="network_fee" class="form-control"
                                         placeholder="فی شبکه." value="{{ old('network_fee') }}" required>
                                     @error('network_fee')

@@ -49,10 +49,6 @@ class FetchDepositWithdrawalConfig extends Command
         if (count($foundNetwork)) {
             $chain->update([
                 'network_fee' => $foundNetwork[0]['withdrawal_fee'],
-                'withdraw_enabled' => $foundNetwork[0]['withdraw_enabled'],
-                'deposit_enabled' => $foundNetwork[0]['deposit_enabled'],
-                'min_deposit_amount' => $foundNetwork[0]['min_deposit_amount'],
-                'min_withdraw_amount' => $foundNetwork[0]['min_withdraw_amount'],
                 'safe_confirmations' => $foundNetwork[0]['safe_confirmations'],
             ]);
         } else {
