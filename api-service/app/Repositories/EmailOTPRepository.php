@@ -27,4 +27,12 @@ class EmailOTPRepository implements EmailOTPRepositoryInterface
             ->latest()
             ->first();
     }
+
+    public function deleteOldTokens(string $email, EmailOTPActionEnum $action): void
+    {
+        EmailOTP::query()
+            ->where('email', $email)
+            ->where('action', $action)
+            ->delete();
+    }
 }

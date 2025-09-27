@@ -11,4 +11,6 @@ interface EmailOTPRepositoryInterface
     public function saveNewEmail(SaveNewEmailRequestDTO $requestDTO): void;
 
     public function getLastToken(string $email, EmailOTPActionEnum $action): ?EmailOTP;
+
+    public function deleteOldTokens(string $email, EmailOTPActionEnum $action): void;
 }

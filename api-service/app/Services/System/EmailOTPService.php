@@ -2,6 +2,7 @@
 
 namespace App\Services\System;
 
+use App\Exceptions\System\OTPRateLimitException;
 use App\Mail\OTPDefaultMail;
 use App\Repositories\DTO\System\EmailOTP\SaveNewEmailRequestDTO;
 use App\Repositories\Interfaces\EmailOTPRepositoryInterface;
@@ -9,6 +10,7 @@ use App\Services\System\DTO\SendOTPRequestDTO;
 use App\Services\System\DTO\VerifyOTPRequestDTO;
 use App\Utils\RandomToken;
 use Illuminate\Support\Facades\Mail;
+use App\Enums\EmailOTPActionEnum;
 
 class EmailOTPService
 {
@@ -18,82 +20,6 @@ class EmailOTPService
 
     public function __construct(private EmailOTPRepositoryInterface $emailOTPRepository) {}
 
-    /**
-     * @OA\Post(
-     *     path="/api/v1/authorization/otp-code/{action}",
-     *     summary="Send OTP Code",
-     *     description="Send an OTP code via email for a specific action, such as withdrawal or two-factor setup.",
-     *     tags={"Authorization"},
-     *
-     *     @OA\Parameter(
-     *         name="action",
-     *         in="path",
-     *         required=true,
-     *         description="The action for which the OTP code is being sent. Possible values: `two-factor-setup`, `withdrawal`.",
-     *
-     *         @OA\Schema(
-     *             type="string",
-     *             enum={"two-factor-setup", "withdrawal"},
-     *             example="withdrawal"
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=200,
-     *         description="OTP code sent successfully.",
-     *
-     *         @OA\JsonContent(
-     *             type="object",
-     *
-     *             @OA\Property(
-     *                 property="message",
-     *                 type="string",
-     *                 example="email send successfully"
-     *             )
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized. User is not authenticated.",
-     *
-     *         @OA\JsonContent(
-     *             type="object",
-     *
-     *             @OA\Property(
-     *                 property="message",
-     *                 type="string",
-     *                 example="Unauthenticated."
-     *             )
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=422,
-     *         description="Invalid action parameter.",
-     *
-     *         @OA\JsonContent(
-     *             type="object",
-     *
-     *             @OA\Property(
-     *                 property="message",
-     *                 type="string",
-     *                 example="The given data was invalid."
-     *             ),
-     *             @OA\Property(
-     *                 property="errors",
-     *                 type="object",
-     *                 example={
-     *                     "action": {"The action field must be one of `two-factor-setup`, `withdrawal`."}
-     *                 }
-     *             )
-     *         )
-     *     ),
-     *     security={
-     *         {"bearerAuth": {}}
-     *     }
-     * )
-     */
     public function send(SendOTPRequestDTO $requestDTO)
     {
         // Check if a recent OTP was sent within the last 60 seconds
@@ -103,8 +29,14 @@ class EmailOTPService
         );
 
         if ($lastToken && now()->subSeconds(60)->lt($lastToken->created_at)) {
-            throw new \Exception(__('messages.otp.rate_limit'), 429);
+            throw new OTPRateLimitException();
         }
+
+        // Delete all old OTP codes for this email and action before creating a new one
+        $this->emailOTPRepository->deleteOldTokens(
+            $requestDTO->getEmail(),
+            $requestDTO->getAction()
+        );
 
         $code = RandomToken::generate(self::CODE_LENGTH);
 
@@ -132,11 +64,16 @@ class EmailOTPService
         if (is_null($model)) {
             return false;
         }
-        $model->delete();
 
-        return
-            $model->code === $requestDTO->getCode()
+        $isValid = $model->code === $requestDTO->getCode()
             &&
             now()->subMinutes(self::EXPIRATION_PER_MINUTES)->lte($model->created_at);
+
+        return $isValid;
+    }
+
+    public function deleteAllOTPCodesByAction(string $email, EmailOTPActionEnum $action): void
+    {
+        $this->emailOTPRepository->deleteOldTokens($email, $action);
     }
 }
