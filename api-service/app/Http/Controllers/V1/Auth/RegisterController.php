@@ -19,51 +19,6 @@ class RegisterController extends Controller
 {
     public function __construct(private readonly RegisterService $registerService, private readonly AccessTokenService $accessTokenService) {}
 
-    /**
-     * @OA\Post(
-     *     path="/api/v1/auth/register",
-     *     summary="Register a new user",
-     *     description="Handles user registration, revokes previous sessions, generates a new access token, and sends a verification email.",
-     *     operationId="registerUser",
-     *     tags={"Authentication"},
-     *
-     *     @OA\RequestBody(
-     *         required=true,
-     *
-     *         @OA\JsonContent(ref="#/components/schemas/RegisterRequest")
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=201,
-     *         description="Registration successful",
-     *
-     *         @OA\JsonContent(
-     *
-     *             @OA\Property(property="message", type="string", example="Registration successful."),
-     *             @OA\Property(
-     *                 property="data",
-     *                 type="object",
-     *                 @OA\Property(property="token", ref="#/components/schemas/AccessTokenResource"),
-     *                 @OA\Property(property="user", ref="#/components/schemas/UserResource")
-     *             )
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=422,
-     *         description="Validation error",
-     *
-     *         @OA\JsonContent(
-     *
-     *             @OA\Property(property="message", type="string", example="The given data was invalid."),
-     *             @OA\Property(property="errors", type="object", additionalProperties={"type": "array", "items": {"type": "string"}})
-     *         )
-     *     ),
-     *     security={
-     *         {"throttle": {}}
-     *     }
-     * )
-     */
     public function register(RegisterRequest $request): Response
     {
         $validatedData = $request->validated();
@@ -107,47 +62,7 @@ class RegisterController extends Controller
         ], Response::HTTP_CREATED);
     }
 
-    /**
-     * @OA\Post(
-     *     path="/api/v1/auth/email/resend",
-     *     summary="Resend Email Activation",
-     *     description="Resend the activation email to the authenticated user.",
-     *     operationId="resendEmailActivation",
-     *     tags={"Authentication"},
-     *     security={{"sanctum": {}}},
-     *
-     *     @OA\Response(
-     *         response=200,
-     *         description="Activation email resent successfully.",
-     *
-     *         @OA\JsonContent(
-     *             type="object",
-     *
-     *             @OA\Property(property="message", type="string", example="The activation email has been resent.")
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized",
-     *
-     *         @OA\JsonContent(
-     *
-     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=429,
-     *         description="Too Many Requests",
-     *
-     *         @OA\JsonContent(
-     *
-     *             @OA\Property(property="message", type="string", example="Too many requests. Please try again later.")
-     *         )
-     *     )
-     * )
-     */
+
     public function resend()
     {
         $user = Auth::user();
