@@ -6,6 +6,7 @@ use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
 use App\Models\OTCOrder;
+use App\Models\StockContract;
 use App\Models\User;
 use App\Models\Withdrawal;
 use App\Services\Wallet\WalletService;
@@ -50,6 +51,9 @@ class InquiryController extends Controller
         $deposits = Deposit::query()->whereUserId($user->id)->with(['user', 'currency', 'transaction'])->orderBy('created_at', 'desc')->take(5)->get();
         $totalDepositsCount = Deposit::query()->whereUserId($user->id)->count();
 
+        $stockContracts = StockContract::query()->whereUserId($user->id)->with(['stock', 'transactions'])->orderBy('created_at', 'desc')->take(5)->get();
+        $totalStockOrdersCount = StockContract::query()->whereUserId($user->id)->count();
+
         $wallets = $user->wallets()->with('walletChains')->get();
 
         $totalAssetsValue = $this->walletService->totalAssetsValue($user);
@@ -74,6 +78,8 @@ class InquiryController extends Controller
             'totalWithdrawsCount' => $totalWithdrawsCount,
             'deposits' => $deposits,
             'totalDepositsCount' => $totalDepositsCount,
+            'stockContracts' => $stockContracts,
+            'totalStockOrdersCount' => $totalStockOrdersCount,
             'walletsWithAssetsValues' => $walletsWithAssetsValues,
             'totalAssetsValue' => $totalAssetsValue,
             'totalAvailableAssetsValue' => $totalAvailableAssetsValue,

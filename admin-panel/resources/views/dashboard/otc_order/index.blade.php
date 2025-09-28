@@ -369,9 +369,10 @@
                                     @include('dashboard.otc_order.otc-description-modal', [
                                         'order' => $order,
                                     ])
-                                    @include('dashboard.otc_order.otc-detail-modal', [
-                                        'order' => $order,
-                                    ])
+                                    <x-transaction-modal modal-id="otc-{{ $order->id }}"
+                                        title="تراکنش های معامله #{{ $order->id }}" :user="$order->user" :transactions="$order->transactions"
+                                        route-name="admin.transaction.index" route-param="otc_order_id"
+                                        :route-param-value="$order->id" />
                                 </td>
                             </tr>
                         @endforeach

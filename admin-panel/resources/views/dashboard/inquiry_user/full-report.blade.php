@@ -224,6 +224,16 @@
                                         class="badge badge-center rounded-pill bg-{{ $totalDepositsCount ? 'success' : 'danger' }} bg-glow ms-2">{{ $totalDepositsCount }}</span>
                                 </button>
                             </li>
+                            <li class="nav-item">
+                                <button type="button" class="nav-link" data-bs-toggle="tab"
+                                    data-bs-target="#form-tabs-stock" aria-controls="form-tabs-social" role="tab"
+                                    aria-selected="false">
+                                    <span class="ti ti-link ti-lg d-sm-none"></span>
+                                    <span class="d-none d-sm-block">آخرین معاملات سهام کاربر</span>
+                                    <span
+                                        class="badge badge-center rounded-pill bg-{{ $totalStockOrdersCount ? 'success' : 'danger' }} bg-glow ms-2">{{ $totalStockOrdersCount }}</span>
+                                </button>
+                            </li>
                         </ul>
                     </div>
                 </div>
@@ -319,9 +329,10 @@
                                                     @include('dashboard.otc_order.otc-description-modal', [
                                                         'order' => $order,
                                                     ])
-                                                    @include('dashboard.otc_order.otc-detail-modal', [
-                                                        'order' => $order,
-                                                    ])
+                                                    <x-transaction-modal modal-id="otc-{{ $order->id }}"
+                                                        title="تراکنش های معامله #{{ $order->id }}" :user="$order->user"
+                                                        :transactions="$order->transactions" route-name="admin.transaction.index"
+                                                        route-param="otc_order_id" :route-param-value="$order->id" />
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -466,140 +477,10 @@
                                                             data-bs-target="#withdraw-{{ $withdraw->id }}">
                                                             <i class="fa-light fa-memo-circle-info fa-xl"></i>
                                                         </a>
-                                                        <div class="modal fade" id="withdraw-{{ $withdraw->id }}"
-                                                            tabindex="-1" aria-model="true" role="dialog">
-                                                            <div class="modal-dialog modal-xl" role="document">
-                                                                <div class="modal-content">
-                                                                    <div class="modal-header">
-                                                                        <h5 class="modal-title font-number"
-                                                                            id="exampleModalLabel4">
-                                                                            تراکنش
-                                                                            های
-                                                                            برداشت #{{ $withdraw->id }}</h5>
-                                                                        <button type="button" class="btn-close"
-                                                                            data-bs-dismiss="modal"
-                                                                            aria-label="Close"></button>
-                                                                    </div>
-                                                                    <div class="modal-body">
-                                                                        <div class="table-responsive text-nowrap">
-                                                                            <table class="table table-striped">
-                                                                                <thead>
-                                                                                    <tr>
-                                                                                        <th>شناسه</th>
-                                                                                        <th>نوع تراکنش</th>
-                                                                                        <th>رمز ارز</th>
-                                                                                        <th>مقدار</th>
-                                                                                        <th>مقدار موجودی</th>
-                                                                                        <th>توضیحات</th>
-                                                                                        <th>تاریخ و زمان</th>
-                                                                                        <th>وضعیت</th>
-                                                                                    </tr>
-                                                                                </thead>
-                                                                                <tbody class="table-border-bottom-0">
-                                                                                    @if ($withdraw->transactions->isEmpty())
-                                                                                        <tr>
-                                                                                            <td colspan="9"
-                                                                                                class="text-center">
-                                                                                                تراکنشی
-                                                                                                یافت
-                                                                                                نشد.
-                                                                                            </td>
-                                                                                        </tr>
-                                                                                    @else
-                                                                                        @foreach ($withdraw->transactions as $transaction)
-                                                                                            <tr>
-                                                                                                <td>{{ $transaction->id }}
-                                                                                                </td>
-                                                                                                <td
-                                                                                                    class="text-heading fw-medium">
-                                                                                                    <div
-                                                                                                        class="d-flex justify-content-start align-items-center">
-                                                                                                        <div
-                                                                                                            class="trans-avatar-group d-flex align-items-center assigned-avatar">
-                                                                                                            <div
-                                                                                                                class="avatar avatar-md ">
-                                                                                                                <img src="{{ asset($transaction->wallet->currency->coinLogo()) }}"
-                                                                                                                    class="rounded-circle">
-                                                                                                            </div>
-                                                                                                            <div
-                                                                                                                class="avatar avatar-md">
-                                                                                                                <span
-                                                                                                                    class="avatar-initial rounded-circle bg-label-{{ $transaction->type->color() }}">
-                                                                                                                    <i
-                                                                                                                        class="fa-regular fa-{{ $transaction->type->icon() }} mx-3"></i>
-                                                                                                                </span>
-                                                                                                            </div>
-                                                                                                        </div>
-                                                                                                        <div
-                                                                                                            class="d-flex flex-column align-items-start">
-                                                                                                            <span
-                                                                                                                class="badge bg-label-{{ $transaction->type->color() }} ms-2">
-                                                                                                                {{ $transaction->type->label() }}
-                                                                                                            </span>
-                                                                                                            @if ($transaction->subtype->value != 'user_initiated')
-                                                                                                                <span
-                                                                                                                    class="badge bg-label-secondary ms-2 mt-2">
-                                                                                                                    {{ $transaction->subtype->label() }}
-                                                                                                                </span>
-                                                                                                            @endif
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                </td>
-
-
-                                                                                                <td>{{ $transaction->wallet->currency_symbol }}
-                                                                                                </td>
-                                                                                                <td class="font-number"
-                                                                                                    dir="ltr">
-                                                                                                    <h6
-                                                                                                        class="mb-0 {{ $transaction->amount > 0 ? 'text-success' : 'text-danger' }}">
-                                                                                                        {{ formatNumberTrimZeros($transaction->amount) }}
-                                                                                                    </h6>
-                                                                                                </td>
-                                                                                                <td class="font-number">
-                                                                                                    <h6 class="mb-0">
-                                                                                                        {{ formatNumberTrimZeros($transaction->balance) }}
-                                                                                                    </h6>
-                                                                                                </td>
-
-                                                                                                <td
-                                                                                                    class="font-number text-wrap">
-                                                                                                    @if ($transaction->admin_id)
-                                                                                                        {{ $transaction->admin->last_name }}
-                                                                                                    @endif
-                                                                                                    <span>{{ $transaction->description }}</span>
-
-                                                                                                </td>
-                                                                                                <td class="font-number">
-                                                                                                    {{ \App\Helpers\DateFormatter::convertToPersianDate($transaction->created_at, 'H:i:s %Y/%m/%d') }}
-                                                                                                </td>
-
-                                                                                                <td>
-                                                                                                    <span
-                                                                                                        class="badge bg-label-{{ $transaction->status->color() }}">
-                                                                                                        {{ $transaction->status->label() }}
-                                                                                                    </span>
-                                                                                                </td>
-                                                                                            </tr>
-                                                                                        @endforeach
-                                                                                    @endif
-                                                                                </tbody>
-                                                                            </table>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="modal-footer">
-                                                                        <a type="button"
-                                                                            href="{{ route('admin.transaction.index', ['withdrawal_id' => $withdraw->id]) }}"
-                                                                            class="btn btn-primary">لیست تراکنش ها</a>
-                                                                        <button type="button"
-                                                                            class="btn btn-label-secondary waves-effect"
-                                                                            data-bs-dismiss="modal">بستن
-                                                                        </button>
-
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
+                                                        <x-transaction-modal :modal-id="'withdraw-' . $withdraw->id" :title="'تراکنش های برداشت #' . $withdraw->id"
+                                                            :transactions="$withdraw->transactions" route-name="admin.transaction.index"
+                                                            :user="$withdraw->user" route-param="withdrawal_id"
+                                                            :route-param-value="$withdraw->id" />
                                                     @endif
                                                     @if ($withdraw->status === \App\Enums\WithdrawalStatusEnum::AWAITING_APPROVAL)
                                                         <a href="{{ route('admin.withdrawal.confirm-withdrawal', ['withdraw' => $withdraw]) }}"
@@ -722,7 +603,104 @@
                             </div>
                         @endif
                     </div>
+                    <!-- Stock Contracts Tab -->
+                    <div class="tab-pane fade" id="form-tabs-stock" role="tabpanel">
+                        @if ($stockContracts->isEmpty())
+                            <p class="text-center h4">قرارداد سهامی یافت نشد🙄</p>
+                        @else
+                            <div class="ms-5 mb-3">
+                                <a class="btn btn-sm btn-primary"
+                                    href="{{ route('admin.stock-contract.index', ['user' => $user->id]) }}">مشاهده تمام
+                                    قراردادها</a>
+                            </div>
+                            <div class="table-responsive text-nowrap">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>شماره قرارداد</th>
+                                            <th>نوع سهام</th>
+                                            <th>تعداد</th>
+                                            <th>ارزش قرارداد</th>
+                                            <th>تاریخ ایجاد</th>
+                                            <th>وضعیت قرارداد</th>
+                                            <th>عملیات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="table-border-bottom-0">
+                                        @foreach ($stockContracts as $contract)
+                                            <tr>
+                                                <td>{{ $contract->id }}</td>
+                                                <td>
+                                                    @if ($contract->contract_file)
+                                                        <a href="{{ \App\Data\FileStoragePaths::CONTRACT_DOWNLOAD_URL($contract->contract_file) }}"
+                                                            target="_blank" class="fw-medium font-number">
+                                                            <i class="fa-thin fa-file-certificate fa-lg"></i>
+                                                            {{ $contract->contract_number }}
+                                                        </a>
+                                                    @else
+                                                        <span class="fw-medium font-number text-muted">
+                                                            <i class="fa-thin fa-file-certificate fa-lg"></i>
+                                                            {{ $contract->contract_number }}
+                                                            <small class="text-danger">(PDF موجود نیست)</small>
+                                                        </span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    <span
+                                                        class="fw-medium">{{ $contract->stock->name ?? 'نامشخص' }}</span>
+                                                </td>
+                                                <td>
+                                                    <span class="font-number"
+                                                        dir="ltr">{{ number_format($contract->amount) }}</span>
+                                                </td>
+                                                <td>
+                                                    <span class="font-number" dir="ltr">
+                                                        <h6 class="font-number text-heading mb-0">
+                                                            <span
+                                                                class="ms-1">{{ number_format($contract->total_value, 2) }}</span>
+                                                            <small class="text-muted">USDT</small>
+                                                        </h6>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {{ \App\Helpers\DateFormatter::convertToPersianDate($contract->created_at, 'H:i:s - %d %B %Y') }}
+                                                </td>
+                                                <td>
+                                                    <span
+                                                        class="badge bg-label-{{ $contract->contract_status->color() }} rounded p-2">
+                                                        {{ $contract->contract_status->label() }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <a class="text-secondary me-1"
+                                                        href="{{ route('admin.stock-contract.show', $contract->id) }}">
+                                                        <i class="fa fa-eye"></i>
+                                                    </a>
+                                                    <a class="text-secondary me-1"
+                                                        href="{{ route('admin.stock-contract.edit', $contract->id) }}">
+                                                        <i class="fa fa-edit"></i>
+                                                    </a>
+                                                    <button type="button" class="btn btn-link p-0 m-0 me-1"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#stock-contract-{{ $contract->id }}">
+                                                        <i class="fa-light fa-memo-circle-info"></i>
+                                                    </button>
+                                                    <x-transaction-modal :modal-id="'stock-contract-' . $contract->id" :title="'تراکنش های قرارداد #' . $contract->id"
+                                                        :user="$contract->user" :transactions="$contract->transactions"
+                                                        route-name="admin.transaction.index"
+                                                        route-param="stock_contract_id" :route-param-value="$contract->id" />
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
+                    </div>
                 </div>
+
+
 
             </div>
         </div>
@@ -730,3 +708,46 @@
     </div>
 
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tabButtons = document.querySelectorAll('[data-bs-toggle="tab"]');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+    const storageKey = 'inquiry_user_active_tab';
+    
+    // بازیابی آخرین تب فعال از localStorage
+    const savedTab = localStorage.getItem(storageKey);
+    
+    if (savedTab) {
+        // حذف کلاس active از همه تب‌ها و پنل‌ها
+        tabButtons.forEach(btn => {
+            btn.classList.remove('active');
+            btn.setAttribute('aria-selected', 'false');
+        });
+        
+        tabPanes.forEach(pane => {
+            pane.classList.remove('active', 'show');
+        });
+        
+        // فعال کردن تب ذخیره شده
+        const savedButton = document.querySelector(`[data-bs-target="${savedTab}"]`);
+        const savedPane = document.querySelector(savedTab);
+        
+        if (savedButton && savedPane) {
+            savedButton.classList.add('active');
+            savedButton.setAttribute('aria-selected', 'true');
+            savedPane.classList.add('active', 'show');
+        }
+    }
+    
+    // ذخیره تب فعال هنگام کلیک
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const target = this.getAttribute('data-bs-target');
+            localStorage.setItem(storageKey, target);
+        });
+    });
+});
+</script>
+@endpush

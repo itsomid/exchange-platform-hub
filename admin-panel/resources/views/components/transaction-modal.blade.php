@@ -1,15 +1,15 @@
-<div class="modal fade" id="otc-{{ $order->id }}" tabindex="-1" aria-model="true" role="dialog">
+@props(['modalId', 'title', 'user' => null, 'transactions', 'routeName', 'routeParam', 'routeParamValue'])
+
+<div class="modal fade" id="{{ $modalId }}" tabindex="-1" aria-model="true" role="dialog">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header justify-content-between">
-                <h5 class="modal-title font-number" id="exampleModalLabel4">
-                    تراکنش های معامله #{{ $order->id }}
-                </h5>
+                <h5 class="modal-title font-number" id="exampleModalLabel4">{{ $title }}</h5>
 
-                <div class="d-flex flex-column">
+                <div class="d-flex flex-column ">
                     <a href="" class="text-heading text-truncate">
-                        <span class="h6 fw-medium">{{ $order->user->email }}</span>
-                        <span class="me-2">({{ $order->user->username }})</span>
+                        <span class="h6 fw-medium">{{ $user->email }}</span>
+                        <span class="me-2">({{ $user->username }})</span>
                     </a>
                 </div>
 
@@ -31,19 +31,21 @@
                             </tr>
                         </thead>
                         <tbody class="table-border-bottom-0">
-                            @if ($order->transactions->isEmpty())
+                            @if ($transactions->isEmpty())
                                 <tr>
-                                    <td colspan="9" class="text-center">تراکنشی یافت نشد.</td>
+                                    <td colspan="8" class="text-center">
+                                        تراکنشی یافت نشد.
+                                    </td>
                                 </tr>
                             @else
-                                @foreach ($order->transactions as $transaction)
+                                @foreach ($transactions as $transaction)
                                     <tr>
                                         <td>{{ $transaction->id }}</td>
                                         <td class="text-heading fw-medium">
                                             <div class="d-flex justify-content-start align-items-center">
                                                 <div
                                                     class="trans-avatar-group d-flex align-items-center assigned-avatar">
-                                                    <div class="avatar avatar-md">
+                                                    <div class="avatar avatar-md ">
                                                         <img src="{{ asset($transaction->wallet->currency->coinLogo()) }}"
                                                             class="rounded-circle">
                                                     </div>
@@ -75,13 +77,17 @@
                                             </h6>
                                         </td>
                                         <td class="font-number">
-                                            <h6 class="mb-0">{{ formatNumberTrimZeros($transaction->balance) }}</h6>
+                                            <h6 class="mb-0">
+                                                {{ formatNumberTrimZeros($transaction->balance) }}
+                                            </h6>
                                         </td>
                                         <td class="font-number text-wrap">
-                                            @if ($transaction->admin_id)
-                                                {{ $transaction->admin->last_name }}
-                                            @endif
                                             <span>{{ $transaction->description }}</span>
+                                            @if ($transaction->admin_id)
+                                                <p class="text-muted">توسط ادمین
+                                                    ({{ $transaction->admin->last_name }})
+                                                </p>
+                                            @endif
                                         </td>
                                         <td class="font-number">
                                             {{ \App\Helpers\DateFormatter::convertToPersianDate($transaction->created_at, 'H:i:s %Y/%m/%d') }}
@@ -99,10 +105,10 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <a type="button" href="{{ route('admin.transaction.index', ['otc_order_id' => $order->id]) }}"
+                <a type="button" href="{{ route($routeName, [$routeParam => $routeParamValue]) }}"
                     class="btn btn-primary">لیست تراکنش ها</a>
-                <button type="button" class="btn btn-label-secondary waves-effect"
-                    data-bs-dismiss="modal">بستن</button>
+                <button type="button" class="btn btn-label-secondary waves-effect" data-bs-dismiss="modal">بستن
+                </button>
             </div>
         </div>
     </div>
