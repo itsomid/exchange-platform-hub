@@ -1,7 +1,7 @@
 @extends('mail.layout.master-mail-layout')
-@section('title', 'کد دو عاملی ' . $action->getLabel())
+@section('title', 'کد ' . $action->getLabel())
 @section('header')
-    کد دو عاملی {{ $action->getLabel() }}
+    کد {{ $action->getLabel() }}
 @endsection
 @section('content')
     <div style="text-align: right"> سلام کاربر عزیز،</div>
