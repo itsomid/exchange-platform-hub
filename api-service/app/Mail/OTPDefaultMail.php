@@ -37,7 +37,7 @@ class OTPDefaultMail extends Mailable implements ShouldQueue
      */
     public function content(): Content
     {
-        $expiration = now()->addMinutes(10)->diffForHumans();
+        $expiration = now()->addMinutes(30)->diffForHumans();
 
         return new Content(
             view: 'mail.otp.default-mail',
