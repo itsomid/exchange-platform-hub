@@ -87,6 +87,8 @@ class StockService
                     ->setWalletId($walletBaseCurrency->id)
                     ->setStockContractId($stockContract->id)
             );
+            $this->walletService->decreaseBalance($user->id, 'USDT', $totalValue);
+
             $this->transactionRepository->create(
                 resolve(CreateTransactionRequestDTO::class)
                     ->setUserId(config('bitexroom.user_id'))
@@ -108,7 +110,7 @@ class StockService
                     )
             );
 
-            $this->walletService->decreaseBalance($user->id, 'USDT', $totalValue);
+            $this->walletService->increaseBalance(config('bitexroom.user_id'), 'USDT', $totalValue);
 
             $generatedPdfPath = $this->generateContractPdf($stockContract, $stock);
 
@@ -139,9 +141,16 @@ class StockService
             if ($returnAmount > 0) {
                 $user = $stockContract->user;
                 $wallet = $this->walletRepository->getOneByCurrency('USDT', $user->id);
-                $ExchangeWallet = $this->walletRepository->getOneByCurrency('USDT', config('bitexroom.user_id'));
+                
+                // Lock ExchangeWallet for update to prevent race conditions
+                $ExchangeWallet = $this->walletRepository->getWalletWithLock('USDT', config('bitexroom.user_id'));
+                
+                // Calculate balances manually to avoid cache issues
+                $initialExchangeBalance = $ExchangeWallet->balance;
+                $balanceAfterDecrease = $initialExchangeBalance - $returnAmount;
+            
 
-                // Create transaction record
+                // Create transaction record for user return
                 $this->transactionRepository->create(
                     resolve(CreateTransactionRequestDTO::class)
                         ->setUserId($user->id)
@@ -156,7 +165,9 @@ class StockService
                         ->setDescription('بازگشت وجه ابطال قرارداد سهام ' . $stockContract->contract_number)
                 );
 
+                $this->walletService->increaseBalance($user->id, 'USDT', $returnAmount);
 
+                // Create transaction record for exchange decrease
                 $this->transactionRepository->create(
                     resolve(CreateTransactionRequestDTO::class)
                         ->setUserId(config('bitexroom.user_id'))
@@ -164,13 +175,16 @@ class StockService
                         ->setStockContractId($stockContract->id)
                         ->setCoinPrice(1)
                         ->setAmount(-$returnAmount)
-                        ->setBalance($ExchangeWallet->balance)
+                        ->setBalance($initialExchangeBalance)
                         ->setType(TransactionTypeEnum::BUY)
                         ->setSubtype(TransactionSubTypeEnum::STOCK)
                         ->setStatus(TransactionStatusEnum::SUCCESS)
                         ->setDescription('کسر از حساب صرافی بابت ابطال قرارداد ' . $stockContract->contract_number)
                 );
 
+                $this->walletService->decreaseBalance(config('bitexroom.user_id'), 'USDT', $returnAmount);
+
+                // Create transaction record for cancellation fee
                 $this->transactionRepository->create(
                     resolve(CreateTransactionRequestDTO::class)
                         ->setUserId(config('bitexroom.user_id'))
@@ -178,15 +192,13 @@ class StockService
                         ->setStockContractId($stockContract->id)
                         ->setCoinPrice(1)
                         ->setAmount($stockContract->cancellation_fee)
-                        ->setBalance($ExchangeWallet->balance)
+                        ->setBalance($balanceAfterDecrease)
                         ->setType(TransactionTypeEnum::FEE)
                         ->setSubtype(TransactionSubTypeEnum::STOCK)
                         ->setStatus(TransactionStatusEnum::SUCCESS)
                         ->setDescription('کارمزد ابطال قرارداد ' . $stockContract->contract_number)
                 );
 
-
-                $this->walletService->increaseBalance($user->id, 'USDT', $returnAmount);
                 $this->walletService->increaseBalance(config('bitexroom.user_id'), 'USDT', $stockContract->cancellation_fee);
 
                 $this->stockRepository->sellContract($stockContract);
