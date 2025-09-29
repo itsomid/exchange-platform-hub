@@ -179,7 +179,7 @@
                                                 <input name="chains[{{ $chain->id }}][network_fee]"
                                                     id="network_fee_{{ $chain->id }}" class="form-control font-number"
                                                     placeholder="فی شبکه."
-                                                    value="{{ formatNumberTrimZeros($chain->network_fee) }}" disabled
+                                                    value="{{ formatNumberTrimZeros($chain->network_fee,2) }}" disabled
                                                     required>
                                                 <span class="input-group-text">{{ $currency->symbol }}</span>
                                             </div>

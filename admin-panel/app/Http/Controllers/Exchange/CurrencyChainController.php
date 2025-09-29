@@ -44,13 +44,14 @@ class CurrencyChainController extends Controller
      */
     public function storeChain(Request $request, Currency $currency)
     {
-
+        // Check if this is a base coin to determine contract_address requirement
+        $isBaseCoin = $request->has('is_base_coin') && $request->is_base_coin == '1';
+        
         // Validate the incoming data
-        $validated = $request->validate([
+        $validationRules = [
             'chain' => 'required|string',  // Ensure the chain is selected
             'min_deposit_amount' => 'required|numeric',
             'min_withdraw_amount' => 'required|numeric',
-            'contract_address' => 'required|string',
             'explorer_address_url' => 'required|string',
             'explorer_tx_url' => 'required|string',
             'deposit_delay_minutes' => 'required|integer',
@@ -59,7 +60,16 @@ class CurrencyChainController extends Controller
             'network_fee' => 'required|numeric',
             'deposit_enabled' => 'nullable|boolean',
             'withdraw_enabled' => 'nullable|boolean',
-        ]);
+        ];
+        
+        // Make contract_address optional for base coins
+        if ($isBaseCoin) {
+            $validationRules['contract_address'] = 'nullable|string';
+        } else {
+            $validationRules['contract_address'] = 'required|string';
+        }
+        
+        $validated = $request->validate($validationRules);
 
         // Check if the chain already exists for the given currency
         $existingChain = CurrencyChain::where('currency_id', $currency->id)
@@ -127,9 +137,9 @@ class CurrencyChainController extends Controller
      */
     public function updateChains(Request $request, Currency $currency)
     {
-        $validated = $request->validate([
+        // Build validation rules dynamically based on chain types
+        $validationRules = [
             'chains.*.min_deposit_amount' => 'required|numeric|min:0',
-            'chains.*.contract_address' => 'required|string',
             'chains.*.explorer_address_url' => 'required|string',
             'chains.*.explorer_tx_url' => 'required|string',
             'chains.*.min_withdraw_amount' => 'required|numeric|min:0',
@@ -138,7 +148,20 @@ class CurrencyChainController extends Controller
             'chains.*.exchange_withdrawal_fee' => 'required|numeric|min:0',
             'chains.*.deposit_enabled' => 'nullable|boolean',
             'chains.*.withdraw_enabled' => 'nullable|boolean',
-        ]);
+        ];
+
+        // Check each chain to determine if contract_address should be required
+        foreach ($currency->chains as $chain) {
+            if (isset($request->chains[$chain->id])) {
+                if ($chain->is_base_coin) {
+                    $validationRules["chains.{$chain->id}.contract_address"] = 'nullable|string';
+                } else {
+                    $validationRules["chains.{$chain->id}.contract_address"] = 'required|string';
+                }
+            }
+        }
+
+        $validated = $request->validate($validationRules);
 
         // Loop through each chain and update the values
         foreach ($currency->chains as $chain) {
