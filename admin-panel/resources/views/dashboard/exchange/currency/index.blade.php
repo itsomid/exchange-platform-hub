@@ -145,7 +145,7 @@
 
                                                 <smal>{{$chain->chain}} -> </smal>
 
-                                                <span class="fw-bold text-primary">{{formatNumberTrimZeros($chain->exchange_withdrawal_fee)}}</span>
+                                                <span class="fw-bold text-primary">{{formatNumberTrimZeros($chain->exchange_withdrawal_fee, $currency->amount_precision)}}</span>
                                                 <smal class="me-2">{{$currency->symbol}}</smal>
                                             </span>
 
@@ -161,7 +161,7 @@
 
                                                 <smal>{{$chain->chain}} -> </smal>
 
-                                                <span class="fw-bold text-primary">{{formatNumberTrimZeros($chain->network_fee)}}</span>
+                                                <span class="fw-bold text-primary">{{formatNumberTrimZeros($chain->network_fee, $currency->amount_precision)}}</span>
                                                 <smal class="me-2">{{$currency->symbol}}</smal>
                                             </span>
 
