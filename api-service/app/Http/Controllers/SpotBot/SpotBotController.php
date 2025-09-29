@@ -175,8 +175,8 @@ class SpotBotController extends Controller
             // Generate buy orders
             for ($i = 0; $i < $buyOrdersCount; $i++) {
                 try {
-                    $buyPrice = $this->calculateOrderPrice($currentPrice, $setting->order_margin, 'buy', $i);
-                    $quantity = $this->calculateOrderQuantity($setting);
+                    $buyPrice = $this->calculateOrderPrice($currentPrice, $setting->order_margin, 'buy', $i, $market);
+                    $quantity = $this->calculateOrderQuantity($setting, $market);
 
                     $buyOrder = $this->createBotOrder(
                         $setting->fake_user_id,
@@ -203,8 +203,8 @@ class SpotBotController extends Controller
             // Generate sell orders
             for ($i = 0; $i < $sellOrdersCount; $i++) {
                 try {
-                    $sellPrice = $this->calculateOrderPrice($currentPrice, $setting->order_margin, 'sell', $i);
-                    $quantity = $this->calculateOrderQuantity($setting);
+                    $sellPrice = $this->calculateOrderPrice($currentPrice, $setting->order_margin, 'sell', $i, $market);
+                    $quantity = $this->calculateOrderQuantity($setting, $market);
 
                     $sellOrder = $this->createBotOrder(
                         $setting->fake_user_id,
@@ -328,8 +328,8 @@ class SpotBotController extends Controller
         $wallets = resolve(WalletRepositoryInterface::class);
 
         // BUY side check: need quote currency balance for total buy value of a representative order
-        $buyQuantity = $this->calculateOrderQuantity($setting);
-        $buyPricePreview = $this->calculateOrderPrice($currentPrice, $setting->order_margin, 'buy', 0);
+        $buyQuantity = $this->calculateOrderQuantity($setting, $market);
+        $buyPricePreview = $this->calculateOrderPrice($currentPrice, $setting->order_margin, 'buy', 0, $market);
         $totalBuyValue = Math::mul($buyQuantity, $buyPricePreview);
         $quoteWallet = $wallets->getOneOrCreateByCurrencyWithLock($market->quote_currency, $setting->fake_user_id);
         if (Math::comp($quoteWallet->available_balance, $totalBuyValue) === -1) {
@@ -337,7 +337,7 @@ class SpotBotController extends Controller
         }
 
         // SELL side check: need base currency quantity for a representative order
-        $sellQuantity = $this->calculateOrderQuantity($setting);
+        $sellQuantity = $this->calculateOrderQuantity($setting, $market);
         $baseWallet = $wallets->getOneOrCreateByCurrencyWithLock($market->base_currency, $setting->fake_user_id);
         if (Math::comp($baseWallet->available_balance, $sellQuantity) === -1) {
             throw new InsufficientBalanceException("Insufficient {$market->base_currency} balance.");
@@ -351,9 +351,10 @@ class SpotBotController extends Controller
      * @param string $margin
      * @param string $side
      * @param int $orderIndex
+     * @param Market $market
      * @return string
      */
-    private function calculateOrderPrice(string $currentPrice, string $margin, string $side, int $orderIndex): string
+    private function calculateOrderPrice(string $currentPrice, string $margin, string $side, int $orderIndex, Market $market): string
     {
         $marginMultiplier = (1 + ($orderIndex * 0.1)); // Spread orders with increasing margin
         $adjustedMargin = bcmul($margin, (string)$marginMultiplier, 8);
@@ -361,21 +362,30 @@ class SpotBotController extends Controller
         if ($side === 'buy') {
             // Buy orders below current price
             $priceReduction = bcmul($currentPrice, bcdiv($adjustedMargin, '100', 8), 8);
-            return bcsub($currentPrice, $priceReduction, 8);
+            $calculatedPrice = bcsub($currentPrice, $priceReduction, 8);
         } else {
             // Sell orders above current price
             $priceIncrease = bcmul($currentPrice, bcdiv($adjustedMargin, '100', 8), 8);
-            return bcadd($currentPrice, $priceIncrease, 8);
+            $calculatedPrice = bcadd($currentPrice, $priceIncrease, 8);
         }
+
+        // Apply price precision truncation
+        $pricePrecision = $market->currency?->price_precision;
+        if ($pricePrecision !== null) {
+            return $this->truncateToPrecision($calculatedPrice, (int) $pricePrecision);
+        }
+
+        return $calculatedPrice;
     }
 
     /**
      * Calculate order quantity based on bot settings
      *
      * @param SpotBotSetting $setting
+     * @param Market $market
      * @return string
      */
-    private function calculateOrderQuantity(SpotBotSetting $setting): string
+    private function calculateOrderQuantity(SpotBotSetting $setting, Market $market): string
     {
         // Generate random quantity between min and max order size
         $minSize = $setting->min_order_size ?? '0.001';
@@ -386,7 +396,19 @@ class SpotBotController extends Controller
         $sizeDiff = bcsub($maxSize, $minSize, 8);
         $randomAmount = bcmul($sizeDiff, (string)$randomFactor, 8);
 
-        return bcadd($minSize, $randomAmount, 8);
+        $calculatedQuantity = bcadd($minSize, $randomAmount, 8);
+
+        // Apply amount precision validation and truncation
+        $amountPrecision = $market->currency?->amount_precision;
+        if ($amountPrecision !== null) {
+            // Validate precision first
+            if (!$this->isPrecisionValid($calculatedQuantity, (int) $amountPrecision)) {
+                // If precision is invalid, truncate to valid precision
+                $calculatedQuantity = $this->truncateToPrecision($calculatedQuantity, (int) $amountPrecision);
+            }
+        }
+
+        return $calculatedQuantity;
     }
 
     /**
@@ -649,8 +671,8 @@ class SpotBotController extends Controller
             // Prepare buy orders
             for ($i = 0; $i < $buyOrdersCount; $i++) {
                 try {
-                    $buyPrice = $this->calculateOrderPrice($currentPrice, $setting->order_margin, 'buy', $i);
-                    $quantity = $this->calculateOrderQuantity($setting);
+                    $buyPrice = $this->calculateOrderPrice($currentPrice, $setting->order_margin, 'buy', $i, $market);
+                    $quantity = $this->calculateOrderQuantity($setting, $market);
                     
                     $newOrders[] = [
                         'side' => SpotOrderSideEnum::BUY,
@@ -666,8 +688,8 @@ class SpotBotController extends Controller
             // Prepare sell orders
             for ($i = 0; $i < $sellOrdersCount; $i++) {
                 try {
-                    $sellPrice = $this->calculateOrderPrice($currentPrice, $setting->order_margin, 'sell', $i);
-                    $quantity = $this->calculateOrderQuantity($setting);
+                    $sellPrice = $this->calculateOrderPrice($currentPrice, $setting->order_margin, 'sell', $i, $market);
+                    $quantity = $this->calculateOrderQuantity($setting, $market);
                     
                     $newOrders[] = [
                         'side' => SpotOrderSideEnum::SELL,
@@ -971,8 +993,8 @@ class SpotBotController extends Controller
                 // Pre-check both sides already done; proceed to normal generation with no side flags
                 for ($i = 0; $i < $setting->buy_orders_count; $i++) {
                     try {
-                        $buyPrice = $this->calculateOrderPrice($currentPrice, $setting->order_margin, 'buy', $i);
-                        $quantity = $this->calculateOrderQuantity($setting);
+                        $buyPrice = $this->calculateOrderPrice($currentPrice, $setting->order_margin, 'buy', $i, $market);
+                        $quantity = $this->calculateOrderQuantity($setting, $market);
 
                         $buyOrder = $this->createBotOrder(
                             $setting->fake_user_id,
@@ -1004,8 +1026,8 @@ class SpotBotController extends Controller
 
                 for ($i = 0; $i < $setting->sell_orders_count; $i++) {
                     try {
-                        $sellPrice = $this->calculateOrderPrice($currentPrice, $setting->order_margin, 'sell', $i);
-                        $quantity = $this->calculateOrderQuantity($setting);
+                        $sellPrice = $this->calculateOrderPrice($currentPrice, $setting->order_margin, 'sell', $i, $market);
+                        $quantity = $this->calculateOrderQuantity($setting, $market);
 
                         $sellOrder = $this->createBotOrder(
                             $setting->fake_user_id,
@@ -1084,5 +1106,52 @@ class SpotBotController extends Controller
                 'results' => $results
             ]
         ]);
+    }
+
+    /**
+     * Truncate a number to specified decimal precision without rounding
+     *
+     * @param string $value
+     * @param int $precision
+     * @return string
+     */
+    private function truncateToPrecision(string $value, int $precision): string
+    {
+        if ($precision < 0) {
+            return $value;
+        }
+
+        $parts = explode('.', $value);
+        
+        if (count($parts) === 1) {
+            // No decimal part
+            return $value;
+        }
+
+        if ($precision === 0) {
+            return $parts[0];
+        }
+
+        $decimalPart = substr($parts[1], 0, $precision);
+        return $parts[0] . '.' . $decimalPart;
+    }
+
+    /**
+     * Check if a value's decimal precision is valid (not exceeding the allowed precision)
+     *
+     * @param string $value
+     * @param int $precision
+     * @return bool
+     */
+    private function isPrecisionValid(string $value, int $precision): bool
+    {
+        $parts = explode('.', $value);
+        
+        if (count($parts) === 1) {
+            // No decimal part, always valid
+            return true;
+        }
+
+        return strlen($parts[1]) <= $precision;
     }
 }
