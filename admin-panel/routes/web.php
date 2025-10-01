@@ -181,3 +181,7 @@ Route::get('pdf-stream', function () {
     // Stream the PDF
     return $pdf->stream('contract_' . $contract->contract_number . '.pdf');
 });
+
+Route::get('/debug-sentry', function () {
+    throw new Exception('My first Sentry error!');
+});

@@ -28,6 +28,7 @@
         "opcodesio/log-viewer": "^v3.19.0",
         "predis/predis": "^2.0",
         "ratchet/pawl": "^v0.4.3",
+        "sentry/sentry-laravel": "^4.16",
         "spatie/laravel-backup": "^9.3",
         "spatie/laravel-permission": "^6.10.1",
         "zanysoft/laravel-pdf": "*"
