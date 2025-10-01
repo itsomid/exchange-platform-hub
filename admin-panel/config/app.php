@@ -174,6 +174,7 @@ return [
         Jenssegers\Agent\AgentServiceProvider::class,
         Maatwebsite\Excel\ExcelServiceProvider::class,
         Kavenegar\Laravel\ServiceProvider::class,
+        App\Providers\SentryExceptionServiceProvider::class
     ])->toArray(),
 
     /*d
