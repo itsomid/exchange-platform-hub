@@ -18,6 +18,7 @@ use App\Services\Exchanges\Asset\Enum\WithdrawMethodEnum;
 use App\Services\Exchanges\DTO\ChargeCurrencyRequestDTO;
 use App\Services\Exchanges\DTO\ChargeCurrencyResponseDTO;
 use App\Services\Wallet\WalletService;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class ExchangeService
@@ -32,7 +33,7 @@ class ExchangeService
     public function chargeCurrency(ChargeCurrencyRequestDTO $requestDTO): ChargeCurrencyResponseDTO
     {
         try {
-            
+
             if ($requestDTO->getExchangeSlug()) {
                 $exchange = $this->exchangeRepository->getExchangeBySlug($requestDTO->getExchangeSlug());
             } else {
@@ -126,7 +127,20 @@ class ExchangeService
         } catch (CoinexWithdrawalException $exception) {
             throw $exception;
         } catch (Throwable $exception) {
-            report("sss:" . $exception);
+            report($exception);
+
+            $context = [
+                'exchange' => isset($exchange) ? $exchange->slug : null,
+                'currency' => $requestDTO->getCurrency(),
+                'currency_chain' => $requestDTO->getCurrencyChain(),
+                'quantity' => $requestDTO->getQuantity(),
+            ];
+
+            Log::error('Charge currency failed in ExchangeService', array_merge($context, [
+                'exception_message' => $exception->getMessage(),
+                'exception_code' => $exception->getCode(),
+            ]));
+
             throw $exception;
         }
 
