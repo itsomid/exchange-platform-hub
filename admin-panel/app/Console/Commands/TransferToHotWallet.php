@@ -180,7 +180,10 @@ class TransferToHotWallet extends Command
 
     public function transferCurrency(Currency $currency, string $triggerType): void
     {
-        $chain = $currency->chains->sortBy('min_withdraw_amount')->first();
+        $chain = $currency->chains
+            ->filter(function ($c) { return (float) $c->network_fee > 0; })
+            ->sortBy('network_fee')
+            ->first();
 
         $pendingLists = OTCRefExchangeWithdrawal::query()
             ->where('status', OTCRefExchangeWithdrawalStatusEnum::PENDING)
