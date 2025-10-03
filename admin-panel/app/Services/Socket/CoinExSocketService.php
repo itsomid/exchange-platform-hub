@@ -116,6 +116,7 @@ class CoinExSocketService
         if (isset($data['method']) && $data['method'] === 'state.update') {
             $markets = $data['data']['state_list'] ?? [];
             foreach ($markets as $market) {
+
                 $this->updateCurrencyPrice($market['market'], $market['last'] ?? null, $market['open'] ?? null, $market);
             }
         }
@@ -137,92 +138,139 @@ class CoinExSocketService
     private function updateCurrencyPrice(string $symbol, ?string $lastPrice, ?string $openPrice, array $data): void
     {
         $baseCurrency = str_replace('USDT', '', $symbol);
-        $priceKey = md5($lastPrice . '|' . $openPrice);
-        if (!isset($this->coinsPrice[$baseCurrency]) || $this->coinsPrice[$baseCurrency] !== $priceKey) {
-            // use hash to reduce memory usage
-            $this->coinsPrice[$baseCurrency] = $priceKey;
-
-
-            echo $baseCurrency . ': last->' . $lastPrice . PHP_EOL;
-//            echo $baseCurrency . ': open->' . $openPrice . PHP_EOL;
-
-            if (!isset($this->marketIds[$baseCurrency]['id'])) {
-                $market = Market::query()
-                    ->where('base_currency', $baseCurrency)
-                    ->first();
-
-                if (!$market) {
-                    echo "Market not found for base_currency: $baseCurrency\n";
-                    return;
-                }
-
-                $this->marketIds[$baseCurrency] = [
-                    'id' => $market->id,
-                    'last_update' => time()
-                ];
-            }
-            $marketId = $this->marketIds[$baseCurrency]['id'];
-
-            // Find the exchange price related to the market for CoinEx
-            if (!isset($this->exchangePrices[$marketId]) || time() - $this->exchangePrices[$marketId]['last_update'] > 60) {
-                $exchangePriceModel = ExchangePrice::query()
-                    ->where('market_id', $marketId)
-                    ->where('exchange_id', $this->coinexID)
-                    ->first();
-
-                if (!$exchangePriceModel) {
-                    echo "ExchangePrice not found for base_currency: $baseCurrency\n";
-                    return;
-                }
-
-                $this->exchangePrices[$marketId] = [
-                    'exchange_profit_sell' => $exchangePriceModel->exchange_profit_sell,
-                    'exchange_profit_buy' => $exchangePriceModel->exchange_profit_buy,
-                    'last_update' => time()
-                ];
-            }
-
-            $profitSell = $this->exchangePrices[$marketId]['exchange_profit_sell'];
-            $profitBuy = $this->exchangePrices[$marketId]['exchange_profit_buy'];
-
-
-            ExchangePrice::query()
-                ->where('market_id', $marketId)
-                ->where('exchange_id', $this->coinexID)
-                ->update([
-                    'price' => $lastPrice,
-                    'open_price' => $openPrice,
-                ]);
-
-
-            $sellPrice = bcmul($lastPrice, ($profitSell / 100) + 1, 8);
-            $buyPrice = bcmul($lastPrice, ($profitBuy / 100) + 1, 8);
-
-            $sellOpenPrice = bcmul($openPrice, ($profitSell / 100) + 1, 8);
-            $buyOpenPrice = bcmul($openPrice, ($profitBuy / 100) + 1, 8);
-
-
-            Redis::publish('market_prices', json_encode([
-                'base_currency' => $baseCurrency,
-                'sell_price' => $sellPrice,
-                'sell_open_price' => $sellOpenPrice,
-                'buy_price' => $buyPrice,
-                'buy_open_price' => $buyOpenPrice,
-                'last_price' => $lastPrice,
-                'price_change_percentage' => round((($lastPrice - $openPrice) / $openPrice) * 100, 2),
-                'timestamp' => now()->timestamp,
-            ]));
-
-
-            MarketUpdated::dispatch($marketId, [
-                'low' => $data['low'],
-                'high' => $data['high'],
-                'last' => $data['last'],
-                'open' => $data['open'],
-                'price_change_percentage' => round((($data['last'] - $data['open']) / $data['open']) * 100, 2),
-            ]);
-
+        $priceKey = md5(($lastPrice ?? '') . '|' . ($openPrice ?? ''));
+        if (isset($this->coinsPrice[$baseCurrency]) && $this->coinsPrice[$baseCurrency] === $priceKey) {
+            return;
         }
+        $this->coinsPrice[$baseCurrency] = $priceKey;
+
+        echo $baseCurrency . ': last->' . $lastPrice . PHP_EOL;
+
+        $marketId = $this->getMarketIdForBaseCurrency($baseCurrency);
+        if ($marketId === null) {
+            return;
+        }
+
+        $profits = $this->getExchangeProfitForMarket($marketId, $baseCurrency);
+        if ($profits === null) {
+            return;
+        }
+
+        $this->updateExchangePriceForMarket($marketId, $lastPrice, $openPrice);
+
+        $prices = $this->calculatePrices($lastPrice, $openPrice, $profits['sell'], $profits['buy']);
+
+        Redis::publish('market_prices', json_encode([
+            'base_currency' => $baseCurrency,
+            'sell_price' => $prices['sell_price'],
+            'sell_open_price' => $prices['sell_open_price'],
+            'buy_price' => $prices['buy_price'],
+            'buy_open_price' => $prices['buy_open_price'],
+            'last_price' => $lastPrice,
+            'price_change_percentage' => $this->calculateChangePercentage($lastPrice, $openPrice),
+            'timestamp' => now()->timestamp,
+        ]));
+
+        MarketUpdated::dispatch($marketId, [
+            'low' => $data['low'],
+            'high' => $data['high'],
+            'last' => $data['last'],
+            'open' => $data['open'],
+            'price_change_percentage' => $this->calculateChangePercentage($data['last'] ?? null, $data['open'] ?? null),
+        ]);
+    }
+
+    private function getMarketIdForBaseCurrency(string $baseCurrency): ?int
+    {
+        if (isset($this->marketIds[$baseCurrency]['id'])) {
+            return $this->marketIds[$baseCurrency]['id'];
+        }
+
+        $market = Market::query()
+            ->where('base_currency', $baseCurrency)
+            ->first();
+
+        if (!$market) {
+            echo "Market not found for base_currency: $baseCurrency\n";
+            return null;
+        }
+
+        $this->marketIds[$baseCurrency] = [
+            'id' => $market->id,
+            'last_update' => time()
+        ];
+
+        return $market->id;
+    }
+
+    private function getExchangeProfitForMarket(int $marketId, string $baseCurrency): ?array
+    {
+        if (isset($this->exchangePrices[$marketId]) && time() - $this->exchangePrices[$marketId]['last_update'] <= 60) {
+            return [
+                'sell' => $this->exchangePrices[$marketId]['exchange_profit_sell'],
+                'buy' => $this->exchangePrices[$marketId]['exchange_profit_buy'],
+            ];
+        }
+
+        $exchangePriceModel = ExchangePrice::query()
+            ->where('market_id', $marketId)
+            ->where('exchange_id', $this->coinexID)
+            ->first();
+
+        if (!$exchangePriceModel) {
+            echo "ExchangePrice not found for base_currency: $baseCurrency\n";
+            return null;
+        }
+
+        $this->exchangePrices[$marketId] = [
+            'exchange_profit_sell' => $exchangePriceModel->exchange_profit_sell,
+            'exchange_profit_buy' => $exchangePriceModel->exchange_profit_buy,
+            'last_update' => time()
+        ];
+
+        return [
+            'sell' => $exchangePriceModel->exchange_profit_sell,
+            'buy' => $exchangePriceModel->exchange_profit_buy,
+        ];
+    }
+
+    private function updateExchangePriceForMarket(int $marketId, ?string $lastPrice, ?string $openPrice): void
+    {
+        ExchangePrice::query()
+            ->where('market_id', $marketId)
+            ->where('exchange_id', $this->coinexID)
+            ->update([
+                'price' => $lastPrice,
+                'open_price' => $openPrice,
+            ]);
+    }
+
+    private function calculatePrices(?string $lastPrice, ?string $openPrice, float $profitSell, float $profitBuy): array
+    {
+        $sellPrice = bcmul($lastPrice ?? '0', ($profitSell / 100) + 1, 8);
+        $buyPrice = bcmul($lastPrice ?? '0', ($profitBuy / 100) + 1, 8);
+
+        $sellOpenPrice = bcmul($openPrice ?? '0', ($profitSell / 100) + 1, 8);
+        $buyOpenPrice = bcmul($openPrice ?? '0', ($profitBuy / 100) + 1, 8);
+
+        return [
+            'sell_price' => $sellPrice,
+            'buy_price' => $buyPrice,
+            'sell_open_price' => $sellOpenPrice,
+            'buy_open_price' => $buyOpenPrice,
+        ];
+    }
+
+    private function calculateChangePercentage(?string $lastPrice, ?string $openPrice): float
+    {
+        if ($openPrice === null || $openPrice == 0 || $lastPrice === null) {
+            return 0.0;
+        }
+
+        $last = (float) $lastPrice;
+        $open = (float) $openPrice;
+
+        return round((($last - $open) / $open) * 100, 2);
     }
 
     private function fetchMarkets(): array

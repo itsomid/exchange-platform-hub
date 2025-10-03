@@ -217,7 +217,7 @@ services:
       - laravel
     restart: always
 
-  api-reverb:
+  admin-reverb:
     build:
       context: ./dockerfiles
       dockerfile: php.dockerfile
@@ -225,10 +225,10 @@ services:
         - UID=${UID:-1000}
         - GID=${GID:-1000}
         - USER=${USER:-f}
-    container_name: api-reverb
+    container_name: admin-reverb
     volumes:
-      - ./api-service:/var/www/html:delegated
-      - ./env/api_service.env:/var/www/html/.env
+      - ./admin-panel:/var/www/html:delegated
+      - ./env/admin_panel.env:/var/www/html/.env
     depends_on:
       - database
       - redis
