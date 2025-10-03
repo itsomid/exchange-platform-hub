@@ -7,6 +7,7 @@ use App\Models\Market;
 use App\Models\Setting;
 use App\Models\SpotTrade;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 class SpotTicker extends Command
@@ -38,7 +39,11 @@ class SpotTicker extends Command
 
         $this->info('Running spot ticker...');
 
-        $markets = Market::query()->where('is_active', true)->get();
+
+        $markets = Market::query()
+            ->where('is_active', true)
+            ->select(['id', 'base_currency', 'quote_currency'])
+            ->get();
 
         $marketQueryStrings = $markets->map(function ($market) {
             return "{$market->base_currency}{$market->quote_currency}";
@@ -48,14 +53,27 @@ class SpotTicker extends Command
             'market' => implode(',', $marketQueryStrings),
         ])->json();
 
-        foreach ($response['data'] as $data) {
-            $market = $markets->where('base_currency', str_replace('USDT', '', $data['market']))
-                ->first();
+        $marketsByTicker = $markets->keyBy(fn ($m) => $m->base_currency . $m->quote_currency);
 
-            $volume = SpotTrade::query()
-                ->where('market_id', $market->id)
-                ->where('created_at', '>=', now()->subHours(24))
-                ->sum('quantity');
+        $since = now()->subHours(24);
+
+        $marketIds = $markets->pluck('id');
+
+        $volumes = SpotTrade::query()
+            ->whereIn('market_id', $marketIds)
+            ->where('created_at', '>=', $since)
+            ->select('market_id', DB::raw('SUM(quantity) as volume'))
+            ->groupBy('market_id')
+            ->pluck('volume', 'market_id');
+
+        foreach ($response['data'] as $data) {
+
+            $market = $marketsByTicker->get($data['market']);
+            if (!$market) {
+                continue;
+            }
+
+            $volume = (float)($volumes[$market->id] ?? 0);
             //Dispatch price via socket to the frontend. use Laravel Reverb
             MarketUpdated::dispatch($market->id, [
                 'low' => $data['low'],
