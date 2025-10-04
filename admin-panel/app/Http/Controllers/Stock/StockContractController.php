@@ -139,9 +139,11 @@ class StockContractController extends Controller
                 'status' => TransactionStatusEnum::SUCCESS,
                 'description' => 'خرید سهام توسط ادمین (#' . auth()->user()->id . '-' . auth()->user()->fullname() . ') - شماره قرارداد: ' . $contract->contract_number,
             ]);
+            $this->walletService->decreaseBalance($request['user_id'], 'USDT', $totalValue);
+
 
             Transaction::create([
-                'user_id' => config('bitexroom.user_id'),
+                'user_id' => $this->bitexroomUserId,
                 'wallet_id' => $ExchangeWallet->id,
                 'admin_id' => auth()->user()->id,
                 'stock_contract_id' => $contract->id,
@@ -154,7 +156,8 @@ class StockContractController extends Controller
                 'description' => 'خرید سهام توسط ادمین (#' . auth()->user()->id . '-' . auth()->user()->fullname() . ') - شماره قرارداد: ' . $contract->contract_number,
             ]);
 
-            $this->walletService->decreaseBalance($request['user_id'], 'USDT', $totalValue);
+            $this->walletService->increaseBalance($this->bitexroomUserId,'USDT',$totalValue);
+
         }
 
 
@@ -254,8 +257,24 @@ class StockContractController extends Controller
                     'status' => TransactionStatusEnum::SUCCESS,
                     'description' => 'بازگشت وجه ابطال قرارداد سهام ' . $stockContract->contract_number,
                 ]);
+                $this->walletService->increaseBalance($user->id, 'USDT', $refundAmount);
 
-                // Only create fee transaction if fee is deducted
+                Transaction::create([
+                    'user_id' => $this->bitexroomUserId,
+                    'wallet_id' => $ExchangeWallet->id,
+                    'admin_id' => auth()->user()->id,
+                    'stock_contract_id' => $stockContract->id,
+                    'amount' => -$refundAmount,
+                    'balance' => $ExchangeWallet->balance,
+                    'coin_price' => "1",
+                    'type' => TransactionTypeEnum::SELL,
+                    'subtype' => TransactionSubTypeEnum::STOCK,
+                    'status' => TransactionStatusEnum::SUCCESS,
+                    'description' => 'بابت لغو سهام توسط ادمین (#' . auth()->user()->id . '-' . auth()->user()->fullname() . ') - شماره قرارداد: ' . $stockContract->contract_number,
+                ]);
+                $this->walletService->decreaseBalance($this->bitexroomUserId,'USDT',$refundAmount);
+
+
                 if ($deductFee) {
                     Transaction::create([
                         'user_id' => $this->bitexroomUserId,
@@ -270,11 +289,6 @@ class StockContractController extends Controller
                         'status' => TransactionStatusEnum::SUCCESS,
                         'description' => 'کارمزد ابطال قرارداد ' . $stockContract->contract_number,
                     ]);
-                }
-
-                // Update wallet balance using WalletService
-                $this->walletService->increaseBalance($user->id, 'USDT', $refundAmount);
-                if ($deductFee) {
                     $this->walletService->increaseBalance($this->bitexroomUserId, 'USDT', $stockContract->cancellation_fee);
                 }
             }
