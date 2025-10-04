@@ -58,6 +58,7 @@ class CreateOrderRequest extends FormRequest
             'quantity' => [
                 'required',
                 'numeric',
+                'gt:0',
                 'min:' . $market?->min_trade_amount,
                 'max:' . $market?->max_trade_amount,
                 function (string $attribute, $value, $fail) use ($amountPrecision) {

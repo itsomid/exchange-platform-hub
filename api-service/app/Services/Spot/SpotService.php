@@ -45,6 +45,11 @@ class SpotService
 
         $price = $requestDTO->getPrice();
 
+        // Validate quantity for both market and limit orders
+        if (is_null($quantity) || Math::comp($quantity, '0') !== 1) {
+            throw new InvalidArgumentException('مقدار باید بزرگتر از صفر و معتبر باشد.');
+        }
+
 
         if ($type !== SpotOrderTypeEnum::MARKET) {
             if (is_null($price) || Math::comp($price, '0') !== 1) {
@@ -56,7 +61,6 @@ class SpotService
         $currency = ($side === SpotOrderSideEnum::BUY)
             ? $market->quote_currency
             : $market->base_currency;
-
 
 
         if ($side === SpotOrderSideEnum::BUY) {
