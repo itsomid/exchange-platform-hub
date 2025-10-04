@@ -37,6 +37,9 @@ class SpotBotSettingController extends Controller
             'max_order_size' => 'nullable|numeric|min:0',
         ]);
 
+        // Ensure is_active is explicitly set as boolean even when checkbox is unchecked
+        $data['is_active'] = $request->boolean('is_active');
+
         SpotBotSetting::updateOrCreate(
             ['currency_id' => $currency->id],
             $data

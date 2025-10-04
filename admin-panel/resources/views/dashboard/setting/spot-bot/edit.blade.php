@@ -64,7 +64,7 @@
         @method('PUT')
 
         <div class="row">
-            <!-- تنظیمات اصلی ربات -->
+
             <div class="col-lg-8">
                 <div class="card mb-4">
                     <div class="card-header">
@@ -75,9 +75,10 @@
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
-                            <!-- وضعیت ربات -->
+
                             <div class="col-12 mb-5">
                                 <div class="form-check form-switch  switch-lg">
+                                    <input type="hidden" name="is_active" value="0">
                                     <input class="form-check-input " type="checkbox" id="is_active" name="is_active"
                                         value="1"
                                         {{ old('is_active', $spotBotSetting->is_active ?? false) ? 'checked' : '' }}>
@@ -90,7 +91,7 @@
                                     کرد</small>
                             </div>
 
-                            <!-- بازه زمانی قیمت -->
+
                             <div class="col-md-6">
                                 <label for="price_interval_seconds" class="form-label">
                                     <i class="fa-solid fa-clock me-1"></i>
@@ -107,7 +108,7 @@
                                 <small class="text-muted">هر چند ثانیه یکبار قیمت بروزرسانی شود</small>
                             </div>
 
-                            <!-- مارجین سفارش -->
+
                             <div class="col-md-6">
                                 <label for="order_margin" class="form-label">
                                     <i class="fa-solid fa-percentage me-1"></i>
@@ -123,7 +124,7 @@
                                 <small class="text-muted">درصد اختلاف قیمت سفارش با قیمت بازار</small>
                             </div>
 
-                            <!-- تعداد سفارش خرید -->
+
                             <div class="col-md-6">
                                 <label for="buy_orders_count" class="form-label">
                                     <i class="fa-solid fa-arrow-up me-1 text-success"></i>
@@ -138,7 +139,7 @@
                                 @enderror
                             </div>
 
-                            <!-- تعداد سفارش فروش -->
+
                             <div class="col-md-6">
                                 <label for="sell_orders_count" class="form-label">
                                     <i class="fa-solid fa-arrow-down me-1 text-danger"></i>
@@ -153,7 +154,7 @@
                                 @enderror
                             </div>
 
-                            <!-- درصد سقوط بازار -->
+
                             <div class="col-md-6">
                                 <label for="market_crash_percentage" class="form-label">
                                     <i class="fa-solid fa-chart-line-down me-1 text-warning"></i>
@@ -170,7 +171,7 @@
                                 <small class="text-muted">در صورت سقوط بیش از این درصد، ربات متوقف می‌شود</small>
                             </div>
 
-                            <!-- حداقل اندازه سفارش -->
+
                             <div class="col-md-6">
                                 <label for="min_order_size" class="form-label">
                                     <i class="fa-solid fa-arrow-down-short-wide me-1"></i>
@@ -185,7 +186,7 @@
                                 @enderror
                             </div>
 
-                            <!-- حداکثر اندازه سفارش -->
+
                             <div class="col-md-6">
                                 <label for="max_order_size" class="form-label">
                                     <i class="fa-solid fa-arrow-up-wide-short me-1"></i>
@@ -204,7 +205,6 @@
                 </div>
             </div>
 
-            <!-- تنظیمات کاربر صوری -->
             <div class="col-lg-4">
                 <div class="card mb-4">
                     <div class="card-header">
@@ -247,7 +247,7 @@
                     </div>
                 </div>
 
-                <!-- آمار سریع -->
+
                 <div class="card">
                     <div class="card-header">
                         <h5 class="card-title mb-0">
@@ -281,7 +281,7 @@
             </div>
         </div>
 
-        <!-- دکمه‌های عملیات -->
+
         <div class="row">
             <div class="col-12">
                 <div class="card">
@@ -311,7 +311,6 @@
 
     @push('scripts')
         <script>
-            // اعتبارسنجی فرم
             document.addEventListener('DOMContentLoaded', function() {
                 const form = document.querySelector('form');
                 const minOrderSize = document.getElementById('min_order_size');
