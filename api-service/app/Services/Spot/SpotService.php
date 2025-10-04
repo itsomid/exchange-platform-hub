@@ -76,7 +76,7 @@ class SpotService
         $wallet = $this->walletRepository->getOneOrCreateByCurrencyWithLock($currency, $requestDTO->getUserId());
 
         if (Math::comp($wallet->available_balance, $tradeAmount) === -1) {
-            throw new InsufficientBalanceException("Insufficient {$currency} balance.");
+            throw new InsufficientBalanceException(trans('exceptions.' . \App\Exceptions\V1\Wallet\InsufficientBalanceException::class, ['currency' => $currency]));
         }
 
         // Update wallet balances only if it's not a market order

@@ -63,7 +63,7 @@ class StockService
             $totalValue = $data['amount'] * $stock->value;
             $hasBalance = $this->walletService->checkBalance($user->id, 'USDT', $totalValue);
             if (!$hasBalance) {
-                throw new InsufficientBalanceException("Insufficient USDT balance.");
+                throw new InsufficientBalanceException(trans('exceptions.' . \App\Exceptions\V1\Wallet\InsufficientBalanceException::class, ['currency' => 'USDT']));
             }
             $ExchangeWallet = $this->walletRepository->getOneByCurrency('USDT', config('bitexroom.user_id'));
             $stockContract = $this->stockRepository->createContract(
