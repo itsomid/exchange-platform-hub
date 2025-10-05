@@ -38,7 +38,7 @@ class CoinExSocketService
         }
 
         $reactConnector = new \React\Socket\Connector([
-            'dns' => '1.1.1.1',
+            'dns' => '8.8.8.8',
             'timeout' => 10,
         ]);
         $loop = \React\EventLoop\Loop::get();
@@ -160,6 +160,8 @@ class CoinExSocketService
 
         $prices = $this->calculatePrices($lastPrice, $openPrice, $profits['sell'], $profits['buy']);
 
+        $priceChangePercentage = $this->calculateChangePercentage($lastPrice, $openPrice);
+
         Redis::publish('market_prices', json_encode([
             'base_currency' => $baseCurrency,
             'sell_price' => $prices['sell_price'],
@@ -167,16 +169,16 @@ class CoinExSocketService
             'buy_price' => $prices['buy_price'],
             'buy_open_price' => $prices['buy_open_price'],
             'last_price' => $lastPrice,
-            'price_change_percentage' => $this->calculateChangePercentage($lastPrice, $openPrice),
+            'price_change_percentage' => $priceChangePercentage,
             'timestamp' => now()->timestamp,
         ]));
 
         MarketUpdated::dispatch($marketId, [
-            'low' => $data['low'],
-            'high' => $data['high'],
-            'last' => $data['last'],
-            'open' => $data['open'],
-            'price_change_percentage' => $this->calculateChangePercentage($data['last'] ?? null, $data['open'] ?? null),
+            'low' => $data['low'] ?? null,
+            'high' => $data['high'] ?? null,
+            'last' => $lastPrice,
+            'open' => $openPrice,
+            'price_change_percentage' => $priceChangePercentage,
         ]);
     }
 
