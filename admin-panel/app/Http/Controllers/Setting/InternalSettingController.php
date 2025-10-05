@@ -100,7 +100,8 @@ class InternalSettingController extends Controller
         return redirect()->back();
     }
 
-    public function updateOTCSetting(Request $request)
+    
+    public function updateOTCCommission(Request $request)
     {
         // Validate the input
         $request->validate([
@@ -123,6 +124,31 @@ class InternalSettingController extends Controller
         // Redirect with success message
         return redirect()->back();
     }
+    
+    public function updateSpotCommission(Request $request)
+    {
+        // Validate the input
+        $request->validate([
+            'spot_maker_fee' => 'required|numeric|min:0',
+            'spot_taker_fee' => 'required|numeric|min:0',
+        ]);
+
+        // Update spot maker fee
+        Setting::updateOrCreate(
+            ['key' => 'spot_maker_fee'],
+            ['value' => $request->input('spot_maker_fee')]
+        );
+
+        // Update spot taker fee
+        Setting::updateOrCreate(
+            ['key' => 'spot_taker_fee'],
+            ['value' => $request->input('spot_taker_fee')]
+        );
+        Toast::message('تنظیمات فروش اسپات با موفقیت ذخیره شد')->success()->notify();
+        // Redirect with success message
+        return redirect()->back();
+    }
+    
     public function updatePermissions()
     {
         $permissions = [];

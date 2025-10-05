@@ -230,7 +230,9 @@ Route::middleware(['admin.2fa'])->group(function () {
 
     Route::get('/internal-settings', [InternalSettingController::class, 'index'])->name('internal.setting.index')->can('setting.int.index');
     Route::post('/internal-settings/update-permissions', [InternalSettingController::class, 'updatePermissions'])->name('setting.int.update-permissions')->can('setting.int.index');
-    Route::post('/internal-settings/update-otc-setting', [InternalSettingController::class, 'updateOTCSetting'])->name('setting.int.update-otc-setting')->can('setting.int.index');
+    Route::post('/internal-settings/update-otc-commission', [InternalSettingController::class, 'updateOTCCommission'])->name('setting.int.update-otc-commission')->can('setting.int.index');    
+    Route::post('/internal-settings/update-spot-commission', [InternalSettingController::class, 'updateSpotCommission'])->name('setting.int.update-spot-commission')->can('setting.int.index'); 
+
     Route::post('/internal-settings/update-referral-setting', [InternalSettingController::class, 'updateReferralSetting'])->name('setting.int.update-referral-setting')->can('setting.int.index');
     Route::post('/internal-settings/update-exchange-withdrawal-setting', [InternalSettingController::class, 'updateExchangeWithdrawalSetting'])->name('setting.int.update-exchange-withdrawal-setting')->can('setting.int.index');
     Route::post('/internal-settings/update-spot-settings', [InternalSettingController::class, 'updateSpotSettings'])->name('setting.int.update-spot-settings')->can('setting.int.index');
