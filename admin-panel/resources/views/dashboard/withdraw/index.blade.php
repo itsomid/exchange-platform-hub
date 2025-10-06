@@ -237,8 +237,8 @@
 
                         </th>
                         <th>ارزش</th>
-                        <th>آدرس</th>
-                        <th>(TxID) لینک تراکنش</th>
+                        <th>آدرس برداشت</th>
+                        <th> هش تراکنش (TxID)</th>
                         <th>
                             @php
                                 $currentParams = request()->except('sortByCreatedAt');

@@ -156,31 +156,14 @@
 
 
                             <div class="col-md-6">
-                                <label for="market_crash_percentage" class="form-label">
-                                    <i class="fa-solid fa-chart-line-down me-1 text-warning"></i>
-                                    درصد سقوط بازار
-                                </label>
-                                <input type="number"
-                                    class="form-control @error('market_crash_percentage') is-invalid @enderror"
-                                    id="market_crash_percentage" name="market_crash_percentage"
-                                    value="{{ old('market_crash_percentage', $spotBotSetting->market_crash_percentage ?? 10) }}"
-                                    step="0.01" min="0" max="100">
-                                @error('market_crash_percentage')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                                <small class="text-muted">در صورت سقوط بیش از این درصد، ربات متوقف می‌شود</small>
-                            </div>
-
-
-                            <div class="col-md-6">
                                 <label for="min_order_size" class="form-label">
                                     <i class="fa-solid fa-arrow-down-short-wide me-1"></i>
                                     حداقل اندازه سفارش
                                 </label>
-                                <input type="number" class="form-control @error('min_order_size') is-invalid @enderror"
+                                <input  class="form-control @error('min_order_size') is-invalid @enderror"
                                     id="min_order_size" name="min_order_size"
-                                    value="{{ old('min_order_size', $spotBotSetting->min_order_size ?? 10) }}"
-                                    step="0.0001" min="0" required>
+                                    value="{{ old('min_order_size', formatNumberTrimZeros($spotBotSetting->min_order_size) ?? 10) }}"
+                                      required>
                                 @error('min_order_size')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -192,14 +175,30 @@
                                     <i class="fa-solid fa-arrow-up-wide-short me-1"></i>
                                     حداکثر اندازه سفارش
                                 </label>
-                                <input type="number" class="form-control @error('max_order_size') is-invalid @enderror"
+                                <input class="form-control @error('max_order_size') is-invalid @enderror"
                                     id="max_order_size" name="max_order_size"
-                                    value="{{ old('max_order_size', $spotBotSetting->max_order_size ?? 1000) }}"
-                                    step="0.01" min="0" required>
+                                    value="{{ old('max_order_size', formatNumberTrimZeros($spotBotSetting->max_order_size) ?? 1000) }}"
+                                     required>
                                 @error('max_order_size')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
+                            <div class="col-md-6">
+                                <label for="market_crash_percentage" class="form-label">
+                                    <i class="fa-solid fa-chart-line-down me-1 text-warning"></i>
+                                    درصد سقوط بازار
+                                </label>
+                                <input type="number"
+                                       class="form-control @error('market_crash_percentage') is-invalid @enderror"
+                                       id="market_crash_percentage" name="market_crash_percentage"
+                                       value="{{ old('market_crash_percentage', $spotBotSetting->market_crash_percentage ?? 10) }}"
+                                       step="0.01" min="0" max="100">
+                                @error('market_crash_percentage')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <small class="text-muted">در صورت سقوط بیش از این درصد، ربات متوقف می‌شود</small>
+                            </div>
+
                         </div>
                     </div>
                 </div>
