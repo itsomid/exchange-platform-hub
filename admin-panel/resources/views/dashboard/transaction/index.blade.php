@@ -56,44 +56,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-12 col-xl-3">
-            <div class="card bg-info">
-                <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
-                        <div class="content-left">
-                            <span class="text-white">سود صرافی از کارمزدهای معاملات OTC</span>
-                            <div class="d-flex align-items-center my-1">
 
-                                <h4 class="mb-0 me-2">{{ formatNumber($OTCFeeTransactionsSum, 2) }}</h4>
-                                <small class="text-white">USDT</small>
-                            </div>
-                        </div>
-                        <span class="badge bg-label-success rounded p-2">
-                            <i class="fa-regular fa-chart-candlestick"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-12 col-xl-3">
-            <div class="card bg-info">
-                <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
-                        <div class="content-left">
-                            <span class="text-white">سود صرافی از کارمزدهای برداشت</span>
-                            <div class="d-flex align-items-center my-1">
-
-                                <h4 class="mb-0 me-2">{{ formatNumber($withdrawalFeeTransactionsSum, 2) }}</h4>
-                                <small class="text-white">USDT</small>
-                            </div>
-                        </div>
-                        <span class="badge bg-label-info rounded p-2">
-                            <i class="fa-regular fa-dollar fa-lg"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div class="col-sm-12 col-xl-3">
             <div class="card">
                 <div class="card-body">
@@ -132,18 +95,24 @@
             </form>
         </div>
     </div>
-    <div class="card mb-4">
+    <div class="card mb-4 shadow-sm">
         <div class="card-body">
-            <div class="card-title header-elements">
-                <h5 class="m-0 me-2">فیلتر</h5>
+            <div class="card-title header-elements mb-4">
+                <h5 class="m-0 me-2 d-flex align-items-center">
+                    <i class="fas fa-filter me-2 text-primary"></i>
+                    فیلترهای پیشرفته
+                </h5>
             </div>
             <form action="{{ route('admin.transaction.index') }}" method="get">
-                <div class="row">
-                    <div class="col-md-3 mt-3">
+                <div class="row g-3">
+                    <div class="col-md-3">
                         <div class="form-group">
-                            <label class="form-label" for="type">نوع تراکنش:</label>
-                            <select name="type" class="form-control" id="type">
-                                <option value="">همه</option>
+                            <label class="form-label fw-semibold" for="type">
+                                <i class="fas fa-exchange-alt me-1 text-info"></i>
+                                نوع تراکنش:
+                            </label>
+                            <select name="type" class="form-select" id="type">
+                                <option value="">همه انواع</option>
                                 @foreach (\App\Enums\TransactionTypeEnum::cases() as $case)
                                     <option value="{{ $case->value }}"
                                         {{ request()->has('type') && request()->input('type') == $case->value ? 'selected' : '' }}>
@@ -153,11 +122,14 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-3 mt-3">
+                    <div class="col-md-3">
                         <div class="form-group">
-                            <label class="form-label" for="subtype">نوع زیر تراکنش:</label>
-                            <select name="subtype" class="form-control" id="subtype">
-                                <option value="">همه</option>
+                            <label class="form-label fw-semibold" for="subtype">
+                                <i class="fas fa-tags me-1 text-warning"></i>
+                                نوع زیر تراکنش:
+                            </label>
+                            <select name="subtype" class="form-select" id="subtype">
+                                <option value="">همه انواع</option>
                                 @foreach (\App\Enums\TransactionSubTypeEnum::cases() as $case)
                                     <option value="{{ $case->value }}"
                                         {{ request()->has('subtype') && request()->input('subtype') == $case->value ? 'selected' : '' }}>
@@ -167,8 +139,28 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-4 mt-3">
-                        <label class="form-label" for="user">کاربر :</label>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label fw-semibold" for="currency">
+                                <i class="fas fa-coins me-1 text-success"></i>
+                                رمز ارز:
+                            </label>
+                            <select name="currency" class="form-select" id="currency">
+                                <option value="">همه ارزها</option>
+                                @foreach (\App\Models\Currency::all() as $currency)
+                                    <option value="{{ $currency->symbol }}"
+                                        {{ request()->has('currency') && request()->input('currency') == $currency->symbol ? 'selected' : '' }}>
+                                        {{ $currency->name }} ({{ $currency->symbol }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold" for="user">
+                            <i class="fas fa-user me-1 text-primary"></i>
+                            کاربر:
+                        </label>
                         <x-user-selection-component input-name="user" multiple="0"
                             selected="{{ request()->filled('user') ? $transactions[0]->user->id : '' }}"
                             selected-label="{{ request()->filled('user')
@@ -180,11 +172,66 @@
                                     $transactions[0]->user->email
                                 : '' }}"></x-user-selection-component>
                     </div>
-                    <div class="col-md-2">
-                        <div class="form-group mt-3"><br>
-                            <button class="btn btn-success text-white" type="submit">
-                                <span>فیلتر</span><i class="fas fa-filter mx-3"></i>
-                            </button>
+                </div>
+
+                <!-- Transaction Value Range Filter -->
+                <div class="row g-3 mt-2">
+                    <div class="col-12">
+                        <div class="card border-0">
+                            <div class="card-body p-3">
+                                <h6 class="card-title mb-3 d-flex align-items-center">
+                                    <i class="fas fa-dollar-sign me-2 text-success"></i>
+                                    فیلتر بازه ارزش تراکنش
+                                    <small class="text-muted ms-2">(ارزش = مقدار × قیمت کوین)</small>
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label fw-semibold" for="transaction_value_min">
+                                                <i class="fas fa-arrow-up me-1 text-success"></i>
+                                                حداقل ارزش (دلار):
+                                            </label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">$</span>
+                                                <input type="number" name="transaction_value_min" class="form-control"
+                                                    id="transaction_value_min" placeholder="200" step="0.01"
+                                                    min="0"
+                                                    value="{{ request()->input('transaction_value_min') }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label fw-semibold" for="transaction_value_max">
+                                                <i class="fas fa-arrow-down me-1 text-danger"></i>
+                                                حداکثر ارزش (دلار):
+                                            </label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">$</span>
+                                                <input type="number" name="transaction_value_max" class="form-control"
+                                                    id="transaction_value_max" placeholder="500" step="0.01"
+                                                    min="0"
+                                                    value="{{ request()->input('transaction_value_max') }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 d-flex align-items-end">
+                                        <div class="form-group w-100">
+                                            <div class="d-grid gap-2 d-md-flex">
+                                                <button class="btn btn-primary flex-fill" type="submit">
+                                                    <i class="fas fa-search me-2"></i>
+                                                    اعمال فیلتر
+                                                </button>
+                                                <a href="{{ route('admin.transaction.index') }}"
+                                                    class="btn btn-outline-secondary flex-fill">
+                                                    <i class="fas fa-times me-2"></i>
+                                                    پاک کردن
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -341,110 +388,10 @@
                                 </td>
                                 <td>
                                     <a href="" class="btn btn-icon btn-text-secondary" data-bs-toggle="modal"
-                                        data-bs-target="#deposit-{{ $transaction->id }}">
+                                        data-bs-target="#transaction-{{ $transaction->id }}">
                                         <i class="fa-regular fa-eye fa-xl"></i>
                                     </a>
-                                    <div class="modal fade" id="deposit-{{ $transaction->id }}" tabindex="-1"
-                                        aria-hidden="true">
-                                        <div class="modal-dialog" role="document">
-                                            <div class="modal-content">
-                                                <div class="modal-header" dir="ltr">
-                                                    <h5 class="modal-title font-number">Transaction
-                                                        #{{ $transaction->id }}</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                        aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <div
-                                                        class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
-
-                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">مشخصات کاربر</h6>
-                                                        <div class="d-flex  gap-4 align-items-center">
-                                                            <div class="d-flex flex-column">
-                                                                <small>{{ $transaction->user->fullname() }}</small>
-                                                                <small>{{ $transaction->user->username }}</small>
-                                                                <a href="" class="text-heading text-truncate">
-                                                                    <span
-                                                                        class="fw-medium">{{ $transaction->user->email }}</span>
-                                                                </a>
-
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div
-                                                        class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
-                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">قیمت کوین هنگام تراکنش</h6>
-                                                        <div class="d-flex gap-4 align-items-center">
-
-                                                            <span class="font-number text-info">
-                                                                {{ formatNumberTrimZeros($transaction->coin_price) }} USDT
-                                                            </span>
-                                                            <img src="{{ asset($transaction->wallet->currency->coinLogo()) }}"
-                                                                width="30" />
-                                                        </div>
-                                                    </div>
-                                                    <div
-                                                        class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
-
-                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی کاربر قبل از تراکنش</h6>
-                                                        <div class="d-flex  gap-4 align-items-center">
-
-                                                            <span
-                                                                class="font-number">{{ formatNumberTrimZeros($transaction->balance) }}</span>
-                                                            <img src="{{ asset($transaction->wallet->currency->coinLogo()) }}"
-                                                                width="30" />
-                                                        </div>
-                                                    </div>
-                                                    <div
-                                                        class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
-
-                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی کاربر پس از تراکنش</h6>
-                                                        <div class="d-flex  gap-4 align-items-center">
-                                                            <span class="font-number text-primary"
-                                                                dir="ltr">{{ formatNumberTrimZeros($transaction->balance + $transaction->amount) }}</span>
-                                                            <img src="{{ asset($transaction->wallet->currency->coinLogo()) }}"
-                                                                width="30" />
-                                                        </div>
-                                                    </div>
-
-                                                    <div
-                                                        class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
-
-                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">ایجاد شده توسط ادمین</h6>
-                                                        <div class="text-wrap font-number">
-                                                            @if ($transaction->admin_id)
-                                                                {{ $transaction->admin->fullname() }} -
-                                                                #{{ $transaction->admin->id }}
-                                                            @else
-                                                                <span class="badge bg-label-danger">خیر</span>
-                                                            @endif
-                                                        </div>
-                                                    </div>
-                                                    <div
-                                                        class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
-
-                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات تراکنش</h6>
-                                                        <div class="text-wrap font-number w-60 text-end">
-                                                            {{ $transaction->description }}
-                                                        </div>
-                                                    </div>
-                                                    <div
-                                                        class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
-
-                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات ادمین</h6>
-                                                        <div class="text-wrap font-number">
-                                                            {{ $transaction->admin_description }}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-label-secondary"
-                                                        data-bs-dismiss="modal">بستن
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <x-transaction-details-modal :transaction="$transaction" />
                                 </td>
                             </tr>
                         @endforeach
