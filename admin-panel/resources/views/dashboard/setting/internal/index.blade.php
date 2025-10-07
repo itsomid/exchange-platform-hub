@@ -186,6 +186,16 @@
                         <div class="row mt-5">
                             <div class="col-xl-6 mt-3">
                                 <label class="switch switch-lg">
+                                    <input type="checkbox" class="switch-input" name="spot_trading_enabled"
+                                        value="1"
+                                        {{ $spotTradingEnabled && $spotTradingEnabled->value ? 'checked' : '' }} />
+                                    <span class="switch-toggle-slider"></span>
+                                    <span class="switch-label">فعال‌سازی معاملات اسپات</span>
+                                </label>
+                                <small class="text-muted d-block mt-2">این گزینه کل سیستم معاملات اسپات را کنترل می‌کند. در صورت غیرفعال بودن، هیچ معامله یا سفارشی امکان‌پذیر نخواهد بود</small>
+                            </div>
+                            <div class="col-xl-6 mt-3">
+                                <label class="switch switch-lg">
                                     <input type="checkbox" class="switch-input" name="spot_ticker_enabled"
                                         value="1"
                                         {{ $spotTickerEnabled && $spotTickerEnabled->value ? 'checked' : '' }} />

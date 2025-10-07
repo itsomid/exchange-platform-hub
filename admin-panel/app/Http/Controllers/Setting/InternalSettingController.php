@@ -35,6 +35,7 @@ class InternalSettingController extends Controller
         $exchangeWithdrawalStatus = Setting::where('key', 'exchange_withdrawal_status')->first();
         $spotTickerEnabled = Setting::where('key', 'spot_ticker_enabled')->first();
         $orderMatchingEnabled = Setting::where('key', 'order_matching_enabled')->first();
+        $spotTradingEnabled = Setting::where('key', 'spot_trading_enabled')->first();
 
         $exchangeWalletChains = $this->walletService->getExchangeAllWalletChain();
 
@@ -53,6 +54,7 @@ class InternalSettingController extends Controller
             'exchangeWithdrawalStatus' => $exchangeWithdrawalStatus,
             'spotTickerEnabled' => $spotTickerEnabled,
             'orderMatchingEnabled' => $orderMatchingEnabled,
+            'spotTradingEnabled' => $spotTradingEnabled,
             'exchangeWalletChains' => $exchangeWalletChains,
 
         ]);
@@ -210,6 +212,16 @@ class InternalSettingController extends Controller
 
     public function updateSpotSettings(Request $request)
     {
+        // Update spot trading enabled status
+        Setting::updateOrCreate(
+            ['key' => 'spot_trading_enabled'],
+            [
+                'value' => $request->has('spot_trading_enabled') ? $request->input('spot_trading_enabled') : false,
+                'name' => 'وضعیت فعال‌سازی معاملات اسپات',
+                'type' => 'boolean'
+            ]
+        );
+
         // Update spot ticker enabled status
         Setting::updateOrCreate(
             ['key' => 'spot_ticker_enabled'],
