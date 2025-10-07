@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Helpers\Math;
 use App\Models\Currency;
 use App\Models\Market;
+use App\Models\Setting;
 use App\Models\SpotBotSetting;
 use App\Models\SpotOrder;
 use App\Services\Spot\DTO\SpotOrderRequestDTO;
@@ -280,6 +281,11 @@ class SpotBotController extends Controller
      */
     private function createBotOrder(int $userId, int $marketId, string $quantity, string $price, SpotOrderSideEnum $side, SpotOrderTypeEnum $type)
     {
+        // Check if spot trading is enabled
+        // if (!Setting::isEnabled('spot_trading_enabled')) {
+        //     throw new \Exception('Spot trading is currently disabled');
+        // }
+
         $lock = Cache::lock('bot_trade:' . $marketId . $userId, 40);
 
         if ($lock->get()) {

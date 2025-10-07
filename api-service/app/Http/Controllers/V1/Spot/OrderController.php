@@ -10,6 +10,7 @@ use App\Http\Requests\V1\Spot\CreateOrderRequest;
 use App\Http\Requests\V1\Spot\ListOrderRequest;
 use App\Http\Resources\SpotOrderResource;
 use App\Http\Resources\V1\Spot\OrderBookResource;
+use App\Models\Setting;
 use App\Models\SpotOrder;
 use App\Services\Spot\DTO\SpotOrderListsRequestDTO;
 use App\Services\Spot\DTO\SpotOrderRequestDTO;
@@ -27,6 +28,13 @@ class OrderController extends Controller
 
     public function store(CreateOrderRequest $request)
     {
+        // Check if spot trading is enabled
+        if (!Setting::isEnabled('spot_trading_enabled')) {
+            return response([
+                'message' => __('spot.trading_disabled'),
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         $validated = $request->validated();
         $lock = Cache::lock('trade:'.$validated['market_id'].Auth::id(), 40);
         if ($lock->get()) {
