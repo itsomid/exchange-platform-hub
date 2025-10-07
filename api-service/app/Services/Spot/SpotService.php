@@ -50,6 +50,12 @@ class SpotService
             throw new InvalidArgumentException('مقدار باید بزرگتر از صفر و معتبر باشد.');
         }
 
+        // For market orders, check if opposite side has orders
+        if ($type === SpotOrderTypeEnum::MARKET) {
+            if (!$this->spotOrderRepository->hasOrdersOnOppositeSide($requestDTO->getMarketId(), $side)) {
+                throw new InvalidArgumentException('امکان ثبت سفارش بازار وجود ندارد.');
+            }
+        }
 
         if ($type !== SpotOrderTypeEnum::MARKET) {
             if (is_null($price) || Math::comp($price, '0') !== 1) {

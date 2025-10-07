@@ -96,4 +96,22 @@ class SpotOrderRepository implements SpotOrderRepositoryInterface
             ->lockForUpdate()
             ->find($orderId);
     }
+
+    /**
+     * Check if the opposite side of order book has any open orders
+     * For BUY market orders, check if there are any SELL orders (asks)
+     * For SELL market orders, check if there are any BUY orders (bids)
+     */
+    public function hasOrdersOnOppositeSide(int $marketId, SpotOrderSideEnum $orderSide): bool
+    {
+        $oppositeSide = $orderSide === SpotOrderSideEnum::BUY 
+            ? SpotOrderSideEnum::SELL 
+            : SpotOrderSideEnum::BUY;
+
+        return SpotOrder::query()
+            ->where('market_id', $marketId)
+            ->where('side', $oppositeSide)
+            ->where('status', SpotOrderStatusEnum::OPEN)
+            ->exists();
+    }
 }

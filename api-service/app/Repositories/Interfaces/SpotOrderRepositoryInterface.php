@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Interfaces;
 
+use App\Enums\SpotOrderSideEnum;
 use App\Models\SpotOrder;
 use App\Repositories\DTO\SpotOrder\SpotOrderCreateRequestDTO;
 use App\Repositories\DTO\SpotOrder\TradeListRequestDTO;
@@ -18,4 +19,6 @@ interface SpotOrderRepositoryInterface
     public function getLatestOrders(int $marketId, int $limit): array;
 
     public function getOneWithLock(int $orderId): ?SpotOrder;
+
+    public function hasOrdersOnOppositeSide(int $marketId, SpotOrderSideEnum $orderSide): bool;
 }
