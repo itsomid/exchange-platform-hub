@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Setting;
 
 use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Setting\UpdateSpotBotSettingRequest;
 use App\Models\Currency;
 use App\Models\SpotBotSetting;
 use App\Models\User;
@@ -23,19 +24,9 @@ class SpotBotSettingController extends Controller
         return view('dashboard.setting.spot-bot.edit', compact('currency', 'spotBotSetting'));
     }
 
-    public function update(Request $request, Currency $currency)
+    public function update(UpdateSpotBotSettingRequest $request, Currency $currency)
     {
-        $data = $request->validate([
-            'is_active' => 'boolean',
-            'price_interval_seconds' => 'required|integer|min:1',
-            'order_margin' => 'required|numeric|min:0',
-            'buy_orders_count' => 'required|integer|min:0',
-            'sell_orders_count' => 'required|integer|min:0',
-            'fake_user_id' => 'nullable|exists:users,id',
-            'market_crash_percentage' => 'nullable|numeric|min:0|max:100',
-            'min_order_size' => 'nullable|numeric|min:0',
-            'max_order_size' => 'nullable|numeric|min:0',
-        ]);
+        $data = $request->validated();
 
         // Ensure is_active is explicitly set as boolean even when checkbox is unchecked
         $data['is_active'] = $request->boolean('is_active');
