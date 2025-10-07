@@ -117,6 +117,7 @@ class ReferralCommissionService
                 'otc_order_id' => $otcOrder->id,
                 'balance' => $exchangeWallet->balance,
                 'amount' => -$commissionAmount,
+                'coin_price' => $otcOrder->price,
                 'type' => TransactionTypeEnum::REFERRAL,
                 'subtype' => $role === 'introducer' ? TransactionSubTypeEnum::REFERRAL_INTRODUCER : TransactionSubTypeEnum::REFERRAL_FRIEND,
                 'status' => TransactionStatusEnum::SUCCESS,

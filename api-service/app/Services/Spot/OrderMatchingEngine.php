@@ -71,6 +71,7 @@ readonly class OrderMatchingEngine
             ->where('side', $oppositeType)
             ->where('market_id', $order->market_id)
             ->where('status', SpotOrderStatusEnum::OPEN)
+            ->where('user_id', '!=', $order->user_id) // Prevent self-trading
             ->orderBy('price', $sortType)
             ->whereNotNull('price') // Ensure matching against LIMIT orders only
             ->lockForUpdate()
@@ -119,6 +120,7 @@ readonly class OrderMatchingEngine
             ->where('side', $oppositeType)
             ->where('market_id', $order->market_id)
             ->where('status', SpotOrderStatusEnum::OPEN)
+            ->where('user_id', '!=', $order->user_id) // Prevent self-trading
             ->where(function ($query) use ($order) {
                 // Match with:
                 // - Market orders (no price)
@@ -532,14 +534,20 @@ readonly class OrderMatchingEngine
                       // !! Consider implementing a more robust unlock calculation based on filled amount/price if possible !!
                  }
 
-             } else {
-                 // Market Sell: Locked base currency for the quantity.
-                 $currencyToUnlock = $order->market->base_currency;
-                 // The amount to unlock is the quantity that was *not* filled.
-                 $amountToUnlock = $remainedQuantity;
-                 $this->walletRepository->decreaseLockedBalance($order->user_id, $currencyToUnlock, $amountToUnlock);
-                 logger()->info("Released remaining locked base balance for canceled market sell order {$order->id}. Amount: {$amountToUnlock}");
-             }
+            } else {
+                // Market Sell: For MARKET orders, no base currency was locked at creation.
+                // Avoid decreasing locked_balance to prevent negative values on partial fill + cancel.
+                if ($order->type !== SpotOrderTypeEnum::MARKET) {
+                    // For non-market sells that had base locked, unlock the unfilled remainder.
+                    $currencyToUnlock = $order->market->base_currency;
+                    $amountToUnlock = $remainedQuantity; // quantity that was not filled
+                    $this->walletRepository->decreaseLockedBalance($order->user_id, $currencyToUnlock, $amountToUnlock);
+                    logger()->info("Released remaining locked base balance for canceled non-market sell order {$order->id}. Amount: {$amountToUnlock}");
+                } else {
+                    // Nothing to unlock for market sells; balances were taken directly from available.
+                    logger()->info("No locked balance to release for canceled market sell order {$order->id}. Remaining quantity: {$remainedQuantity}");
+                }
+            }
          } catch (Throwable $e) {
               logger()->error("Failed to release locked balance for canceled order {$order->id}: " . $e->getMessage(), ['exception' => $e]);
               // Rethrow or handle appropriately - failing to unlock funds is critical.
