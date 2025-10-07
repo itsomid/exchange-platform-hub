@@ -188,8 +188,8 @@
                     <div class="col-md-6 mt-3">
                         <label class="form-label" for="user">کاربر :</label>
                         <x-user-selection-component input-name="user" multiple="0"
-                            selected="{{ request()->filled('user') ? $otcOrders[0]->user->id : '' }}"
-                            selected-label="{{ request()->filled('user')
+                            selected="{{ request()->filled('user') && $otcOrders->isNotEmpty() && $otcOrders[0]->user ? $otcOrders[0]->user->id : '' }}"
+                            selected-label="{{ request()->filled('user') && $otcOrders->isNotEmpty() && $otcOrders[0]->user
                                 ? '(' . $otcOrders[0]->user->id . '#) ' . $otcOrders[0]->user->fullname() . ' | ' . $otcOrders[0]->user->email
                                 : '' }}"></x-user-selection-component>
                     </div>

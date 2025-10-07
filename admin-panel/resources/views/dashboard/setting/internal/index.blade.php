@@ -192,7 +192,9 @@
                                     <span class="switch-toggle-slider"></span>
                                     <span class="switch-label">فعال‌سازی معاملات اسپات</span>
                                 </label>
-                                <small class="text-muted d-block mt-2">این گزینه کل سیستم معاملات اسپات را کنترل می‌کند. در صورت غیرفعال بودن، هیچ معامله یا سفارشی امکان‌پذیر نخواهد بود</small>
+                                <small class="text-muted d-block mt-2">این گزینه کل سیستم معاملات اسپات را کنترل می‌کند. در
+                                    صورت غیرفعال بودن، هیچ معامله یا سفارشی توسط کاربران جز بات امکان‌پذیر نخواهد
+                                    بود</small>
                             </div>
                             <div class="col-xl-6 mt-3">
                                 <label class="switch switch-lg">

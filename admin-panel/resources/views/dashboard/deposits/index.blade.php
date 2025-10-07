@@ -175,8 +175,8 @@
                     <div class="col-md-6 mt-3">
                         <label class="form-label" for="user">کاربر :</label>
                         <x-user-selection-component input-name="user" multiple="0"
-                            selected="{{ request()->filled('user') ? $deposits[0]->user->id : '' }}"
-                            selected-label="{{ request()->filled('user')
+                            selected="{{ request()->filled('user') && $deposits->isNotEmpty() && $deposits[0]->user ? $deposits[0]->user->id : '' }}"
+                            selected-label="{{ request()->filled('user') && $deposits->isNotEmpty() && $deposits[0]->user
                                 ? '(' . $deposits[0]->user->id . '#) ' . $deposits[0]->user->fullname() . ' | ' . $deposits[0]->user->email
                                 : '' }}"></x-user-selection-component>
                     </div>

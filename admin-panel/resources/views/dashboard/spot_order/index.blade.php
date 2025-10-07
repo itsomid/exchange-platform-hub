@@ -56,7 +56,7 @@
     <div class="card">
         <div class="card-body">
             <div class="card-title header-elements">
-                <h5 class="m-0 me-2">فیلتر</h5>
+                <h5 class="m-0 me-2">فیلتر سفارشات اسپات</h5>
             </div>
             <form action="{{ route('admin.spot_orders.index') }}" method="get">
                 <!-- Hidden input to maintain current source -->
@@ -82,8 +82,8 @@
                         <div class="col-md-6 mt-3">
                             <label class="form-label" for="user">کاربر :</label>
                             <x-user-selection-component input-name="user" multiple="0"
-                                selected="{{ request()->filled('user') ? $spotOrders[0]->user->id : '' }}"
-                                selected-label="{{ request()->filled('user')
+                                selected="{{ request()->filled('user') && $spotOrders->isNotEmpty() && $spotOrders[0]->user ? $spotOrders[0]->user->id : '' }}"
+                                selected-label="{{ request()->filled('user') && $spotOrders->isNotEmpty() && $spotOrders[0]->user
                                     ? '(' . $spotOrders[0]->user->id . '#) ' . $spotOrders[0]->user->fullname() . ' | ' . $spotOrders[0]->user->email
                                     : '' }}"></x-user-selection-component>
                         </div>

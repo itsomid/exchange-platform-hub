@@ -158,8 +158,8 @@
                     <div class="col-md-6 ">
                         <label class="form-label" for="user">کاربر :</label>
                         <x-user-selection-component input-name="user" multiple="0"
-                            selected="{{ request()->filled('user') ? $withdraws[0]->user->id : '' }}"
-                            selected-label="{{ request()->filled('user')
+                            selected="{{ request()->filled('user') && $withdraws->isNotEmpty() && $withdraws[0]->user ? $withdraws[0]->user->id : '' }}"
+                            selected-label="{{ request()->filled('user') && $withdraws->isNotEmpty() && $withdraws[0]->user
                                 ? '(' . $withdraws[0]->user->id . '#) ' . $withdraws[0]->user->fullname() . ' | ' . $withdraws[0]->user->email
                                 : '' }}"></x-user-selection-component>
                     </div>

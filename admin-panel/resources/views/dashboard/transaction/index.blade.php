@@ -162,8 +162,8 @@
                             کاربر:
                         </label>
                         <x-user-selection-component input-name="user" multiple="0"
-                            selected="{{ request()->filled('user') ? $transactions[0]->user->id : '' }}"
-                            selected-label="{{ request()->filled('user')
+                            selected="{{ request()->filled('user') && $transactions->isNotEmpty() && $transactions[0]->user ? $transactions[0]->user->id : '' }}"
+                            selected-label="{{ request()->filled('user') && $transactions->isNotEmpty() && $transactions[0]->user
                                 ? '(' .
                                     $transactions[0]->user->id .
                                     '#) ' .
