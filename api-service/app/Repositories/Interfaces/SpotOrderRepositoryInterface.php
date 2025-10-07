@@ -20,5 +20,5 @@ interface SpotOrderRepositoryInterface
 
     public function getOneWithLock(int $orderId): ?SpotOrder;
 
-    public function hasOrdersOnOppositeSide(int $marketId, SpotOrderSideEnum $orderSide): bool;
+    public function hasOrdersOnOppositeSide(int $marketId, SpotOrderSideEnum $orderSide, ?int $excludeUserId = null): bool;
 }

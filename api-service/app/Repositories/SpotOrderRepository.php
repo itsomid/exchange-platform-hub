@@ -102,16 +102,21 @@ class SpotOrderRepository implements SpotOrderRepositoryInterface
      * For BUY market orders, check if there are any SELL orders (asks)
      * For SELL market orders, check if there are any BUY orders (bids)
      */
-    public function hasOrdersOnOppositeSide(int $marketId, SpotOrderSideEnum $orderSide): bool
+    public function hasOrdersOnOppositeSide(int $marketId, SpotOrderSideEnum $orderSide, ?int $excludeUserId = null): bool
     {
         $oppositeSide = $orderSide === SpotOrderSideEnum::BUY 
             ? SpotOrderSideEnum::SELL 
             : SpotOrderSideEnum::BUY;
 
-        return SpotOrder::query()
+        $query = SpotOrder::query()
             ->where('market_id', $marketId)
             ->where('side', $oppositeSide)
-            ->where('status', SpotOrderStatusEnum::OPEN)
-            ->exists();
+            ->where('status', SpotOrderStatusEnum::OPEN);
+
+        if ($excludeUserId !== null) {
+            $query->where('user_id', '!=', $excludeUserId);
+        }
+
+        return $query->exists();
     }
 }

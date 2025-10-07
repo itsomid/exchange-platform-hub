@@ -52,7 +52,7 @@ class SpotService
 
         // For market orders, check if opposite side has orders
         if ($type === SpotOrderTypeEnum::MARKET) {
-            if (!$this->spotOrderRepository->hasOrdersOnOppositeSide($requestDTO->getMarketId(), $side)) {
+            if (!$this->spotOrderRepository->hasOrdersOnOppositeSide($requestDTO->getMarketId(), $side, $requestDTO->getUserId())) {
                 throw new InvalidArgumentException('امکان ثبت سفارش بازار وجود ندارد.');
             }
         }
