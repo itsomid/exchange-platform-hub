@@ -378,7 +378,8 @@
 
                                 </td>
                                 <td class="font-number">
-                                    {{ \App\Helpers\DateFormatter::convertToPersianDate($transaction->created_at, 'H:i:s %Y/%m/%d') }}
+                                    {{ \App\Helpers\DateFormatter::convertToPersianDate($transaction->created_at, 'H:i:s %Y/%m/%d') }}<br>
+                                    <small class="text-muted ">{{ $transaction->created_at->format('Y/m/d') }}</small>
                                 </td>
 
                                 <td>
