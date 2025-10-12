@@ -113,17 +113,25 @@ class OrderController extends Controller
     public function cancel(SpotOrder $order)
     {
         if (! Gate::allows('update-spot-order', $order)) {
-            abort(403);
+            return response()->json([
+                'message' => __('auth.access_denied'),
+            ], 403);
         }
 
-        $this->spotService->cancel(
-            userId: Auth::id(),
-            orderId: $order->id
-        );
+        try {
+            $this->spotService->cancel(
+                userId: Auth::id(),
+                orderId: $order->id
+            );
 
-        return response([
-            'message' => __('spot.order_canceled'),
-        ]);
+            return response()->json([
+                'message' => __('spot.order_canceled'),
+            ]);
+        } catch (Throwable $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+            ], 400);
+        }
     }
 
 

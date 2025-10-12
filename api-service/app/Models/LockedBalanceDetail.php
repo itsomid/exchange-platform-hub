@@ -21,6 +21,7 @@ class LockedBalanceDetail extends Model
         'otc_order_id',
         'spot_order_id',
         'amount',
+        'description',
     ];
 
     protected function casts(): array

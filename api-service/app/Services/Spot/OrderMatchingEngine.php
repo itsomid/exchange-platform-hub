@@ -231,6 +231,14 @@ readonly class OrderMatchingEngine
                  $order->price = $order->getOriginal('price');
             }
             $order->update(['status' => SpotOrderStatusEnum::COMPLETED]);
+            
+            // Update description before deleting locked balance for completed order
+            $lockedDetail = LockedBalanceDetail::query()->where('spot_order_id', $order->id)->first();
+            if ($lockedDetail) {
+                $description = "تکمیل سفارش اسپات #{$order->id} - پر شده: {$order->filled_quantity}";
+                $lockedDetail->update(['description' => $description]);
+            }
+            
             LockedBalanceDetail::query()
                 ->where('spot_order_id', $order->id)
                 ->delete();
@@ -256,6 +264,14 @@ readonly class OrderMatchingEngine
                 $oppositeOrder->price = $oppositeOrder->getOriginal('price');
            }
             $oppositeOrder->update(['status' => SpotOrderStatusEnum::COMPLETED]);
+            
+            // Update description before deleting locked balance for completed opposite order
+            $oppositeLockedDetail = LockedBalanceDetail::query()->where('spot_order_id', $oppositeOrder->id)->first();
+            if ($oppositeLockedDetail) {
+                $description = "تکمیل سفارش اسپات #{$oppositeOrder->id} - پر شده: {$oppositeOrder->filled_quantity}";
+                $oppositeLockedDetail->update(['description' => $description]);
+            }
+            
             LockedBalanceDetail::query()
                 ->where('spot_order_id', $oppositeOrder->id)
                 ->delete();
@@ -471,6 +487,20 @@ readonly class OrderMatchingEngine
 
                 // Release any remaining locked balance associated with the canceled portion
                 $this->releaseRemainingLockedBalance($order);
+
+                // Update description before deleting locked balance for canceled market order
+                $lockedDetail = LockedBalanceDetail::query()->where('spot_order_id', $order->id)->first();
+                if ($lockedDetail) {
+                    $description = '';
+                    if (Math::comp($filledQuantity, 0) !== 0) {
+                        // Partially filled market order
+                        $description = "لغو سفارش مارکت #{$order->id} - پر شده: {$filledQuantity} از {$initialQuantity}";
+                    } else {
+                        // Fully unfilled market order
+                        $description = "لغو سفارش مارکت #{$order->id} - بدون پر شدن";
+                    }
+                    $lockedDetail->update(['description' => $description]);
+                }
 
                 // Clean up any potentially remaining locked balance detail entry
                 LockedBalanceDetail::query()

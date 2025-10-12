@@ -196,13 +196,18 @@ class SpotService
             ->setCreatedAt($order->created_at);
     }
 
-    public function cancel(int $userId, int $orderId): void
+    public function cancel(int $userId, int $orderId)
     {
         try {
             DB::beginTransaction();
             $order = $this->spotOrderRepository->getOneWithLock($orderId);
+         
+            if ($order === null) {
+                throw new InvalidArgumentException('سفارش موردنظر یافت نشد.');
+            }
+
             if ($order->status !== SpotOrderStatusEnum::OPEN) {
-                return;
+                throw new InvalidArgumentException('این سفارش در وضعیت باز نیست و قابل لغو نیست.');
             }
 
             // Check if this is a bot order
@@ -226,14 +231,36 @@ class SpotService
     private function cancelRegularOrder(int $userId, $order): void
     {
         $lockedDetail = $this->lockedBalanceRepository->getOne($order->id, LockedBalanceTypeEnum::SPOT);
-
+      
         $amountRefund = $lockedDetail->amount;
+
         //Partial Matched
         if (Math::comp($order->filled_quantity, '0') !== 0) {
-            $amountRefund = Math::sub($lockedDetail->amount, $order->getFilledValue());
+            if ($order->side === SpotOrderSideEnum::BUY) {
+                // For buy orders, we locked quote currency (e.g., USDT)
+                // Refund = locked amount - (filled_quantity * price)
+                $amountRefund = Math::sub($lockedDetail->amount, $order->getFilledValue());
+            } else {
+                // For sell orders, we locked base currency (e.g., TRX)
+                // Refund = locked amount - filled_quantity
+                $amountRefund = Math::sub($lockedDetail->amount, $order->filled_quantity);
+            }
         }
-
+       
         $market = $order->market;
+        
+        // Update description before deleting locked balance
+        $description = '';
+        if (Math::comp($order->filled_quantity, '0') !== 0) {
+            // Partially filled order
+            $description = "لغو سفارش اسپات #{$order->id} - پر شده: " . formatNumberTrimZeros($order->filled_quantity) . " از " . formatNumberTrimZeros($order->quantity);
+        } else {
+            // Fully unfilled order
+            $description = "لغو سفارش اسپات #{$order->id} - بدون پر شدن";
+        }
+        
+        $lockedDetail->update(['description' => $description]);
+        
         $this->lockedBalanceRepository->deleteSpotOrderLockedBalance($order->id);
 
         if ($order->side === SpotOrderSideEnum::BUY) {
@@ -242,11 +269,11 @@ class SpotService
             $currency = $market->base_currency;
         }
         $wallet = $this->walletRepository->getWalletWithLock($currency, $userId);
-
+       
         $wallet->decrement('locked_balance', $amountRefund);
-
+ 
         $order->update([
-            'status' => SpotOrderStatusEnum::CANCELED,
+            'status' => SpotOrderStatusEnum::PARTIALLY_FILLED_CANCELED,
         ]);
     }
 
