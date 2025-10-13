@@ -120,7 +120,7 @@ services:
         - UID=${UID:-1000}
         - GID=${GID:-1000}
         - USER=${USER:-laraveluser}
-    container_name: laravel-admin-cron
+    container_name: admin-cron
     volumes:
       - ./admin-panel:/var/www/html:delegated
       - ./env/admin_panel.env:/var/www/html/.env
@@ -139,7 +139,7 @@ services:
         - UID=${UID:-1000}
         - GID=${GID:-1000}
         - USER=${USER:-laraveluser}
-    container_name: laravel-api-cron
+    container_name: api-cron
     volumes:
       - "./api-service:/var/www/html:delegated"
       - "./env/api_service.env:/var/www/html/.env"
@@ -147,7 +147,7 @@ services:
       - database
     working_dir: /var/www/html
     #    entrypoint: /bin/sh -c "while true; do php artisan schedule:run >> /dev/null 2>&1; sleep 60; done"
-    entrypoint: /bin/sh -c "while true; do echo \"[ $(date) ] Running schedule...\"; php artisan schedule:run; sleep 60; done"
+    entrypoint: /bin/sh -c "while true; do php artisan schedule:run >> /dev/null 2>&1; sleep 60; done"
     networks:
       - laravel
     extra_hosts:
