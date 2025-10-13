@@ -218,6 +218,9 @@ class WalletController extends Controller
             'block_amount' => 'required|numeric|min:0',
             'description' => 'nullable|string',
         ]);
+        if ($validated['block_amount'] == 0 ){
+            return redirect()->back()->withErrors(['block_amount' => 'مقدار بلاک باید بیشتر از 0 باشد']);
+        }
         // Check if block amount is valid
         if ($validated['block_amount'] > $wallet->balance - $wallet->locked_balance) {
             return redirect()->back()->withErrors(['block_amount' => 'مقدار بلاکی از موجودی کاربر بیشتر است']);
