@@ -119,6 +119,16 @@ class User extends Authenticatable implements CanResetPassword, MustVerifyEmail
     }
 
     /**
+     * Send the email verification notification as a queued mailable.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        $url = $this->getUrlForEmailVerification();
+        \Illuminate\Support\Facades\Mail::to($this->email)
+            ->queue(new \App\Mail\EmailVerificationMail($this, $url));
+    }
+
+    /**
      * Retrieve the latest email verification token for the user.
      */
     public function getLatestToken(): int
