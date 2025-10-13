@@ -47,7 +47,7 @@ class CleanupIncompleteBotOrders extends Command
         // Exclude orders that have been partially filled or have associated trades
         $query = SpotOrder::query()
             ->where('source', SpotOrderSourceEnum::BOT)
-            ->whereIn('status', [SpotOrderStatusEnum::OPEN, SpotOrderStatusEnum::CANCELED])
+            ->where('status', SpotOrderStatusEnum::CANCELED)
             ->where('created_at', '<', $cutoffTime)
             ->where('filled_quantity', '0') // Only orders with no filled quantity
             ->whereDoesntHave('makerTrades') // No trades as maker
