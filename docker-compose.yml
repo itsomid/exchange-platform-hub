@@ -169,7 +169,7 @@ services:
     depends_on:
       - database
     working_dir: /var/www/html
-    entrypoint: [ 'php', '/var/www/html/artisan', 'queue:work', '--tries=20', '--timeout=60', '--queue=default,admin-email,api-withdrawal' ]
+    entrypoint: [ 'php', '/var/www/html/artisan', 'queue:work', '--tries=20', '--timeout=60', '--queue=default,admin-email' ]
     networks:
       - laravel
 
@@ -188,7 +188,7 @@ services:
     depends_on:
       - database
     working_dir: /var/www/html
-    entrypoint: [ 'php', '/var/www/html/artisan', 'queue:work', '--tries=20', '--timeout=60', '--queue=api-service,api-email' ]
+    entrypoint: [ 'php', '/var/www/html/artisan', 'queue:work', '--tries=20', '--timeout=60', '--queue=api-service,api-email,api-withdrawal' ]
     networks:
       - laravel
     extra_hosts:
