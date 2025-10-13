@@ -272,9 +272,18 @@ class SpotService
        
         $wallet->decrement('locked_balance', $amountRefund);
  
-        $order->update([
-            'status' => SpotOrderStatusEnum::PARTIALLY_FILLED_CANCELED,
-        ]);
+        // Set status based on whether order was partially filled
+        if (Math::comp($order->filled_quantity, '0') !== 0) {
+            // Order was partially filled
+            $order->update([
+                'status' => SpotOrderStatusEnum::PARTIALLY_FILLED_CANCELED,
+            ]);
+        } else {
+            // Order was not filled at all
+            $order->update([
+                'status' => SpotOrderStatusEnum::CANCELED,
+            ]);
+        }
     }
 
     /**
