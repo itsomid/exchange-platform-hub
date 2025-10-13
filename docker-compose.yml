@@ -29,7 +29,7 @@ services:
       - php-admin
       - database
       - admin-queue
-      - laravel-admin-cron
+      - admin-cron
     #      - phpmyadmin
     networks:
       - laravel
@@ -72,7 +72,7 @@ services:
       - php-api
       - database
       - api-queue
-      - laravel-api-cron
+      - api-cron
     networks:
       - laravel
 
