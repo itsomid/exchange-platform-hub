@@ -268,7 +268,7 @@
                                                         class="d-flex align-items-sm-center justify-content-between border-bottom py-4 mb-4">
                                                         <div class="d-flex flex-wrap gap-2 font-number">
                                                             <span
-                                                                class="text-success">{{ formatNumberTrimZeros($spotOrder->filled_quantity / $spotOrder->quantity) * 100 }}%
+                                                                class="text-success">{{ formatNumberTrimZeros($spotOrder->filled_quantity / $spotOrder->quantity ) * 100 }}%
                                                                 اجرا شده</span>
                                                         </div>
                                                         <div class="d-flex align-items-center">
@@ -295,15 +295,24 @@
                                                     </div>
                                                     <div
                                                         class="d-flex align-items-sm-center justify-content-between border-bottom py-4 mb-4">
+                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">مقدار اجرا شده</h6>
+                                                        <div class="d-flex flex-wrap gap-1 font-number" dir="ltr">
+                                                            <span
+                                                                class="text-info">{{ formatNumberTrimZeros($spotOrder->filled_quantity) }}
+                                                                {{ $spotOrder->market->base_currency }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div
+                                                        class="d-flex align-items-sm-center justify-content-between border-bottom py-4 mb-4">
                                                         <h6 class="m-0 mb-2 mb-md-0 me-12">قیمت</h6>
                                                         <div class="d-flex flex-wrap gap-1 font-number" dir="ltr">
-                                                            <span>{{ $spotOrder->price ? formatNumber($spotOrder->price) : 'سفارش بازار' }}</span>
+                                                            <span>{{ $spotOrder->price ? formatNumberTrimZeros($spotOrder->price) : 'سفارش بازار' }}</span>
                                                             <span>{{ $spotOrder->price ? 'USDT' : '' }}</span>
                                                         </div>
                                                     </div>
                                                     <div
                                                         class="d-flex align-items-sm-center justify-content-between border-bottom py-4 mb-4">
-                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">ارزش سفارش</h6>
+                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">ارزش کل سفارش</h6>
                                                         <div class="d-flex flex-wrap gap-1 font-number" dir="ltr">
                                                             <span>{{ $spotOrder->price ? formatNumberTrimZeros(bcmul($spotOrder->price, $spotOrder->quantity, 8)) : 'سفارش بازار' }}</span>
                                                             <span>{{ $spotOrder->price ? 'USDT' : '' }}</span>
@@ -311,11 +320,11 @@
                                                     </div>
                                                     <div
                                                         class="d-flex align-items-sm-center justify-content-between border-bottom py-4 mb-4">
-                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">مقدار اجرا شده</h6>
+                                                        <h6 class="m-0 mb-2 mb-md-0 me-12">ارزش اجرا شده</h6>
                                                         <div class="d-flex flex-wrap gap-1 font-number" dir="ltr">
-                                                            <span
-                                                                class="text-info">{{ formatNumberTrimZeros($spotOrder->filled_quantity) }}
-                                                                {{ $spotOrder->market->base_currency }}</span>
+
+                                                            <span>{{ $spotOrder->price ? formatNumberTrimZeros(bcmul($spotOrder->price, $spotOrder->filled_quantity, 8)) : 'سفارش بازار' }}</span>
+                                                            <span>{{ $spotOrder->price ? 'USDT' : '' }}</span>
                                                         </div>
                                                     </div>
                                                     <div
@@ -383,9 +392,9 @@
                                                                                 <td>{{ formatNumberTrimZeros($trade->quantity) }}
                                                                                     <small>{{ $spotOrder->market->base_currency }}</small>
                                                                                 </td>
-                                                                                <td>{{ formatNumber($trade->price) }}</td>
+                                                                                <td>{{ formatNumberTrimZeros($trade->price) }}</td>
                                                                                 <td class="text-success">
-                                                                                    {{ formatNumber($trade->price * $trade->quantity) }}
+                                                                                    {{ formatNumberTrimZeros($trade->price * $trade->quantity) }}
                                                                                 </td>
                                                                                 <td class="text-danger" dir="ltr">
                                                                                     <small>{{ formatNumberTrimZeros($trade->commission->maker_commission_amount) }}

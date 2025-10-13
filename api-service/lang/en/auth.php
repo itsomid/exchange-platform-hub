@@ -35,4 +35,5 @@ return [
         'disable-success' => '2FA has been successfully disabled.',
     ],
     'too_many_attempts' => 'Too many attempts. Please try again later.',
+    'access_denied' => 'You do not have permission to perform this action.',
 ];
