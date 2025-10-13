@@ -112,7 +112,7 @@ services:
       - laravel
 
   # Laravel Cron Jobs
-  laravel-admin-cron:
+  admin-cron:
     build:
       context: ./dockerfiles
       dockerfile: php.dockerfile
@@ -131,7 +131,7 @@ services:
     networks:
       - laravel
 
-  laravel-api-cron:
+  api-cron:
     build:
       context: ./dockerfiles
       dockerfile: php.dockerfile
