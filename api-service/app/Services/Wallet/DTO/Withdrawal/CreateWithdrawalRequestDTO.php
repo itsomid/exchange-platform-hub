@@ -14,6 +14,8 @@ class CreateWithdrawalRequestDTO
 
     private string $address;
 
+    private ?string $remark = null;
+
     public function setUserId(int $userId): CreateWithdrawalRequestDTO
     {
         $this->userId = $userId;
@@ -72,5 +74,17 @@ class CreateWithdrawalRequestDTO
     public function getCurrencyChain(): string
     {
         return $this->currencyChain;
+    }
+
+    public function setRemark(?string $remark): CreateWithdrawalRequestDTO
+    {
+        $this->remark = $remark;
+
+        return $this;
+    }
+
+    public function getRemark(): ?string
+    {
+        return $this->remark;
     }
 }

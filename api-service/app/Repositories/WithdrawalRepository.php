@@ -24,6 +24,7 @@ class WithdrawalRepository implements WithdrawalRepositoryInterface
             'total_fee' => Math::add($requestDTO->getExchangeFee(), $requestDTO->getNetworkFee()),
             'currency_chain_id' => $requestDTO->getCurrencyChainId(),
             'currency_symbol' => $requestDTO->getCurrencySymbol(),
+            'remark' => $requestDTO->getRemark(),
         ]);
     }
 

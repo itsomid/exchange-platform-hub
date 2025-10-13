@@ -24,6 +24,8 @@ class CreateWithdrawalRequestDTO
 
     private WithdrawalStatusEnum $status;
 
+    private ?string $remark = null;
+
     public function setUserId(int $user_id): CreateWithdrawalRequestDTO
     {
         $this->user_id = $user_id;
@@ -130,5 +132,17 @@ class CreateWithdrawalRequestDTO
     public function getUSDTValue(): string
     {
         return $this->USDTValue;
+    }
+
+    public function setRemark(?string $remark): CreateWithdrawalRequestDTO
+    {
+        $this->remark = $remark;
+
+        return $this;
+    }
+
+    public function getRemark(): ?string
+    {
+        return $this->remark;
     }
 }

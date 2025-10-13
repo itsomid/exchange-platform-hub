@@ -44,11 +44,16 @@ Route::prefix('/wallets')->group(function () {
     Route::get('/value-usdt', [WalletController::class, 'assetsUSDTValue'])->name('wallets.value-usdt');
     Route::get('/check-withdrawal-limit', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, 'checkWithdrawalLimit']);
 
+    Route::get('/withdrawals', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, 'lists'])->name('wallets.withdrawals');
     Route::post('/withdrawal', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, '__invoke'])->name('wallets.withdraw')->middleware([\App\Http\Middleware\FinancialWithdrawalBlockMiddleware::class]);
-    Route::post('/check-withdrawal', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, 'checkWithdrawal'])->name('wallets.check-withdrawal')
+    Route::post('/check-all-pending-withdrawal', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, 'checkWithdrawal'])->name('wallets.check-all-withdrawal')
         ->middleware(['throttle:' . config('bitexroom.withdrawal.check_wallet_attempts.max_attempts') . ',' . config('bitexroom.withdrawal.check_wallet_attempts.minutes')]);
-
+        
+    Route::post('/check-withdrawal/{withdrawalId}', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, 'checkWithdrawalById'])->name('wallets.check-withdraw-by-id')
+        ->middleware(['throttle:' . config('bitexroom.withdrawal.check_wallet_attempts.max_attempts') . ',' . config('bitexroom.withdrawal.check_wallet_attempts.minutes')]);
+    
     Route::get('/{currencySymbol}', [WalletController::class, 'show'])->name('wallets.show');
+
 });
 Route::prefix('saved-addresses')->group(function () {
     Route::get('/addresses', [\App\Http\Controllers\V1\Wallet\SavedAddressController::class, 'lists']);
@@ -58,6 +63,7 @@ Route::prefix('saved-addresses')->group(function () {
 // Transaction
 Route::prefix('transactions')->group(function () {
     Route::get('/all-deposit-withdraw', [\App\Http\Controllers\V1\Transaction\TransactionController::class, 'allDepositWithdraw'])->name('transactions.all-deposit-withdraw');
+
 });
 // Portfolio
 Route::prefix('/portfolio')->group(function () {
@@ -97,17 +103,18 @@ Route::prefix('/tickets')->group(function () {
     Route::post('/{ticket}/reply', [App\Http\Controllers\V1\User\TicketController::class, 'reply']);
 });
 
+
 // Spot
 Route::prefix('/spot')->group(function () {
     // get-markets
     Route::get('/markets', [\App\Http\Controllers\V1\Spot\MarketController::class, 'lists'])->name('spot.markets')->withoutMiddleware(['auth:sanctum', 'verified']);
 
-    Route::get('/markets/{marketId}/state', [\App\Http\Controllers\V1\Spot\MarketController::class, 'getState']);
+    Route::get('/markets/state/{marketId}', [\App\Http\Controllers\V1\Spot\MarketController::class, 'getState']);
     Route::prefix('/orders')->group(function () {
         Route::post('/', [\App\Http\Controllers\V1\Spot\OrderController::class, 'store']);
         Route::get('/', [\App\Http\Controllers\V1\Spot\OrderController::class, 'lists']);
         Route::get('/{order}', [\App\Http\Controllers\V1\Spot\OrderController::class, 'show']);
-        Route::post('cancel/{order}', [\App\Http\Controllers\V1\Spot\OrderController::class, 'cancel']);
+        Route::post('/cancel/{order}', [\App\Http\Controllers\V1\Spot\OrderController::class, 'cancel']);
     });
     Route::get('/order-books/{marketId}', [\App\Http\Controllers\V1\Spot\OrderController::class, 'getOrderBooks'])->name('spot.order-books');
 

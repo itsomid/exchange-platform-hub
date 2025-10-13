@@ -48,7 +48,7 @@ services:
       - "./admin-panel:/var/www/html:delegated"
       - "./env/admin_panel.env:/var/www/html/.env"
       - "./admin-panel/storage:/var/www/html/storage"
-      - "/var/run/docker.sock:/var/run/docker.sock"  # دسترسی به Docker daemon
+      - "/var/run/docker.sock:/var/run/docker.sock" # دسترسی به Docker daemon
     networks:
       - laravel
     extra_hosts:
@@ -169,7 +169,7 @@ services:
     depends_on:
       - database
     working_dir: /var/www/html
-    entrypoint: [ 'php', '/var/www/html/artisan', 'queue:work', '--tries=20', '--timeout=60', '--queue=default,admin-email' ]
+    entrypoint: [ 'php', '/var/www/html/artisan', 'queue:work', '--tries=20', '--timeout=60', '--queue=default,admin-email,api-withdrawal' ]
     networks:
       - laravel
 
@@ -193,7 +193,6 @@ services:
       - laravel
     extra_hosts:
       - "host.docker.internal:host-gateway"
-
 
   # Laravel Queue Workers
   exchange-listen:

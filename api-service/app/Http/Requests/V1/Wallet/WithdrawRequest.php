@@ -54,6 +54,12 @@ use Illuminate\Validation\Rule;
  *         type="string",
  *         description="The OTP code for two-factor authentication.",
  *         example="123456"
+ *     ),
+ *     @OA\Property(
+ *         property="remark",
+ *         type="string",
+ *         description="Optional user note for the withdrawal.",
+ *         example="Payment for services"
  *     )
  * )
  */
@@ -89,6 +95,7 @@ class WithdrawRequest extends FormRequest
                 },
             ],
             'amount' => ['required', new CheckMinAmount($this->input('currency'), $this->input('currency_chain')), new CheckWalletBalance($this->input('currency'))],
+            'remark' => ['nullable', 'string', 'max:100'],
         ];
 
         // Skip 2FA and OTP validation on localhost
@@ -117,6 +124,8 @@ class WithdrawRequest extends FormRequest
             'amount.required' => __('validation.required', ['attribute' => 'مقدار']),
             '2fa_code.required' => __('validation.required', ['attribute' => 'کد Google 2FA']),
             'otp_code.required' => __('validation.required', ['attribute' => 'کد OTP']),
+            'remark.string' => __('validation.string', ['attribute' => 'یادداشت']),
+            'remark.max' => __('validation.max.string', ['attribute' => 'یادداشت', 'max' => 1000]),
         ];
     }
 }

@@ -31,6 +31,7 @@ class Withdrawal extends Model
         'transaction_hash',
         'status',
         'description',
+        'remark',
         'confirmed_at',
     ];
 

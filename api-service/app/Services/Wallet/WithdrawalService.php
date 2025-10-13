@@ -84,6 +84,7 @@ class WithdrawalService
                     ->setNetworkFee($chain->network_fee)
                     ->setExchangeFee($chain->exchange_withdrawal_fee)
                     ->setStatus($withdrawalStatus)
+                    ->setRemark($requestDTO->getRemark())
             );
             $this->lockBalance($wallet, $amount, $withdrawal->id);
 
@@ -93,19 +94,13 @@ class WithdrawalService
                     'description' => 'Admin approval required',
                 ]);
             } else {
+                // Update status to queued
                 $withdrawal->update([
-                    'description' => 'Withdraw request send to HD Wallet',
+                    'status' => WithdrawalStatusEnum::QUEUED,
+                    'description' => 'Withdrawal queued for processing'
                 ]);
-
-                $this->withdrawalService->withdraw(
-                    resolve(WithdrawRequestDTO::class)
-                        ->setAmount($receivedAmount)
-                        ->setWithdrawalId($withdrawal->id)
-                        ->setWithdrawAddress($requestDTO->getAddress())
-                        ->setBlockchain($chain->blockchain_name->value)
-                        ->setUserId($requestDTO->getUserId())
-                        ->setCurrencySymbol($requestDTO->getCurrencySymbol())
-                );
+                // Dispatch job to process withdrawal
+                \App\Jobs\SendWithdrawalToHDWallet::dispatch($withdrawal->id);
             }
             DB::commit();
 
@@ -349,6 +344,7 @@ class WithdrawalService
             'wallet_id' => $wallet->id,
             'amount' => $amount,
             'type' => LockedBalanceTypeEnum::WITHDRAWAL,
+            'description' => 'مسدود سازی دارایی بابت برداشت #' . $withdrawalId,
             'withdrawal_id' => $withdrawalId,
         ]);
         // Deduct balance and lock funds
