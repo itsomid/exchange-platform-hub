@@ -116,7 +116,7 @@
                             <div class="content-left">
                                 <span class="">ارزش واریزها</span>
                                 <div class="d-flex align-items-center my-1">
-                                    <h4 class="mb-0 me-2">{{formatNumber($totalDepositsValue,2)}}</h4>
+                                    <h4 class="mb-0 me-2">{{formatNumberTrimZeros($totalDepositsValue,2)}}</h4>
                                     <small>USDT</small>
                                 </div>
                             </div>
