@@ -100,13 +100,27 @@ class CleanupIncompleteBotOrders extends Command
         $bar->start();
         
         $deletedCount = 0;
-        $query->chunk(100, function ($orders) use (&$deletedCount, $bar) {
+        
+        // First, collect all IDs to avoid issues with changing query during deletion
+        $orderIds = $query->pluck('id')->toArray();
+        
+        // Process orders in chunks by ID
+        $chunks = array_chunk($orderIds, 100);
+        
+        foreach ($chunks as $chunk) {
+            $orders = SpotOrder::whereIn('id', $chunk)->get();
+            
             foreach ($orders as $order) {
-                $order->delete();
-                $deletedCount++;
-                $bar->advance();
+                try {
+                    $order->delete();
+                    $deletedCount++;
+                    $bar->advance();
+                } catch (\Exception $e) {
+                    $this->error("Failed to delete order ID {$order->id}: " . $e->getMessage());
+                    $bar->advance(); // Still advance the bar to maintain count
+                }
             }
-        });
+        }
         
         $bar->finish();
         $this->newLine();
