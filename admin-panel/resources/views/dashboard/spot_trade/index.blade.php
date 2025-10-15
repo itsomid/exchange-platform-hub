@@ -309,7 +309,7 @@
                                 <span class="ms-1">{{formatNumberTrimZeros($spotTrade->quantity)  }}</span>
                                 <small>{{$spotTrade->market->base_currency}}</small>
                             </td>
-                            <td dir="ltr">{{ formatNumber($spotTrade->price) }}
+                            <td dir="ltr">{{ formatNumberTrimZeros($spotTrade->price) }}
                                 <small>USDT</small>
                             </td>
                             <td>{{ $spotTrade->makerOrder->user->email }}</td>
