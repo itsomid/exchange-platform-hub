@@ -52,7 +52,7 @@ class DeleteSpecificSpotTrades extends Command
             $spotTradesCount = $spotTrades->count();
 
             // Find related trading commissions
-            $tradingCommissions = DB::table('trading_commission')
+            $tradingCommissions = DB::table('trading_commissions')
                 ->whereIn('spot_trade_id', $spotTradeIds)
                 ->get();
 
@@ -104,7 +104,7 @@ class DeleteSpecificSpotTrades extends Command
             DB::transaction(function () use ($spotTradeIds, $commissionsCount, $spotTradesCount) {
                 // Delete trading commissions first (foreign key constraint)
                 if ($commissionsCount > 0) {
-                    $deletedCommissions = DB::table('trading_commission')
+                    $deletedCommissions = DB::table('trading_commissions')
                         ->whereIn('spot_trade_id', $spotTradeIds)
                         ->delete();
                     
