@@ -291,7 +291,7 @@
                                 <td class="text-heading fw-medium">
                                     <img src="{{ asset($spotTrade->market->baseCurrency->coinLogo()) }}"
                                         class="rounded-circle" width="32px">
-                                    <small>{{ $spotTrade->market->name }}</small>
+                                    <small class="ms-1">{{ $spotTrade->market->name }}</small>
                                 </td>
 
                                 <td>{{ $spotTrade->takerOrder->type->label() }}</td>
