@@ -19,7 +19,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('bitexroom:transfer-to-hot-wallet')->everyFiveMinutes();
         
         // Cleanup incomplete bot orders every 5 minutes
-        $schedule->command('orders:cleanup-bot-orders --silent')->everyFiveMinutes();
+        $schedule->command('orders:cleanup-bot-orders --silent')->everyTenMinutes();
         
         //        $schedule->command('backup:clean')->daily()->at('03:00');
         //        $schedule->command('backup:run')->daily()->at('04:00');
