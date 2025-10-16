@@ -119,11 +119,11 @@
                                     <td class="text-black font-number">
                                         {{ formatNumberTrimZeros($wallet->balance) }}</td>
                                     <td class="font-number">
-                                        {{ formatNumberTrimZeros(bcsub($wallet->balance, $wallet->locked_balance, $wallet->currency->precision)) }}
+                                        {{ formatNumberTrimZeros(bcsub($wallet->balance, $wallet->locked_balance,8)) }}
                                         <br>
                                         @if ($wallet->locked_balance > 0)
                                             <small class="text-danger">
-                                                {{ formatNumberTrimZeros($wallet->locked_balance, $wallet->currency->precision) }}
+                                                {{ formatNumberTrimZeros($wallet->locked_balance) }}
                                                 <i class="fa-regular fa-lock"></i>
                                             </small>
                                         @endif
@@ -715,32 +715,32 @@ document.addEventListener('DOMContentLoaded', function() {
     const tabButtons = document.querySelectorAll('[data-bs-toggle="tab"]');
     const tabPanes = document.querySelectorAll('.tab-pane');
     const storageKey = 'inquiry_user_active_tab';
-    
+
     // بازیابی آخرین تب فعال از localStorage
     const savedTab = localStorage.getItem(storageKey);
-    
+
     if (savedTab) {
         // حذف کلاس active از همه تب‌ها و پنل‌ها
         tabButtons.forEach(btn => {
             btn.classList.remove('active');
             btn.setAttribute('aria-selected', 'false');
         });
-        
+
         tabPanes.forEach(pane => {
             pane.classList.remove('active', 'show');
         });
-        
+
         // فعال کردن تب ذخیره شده
         const savedButton = document.querySelector(`[data-bs-target="${savedTab}"]`);
         const savedPane = document.querySelector(savedTab);
-        
+
         if (savedButton && savedPane) {
             savedButton.classList.add('active');
             savedButton.setAttribute('aria-selected', 'true');
             savedPane.classList.add('active', 'show');
         }
     }
-    
+
     // ذخیره تب فعال هنگام کلیک
     tabButtons.forEach(button => {
         button.addEventListener('click', function() {

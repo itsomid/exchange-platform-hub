@@ -32,6 +32,7 @@ class UserAgentChangedMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
+            to: [$this->user->email],
             subject: 'دستگاه شما تغییر کرده است',
         );
     }

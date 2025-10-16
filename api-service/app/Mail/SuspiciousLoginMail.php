@@ -26,6 +26,7 @@ class SuspiciousLoginMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
+            to: [$this->data['user']->email],
             subject: 'هشدار امنیتی: ورود مشکوک به حساب کاربری',
         );
     }
