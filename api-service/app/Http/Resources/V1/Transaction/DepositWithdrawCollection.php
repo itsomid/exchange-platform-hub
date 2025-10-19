@@ -45,7 +45,9 @@ class DepositWithdrawCollection extends ResourceCollection
             'type' => $responseDTO->getType()->value,
             'type_lang' => __('enum.transaction-type.' . $responseDTO->getType()->name),
             'status' => $responseDTO->getStatus(),
-            'status_lang' => __('enum.deposit-withdrawal.' . $responseDTO->getStatus()),
+            'status_lang' => $responseDTO->getType()->name === 'DEPOSIT' 
+                ? __('enum.deposit.' . $responseDTO->getStatus()) 
+                : __('enum.withdrawal.' . $responseDTO->getStatus()),
             'explorer_address_url' => $responseDTO->getExplorerAddressUrl(),
             'explorer_tx_url' => $responseDTO->getExplorerTxUrl(),
             'confirmed_at' => $responseDTO->getConfirmedAt(),

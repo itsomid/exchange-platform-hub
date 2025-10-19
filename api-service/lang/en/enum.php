@@ -14,7 +14,7 @@ return [
         \App\Enums\TransactionStatusEnum::FAILED->name => 'failed',
         \App\Enums\TransactionStatusEnum::PENDING->name => 'pending',
     ],
-    'deposit-withdrawal' => [
+    'withdrawal' => [
         \App\Enums\WithdrawalStatusEnum::PENDING->name => 'pending',
         \App\Enums\WithdrawalStatusEnum::FAILED->name => 'failed',
         \App\Enums\WithdrawalStatusEnum::QUEUED->name => 'queued',
@@ -22,6 +22,8 @@ return [
         \App\Enums\WithdrawalStatusEnum::AWAITING_APPROVAL->name => 'awaiting_approval',
         \App\Enums\WithdrawalStatusEnum::COMPLETED->name => 'completed',
         \App\Enums\WithdrawalStatusEnum::REJECTED->name => 'rejected',
+    ],
+    'deposit' => [
         \App\Enums\DepositStatusEnum::PENDING->name => 'pending',
         \App\Enums\DepositStatusEnum::CONFIRMED->name => 'confirmed',
         \App\Enums\DepositStatusEnum::TOO_SMALL->name => 'too_small',

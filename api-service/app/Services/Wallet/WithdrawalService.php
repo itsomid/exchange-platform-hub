@@ -23,7 +23,6 @@ use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Repositories\Interfaces\WithdrawalRepositoryInterface;
 use App\Repositories\Interfaces\ExchangeRepositoryInterface;
 use App\Services\Exchanges\AdminNotification;
-use App\Services\Wallet\DTO\Withdrawal\CheckWithdrawalResponseDTO;
 use App\Services\Wallet\DTO\Withdrawal\CreateWithdrawalRequestDTO;
 use App\Services\Wallet\DTO\Withdrawal\CreateWithdrawalResponseDTO;
 use App\Repositories\DTO\Transaction\CreateTransactionRequestDTO;
@@ -121,103 +120,7 @@ class WithdrawalService
         $this->checkWithdrawal($pendingWithdrawal);
     }
 
-    public function checkSpecificUserWithdrawal(int $userId): CheckWithdrawalResponseDTO
-    {
-        $pendingWithdrawal = $this->withdrawalRepository->getUserAllPending($userId);
 
-        return $this->checkWithdrawal($pendingWithdrawal);
-    }
-
-    private function fialedWithdrawal(Withdrawal $withdrawal)
-    {
-
-        try {
-
-            DB::beginTransaction();
-
-            $this->lockedBalanceRepository->deleteWithdrawalLockedBalance($withdrawal->id);
-
-            $wallet = Wallet::query()
-                ->where('user_id', $withdrawal->user_id)
-                ->where('currency_symbol', $withdrawal->currency_symbol)
-                ->lockForUpdate()
-                ->first();
-
-            $wallet->decrement('locked_balance', $withdrawal->amount);
-
-            DB::commit();
-        } catch (Throwable $e) {
-            DB::rollBack();
-            report($e);
-            throw $e;
-        }
-    }
-
-    public function checkWithdrawal(Collection $pendingWithdrawal): CheckWithdrawalResponseDTO
-    {
-        $checkWithdrawalResponseDTO = resolve(CheckWithdrawalResponseDTO::class);
-
-        foreach ($pendingWithdrawal as $withdrawal) {
-            $user = $withdrawal->user;
-            try {
-
-                $responseDTO = $this->withdrawalService->getStatus(
-                    resolve(GetWithdrawalStatusRequestDTO::class)
-                        ->setWithdrawalId($withdrawal->id)
-                        ->setBlockchain($withdrawal->currencyChain->blockchain_name->value)
-                        ->setCurrencySymbol($withdrawal->currency_symbol)
-                );
-                $checkWithdrawalResponseDTO
-                    ->setWithdrawId($withdrawal->id)
-                    ->setCurrencyChain($withdrawal->currencyChain->chain->value)
-                    ->setWalletAddress($withdrawal->address)
-                    ->setAmount($withdrawal->amount)
-                    ->setTotalFee($withdrawal->total_fee)
-                    ->setCurrencySymbol($withdrawal->currency_symbol)
-                    ->setExplorerAddressUrl($withdrawal->explorer_address_url)
-                    ->setExplorerTxUrl($withdrawal->explorer_tx_url);
-
-                if ($responseDTO->getStatus() === 'failed') {
-
-                    $withdrawal->update([
-                        'status' => WithdrawalStatusEnum::FAILED,
-                        'description' => $responseDTO->getDescription(),
-                    ]);
-
-                    $this->fialedWithdrawal($withdrawal);
-
-                    $checkWithdrawalResponseDTO->setStatus(WithdrawalStatusEnum::FAILED)
-                        ->setConfirmedAt($withdrawal->confirmed_at)
-                        ->setTransactionHash($responseDTO->getTransactionHash());
-
-                    AdminNotification::sendHotWalletNotEnoughBalance($responseDTO->getCurrencySymbol(), $responseDTO->getAmount(), $user);
-                }
-
-                if ($responseDTO->getStatus() === 'completed') {
-
-                    $this->confirmWithdrawal($withdrawal, $responseDTO->getTransactionHash(), $responseDTO->getFee());
-
-                    $user->notify(new WithdrawalSuccessful($withdrawal->currency_symbol, $withdrawal->amount, $user->name, $withdrawal->currencyChain->chain->value));
-
-                    $checkWithdrawalResponseDTO->setStatus(WithdrawalStatusEnum::COMPLETED)
-                        ->setTransactionHash($responseDTO->getTransactionHash())
-                        ->setConfirmedAt($withdrawal->confirmed_at);
-                }
-            } catch (NotFoundException) {
-                report(new \Exception('Withdrawal #' . $withdrawal->id . ' not found in HD wallet Service'));
-                $withdrawal->update([
-                    'status' => WithdrawalStatusEnum::FAILED,
-                ]);
-                $this->fialedWithdrawal($withdrawal);
-            } catch (Throwable $exception) {
-                report($exception);
-
-                continue;
-            }
-        }
-
-        return $checkWithdrawalResponseDTO;
-    }
 
     private function confirmWithdrawal(Withdrawal $withdrawal, string $transactionHash, string $hdWalletNetworkFee): void
     {

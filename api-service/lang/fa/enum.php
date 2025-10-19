@@ -14,14 +14,16 @@ return [
         \App\Enums\TransactionStatusEnum::FAILED->name => 'خطا',
         \App\Enums\TransactionStatusEnum::PENDING->name => 'در انتظار',
     ],
-    'deposit-withdrawal' => [
+    'withdrawal' => [
         \App\Enums\WithdrawalStatusEnum::PENDING->name => 'در انتظار',
         \App\Enums\WithdrawalStatusEnum::FAILED->name => 'ناموفق',
         \App\Enums\WithdrawalStatusEnum::QUEUED->name => 'در صف ارسال',
-        \App\Enums\WithdrawalStatusEnum::PROCESSING->name => 'در حال ارسال',
-        \App\Enums\WithdrawalStatusEnum::AWAITING_APPROVAL->name => 'منتظر تأیید ادمین',
+        \App\Enums\WithdrawalStatusEnum::PROCESSING->name => 'در حال پردازش',
+        \App\Enums\WithdrawalStatusEnum::AWAITING_APPROVAL->name => 'در انتظار تایید',
         \App\Enums\WithdrawalStatusEnum::COMPLETED->name => 'انجام شده',
         \App\Enums\WithdrawalStatusEnum::REJECTED->name => 'رد شده توسط ادمین',
+    ],
+    'deposit' => [
         \App\Enums\DepositStatusEnum::PENDING->name => 'در حال انجام',
         \App\Enums\DepositStatusEnum::CONFIRMED->name => 'انجام شده',
         \App\Enums\DepositStatusEnum::TOO_SMALL->name => 'کمتر از حد مجاز',

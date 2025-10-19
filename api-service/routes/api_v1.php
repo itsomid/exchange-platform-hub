@@ -42,18 +42,13 @@ Route::prefix('/wallets')->group(function () {
     Route::post('/refresh', [WalletController::class, 'refresh'])->name('wallets.refresh')->middleware(['throttle:wallet-check']);
     Route::get('/lists', [WalletController::class, 'lists'])->name('wallets.lists');
     Route::get('/value-usdt', [WalletController::class, 'assetsUSDTValue'])->name('wallets.value-usdt');
-    Route::get('/check-withdrawal-limit', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, 'checkWithdrawalLimit']);
 
     Route::get('/withdrawals', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, 'lists'])->name('wallets.withdrawals');
     Route::post('/withdrawal', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, '__invoke'])->name('wallets.withdraw')->middleware([\App\Http\Middleware\FinancialWithdrawalBlockMiddleware::class]);
-    Route::post('/check-all-pending-withdrawal', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, 'checkWithdrawal'])->name('wallets.check-all-withdrawal')
-        ->middleware(['throttle:' . config('bitexroom.withdrawal.check_wallet_attempts.max_attempts') . ',' . config('bitexroom.withdrawal.check_wallet_attempts.minutes')]);
-        
-    Route::post('/check-withdrawal/{withdrawalId}', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, 'checkWithdrawalById'])->name('wallets.check-withdraw-by-id')
-        ->middleware(['throttle:' . config('bitexroom.withdrawal.check_wallet_attempts.max_attempts') . ',' . config('bitexroom.withdrawal.check_wallet_attempts.minutes')]);
-    
-    Route::get('/{currencySymbol}', [WalletController::class, 'show'])->name('wallets.show');
 
+    Route::get('/check-withdrawal-limit', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, 'checkWithdrawalLimit']);
+
+    Route::get('/{currencySymbol}', [WalletController::class, 'show'])->name('wallets.show');
 });
 Route::prefix('saved-addresses')->group(function () {
     Route::get('/addresses', [\App\Http\Controllers\V1\Wallet\SavedAddressController::class, 'lists']);
@@ -63,7 +58,6 @@ Route::prefix('saved-addresses')->group(function () {
 // Transaction
 Route::prefix('transactions')->group(function () {
     Route::get('/all-deposit-withdraw', [\App\Http\Controllers\V1\Transaction\TransactionController::class, 'allDepositWithdraw'])->name('transactions.all-deposit-withdraw');
-
 });
 // Portfolio
 Route::prefix('/portfolio')->group(function () {

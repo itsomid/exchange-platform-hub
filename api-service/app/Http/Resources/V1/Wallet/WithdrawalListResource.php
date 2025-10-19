@@ -27,7 +27,7 @@ class WithdrawalListResource extends JsonResource
             'type' => 'withdrawal',
             'type_lang' => __('enum.transaction-type.' . \App\Enums\TransactionTypeEnum::WITHDRAWAL->name),
             'status' => $this->status->value,
-            'status_lang' => __('enum.deposit-withdrawal.' . $this->status->name),
+            'status_lang' => __('enum.withdrawal.' . $this->status->name),
             'explorer_address_url' => $this->explorer_address_url,
             'explorer_tx_url' => $this->explorer_tx_url,
             'confirmed_at' => $this->confirmed_at?->toISOString(),

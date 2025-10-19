@@ -49,12 +49,13 @@ class SendWithdrawalToHDWallet implements ShouldQueue
         }
 
         try {
+            DB::beginTransaction();
+
             // Update status to processing
             $withdrawal->update([
                 'status' => WithdrawalStatusEnum::PROCESSING,
                 'description' => 'Processing withdrawal request'
             ]);
-            DB::beginTransaction();
 
             // Calculate received amount (amount - fees)
             $fee = Math::add($withdrawal->currencyChain->network_fee, $withdrawal->currencyChain->exchange_withdrawal_fee);
@@ -83,6 +84,7 @@ class SendWithdrawalToHDWallet implements ShouldQueue
                 ->delay(now()->addMinutes(2)); // Start checking after 2 minutes
 
             Log::info("Withdrawal {$this->withdrawalId} sent to HD Wallet successfully and status checking scheduled");
+
         } catch (Throwable $e) {
             DB::rollBack();
 
@@ -114,6 +116,7 @@ class SendWithdrawalToHDWallet implements ShouldQueue
                 Log::error("Withdrawal {$this->withdrawalId} marked as failed after all retry attempts", [
                     'error' => $exception->getMessage()
                 ]);
+
             } catch (Throwable $e) {
                 DB::rollBack();
                 Log::error("Failed to mark withdrawal {$this->withdrawalId} as failed", [

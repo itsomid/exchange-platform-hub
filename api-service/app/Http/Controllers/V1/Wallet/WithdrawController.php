@@ -5,7 +5,6 @@ namespace App\Http\Controllers\V1\Wallet;
 use App\Enums\WithdrawalStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Wallet\WithdrawRequest;
-use App\Http\Resources\V1\Wallet\CheckWithdrawalResource;
 use App\Http\Resources\V1\Wallet\WithdrawalResource;
 use App\Http\Resources\V1\Wallet\WithdrawalListResource;
 use App\Repositories\Interfaces\WithdrawalRepositoryInterface;
@@ -31,12 +30,12 @@ class WithdrawController extends Controller
 
         // Use repository to get withdrawals
         $withdrawals = $this->withdrawalRepository->getWithdrawals($userId, $currency);
-        
+
         // Manual pagination since repository returns Collection
         $total = $withdrawals->count();
         $offset = ($page - 1) * $limit;
         $paginatedWithdrawals = $withdrawals->slice($offset, $limit)->values();
-        
+
         $lastPage = (int) ceil($total / $limit);
         $from = $total > 0 ? $offset + 1 : null;
         $to = $total > 0 ? min($offset + $limit, $total) : null;
@@ -69,97 +68,6 @@ class WithdrawController extends Controller
         );
 
         return new WithdrawalResource($withdrawResponse);
-    }
-
-
-    public function checkWithdrawal()
-    {
-        $response = $this->withdrawalService->checkSpecificUserWithdrawal(Auth::id());
-
-        if ($response->getStatus() === null) {
-            return response([], Response::HTTP_NO_CONTENT);
-        }
-
-        $message = __('messages.withdrawals.check_withdrawal_started');
-        if ($response->getStatus() === WithdrawalStatusEnum::COMPLETED) {
-            $message = __('messages.withdrawals.check_withdrawal_success');
-        } elseif ($response->getStatus() === WithdrawalStatusEnum::FAILED) {
-            $message = __('messages.withdrawals.check_withdrawal_error');
-        }
-
-        $data = [
-            'available_in' => now()->addMinutes(config('bitexroom.withdrawal.check_wallet_attempts'))->format('Y-m-d H:i:s'),
-            'has_new_transaction' => $response->getStatus() === WithdrawalStatusEnum::COMPLETED || $response->getStatus() === WithdrawalStatusEnum::FAILED,
-        ];
-        $data['withdrawal_details'] = new CheckWithdrawalResource($response);
-
-        return response([
-            'message' => $message,
-            'status' => $response->getStatus(),
-            'data' => $data,
-        ]);
-    }
-
-
-    public function checkWithdrawalById(int $withdrawalId)
-    {
-        // Find the withdrawal record for the authenticated user
-        $withdrawal = \App\Models\Withdrawal::query()
-            ->with('currencyChain', 'user')
-            ->where('id', $withdrawalId)
-            ->where('user_id', Auth::id())
-            ->first();
-
-        if (!$withdrawal) {
-            return response([
-                'message' => __('messages.withdrawals.withdrawal_not_found'),
-            ], Response::HTTP_NOT_FOUND);
-        }
-
-        // Check if withdrawal is in pending status
-        if ($withdrawal->status !== WithdrawalStatusEnum::PENDING) {
-            return response([
-                'message' => __('messages.withdrawals.withdrawal_not_pending'),
-                'status' => $withdrawal->status,
-                'data' => [
-                    'withdrawal_id' => $withdrawal->id,
-                    'withdrawal_details' => new CheckWithdrawalResource($withdrawal),
-                ],
-            ]);
-        }
-
-        // Use the existing withdrawal service to check the specific withdrawal
-        $service = resolve(WithdrawalService::class);
-        $response = $service->checkWithdrawal(collect([$withdrawal]));
-
-        if ($response->getStatus() === null) {
-            return response([
-                'message' => __('messages.withdrawals.check_deposit_no_update'),
-                'data' => [
-                    'withdrawal_id' => $withdrawalId,
-                    'has_new_transaction' => false,
-                ],
-            ], Response::HTTP_NO_CONTENT);
-        }
-
-        $message = __('messages.withdrawals.check_deposit_started');
-        if ($response->getStatus() === WithdrawalStatusEnum::COMPLETED) {
-            $message = __('messages.withdrawals.check_deposit_success');
-        } elseif ($response->getStatus() === WithdrawalStatusEnum::FAILED) {
-            $message = __('messages.withdrawals.check_deposit_error');
-        }
-
-        $data = [
-            'withdrawal_id' => $withdrawalId,
-            'has_new_transaction' => $response->getStatus() === WithdrawalStatusEnum::COMPLETED || $response->getStatus() === WithdrawalStatusEnum::FAILED,
-        ];
-        $data['withdrawal_details'] = new CheckWithdrawalResource($response);
-
-        return response([
-            'message' => $message,
-            'status' => $response->getStatus(),
-            'data' => $data,
-        ]);
     }
 
 

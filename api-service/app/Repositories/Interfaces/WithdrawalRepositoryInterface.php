@@ -12,7 +12,7 @@ interface WithdrawalRepositoryInterface
 
     public function getWithdrawals(int $userId, ?string $currencySymbol = null): Collection;
 
-    public function getUserAllPending(int $userId): Collection;
+    public function getUserAllPendingWithdrawal(int $userId): Collection;
 
     public function getAllPending(): Collection;
 }

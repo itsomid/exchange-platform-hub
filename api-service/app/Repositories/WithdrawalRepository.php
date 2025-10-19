@@ -38,7 +38,7 @@ class WithdrawalRepository implements WithdrawalRepositoryInterface
             ->get();
     }
 
-    public function getUserAllPending(int $userId): Collection
+    public function getUserAllPendingWithdrawal(int $userId): Collection
     {
         return Withdrawal::query()
             ->with('currencyChain', 'user')
