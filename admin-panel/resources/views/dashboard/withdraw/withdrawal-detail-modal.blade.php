@@ -86,6 +86,12 @@
         {{ $withdraw->description }}
     </div>
 </div>
+<div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+    <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات کاربر (Remark)</h6>
+    <div class="text-wrap font-number w-60 text-end">
+        {{ $withdraw->remark }}
+    </div>
+</div>
 
 @if ($withdraw->transaction)
     <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">

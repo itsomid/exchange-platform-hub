@@ -10,7 +10,7 @@ use App\Helpers\DateFormatter;
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
 use App\Models\Withdrawal;
-use App\Services\APIService\APIService;
+
 use App\Services\Withdrawal\WithdrawalService;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
@@ -31,7 +31,7 @@ class WithdrawalController extends Controller
         $todayWithdrawalsCount = Withdrawal::whereDate('created_at', $today)->count();
 
         $totalWithdrawalsValue = Withdrawal::with('currency')
-            ->whereDate('created_at', $today)// Assuming `currency` has the price
+            ->whereDate('created_at', $today) // Assuming `currency` has the price
             ->get()
             ->sum(function ($withdraw) {
                 return $withdraw->amount * $withdraw->currency->exchange_price; // Multiply amount by coin price
@@ -108,12 +108,35 @@ class WithdrawalController extends Controller
 
     public function checkWithdrawal(Withdrawal $withdrawal)
     {
-        $apiService = resolve(APIService::class);
-        $apiService->checkWithdrawal($withdrawal->user_id);
+        try {
+            $withdrawalService = resolve(\App\Services\Withdrawal\WithdrawalService::class);
 
-        Toast::message('فرآیند چک برداشت آغاز شد.')->success()->notify();
+            // Check if withdrawal is in pending status
+            if ($withdrawal->status !== \App\Enums\WithdrawalStatusEnum::PENDING) {
+                Toast::message('این برداشت در وضعیت انتظار نیست.')->warning()->notify();
+                return redirect()->back();
+            }
 
-        return redirect()->back();
+            // Check the specific withdrawal
+            $withdrawalCollection = new \Illuminate\Database\Eloquent\Collection([$withdrawal]);
+            $response = $withdrawalService->checkWithdrawal($withdrawalCollection);
+
+            if ($response->getStatus() === null) {
+                Toast::message('هیچ تغییری در وضعیت برداشت یافت نشد.')->info()->notify();
+            } elseif ($response->getStatus() === \App\Enums\WithdrawalStatusEnum::COMPLETED) {
+                Toast::message('برداشت با موفقیت تکمیل شد.')->success()->notify();
+            } elseif ($response->getStatus() === \App\Enums\WithdrawalStatusEnum::FAILED) {
+                Toast::message('برداشت با خطا مواجه شد.')->danger()->notify();
+            } else {
+                Toast::message('فرآیند چک برداشت آغاز شد.')->success()->notify();
+            }
+
+            return redirect()->back();
+        } catch (\Throwable $exception) {
+            report($exception);
+            Toast::message('خطا در بررسی برداشت: ' . $exception->getMessage())->danger()->notify();
+            return redirect()->back();
+        }
     }
 
     public function excelExport(Request $request)
@@ -143,10 +166,10 @@ class WithdrawalController extends Controller
                 formatNumberTrimZeros($withdrawal->network_fee),
                 $withdrawal->address,
                 $withdrawal->transaction_hash,
-                DateFormatter::convertToPersianDate($withdrawal->created_at,'%Y/%m/%d H:i:s'),
-                DateFormatter::convertToPersianDate($withdrawal->confirmed_at,'%Y/%m/%d H:i:s'),
+                DateFormatter::convertToPersianDate($withdrawal->created_at, '%Y/%m/%d H:i:s'),
+                DateFormatter::convertToPersianDate($withdrawal->confirmed_at, '%Y/%m/%d H:i:s'),
                 $withdrawal->status->label(),
-                $withdrawal->description ,
+                $withdrawal->description,
             ];
         });
 

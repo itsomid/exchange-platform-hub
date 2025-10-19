@@ -230,8 +230,8 @@ Route::middleware(['admin.2fa'])->group(function () {
 
     Route::get('/internal-settings', [InternalSettingController::class, 'index'])->name('internal.setting.index')->can('setting.int.index');
     Route::post('/internal-settings/update-permissions', [InternalSettingController::class, 'updatePermissions'])->name('setting.int.update-permissions')->can('setting.int.index');
-    Route::post('/internal-settings/update-otc-commission', [InternalSettingController::class, 'updateOTCCommission'])->name('setting.int.update-otc-commission')->can('setting.int.index');    
-    Route::post('/internal-settings/update-spot-commission', [InternalSettingController::class, 'updateSpotCommission'])->name('setting.int.update-spot-commission')->can('setting.int.index'); 
+    Route::post('/internal-settings/update-otc-commission', [InternalSettingController::class, 'updateOTCCommission'])->name('setting.int.update-otc-commission')->can('setting.int.index');
+    Route::post('/internal-settings/update-spot-commission', [InternalSettingController::class, 'updateSpotCommission'])->name('setting.int.update-spot-commission')->can('setting.int.index');
 
     Route::post('/internal-settings/update-referral-setting', [InternalSettingController::class, 'updateReferralSetting'])->name('setting.int.update-referral-setting')->can('setting.int.index');
     Route::post('/internal-settings/update-exchange-withdrawal-setting', [InternalSettingController::class, 'updateExchangeWithdrawalSetting'])->name('setting.int.update-exchange-withdrawal-setting')->can('setting.int.index');
@@ -265,6 +265,8 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::post('{wallet}/create-chain-address/{chain_name}', [WalletController::class, 'createExchangeWalletChain'])->name('wallet.create-chain-address');
         Route::post('update-chain-address/{wallet_chain}', [WalletController::class, 'updateExchangeWalletChain'])->name('wallet.update-chain-address');
         Route::get('{user}/{wallet}/refresh', [WalletController::class, 'refresh'])->name('wallet.refresh');
+        Route::post('generate-address', [WalletController::class, 'generateAddressFromHdWallet'])->name('wallet.generate-address')->can('wallet');
+        Route::post('create-wallet-chains', [WalletController::class, 'createWalletChains'])->name('wallet.create-chains')->can('wallet');
     });
 
     Route::prefix('report')->group(function () {
