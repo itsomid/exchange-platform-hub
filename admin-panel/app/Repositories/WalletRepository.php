@@ -86,7 +86,7 @@ class WalletRepository implements WalletRepositoryInterface
     public function getOneByCurrencyWithChain(string $base_currency, string $chainSymbol, int $userId): Wallet
     {
         return Wallet::query()
-            ->with(['chains' => fn ($q) => $q->where('currency_chain', $chainSymbol)])
+            ->with(['chains' => fn($q) => $q->where('currency_chain', $chainSymbol)])
             ->where('currency_symbol', $base_currency)
             ->where('user_id', $userId)
             ->first();
@@ -96,14 +96,16 @@ class WalletRepository implements WalletRepositoryInterface
     {
         return Wallet::query()
             ->lockForUpdate()
-            ->firstOrCreate([
-                'user_id' => $userId,
-                'currency_symbol' => $base_currency,
-            ],
+            ->firstOrCreate(
+                [
+                    'user_id' => $userId,
+                    'currency_symbol' => $base_currency,
+                ],
                 [
                     'balance' => 0,
                     'locked_balance' => 0,
-                ]);
+                ]
+            );
     }
 
     public function getBitexroomWallet(string $currency): Wallet

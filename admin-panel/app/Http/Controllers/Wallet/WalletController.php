@@ -2,25 +2,21 @@
 
 namespace App\Http\Controllers\Wallet;
 
-use App\Enums\BalanceOperationEnum;
 use App\Enums\LockedBalanceTypeEnum;
-use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Wallet\IncreaseCreditRequest;
-use App\Http\Requests\Wallet\RefreshWalletRequest;
 use App\Models\Currency;
 use App\Models\CurrencyChain;
-use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WalletChain;
 use App\Services\Transaction\TransactionService;
 use App\Services\Wallet\CheckWalletService;
 use App\Services\Wallet\DTO\CheckWallet\CheckUserDepositRequestDTO;
-use App\Services\Wallet\DTO\UpdateBalanceRequestDTO;
 use App\Services\Wallet\WalletService;
+use App\Exceptions\V1\Wallet\InternalWalletHasProblemException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -218,7 +214,7 @@ class WalletController extends Controller
             'block_amount' => 'required|numeric|min:0',
             'description' => 'nullable|string',
         ]);
-        if ($validated['block_amount'] == 0 ){
+        if ($validated['block_amount'] == 0) {
             return redirect()->back()->withErrors(['block_amount' => 'مقدار بلاک باید بیشتر از 0 باشد']);
         }
         // Check if block amount is valid
@@ -289,6 +285,41 @@ class WalletController extends Controller
         return redirect()->back();
     }
 
+    public function generateAddressFromHdWallet(Request $request, WalletService $walletService)
+    {
+        try {
+            $request->validate([
+                'user_id' => 'required|integer|exists:users,id',
+                'currency' => 'required|string|exists:currencies,symbol',
+                'chain' => 'required|string|exists:currency_chains,chain'
+            ]);
+            $response = $walletService->generateAddress(
+                $request->user_id,
+                $request->currency,
+                $request->chain
+            );
+            Toast::message('آدرس با موفقیت تولید شد.')->success()->notify();
+            return response()->json([
+                'success' => true,
+                'address' => $response,
+                'message' => 'آدرس با موفقیت تولید شد.'
+            ]);
+        } catch (InternalWalletHasProblemException $e) {
+            Toast::message('خطا در تولید آدرس. لطفا دوباره تلاش کنید.')->danger()->notify();
+            return response()->json([
+                'success' => false,
+                'message' => 'خطا در تولید آدرس. لطفا دوباره تلاش کنید.'
+            ], 500);
+        } catch (\Throwable $e) {
+            report($e);
+            Toast::message('خطای سیستمی رخ داده است.')->danger()->notify();
+            return response()->json([
+                'success' => false,
+                'message' => 'خطای سیستمی رخ داده است.'
+            ], 500);
+        }
+    }
+
     public function createExchangeWalletChain(Wallet $wallet, $chainName, Request $request)
     {
         $walletChains = $wallet->walletChains()->create([
@@ -325,6 +356,35 @@ class WalletController extends Controller
             if (!session()->has('toast')) {
                 Toast::message('واریزی جدیدی یافت نشد.')->info()->notify();
             }
+        }
+
+        return redirect()->back();
+    }
+
+    /**
+     * Create wallet chains for all available chains of a currency
+     */
+    public function createWalletChains(Request $request, WalletService $walletService)
+    {
+        $request->validate([
+            'user_id' => 'required|integer|exists:users,id',
+            'currency_symbol' => 'required|string|exists:currencies,symbol'
+        ]);
+
+        $result = $walletService->createWalletChainsForCurrency(
+            $request->user_id,
+            $request->currency_symbol
+        );
+
+        if ($result['success']) {
+            $createdCount = count($result['created_chains']);
+            if ($createdCount > 0) {
+                Toast::message("با موفقیت {$createdCount} زنجیره کیف پول ایجاد شد.")->success()->notify();
+            } else {
+                Toast::message('تمام زنجیره‌های کیف پول از قبل موجود بودند.')->info()->notify();
+            }
+        } else {
+            Toast::message('خطا در ایجاد زنجیره‌های کیف پول: ' . $result['message'])->danger()->notify();
         }
 
         return redirect()->back();

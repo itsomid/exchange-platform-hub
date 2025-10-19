@@ -119,7 +119,7 @@
                                     <td class="text-black font-number">
                                         {{ formatNumberTrimZeros($wallet->balance) }}</td>
                                     <td class="font-number">
-                                        {{ formatNumberTrimZeros(bcsub($wallet->balance, $wallet->locked_balance,8)) }}
+                                        {{ formatNumberTrimZeros(bcsub($wallet->balance, $wallet->locked_balance, 8)) }}
                                         <br>
                                         @if ($wallet->locked_balance > 0)
                                             <small class="text-danger">
@@ -162,12 +162,34 @@
                                                         </span>
                                                     </a><br>
                                                 @else
-                                                    <span class="text-danger"> آدرس شبکه
-                                                        ({{ $walletChain->currency_chain }}) ست نشده است</span><br>
+                                                    <div class="d-flex align-items-center">
+                                                        <span class="text-danger me-2"> آدرس شبکه
+                                                            ({{ $walletChain->currency_chain }}) ست نشده است</span>
+                                                        <button type="button"
+                                                            class="btn btn-success btn-xs generate-address-btn"
+                                                            data-user-id="{{ $user->id }}"
+                                                            data-currency="{{ $wallet->currency_symbol }}"
+                                                            data-chain="{{ $walletChain->currency_chain }}"
+                                                            data-wallet-chain-id="{{ $walletChain->id }}">
+                                                            <i class="fa-solid fa-plus me-1"></i>تولید آدرس
+                                                        </button>
+                                                    </div>
                                                 @endif
                                             @endforeach
                                         @else
-                                            <span class="text-danger">N/A Wallet Chain</span>
+                                            <div class="d-flex align-items-center">
+                                                <span class="text-danger me-2">N/A Wallet Chain</span>
+                                                <form method="POST" action="{{ route('admin.wallet.create-chains') }}"
+                                                    class="d-inline">
+                                                    @csrf
+                                                    <input type="hidden" name="user_id" value="{{ $user->id }}">
+                                                    <input type="hidden" name="currency_symbol"
+                                                        value="{{ $wallet->currency_symbol }}">
+                                                    <button type="submit" class="btn btn-primary btn-xs">
+                                                        <i class="fa-solid fa-plus me-1"></i>ایجاد WalletChain
+                                                    </button>
+                                                </form>
+                                            </div>
                                         @endif
                                     </th>
                                     <td>
@@ -710,44 +732,100 @@
 @endsection
 
 @push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const tabButtons = document.querySelectorAll('[data-bs-toggle="tab"]');
-    const tabPanes = document.querySelectorAll('.tab-pane');
-    const storageKey = 'inquiry_user_active_tab';
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabButtons = document.querySelectorAll('[data-bs-toggle="tab"]');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+            const storageKey = 'inquiry_user_active_tab';
 
-    // بازیابی آخرین تب فعال از localStorage
-    const savedTab = localStorage.getItem(storageKey);
+            // بازیابی آخرین تب فعال از localStorage
+            const savedTab = localStorage.getItem(storageKey);
 
-    if (savedTab) {
-        // حذف کلاس active از همه تب‌ها و پنل‌ها
-        tabButtons.forEach(btn => {
-            btn.classList.remove('active');
-            btn.setAttribute('aria-selected', 'false');
+            if (savedTab) {
+                // حذف کلاس active از همه تب‌ها و پنل‌ها
+                tabButtons.forEach(btn => {
+                    btn.classList.remove('active');
+                    btn.setAttribute('aria-selected', 'false');
+                });
+
+                tabPanes.forEach(pane => {
+                    pane.classList.remove('active', 'show');
+                });
+
+                // فعال کردن تب ذخیره شده
+                const savedButton = document.querySelector(`[data-bs-target="${savedTab}"]`);
+                const savedPane = document.querySelector(savedTab);
+
+                if (savedButton && savedPane) {
+                    savedButton.classList.add('active');
+                    savedButton.setAttribute('aria-selected', 'true');
+                    savedPane.classList.add('active', 'show');
+                }
+            }
+
+            // ذخیره تب فعال هنگام کلیک
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const target = this.getAttribute('data-bs-target');
+                    localStorage.setItem(storageKey, target);
+                });
+            });
+
+            // Handle generate address button clicks
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('generate-address-btn') || e.target.closest(
+                        '.generate-address-btn')) {
+                    const button = e.target.classList.contains('generate-address-btn') ? e.target : e.target
+                        .closest('.generate-address-btn');
+
+                    const userId = button.getAttribute('data-user-id');
+                    const currency = button.getAttribute('data-currency');
+                    const chain = button.getAttribute('data-chain');
+                    const walletChainId = button.getAttribute('data-wallet-chain-id');
+
+                    // Disable button and show loading state
+                    button.disabled = true;
+                    const originalText = button.innerHTML;
+                    button.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>در حال تولید...';
+
+                    // Make AJAX request to generate address
+                    fetch('{{ route('admin.wallet.generate-address') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                    .getAttribute('content')
+                            },
+                            body: JSON.stringify({
+                                user_id: userId,
+                                currency: currency,
+                                chain: chain
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Show success message
+
+                                // Reload the page to show the new address
+                                location.reload();
+                            } else {
+
+                                // Re-enable button
+                                button.disabled = false;
+                                button.innerHTML = originalText;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+
+
+                            // Re-enable button
+                            button.disabled = false;
+                            button.innerHTML = originalText;
+                        });
+                }
+            });
         });
-
-        tabPanes.forEach(pane => {
-            pane.classList.remove('active', 'show');
-        });
-
-        // فعال کردن تب ذخیره شده
-        const savedButton = document.querySelector(`[data-bs-target="${savedTab}"]`);
-        const savedPane = document.querySelector(savedTab);
-
-        if (savedButton && savedPane) {
-            savedButton.classList.add('active');
-            savedButton.setAttribute('aria-selected', 'true');
-            savedPane.classList.add('active', 'show');
-        }
-    }
-
-    // ذخیره تب فعال هنگام کلیک
-    tabButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const target = this.getAttribute('data-bs-target');
-            localStorage.setItem(storageKey, target);
-        });
-    });
-});
-</script>
+    </script>
 @endpush
