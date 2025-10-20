@@ -9,7 +9,7 @@ return [
     \App\Exceptions\NotFoundException::class => 'صفحه مورد نظر وجود ندارد.',
     \App\Exceptions\User\ReferralCodeDoesNotBelongsToUser::class => 'کد معرف متعلق به کاربر نیست.',
     \App\Exceptions\V1\Wallet\InsufficientBalanceException::class => 'موجودی :currency کافی نیست.',
-    \App\Exceptions\V1\Wallet\InternalWalletHasProblemException::class => 'سرویس کیف پول در حال حاضر در دسترس نیست. لطفا بعدا تلاش کنید.',
+    \App\Exceptions\V1\Wallet\InternalWalletHasProblemException::class => 'سرویس کیف پول دارای خطا می باشد. لطفا بررسی کنید.',
     \App\Exceptions\Auth\ResetTwoFactor\TokenInvalidException::class => 'توکن وارد شده معتبر نمی باشد.',
     \App\Exceptions\V1\OTC\BuyTradeWasFiledException::class => 'در حال حاضر خرید روی :marketName ممکن نیست.',
     \App\Exceptions\V1\OTC\SellTradeWasFiledException::class => 'در حال حاضر فروش روی :marketName ممکن نیست.',

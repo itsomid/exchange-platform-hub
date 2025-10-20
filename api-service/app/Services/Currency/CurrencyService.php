@@ -75,4 +75,23 @@ class CurrencyService
                     ->setIsMemoRequiredForDeposit($item->is_memo_required_for_deposit)
             )->toArray()))->toArray();
     }
+
+    /**
+     * Get parent coin for network fee calculation
+     * For tokens like USDT on ERC20, returns ETH currency
+     * For tokens like USDT on BSC, returns BNB currency
+     */
+    public function getParentCoin(CurrencyChain $currencyChain): ?Currency
+    {
+        if ($currencyChain->is_base_coin) {
+            return null; // Already a base coin, no parent needed
+        }
+
+        // Find the base coin for the same blockchain
+        $baseCoinChain = CurrencyChain::where('blockchain_name', $currencyChain->blockchain_name)
+            ->where('is_base_coin', true)
+            ->first();
+
+        return $baseCoinChain?->currency;
+    }
 }

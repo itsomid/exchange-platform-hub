@@ -227,7 +227,7 @@
                             @endphp
                             <a href="{{ route('admin.withdrawal.index', array_merge($currentParams, ['sortByTotalFee' => $newSortDirection])) }}"
                                 class="text-black">
-                                کارمزد برداشت <br> (فی شبکه + صرافی)
+                                کارمزد برداشت <br> (فی صرافی مرجع + بیتکس روم)
                                 @if ($currentSortDirection === 'asc')
                                     <span><i class="fa-solid fa-arrow-up"></i></span>
                                 @else

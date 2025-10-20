@@ -44,17 +44,17 @@ class SendWithdrawalToHDWallet implements ShouldQueue
 
         // Check if withdrawal is still in pending status
         if ($withdrawal->status !== WithdrawalStatusEnum::QUEUED) {
-            Log::info("Withdrawal {$this->withdrawalId} is not in pending status: {$withdrawal->status->value}");
+            Log::info("Withdrawal {$this->withdrawalId} is not in queued status: {$withdrawal->status->value}");
             return;
         }
 
         try {
+            DB::beginTransaction();
             // Update status to processing
             $withdrawal->update([
                 'status' => WithdrawalStatusEnum::PROCESSING,
                 'description' => 'Processing withdrawal request'
             ]);
-            DB::beginTransaction();
 
             // Calculate received amount (amount - fees)
             $fee = Math::add($withdrawal->currencyChain->network_fee, $withdrawal->currencyChain->exchange_withdrawal_fee);

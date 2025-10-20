@@ -22,6 +22,7 @@ class CurrencyChain extends Model
         'deposit_enabled' => 'boolean',
         'withdraw_enabled' => 'boolean',
         'blockchain_name' => CurrencyBlockChainNameEnum::class,
+        'is_base_coin' => 'boolean',
     ];
 
     public function currency(): BelongsTo

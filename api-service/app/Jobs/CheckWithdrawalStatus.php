@@ -15,6 +15,10 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Repositories\DTO\Transaction\CreateTransactionRequestDTO;
+use App\Enums\TransactionTypeEnum;
+use App\Enums\TransactionSubTypeEnum;
+use App\Enums\TransactionStatusEnum;
+use App\Utils\Math;
 use Throwable;
 
 class CheckWithdrawalStatus implements ShouldQueue
@@ -67,11 +71,11 @@ class CheckWithdrawalStatus implements ShouldQueue
 
             if ($responseDTO->getStatus() === 'completed') {
                 $this->handleCompletedWithdrawal($withdrawal, $responseDTO);
-                Log::info("Withdrawal {$this->withdrawalId} marked as completed automatically");
             } elseif ($responseDTO->getStatus() === 'failed') {
                 $this->handleFailedWithdrawal($withdrawal, $responseDTO);
-                Log::info("Withdrawal {$this->withdrawalId} marked as failed automatically");
+                Log::channel('hd-wallet')->error("Withdrawal {$this->withdrawalId} marked as failed automatically with description: {$responseDTO->getDescription()}");
             } else {
+                Log::info("Withdrawal {$this->withdrawalId} marked as pending automatically");
                 // Status is still pending/processing, schedule another check
                 $this->scheduleNextCheck();
             }
@@ -93,50 +97,13 @@ class CheckWithdrawalStatus implements ShouldQueue
     private function handleCompletedWithdrawal(Withdrawal $withdrawal, $responseDTO): void
     {
         try {
-            DB::beginTransaction();
-
-            // Delete locked balance
-            $lockedBalanceRepository = resolve(\App\Repositories\Interfaces\LockedBalanceRepositoryInterface::class);
-            $lockedBalanceRepository->deleteWithdrawalLockedBalance($withdrawal->id);
-
-            // Get wallet and update balances
-            $wallet = \App\Models\Wallet::query()
-                ->where('user_id', $withdrawal->user_id)
-                ->where('currency_symbol', $withdrawal->currency_symbol)
-                ->lockForUpdate()
-                ->first();
-
-            if ($wallet) {
-                // Deduct from balance and locked_balance
-                $wallet->decrement('balance', $withdrawal->amount);
-                $wallet->decrement('locked_balance', $withdrawal->amount);
-            }
-
-            // Update withdrawal record
-            $withdrawal->update([
-                'transaction_hash' => $responseDTO->getTransactionHash(),
-                'status' => WithdrawalStatusEnum::COMPLETED,
-                'hd_wallet_network_fee' => $responseDTO->getFee(),
-                'confirmed_at' => now(),
-                'description' => 'Withdrawal completed automatically',
-            ]);
-
-            // Create transaction record
-            $transactionRepository = resolve(\App\Repositories\Interfaces\TransactionRepositoryInterface::class);
-            $transactionRepository->create(
-                resolve(CreateTransactionRequestDTO::class)
-                    ->setUserId($withdrawal->user_id)
-                    ->setWalletId($wallet->id)
-                    ->setWithdrawalId($withdrawal->id)
-                    ->setAmount(-$withdrawal->amount)
-                    ->setBalance($wallet->balance)
-                    ->setType(\App\Enums\TransactionTypeEnum::WITHDRAWAL)
-                    ->setSubtype(\App\Enums\TransactionSubTypeEnum::USER_INITIATED)
-                    ->setStatus(\App\Enums\TransactionStatusEnum::SUCCESS)
-                    ->setDescription('Withdrawal completed')
+            // Use the existing WithdrawalService to handle the confirmation
+            $withdrawalService = resolve(\App\Services\Wallet\WithdrawalService::class);
+            $withdrawalService->confirmWithdrawal(
+                $withdrawal,
+                $responseDTO->getTransactionHash(),
+                $responseDTO->getFee()
             );
-
-            DB::commit();
 
             // Send notification to user
             $withdrawal->user->notify(new WithdrawalSuccessful(
@@ -146,7 +113,6 @@ class CheckWithdrawalStatus implements ShouldQueue
                 $withdrawal->currencyChain->chain->value
             ));
         } catch (Throwable $e) {
-            DB::rollBack();
             Log::error("Failed to handle completed withdrawal {$this->withdrawalId}: " . $e->getMessage());
             throw $e;
         }
