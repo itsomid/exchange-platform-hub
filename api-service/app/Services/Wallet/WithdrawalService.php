@@ -114,13 +114,6 @@ class WithdrawalService
         }
     }
 
-    public function checkAllWithdrawal(): void
-    {
-        $pendingWithdrawal = $this->withdrawalRepository->getAllPending();
-        $this->checkWithdrawal($pendingWithdrawal);
-    }
-
-
 
     private function confirmWithdrawal(Withdrawal $withdrawal, string $transactionHash, string $hdWalletNetworkFee): void
     {

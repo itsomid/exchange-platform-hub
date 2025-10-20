@@ -8,6 +8,7 @@ use App\Models\Withdrawal;
 use App\Repositories\DTO\Withdrawal\CreateWithdrawalRequestDTO;
 use App\Repositories\Interfaces\WithdrawalRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class WithdrawalRepository implements WithdrawalRepositoryInterface
 {
@@ -36,6 +37,18 @@ class WithdrawalRepository implements WithdrawalRepositoryInterface
             ->when(! empty($currencySymbol), fn ($q) => $q->where('currency_symbol', $currencySymbol))
             ->latest()
             ->get();
+    }
+
+    public function getWithdrawalsPaginated(int $userId, ?string $currencySymbol = null, ?string $status = null, int $page = 1, int $perPage = 10): LengthAwarePaginator
+    {
+        $query = Withdrawal::query()
+            ->with('currencyChain')
+            ->where('user_id', $userId)
+            ->when(! empty($currencySymbol), fn ($q) => $q->where('currency_symbol', $currencySymbol))
+            ->when(! empty($status), fn ($q) => $q->where('status', $status))
+            ->latest();
+
+        return $query->paginate($perPage, ['*'], 'page', $page);
     }
 
     public function getUserAllPendingWithdrawal(int $userId): Collection

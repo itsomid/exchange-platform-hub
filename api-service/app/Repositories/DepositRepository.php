@@ -7,6 +7,7 @@ use App\Models\Deposit;
 use App\Repositories\DTO\Deposit\CreateOrUpdatePendingDepositRequestDTO;
 use App\Repositories\Interfaces\DepositRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class DepositRepository implements DepositRepositoryInterface
 {
@@ -69,5 +70,17 @@ class DepositRepository implements DepositRepositoryInterface
             ->when(! empty($currencySymbol), fn ($q) => $q->where('currency_symbol', $currencySymbol))
             ->latest()
             ->get();
+    }
+
+    public function getDepositsPaginated(int $userId, ?string $currencySymbol = null, ?string $status = null, int $page = 1, int $perPage = 10): LengthAwarePaginator
+    {
+        $query = Deposit::query()
+            ->with(['currencyChain', 'currency'])
+            ->where('user_id', $userId)
+            ->when(!empty($currencySymbol), fn($q) => $q->where('currency_symbol', $currencySymbol))
+            ->when(!empty($status), fn($q) => $q->whereRaw('LOWER(status) = ?', [strtolower($status)]))
+            ->latest();
+
+        return $query->paginate($perPage, ['*'], 'page', $page);
     }
 }

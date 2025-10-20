@@ -2,18 +2,22 @@
 
 namespace App\Http\Controllers\V1\Wallet;
 
-use App\Enums\WithdrawalStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Wallet\WithdrawRequest;
-use App\Http\Resources\V1\Wallet\WithdrawalResource;
-use App\Http\Resources\V1\Wallet\WithdrawalListResource;
+use App\Http\Resources\V1\Withdrawal\WithdrawalResource;
+use App\Http\Resources\V1\Withdrawal\WithdrawalListCollection;
 use App\Repositories\Interfaces\WithdrawalRepositoryInterface;
 use App\Services\Wallet\DTO\Withdrawal\CreateWithdrawalRequestDTO;
 use App\Services\Wallet\WithdrawalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * @OA\Tag(
+ *     name="Withdrawals",
+ *     description="Withdrawal management endpoints"
+ * )
+ */
 class WithdrawController extends Controller
 {
     public function __construct(
@@ -23,34 +27,21 @@ class WithdrawController extends Controller
 
     public function lists(Request $request)
     {
+
         $userId = Auth::id();
-        $currency = $request->query('currency');
-        $limit = min((int) $request->query('limit', 5), 50); // Default 5, max 50
-        $page = max((int) $request->query('page', 1), 1); // Default 1, min 1
+        $currencySymbol = $request->query('currency');
+        $status = $request->query('status');
+        $page =  $request->query('page', 1);
+        $perPage = $request->query('limit', 10);
+        $withdrawals = $this->withdrawalRepository->getWithdrawalsPaginated(
+            $userId,
+            $currencySymbol,
+            $status,
+            $page,
+            $perPage
+        );
 
-        // Use repository to get withdrawals
-        $withdrawals = $this->withdrawalRepository->getWithdrawals($userId, $currency);
-
-        // Manual pagination since repository returns Collection
-        $total = $withdrawals->count();
-        $offset = ($page - 1) * $limit;
-        $paginatedWithdrawals = $withdrawals->slice($offset, $limit)->values();
-
-        $lastPage = (int) ceil($total / $limit);
-        $from = $total > 0 ? $offset + 1 : null;
-        $to = $total > 0 ? min($offset + $limit, $total) : null;
-
-        return response()->json([
-            'data' => WithdrawalListResource::collection($paginatedWithdrawals),
-            'meta' => [
-                'current_page' => $page,
-                'per_page' => $limit,
-                'total' => $total,
-                'last_page' => $lastPage,
-                'from' => $from,
-                'to' => $to,
-            ]
-        ]);
+        return new WithdrawalListCollection($withdrawals);
     }
 
 
