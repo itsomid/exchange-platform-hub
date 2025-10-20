@@ -28,9 +28,7 @@ readonly class OrderMatchingEngine
     public function __construct(
         private WalletRepositoryInterface               $walletRepository,
         private readonly TransactionRepositoryInterface $transactionRepository,
-    )
-    {
-    }
+    ) {}
 
     public function processOrder(): void
     {
@@ -64,7 +62,7 @@ readonly class OrderMatchingEngine
         // Store initial amount needed to detect partial fills later
         $initialRemindedQuantity = $order->getRemindedQuantity();
         if (Math::comp($initialRemindedQuantity, 0) <= 0) {
-             return; // Already filled somehow before processing
+            return; // Already filled somehow before processing
         }
 
         $oppositeOrders = SpotOrder::query()
@@ -96,17 +94,17 @@ readonly class OrderMatchingEngine
 
         // Check if the order is still open and has remaining quantity
         if ($order->status === SpotOrderStatusEnum::OPEN && Math::comp($finalRemindedQuantity, 0) === 1) {
-             if (Math::comp($finalRemindedQuantity, $initialRemindedQuantity) === 0) {
-                 // Case 1: No fills occurred at all
-                 logger()->info("Market order {$order->id} could not be filled. Canceling.");
-                 $this->cancelRemainingMarketOrder($order);
-             } elseif (Math::comp($finalRemindedQuantity, $initialRemindedQuantity) === -1) {
-                 // Case 2: Partially filled
-                 logger()->info("Market order {$order->id} was partially filled. Canceling remaining quantity: {$finalRemindedQuantity}.");
-                 $this->cancelRemainingMarketOrder($order);
-             }
-             // If $finalRemindedQuantity is somehow greater than initial, it's an error state.
-             // If $finalRemindedQuantity is zero or less, it was fully filled, do nothing here.
+            if (Math::comp($finalRemindedQuantity, $initialRemindedQuantity) === 0) {
+                // Case 1: No fills occurred at all
+                logger()->info("Market order {$order->id} could not be filled. Canceling.");
+                $this->cancelRemainingMarketOrder($order);
+            } elseif (Math::comp($finalRemindedQuantity, $initialRemindedQuantity) === -1) {
+                // Case 2: Partially filled
+                logger()->info("Market order {$order->id} was partially filled. Canceling remaining quantity: {$finalRemindedQuantity}.");
+                $this->cancelRemainingMarketOrder($order);
+            }
+            // If $finalRemindedQuantity is somehow greater than initial, it's an error state.
+            // If $finalRemindedQuantity is zero or less, it was fully filled, do nothing here.
         }
         // ---- End: Added Logic for Partial/No Fill ----
     }
@@ -126,13 +124,13 @@ readonly class OrderMatchingEngine
                 // - Market orders (no price)
                 // - Limit orders that meet the price condition
                 $query->whereNull('price') // Market order
-                ->orWhere(function ($q) use ($order) {
-                    if ($order->side === SpotOrderSideEnum::BUY) {
-                        $q->where('price', '<=', $order->price); // Buy: Match at or below limit price
-                    } else {
-                        $q->where('price', '>=', $order->price); // Sell: Match at or above limit price
-                    }
-                });
+                    ->orWhere(function ($q) use ($order) {
+                        if ($order->side === SpotOrderSideEnum::BUY) {
+                            $q->where('price', '<=', $order->price); // Buy: Match at or below limit price
+                        } else {
+                            $q->where('price', '>=', $order->price); // Sell: Match at or above limit price
+                        }
+                    });
             })
             ->orderByRaw('price IS NULL DESC') // Prioritize market orders (NULL price first)
             ->orderBy('price', $sortType) // Then sort limit orders by price
@@ -228,17 +226,17 @@ readonly class OrderMatchingEngine
         if ($order->getRemindedQuantity() <= 0) {
             // $order->price = $order->getOriginal('price'); // REMOVE THIS for market orders
             if ($order->type !== SpotOrderTypeEnum::MARKET) { // Only reset price for limit orders
-                 $order->price = $order->getOriginal('price');
+                $order->price = $order->getOriginal('price');
             }
             $order->update(['status' => SpotOrderStatusEnum::COMPLETED]);
-            
+
             // Update description before deleting locked balance for completed order
             $lockedDetail = LockedBalanceDetail::query()->where('spot_order_id', $order->id)->first();
             if ($lockedDetail) {
                 $description = "تکمیل سفارش اسپات #{$order->id} - پر شده: {$order->filled_quantity}";
                 $lockedDetail->update(['description' => $description]);
             }
-            
+
             LockedBalanceDetail::query()
                 ->where('spot_order_id', $order->id)
                 ->delete();
@@ -259,19 +257,19 @@ readonly class OrderMatchingEngine
         }
 
         if ($oppositeOrder->getRemindedQuantity() <= 0) {
-           // $oppositeOrder->price = $oppositeOrder->getOriginal('price'); // REMOVE THIS if opposite is market
-           if ($oppositeOrder->type !== SpotOrderTypeEnum::MARKET) { // Only reset price for limit orders
+            // $oppositeOrder->price = $oppositeOrder->getOriginal('price'); // REMOVE THIS if opposite is market
+            if ($oppositeOrder->type !== SpotOrderTypeEnum::MARKET) { // Only reset price for limit orders
                 $oppositeOrder->price = $oppositeOrder->getOriginal('price');
-           }
+            }
             $oppositeOrder->update(['status' => SpotOrderStatusEnum::COMPLETED]);
-            
+
             // Update description before deleting locked balance for completed opposite order
             $oppositeLockedDetail = LockedBalanceDetail::query()->where('spot_order_id', $oppositeOrder->id)->first();
             if ($oppositeLockedDetail) {
                 $description = "تکمیل سفارش اسپات #{$oppositeOrder->id} - پر شده: {$oppositeOrder->filled_quantity}";
                 $oppositeLockedDetail->update(['description' => $description]);
             }
-            
+
             LockedBalanceDetail::query()
                 ->where('spot_order_id', $oppositeOrder->id)
                 ->delete();
@@ -284,8 +282,8 @@ readonly class OrderMatchingEngine
     {
         $baseCurrency = $spotOrder->side === SpotOrderSideEnum::BUY ? $spotOrder->market->base_currency : $spotOrder->market->quote_currency;
         $quoteCurrency = $spotOrder->side === SpotOrderSideEnum::BUY ? $spotOrder->market->quote_currency : $spotOrder->market->base_currency;
-        $walletBaseCurrency = $this->walletRepository->getOneByCurrency($baseCurrency, $spotOrder->user_id);
-        $walletQuoteCurrency = $this->walletRepository->getOneByCurrency($quoteCurrency, $spotOrder->user_id);
+        $walletBaseCurrency = $this->walletRepository->getOrCreateWallet($spotOrder->user_id, $baseCurrency);
+        $walletQuoteCurrency = $this->walletRepository->getOrCreateWallet($spotOrder->user_id, $quoteCurrency,);
 
         $buyQuantity = $spotOrder->side === SpotOrderSideEnum::BUY ? $spotTrade->quantity : Math::mul($spotTrade->quantity, $spotTrade->price);
         $sellQuantity = $spotOrder->side === SpotOrderSideEnum::BUY ? Math::mul($spotTrade->quantity, $spotTrade->price) : $spotTrade->quantity;
@@ -301,11 +299,13 @@ readonly class OrderMatchingEngine
                 ->setStatus(TransactionStatusEnum::SUCCESS)
                 ->setBalance($walletBaseCurrency->balance)
                 ->setDescription(
-                    sprintf('%s %s %s',
+                    sprintf(
+                        '%s %s %s',
                         $spotOrder->side === SpotOrderSideEnum::BUY ? 'خرید' : 'فروش',
                         formatNumberTrimZeros((float)$spotTrade->quantity),
                         $spotOrder->market->base_currency
-                    ))
+                    )
+                )
                 ->setSubtype(TransactionSubTypeEnum::SPOT)
                 ->setWalletId($walletBaseCurrency->id)
         );
@@ -321,11 +321,13 @@ readonly class OrderMatchingEngine
                 ->setStatus(TransactionStatusEnum::SUCCESS)
                 ->setBalance($walletQuoteCurrency->balance)
                 ->setDescription(
-                    sprintf('%s %s %s',
+                    sprintf(
+                        '%s %s %s',
                         $spotOrder->side === SpotOrderSideEnum::BUY ? 'خرید' : 'فروش',
                         formatNumberTrimZeros((float)$spotTrade->quantity),
                         $spotOrder->market->base_currency
-                    ))
+                    )
+                )
                 ->setSubtype(TransactionSubTypeEnum::SPOT)
                 ->setWalletId($walletQuoteCurrency->id)
         );
@@ -340,9 +342,9 @@ readonly class OrderMatchingEngine
 
 
         if ($spotOrder->side === SpotOrderSideEnum::BUY) {
-            $commissionWallet = $this->walletRepository->getOneByCurrency($spotOrder->market->base_currency, $spotOrder->user_id);
-        }else{
-            $commissionWallet = $this->walletRepository->getOneByCurrency($spotOrder->market->quote_currency, $spotOrder->user_id);
+            $commissionWallet = $this->walletRepository->getOrCreateWallet($spotOrder->user_id, $spotOrder->market->base_currency);
+        } else {
+            $commissionWallet = $this->walletRepository->getOrCreateWallet($spotOrder->user_id, $spotOrder->market->quote_currency);
         }
 
         // **Create Transaction for Commission**
@@ -356,11 +358,13 @@ readonly class OrderMatchingEngine
                 ->setStatus(TransactionStatusEnum::SUCCESS)
                 ->setBalance($commissionWallet->balance)
                 ->setDescription(
-                    sprintf('کارمزد معامله اسپات %s %s به ارزش %s',
+                    sprintf(
+                        'کارمزد معامله اسپات %s %s به ارزش %s',
                         $spotOrder->side === SpotOrderSideEnum::BUY ? 'خرید' : 'فروش',
                         $spotOrder->market->base_currency,
                         formatNumberTrimZeros((float)$commissionAmount),
-                    ))
+                    )
+                )
                 ->setSubtype(TransactionSubTypeEnum::SPOT)
                 ->setWalletId($commissionWallet->id)
         );
@@ -398,14 +402,14 @@ readonly class OrderMatchingEngine
             // **Refund remaining USDT if price was lower than expected**
             // This logic only applies if the taker was a LIMIT order with a specific price
             if ($takerOrder->type === SpotOrderTypeEnum::LIMIT && $takerOrder->price !== null) {
-                 $expectedTradeCost = Math::mul($tradeQuantity, $takerOrder->price); // Calculate expected cost only for limit orders
-                 $refundAmount = Math::sub($expectedTradeCost, $actualTradeCost);
-                 if (Math::comp($refundAmount, 0) === 1) {
-                     $this->walletRepository->increaseBalance($takerOrder->user_id, $quoteCurrency, $refundAmount);
-                     // Also decrease the lock for the refunded amount, as it was initially locked based on expected cost
-                     $this->walletRepository->decreaseLockedBalance($takerOrder->user_id, $quoteCurrency, $refundAmount);
-                     logger()->info("Refunded {$refundAmount} {$quoteCurrency} to user {$takerOrder->user_id} for taker order {$takerOrder->id} due to better execution price.");
-                 }
+                $expectedTradeCost = Math::mul($tradeQuantity, $takerOrder->price); // Calculate expected cost only for limit orders
+                $refundAmount = Math::sub($expectedTradeCost, $actualTradeCost);
+                if (Math::comp($refundAmount, 0) === 1) {
+                    $this->walletRepository->increaseBalance($takerOrder->user_id, $quoteCurrency, $refundAmount);
+                    // Also decrease the lock for the refunded amount, as it was initially locked based on expected cost
+                    $this->walletRepository->decreaseLockedBalance($takerOrder->user_id, $quoteCurrency, $refundAmount);
+                    logger()->info("Refunded {$refundAmount} {$quoteCurrency} to user {$takerOrder->user_id} for taker order {$takerOrder->id} due to better execution price.");
+                }
             }
         } else {
             // Seller (Taker) receives quote currency, pays in base currency
@@ -436,8 +440,6 @@ readonly class OrderMatchingEngine
             $this->walletRepository->decreaseBalance($makerOrder->user_id, $quoteCurrency, $actualTradeCost);
 
             $this->walletRepository->decreaseLockedBalance($makerOrder->user_id, $quoteCurrency, $actualTradeCost);
-
-
         } else {
             // Seller (Maker) receives quote currency, pays in base currency
             // Commission is taken from quote currency (what they receive)
@@ -476,10 +478,10 @@ readonly class OrderMatchingEngine
 
                 // Check if any part of the order was filled before cancellation
                 if (Math::comp($filledQuantity, 0) === 1 && Math::comp($filledQuantity, $initialQuantity) === -1) {
-                     $newStatus = SpotOrderStatusEnum::PARTIALLY_FILLED_CANCELED;
-                     logger()->info("Market order {$order->id} was partially filled. Setting status to PARTIALLY_FILLED_CANCELED.");
+                    $newStatus = SpotOrderStatusEnum::PARTIALLY_FILLED_CANCELED;
+                    logger()->info("Market order {$order->id} was partially filled. Setting status to PARTIALLY_FILLED_CANCELED.");
                 } else {
-                     logger()->info("Market order {$order->id} had no fills before cancellation. Setting status to CANCELED.");
+                    logger()->info("Market order {$order->id} had no fills before cancellation. Setting status to CANCELED.");
                 }
 
                 $order->status = $newStatus; // Use the determined status
@@ -514,7 +516,7 @@ readonly class OrderMatchingEngine
             // Update the order book after cancellation
             $this->broadcastOrderBook($order->market_id);
         } else {
-             logger()->warning("Attempted to cancel order {$order->id} which is not an open market order. Status: {$order->status->value}, Type: {$order->type->value}");
+            logger()->warning("Attempted to cancel order {$order->id} which is not an open market order. Status: {$order->status->value}, Type: {$order->type->value}");
         }
     }
 
@@ -523,47 +525,46 @@ readonly class OrderMatchingEngine
      */
     private function releaseRemainingLockedBalance(SpotOrder $order): void
     {
-         // Use refresh to ensure we have the latest quantity info
-         $order->refresh();
-         // Calculate remaining quantity based on initial and filled, NOT getRemindedQuantity() as status is changing
-         $initialQuantity = $order->getOriginal('quantity');
-         $filledQuantity = $order->filled_quantity;
-         $remainedQuantity = Math::sub($initialQuantity, $filledQuantity);
+        // Use refresh to ensure we have the latest quantity info
+        $order->refresh();
+        // Calculate remaining quantity based on initial and filled, NOT getRemindedQuantity() as status is changing
+        $initialQuantity = $order->getOriginal('quantity');
+        $filledQuantity = $order->filled_quantity;
+        $remainedQuantity = Math::sub($initialQuantity, $filledQuantity);
 
 
-         if (Math::comp($remainedQuantity, 0) <= 0) {
-             logger()->info("No remaining quantity ({$remainedQuantity}) to release balance for order {$order->id}. Initial: {$initialQuantity}, Filled: {$filledQuantity}");
-             return; // Nothing to release
-         }
+        if (Math::comp($remainedQuantity, 0) <= 0) {
+            logger()->info("No remaining quantity ({$remainedQuantity}) to release balance for order {$order->id}. Initial: {$initialQuantity}, Filled: {$filledQuantity}");
+            return; // Nothing to release
+        }
 
-         logger()->info("Attempting to release balance for remaining quantity {$remainedQuantity} of order {$order->id}.");
+        logger()->info("Attempting to release balance for remaining quantity {$remainedQuantity} of order {$order->id}.");
 
 
-         try {
-             if ($order->side === SpotOrderSideEnum::BUY) {
-                 // Market Buy: Locked quote currency.
-                 // We need to know how much quote currency is *still* locked for the remaining UNFILLED quantity.
-                 // This is tricky without knowing the average fill price or the exact lock amount remaining.
-                 // Assuming LockedBalanceDetail holds the *total initial lock* or is updated precisely.
-                 // SAFER APPROACH: Recalculate the required lock for the *filled* amount and unlock the difference.
+        try {
+            if ($order->side === SpotOrderSideEnum::BUY) {
+                // Market Buy: Locked quote currency.
+                // We need to know how much quote currency is *still* locked for the remaining UNFILLED quantity.
+                // This is tricky without knowing the average fill price or the exact lock amount remaining.
+                // Assuming LockedBalanceDetail holds the *total initial lock* or is updated precisely.
+                // SAFER APPROACH: Recalculate the required lock for the *filled* amount and unlock the difference.
 
-                 // Let's assume LockedBalanceDetail holds the *current remaining* lock amount.
-                 // This requires LockedBalanceDetail to be updated during partial fills, which is complex.
-                 // If LockedBalanceDetail only holds the initial lock, this logic is incorrect.
+                // Let's assume LockedBalanceDetail holds the *current remaining* lock amount.
+                // This requires LockedBalanceDetail to be updated during partial fills, which is complex.
+                // If LockedBalanceDetail only holds the initial lock, this logic is incorrect.
 
-                 $lockedDetail = LockedBalanceDetail::query()->where('spot_order_id', $order->id)->first();
-                 if ($lockedDetail && Math::comp($lockedDetail->amount, 0) === 1) {
-                      // WARNING: This assumes $lockedDetail->amount is the *remaining* lock, not the initial lock.
-                      $amountToUnlock = $lockedDetail->amount;
-                      // Decrease locked balance (which should increase available balance)
-                      $this->walletRepository->decreaseLockedBalance($order->user_id, $order->market->quote_currency, $amountToUnlock);
-                      logger()->info("Released remaining locked quote balance for canceled market buy order {$order->id} based on LockedBalanceDetail. Amount: {$amountToUnlock}");
-                 } else {
-                      // Fallback/Warning: If LockedBalanceDetail is missing or zero, or holds initial lock.
-                      logger()->error("Could not find valid/updated LockedBalanceDetail to release funds accurately for canceled market buy order {$order->id}. Remained quantity: {$remainedQuantity}. Manual check required or revise unlock logic.");
-                      // !! Consider implementing a more robust unlock calculation based on filled amount/price if possible !!
-                 }
-
+                $lockedDetail = LockedBalanceDetail::query()->where('spot_order_id', $order->id)->first();
+                if ($lockedDetail && Math::comp($lockedDetail->amount, 0) === 1) {
+                    // WARNING: This assumes $lockedDetail->amount is the *remaining* lock, not the initial lock.
+                    $amountToUnlock = $lockedDetail->amount;
+                    // Decrease locked balance (which should increase available balance)
+                    $this->walletRepository->decreaseLockedBalance($order->user_id, $order->market->quote_currency, $amountToUnlock);
+                    logger()->info("Released remaining locked quote balance for canceled market buy order {$order->id} based on LockedBalanceDetail. Amount: {$amountToUnlock}");
+                } else {
+                    // Fallback/Warning: If LockedBalanceDetail is missing or zero, or holds initial lock.
+                    logger()->error("Could not find valid/updated LockedBalanceDetail to release funds accurately for canceled market buy order {$order->id}. Remained quantity: {$remainedQuantity}. Manual check required or revise unlock logic.");
+                    // !! Consider implementing a more robust unlock calculation based on filled amount/price if possible !!
+                }
             } else {
                 // Market Sell: For MARKET orders, no base currency was locked at creation.
                 // Avoid decreasing locked_balance to prevent negative values on partial fill + cancel.
@@ -578,10 +579,10 @@ readonly class OrderMatchingEngine
                     logger()->info("No locked balance to release for canceled market sell order {$order->id}. Remaining quantity: {$remainedQuantity}");
                 }
             }
-         } catch (Throwable $e) {
-              logger()->error("Failed to release locked balance for canceled order {$order->id}: " . $e->getMessage(), ['exception' => $e]);
-              // Rethrow or handle appropriately - failing to unlock funds is critical.
-              throw $e;
-         }
+        } catch (Throwable $e) {
+            logger()->error("Failed to release locked balance for canceled order {$order->id}: " . $e->getMessage(), ['exception' => $e]);
+            // Rethrow or handle appropriately - failing to unlock funds is critical.
+            throw $e;
+        }
     }
 }

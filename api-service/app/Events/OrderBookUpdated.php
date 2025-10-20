@@ -14,8 +14,6 @@ class OrderBookUpdated implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    private SpotService $spotOrderService;
-
     public int $marketId;
 
     /**
@@ -23,7 +21,6 @@ class OrderBookUpdated implements ShouldBroadcast
      */
     public function __construct(int $marketId)
     {
-        $this->spotOrderService = resolve(SpotService::class);
         $this->marketId = $marketId;
     }
 
@@ -35,7 +32,7 @@ class OrderBookUpdated implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new Channel('order-book.'.$this->marketId),
+            new Channel('order-book.' . $this->marketId),
         ];
     }
 
