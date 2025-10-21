@@ -141,14 +141,14 @@ class StockService
             if ($returnAmount > 0) {
                 $user = $stockContract->user;
                 $wallet = $this->walletRepository->getOneByCurrency('USDT', $user->id);
-                
+
                 // Lock ExchangeWallet for update to prevent race conditions
                 $ExchangeWallet = $this->walletRepository->getWalletWithLock('USDT', config('bitexroom.user_id'));
-                
+
                 // Calculate balances manually to avoid cache issues
                 $initialExchangeBalance = $ExchangeWallet->balance;
                 $balanceAfterDecrease = $initialExchangeBalance - $returnAmount;
-            
+
 
                 // Create transaction record for user return
                 $this->transactionRepository->create(
@@ -174,7 +174,7 @@ class StockService
                         ->setWalletId($ExchangeWallet->id)
                         ->setStockContractId($stockContract->id)
                         ->setCoinPrice(1)
-                        ->setAmount(-$returnAmount)
+                        ->setAmount(-$stockContract->total_value)
                         ->setBalance($initialExchangeBalance)
                         ->setType(TransactionTypeEnum::BUY)
                         ->setSubtype(TransactionSubTypeEnum::STOCK)
