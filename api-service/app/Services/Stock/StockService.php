@@ -182,7 +182,7 @@ class StockService
                         ->setDescription('کسر از حساب صرافی بابت ابطال قرارداد ' . $stockContract->contract_number)
                 );
 
-                $this->walletService->decreaseBalance(config('bitexroom.user_id'), 'USDT', $returnAmount);
+                $this->walletService->decreaseBalance(config('bitexroom.user_id'), 'USDT', $stockContract->total_value);
 
                 // Create transaction record for cancellation fee
                 $this->transactionRepository->create(

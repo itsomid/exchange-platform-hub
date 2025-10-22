@@ -9,6 +9,8 @@ volumes:
     driver: local
   storage_api:
     driver: local
+  api_system_dbdata:
+    driver: local
 
 services:
   # NGINX for Admin Panel
@@ -30,7 +32,6 @@ services:
       - database
       - admin-queue
       - admin-cron
-    #      - phpmyadmin
     networks:
       - laravel
 
@@ -70,7 +71,6 @@ services:
       - "./env/api_service.env:/var/www/html/.env"
     depends_on:
       - php-api
-      - database
       - api-queue
       - api-cron
     networks:
@@ -111,6 +111,21 @@ services:
     networks:
       - laravel
 
+  # MySQL Database for API System
+#  api-system-database:
+#    image: mysql:latest
+#    container_name: api-system-database
+#    restart: unless-stopped
+#    tty: true
+#    ports:
+#      - 3308:3306
+#    env_file:
+#      - ./env/api_system_mysql.env
+#    volumes:
+#      - api_system_dbdata:/var/lib/mysql
+#    networks:
+#      - laravel
+
   # Laravel Cron Jobs
   admin-cron:
     build:
@@ -146,7 +161,6 @@ services:
     depends_on:
       - database
     working_dir: /var/www/html
-    #    entrypoint: /bin/sh -c "while true; do php artisan schedule:run >> /dev/null 2>&1; sleep 60; done"
     entrypoint: /bin/sh -c "while true; do php artisan schedule:run >> /dev/null 2>&1; sleep 60; done"
     networks:
       - laravel
@@ -239,30 +253,6 @@ services:
       - laravel
     restart: always
 
-  laravel-migrate-seed:
-    build:
-      context: ./dockerfiles
-      dockerfile: php.dockerfile
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-        - USER=${USER:-laraveluser}
-    container_name: laravel-migrate-seed
-    volumes:
-      - ./admin-panel:/var/www/html:delegated
-      - ./env/admin_panel.env:/var/www/html/.env
-    depends_on:
-      - database
-    profiles: [ "migrate-seed" ]
-    working_dir: /var/www/html
-    entrypoint: [ "/bin/sh", "-c" ]
-    command:
-      - |
-        php artisan migrate
-        php artisan db:seed
-    networks:
-      - laravel
-
   # Composer service for Admin Panel
   composer-admin:
     build:
@@ -348,7 +338,6 @@ services:
     container_name: npm
     volumes:
       - ./admin-panel:/var/www/html
-    #      - .env:/var/www/html/.env
     ports:
       - 3000:3000
       - 3001:3001
@@ -366,14 +355,3 @@ services:
       - 6380:6379
     networks:
       - laravel
-    #  phpmyadmin:
-    #    image: phpmyadmin:5.2.0
-    #    container_name: phpmyadmin
-    #    env_file:
-    #      - ./env/phpmyadmin.env
-    #    depends_on:
-    #      - database
-    #    ports:
-    #      - 8888:80
-    #    networks:
-    #      - laravelnetworks:

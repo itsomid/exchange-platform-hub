@@ -42,6 +42,9 @@ use App\Http\Controllers\Withdrawal\WithdrawalReportController;
 use App\Http\Controllers\Stock\StockController;
 use App\Http\Controllers\Stock\StockContractController;
 use App\Http\Controllers\Setting\SpotBotSettingController;
+use App\Http\Controllers\ApiSystem\ApiSystemController;
+use App\Http\Controllers\ApiSystem\ApiSystemTokenController;
+use App\Http\Controllers\ApiSystem\BatchTokenController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -299,4 +302,47 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::delete('/{stockContract}', [StockContractController::class, 'destroy'])->name('stock-contract.destroy')->can('stock');
         Route::post('/{stockContract}/regenerate-pdf', [StockContractController::class, 'generateContractPdfIfNotExists'])->name('stock-contract.regenerate-pdf')->can('stock');
     });
+
+    // *********API SYSTEMS*********//
+//    Route::prefix('api-systems')->group(function () {
+//        Route::get('/', [ApiSystemController::class, 'index'])->name('api-system.index')->can('api-system');
+//        Route::get('/create', [ApiSystemController::class, 'create'])->name('api-system.create')->can('api-system');
+//        Route::post('/', [ApiSystemController::class, 'store'])->name('api-system.store')->can('api-system');
+//        Route::get('/{system}', [ApiSystemController::class, 'show'])->name('api-system.show')->can('api-system');
+//        Route::get('/{system}/edit', [ApiSystemController::class, 'edit'])->name('api-system.edit')->can('api-system');
+//        Route::patch('/{system}', [ApiSystemController::class, 'update'])->name('api-system.update')->can('api-system');
+//        Route::patch('/{system}/toggle-status', [ApiSystemController::class, 'toggleStatus'])->name('api-system.toggle-status')->can('api-system');
+//        Route::delete('/{system}', [ApiSystemController::class, 'destroy'])->name('api-system.destroy')->can('api-system');
+//        Route::get('/statistics/overview', [ApiSystemController::class, 'statistics'])->name('api-system.statistics')->can('api-system');
+//
+//        // API System Tokens
+//        Route::prefix('{system}/tokens')->group(function () {
+//            Route::get('/', [ApiSystemTokenController::class, 'index'])->name('api-system.tokens.index')->can('api-system');
+//            Route::get('/create', [ApiSystemTokenController::class, 'create'])->name('api-system.tokens.create')->can('api-system');
+//            Route::post('/', [ApiSystemTokenController::class, 'store'])->name('api-system.tokens.store')->can('api-system');
+//            Route::get('/{token}', [ApiSystemTokenController::class, 'show'])->name('api-system.tokens.show')->can('api-system');
+//            Route::get('/{token}/edit', [ApiSystemTokenController::class, 'edit'])->name('api-system.tokens.edit')->can('api-system');
+//            Route::patch('/{token}', [ApiSystemTokenController::class, 'update'])->name('api-system.tokens.update')->can('api-system');
+//            Route::post('/{token}/toggle-status', [ApiSystemTokenController::class, 'toggleStatus'])->name('api-system.tokens.toggle-status')->can('api-system');
+//            Route::post('/{token}/regenerate', [ApiSystemTokenController::class, 'regenerate'])->name('api-system.tokens.regenerate')->can('api-system');
+//            Route::delete('/{token}', [ApiSystemTokenController::class, 'destroy'])->name('api-system.tokens.destroy')->can('api-system');
+//            Route::get('/{token}/usage-stats', [ApiSystemTokenController::class, 'getUsageStats'])->name('api-system.tokens.usage-stats')->can('api-system');
+//        });
+//
+//        // Batch Tokens
+//        Route::prefix('{system}/batch-tokens')->group(function () {
+//            Route::get('/', [BatchTokenController::class, 'index'])->name('api-system.batch-tokens.index')->can('api-system');
+//            Route::get('/{batchToken}', [BatchTokenController::class, 'show'])->name('api-system.batch-tokens.show')->can('api-system');
+//            Route::post('/{batchToken}/cancel', [BatchTokenController::class, 'cancel'])->name('api-system.batch-tokens.cancel')->can('api-system');
+//            Route::post('/{batchToken}/retry', [BatchTokenController::class, 'retry'])->name('api-system.batch-tokens.retry')->can('api-system');
+//            Route::post('/{batchToken}/force-complete', [BatchTokenController::class, 'forceComplete'])->name('api-system.batch-tokens.force-complete')->can('api-system');
+//            Route::get('/stats/overview', [BatchTokenController::class, 'getStats'])->name('api-system.batch-tokens.stats')->can('api-system');
+//            Route::get('/export/csv', [BatchTokenController::class, 'export'])->name('api-system.batch-tokens.export')->can('api-system');
+//        });
+//    });
+//
+//    // General Batch Tokens (for sidebar navigation)
+//    Route::prefix('batch-tokens')->group(function () {
+//        Route::get('/', [BatchTokenController::class, 'indexAll'])->name('batch-tokens.index')->can('api-system');
+//    });
 });
