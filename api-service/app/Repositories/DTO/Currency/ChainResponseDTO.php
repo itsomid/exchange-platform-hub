@@ -28,6 +28,10 @@ class ChainResponseDTO
 
     private bool $isMemoRequiredForDeposit;
 
+    private ?string $contractAddress;
+
+    private ?string $contractAddressUrl;
+
     public function setChain(CurrencyChainEnum $chain): self
     {
         $this->chain = $chain;
@@ -170,5 +174,29 @@ class ChainResponseDTO
     public function getWithdrawalFee(): string
     {
         return $this->withdrawalFee;
+    }
+
+    public function setContractAddress(?string $contractAddress): self
+    {
+        $this->contractAddress = $contractAddress;
+
+        return $this;
+    }
+
+    public function getContractAddress(): ?string
+    {
+        return $this->contractAddress;
+    }
+
+    public function setContractAddressUrl(?string $contractAddressUrl): self
+    {
+        $this->contractAddressUrl = $contractAddressUrl;
+
+        return $this;
+    }
+
+    public function getContractAddressUrl(): ?string
+    {
+        return $this->contractAddressUrl;
     }
 }

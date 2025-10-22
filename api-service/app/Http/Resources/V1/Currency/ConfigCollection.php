@@ -83,6 +83,8 @@ class ConfigCollection extends ResourceCollection
                     'withdrawal_fee' => $chain->getWithdrawalFee(),
                     'withdrawal_precision' => $chain->getWithdrawPrecision(),
                     'memo' => $chain->getMemo(),
+                    'contract_address' => $chain->getContractAddress(),
+                    'contract_address_url' => $chain->getContractAddressUrl(),
                 ];
             }, $configResponseDTO->getChains()),
         ])->toArray();

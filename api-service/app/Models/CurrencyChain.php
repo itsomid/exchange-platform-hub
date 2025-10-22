@@ -35,4 +35,35 @@ class CurrencyChain extends Model
         return $query->where('chain', $currencyChain)
             ->sum(DB::raw('network_fee + exchange_withdrawal_fee'));
     }
+
+    /**
+     * Generate contract address URL for blockchain explorers
+     * 
+     * @return string|null
+     */
+    public function getContractAddressUrl(): ?string
+    {
+        if (!$this->contract_address) {
+            return null;
+        }
+
+        // Map blockchain names to their explorer URLs
+        $explorerUrls = [
+            'BSC' => 'https://bscscan.com/token/',
+            'ETHEREUM' => 'https://etherscan.io/token/',
+            'POLYGON' => 'https://polygonscan.com/token/',
+            'TRON' => 'https://tronscan.org/#/token20/',
+            'ARBITRUM' => 'https://arbiscan.io/token/',
+            'OPTIMISM' => 'https://optimistic.etherscan.io/token/',
+            'AVALANCHE' => 'https://snowtrace.io/token/',
+        ];
+
+        $blockchainName = $this->blockchain_name?->value;
+        
+        if (!$blockchainName || !isset($explorerUrls[$blockchainName])) {
+            return null;
+        }
+
+        return $explorerUrls[$blockchainName] . $this->contract_address;
+    }
 }

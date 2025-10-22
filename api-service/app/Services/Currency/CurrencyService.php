@@ -35,6 +35,8 @@ class CurrencyService
                     ->setSafeConfirmations($item->safe_confirmations)
                     ->setWithdrawalFee(Math::add($item->exchange_withdrawal_fee, $item->network_fee))
                     ->setWithdrawPrecision($item->withdrawal_precision)
+                    ->setContractAddress($item->contract_address)
+                    ->setContractAddressUrl($item->getContractAddressUrl())
                     ->setMemo($item->memo)
                     ->setIsMemoRequiredForDeposit($item->is_memo_required_for_deposit)
             )->toArray());
@@ -71,6 +73,8 @@ class CurrencyService
                     ->setSafeConfirmations($item->safe_confirmations)
                     ->setWithdrawalFee(Math::add($item->exchange_withdrawal_fee ?? 0, $item->network_fee ?? 0))
                     ->setWithdrawPrecision($item->withdrawal_precision)
+                    ->setContractAddress($item->contract_address)
+                    ->setContractAddressUrl($item->getContractAddressUrl())
                     ->setMemo($item->memo)
                     ->setIsMemoRequiredForDeposit($item->is_memo_required_for_deposit)
             )->toArray()))->toArray();
