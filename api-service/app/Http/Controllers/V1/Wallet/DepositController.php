@@ -26,10 +26,10 @@ class DepositController extends Controller
 
         $deposits = $this->depositRepository->getDepositsPaginated(
             userId: Auth::id(),
-            currencySymbol: $request->get('currency_symbol'),
+            currencySymbol: $request->get('currency'),
             status: $request->get('status'),
             page: $request->get('page', 1),
-            perPage: $request->get('per_page', 10)
+            perPage: $request->get('limit', 10)
         );
 
         return new DepositListCollection($deposits);
