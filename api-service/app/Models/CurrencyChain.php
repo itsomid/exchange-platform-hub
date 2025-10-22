@@ -49,7 +49,7 @@ class CurrencyChain extends Model
 
         // Map blockchain names to their explorer URLs
         $explorerUrls = [
-            'BSC' => 'https://bscscan.com/token/',
+            'BINANCE' => 'https://bscscan.com/token/',
             'ETHEREUM' => 'https://etherscan.io/token/',
             'POLYGON' => 'https://polygonscan.com/token/',
             'TRON' => 'https://tronscan.org/#/token20/',
@@ -59,9 +59,9 @@ class CurrencyChain extends Model
         ];
 
         $blockchainName = $this->blockchain_name?->value;
-        
+
         if (!$blockchainName || !isset($explorerUrls[$blockchainName])) {
-            return null;
+            return "null";
         }
 
         return $explorerUrls[$blockchainName] . $this->contract_address;
