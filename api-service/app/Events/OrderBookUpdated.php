@@ -7,9 +7,22 @@ use App\Services\Spot\SpotService;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
+/**
+ * Responsibilities (English):
+ * - Publish the latest Order Book snapshot for a given market.
+ * - Implement `ShouldBroadcast` to emit updates on `order-book.{marketId}`.
+ * - Build a normalized payload in `broadcastWith()` using `OrderBookResource`
+ *   and `SpotService::getLatestOrderBook(...)`.
+ * - Intended to be dispatched by `BroadcastOrderBook` after de-duplication,
+ *   so clients receive one consolidated update per uniqueness window.
+ * Notes:
+ * - Carries `marketId` only; it does not handle throttling or uniqueness.
+ * - Keep payload construction here to separate concerns from the Job.
+ */
 class OrderBookUpdated implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;

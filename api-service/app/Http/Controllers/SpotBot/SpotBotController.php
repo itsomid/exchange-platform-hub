@@ -666,9 +666,8 @@ class SpotBotController extends Controller
             // Pre-check balances before starting the replacement process
             $this->ensureSufficientBalances($setting, $market, $currentPrice);
 
-            // Get optional parameters from request, fallback to settings
-            $buyOrdersCount = $request->input('buy_orders_count', $setting->buy_orders_count);
-            $sellOrdersCount = $request->input('sell_orders_count', $setting->sell_orders_count);
+            $buyOrdersCount = $setting->buy_orders_count;
+            $sellOrdersCount = $setting->sell_orders_count;
 
             // Step 1: Generate new orders first (but don't place them yet)
             $newOrders = [];
@@ -679,7 +678,7 @@ class SpotBotController extends Controller
                 try {
                     $buyPrice = $this->calculateOrderPrice($currentPrice, $setting->order_margin, 'buy', $i, $market);
                     $quantity = $this->calculateOrderQuantity($setting, $market);
-                    
+
                     $newOrders[] = [
                         'side' => SpotOrderSideEnum::BUY,
                         'price' => $buyPrice,
@@ -696,7 +695,7 @@ class SpotBotController extends Controller
                 try {
                     $sellPrice = $this->calculateOrderPrice($currentPrice, $setting->order_margin, 'sell', $i, $market);
                     $quantity = $this->calculateOrderQuantity($setting, $market);
-                    
+
                     $newOrders[] = [
                         'side' => SpotOrderSideEnum::SELL,
                         'price' => $sellPrice,
@@ -720,13 +719,13 @@ class SpotBotController extends Controller
 
             // Step 3: Atomic replacement - cancel old and create new in quick succession
             \DB::transaction(function () use (
-                $existingOrders, 
-                $newOrders, 
-                $setting, 
-                $market, 
-                $spotService, 
-                &$cancelledOrders, 
-                &$createdOrders, 
+                $existingOrders,
+                $newOrders,
+                $setting,
+                $market,
+                $spotService,
+                &$cancelledOrders,
+                &$createdOrders,
                 &$errors
             ) {
                 // Cancel existing orders
@@ -771,14 +770,6 @@ class SpotBotController extends Controller
                 }
             });
 
-            Log::channel('spot-bot')->info('Bot orders replaced successfully', [
-                'currency_id' => $currency_id,
-                'currency_symbol' => $currency->symbol,
-                'market_id' => $market->id,
-                'cancelled_orders_count' => count($cancelledOrders),
-                'created_orders_count' => count($createdOrders),
-                'errors_count' => count($errors)
-            ]);
 
             return response()->json([
                 'success' => true,
@@ -794,7 +785,6 @@ class SpotBotController extends Controller
                     'errors' => $errors
                 ]
             ]);
-
         } catch (InsufficientBalanceException $e) {
             return response()->json([
                 'success' => false,
@@ -1128,7 +1118,7 @@ class SpotBotController extends Controller
         }
 
         $parts = explode('.', $value);
-        
+
         if (count($parts) === 1) {
             // No decimal part
             return $value;
@@ -1152,7 +1142,7 @@ class SpotBotController extends Controller
     private function isPrecisionValid(string $value, int $precision): bool
     {
         $parts = explode('.', $value);
-        
+
         if (count($parts) === 1) {
             // No decimal part, always valid
             return true;

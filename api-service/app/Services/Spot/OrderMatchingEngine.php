@@ -9,8 +9,8 @@ use App\Enums\SpotOrderTypeEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
-use App\Events\OrderBookUpdated;
 use App\Events\UserNotification;
+use App\Jobs\BroadcastOrderBook;
 use App\Helpers\Math;
 use App\Models\LockedBalanceDetail;
 use App\Models\Setting;
@@ -455,7 +455,8 @@ readonly class OrderMatchingEngine
 
     private function broadcastOrderBook(int $marketId): void
     {
-        OrderBookUpdated::dispatch($marketId);
+        // Funnel all broadcasts through the unique job to throttle & deduplicate
+        BroadcastOrderBook::dispatch($marketId);
     }
 
     private function broadcastUserNotifications(int $userId): void

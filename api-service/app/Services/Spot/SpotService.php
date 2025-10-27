@@ -7,7 +7,7 @@ use App\Enums\SpotOrderSideEnum;
 use App\Enums\SpotOrderStatusEnum;
 use App\Enums\SpotOrderTypeEnum;
 use App\Enums\SpotOrderSourceEnum;
-use App\Events\OrderBookUpdated;
+use App\Jobs\BroadcastOrderBook;
 use App\Exceptions\V1\Wallet\InsufficientBalanceException;
 use App\Helpers\Math;
 use App\Models\LockedBalanceDetail;
@@ -119,7 +119,7 @@ class SpotService
                 ]);
             }
             //Update Socket
-            OrderBookUpdated::dispatch($requestDTO->getMarketId());
+            BroadcastOrderBook::dispatch($requestDTO->getMarketId());
         } catch (Throwable $exception) {
             report($exception);
             throw $exception; // Re-throw the exception instead of silently continuing
@@ -201,7 +201,7 @@ class SpotService
         try {
             DB::beginTransaction();
             $order = $this->spotOrderRepository->getOneWithLock($orderId);
-         
+
             if ($order === null) {
                 throw new InvalidArgumentException('سفارش موردنظر یافت نشد.');
             }
@@ -218,7 +218,7 @@ class SpotService
             }
 
             DB::commit();
-            OrderBookUpdated::dispatch($order->market->id);
+            BroadcastOrderBook::dispatch($order->market->id);
         } catch (Throwable $exception) {
             DB::rollBack();
             throw $exception;
@@ -231,7 +231,7 @@ class SpotService
     private function cancelRegularOrder(int $userId, $order): void
     {
         $lockedDetail = $this->lockedBalanceRepository->getOne($order->id, LockedBalanceTypeEnum::SPOT);
-      
+
         $amountRefund = $lockedDetail->amount;
 
         //Partial Matched
@@ -246,9 +246,9 @@ class SpotService
                 $amountRefund = Math::sub($lockedDetail->amount, $order->filled_quantity);
             }
         }
-       
+
         $market = $order->market;
-        
+
         // Update description before deleting locked balance
         $description = '';
         if (Math::comp($order->filled_quantity, '0') !== 0) {
@@ -258,9 +258,9 @@ class SpotService
             // Fully unfilled order
             $description = "لغو سفارش اسپات #{$order->id} - بدون پر شدن";
         }
-        
+
         $lockedDetail->update(['description' => $description]);
-        
+
         $this->lockedBalanceRepository->deleteSpotOrderLockedBalance($order->id);
 
         if ($order->side === SpotOrderSideEnum::BUY) {
@@ -269,9 +269,9 @@ class SpotService
             $currency = $market->base_currency;
         }
         $wallet = $this->walletRepository->getWalletWithLock($currency, $userId);
-       
+
         $wallet->decrement('locked_balance', $amountRefund);
- 
+
         // Set status based on whether order was partially filled
         if (Math::comp($order->filled_quantity, '0') !== 0) {
             // Order was partially filled
