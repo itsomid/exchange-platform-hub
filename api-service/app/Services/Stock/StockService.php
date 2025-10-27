@@ -29,21 +29,6 @@ class StockService
         private readonly TransactionRepositoryInterface $transactionRepository
     ) {}
 
-    public function getStocks(): Collection
-    {
-        return $this->stockRepository->getStocks();
-    }
-
-    public function getStockById(string $stockId): ?Stock
-    {
-        return $this->stockRepository->getStockById($stockId);
-    }
-
-    public function getStockByType(string $type): Collection
-    {
-        return $this->stockRepository->getStockByType($type);
-    }
-
     public function getUserPortfolio(User $user): array
     {
         $contracts = $this->stockRepository->getUserContracts($user);

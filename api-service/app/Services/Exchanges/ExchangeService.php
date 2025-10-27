@@ -35,16 +35,14 @@ class ExchangeService
         private readonly WalletRepositoryInterface         $walletRepository,
         private readonly WalletChainRepositoryInterface    $chainRepository,
         private readonly OTCRefExchangeWithdrawalInterface $refExchangeWithdrawalRepository,
-    )
-    {
-    }
+    ) {}
 
     public function buy(ExchangeBuyRequestDTO $requestDTO): ExchangeBuyResponseDTO
     {
         $market = $this->marketRepository->getMarketById($requestDTO->getMarketId());
         $exchangeName = $market->exchangePrice->exchange->slug;
         $asset = AssetFactory::make($exchangeName);
-        
+
         $response = $asset->placeOrder(
             resolve(BuyDTORequest::class)
                 ->setSide('buy')
@@ -71,7 +69,7 @@ class ExchangeService
 
             // Get fee currency based on exchange type
             $feeCurrency = $this->getFeeCurrencyForExchange($exchangeName);
-            
+
             $feeWallet = $this->walletRepository
                 ->getOrCreateWallet(
                     config('bitexroom.user_id'),
@@ -104,11 +102,13 @@ class ExchangeService
                     ->setType(TransactionTypeEnum::REF_EXCHANGE)
                     ->setSubtype(TransactionSubTypeEnum::REF_EXCHANGE_BUY_FEE)
                     ->setStatus(TransactionStatusEnum::SUCCESS)
-                    ->setDescription(sprintf('استفاده %s به مقدار %s برای فی خرید از صرافی مرجع (%s)',
-                        $feeCurrency,
-                        formatNumberTrimZeros((float)$response->getDiscountFee()),
-                        $market->exchangePrice->exchange->name
-                    ),
+                    ->setDescription(
+                        sprintf(
+                            'استفاده %s به مقدار %s برای فی خرید از صرافی مرجع (%s)',
+                            $feeCurrency,
+                            formatNumberTrimZeros((float)$response->getDiscountFee()),
+                            $market->exchangePrice->exchange->name
+                        ),
                     ));
             }
 
@@ -118,7 +118,7 @@ class ExchangeService
                 // If fee is paid in USDT, subtract it from the main transaction to avoid double counting
                 $usdtAmount = bcsub($usdtAmount, $response->getDiscountFee(), 8);
             }
-            
+
             $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
                 ->setUserId(config('bitexroom.user_id'))
                 ->setWalletId($usdtWallet->id)
@@ -129,10 +129,12 @@ class ExchangeService
                 ->setType(TransactionTypeEnum::REF_EXCHANGE)
                 ->setSubtype(TransactionSubTypeEnum::REF_EXCHANGE_BUY)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
-                ->setDescription(sprintf('استفاده USDT به مقدار %s در خرید از صرافی مرجع (%s)',
-                    formatNumberTrimZeros((float)$usdtAmount),
-                    $market->exchangePrice->exchange->name
-                ),
+                ->setDescription(
+                    sprintf(
+                        'استفاده USDT به مقدار %s در خرید از صرافی مرجع (%s)',
+                        formatNumberTrimZeros((float)$usdtAmount),
+                        $market->exchangePrice->exchange->name
+                    ),
                 ));
             //BASE Currency
             $baseCurrencyTransaction = $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
@@ -145,11 +147,13 @@ class ExchangeService
                 ->setType(TransactionTypeEnum::REF_EXCHANGE)
                 ->setSubtype(TransactionSubTypeEnum::REF_EXCHANGE_BUY)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
-                ->setDescription(sprintf('خرید %s به مقدار %s از صرافی مرجع (%s)',
-                    $market->base_currency,
-                    formatNumberTrimZeros((float)$response->getAmount()),
-                    $market->exchangePrice->exchange->name
-                ),
+                ->setDescription(
+                    sprintf(
+                        'خرید %s به مقدار %s از صرافی مرجع (%s)',
+                        $market->base_currency,
+                        formatNumberTrimZeros((float)$response->getAmount()),
+                        $market->exchangePrice->exchange->name
+                    ),
                 ));
             $baseCurrencyWallet->increment('balance', (float)$response->getAmount());
 
@@ -159,7 +163,6 @@ class ExchangeService
                     ->setTransactionId($baseCurrencyTransaction->id)
                     ->setStatus(OTCRefExchangeWithdrawalStatusEnum::PENDING)
             );
-
         }
 
         return resolve(ExchangeBuyResponseDTO::class)
@@ -225,7 +228,9 @@ class ExchangeService
                 ->setType(TransactionTypeEnum::REF_EXCHANGE)
                 ->setSubtype(TransactionSubTypeEnum::REF_EXCHANGE_BUY_FEE)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
-                ->setDescription(sprintf('استفاده CET به مقدار %s',
+                ->setDescription(
+                    sprintf(
+                        'استفاده CET به مقدار %s',
                         formatNumberTrimZeros((float)$response->getFee())
                     )
                 ));
@@ -239,7 +244,9 @@ class ExchangeService
                 ->setType(TransactionTypeEnum::REF_EXCHANGE)
                 ->setSubtype(TransactionSubTypeEnum::REF_EXCHANGE_BUY)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
-                ->setDescription(sprintf('استفاده USDT به مقدار %s',
+                ->setDescription(
+                    sprintf(
+                        'استفاده USDT به مقدار %s',
                         formatNumberTrimZeros((float)$response->getActualAmount())
                     )
                 ));
@@ -255,7 +262,7 @@ class ExchangeService
             ->setWithdrawStatus($response->getStatus());
     }
 
-    
+
     /**
      * Get fee currency for different exchanges
      */

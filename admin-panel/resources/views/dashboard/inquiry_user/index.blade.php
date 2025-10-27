@@ -6,11 +6,13 @@
             <div class="card mb-3">
                 <div class="card-body">
                     <h5 class="card-title">استعلام کاربر</h5>
-                    <form action="{{route('admin.inquiry.submit')}}" class="row mt-3 d-flex align-items-end justify-content-between" method="post">
+                    <form action="{{ route('admin.inquiry.submit') }}"
+                        class="row mt-3 d-flex align-items-end justify-content-between" method="post">
                         @csrf
                         <div class="col-md-4 user_role">
                             <label class="form-label" for="email">ایمیل یا ایدی کاربر:</label>
-                            <input type="text" id="email" name="email" class="form-control" placeholder="ایمیل/شناسه کاربری" value="{{old('email')}}">
+                            <input type="text" id="email" name="email" class="form-control"
+                                placeholder="ایمیل/شناسه کاربری" value="{{ old('email') }}">
                         </div>
                         <div class="col-md-2 mt-2">
                             <button type="submit" class="btn btn-primary mt-2 text-white">
@@ -31,13 +33,10 @@
                     <div class="card-body">
                         <div class="user-avatar-section">
                             <div class="d-flex align-items-center flex-column">
-                                <img class="img-fluid rounded mb-3 pt-1 mt-4"
-                                     src="{{auth()->user()->avatar()}}"
-                                     height="100"
-                                     width="100"
-                                     alt="User avatar"/>
+                                <img class="img-fluid rounded mb-3 pt-1 mt-4" src="{{ auth()->user()->avatar() }}"
+                                    height="100" width="100" alt="User avatar" />
                                 <div class="user-info text-center">
-                                    <h4 class="mb-2">{{$user->name}}</h4>
+                                    <h4 class="mb-2">{{ $user->name }}</h4>
                                 </div>
                             </div>
                         </div>
@@ -48,37 +47,38 @@
                                 <p class="mt-4 s mall text-uppercase text-muted">جزئیات</p>
                                 <li class="mb-2 d-flex justify-content-between">
                                     <span class="fw-semibold me-1">ایدی کاربر:</span>
-                                    <span>#{{$user->id}}</span>
+                                    <span>#{{ $user->id }}</span>
                                 </li>
                                 <li class="mb-2 d-flex justify-content-between">
                                     <span class="fw-semibold me-1">ایمیل:</span>
-                                    <span>{{$user->email}}</span>
+                                    <span>{{ $user->email }}</span>
                                 </li>
                                 <li class="mb-2 pt-1  d-flex justify-content-between">
                                     <span class="fw-semibold me-1">شماره تماس:</span>
-                                    <span>{{$user->mobile}}</span>
+                                    <span>{{ $user->mobile }}</span>
                                 </li>
                                 <li class="mb-2 pt-1  d-flex justify-content-between">
                                     <span class="fw-semibold me-1">اعتبار:</span>
-                                    <span>{{number_format($user->balance, 0)}}</span>
+                                    <span>{{ formatNumberTrimZeros($user->balance, 0) }}</span>
                                 </li>
                                 <li class="mb-2 pt-1  d-flex justify-content-between">
                                     <span class="fw-semibold me-1">تاریخ ایجاد حساب:</span>
                                     <span>
-                                     {{$user->created_at()}}
-                                </span>
+                                        {{ $user->created_at() }}
+                                    </span>
                                 </li>
                                 <li class="mb-2 pt-1  d-flex justify-content-between">
                                     <span class="fw-semibold me-1">وضعیت:</span>
-                                    <span class="badge bg-label-{{auth()->user()->status(true)}}">
-                                    {{auth()->user()->status()}}
-                                </span>
+                                    <span class="badge bg-label-{{ auth()->user()->status(true) }}">
+                                        {{ auth()->user()->status() }}
+                                    </span>
                                 </li>
 
                                 <hr>
                                 <p class="mt-4 small text-uppercase text-muted">عملیات</p>
                                 <li class="mb-2 pt-1 d-flex justify-content-center text-white">
-                                    <a href="{{route('admin.user.edit',$user->id)}}" type="button" class="btn btn-primary mx-1">
+                                    <a href="{{ route('admin.user.edit', $user->id) }}" type="button"
+                                        class="btn btn-primary mx-1">
                                         <span class="mx-1">ویرایش کاربر</span>
                                         <i class="fa-regular fa-user-pen"></i>
                                     </a>
@@ -86,10 +86,10 @@
                                         <span class="mx-1">ورود به پنل کاربر</span>
                                         <i class="fa-sharp fa-solid fa-castle"></i>
                                     </button>
-                                    {{--                                    <button type="button" class="btn btn-warning mx-1">--}}
-                                    {{--                                        <span class="mx-1">همگام سازی</span>--}}
-                                    {{--                                        <i class="fa-solid fa-arrows-rotate"></i>--}}
-                                    {{--                                    </button>--}}
+                                    {{--                                    <button type="button" class="btn btn-warning mx-1"> --}}
+                                    {{--                                        <span class="mx-1">همگام سازی</span> --}}
+                                    {{--                                        <i class="fa-solid fa-arrows-rotate"></i> --}}
+                                    {{--                                    </button> --}}
 
                                 </li>
                             </ul>
@@ -104,11 +104,12 @@
                         <div class="card-title">
                             <h6>خرید های کاربر</h6>
                             <p class="small text-uppercase text-muted">
-                                تعداد سفارشات: <strong class="text-dark">{{$user}}</strong>
+                                تعداد سفارشات: <strong class="text-dark">{{ $user }}</strong>
                             </p>
                         </div>
                         <div class="user-products-inquiry-section">
-                            <img  src="https://cdn2.com/uploads/images/shop/1685361606880.png" width="100" height="100" alt="عکس دوره">
+                            <img src="https://cdn2.com/uploads/images/shop/1685361606880.png" width="100" height="100"
+                                alt="عکس دوره">
                             <div>
                                 <span>نام محصول : <strong>نام محصول</strong></span>
                                 <span>آیدی خرید : <strong>۱۲۱۲۱#</strong></span>
@@ -116,7 +117,8 @@
                         </div>
                         <hr>
                         <div class="user-products-inquiry-section">
-                            <img  src="https://cdn2.com/uploads/images/shop/1685361606880.png" width="100" height="100" alt="عکس دوره">
+                            <img src="https://cdn2.com/uploads/images/shop/1685361606880.png" width="100" height="100"
+                                alt="عکس دوره">
                             <div>
                                 <span>نام محصول : <strong>نام محصول</strong></span>
                                 <span>آیدی خرید : <strong>۱۲۱۲۱#</strong></span>
@@ -126,6 +128,6 @@
                 </div>
             </div>
         </div>
-    @endif
+        @endif
 
-@endsection
+    @endsection

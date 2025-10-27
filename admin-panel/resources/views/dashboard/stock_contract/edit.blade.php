@@ -10,22 +10,21 @@
 
                 <div class="col-md-6">
                     <label class="form-label mt-3" for="user">کاربر :</label>
-                    <x-user-selection-component
-                        inputName="user"
-                        multiple="0"
-                        disabled="1"
-                        selected="{{$stockContract->user}}"
-                        selected-label="({{$stockContract->user->id}}#) {{$stockContract->user->fullname()}} | {{$stockContract->user->email}}">
+                    <x-user-selection-component inputName="user" multiple="0" disabled="1"
+                        selected="{{ $stockContract->user }}"
+                        selected-label="({{ $stockContract->user->id }}#) {{ $stockContract->user->fullname() }} | {{ $stockContract->user->email }}">
                     </x-user-selection-component>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label mt-5" for="stock_id">سهام :</label>
-                    <select name="stock_id" id="stock_id" class="form-control @error('stock_id') is-invalid @enderror" disabled="1" required>
+                    <select name="stock_id" id="stock_id" class="form-control @error('stock_id') is-invalid @enderror"
+                        disabled="1" required>
                         <option value="">انتخاب سهام</option>
-                        @foreach($stocks as $stock)
-                            <option value="{{ $stock->id }}" {{ old('stock_id', $stockContract->stock_id) == $stock->id ? 'selected' : '' }}>
-                                {{ $stock->name }} - {{ number_format($stock->value) }} USDT
+                        @foreach ($stocks as $stock)
+                            <option value="{{ $stock->id }}"
+                                {{ old('stock_id', $stockContract->stock_id) == $stock->id ? 'selected' : '' }}>
+                                {{ $stock->name }} - {{ formatNumberTrimZeros($stock->value) }} USDT
                             </option>
                         @endforeach
                     </select>
@@ -36,15 +35,10 @@
 
                 <div class="col-md-6 mt-3">
                     <label class="form-label" for="amount">تعداد سهم:</label>
-                    <input type="number"
-                           name="amount"
-                           id="amount"
-                           class="form-control @error('amount') is-invalid @enderror"
-                           value="{{ old('amount', $stockContract->amount) }}"
-                           placeholder="تعداد سهم را وارد کنید"
-                           min="1"
-                           disabled="1"
-                           required>
+                    <input type="number" name="amount" id="amount"
+                        class="form-control @error('amount') is-invalid @enderror"
+                        value="{{ old('amount', $stockContract->amount) }}" placeholder="تعداد سهم را وارد کنید"
+                        min="1" disabled="1" required>
                     @error('amount')
                         <small class="text-danger">{{ $message }}</small>
                     @enderror
@@ -52,10 +46,17 @@
 
                 <div class="col-md-6 mt-3">
                     <label class="form-label" for="contract_status">وضعیت قرارداد:</label>
-                    <select name="contract_status" id="contract_status" class="form-control @error('contract_status') is-invalid @enderror" required>
-                        <option value="active" {{ old('contract_status', $stockContract->contract_status->value) == 'active' ? 'selected' : '' }}>فعال</option>
-                        <option value="sold" {{ old('contract_status', $stockContract->contract_status->value) == 'sold' ? 'selected' : '' }}>فروخته شده</option>
-                        <option value="canceled" {{ old('contract_status', $stockContract->contract_status->value) == 'canceled' ? 'selected' : '' }}>لغو شده</option>
+                    <select name="contract_status" id="contract_status"
+                        class="form-control @error('contract_status') is-invalid @enderror" required>
+                        <option value="active"
+                            {{ old('contract_status', $stockContract->contract_status->value) == 'active' ? 'selected' : '' }}>
+                            فعال</option>
+                        <option value="sold"
+                            {{ old('contract_status', $stockContract->contract_status->value) == 'sold' ? 'selected' : '' }}>
+                            فروخته شده</option>
+                        <option value="canceled"
+                            {{ old('contract_status', $stockContract->contract_status->value) == 'canceled' ? 'selected' : '' }}>
+                            لغو شده</option>
                     </select>
                     @error('contract_status')
                         <small class="text-danger">{{ $message }}</small>
@@ -64,7 +65,9 @@
 
                 <div class="col-md-12 mt-6">
                     <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" name="deduct_cancellation_fee" id="deduct_cancellation_fee" value="1" {{ old('deduct_cancellation_fee') ? 'checked' : '' }}>
+                        <input class="form-check-input" type="checkbox" name="deduct_cancellation_fee"
+                            id="deduct_cancellation_fee" value="1"
+                            {{ old('deduct_cancellation_fee') ? 'checked' : '' }}>
                         <label class="form-check-label" for="deduct_cancellation_fee">
                             کارمزد ابطال از مبلغ برگشتی به مشتری کم شود
                         </label>
@@ -73,11 +76,8 @@
 
                 <div class="col-md-12 mt-3">
                     <label class="form-label" for="description">توضیحات:</label>
-                    <textarea name="description"
-                              id="description"
-                              class="form-control @error('description') is-invalid @enderror"
-                              rows="3"
-                              placeholder="توضیحات قرارداد را وارد کنید">{{ old('description', $stockContract->description) }}</textarea>
+                    <textarea name="description" id="description" class="form-control @error('description') is-invalid @enderror"
+                        rows="3" placeholder="توضیحات قرارداد را وارد کنید">{{ old('description', $stockContract->description) }}</textarea>
                     @error('description')
                         <small class="text-danger">{{ $message }}</small>
                     @enderror

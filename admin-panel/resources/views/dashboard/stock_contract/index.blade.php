@@ -27,7 +27,7 @@
                         <div class="content-left">
                             <span>ارزش قراردادهای فعال</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{ number_format($activeAmount) }}
+                                <h4 class="mb-0 me-2">{{ formatNumberTrimZeros($activeAmount) }}
                                     <small class="text-muted fw-medium">USDT</small>
                                 </h4>
                             </div>
@@ -64,7 +64,7 @@
                         <div class="content-left">
                             <span>مبلغ قراردادهای فروخته شده</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{ number_format($soldAmount) }}
+                                <h4 class="mb-0 me-2">{{ formatNumberTrimZeros($soldAmount) }}
                                     <small class="text-muted fw-medium">USDT</small>
                                 </h4>
                             </div>
@@ -100,7 +100,7 @@
                         <div class="content-left">
                             <span>مبلغ قراردادهای ابطال شده</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{ number_format($canceledAmount) }}
+                                <h4 class="mb-0 me-2">{{ formatNumberTrimZeros($canceledAmount) }}
                                     <small class="text-muted fw-medium">USDT</small>
                                 </h4>
                             </div>
@@ -121,7 +121,7 @@
                         <div class="content-left">
                             <span> کارمزد دریافتی ابطال (فروخته و کنسل شده)</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{ number_format($cancellationSoldFees) }}
+                                <h4 class="mb-0 me-2">{{ formatNumberTrimZeros($cancellationSoldFees) }}
                                     <small class="text-muted fw-medium">USDT</small>
                                 </h4>
                             </div>
@@ -223,12 +223,13 @@
                                 </td>
                                 <td>
                                     <span class="font-number"
-                                        dir="ltr">{{ number_format($contract->amount) }}</span>
+                                        dir="ltr">{{ formatNumberTrimZeros($contract->amount) }}</span>
                                 </td>
                                 <td>
                                     <span class="font-number" dir="ltr">
                                         <h6 class="font-number text-heading mb-0">
-                                            <span class="ms-1">{{ number_format($contract->total_value, 2) }}</span>
+                                            <span
+                                                class="ms-1">{{ formatNumberTrimZeros($contract->total_value, 2) }}</span>
                                             <small class="text-muted">USDT</small>
                                         </h6>
                                     </span>

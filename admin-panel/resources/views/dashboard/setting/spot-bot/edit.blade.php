@@ -116,7 +116,7 @@
                                 </label>
                                 <input type="number" class="form-control @error('order_margin') is-invalid @enderror"
                                     id="order_margin" name="order_margin"
-                                    value="{{ old('order_margin', $spotBotSetting->order_margin ?? 0.5) }}" step="0.01"
+                                    value="{{ old('order_margin', $spotBotSetting->order_margin ?? 0.5) }}" step="0.0001"
                                     min="0" required>
                                 @error('order_margin')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -160,10 +160,10 @@
                                     <i class="fa-solid fa-arrow-down-short-wide me-1"></i>
                                     حداقل اندازه سفارش
                                 </label>
-                                <input  class="form-control @error('min_order_size') is-invalid @enderror"
+                                <input class="form-control @error('min_order_size') is-invalid @enderror"
                                     id="min_order_size" name="min_order_size"
                                     value="{{ old('min_order_size', formatNumberTrimZeros($spotBotSetting->min_order_size) ?? 10) }}"
-                                      required>
+                                    required>
                                 @error('min_order_size')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -178,7 +178,7 @@
                                 <input class="form-control @error('max_order_size') is-invalid @enderror"
                                     id="max_order_size" name="max_order_size"
                                     value="{{ old('max_order_size', formatNumberTrimZeros($spotBotSetting->max_order_size) ?? 1000) }}"
-                                     required>
+                                    required>
                                 @error('max_order_size')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -189,12 +189,12 @@
                                     درصد سقوط بازار
                                 </label>
                                 <input type="number"
-                                       class="form-control @error('market_crash_percentage') is-invalid @enderror"
-                                       id="market_crash_percentage" name="market_crash_percentage"
-                                       value="{{ old('market_crash_percentage', $spotBotSetting->market_crash_percentage ?? 10) }}"
-                                       step="0.01" min="0" max="100">
+                                    class="form-control @error('market_crash_percentage') is-invalid @enderror"
+                                    id="market_crash_percentage" name="market_crash_percentage"
+                                    value="{{ old('market_crash_percentage', $spotBotSetting->market_crash_percentage ?? 10) }}"
+                                    step="0.01" min="0" max="100">
                                 @error('market_crash_percentage')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                                 <small class="text-muted">در صورت سقوط بیش از این درصد، ربات متوقف می‌شود</small>
                             </div>

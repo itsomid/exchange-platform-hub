@@ -33,7 +33,7 @@
                         <span class="fw-bold">سفارشات کاربران</span>
                         <span class="badge bg-white text-primary ms-2 px-2 py-1 rounded-pill"
                             style="font-size: 0.75rem; font-weight: 700;">
-                            {{ number_format($userOrdersCount ?? 0) }}
+                            {{ formatNumberTrimZeros($userOrdersCount ?? 0) }}
                         </span>
                     </a>
                 </li>
@@ -45,7 +45,7 @@
                         <span class="fw-bold">سفارشات ربات معاملاتی</span>
                         <span class="badge bg-white text-danger ms-2 px-2 py-1 rounded-pill"
                             style="font-size: 0.75rem; font-weight: 700;">
-                            {{ number_format($botOrdersCount ?? 0) }}
+                            {{ formatNumberTrimZeros($botOrdersCount ?? 0) }}
                         </span>
                     </a>
                 </li>
@@ -268,7 +268,7 @@
                                                         class="d-flex align-items-sm-center justify-content-between border-bottom py-4 mb-4">
                                                         <div class="d-flex flex-wrap gap-2 font-number">
                                                             <span
-                                                                class="text-success">{{ formatNumberTrimZeros($spotOrder->filled_quantity / $spotOrder->quantity ) * 100 }}%
+                                                                class="text-success">{{ formatNumberTrimZeros($spotOrder->filled_quantity / $spotOrder->quantity) * 100 }}%
                                                                 اجرا شده</span>
                                                         </div>
                                                         <div class="d-flex align-items-center">
@@ -392,7 +392,8 @@
                                                                                 <td>{{ formatNumberTrimZeros($trade->quantity) }}
                                                                                     <small>{{ $spotOrder->market->base_currency }}</small>
                                                                                 </td>
-                                                                                <td>{{ formatNumberTrimZeros($trade->price) }}</td>
+                                                                                <td>{{ formatNumberTrimZeros($trade->price) }}
+                                                                                </td>
                                                                                 <td class="text-success">
                                                                                     {{ formatNumberTrimZeros($trade->price * $trade->quantity) }}
                                                                                 </td>

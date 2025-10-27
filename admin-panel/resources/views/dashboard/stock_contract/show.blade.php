@@ -12,14 +12,17 @@
                     <a href="{{ route('admin.stock-contract.edit', $stockContract->id) }}" class="btn btn-primary">
                         <i class="fa fa-edit mx-2"></i> ویرایش
                     </a>
-                    @if($stockContract->contract_file)
-                        <a href="{{ \App\Data\FileStoragePaths::CONTRACT_DOWNLOAD_URL($stockContract->contract_file) }}" class="btn btn-success" target="_blank">
+                    @if ($stockContract->contract_file)
+                        <a href="{{ \App\Data\FileStoragePaths::CONTRACT_DOWNLOAD_URL($stockContract->contract_file) }}"
+                            class="btn btn-success" target="_blank">
                             <i class="fa fa-download mx-2"></i> دانلود قرارداد
                         </a>
                     @endif
-                    <form action="{{ route('admin.stock-contract.regenerate-pdf', $stockContract->id) }}" method="POST" class="d-inline">
+                    <form action="{{ route('admin.stock-contract.regenerate-pdf', $stockContract->id) }}" method="POST"
+                        class="d-inline">
                         @csrf
-                        <button type="submit" class="btn btn-warning" onclick="return confirm('آیا از بازسازی فایل قرارداد اطمینان دارید؟')">
+                        <button type="submit" class="btn btn-warning"
+                            onclick="return confirm('آیا از بازسازی فایل قرارداد اطمینان دارید؟')">
                             <i class="fa fa-refresh mx-2"></i> بازسازی PDF
                         </button>
                     </form>
@@ -44,18 +47,18 @@
                             </div>
                             <div class="d-flex justify-content-between">
                                 <span class="text-muted">تاریخ ایجاد:</span>
-                                <span>{{ \App\Helpers\DateFormatter::convertToPersianDate($stockContract->created_at,'H:i:s - %d %B %Y') }}</span>
+                                <span>{{ \App\Helpers\DateFormatter::convertToPersianDate($stockContract->created_at, 'H:i:s - %d %B %Y') }}</span>
                             </div>
-                            @if($stockContract->sold_at)
+                            @if ($stockContract->sold_at)
                                 <div class="d-flex justify-content-between">
                                     <span class="text-muted">تاریخ فروش:</span>
-                                    <span>{{ \App\Helpers\DateFormatter::convertToPersianDate($stockContract->sold_at,'H:i:s - %d %B %Y') }}</span>
+                                    <span>{{ \App\Helpers\DateFormatter::convertToPersianDate($stockContract->sold_at, 'H:i:s - %d %B %Y') }}</span>
                                 </div>
                             @endif
-                            @if($stockContract->cancelled_at)
+                            @if ($stockContract->cancelled_at)
                                 <div class="d-flex justify-content-between">
                                     <span class="text-muted">تاریخ ابطال:</span>
-                                    <span>{{ \App\Helpers\DateFormatter::convertToPersianDate($stockContract->cancelled_at,'H:i:s - %d %B %Y') }}</span>
+                                    <span>{{ \App\Helpers\DateFormatter::convertToPersianDate($stockContract->cancelled_at, 'H:i:s - %d %B %Y') }}</span>
                                 </div>
                             @endif
                         </div>
@@ -68,19 +71,25 @@
                         <div class="d-flex flex-column gap-2">
                             <div class="d-flex justify-content-between">
                                 <span class="text-muted">تعداد سهم:</span>
-                                <span class="font-number" dir="ltr">{{ number_format($stockContract->amount) }}</span>
+                                <span class="font-number"
+                                    dir="ltr">{{ formatNumberTrimZeros($stockContract->amount) }}</span>
                             </div>
                             <div class="d-flex justify-content-between">
                                 <span class="text-muted">ارزش هر سهم:</span>
-                                <span class="font-number" dir="ltr">{{ formatNumberTrimZeros($stockContract->stock->value ?? 0) }} USDT</span>
+                                <span class="font-number"
+                                    dir="ltr">{{ formatNumberTrimZeros($stockContract->stock->value ?? 0) }}
+                                    USDT</span>
                             </div>
                             <div class="d-flex justify-content-between">
                                 <span class="text-muted">ارزش کل قرارداد:</span>
-                                <span class="font-number" dir="ltr">{{ formatNumberTrimZeros($stockContract->total_value,2) }} USDT</span>
+                                <span class="font-number"
+                                    dir="ltr">{{ formatNumberTrimZeros($stockContract->total_value, 2) }} USDT</span>
                             </div>
                             <div class="d-flex justify-content-between">
                                 <span class="text-muted">کارمزد ابطال:</span>
-                                <span class="font-number" dir="ltr">{{ formatNumberTrimZeros($stockContract->cancellation_fee) }} USDT</span>
+                                <span class="font-number"
+                                    dir="ltr">{{ formatNumberTrimZeros($stockContract->cancellation_fee) }}
+                                    USDT</span>
                             </div>
                         </div>
                     </div>
@@ -120,7 +129,8 @@
                             </div>
                             <div class="d-flex justify-content-between">
                                 <span class="text-muted">وضعیت سهام:</span>
-                                <span class="badge bg-label-{{ $stockContract->stock->status->color() ?? 'secondary' }} rounded p-2">
+                                <span
+                                    class="badge bg-label-{{ $stockContract->stock->status->color() ?? 'secondary' }} rounded p-2">
                                     {{ $stockContract->stock->status->label() ?? 'نامشخص' }}
                                 </span>
                             </div>
@@ -128,7 +138,7 @@
                     </div>
                 </div>
 
-                @if($stockContract->description)
+                @if ($stockContract->description)
                     <div class="col-md-12">
                         <div class="mb-4">
                             <h6 class="fw-bold">توضیحات</h6>

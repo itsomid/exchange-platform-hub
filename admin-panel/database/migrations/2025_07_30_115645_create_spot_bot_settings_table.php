@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('currency_id')->constrained('currencies')->onDelete('cascade');
             $table->boolean('is_active')->default(false);
             $table->unsignedInteger('price_interval_seconds')->default(5);
-            $table->decimal('order_margin', 5, 2)->default(0.1);
+            $table->decimal('order_margin', 5, 4)->default(0.1);
             $table->unsignedInteger('buy_orders_count')->default(5);
             $table->unsignedInteger('sell_orders_count')->default(5);
             $table->foreignId('fake_user_id')->nullable()->constrained('users')->onDelete('set null');

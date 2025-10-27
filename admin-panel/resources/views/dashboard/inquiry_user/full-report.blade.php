@@ -674,13 +674,13 @@
                                                 </td>
                                                 <td>
                                                     <span class="font-number"
-                                                        dir="ltr">{{ number_format($contract->amount) }}</span>
+                                                        dir="ltr">{{ formatNumberTrimZeros($contract->amount) }}</span>
                                                 </td>
                                                 <td>
                                                     <span class="font-number" dir="ltr">
                                                         <h6 class="font-number text-heading mb-0">
                                                             <span
-                                                                class="ms-1">{{ number_format($contract->total_value, 2) }}</span>
+                                                                class="ms-1">{{ formatNumberTrimZeros($contract->total_value, 2) }}</span>
                                                             <small class="text-muted">USDT</small>
                                                         </h6>
                                                     </span>
