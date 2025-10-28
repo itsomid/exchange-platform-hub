@@ -169,7 +169,7 @@
             <div class="card-title header-elements">
                 <h5 class="m-0 me-2">فیلتر</h5>
             </div>
-            <form action="{{ route('admin.otc_orders.index') }}" method="get">
+            <form action="{{ route('admin.spot_trades.index') }}" method="get">
                 <div class="row">
                     <div class="col-md-3 mt-3">
                         <div class="form-group">
