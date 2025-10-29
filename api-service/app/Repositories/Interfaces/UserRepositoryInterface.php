@@ -28,4 +28,6 @@ interface UserRepositoryInterface
     public function updateUser(int $userId, array $data): void;
 
     public function getReferredUsers(int $referralId): Collection;
+
+    public function findByEmail(string $email): ?User;
 }

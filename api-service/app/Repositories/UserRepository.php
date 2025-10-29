@@ -102,4 +102,11 @@ class UserRepository implements UserRepositoryInterface
             ->withSum('referredTransactions', 'amount')
             ->get());
     }
+
+    public function findByEmail(string $email): ?User
+    {
+        return User::query()
+            ->where('email', $email)
+            ->first();
+    }
 }
