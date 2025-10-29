@@ -139,8 +139,6 @@ class SpotService
                 ->setMarketId($requestDTO->getMarketId())
         )->map(function ($order) {
 
-            //            $filledValue = $order->makerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0);
-            //            $filledValue = Math::add($filledValue, $order->takerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0));
             $filledValue = formatNumberTrimZeros(bcmul($order->price, $order->filled_quantity, 8));
             return resolve(SpotOrderListsResponseDTO::class)
                 ->setId($order->id)
@@ -153,6 +151,7 @@ class SpotService
                         $order->taker_commissions_sum_taker_commission_amount ?? 0
                     )
                 )
+                ->setCommissionCurrency($order->getCommissionCurrency())
                 ->setFilledQuantity($order->filled_quantity)
                 ->setQuantity($order->quantity)
                 ->setPrice($order->price)
@@ -188,6 +187,7 @@ class SpotService
                     $order->taker_commissions_sum_taker_commission_amount ?? 0
                 )
             )
+            ->setCommissionCurrency($order->getCommissionCurrency())
             ->setFilledQuantity($order->filled_quantity)
             ->setQuantity($order->quantity)
             ->setPrice($order->price)

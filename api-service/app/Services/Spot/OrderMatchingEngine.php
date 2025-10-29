@@ -218,11 +218,10 @@ readonly class OrderMatchingEngine
                 'taker_commission_currency' => $takerCommissionCurrency,
             ]);
 
-        // ثبت تراکنش‌ها قبل از آپدیت ولت‌ها تا موجودی قبلی ثبت شود
+
         $this->addTransactions($order, $spotTrade, $makerCommissionAmount, $takerCommissionAmount);
         $this->addTransactions($oppositeOrder, $spotTrade, $makerCommissionAmount, $takerCommissionAmount);
 
-        // حالا ولت‌ها را آپدیت می‌کنیم
         $this->updateWallets($takerOrder, $makerOrder, $tradeQuantity, $makerOrder->price, $makerCommissionAmount, $takerCommissionAmount);
 
         if ($order->getRemindedQuantity() <= 0) {

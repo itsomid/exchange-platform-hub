@@ -27,6 +27,8 @@ class SpotOrderListsResponseDTO
 
     private string $commission;
 
+    private ?string $commissionCurrency = null;
+
     private string $filledValue;
 
     private Carbon $createdAt;
@@ -125,6 +127,18 @@ class SpotOrderListsResponseDTO
     public function getCommission(): string
     {
         return $this->commission;
+    }
+
+    public function setCommissionCurrency(?string $commissionCurrency): SpotOrderListsResponseDTO
+    {
+        $this->commissionCurrency = $commissionCurrency;
+
+        return $this;
+    }
+
+    public function getCommissionCurrency(): ?string
+    {
+        return $this->commissionCurrency;
     }
 
     public function setFilledValue(string $filledValue): SpotOrderListsResponseDTO
