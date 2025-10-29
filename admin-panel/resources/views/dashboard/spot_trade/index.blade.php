@@ -321,7 +321,10 @@
                                     {{ formatNumberTrimZeros($spotTrade->total_commission_value) }}
                                     <small>USDT</small>
                                 </td>
-                                <td dir="ltr">{{ jdate($spotTrade->created_at)->format('Y-m-d H:i') }}</td>
+                                <td dir="ltr">
+                                    {{ \App\Helpers\DateFormatter::convertToPersianDate($spotTrade->created_at, '%Y/%m/%d H:i:s') }}<br>
+                                    <small>{{ $spotTrade->created_at->format('Y/m/d') }}</small>
+                                </td>
                                 <td>
                                     <span class="badge bg-label-success">
                                         {{ $spotTrade->makerOrder->status->label() }}
