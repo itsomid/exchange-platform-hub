@@ -37,12 +37,23 @@ class SpotOrderController extends Controller
             $query->where('user_id', $request->user);
         }
 
-        // Filter by source - default to USER, but allow BOT if specified
+        // Filter by source - show USER orders and completed BOT orders
         $source = $request->input('source', 'user');
         if ($source === 'bot') {
+            // Show only BOT orders
             $query->where('source', SpotOrderSourceEnum::BOT->value);
         } else {
-            $query->where('source', SpotOrderSourceEnum::USER->value);
+            // Show USER orders + completed BOT orders
+            $query->where(function ($q) {
+                $q->where('source', SpotOrderSourceEnum::USER->value)
+                    ->orWhere(function ($subQuery) {
+                        $subQuery->where('source', SpotOrderSourceEnum::BOT->value)
+                            ->whereIn('status', [
+                                SpotOrderStatusEnum::COMPLETED->value,
+                                SpotOrderStatusEnum::PARTIALLY_FILLED_CANCELED->value
+                            ]);
+                    });
+            });
         }
 
         // Sort by ID
@@ -62,7 +73,7 @@ class SpotOrderController extends Controller
             $query->orderBy('created_at', $request->sortByCreatedAt);
         }
 
-         $spotOrders = $query->paginate(50);
+        $spotOrders = $query->paginate(50);
 
         // Calculate commission values for each order's trades
         foreach ($spotOrders as $order) {
@@ -76,7 +87,7 @@ class SpotOrderController extends Controller
                     $commissionValues = $this->calculateCommissionValues($trade, $trade->commission);
                     $trade->maker_commission_value = $commissionValues['maker_commission_value'];
                     $trade->taker_commission_value = $commissionValues['taker_commission_value'];
-//                    $trade->total_commission_value = $commissionValues['total_commission_value'];
+                    //                    $trade->total_commission_value = $commissionValues['total_commission_value'];
                     $order->total_maker_commission_value = bcadd($order->total_maker_commission_value, $trade->maker_commission_value, 8);
                     $order->total_taker_commission_value = bcadd($order->total_taker_commission_value, $trade->taker_commission_value, 8);
                     $order->total_commission_value = bcadd($order->total_commission_value, $commissionValues['total_commission_value'], 8);
@@ -89,7 +100,7 @@ class SpotOrderController extends Controller
                     $commissionValues = $this->calculateCommissionValues($trade, $trade->commission);
                     $trade->maker_commission_value = $commissionValues['maker_commission_value'];
                     $trade->taker_commission_value = $commissionValues['taker_commission_value'];
-//                    $trade->total_commission_value = $commissionValues['total_commission_value'];
+                    //                    $trade->total_commission_value = $commissionValues['total_commission_value'];
 
                     $order->total_maker_commission_value = bcadd($order->total_maker_commission_value, $trade->maker_commission_value, 8);
                     $order->total_taker_commission_value = bcadd($order->total_taker_commission_value, $trade->taker_commission_value, 8);
@@ -97,7 +108,7 @@ class SpotOrderController extends Controller
                 }
             }
         }
-//        return $spotOrders;
+        //        return $spotOrders;
         // Add these counts to your index method
         $userOrdersCount = SpotOrder::where('source', SpotOrderSourceEnum::USER->value)->count();
         $botOrdersCount = SpotOrder::where('source', SpotOrderSourceEnum::BOT->value)->count();
@@ -110,7 +121,8 @@ class SpotOrderController extends Controller
         ]);
     }
 
-    public function calculateCommissionValues(SpotTrade $trade, TradingCommission $commission) {
+    public function calculateCommissionValues(SpotTrade $trade, TradingCommission $commission)
+    {
 
 
         if ($commission->maker_commission_currency !== 'USDT') {
