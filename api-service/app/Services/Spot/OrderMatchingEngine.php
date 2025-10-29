@@ -218,10 +218,12 @@ readonly class OrderMatchingEngine
                 'taker_commission_currency' => $takerCommissionCurrency,
             ]);
 
-        $this->updateWallets($takerOrder, $makerOrder, $tradeQuantity, $makerOrder->price, $makerCommissionAmount, $takerCommissionAmount);
-
+        // ثبت تراکنش‌ها قبل از آپدیت ولت‌ها تا موجودی قبلی ثبت شود
         $this->addTransactions($order, $spotTrade, $makerCommissionAmount, $takerCommissionAmount);
         $this->addTransactions($oppositeOrder, $spotTrade, $makerCommissionAmount, $takerCommissionAmount);
+
+        // حالا ولت‌ها را آپدیت می‌کنیم
+        $this->updateWallets($takerOrder, $makerOrder, $tradeQuantity, $makerOrder->price, $makerCommissionAmount, $takerCommissionAmount);
 
         if ($order->getRemindedQuantity() <= 0) {
             // $order->price = $order->getOriginal('price'); // REMOVE THIS for market orders
@@ -280,24 +282,42 @@ readonly class OrderMatchingEngine
 
     private function addTransactions(SpotOrder $spotOrder, SpotTrade $spotTrade, string $makerCommissionAmount, string $takerCommissionAmount): void
     {
-        $baseCurrency = $spotOrder->side === SpotOrderSideEnum::BUY ? $spotOrder->market->base_currency : $spotOrder->market->quote_currency;
-        $quoteCurrency = $spotOrder->side === SpotOrderSideEnum::BUY ? $spotOrder->market->quote_currency : $spotOrder->market->base_currency;
+        // ارزهای مارکت را مستقیم از market بگیر (نباید بر اساس side تغییر کنند)
+        $baseCurrency = $spotOrder->market->base_currency;   // مثلا ETH
+        $quoteCurrency = $spotOrder->market->quote_currency; // مثلا USDT
+
         $walletBaseCurrency = $this->walletRepository->getOrCreateWallet($spotOrder->user_id, $baseCurrency);
-        $walletQuoteCurrency = $this->walletRepository->getOrCreateWallet($spotOrder->user_id, $quoteCurrency,);
+        $walletQuoteCurrency = $this->walletRepository->getOrCreateWallet($spotOrder->user_id, $quoteCurrency);
 
-        $buyQuantity = $spotOrder->side === SpotOrderSideEnum::BUY ? $spotTrade->quantity : Math::mul($spotTrade->quantity, $spotTrade->price);
-        $sellQuantity = $spotOrder->side === SpotOrderSideEnum::BUY ? Math::mul($spotTrade->quantity, $spotTrade->price) : $spotTrade->quantity;
+        // تعیین چه چیزی دریافت و چه چیزی پرداخت میشه
+        if ($spotOrder->side === SpotOrderSideEnum::BUY) {
+            // خرید: دریافت base (ETH)، پرداخت quote (USDT)
+            $receiveAmount = $spotTrade->quantity; // ETH
+            $payAmount = Math::mul($spotTrade->quantity, $spotTrade->price); // USDT
+            $receiveWallet = $walletBaseCurrency;
+            $payWallet = $walletQuoteCurrency;
+        } else {
+            // فروش: دریافت quote (USDT)، پرداخت base (ETH)
+            $receiveAmount = Math::mul($spotTrade->quantity, $spotTrade->price); // USDT
+            $payAmount = $spotTrade->quantity; // ETH
+            $receiveWallet = $walletQuoteCurrency;
+            $payWallet = $walletBaseCurrency;
+        }
 
+        // Capture موجودی‌های اولیه قبل از هر تراکنش
+        $initialReceiveBalance = $receiveWallet->balance;
+        $initialPayBalance = $payWallet->balance;
 
+        // تراکنش دریافت (BUY) - با موجودی اولیه
         $this->transactionRepository->create(
             resolve(CreateTransactionRequestDTO::class)
                 ->setSpotTradeId($spotTrade->id)
                 ->setUserId($spotOrder->user_id)
                 ->setType(TransactionTypeEnum::BUY)
-                ->setAmount($buyQuantity)
+                ->setAmount($receiveAmount)
                 ->setCoinPrice($spotOrder->side === SpotOrderSideEnum::BUY ? $spotTrade->price : "1")
                 ->setStatus(TransactionStatusEnum::SUCCESS)
-                ->setBalance($walletBaseCurrency->balance)
+                ->setBalance($initialReceiveBalance)
                 ->setDescription(
                     sprintf(
                         '%s %s %s',
@@ -307,19 +327,22 @@ readonly class OrderMatchingEngine
                     )
                 )
                 ->setSubtype(TransactionSubTypeEnum::SPOT)
-                ->setWalletId($walletBaseCurrency->id)
+                ->setWalletId($receiveWallet->id)
         );
 
+        // محاسبه موجودی بعد از دریافت
+        $balanceAfterReceive = Math::add($initialReceiveBalance, $receiveAmount);
 
+        // تراکنش پرداخت (SELL) - با موجودی اولیه
         $this->transactionRepository->create(
             resolve(CreateTransactionRequestDTO::class)
                 ->setSpotTradeId($spotTrade->id)
                 ->setUserId($spotOrder->user_id)
                 ->setType(TransactionTypeEnum::SELL)
-                ->setAmount($sellQuantity * -1)
+                ->setAmount($payAmount * -1)
                 ->setCoinPrice($spotOrder->side === SpotOrderSideEnum::BUY ? "1" : $spotTrade->price)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
-                ->setBalance($walletQuoteCurrency->balance)
+                ->setBalance($initialPayBalance)
                 ->setDescription(
                     sprintf(
                         '%s %s %s',
@@ -329,25 +352,23 @@ readonly class OrderMatchingEngine
                     )
                 )
                 ->setSubtype(TransactionSubTypeEnum::SPOT)
-                ->setWalletId($walletQuoteCurrency->id)
+                ->setWalletId($payWallet->id)
         );
 
-        // Determine which commission applies and which wallet to use based on role
-
+        // Determine which commission applies based on role
         if ($spotOrder->role === SpotOrderRoleEnum::MAKER) {
             $commissionAmount = $makerCommissionAmount;
         } else {
             $commissionAmount = $takerCommissionAmount;
         }
 
+        // کارمزد از ارزی که دریافت میشه کسر میشه
+        // برای BUY: از ETH کسر میشه
+        // برای SELL: از USDT کسر میشه
+        $commissionWallet = $receiveWallet;
+        $commissionBalanceBeforeFee = $balanceAfterReceive; // موجودی بعد از دریافت، قبل از کسر کارمزد
 
-        if ($spotOrder->side === SpotOrderSideEnum::BUY) {
-            $commissionWallet = $this->walletRepository->getOrCreateWallet($spotOrder->user_id, $spotOrder->market->base_currency);
-        } else {
-            $commissionWallet = $this->walletRepository->getOrCreateWallet($spotOrder->user_id, $spotOrder->market->quote_currency);
-        }
-
-        // **Create Transaction for Commission**
+        // تراکنش Commission - با موجودی بعد از تراکنش‌های دریافت/پرداخت
         $this->transactionRepository->create(
             resolve(CreateTransactionRequestDTO::class)
                 ->setSpotTradeId($spotTrade->id)
@@ -356,7 +377,7 @@ readonly class OrderMatchingEngine
                 ->setAmount($commissionAmount * -1)
                 ->setCoinPrice($spotOrder->side === SpotOrderSideEnum::BUY ? $spotTrade->price : "1")
                 ->setStatus(TransactionStatusEnum::SUCCESS)
-                ->setBalance($commissionWallet->balance)
+                ->setBalance($commissionBalanceBeforeFee)
                 ->setDescription(
                     sprintf(
                         'کارمزد معامله اسپات %s %s به ارزش %s',
