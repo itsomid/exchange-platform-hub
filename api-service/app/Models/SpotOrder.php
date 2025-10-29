@@ -142,5 +142,29 @@ class SpotOrder extends Model
 
         return $this->takerTrades()->exists() ? SpotOrderRoleEnum::TAKER : SpotOrderRoleEnum::PENDING;
     }
+
+    public function getCommissionCurrency(): ?string
+    {
+        $role = $this->role;
+        
+        // اگر هنوز معامله‌ای انجام نشده، ارز کارمزد مشخص نیست
+        if ($role === SpotOrderRoleEnum::PENDING) {
+            return null;
+        }
+        
+        // اگر هم maker و هم taker است، ارز کارمزد maker را برمی‌گردانیم
+        if ($role === SpotOrderRoleEnum::BOTH || $role === SpotOrderRoleEnum::MAKER) {
+            $commission = $this->makerCommissions()->first();
+            return $commission?->maker_commission_currency;
+        }
+        
+        // اگر فقط taker است
+        if ($role === SpotOrderRoleEnum::TAKER) {
+            $commission = $this->takerCommissions()->first();
+            return $commission?->taker_commission_currency;
+        }
+        
+        return null;
+    }
     
 }
