@@ -6,9 +6,8 @@
             <div class="card mb-6">
                 <div class="user-profile-header d-flex flex-column flex-lg-row text-sm-start text-center m-2">
                     <div class="d-flex align-items-center">
-                        <img class="img-fluid rounded" src="http://127.0.0.1:8000/images/avatars/avatar.webp"
-                             height="50"
-                             width="50" alt="User avatar">
+                        <img class="img-fluid rounded" src="http://127.0.0.1:8000/images/avatars/avatar.webp" height="50"
+                            width="50" alt="User avatar">
                     </div>
                     <div class="flex-grow-1">
                         <div
@@ -199,8 +198,7 @@
                         <p class="mb-5">
 
                             <small class="text-muted fw-light">USDT</small>
-                            <span
-                                class="text-primary me-2 font-number">{{ formatNumber($wallet->assetValue, 2) }}</span>
+                            <span class="text-primary me-2 font-number">{{ formatNumber($wallet->assetValue, 2) }}</span>
                         </p>
                         @if ($wallet->locked_balance != 0)
                             <p class="mb-0">
@@ -215,21 +213,21 @@
                     </div>
                     <div class="card-body border-top">
                         <a href="{{ route('admin.wallet.detail', ['user' => $user->id, 'wallet' => $wallet->id, 'type' => 'deposit']) }}"
-                           class="btn btn-label-primary me-2 btn-sm">مشاهده جزئیات</a>
+                            class="btn btn-label-primary me-2 btn-sm">مشاهده جزئیات</a>
                         <a class="btn btn-icon btn-success btn-xs"
-                           href="{{ route('admin.wallet.increase-credit.form', ['currency' => $wallet->currency_symbol, 'user' => $user]) }}">
+                            href="{{ route('admin.wallet.increase-credit.form', ['currency' => $wallet->currency_symbol, 'user' => $user]) }}">
                             <i class="fa-regular fa-arrow-down-left fa-lg"></i>
                         </a>
                         <a class="btn btn-icon btn-google-plus ms-2 btn-xs"
-                           href="{{ route('admin.wallet.decrease-credit.form', ['currency' => $wallet->currency_symbol, 'user' => $user]) }}">
+                            href="{{ route('admin.wallet.decrease-credit.form', ['currency' => $wallet->currency_symbol, 'user' => $user]) }}">
                             <i class="fa-regular fa-arrow-up-right fa-lg"></i>
                         </a>
                         <a class="btn btn-icon btn-outline-success ms-2 btn-xs"
-                           href="{{ route('admin.wallet.unblock-balance.form', ['wallet' => $wallet, 'user' => $user]) }}">
+                            href="{{ route('admin.wallet.unblock-balance.form', ['wallet' => $wallet, 'user' => $user]) }}">
                             <i class="fa-regular fa-lock-open fa-lg"></i>
                         </a>
                         <a class="btn btn-icon btn-outline-danger ms-2 btn-xs"
-                           href="{{ route('admin.wallet.block-balance.form', ['wallet' => $wallet, 'user' => $user]) }}">
+                            href="{{ route('admin.wallet.block-balance.form', ['wallet' => $wallet, 'user' => $user]) }}">
                             <i class="fa-regular fa-ban fa-lg"></i>
                         </a>
 

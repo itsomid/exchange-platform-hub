@@ -188,9 +188,14 @@
                     <div class="col-md-6 mt-3">
                         <label class="form-label" for="user">کاربر :</label>
                         <x-user-selection-component input-name="user" multiple="0"
-                            selected="{{ request()->filled('user') ? $otcOrders[0]->user->id : '' }}"
-                            selected-label="{{ request()->filled('user')
-                                ? '(' . $otcOrders[0]->user->id . '#) ' . $otcOrders[0]->user->fullname() . ' | ' . $otcOrders[0]->user->email
+                            selected="{{ request()->filled('user') && $spotTrades->count() > 0 ? $spotTrades[0]->makerOrder->user->id : '' }}"
+                            selected-label="{{ request()->filled('user') && $spotTrades->count() > 0
+                                ? '(' .
+                                    $spotTrades[0]->makerOrder->user->id .
+                                    '#) ' .
+                                    $spotTrades[0]->makerOrder->user->fullname() .
+                                    ' | ' .
+                                    $spotTrades[0]->makerOrder->user->email
                                 : '' }}"></x-user-selection-component>
                     </div>
                     <div class="col-md-2 mt-3">

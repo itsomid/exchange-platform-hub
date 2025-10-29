@@ -140,6 +140,24 @@ return [
             'path' => storage_path('logs/spot-bot.log'),
             'replace_placeholders' => true,
         ],
+        
+        'spot-order-matching' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/spot-order-matching.log'),
+            'replace_placeholders' => true,
+        ],
+        'locked-balance-detail' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/locked-balance-detail.log'),
+            'replace_placeholders' => true,
+        ],
+
+        'api-system' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/api-system.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
 
     ],
 
