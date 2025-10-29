@@ -226,7 +226,10 @@
                                         <small>{{ $spotOrder->market->base_currency }}</small>
                                     </div>
                                 </td>
-                                <td dir="ltr">{{ jdate($spotOrder->created_at)->format('Y-m-d H:i') }}</td>
+                                <td dir="ltr">
+                                    {{ \App\Helpers\DateFormatter::convertToPersianDate($spotOrder->created_at, '%Y/%m/%d H:i:s') }}<br>
+                                    <small>{{ $spotOrder->created_at->format('Y/m/d') }}</small>
+                                </td>
                                 <td>
                                     <span class="badge bg-label-{{ $spotOrder->status->color() }}">
                                         {{ $spotOrder->status->label() }}
