@@ -128,7 +128,7 @@ class OTCService
             $receivedAmount = Math::sub($buyAmount, $fee);
 
             if (Math::comp($buyerQuoteWallet->available_balance, $amountInQuoteCurrency) === -1) {
-                throw new \App\Exceptions\V1\Wallet\InsufficientBalanceException(__('Insufficient :currency balance.', ['currency' => $market->quote_currency]));
+                throw new InsufficientBalanceException(trans('exceptions.' . \App\Exceptions\V1\Wallet\InsufficientBalanceException::class, ['currency' => $market->quote_currency]));
             }
 
             $otc_order = $this->otcOrderRepository->create(
@@ -381,7 +381,7 @@ class OTCService
             $receivedAmount = Math::sub($amountInQuoteCurrency, $fee);
 
             if (Math::comp($sellerWallet->available_balance, $sellAmount) === -1) {
-                throw new InsufficientBalanceException(__('Insufficient :currency balance.', ['currency' => $market->base_currency]));
+                throw new InsufficientBalanceException(trans('exceptions.' . \App\Exceptions\V1\Wallet\InsufficientBalanceException::class, ['currency' => $market->base_currency]));
             }
 
             $otc_order = $this->otcOrderRepository->create(

@@ -130,7 +130,25 @@ class WalletRepository implements WalletRepositoryInterface
     public function decreaseLockedBalance(int $user_id, string $quoteCurrency, string $totalTradeValue): void
     {
         $wallet = $this->getOrCreateWallet($user_id, $quoteCurrency);
-        $wallet->locked_balance = Math::sub($wallet->locked_balance, $totalTradeValue);
+        $newLockedBalance = Math::sub($wallet->locked_balance, $totalTradeValue);
+        
+        // Critical validation: prevent negative locked_balance
+        if (Math::comp($newLockedBalance, '0') === -1) {
+            \Illuminate\Support\Facades\Log::channel('locked-balance-detail')->error(
+                "Attempted to set negative locked_balance for user {$user_id}, currency {$quoteCurrency}. Current: {$wallet->locked_balance}, Decrease by: {$totalTradeValue}, Would be: {$newLockedBalance}"
+            );
+            
+            // Log stack trace to help debug where this is coming from
+            \Illuminate\Support\Facades\Log::channel('locked-balance-detail')->error(
+                'Stack trace: ' . json_encode(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), JSON_PRETTY_PRINT)
+            );
+            
+            throw new \RuntimeException(
+                "Cannot decrease locked_balance below zero. User: {$user_id}, Currency: {$quoteCurrency}, Current: {$wallet->locked_balance}, Attempted decrease: {$totalTradeValue}"
+            );
+        }
+        
+        $wallet->locked_balance = $newLockedBalance;
         $wallet->save();
     }
 }

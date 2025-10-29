@@ -49,7 +49,7 @@ readonly class OrderMatchingEngine
                 DB::commit();
             } catch (Throwable $e) {
                 DB::rollBack();
-                logger()->error('Order matching failed: ' . $e->getMessage(), ['exception' => $e]);
+                \Illuminate\Support\Facades\Log::channel('spot-order-matching')->error('Order matching failed: ' . $e->getMessage(), ['exception' => $e]);
             }
         }
     }
@@ -96,11 +96,11 @@ readonly class OrderMatchingEngine
         if ($order->status === SpotOrderStatusEnum::OPEN && Math::comp($finalRemindedQuantity, 0) === 1) {
             if (Math::comp($finalRemindedQuantity, $initialRemindedQuantity) === 0) {
                 // Case 1: No fills occurred at all
-                logger()->info("Market order {$order->id} could not be filled. Canceling.");
+                \Illuminate\Support\Facades\Log::channel('spot-order-matching')->info("Market order {$order->id} could not be filled. Canceling.");
                 $this->cancelRemainingMarketOrder($order);
             } elseif (Math::comp($finalRemindedQuantity, $initialRemindedQuantity) === -1) {
                 // Case 2: Partially filled
-                logger()->info("Market order {$order->id} was partially filled. Canceling remaining quantity: {$finalRemindedQuantity}.");
+                \Illuminate\Support\Facades\Log::channel('spot-order-matching')->info("Market order {$order->id} was partially filled. Canceling remaining quantity: {$finalRemindedQuantity}.");
                 $this->cancelRemainingMarketOrder($order);
             }
             // If $finalRemindedQuantity is somehow greater than initial, it's an error state.
@@ -428,7 +428,16 @@ readonly class OrderMatchingEngine
                     $this->walletRepository->increaseBalance($takerOrder->user_id, $quoteCurrency, $refundAmount);
                     // Also decrease the lock for the refunded amount, as it was initially locked based on expected cost
                     $this->walletRepository->decreaseLockedBalance($takerOrder->user_id, $quoteCurrency, $refundAmount);
-                    logger()->info("Refunded {$refundAmount} {$quoteCurrency} to user {$takerOrder->user_id} for taker order {$takerOrder->id} due to better execution price.");
+                    
+                    // Update LockedBalanceDetail to reflect the refunded amount
+                    // This is critical to prevent negative locked_balance during order cancellation
+                    $lockedDetail = LockedBalanceDetail::query()->where('spot_order_id', $takerOrder->id)->first();
+                    if ($lockedDetail) {
+                        $lockedDetail->amount = Math::sub($lockedDetail->amount, $refundAmount);
+                        $lockedDetail->save();
+                    }
+                    
+                    \Illuminate\Support\Facades\Log::channel('spot-order-matching')->info("Refunded {$refundAmount} {$quoteCurrency} to user {$takerOrder->user_id} for taker order {$takerOrder->id} due to better execution price.");
                 }
             }
         } else {
@@ -438,6 +447,13 @@ readonly class OrderMatchingEngine
 
             if ($takerOrder->type !== SpotOrderTypeEnum::MARKET) {
                 $this->walletRepository->decreaseLockedBalance($takerOrder->user_id, $baseCurrency, $tradeQuantity);
+                
+                // Update LockedBalanceDetail for SELL orders during partial matches
+                $lockedDetail = LockedBalanceDetail::query()->where('spot_order_id', $takerOrder->id)->first();
+                if ($lockedDetail) {
+                    $lockedDetail->amount = Math::sub($lockedDetail->amount, $tradeQuantity);
+                    $lockedDetail->save();
+                }
             }
 
 
@@ -460,6 +476,13 @@ readonly class OrderMatchingEngine
             $this->walletRepository->decreaseBalance($makerOrder->user_id, $quoteCurrency, $actualTradeCost);
 
             $this->walletRepository->decreaseLockedBalance($makerOrder->user_id, $quoteCurrency, $actualTradeCost);
+            
+            // Update LockedBalanceDetail for BUY Maker orders during partial matches
+            $lockedDetail = LockedBalanceDetail::query()->where('spot_order_id', $makerOrder->id)->first();
+            if ($lockedDetail) {
+                $lockedDetail->amount = Math::sub($lockedDetail->amount, $actualTradeCost);
+                $lockedDetail->save();
+            }
         } else {
             // Seller (Maker) receives quote currency, pays in base currency
             // Commission is taken from quote currency (what they receive)
@@ -467,6 +490,13 @@ readonly class OrderMatchingEngine
             $this->walletRepository->increaseBalance($makerOrder->user_id, $quoteCurrency, $makerReceiveQuote);
 
             $this->walletRepository->decreaseLockedBalance($makerOrder->user_id, $baseCurrency, $tradeQuantity);
+            
+            // Update LockedBalanceDetail for SELL Maker orders during partial matches
+            $lockedDetail = LockedBalanceDetail::query()->where('spot_order_id', $makerOrder->id)->first();
+            if ($lockedDetail) {
+                $lockedDetail->amount = Math::sub($lockedDetail->amount, $tradeQuantity);
+                $lockedDetail->save();
+            }
 
             //Decrease Quote Currency
             $this->walletRepository->decreaseBalance($makerOrder->user_id, $baseCurrency, $tradeQuantity);
@@ -500,9 +530,9 @@ readonly class OrderMatchingEngine
                 // Check if any part of the order was filled before cancellation
                 if (Math::comp($filledQuantity, 0) === 1 && Math::comp($filledQuantity, $initialQuantity) === -1) {
                     $newStatus = SpotOrderStatusEnum::PARTIALLY_FILLED_CANCELED;
-                    logger()->info("Market order {$order->id} was partially filled. Setting status to PARTIALLY_FILLED_CANCELED.");
+                    \Illuminate\Support\Facades\Log::channel('spot-order-matching')->info("Market order {$order->id} was partially filled. Setting status to PARTIALLY_FILLED_CANCELED.");
                 } else {
-                    logger()->info("Market order {$order->id} had no fills before cancellation. Setting status to CANCELED.");
+                    \Illuminate\Support\Facades\Log::channel('spot-order-matching')->info("Market order {$order->id} had no fills before cancellation. Setting status to CANCELED.");
                 }
 
                 $order->status = $newStatus; // Use the determined status
@@ -537,7 +567,7 @@ readonly class OrderMatchingEngine
             // Update the order book after cancellation
             $this->broadcastOrderBook($order->market_id);
         } else {
-            logger()->warning("Attempted to cancel order {$order->id} which is not an open market order. Status: {$order->status->value}, Type: {$order->type->value}");
+            \Illuminate\Support\Facades\Log::channel('spot-order-matching')->warning("Attempted to cancel order {$order->id} which is not an open market order. Status: {$order->status->value}, Type: {$order->type->value}");
         }
     }
 
@@ -555,11 +585,11 @@ readonly class OrderMatchingEngine
 
 
         if (Math::comp($remainedQuantity, 0) <= 0) {
-            logger()->info("No remaining quantity ({$remainedQuantity}) to release balance for order {$order->id}. Initial: {$initialQuantity}, Filled: {$filledQuantity}");
+            \Illuminate\Support\Facades\Log::channel('spot-order-matching')->info("No remaining quantity ({$remainedQuantity}) to release balance for order {$order->id}. Initial: {$initialQuantity}, Filled: {$filledQuantity}");
             return; // Nothing to release
         }
 
-        logger()->info("Attempting to release balance for remaining quantity {$remainedQuantity} of order {$order->id}.");
+        \Illuminate\Support\Facades\Log::channel('spot-order-matching')->info("Attempting to release balance for remaining quantity {$remainedQuantity} of order {$order->id}.");
 
 
         try {
@@ -580,10 +610,10 @@ readonly class OrderMatchingEngine
                     $amountToUnlock = $lockedDetail->amount;
                     // Decrease locked balance (which should increase available balance)
                     $this->walletRepository->decreaseLockedBalance($order->user_id, $order->market->quote_currency, $amountToUnlock);
-                    logger()->info("Released remaining locked quote balance for canceled market buy order {$order->id} based on LockedBalanceDetail. Amount: {$amountToUnlock}");
+                    \Illuminate\Support\Facades\Log::channel('spot-order-matching')->info("Released remaining locked quote balance for canceled market buy order {$order->id} based on LockedBalanceDetail. Amount: {$amountToUnlock}");
                 } else {
                     // Fallback/Warning: If LockedBalanceDetail is missing or zero, or holds initial lock.
-                    logger()->error("Could not find valid/updated LockedBalanceDetail to release funds accurately for canceled market buy order {$order->id}. Remained quantity: {$remainedQuantity}. Manual check required or revise unlock logic.");
+                    \Illuminate\Support\Facades\Log::channel('spot-order-matching')->error("Could not find valid/updated LockedBalanceDetail to release funds accurately for canceled market buy order {$order->id}. Remained quantity: {$remainedQuantity}. Manual check required or revise unlock logic.");
                     // !! Consider implementing a more robust unlock calculation based on filled amount/price if possible !!
                 }
             } else {
@@ -594,14 +624,14 @@ readonly class OrderMatchingEngine
                     $currencyToUnlock = $order->market->base_currency;
                     $amountToUnlock = $remainedQuantity; // quantity that was not filled
                     $this->walletRepository->decreaseLockedBalance($order->user_id, $currencyToUnlock, $amountToUnlock);
-                    logger()->info("Released remaining locked base balance for canceled non-market sell order {$order->id}. Amount: {$amountToUnlock}");
+                    \Illuminate\Support\Facades\Log::channel('spot-order-matching')->info("Released remaining locked base balance for canceled non-market sell order {$order->id}. Amount: {$amountToUnlock}");
                 } else {
                     // Nothing to unlock for market sells; balances were taken directly from available.
-                    logger()->info("No locked balance to release for canceled market sell order {$order->id}. Remaining quantity: {$remainedQuantity}");
+                    \Illuminate\Support\Facades\Log::channel('spot-order-matching')->info("No locked balance to release for canceled market sell order {$order->id}. Remaining quantity: {$remainedQuantity}");
                 }
             }
         } catch (Throwable $e) {
-            logger()->error("Failed to release locked balance for canceled order {$order->id}: " . $e->getMessage(), ['exception' => $e]);
+            \Illuminate\Support\Facades\Log::channel('spot-order-matching')->error("Failed to release locked balance for canceled order {$order->id}: " . $e->getMessage(), ['exception' => $e]);
             // Rethrow or handle appropriately - failing to unlock funds is critical.
             throw $e;
         }

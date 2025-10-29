@@ -232,20 +232,19 @@ class SpotService
     {
         $lockedDetail = $this->lockedBalanceRepository->getOne($order->id, LockedBalanceTypeEnum::SPOT);
 
+        // Safety check: if LockedBalanceDetail doesn't exist (data inconsistency), log error and return
+        if (!$lockedDetail) {
+            \Illuminate\Support\Facades\Log::channel('spot-order-matching')->error("LockedBalanceDetail not found for order {$order->id} during cancellation. Possible data inconsistency.");
+            throw new InvalidArgumentException('خطا در لغو سفارش: اطلاعات قفل موجودی یافت نشد.');
+        }
+
+        // The lockedDetail->amount is now accurate because it's updated during refunds
+        // So we can safely use it as the amount to unlock
         $amountRefund = $lockedDetail->amount;
 
-        //Partial Matched
-        if (Math::comp($order->filled_quantity, '0') !== 0) {
-            if ($order->side === SpotOrderSideEnum::BUY) {
-                // For buy orders, we locked quote currency (e.g., USDT)
-                // Refund = locked amount - (filled_quantity * price)
-                $amountRefund = Math::sub($lockedDetail->amount, $order->getFilledValue());
-            } else {
-                // For sell orders, we locked base currency (e.g., TRX)
-                // Refund = locked amount - filled_quantity
-                $amountRefund = Math::sub($lockedDetail->amount, $order->filled_quantity);
-            }
-        }
+        // Note: We no longer need to recalculate based on filled_quantity and getFilledValue()
+        // because LockedBalanceDetail->amount is kept up-to-date during partial matches
+        // when refunds occur (see OrderMatchingEngine::updateWallets)
 
         $market = $order->market;
 
@@ -312,11 +311,15 @@ class SpotService
 
         $wallet = $this->walletRepository->getWalletWithLock($currency, $userId);
 
-        // Set locked_balance to zero for bot orders
-        $wallet->update(['locked_balance' => '0']);
+        // Decrement locked_balance by the refund amount (not set to zero!)
+        // Setting to zero would clear locks for other orders too
+        $wallet->decrement('locked_balance', $amountRefund);
 
-        $order->update([
-            'status' => SpotOrderStatusEnum::CANCELED,
-        ]);
+        // Set status based on whether order was partially filled
+        if (Math::comp($order->filled_quantity, '0') !== 0) {
+            $order->update(['status' => SpotOrderStatusEnum::PARTIALLY_FILLED_CANCELED]);
+        } else {
+            $order->update(['status' => SpotOrderStatusEnum::CANCELED]);
+        }
     }
 }
