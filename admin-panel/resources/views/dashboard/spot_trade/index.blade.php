@@ -19,204 +19,204 @@
                 </div>
             </div>
         </div>
-        {{--        <div class="col-sm-12 col-xl-3"> --}}
-        {{--            <div class="card"> --}}
-        {{--                <div class="card-body"> --}}
-        {{--                    <div class="d-flex align-items-start justify-content-between"> --}}
-        {{--                        <div class="content-left"> --}}
-        {{--                            <span>تعداد معاملات امروز</span> --}}
-        {{--                            <div class="d-flex align-items-center my-1"> --}}
-        {{--                                <h4 class="mb-0 me-2">{{$todayOrderCount}}</h4> --}}
-        {{--                            </div> --}}
-        {{--                        </div> --}}
-        {{--                        <span class="badge bg-label-warning rounded"> --}}
-        {{--                            <i class="fa-light fa-swap"></i> --}}
-        {{--                        </span> --}}
-        {{--                    </div> --}}
-        {{--                </div> --}}
-        {{--            </div> --}}
-        {{--        </div> --}}
-        {{--        <div class="col-sm-12 col-xl-3"> --}}
-        {{--            <div class="card"> --}}
-        {{--                <div class="card-body"> --}}
-        {{--                    <div class="d-flex align-items-start justify-content-between"> --}}
-        {{--                        <div class="content-left"> --}}
-        {{--                            <span>تعداد معاملات خرید</span> --}}
-        {{--                            <div class="d-flex align-items-center my-1"> --}}
-        {{--                                <h4 class="mb-0 me-2">{{$totalBuyOrderCount}}</h4> --}}
-        {{--                            </div> --}}
-        {{--                        </div> --}}
-        {{--                        <span class="badge bg-label-primary rounded p-2"> --}}
-        {{--                            <i class="fa-regular fa-user-tag"></i> --}}
-        {{--                        </span> --}}
-        {{--                    </div> --}}
-        {{--                </div> --}}
-        {{--            </div> --}}
-        {{--        </div> --}}
-        {{--        <div class="col-sm-12 col-xl-3"> --}}
-        {{--            <div class="card"> --}}
-        {{--                <div class="card-body "> --}}
-        {{--                    <div class="d-flex align-items-start justify-content-between"> --}}
-        {{--                        <div class="content-left"> --}}
-        {{--                            <span>تعداد معاملات فروش</span> --}}
-        {{--                            <div class="d-flex align-items-center my-1"> --}}
-        {{--                                <h4 class="mb-0 me-2">{{$totalSellOrderCount}}</h4> --}}
-        {{--                            </div> --}}
-        {{--                        </div> --}}
-        {{--                        <span class="badge bg-label-primary rounded p-2"> --}}
-        {{--                            <i class="fa-regular fa-user-tag"></i> --}}
-        {{--                        </span> --}}
-        {{--                    </div> --}}
-        {{--                </div> --}}
-        {{--            </div> --}}
-        {{--        </div> --}}
-        {{--        <div class="col-sm-12 col-xl-3"> --}}
-        {{--            <div class="card"> --}}
-        {{--                <div class="card-body"> --}}
-        {{--                    <div class="d-flex align-items-start justify-content-between"> --}}
-        {{--                        <div class="content-left"> --}}
-        {{--                            <span>حجم معاملات</span> --}}
-        {{--                            <div class="d-flex align-items-center my-1"> --}}
-        {{--                                <h4 class="mb-0 me-2">{{formatNumber($totalOrdersValue)}} --}}
-        {{--                                <small>USDT</small> --}}
-        {{--                                </h4> --}}
-        {{--                            </div> --}}
-        {{--                        </div> --}}
-        {{--                        <span class="badge bg-label-primary rounded p-2"> --}}
-        {{--                            <i class="fa-regular fa-user-tag"></i> --}}
-        {{--                        </span> --}}
-        {{--                    </div> --}}
-        {{--                </div> --}}
-        {{--            </div> --}}
-        {{--        </div> --}}
-        {{--        <div class="col-sm-12 col-xl-3"> --}}
-        {{--            <div class="card"> --}}
-        {{--                <div class="card-body bg-success"> --}}
-        {{--                    <div class="d-flex align-items-start justify-content-between"> --}}
-        {{--                        <div class="content-left"> --}}
-        {{--                            <span class="text-white">کاربران با بیشترین معامله امروز</span> --}}
-        {{--                            <div class="d-flex align-items-baseline my-1"> --}}
-        {{--                                <small class="text-white mx-2"> حجم معاملات امروز: </small> --}}
-        {{--                                <h4 class="mb-0 me-2 text-primary">{{formatNumber($totalTodayOrdersValue,2)}}</h4> --}}
-        {{--                                <small class="text-primary">USDT</small> --}}
-        {{--                            </div> --}}
-        {{--                        </div> --}}
 
-        {{--                        <ul class="list-unstyled avatar-group d-flex my-0"> --}}
-        {{--                            @if (count($topUsers)) --}}
-        {{--                                @foreach ($topUsers as $topUser) --}}
-        {{--                                    <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-html='true' --}}
-        {{--                                        data-bs-placement="top" class="avatar pull-up" --}}
-        {{--                                        title="<span class='fw-medium'>نام:</span> --}}
-        {{--                                                    {{ $topUser['user']->fullname()}}</span> --}}
-        {{--                                                    <br> <span class='fw-medium'>شناسه کاربری:</span> --}}
-        {{--                                                    <span class='fw-medium font-monospace'>({{ $topUser['user']->id }}#)</span> --}}
-        {{--                                                    <br> <span class='fw-medium'>نام کاربری:</span> --}}
-        {{--                                                    <span class='fw-medium font-monospace'>({{ $topUser['user']->username }})</span> --}}
-        {{--                                                    <br> <span class='fw-medium'>مجموع واریز:</span> --}}
-        {{--                                                    <span class='fw-medium font-monospace'>{{ formatNumberTrimZeros($topUser['totalOrders']) }}$</span> --}}
-        {{--                                                    "> --}}
-        {{--                                        <div class="avatar me-2"> --}}
-        {{--                                            @php --}}
-        {{--                                                // Define your color array --}}
-        {{--                                                $colors = ['primary', 'info', 'danger', 'warning','success']; --}}
-
-        {{--                                                // Get a random index from the array --}}
-        {{--                                                $randomIndex = array_rand($colors); --}}
-
-        {{--                                                // Retrieve the color using the random index --}}
-        {{--                                                $randomColor = $colors[$randomIndex]; --}}
-        {{--                                            @endphp --}}
-        {{--                                            <span --}}
-        {{--                                                class="avatar-initial rounded-circle bg-label-{{$randomColor}}">{{$topUser['user']->avatar_user_name}}</span> --}}
-        {{--                                        </div> --}}
-        {{--                                    </li> --}}
-        {{--                                @endforeach --}}
-        {{--                            @else --}}
-        {{--                                بدون معامله --}}
-        {{--                            @endif --}}
-
-        {{--                        </ul> --}}
-
-        {{--                    </div> --}}
-        {{--                </div> --}}
-        {{--            </div> --}}
-        {{--        </div> --}}
-    </div>
-    <div class="card mb-3">
-        <div class="card-body">
-            <h5 class="card-title">خروجی اکسل</h5>
-            <form class="row mt-3 d-flex align-items-end"
-                action="{{ route('admin.otc_orders.excel-export', request()->query()) }}" method="POST">
-                @csrf
-                <div class="col-md-2 user_role">
-                    <label class="form-label" for="UserRole">از آیدی :</label>
-                    <input type="number" class="form-control" placeholder="آیدی کاربر">
-                </div>
-                <div class="col-md-2 user_role">
-                    <label class="form-label" for="UserRole">تا آیدی :</label>
-                    <input type="number" class="form-control" placeholder="آیدی کاربر">
-                </div>
-                <div class="col-md-2 mt-2">
-                    <button class="btn btn-success class ">دانلود خروجی اکسل</button>
-                </div>
-            </form>
-        </div>
     </div>
 
     <div class="card">
         <div class="card-body">
             <div class="card-title header-elements">
-                <h5 class="m-0 me-2">فیلتر</h5>
+                <h5 class="m-0 me-2">فیلتر پیشرفته معاملات اسپات</h5>
+                <div class="card-title-elements ms-auto">
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="toggleAdvancedFilter">
+                        <i class="fas fa-chevron-down me-1"></i>
+                        نمایش فیلترهای پیشرفته
+                    </button>
+                </div>
             </div>
-            <form action="{{ route('admin.spot_trades.index') }}" method="get">
-                <div class="row">
-                    <div class="col-md-3 mt-3">
-                        <div class="form-group">
-                            <label class="form-label" for="type">نوع تراکنش:</label>
-                            <select name="type" class="form-control" id="type">
-                                <option value=" ">همه</option>
-                                @foreach (\App\Enums\OTCOrderTypeEnum::cases() as $case)
-                                    <option value="{{ $case->name }}"
-                                        {{ request()->has('type') && request()->input('type') == $case->name ? 'selected' : '' }}>
-                                        {{ $case->label() }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
+            <form action="{{ route('admin.spot_trades.index') }}" method="get" id="filterForm">
+                <!-- Basic Filters Row -->
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label" for="market">بازار:</label>
+                        <select name="market" class="form-select" id="market">
+                            <option value="">همه بازارها</option>
+                            @foreach ($markets as $market)
+                                <option value="{{ $market->id }}"
+                                    {{ request()->input('market') == $market->id ? 'selected' : '' }}>
+                                    {{ $market->name }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
-                    <div class="col-md-6 mt-3">
-                        <label class="form-label" for="user">کاربر :</label>
+                    <div class="col-md-3">
+                        <label class="form-label" for="user">کاربر:</label>
                         <x-user-selection-component input-name="user" multiple="0"
-                            selected="{{ request()->filled('user') && $spotTrades->count() > 0 ? $spotTrades[0]->makerOrder->user->id : '' }}"
-                            selected-label="{{ request()->filled('user') && $spotTrades->count() > 0
-                                ? '(' .
-                                    $spotTrades[0]->makerOrder->user->id .
-                                    '#) ' .
-                                    $spotTrades[0]->makerOrder->user->fullname() .
-                                    ' | ' .
-                                    $spotTrades[0]->makerOrder->user->email
-                                : '' }}"></x-user-selection-component>
+                            selected="{{ request()->filled('user') ? request()->input('user') : '' }}"
+                            selected-label="{{ request()->filled('user') ? 
+                                ('(#' . request()->input('user') . ') ' . \App\Models\User::find(request()->input('user'))?->fullname() . ' - ' . \App\Models\User::find(request()->input('user'))?->email) ?? 
+                                'کاربر #' . request()->input('user') : '' }}"></x-user-selection-component>
                     </div>
-                    <div class="col-md-2 mt-3">
-                        <div class="form-group"><br>
-                            <button class="btn btn-success text-white" type="submit">
-                                <span>فیلتر</span><i class="fas fa-filter mx-3"></i>
+                    <div class="col-md-2">
+                        <label class="form-label" for="date_from">از تاریخ:</label>
+                        <input type="date" name="date_from" class="form-control" id="date_from"
+                            value="{{ request()->input('date_from') }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label" for="date_to">تا تاریخ:</label>
+                        <input type="date" name="date_to" class="form-control" id="date_to"
+                            value="{{ request()->input('date_to') }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-success" type="submit">
+                                <i class="fas fa-search me-1"></i>جستجو
+                            </button>
+                            <button class="btn btn-outline-secondary" type="button" id="clearFiltersBasic">
+                                <i class="fas fa-times me-1"></i>پاک کردن
                             </button>
                         </div>
                     </div>
                 </div>
+
+                <!-- Advanced Filters Row (Initially Hidden) -->
+                <div class="row mb-3" id="advancedFilters" style="display: none;">
+                    <div class="col-md-3">
+                        <label class="form-label" for="price_min">حداقل قیمت:</label>
+                        <div class="input-group">
+                            <input type="number" name="price_min" class="form-control" id="price_min" placeholder="0.00"
+                                step="0.00000001" value="{{ request()->input('price_min') }}">
+                            <span class="input-group-text">USDT</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="price_max">حداکثر قیمت:</label>
+                        <div class="input-group">
+                            <input type="number" name="price_max" class="form-control" id="price_max" placeholder="0.00"
+                                step="0.00000001" value="{{ request()->input('price_max') }}">
+                            <span class="input-group-text">USDT</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="quantity_min">حداقل مقدار:</label>
+                        <input type="number" name="quantity_min" class="form-control" id="quantity_min" placeholder="0.00"
+                            step="0.00000001" value="{{ request()->input('quantity_min') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="quantity_max">حداکثر مقدار:</label>
+                        <input type="number" name="quantity_max" class="form-control" id="quantity_max" placeholder="0.00"
+                            step="0.00000001" value="{{ request()->input('quantity_max') }}">
+                    </div>
+                </div>
+
+                <!-- Trade Value Filters Row (Advanced) -->
+                <div class="row mb-3" id="tradeValueFilters" style="display: none;">
+                    <div class="col-md-3">
+                        <label class="form-label" for="trade_value_min">حداقل ارزش معامله:</label>
+                        <div class="input-group">
+                            <input type="number" name="trade_value_min" class="form-control" id="trade_value_min"
+                                placeholder="0.00" step="0.01" value="{{ request()->input('trade_value_min') }}">
+                            <span class="input-group-text">USDT</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="trade_value_max">حداکثر ارزش معامله:</label>
+                        <div class="input-group">
+                            <input type="number" name="trade_value_max" class="form-control" id="trade_value_max"
+                                placeholder="0.00" step="0.01" value="{{ request()->input('trade_value_max') }}">
+                            <span class="input-group-text">USDT</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex gap-2 align-items-end h-100">
+                            <button class="btn btn-success" type="submit">
+                                <i class="fas fa-filter me-2"></i>اعمال فیلتر
+                            </button>
+                            <button class="btn btn-outline-secondary" type="button" id="clearFilters">
+                                <i class="fas fa-times me-2"></i>پاک کردن فیلترها
+                            </button>
+                            <button class="btn btn-outline-info" type="button" id="exportFiltered">
+                                <i class="fas fa-download me-2"></i>خروجی اکسل
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Summary (Show active filters) -->
+                @if (request()->hasAny([
+                        'market',
+                        'user',
+                        'date_from',
+                        'date_to',
+                        'price_min',
+                        'price_max',
+                        'quantity_min',
+                        'quantity_max',
+                        'trade_value_min',
+                        'trade_value_max',
+                    ]))
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="alert alert-info d-flex align-items-center">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <span class="me-2">فیلترهای فعال:</span>
+                                <div class="d-flex flex-wrap gap-1">
+                                    @if (request()->filled('market'))
+                                        @php $selectedMarket = $markets->find(request()->input('market')) @endphp
+                                        <span class="badge bg-primary">بازار:
+                                            {{ $selectedMarket?->name ?? request()->input('market') }}</span>
+                                    @endif
+                                    @if(request()->filled('user'))
+                                        @php
+                                            $selectedUser = \App\Models\User::find(request()->input('user'));
+                                        @endphp
+                                        @if($selectedUser)
+                                            <span class="badge bg-primary">کاربر: (#{{ $selectedUser->id }}) {{ $selectedUser->fullname() }} - {{ $selectedUser->email }}</span>
+                                        @else
+                                            <span class="badge bg-primary">کاربر: #{{ request()->input('user') }}</span>
+                                        @endif
+                                    @endif
+                                    @if (request()->filled('date_from'))
+                                        <span class="badge bg-primary">از: {{ request()->input('date_from') }}</span>
+                                    @endif
+                                    @if (request()->filled('date_to'))
+                                        <span class="badge bg-primary">تا: {{ request()->input('date_to') }}</span>
+                                    @endif
+                                    @if (request()->filled('price_min'))
+                                        <span class="badge bg-success">قیمت ≥ {{ request()->input('price_min') }}</span>
+                                    @endif
+                                    @if (request()->filled('price_max'))
+                                        <span class="badge bg-success">قیمت ≤ {{ request()->input('price_max') }}</span>
+                                    @endif
+                                    @if (request()->filled('quantity_min'))
+                                        <span class="badge bg-warning">مقدار ≥
+                                            {{ request()->input('quantity_min') }}</span>
+                                    @endif
+                                    @if (request()->filled('quantity_max'))
+                                        <span class="badge bg-warning">مقدار ≤
+                                            {{ request()->input('quantity_max') }}</span>
+                                    @endif
+                                    @if (request()->filled('trade_value_min'))
+                                        <span class="badge bg-info">ارزش ≥
+                                            {{ request()->input('trade_value_min') }}</span>
+                                    @endif
+                                    @if (request()->filled('trade_value_max'))
+                                        <span class="badge bg-info">ارزش ≤
+                                            {{ request()->input('trade_value_max') }}</span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </form>
         </div>
     </div>
-
-
 
     <div class="card mt-3">
         <div class="card-header">
             <div class="card-title header-elements">
                 <h5 class="m-0 me-2">لیست معاملات اسپات</h5>
-
             </div>
         </div>
         <div class="table-responsive text-nowrap">
@@ -240,7 +240,7 @@
                             </a>
                         </th>
                         <th>بازار</th>
-                        <th>نوع</th>
+                        {{-- <th>نوع</th> --}}
                         <th>
                             @php
                                 $currentParams = request()->except('sortByQuantity');
@@ -299,7 +299,7 @@
                                     <small class="ms-1">{{ $spotTrade->market->name }}</small>
                                 </td>
 
-                                <td>{{ $spotTrade->takerOrder->type->label() }}</td>
+                                {{-- <td>{{ $spotTrade->takerOrder->type->label() }}</td> --}}
                                 <td>
                                     <span class="ms-1">{{ formatNumberTrimZeros($spotTrade->quantity) }}</span>
                                     <small>{{ $spotTrade->market->base_currency }}</small>
@@ -478,6 +478,72 @@
     <script>
         $(document).ready(function() {
             $('[data-bs-toggle="tooltip"]').tooltip();
+
+            // Advanced Filter Toggle
+            $('#toggleAdvancedFilter').click(function() {
+                const advancedFilters = $('#advancedFilters, #tradeValueFilters');
+                const button = $(this);
+                const icon = button.find('i');
+
+                if (advancedFilters.is(':visible')) {
+                    advancedFilters.slideUp();
+                    icon.removeClass('fa-chevron-up').addClass('fa-chevron-down');
+                    button.find('span').text('نمایش فیلترهای پیشرفته');
+                } else {
+                    advancedFilters.slideDown();
+                    icon.removeClass('fa-chevron-down').addClass('fa-chevron-up');
+                    button.find('span').text('مخفی کردن فیلترهای پیشرفته');
+                }
+            });
+
+            // Clear Filters (both basic and advanced)
+            $('#clearFilters, #clearFiltersBasic').click(function() {
+                // Clear all form inputs
+                $('#filterForm')[0].reset();
+
+                // Clear select2 if used
+                $('#filterForm select').val('').trigger('change');
+
+                // Redirect to clean URL
+                window.location.href = '{{ route('admin.spot_trades.index') }}';
+            });
+
+            // Export Filtered Data
+            $('#exportFiltered').click(function() {
+                // Create a temporary form for POST request
+                const form = $('<form>', {
+                    'method': 'POST',
+                    'action': '{{ route('admin.spot_trade.excel-export') }}',
+                    'target': '_blank'
+                });
+
+                // Add CSRF token
+                form.append($('<input>', {
+                    'type': 'hidden',
+                    'name': '_token',
+                    'value': '{{ csrf_token() }}'
+                }));
+
+                // Add all current filter values
+                $('#filterForm').find('input, select').each(function() {
+                    const input = $(this);
+                    if (input.val() && input.attr('name')) {
+                        form.append($('<input>', {
+                            'type': 'hidden',
+                            'name': input.attr('name'),
+                            'value': input.val()
+                        }));
+                    }
+                });
+
+                // Submit the form
+                form.appendTo('body').submit().remove();
+            });
+
+            // Auto-show advanced filters if any advanced filter is active
+            @if (request()->hasAny(['price_min', 'price_max', 'quantity_min', 'quantity_max', 'trade_value_min', 'trade_value_max']))
+                $('#toggleAdvancedFilter').click();
+            @endif
         });
     </script>
 @endsection

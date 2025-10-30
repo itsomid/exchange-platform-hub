@@ -4,6 +4,7 @@ namespace App\Http\Controllers\SpotTrade;
 
 use App\Http\Controllers\Controller;
 use App\Models\SpotTrade;
+use App\Models\Market;
 use Illuminate\Http\Request;
 use App\Models\TradingCommission;
 
@@ -12,11 +13,12 @@ class SpotTradeController extends Controller
     public function index()
     {
         $spotTrades = SpotTrade::filterBy(request()->all())->with([
-             'market',
-             'makerOrder.user',
-             'takerOrder.user',
-             'commission'])
-//            ->orderBy('id', request()->input('sortById', 'desc'))
+            'market',
+            'makerOrder.user',
+            'takerOrder.user',
+            'commission'
+        ])
+            ->orderBy('id', request()->input('sortById', 'desc'))
             ->paginate(50);
 
         // Calculate commission values for each trade
@@ -29,8 +31,13 @@ class SpotTradeController extends Controller
             }
         });
 
-        return view('dashboard.spot_trade.index',[
-            'spotTrades' => $spotTrades
+        // Get all markets for the filter dropdown
+        $markets = Market::where('is_active', true)
+            ->get(['id', 'base_currency', 'quote_currency']);
+
+        return view('dashboard.spot_trade.index', [
+            'spotTrades' => $spotTrades,
+            'markets' => $markets
         ]);
     }
 
@@ -39,18 +46,19 @@ class SpotTradeController extends Controller
         return 1;
     }
 
-    public function calculateCommissionValues(SpotTrade $trade, TradingCommission $commission) {
+    public function calculateCommissionValues(SpotTrade $trade, TradingCommission $commission)
+    {
 
-  
+
         if ($commission->maker_commission_currency !== 'USDT') {
-     
+
             $makerCommissionValue = bcmul($commission->maker_commission_amount, $trade->price, 8);
 
             $takerCommissionValue = $commission->taker_commission_amount;
         } else {
-       
+
             $makerCommissionValue = $commission->maker_commission_amount;
-   
+
             $takerCommissionValue = bcmul($commission->taker_commission_amount, $trade->price, 8);
         }
 
