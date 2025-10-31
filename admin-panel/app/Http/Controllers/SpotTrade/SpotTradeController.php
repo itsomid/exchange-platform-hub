@@ -12,14 +12,29 @@ class SpotTradeController extends Controller
 {
     public function index()
     {
-        $spotTrades = SpotTrade::filterBy(request()->all())->with([
+        $query = SpotTrade::filterBy(request()->all())->with([
             'market',
             'makerOrder.user',
             'takerOrder.user',
             'commission'
-        ])
-            ->orderBy('id', request()->input('sortById', 'desc'))
-            ->paginate(50);
+        ]);
+
+        // Handle sorting
+        if (request()->has('sortByTradeValue')) {
+            // Sort by trade value (price * quantity)
+            $sortDirection = request()->input('sortByTradeValue', 'desc');
+            $query->selectRaw('spot_trades.*, (price * quantity) as trade_value')
+                ->orderBy('trade_value', $sortDirection);
+        } elseif (request()->has('sortByQuantity')) {
+            // Sort by quantity
+            $sortDirection = request()->input('sortByQuantity', 'desc');
+            $query->orderBy('quantity', $sortDirection);
+        } else {
+            // Default sorting by ID
+            $query->orderBy('id', request()->input('sortById', 'desc'));
+        }
+
+        $spotTrades = $query->paginate(50);
 
         // Calculate commission values for each trade
         $spotTrades->each(function ($trade) {
@@ -41,9 +56,58 @@ class SpotTradeController extends Controller
         ]);
     }
 
-    public function excelExport()
+    public function excelExport(Request $request)
     {
-        return 1;
+        $from = $request->get('from_id');
+        $to = $request->get('to_id');
+        $filename = 'spot_trades_' . $from . '_' . $to;
+
+        $spotTradeQuery = SpotTrade::orderBy('id')->filterBy(request()->all())->with([
+            'market',
+            'makerOrder.user',
+            'takerOrder.user',
+            'commission'
+        ]);
+
+        if ($request->get('from_id') && $request->get('to_id')) {
+            $spotTradeQuery->where('id', '>=', $request->from_id)
+                ->where('id', '<=', $request->to_id);
+        }
+
+        $spotTrades = $spotTradeQuery->get();
+
+        $spotTrades = $spotTrades->map(function ($trade) {
+            // Calculate commission values
+            $commissionValues = [
+                'maker_commission_value' => 0,
+                'taker_commission_value' => 0,
+                'total_commission_value' => 0
+            ];
+
+            if ($trade->commission) {
+                $commissionValues = $this->calculateCommissionValues($trade, $trade->commission);
+            }
+
+            return [
+                $trade->id,
+                $trade->market->base_currency . '/' . $trade->market->quote_currency,
+                $trade->makerOrder->user->email,
+                $trade->takerOrder->user->email,
+                formatNumberTrimZeros($trade->quantity),
+                formatNumberTrimZeros($trade->price),
+                formatNumberTrimZeros(bcmul($trade->quantity, $trade->price, 8)),
+                formatNumberTrimZeros($commissionValues['maker_commission_value']),
+                formatNumberTrimZeros($commissionValues['taker_commission_value']),
+                formatNumberTrimZeros($commissionValues['total_commission_value']),
+                $trade->makerOrder->side->label(),
+                $trade->takerOrder->side->label(),
+                $trade->makerOrder->status->label(),
+                $trade->takerOrder->status->label(),
+                $trade->created_at,
+            ];
+        });
+
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\SpotTradeExport($spotTrades), $filename . '.xlsx');
     }
 
     public function calculateCommissionValues(SpotTrade $trade, TradingCommission $commission)

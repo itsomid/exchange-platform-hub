@@ -36,7 +36,7 @@
             <form action="{{ route('admin.spot_trades.index') }}" method="get" id="filterForm">
                 <!-- Basic Filters Row -->
                 <div class="row mb-3">
-                    <div class="col-md-3">
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
                         <label class="form-label" for="market">بازار:</label>
                         <select name="market" class="form-select" id="market">
                             <option value="">همه بازارها</option>
@@ -48,32 +48,43 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
                         <label class="form-label" for="user">کاربر:</label>
                         <x-user-selection-component input-name="user" multiple="0"
                             selected="{{ request()->filled('user') ? request()->input('user') : '' }}"
-                            selected-label="{{ request()->filled('user') ? 
-                                ('(#' . request()->input('user') . ') ' . \App\Models\User::find(request()->input('user'))?->fullname() . ' - ' . \App\Models\User::find(request()->input('user'))?->email) ?? 
-                                'کاربر #' . request()->input('user') : '' }}"></x-user-selection-component>
+                            selected-label="{{ request()->filled('user')
+                                ? '(#' .
+                                        request()->input('user') .
+                                        ') ' .
+                                        \App\Models\User::find(request()->input('user'))?->fullname() .
+                                        ' - ' .
+                                        \App\Models\User::find(request()->input('user'))?->email ??
+                                    'کاربر #' . request()->input('user')
+                                : '' }}"></x-user-selection-component>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                         <label class="form-label" for="date_from">از تاریخ:</label>
-                        <input type="date" name="date_from" class="form-control" id="date_from"
+                        <input type="text" name="date_from" class="form-control" id="date_from" data-jdp
                             value="{{ request()->input('date_from') }}">
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-lg-2 col-md-6 col-sm-6 mb-2">
                         <label class="form-label" for="date_to">تا تاریخ:</label>
-                        <input type="date" name="date_to" class="form-control" id="date_to"
+                        <input type="text" name="date_to" class="form-control" id="date_to" data-jdp
                             value="{{ request()->input('date_to') }}">
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label">&nbsp;</label>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-success" type="submit">
+                    <div class="col-lg-2 col-md-6 col-12 mb-2">
+                        <label class="form-label d-none d-lg-block">&nbsp;</label>
+                        <div class="d-flex flex-wrap gap-1 justify-content-start">
+                            <button class="btn btn-success btn-sm flex-fill" type="submit" style="min-width: 70px;">
                                 <i class="fas fa-search me-1"></i>جستجو
                             </button>
-                            <button class="btn btn-outline-secondary" type="button" id="clearFiltersBasic">
+                            <button class="btn btn-outline-secondary btn-sm flex-fill" type="button" id="clearFilters"
+                                style="min-width: 70px;">
                                 <i class="fas fa-times me-1"></i>پاک کردن
+                            </button>
+                            <button class="btn btn-outline-info btn-sm flex-fill" type="button" id="exportFiltered"
+                                style="min-width: 60px;">
+                                <i class="fas fa-download me-1"></i>اکسل
                             </button>
                         </div>
                     </div>
@@ -81,37 +92,18 @@
 
                 <!-- Advanced Filters Row (Initially Hidden) -->
                 <div class="row mb-3" id="advancedFilters" style="display: none;">
-                    <div class="col-md-3">
-                        <label class="form-label" for="price_min">حداقل قیمت:</label>
-                        <div class="input-group">
-                            <input type="number" name="price_min" class="form-control" id="price_min" placeholder="0.00"
-                                step="0.00000001" value="{{ request()->input('price_min') }}">
-                            <span class="input-group-text">USDT</span>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label" for="price_max">حداکثر قیمت:</label>
-                        <div class="input-group">
-                            <input type="number" name="price_max" class="form-control" id="price_max" placeholder="0.00"
-                                step="0.00000001" value="{{ request()->input('price_max') }}">
-                            <span class="input-group-text">USDT</span>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
+
+                    <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
                         <label class="form-label" for="quantity_min">حداقل مقدار:</label>
                         <input type="number" name="quantity_min" class="form-control" id="quantity_min" placeholder="0.00"
                             step="0.00000001" value="{{ request()->input('quantity_min') }}">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
                         <label class="form-label" for="quantity_max">حداکثر مقدار:</label>
                         <input type="number" name="quantity_max" class="form-control" id="quantity_max" placeholder="0.00"
                             step="0.00000001" value="{{ request()->input('quantity_max') }}">
                     </div>
-                </div>
-
-                <!-- Trade Value Filters Row (Advanced) -->
-                <div class="row mb-3" id="tradeValueFilters" style="display: none;">
-                    <div class="col-md-3">
+                    <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
                         <label class="form-label" for="trade_value_min">حداقل ارزش معامله:</label>
                         <div class="input-group">
                             <input type="number" name="trade_value_min" class="form-control" id="trade_value_min"
@@ -119,25 +111,12 @@
                             <span class="input-group-text">USDT</span>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
                         <label class="form-label" for="trade_value_max">حداکثر ارزش معامله:</label>
                         <div class="input-group">
                             <input type="number" name="trade_value_max" class="form-control" id="trade_value_max"
                                 placeholder="0.00" step="0.01" value="{{ request()->input('trade_value_max') }}">
                             <span class="input-group-text">USDT</span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="d-flex gap-2 align-items-end h-100">
-                            <button class="btn btn-success" type="submit">
-                                <i class="fas fa-filter me-2"></i>اعمال فیلتر
-                            </button>
-                            <button class="btn btn-outline-secondary" type="button" id="clearFilters">
-                                <i class="fas fa-times me-2"></i>پاک کردن فیلترها
-                            </button>
-                            <button class="btn btn-outline-info" type="button" id="exportFiltered">
-                                <i class="fas fa-download me-2"></i>خروجی اکسل
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -166,12 +145,13 @@
                                         <span class="badge bg-primary">بازار:
                                             {{ $selectedMarket?->name ?? request()->input('market') }}</span>
                                     @endif
-                                    @if(request()->filled('user'))
+                                    @if (request()->filled('user'))
                                         @php
                                             $selectedUser = \App\Models\User::find(request()->input('user'));
                                         @endphp
-                                        @if($selectedUser)
-                                            <span class="badge bg-primary">کاربر: (#{{ $selectedUser->id }}) {{ $selectedUser->fullname() }} - {{ $selectedUser->email }}</span>
+                                        @if ($selectedUser)
+                                            <span class="badge bg-primary">کاربر: (#{{ $selectedUser->id }})
+                                                {{ $selectedUser->fullname() }} - {{ $selectedUser->email }}</span>
                                         @else
                                             <span class="badge bg-primary">کاربر: #{{ request()->input('user') }}</span>
                                         @endif
@@ -219,11 +199,11 @@
                 <h5 class="m-0 me-2">لیست معاملات اسپات</h5>
             </div>
         </div>
-        <div class="table-responsive text-nowrap">
-            <table class="table ">
+        <div class="table-responsive">
+            <table class="table table-striped">
                 <thead>
                     <tr>
-                        <th>
+                        <th class="text-nowrap">
                             @php
                                 $currentParams = request()->except('sortById');
                                 $currentSortDirection = request()->input('sortById', 'desc');
@@ -239,11 +219,14 @@
                                 @endif
                             </a>
                         </th>
-                        <th>بازار</th>
-                        {{-- <th>نوع</th> --}}
-                        <th>
+                        <th class="text-nowrap">بازار</th>
+                        <th class="text-nowrap">
                             @php
-                                $currentParams = request()->except('sortByQuantity');
+                                $currentParams = request()->except([
+                                    'sortByQuantity',
+                                    'sortByTradeValue',
+                                    'sortByCreatedAt',
+                                ]);
                                 $currentSortDirection = request()->input('sortByQuantity', 'desc');
                                 $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
                             @endphp
@@ -257,20 +240,43 @@
                                 @endif
                             </a>
                         </th>
-                        <th>قیمت</th>
-                        <th>کاربر Maker</th>
-                        <th>کاربر Taker</th>
-                        <th>کارمزد کل
+                        <th class="text-nowrap">
+                            @php
+                                $currentParams = request()->except([
+                                    'sortByQuantity',
+                                    'sortByTradeValue',
+                                    'sortByCreatedAt',
+                                ]);
+                                $currentSortDirection = request()->input('sortByTradeValue', 'desc');
+                                $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
+                            @endphp
+                            <a href="{{ route('admin.spot_trades.index', array_merge($currentParams, ['sortByTradeValue' => $newSortDirection])) }}"
+                                class="text-black">
+                                ارزش معامله (USDT)
+                                @if ($currentSortDirection === 'asc')
+                                    <span><i class="fa-solid fa-arrow-up"></i></span>
+                                @else
+                                    <span><i class="fa-solid fa-arrow-down"></i></span>
+                                @endif
+                            </a>
+                        </th>
+                        <th class="text-nowrap">کاربر Maker</th>
+                        <th class="text-nowrap">کاربر Taker</th>
+                        <th class="text-nowrap">کارمزد کل
                             <i class="fa-regular fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top"
                                 data-bs-custom-class="tooltip-dark" title="مجموع ارزش کارمزد maker و taker"></i>
                         </th>
-                        <th>
+                        <th class="text-nowrap">
                             @php
-                                $currentParams = request()->except('sortByCreatedAt');
+                                $currentParams = request()->except([
+                                    'sortByQuantity',
+                                    'sortByTradeValue',
+                                    'sortByCreatedAt',
+                                ]);
                                 $currentSortDirection = request()->input('sortByCreatedAt', 'desc');
                                 $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
                             @endphp
-                            <a href="{{ route('admin.otc_orders.index', array_merge($currentParams, ['sortByCreatedAt' => $newSortDirection])) }}"
+                            <a href="{{ route('admin.spot_trades.index', array_merge($currentParams, ['sortByCreatedAt' => $newSortDirection])) }}"
                                 class="text-black">
                                 تاریخ
                                 @if ($currentSortDirection === 'asc')
@@ -280,8 +286,8 @@
                                 @endif
                             </a>
                         </th>
-                        <th>وضعیت سفارش</th>
-                        <th>جزییات</th>
+                        <th class="text-nowrap">وضعیت سفارش</th>
+                        <th class="text-nowrap">جزییات</th>
                     </tr>
                 </thead>
                 <tbody class="table-border-bottom-0">
@@ -298,13 +304,11 @@
                                         class="rounded-circle" width="32px">
                                     <small class="ms-1">{{ $spotTrade->market->name }}</small>
                                 </td>
-
-                                {{-- <td>{{ $spotTrade->takerOrder->type->label() }}</td> --}}
                                 <td>
                                     <span class="ms-1">{{ formatNumberTrimZeros($spotTrade->quantity) }}</span>
                                     <small>{{ $spotTrade->market->base_currency }}</small>
                                 </td>
-                                <td dir="ltr">{{ formatNumberTrimZeros($spotTrade->price) }}
+                                <td dir="ltr">{{ formatNumberTrimZeros($spotTrade->price * $spotTrade->quantity) }}
                                     <small>USDT</small>
                                 </td>
                                 <td>{{ $spotTrade->makerOrder->user->email }}
@@ -328,7 +332,8 @@
                                 </td>
                                 <td dir="ltr">
                                     {{ \App\Helpers\DateFormatter::convertToPersianDate($spotTrade->created_at, '%Y/%m/%d H:i:s') }}<br>
-                                    <small>{{ $spotTrade->created_at->format('Y/m/d') }}</small>
+                                    <small
+                                        class="badge bg-label-secondary">{{ $spotTrade->created_at->format('Y/m/d') }}</small>
                                 </td>
                                 <td>
                                     <span class="badge bg-label-success">
@@ -474,7 +479,9 @@
     </div>
 
 @endsection
+
 @section('vendor-script')
+    @vite(['resources/assets/js/jalalidatepicker.js', 'resources/assets/js/forms-extras.js'])
     <script>
         $(document).ready(function() {
             $('[data-bs-toggle="tooltip"]').tooltip();
@@ -496,8 +503,8 @@
                 }
             });
 
-            // Clear Filters (both basic and advanced)
-            $('#clearFilters, #clearFiltersBasic').click(function() {
+            // Clear Filters
+            $('#clearFilters').click(function() {
                 // Clear all form inputs
                 $('#filterForm')[0].reset();
 
@@ -546,4 +553,43 @@
             @endif
         });
     </script>
+
+    <style>
+        /* Custom responsive improvements */
+        @media (max-width: 768px) {
+            .btn-sm {
+                font-size: 0.75rem;
+                padding: 0.25rem 0.5rem;
+            }
+
+            .table-responsive {
+                font-size: 0.85rem;
+            }
+
+            .form-label {
+                font-size: 0.875rem;
+                margin-bottom: 0.25rem;
+            }
+
+            .card-header h5 {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .btn-sm {
+                font-size: 0.7rem;
+                padding: 0.2rem 0.4rem;
+            }
+
+            .table-responsive {
+                font-size: 0.8rem;
+            }
+
+            .form-control,
+            .form-select {
+                font-size: 0.875rem;
+            }
+        }
+    </style>
 @endsection

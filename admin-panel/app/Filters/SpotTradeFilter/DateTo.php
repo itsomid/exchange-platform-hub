@@ -3,6 +3,7 @@
 namespace App\Filters\SpotTradeFilter;
 
 use App\Filters\FilterContract;
+use App\Helpers\DateFormatter;
 
 class DateTo implements FilterContract
 {
@@ -16,7 +17,9 @@ class DateTo implements FilterContract
     public function handle($value = null): void
     {
         if (!is_null($value)) {
-            $this->query->whereDate('created_at', '<=', $value);
+            // Convert Persian date to Carbon date
+            $carbonDate = DateFormatter::convertPersianToCarbonDate($value);
+            $this->query->whereDate('created_at', '<=', $carbonDate);
         }
     }
 }
