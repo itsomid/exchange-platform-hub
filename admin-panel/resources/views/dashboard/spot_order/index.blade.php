@@ -2,24 +2,6 @@
 @section('title', 'مدیریت سفارشات Spot')
 @section('content')
     {{--    TODO: Complete OTC ORder Card --}}
-    <div class="row g-4 mb-4">
-        <div class="col-sm-12 col-xl-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
-                        <div class="content-left"><span>تعداد سفارشات اسپات</span>
-                            <div class="d-flex align-items-center my-1">
-                                {{--                                <h4 class="mb-0 me-2">{{$spotOrders->total()}}</h4> --}}
-                            </div>
-                        </div>
-                        <span class="badge bg-label-success rounded p-2">
-                            <i class="fa-light fa-swap fa-lg"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Tab Navigation -->
     <div class="card mb-4">
@@ -56,47 +38,214 @@
     <div class="card">
         <div class="card-body">
             <div class="card-title header-elements">
-                <h5 class="m-0 me-2">فیلتر سفارشات اسپات</h5>
+                <h5 class="m-0 me-2">فیلتر پیشرفته سفارشات اسپات</h5>
+                <div class="card-title-elements ms-auto">
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="toggleAdvancedFilter">
+                        <i class="fas fa-chevron-down me-1"></i>
+                        نمایش فیلترهای پیشرفته
+                    </button>
+                </div>
             </div>
-            <form action="{{ route('admin.spot_orders.index') }}" method="get">
+            <form action="{{ route('admin.spot_orders.index') }}" method="get" id="filterForm">
                 <!-- Hidden input to maintain current source -->
                 <input type="hidden" name="source" value="{{ request()->input('source', 'user') }}">
 
-                <div class="row">
-                    <div class="col-md-3 mt-3">
-                        <div class="form-group">
-                            <label class="form-label" for="type">نوع سفارش:</label>
-                            <select name="type" class="form-control" id="type">
-                                <option value=" ">همه</option>
-                                @foreach (\App\Enums\SpotOrderTypeEnum::cases() as $case)
-                                    <option value="{{ $case->name }}"
-                                        {{ request()->has('type') && request()->input('type') == $case->name ? 'selected' : '' }}>
-                                        {{ $case->label() }}
+                <!-- Basic Filters Row -->
+                <div class="row mb-3">
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
+                        <label class="form-label" for="market">بازار:</label>
+                        <select name="market" class="form-select" id="market">
+                            <option value="">همه بازارها</option>
+                            @if (isset($markets))
+                                @foreach ($markets as $market)
+                                    <option value="{{ $market->id }}"
+                                        {{ request()->input('market') == $market->id ? 'selected' : '' }}>
+                                        {{ $market->base_currency }}/{{ $market->quote_currency }}
                                     </option>
                                 @endforeach
-                            </select>
-                        </div>
+                            @endif
+                        </select>
                     </div>
-
-                    @if (request()->input('source', 'user') === 'user')
-                        <div class="col-md-6 mt-3">
-                            <label class="form-label" for="user">کاربر :</label>
-                            <x-user-selection-component input-name="user" multiple="0"
-                                selected="{{ request()->filled('user') && $spotOrders->isNotEmpty() && $spotOrders[0]->user ? $spotOrders[0]->user->id : '' }}"
-                                selected-label="{{ request()->filled('user') && $spotOrders->isNotEmpty() && $spotOrders[0]->user
-                                    ? '(' . $spotOrders[0]->user->id . '#) ' . $spotOrders[0]->user->fullname() . ' | ' . $spotOrders[0]->user->email
-                                    : '' }}"></x-user-selection-component>
-                        </div>
-                    @endif
-
-                    <div class="col-md-2 mt-3">
-                        <div class="form-group"><br>
-                            <button class="btn btn-success text-white" type="submit">
-                                <span>فیلتر</span><i class="fas fa-filter mx-3"></i>
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
+                        <label class="form-label" for="type">نوع سفارش:</label>
+                        <select name="type" class="form-select" id="type">
+                            <option value="">همه</option>
+                            @foreach (\App\Enums\SpotOrderTypeEnum::cases() as $case)
+                                <option value="{{ $case->name }}"
+                                    {{ request()->has('type') && request()->input('type') == $case->name ? 'selected' : '' }}>
+                                    {{ $case->label() }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
+                        <label class="form-label" for="status">وضعیت سفارش:</label>
+                        <select name="status" class="form-select" id="status">
+                            <option value="">همه وضعیت‌ها</option>
+                            @foreach (\App\Enums\SpotOrderStatusEnum::cases() as $case)
+                                <option value="{{ $case->name }}"
+                                    {{ request()->input('status') == $case->name ? 'selected' : '' }}>
+                                    {{ $case->label() }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-lg-3 col-md-12 col-12 mb-2">
+                        <label class="form-label d-none d-lg-block">&nbsp;</label>
+                        <div class="d-flex flex-wrap gap-1 justify-content-start">
+                            <button class="btn btn-success btn-sm flex-fill" type="submit" style="min-width: 70px;">
+                                <i class="fas fa-search me-1"></i>جستجو
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm flex-fill" type="button" id="clearFilters"
+                                style="min-width: 70px;">
+                                <i class="fas fa-times me-1"></i>پاک کردن
+                            </button>
+                            <button class="btn btn-outline-info btn-sm flex-fill" type="button" id="exportFiltered"
+                                style="min-width: 60px;">
+                                <i class="fas fa-download me-1"></i>اکسل
                             </button>
                         </div>
                     </div>
                 </div>
+
+                <!-- Second Row for User and Date Filters -->
+                <div class="row mb-3">
+                    @if (request()->input('source', 'user') === 'user')
+                        <div class="col-lg-6 col-md-6 col-sm-12 mb-2">
+                            <label class="form-label" for="user">کاربر:</label>
+                            <x-user-selection-component input-name="user" multiple="0"
+                                selected="{{ request()->filled('user') ? request()->input('user') : '' }}"
+                                selected-label="{{ request()->filled('user')
+                                    ? '(#' .
+                                            request()->input('user') .
+                                            ') ' .
+                                            \App\Models\User::find(request()->input('user'))?->fullname() .
+                                            ' - ' .
+                                            \App\Models\User::find(request()->input('user'))?->email ??
+                                        'کاربر #' . request()->input('user')
+                                    : '' }}"></x-user-selection-component>
+                        </div>
+                    @endif
+                    <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
+                        <label class="form-label" for="date_from">از تاریخ:</label>
+                        <input type="text" name="date_from" class="form-control" id="date_from" data-jdp
+                            value="{{ request()->input('date_from') }}">
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
+                        <label class="form-label" for="date_to">تا تاریخ:</label>
+                        <input type="text" name="date_to" class="form-control" id="date_to" data-jdp
+                            value="{{ request()->input('date_to') }}">
+                    </div>
+                </div>
+
+                <!-- Advanced Filters Row (Initially Hidden) -->
+                <div class="row mb-3" id="advancedFilters" style="display: none;">
+                    <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
+                        <label class="form-label" for="quantity_min">حداقل مقدار:</label>
+                        <input type="number" name="quantity_min" class="form-control" id="quantity_min"
+                            placeholder="0.00" step="0.00000001" value="{{ request()->input('quantity_min') }}">
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
+                        <label class="form-label" for="quantity_max">حداکثر مقدار:</label>
+                        <input type="number" name="quantity_max" class="form-control" id="quantity_max"
+                            placeholder="0.00" step="0.00000001" value="{{ request()->input('quantity_max') }}">
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
+                        <label class="form-label" for="price_min">حداقل قیمت:</label>
+                        <div class="input-group">
+                            <input type="number" name="price_min" class="form-control" id="price_min"
+                                placeholder="0.00" step="0.01" value="{{ request()->input('price_min') }}">
+                            <span class="input-group-text">USDT</span>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
+                        <label class="form-label" for="price_max">حداکثر قیمت:</label>
+                        <div class="input-group">
+                            <input type="number" name="price_max" class="form-control" id="price_max"
+                                placeholder="0.00" step="0.01" value="{{ request()->input('price_max') }}">
+                            <span class="input-group-text">USDT</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Summary (Show active filters) -->
+                @if (request()->hasAny([
+                        'market',
+                        'type',
+                        'status',
+                        'user',
+                        'date_from',
+                        'date_to',
+                        'price_min',
+                        'price_max',
+                        'quantity_min',
+                        'quantity_max',
+                    ]))
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="alert alert-info d-flex align-items-center">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <span class="me-2">فیلترهای فعال:</span>
+                                <div class="d-flex flex-wrap gap-1">
+                                    @if (request()->filled('market') && isset($markets))
+                                        @php $selectedMarket = $markets->find(request()->input('market')) @endphp
+                                        <span class="badge bg-primary">بازار:
+                                            {{ $selectedMarket ? $selectedMarket->base_currency . '/' . $selectedMarket->quote_currency : request()->input('market') }}</span>
+                                    @endif
+                                    @if (request()->filled('type'))
+                                        @php
+                                            $selectedType = \App\Enums\SpotOrderTypeEnum::tryFrom(
+                                                request()->input('type'),
+                                            );
+                                        @endphp
+                                        <span class="badge bg-primary">نوع:
+                                            {{ $selectedType?->label() ?? request()->input('type') }}</span>
+                                    @endif
+                                    @if (request()->filled('status'))
+                                        @php
+                                            $selectedStatus = \App\Enums\SpotOrderStatusEnum::tryFrom(
+                                                request()->input('status'),
+                                            );
+                                        @endphp
+                                        <span class="badge bg-primary">وضعیت:
+                                            {{ $selectedStatus?->label() ?? request()->input('status') }}</span>
+                                    @endif
+                                    @if (request()->filled('user'))
+                                        @php
+                                            $selectedUser = \App\Models\User::find(request()->input('user'));
+                                        @endphp
+                                        @if ($selectedUser)
+                                            <span class="badge bg-primary">کاربر: (#{{ $selectedUser->id }})
+                                                {{ $selectedUser->fullname() }} - {{ $selectedUser->email }}</span>
+                                        @else
+                                            <span class="badge bg-primary">کاربر: #{{ request()->input('user') }}</span>
+                                        @endif
+                                    @endif
+                                    @if (request()->filled('date_from'))
+                                        <span class="badge bg-primary">از: {{ request()->input('date_from') }}</span>
+                                    @endif
+                                    @if (request()->filled('date_to'))
+                                        <span class="badge bg-primary">تا: {{ request()->input('date_to') }}</span>
+                                    @endif
+                                    @if (request()->filled('price_min'))
+                                        <span class="badge bg-success">قیمت ≥ {{ request()->input('price_min') }}</span>
+                                    @endif
+                                    @if (request()->filled('price_max'))
+                                        <span class="badge bg-success">قیمت ≤ {{ request()->input('price_max') }}</span>
+                                    @endif
+                                    @if (request()->filled('quantity_min'))
+                                        <span class="badge bg-warning">مقدار ≥
+                                            {{ request()->input('quantity_min') }}</span>
+                                    @endif
+                                    @if (request()->filled('quantity_max'))
+                                        <span class="badge bg-warning">مقدار ≤
+                                            {{ request()->input('quantity_max') }}</span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </form>
         </div>
     </div>
@@ -113,13 +262,20 @@
                 </h5>
             </div>
         </div>
-        <div class="table-responsive text-nowrap">
-            <table class="table ">
+        <div class="table-responsive">
+            <table class="table table-striped">
                 <thead>
                     <tr>
-                        <th>
+                        <th class="text-nowrap">
                             @php
-                                $currentParams = request()->except('sortById');
+                                $currentParams = request()->except([
+                                    'sortById',
+                                    'sortByQuantity',
+                                    'sortByPrice',
+                                    'sortByFilledQuantity',
+                                    'sortByCreatedAt',
+                                ]);
+
                                 $currentSortDirection = request()->input('sortById', 'desc');
                                 $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
                             @endphp
@@ -133,12 +289,18 @@
                                 @endif
                             </a>
                         </th>
-                        <th>بازار</th>
-                        <th>سمت</th>
-                        <th>نوع</th>
-                        <th>
+                        <th class="text-nowrap">بازار</th>
+                        <th class="text-nowrap">سمت</th>
+                        <th class="text-nowrap">نوع</th>
+                        <th class="text-nowrap">
                             @php
-                                $currentParams = request()->except('sortByQuantity');
+                                $currentParams = request()->except([
+                                    'sortById',
+                                    'sortByQuantity',
+                                    'sortByPrice',
+                                    'sortByFilledQuantity',
+                                    'sortByCreatedAt',
+                                ]);
                                 $currentSortDirection = request()->input('sortByQuantity', 'desc');
                                 $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
                             @endphp
@@ -152,16 +314,64 @@
                                 @endif
                             </a>
                         </th>
-                        <th>قیمت سفارش (USDT)</th>
-                        @if (request()->input('source', 'user') === 'user')
-                            <th>کاربر</th>
-                        @else
-                            <th>منبع</th>
-                        @endif
-                        <th>مقدار اجرا شده</th>
-                        <th>
+                        <th class="text-nowrap">
                             @php
-                                $currentParams = request()->except('sortByCreatedAt');
+                                $currentParams = request()->except([
+                                    'sortById',
+                                    'sortByQuantity',
+                                    'sortByPrice',
+                                    'sortByFilledQuantity',
+                                    'sortByCreatedAt',
+                                ]);
+                                $currentSortDirection = request()->input('sortByPrice', 'desc');
+                                $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
+                            @endphp
+                            <a href="{{ route('admin.spot_orders.index', array_merge($currentParams, ['sortByPrice' => $newSortDirection])) }}"
+                                class="text-black">
+                                قیمت سفارش (USDT)
+                                @if ($currentSortDirection === 'asc')
+                                    <span><i class="fa-solid fa-arrow-up"></i></span>
+                                @else
+                                    <span><i class="fa-solid fa-arrow-down"></i></span>
+                                @endif
+                            </a>
+                        </th>
+                        @if (request()->input('source', 'user') === 'user')
+                            <th class="text-nowrap">کاربر</th>
+                        @else
+                            <th class="text-nowrap">منبع</th>
+                        @endif
+                        <th class="text-nowrap">
+                            @php
+                                $currentParams = request()->except([
+                                    'sortById',
+                                    'sortByQuantity',
+                                    'sortByPrice',
+                                    'sortByFilledQuantity',
+                                    'sortByCreatedAt',
+                                ]);
+                                $currentSortDirection = request()->input('sortByFilledQuantity', 'desc');
+                                $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
+                            @endphp
+                            <a href="{{ route('admin.spot_orders.index', array_merge($currentParams, ['sortByFilledQuantity' => $newSortDirection])) }}"
+                                class="text-black">
+                                مقدار اجرا شده
+                                @if ($currentSortDirection === 'asc')
+                                    <span><i class="fa-solid fa-arrow-up"></i></span>
+                                @else
+                                    <span><i class="fa-solid fa-arrow-down"></i></span>
+                                @endif
+                            </a>
+                        </th>
+                        <th class="text-nowrap">
+                            @php
+                                $currentParams = request()->except([
+                                    'sortById',
+                                    'sortByQuantity',
+                                    'sortByPrice',
+                                    'sortByFilledQuantity',
+                                    'sortByCreatedAt',
+                                ]);
                                 $currentSortDirection = request()->input('sortByCreatedAt', 'desc');
                                 $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
                             @endphp
@@ -175,8 +385,8 @@
                                 @endif
                             </a>
                         </th>
-                        <th>وضعیت سفارش</th>
-                        <th>جزییات</th>
+                        <th class="text-nowrap">وضعیت سفارش</th>
+                        <th class="text-nowrap">جزییات</th>
                     </tr>
                 </thead>
                 <tbody class="table-border-bottom-0">
@@ -459,6 +669,79 @@
     <script>
         $(document).ready(function() {
             $('[data-bs-toggle="tooltip"]').tooltip();
+
+            // Toggle Advanced Filters
+            $('#toggleAdvancedFilter').click(function() {
+                const advancedFilters = $('#advancedFilters');
+                const button = $(this);
+                const icon = button.find('i');
+
+                if (advancedFilters.is(':visible')) {
+                    advancedFilters.slideUp();
+                    icon.removeClass('fa-chevron-up').addClass('fa-chevron-down');
+                    button.html('<i class="fas fa-chevron-down me-1"></i>نمایش فیلترهای پیشرفته');
+                } else {
+                    advancedFilters.slideDown();
+                    icon.removeClass('fa-chevron-down').addClass('fa-chevron-up');
+                    button.html('<i class="fas fa-chevron-up me-1"></i>مخفی کردن فیلترهای پیشرفته');
+                }
+            });
+
+            // Clear Filters Button
+            $('#clearFilters').click(function() {
+                // Get current source parameter
+                const currentSource = $('input[name="source"]').val();
+
+                // Redirect to clean URL with only source parameter
+                const baseUrl = '{{ route('admin.spot_orders.index') }}';
+                const newUrl = baseUrl + '?source=' + currentSource;
+                window.location.href = newUrl;
+            });
+
+            // Export to Excel Button
+            $('#exportFiltered').click(function() {
+                const button = $(this);
+                const originalText = button.html();
+
+                // Show loading state
+                button.prop('disabled', true);
+                button.html('<i class="fas fa-spinner fa-spin me-1"></i>در حال تولید...');
+
+                // Get current form data
+                const formData = $('#filterForm').serialize();
+
+                // Create export URL
+                const exportUrl = '{{ route('admin.spot_orders.excel-export') }}?' + formData;
+
+                // Create temporary link and trigger download
+                const link = document.createElement('a');
+                link.href = exportUrl;
+                link.download = 'spot_orders_' + new Date().toISOString().slice(0, 10) + '.xlsx';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                // Reset button state after delay
+                setTimeout(function() {
+                    button.prop('disabled', false);
+                    button.html(originalText);
+                }, 2000);
+            });
+
+            // Auto-show advanced filters if any advanced filter has value
+            const advancedInputs = ['quantity_min', 'quantity_max', 'price_min', 'price_max'];
+            let hasAdvancedValue = false;
+
+            advancedInputs.forEach(function(inputName) {
+                if ($('input[name="' + inputName + '"]').val()) {
+                    hasAdvancedValue = true;
+                }
+            });
+
+            if (hasAdvancedValue) {
+                $('#advancedFilters').show();
+                $('#toggleAdvancedFilter').html('<i class="fas fa-chevron-up me-1"></i>مخفی کردن فیلترهای پیشرفته');
+            }
         });
     </script>
 @endsection
