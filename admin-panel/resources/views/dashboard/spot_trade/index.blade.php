@@ -372,7 +372,7 @@
 
 
                                                         <div dir="ltr" class="text-end">
-                                                            <span class="fw-bold">Maker:</span>
+                                                            <span class="fw-bold">Maker: </span>
                                                             <span>{{ $spotTrade->makerOrder->user->email }}
                                                                 ({{ $spotTrade->makerOrder->user->username }})
                                                             </span>
@@ -384,7 +384,7 @@
 
 
                                                         <div dir="ltr" class="mt-2 text-end">
-                                                            <span class="fw-bold">Taker:</span>
+                                                            <span class="fw-bold">Taker: </span>
                                                             <span>{{ $spotTrade->takerOrder->user->email }}
                                                                 ({{ $spotTrade->takerOrder->user->username }})
                                                             </span>
@@ -429,22 +429,20 @@
                                                             <small
                                                                 class="me-2">({{ formatNumberTrimZeros($spotTrade->maker_commission_value) }}
                                                                 USDT)</small>
+                                                            <small class="me-2">({{ formatNumberTrimZeros($spotTrade->commission->maker_commission_percentage) }}%)</small>
                                                         </div>
                                                     </div>
                                                     <div
                                                         class="d-flex align-items-sm-center justify-content-between border-bottom py-4 mb-4">
                                                         <h6 class="m-0 mb-2 mb-md-0 me-12">کارمزد Taker</h6>
                                                         <div class="d-flex flex-wrap gap-1 font-number" dir="ltr">
-                                                            @if ($spotTrade->takerSide === \App\Enums\SpotOrderSideEnum::BUY->value)
-                                                                <span>{{ formatNumberTrimZeros($spotTrade->commission->taker_commission_amount) }}
-                                                                    {{ $spotTrade->market->base_currency }}</span>
-                                                            @else
-                                                                <span>{{ formatNumberTrimZeros($spotTrade->commission->taker_commission_amount) }}
-                                                                    {{ $spotTrade->market->quote_currency }}</span>
-                                                            @endif
-                                                            <br>
-                                                            <small>({{ formatNumberTrimZeros($spotTrade->taker_commission_value) }}
+
+                                                            <span class="text-black">{{ formatNumberTrimZeros($spotTrade->commission->taker_commission_amount) }}
+                                                                    {{ $spotTrade->commission->taker_commission_currency }}</span>
+
+                                                            <small class="me-2">({{ formatNumberTrimZeros($spotTrade->taker_commission_value) }}
                                                                 USDT)</small>
+                                                            <small class="me-2">({{ formatNumberTrimZeros($spotTrade->commission->taker_commission_percentage) }}%)</small>
                                                         </div>
                                                     </div>
                                                     <div
