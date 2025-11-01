@@ -205,11 +205,17 @@
                     <tr>
                         <th class="text-nowrap">
                             @php
-                                $currentParams = request()->except('sortById');
+                                $currentParams = request()->except([
+                                    'sortById',
+                                    'sortByQuantity',
+                                    'sortByTradeValue',
+                                    'sortByCreatedAt',
+                                ]);
+
                                 $currentSortDirection = request()->input('sortById', 'desc');
                                 $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
                             @endphp
-                            <a href="{{ route('admin.otc_orders.index', array_merge($currentParams, ['sortById' => $newSortDirection])) }}"
+                            <a href="{{ route('admin.spot_trades.index', array_merge($currentParams, ['sortById' => $newSortDirection])) }}"
                                 class="text-black">
                                 ID
                                 @if ($currentSortDirection === 'asc')
@@ -223,6 +229,7 @@
                         <th class="text-nowrap">
                             @php
                                 $currentParams = request()->except([
+                                    'sortById',
                                     'sortByQuantity',
                                     'sortByTradeValue',
                                     'sortByCreatedAt',
@@ -243,6 +250,7 @@
                         <th class="text-nowrap">
                             @php
                                 $currentParams = request()->except([
+                                    'sortById',
                                     'sortByQuantity',
                                     'sortByTradeValue',
                                     'sortByCreatedAt',
@@ -269,6 +277,7 @@
                         <th class="text-nowrap">
                             @php
                                 $currentParams = request()->except([
+                                    'sortById',
                                     'sortByQuantity',
                                     'sortByTradeValue',
                                     'sortByCreatedAt',
@@ -429,7 +438,8 @@
                                                             <small
                                                                 class="me-2">({{ formatNumberTrimZeros($spotTrade->maker_commission_value) }}
                                                                 USDT)</small>
-                                                            <small class="me-2">({{ formatNumberTrimZeros($spotTrade->commission->maker_commission_percentage) }}%)</small>
+                                                            <small
+                                                                class="me-2">({{ formatNumberTrimZeros($spotTrade->commission->maker_commission_percentage) }}%)</small>
                                                         </div>
                                                     </div>
                                                     <div
@@ -437,12 +447,15 @@
                                                         <h6 class="m-0 mb-2 mb-md-0 me-12">کارمزد Taker</h6>
                                                         <div class="d-flex flex-wrap gap-1 font-number" dir="ltr">
 
-                                                            <span class="text-black">{{ formatNumberTrimZeros($spotTrade->commission->taker_commission_amount) }}
-                                                                    {{ $spotTrade->commission->taker_commission_currency }}</span>
+                                                            <span
+                                                                class="text-black">{{ formatNumberTrimZeros($spotTrade->commission->taker_commission_amount) }}
+                                                                {{ $spotTrade->commission->taker_commission_currency }}</span>
 
-                                                            <small class="me-2">({{ formatNumberTrimZeros($spotTrade->taker_commission_value) }}
+                                                            <small
+                                                                class="me-2">({{ formatNumberTrimZeros($spotTrade->taker_commission_value) }}
                                                                 USDT)</small>
-                                                            <small class="me-2">({{ formatNumberTrimZeros($spotTrade->commission->taker_commission_percentage) }}%)</small>
+                                                            <small
+                                                                class="me-2">({{ formatNumberTrimZeros($spotTrade->commission->taker_commission_percentage) }}%)</small>
                                                         </div>
                                                     </div>
                                                     <div
