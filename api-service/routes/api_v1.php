@@ -3,11 +3,11 @@
 use App\Http\Controllers\V1\Currency\ConfigController;
 use App\Http\Controllers\V1\Wallet\WalletController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Http\Request;
 use App\Http\Controllers\V1\Stock\StockContractController;
 use App\Http\Controllers\V1\Stock\StockTradeController;
 use App\Http\Controllers\V1\Stock\StockController;
+use App\Http\Middleware\FinancialWithdrawalBlockMiddleware;
+use App\Http\Middleware\FinancialTradeBlockMiddleware;
 
 
 
@@ -45,7 +45,7 @@ Route::prefix('/wallets')->group(function () {
 
     Route::get('/deposits', [\App\Http\Controllers\V1\Wallet\DepositController::class, 'lists'])->name('wallets.deposits');
     Route::get('/withdrawals', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, 'lists'])->name('wallets.withdrawals');
-    Route::post('/withdrawal', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, '__invoke'])->name('wallets.withdraw')->middleware([\App\Http\Middleware\FinancialWithdrawalBlockMiddleware::class]);
+    Route::post('/withdrawal', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, '__invoke'])->name('wallets.withdraw')->middleware([FinancialWithdrawalBlockMiddleware::class]);
 
     Route::get('/check-withdrawal-limit', [\App\Http\Controllers\V1\Wallet\WithdrawController::class, 'checkWithdrawalLimit']);
 
@@ -67,8 +67,8 @@ Route::prefix('/otc')->group(function () {
     // get-markets
     Route::get('/markets', [\App\Http\Controllers\V1\OTC\MarketController::class, 'lists'])->name('otc.markets')->withoutMiddleware(['auth:sanctum', 'verified']);
 
-    Route::post('/buy', [\App\Http\Controllers\V1\OTC\BuyController::class, 'create'])->name('otc.buy')->middleware(['throttle:' . config('bitexroom.otc.buy_attempts.max_attempts') . ',' . config('bitexroom.otc.buy_attempts.minutes'), \App\Http\Middleware\FinancialTradeBlockMiddleware::class]);
-    Route::post('/sell', [\App\Http\Controllers\V1\OTC\SellController::class, 'create'])->name('otc.sell')->middleware(['throttle:' . config('bitexroom.otc.sell_attempts.max_attempts') . ',' . config('bitexroom.otc.sell_attempts.minutes'), \App\Http\Middleware\FinancialTradeBlockMiddleware::class]);
+    Route::post('/buy', [\App\Http\Controllers\V1\OTC\BuyController::class, 'create'])->name('otc.buy')->middleware(['throttle:' . config('bitexroom.otc.buy_attempts.max_attempts') . ',' . config('bitexroom.otc.buy_attempts.minutes'), FinancialTradeBlockMiddleware::class]);
+    Route::post('/sell', [\App\Http\Controllers\V1\OTC\SellController::class, 'create'])->name('otc.sell')->middleware(['throttle:' . config('bitexroom.otc.sell_attempts.max_attempts') . ',' . config('bitexroom.otc.sell_attempts.minutes'), FinancialTradeBlockMiddleware::class]);
 
     Route::get('/fee', [\App\Http\Controllers\V1\OTC\SettingController::class, 'fee']);
 
@@ -76,7 +76,7 @@ Route::prefix('/otc')->group(function () {
 });
 
 Route::prefix('authorization')->group(function () {
-    Route::post('/otp-code/{action}', [\App\Http\Controllers\V1\Authorization\EmailOTPController::class, 'send'])->middleware(['throttle:1,1', \App\Http\Middleware\FinancialWithdrawalBlockMiddleware::class]);
+    Route::post('/otp-code/{action}', [\App\Http\Controllers\V1\Authorization\EmailOTPController::class, 'send'])->middleware(['throttle:1,1', FinancialWithdrawalBlockMiddleware::class]);
 });
 
 // Notifications
@@ -103,7 +103,7 @@ Route::prefix('/spot')->group(function () {
 
     Route::get('/markets/state/{marketId}', [\App\Http\Controllers\V1\Spot\MarketController::class, 'getState']);
     Route::prefix('/orders')->group(function () {
-        Route::post('/', [\App\Http\Controllers\V1\Spot\OrderController::class, 'store']);
+        Route::post('/', [\App\Http\Controllers\V1\Spot\OrderController::class, 'store'])->middleware([FinancialTradeBlockMiddleware::class]);
         Route::get('/', [\App\Http\Controllers\V1\Spot\OrderController::class, 'lists']);
         Route::get('/{order}', [\App\Http\Controllers\V1\Spot\OrderController::class, 'show']);
         Route::post('/cancel/{order}', [\App\Http\Controllers\V1\Spot\OrderController::class, 'cancel']);
