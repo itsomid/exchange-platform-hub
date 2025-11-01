@@ -285,6 +285,15 @@
                 </tbody>
             </table>
         </div>
+        
+        <!-- Pagination Links -->
+        @if($contracts->hasPages())
+            <div class="card-footer">
+                <div class="d-flex justify-content-center">
+                    {{ $contracts->appends(request()->query())->links() }}
+                </div>
+            </div>
+        @endif
     </div>
 
 @endsection

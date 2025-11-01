@@ -36,18 +36,32 @@ class StockContractController extends Controller
 
     public function index()
     {
-        $contracts = StockContract::with(['user', 'stock', 'transactions'])->orderBy('created_at', 'desc')->get();
-        // Dashboard statistics
-        $totalContracts = $contracts->count();
+        $query = StockContract::with(['user', 'stock', 'transactions']);
 
-        $activeAmount = $contracts->where('contract_status', StockContractStatusEnum::ACTIVE)->sum('total_value');
-        $soldContracts = $contracts->where('contract_status', StockContractStatusEnum::SOLD)->count();
-        $canceledContracts = $contracts->where('contract_status', StockContractStatusEnum::CANCELED)->count();
+        // Handle sorting by created_at
+        if (request()->has('sortByCreatedAt')) {
+            $sortDirection = request()->input('sortByCreatedAt', 'desc');
+            $query->orderBy('created_at', $sortDirection);
+        } else {
+            // Default sorting by created_at desc
+            $query->orderBy('created_at', 'desc');
+        }
 
-        $soldAmount = $contracts->where('contract_status', StockContractStatusEnum::SOLD)->sum('total_value');
-        $canceledAmount = $contracts->where('contract_status', StockContractStatusEnum::CANCELED)->sum('total_value');
+        // Get paginated contracts
+        $contracts = $query->paginate(50);
 
-        $cancellationSoldFees = $contracts->filter(function ($contract) {
+        // Calculate statistics from all contracts (not just paginated ones)
+        $allContracts = StockContract::all();
+        $totalContracts = $allContracts->count();
+
+        $activeAmount = $allContracts->where('contract_status', StockContractStatusEnum::ACTIVE)->sum('total_value');
+        $soldContracts = $allContracts->where('contract_status', StockContractStatusEnum::SOLD)->count();
+        $canceledContracts = $allContracts->where('contract_status', StockContractStatusEnum::CANCELED)->count();
+
+        $soldAmount = $allContracts->where('contract_status', StockContractStatusEnum::SOLD)->sum('total_value');
+        $canceledAmount = $allContracts->where('contract_status', StockContractStatusEnum::CANCELED)->sum('total_value');
+
+        $cancellationSoldFees = $allContracts->filter(function ($contract) {
             return in_array($contract->contract_status, [StockContractStatusEnum::SOLD, StockContractStatusEnum::CANCELED]);
         })->sum('cancellation_fee');
 
