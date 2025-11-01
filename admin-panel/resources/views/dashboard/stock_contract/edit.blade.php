@@ -38,7 +38,7 @@
                     <input type="number" name="amount" id="amount"
                         class="form-control @error('amount') is-invalid @enderror"
                         value="{{ old('amount', $stockContract->amount) }}" placeholder="تعداد سهم را وارد کنید"
-                        min="1" disabled="1" required>
+                        min="0.001" disabled="1" required>
                     @error('amount')
                         <small class="text-danger">{{ $message }}</small>
                     @enderror

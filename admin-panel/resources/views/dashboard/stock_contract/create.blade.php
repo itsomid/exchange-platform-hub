@@ -8,19 +8,16 @@
                 @csrf
                 <div class="col-md-6">
                     <label class="form-label mt-5" for="user_id">کاربر :</label>
-                    <x-user-selection-component
-                        inputName="user_id"
-                        multiple="0"
-                        selected=""
-                        selected-label="">
+                    <x-user-selection-component inputName="user_id" multiple="0" selected="" selected-label="">
                     </x-user-selection-component>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label mt-5" for="stock_id">سهام :</label>
-                    <select name="stock_id" id="stock_id" class="form-control @error('stock_id') is-invalid @enderror" required>
+                    <select name="stock_id" id="stock_id" class="form-control @error('stock_id') is-invalid @enderror"
+                        required>
                         <option value="">انتخاب سهام</option>
-                        @foreach($stocks as $stock)
+                        @foreach ($stocks as $stock)
                             <option value="{{ $stock->id }}" {{ old('stock_id') == $stock->id ? 'selected' : '' }}>
                                 {{ $stock->name }} - {{ number_format($stock->value) }} USDT
                             </option>
@@ -33,15 +30,9 @@
 
                 <div class="col-md-6 mt-3">
                     <label class="form-label" for="amount">تعداد سهم:</label>
-                    <input type="number"
-                           name="amount"
-                           id="amount"
-                           class="form-control @error('amount') is-invalid @enderror"
-                           value="{{ old('amount') }}"
-                           placeholder="تعداد سهم را وارد کنید"
-                           min="1"
-                           step="1"
-                           required>
+                    <input type="number" name="amount" id="amount"
+                        class="form-control @error('amount') is-invalid @enderror" value="{{ old('amount') }}"
+                        placeholder="تعداد سهم را وارد کنید" min="1" step="0.001" required>
                     @error('amount')
                         <small class="text-danger">{{ $message }}</small>
                     @enderror
@@ -49,7 +40,8 @@
 
                 <div class="col-md-6 mt-3">
                     <label class="form-label" for="contract_status">وضعیت قرارداد:</label>
-                    <select name="contract_status" id="contract_status" class="form-control @error('contract_status') is-invalid @enderror" required>
+                    <select name="contract_status" id="contract_status"
+                        class="form-control @error('contract_status') is-invalid @enderror" required>
                         <option value="active" {{ old('contract_status') == 'active' ? 'selected' : '' }}>فعال</option>
                     </select>
                     @error('contract_status')
@@ -59,11 +51,8 @@
 
                 <div class="col-md-12 mt-3">
                     <label class="form-label" for="description">توضیحات:</label>
-                    <textarea name="description"
-                              id="description"
-                              class="form-control @error('description') is-invalid @enderror"
-                              rows="3"
-                              placeholder="توضیحات قرارداد را وارد کنید">{{ old('description') }}</textarea>
+                    <textarea name="description" id="description" class="form-control @error('description') is-invalid @enderror"
+                        rows="3" placeholder="توضیحات قرارداد را وارد کنید">{{ old('description') }}</textarea>
                     @error('description')
                         <small class="text-danger">{{ $message }}</small>
                     @enderror
