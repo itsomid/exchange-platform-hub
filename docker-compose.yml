@@ -112,19 +112,19 @@ services:
       - laravel
 
   # MySQL Database for API System
-#  api-system-database:
-#    image: mysql:latest
-#    container_name: api-system-database
-#    restart: unless-stopped
-#    tty: true
-#    ports:
-#      - 3308:3306
-#    env_file:
-#      - ./env/api_system_mysql.env
-#    volumes:
-#      - api_system_dbdata:/var/lib/mysql
-#    networks:
-#      - laravel
+  api-system-database:
+    image: mysql:latest
+    container_name: api-system-db
+    restart: unless-stopped
+    tty: true
+    ports:
+      - 3308:3306
+    env_file:
+      - ./env/api_system_mysql.env
+    volumes:
+      - api_system_dbdata:/var/lib/mysql
+    networks:
+      - laravel
 
   # Laravel Cron Jobs
   admin-cron:
