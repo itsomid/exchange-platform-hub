@@ -296,6 +296,38 @@
                 </ul>
             </li>
         @endcanany
+
+        <li class="menu-header small text-uppercase">
+            <span class="menu-header-text">مدیریت API</span>
+        </li>
+
+        <li class="menu-item @if (request()->is('admin/api-systems*')) active open @endif">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <i class="menu-icon fa-regular fa-code"></i>
+                <div>سیستم‌های API</div>
+            </a>
+            <ul class="menu-sub">
+                <li class="menu-item @if (request()->is('admin/api-systems') && !request()->is('admin/api-systems/create')) active @endif">
+                    <a href="{{ route('admin.api-system.index') }}" class="menu-link">
+                        <i class="menu-icon fa-light fa-list fa-sm"></i>
+                        <div>لیست سیستم‌ها</div>
+                    </a>
+                </li>
+                <li class="menu-item @if (request()->is('admin/api-systems/create')) active @endif">
+                    <a href="{{ route('admin.api-system.create') }}" class="menu-link">
+                        <i class="menu-icon fa-light fa-plus fa-sm"></i>
+                        <div>افزودن سیستم جدید</div>
+                    </a>
+                </li>
+                <li class="menu-item @if (request()->is('admin/api-systems/statistics')) active @endif">
+                    <a href="{{ route('admin.api-system.statistics') }}" class="menu-link">
+                        <i class="menu-icon fa-light fa-chart-bar fa-sm"></i>
+                        <div>آمار و گزارشات</div>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
         @canany(['report'])
             <li class="menu-header small text-uppercase">
                 <span class="menu-header-text">گزارشات</span>

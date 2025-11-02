@@ -68,6 +68,33 @@ return [
             ]) : [],
         ],
 
+        'api_system_db' => [
+            'driver' => 'mysql',
+            'dump' => [
+                'use_single_transaction' => true,
+                'timeout' => 300,
+                'extra_options' => '--ssl-mode=DISABLED --no-tablespaces',
+                'add_extra_option' => '--ssl=0 --default-auth=mysql_native_password',
+            ],
+            'url' => env('API_SYSTEM_DATABASE_URL'),
+            'host' => env('API_SYSTEM_DB_HOST', '127.0.0.1'),
+            'port' => env('API_SYSTEM_DB_PORT', '3306'),
+            'database' => env('API_SYSTEM_DB_DATABASE', 'api_system'),
+            'username' => env('API_SYSTEM_DB_USERNAME', 'forge'),
+            'password' => env('API_SYSTEM_DB_PASSWORD', ''),
+            'unix_socket' => env('API_SYSTEM_DB_SOCKET', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
+            ]) : [],
+        ],
+
         'pgsql' => [
             'driver' => 'pgsql',
             'url' => env('DATABASE_URL'),

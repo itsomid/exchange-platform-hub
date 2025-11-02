@@ -42,6 +42,9 @@ use App\Repositories\UserRepository;
 use App\Repositories\WalletChainRepository;
 use App\Repositories\WalletRepository;
 use App\Repositories\WithdrawalRepository;
+use App\Repositories\ApiRequestRepository;
+use App\Repositories\Interfaces\ApiRequestRepositoryInterface;
+
 use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
@@ -72,7 +75,7 @@ class RepositoryServiceProvider extends ServiceProvider
         app()->bind(SpotTradeRepositoryInterface::class, SpotTradeRepository::class);
         app()->bind(ExchangeRepositoryInterface::class, ExchangeRepository::class);
         app()->bind(StockRepositoryInterface::class, StockRepository::class);
-
+        app()->bind(ApiRequestRepositoryInterface::class, ApiRequestRepository::class);
     }
 
     /**

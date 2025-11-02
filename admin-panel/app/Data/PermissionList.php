@@ -48,6 +48,7 @@ class PermissionList
             ['deposit', 'مشاهده لیست واریزی ها'],
             ['withdrawal', 'مشاهده لیست برداشت ها'],
             ['stock', 'مدیریت معجزه قرن'],
+            ['api-system','مدیریت سیستم API'],
 
             ['report','لیست گزارش ها'],
             ['view-logs','لیست ارورها'],

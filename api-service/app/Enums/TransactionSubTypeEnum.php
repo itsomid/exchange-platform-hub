@@ -19,4 +19,5 @@ enum TransactionSubTypeEnum: string
     case REF_EXCHANGE_WITHDRAWAL = 'ref_exchange_withdrawal';
     case REF_EXCHANGE_WITHDRAWAL_FEE = 'ref_exchange_withdrawal_fee';
     case STOCK = 'stock';
+    case API_SYSTEM = 'api_system';
 }

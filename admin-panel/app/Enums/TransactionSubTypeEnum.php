@@ -21,6 +21,7 @@ enum TransactionSubTypeEnum: string
     case REF_EXCHANGE_BUY_FEE = 'ref_exchange_buy_fee';
     case REF_EXCHANGE_WITHDRAWAL = 'ref_exchange_withdrawal';
     case REF_EXCHANGE_WITHDRAWAL_FEE = 'ref_exchange_withdrawal_fee';
+    case API_SYSTEM = 'api_system';
 
 
     const array TYPE_LABEL = [
@@ -41,6 +42,7 @@ enum TransactionSubTypeEnum: string
         self::REF_EXCHANGE_WITHDRAWAL->value => 'برداشت از صرافی مرجع',
         self::REF_EXCHANGE_WITHDRAWAL_FEE->value => 'فی برداشت از صرافی مرجع',
         self::STOCK->value => 'سهام',
+        self::API_SYSTEM->value => 'سیستم API',
     ];
 
     const array TYPE_COLOR = [
@@ -61,6 +63,7 @@ enum TransactionSubTypeEnum: string
         self::REF_EXCHANGE_WITHDRAWAL->value => 'info',
         self::REF_EXCHANGE_WITHDRAWAL_FEE->value => 'info',
         self::STOCK->value => 'warning',
+        self::API_SYSTEM->value => 'info',
     ];
 
     public function label(): string

@@ -27,6 +27,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
             Route::middleware(['api'])->prefix('/api/bot/v1')
                 ->group(base_path('routes/bot_v1.php'));
+
+            Route::middleware(['api'])->prefix('/api/external/v1')
+                ->group(base_path('routes/external_v1.php'));
         }
     )
     ->withBroadcasting(
@@ -42,6 +45,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 'jwt.auth' => \App\Http\Middleware\JwtAuthMiddleware::class,
                 'verified' => \App\Http\Middleware\CustomEnsureEmailIsVerified::class,
                 'basic.auth' => \App\Http\Middleware\BasicAuthMiddleware::class,
+                'api.system.auth' => \App\Http\Middleware\ApiSystemAuthMiddleware::class,
             ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -9,5 +9,6 @@
 ])
 
 @vite(['resources/assets/js/main.js'])
+@vite(['resources/assets/js/animated-tooltip.js'])
 @yield('vendor-script')
 @stack('scripts')
