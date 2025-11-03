@@ -88,23 +88,71 @@ class InMemoryOrderBookService
      */
     public function getMarketOrders(int $marketId, SpotOrderSideEnum $side, int $limit = 100): array
     {
+        \Log::info('[InMemoryOrderBookService] getMarketOrders called', [
+            'marketId' => $marketId,
+            'side' => $side->value,
+            'limit' => $limit
+        ]);
+
         $redis = $this->getRedisConnection();
         $marketKey = $this->getMarketOrdersKey($marketId, $side);
         
+        \Log::info('[InMemoryOrderBookService] Redis key generated', [
+            'marketKey' => $marketKey,
+            'marketId' => $marketId,
+            'side' => $side->value
+        ]);
+
+        // Check if key exists in Redis
+        $keyExists = $redis->exists($marketKey);
+        \Log::info('[InMemoryOrderBookService] Redis key existence check', [
+            'marketKey' => $marketKey,
+            'exists' => $keyExists
+        ]);
+
         // For BUY orders: get highest prices first (DESC)
         // For SELL orders: get lowest prices first (ASC)
         $orderIds = $side === SpotOrderSideEnum::BUY
             ? $redis->zrevrange($marketKey, 0, $limit - 1)
             : $redis->zrange($marketKey, 0, $limit - 1);
         
+        \Log::info('[InMemoryOrderBookService] Order IDs retrieved from Redis', [
+            'marketKey' => $marketKey,
+            'side' => $side->value,
+            'orderIds' => $orderIds,
+            'count' => count($orderIds)
+        ]);
+
         $orders = [];
+        $processedCount = 0;
+        $openOrdersCount = 0;
+        
         foreach ($orderIds as $orderId) {
+            $processedCount++;
             $order = $this->getOrder($orderId);
+            
+            \Log::debug('[InMemoryOrderBookService] Processing order', [
+                'orderId' => $orderId,
+                'orderFound' => $order !== null,
+                'orderStatus' => $order ? $order->status->value : null,
+                'processedCount' => $processedCount
+            ]);
+            
             if ($order && $order->status === SpotOrderStatusEnum::OPEN) {
                 $orders[] = $order;
+                $openOrdersCount++;
             }
         }
         
+        \Log::info('[InMemoryOrderBookService] getMarketOrders completed', [
+            'marketId' => $marketId,
+            'side' => $side->value,
+            'totalOrderIds' => count($orderIds),
+            'processedOrders' => $processedCount,
+            'openOrders' => $openOrdersCount,
+            'finalOrdersCount' => count($orders)
+        ]);
+
         return $orders;
     }
 

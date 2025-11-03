@@ -43,8 +43,19 @@ class HybridOrderBookService
         // Get Redis asks
         $redisAsks = $this->inMemoryOrderBook->getMarketOrders($marketId, SpotOrderSideEnum::SELL, $limit);
 
+        \Log::info('[HybridOrderBookService] Retrieved asks data', [
+            'marketId' => $marketId,
+            'dbAsks' => count($dbAsks),
+            'redisAsks' => count($redisAsks)
+        ]);
+
         // Combine and group asks by price
         $asksGrouped = $this->combineAndGroupOrders($dbAsks, $redisAsks, 'asc', $limit);
+
+        \Log::info('[HybridOrderBookService] Asks grouped', [
+            'marketId' => $marketId,
+            'asksGroupedCount' => count($asksGrouped)
+        ]);
 
         // Get bids (buy orders) from both sources
         $dbBids = SpotOrder::query()
@@ -60,9 +71,37 @@ class HybridOrderBookService
 
         // Get Redis bids
         $redisBids = $this->inMemoryOrderBook->getMarketOrders($marketId, SpotOrderSideEnum::BUY, $limit);
-        logger()->info('Redis bids', $redisBids);
+        
+        \Log::info('[HybridOrderBookService] Retrieved bids data', [
+            'marketId' => $marketId,
+            'dbBids' => count($dbBids),
+            'redisBids' => count($redisBids),
+            'redisBidsData' => array_map(function($bid) {
+                return [
+                    'id' => $bid->id,
+                    'price' => $bid->price,
+                    'quantity' => $bid->quantity,
+                    'status' => $bid->status->value
+                ];
+            }, $redisBids)
+        ]);
+        
         // Combine and group bids by price
         $bidsGrouped = $this->combineAndGroupOrders($dbBids, $redisBids, 'desc', $limit);
+
+        \Log::info('[HybridOrderBookService] Bids grouped', [
+            'marketId' => $marketId,
+            'bidsGroupedCount' => count($bidsGrouped),
+            'bidsGroupedData' => $bidsGrouped
+        ]);
+
+        \Log::info('[HybridOrderBookService] getLatestOrderBook completed', [
+            'marketId' => $marketId,
+            'finalResult' => [
+                'asks' => count($asksGrouped),
+                'bids' => count($bidsGrouped)
+            ]
+        ]);
 
         return [
             'asks' => $asksGrouped,
@@ -108,12 +147,28 @@ class HybridOrderBookService
      */
     private function combineAndGroupOrders($dbOrders, array $redisOrders, string $sortDirection, int $limit): array
     {
+        \Log::info('[HybridOrderBookService] combineAndGroupOrders started', [
+            'dbOrdersCount' => count($dbOrders),
+            'redisOrdersCount' => count($redisOrders),
+            'sortDirection' => $sortDirection,
+            'limit' => $limit
+        ]);
+
         $grouped = [];
 
         // Process database orders
+        $dbProcessedCount = 0;
         foreach ($dbOrders as $order) {
+            $dbProcessedCount++;
             $price = (string) $order->price;
             $priceKey = $this->normalizePriceKey($price);
+
+            \Log::debug('[HybridOrderBookService] Processing DB order', [
+                'orderPrice' => $price,
+                'priceKey' => $priceKey,
+                'totalQuantity' => $order->total_quantity ?? '0',
+                'processedCount' => $dbProcessedCount
+            ]);
 
             if (!isset($grouped[$priceKey])) {
                 $grouped[$priceKey] = [
@@ -125,10 +180,30 @@ class HybridOrderBookService
             $grouped[$priceKey]['quantity'] = Math::add($grouped[$priceKey]['quantity'], $order->total_quantity ?? '0');
         }
 
+        \Log::info('[HybridOrderBookService] DB orders processed', [
+            'processedCount' => $dbProcessedCount,
+            'groupedPriceLevels' => count($grouped)
+        ]);
+
         // Process Redis orders
+        $redisProcessedCount = 0;
         foreach ($redisOrders as $order) {
+            $redisProcessedCount++;
             $price = (string) $order->price;
             $priceKey = $this->normalizePriceKey($price);
+
+            // Calculate remaining quantity
+            $remainingQty = Math::sub($order->quantity, $order->filled_quantity);
+
+            \Log::debug('[HybridOrderBookService] Processing Redis order', [
+                'orderId' => $order->id,
+                'orderPrice' => $price,
+                'priceKey' => $priceKey,
+                'quantity' => $order->quantity,
+                'filledQuantity' => $order->filled_quantity,
+                'remainingQty' => $remainingQty,
+                'processedCount' => $redisProcessedCount
+            ]);
 
             if (!isset($grouped[$priceKey])) {
                 $grouped[$priceKey] = [
@@ -137,19 +212,33 @@ class HybridOrderBookService
                     'total' => '0',
                 ];
             }
-            // Calculate remaining quantity
-            $remainingQty = Math::sub($order->quantity, $order->filled_quantity);
+            
             $grouped[$priceKey]['quantity'] = Math::add($grouped[$priceKey]['quantity'], $remainingQty);
         }
 
+        \Log::info('[HybridOrderBookService] Redis orders processed', [
+            'processedCount' => $redisProcessedCount,
+            'finalGroupedPriceLevels' => count($grouped),
+            'groupedData' => $grouped
+        ]);
+
         // Calculate total (cumulative) and convert to array
         $result = array_values($grouped);
+
+        \Log::info('[HybridOrderBookService] Before sorting', [
+            'resultCount' => count($result),
+            'sortDirection' => $sortDirection
+        ]);
 
         // Sort by price
         usort($result, function ($a, $b) use ($sortDirection) {
             $comp = Math::comp($a['price'], $b['price']);
             return $sortDirection === 'asc' ? $comp : -$comp;
         });
+
+        \Log::info('[HybridOrderBookService] After sorting', [
+            'resultCount' => count($result)
+        ]);
 
         // Calculate cumulative total and limit
         $cumulative = '0';
@@ -162,6 +251,11 @@ class HybridOrderBookService
             $level['total'] = $cumulative;
             $limited[] = (object) $level;
         }
+
+        \Log::info('[HybridOrderBookService] combineAndGroupOrders completed', [
+            'finalCount' => count($limited),
+            'finalData' => $limited
+        ]);
 
         return $limited;
     }

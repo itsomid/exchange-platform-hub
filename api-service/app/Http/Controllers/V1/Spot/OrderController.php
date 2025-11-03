@@ -137,9 +137,31 @@ class OrderController extends Controller
 
     public function getOrderBooks(int $marketId)
     {
-        return new OrderBookResource($this->spotService->getLatestOrderBook(
+        \Log::info('[OrderController] getOrderBooks API called', [
+            'marketId' => $marketId,
+            'limit' => config('spot.order_book_limit_count'),
+            'request_id' => request()->header('X-Request-ID') ?? uniqid(),
+            'user_agent' => request()->header('User-Agent'),
+            'ip' => request()->ip()
+        ]);
+
+        $startTime = microtime(true);
+        
+        $orderBook = $this->spotService->getLatestOrderBook(
             marketId: $marketId,
             limit: config('spot.order_book_limit_count')
-        ));
+        );
+
+        $executionTime = round((microtime(true) - $startTime) * 1000, 2);
+
+        \Log::info('[OrderController] getOrderBooks API completed', [
+            'marketId' => $marketId,
+            'executionTimeMs' => $executionTime,
+            'asksCount' => count($orderBook['asks'] ?? []),
+            'bidsCount' => count($orderBook['bids'] ?? []),
+            'request_id' => request()->header('X-Request-ID') ?? uniqid()
+        ]);
+
+        return new OrderBookResource($orderBook);
     }
 }
