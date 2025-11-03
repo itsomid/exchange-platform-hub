@@ -9,8 +9,8 @@ volumes:
     driver: local
   storage_api:
     driver: local
-#  api_system_dbdata:
-#    driver: local
+  api_system_dbdata:
+    driver: local
 
 services:
   # NGINX for Admin Panel
