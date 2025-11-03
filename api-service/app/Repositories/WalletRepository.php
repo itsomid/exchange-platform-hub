@@ -129,7 +129,8 @@ class WalletRepository implements WalletRepositoryInterface
 
     public function decreaseLockedBalance(int $user_id, string $quoteCurrency, string $totalTradeValue): void
     {
-        $wallet = $this->getOrCreateWallet($user_id, $quoteCurrency);
+        // Use pessimistic lock to avoid race conditions on concurrent decrements
+        $wallet = $this->getWalletWithLock($quoteCurrency, $user_id);
         $newLockedBalance = Math::sub($wallet->locked_balance, $totalTradeValue);
         
         // Critical validation: prevent negative locked_balance
