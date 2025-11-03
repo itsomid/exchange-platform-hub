@@ -9,8 +9,6 @@ volumes:
     driver: local
   storage_api:
     driver: local
-  api_system_dbdata:
-    driver: local
 
 services:
   # NGINX for Admin Panel
@@ -96,7 +94,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  # MySQL Database
+  # MySQL Database (Single Instance for both systems)
   database:
     image: mysql:latest
     container_name: database
@@ -108,21 +106,7 @@ services:
       - ./env/mysql.env
     volumes:
       - dbdata:/var/lib/mysql
-    networks:
-      - laravel
-
-  # MySQL Database for API System
-  api-system-database:
-    image: mysql:latest
-    container_name: api-system-db
-    restart: unless-stopped
-    tty: true
-    ports:
-      - 3308:3306
-    env_file:
-      - ./env/api_system_mysql.env
-    volumes:
-      - api_system_dbdata:/var/lib/mysql
+      - ./dockerfiles/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - laravel
 
