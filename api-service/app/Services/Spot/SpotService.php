@@ -269,9 +269,8 @@ class SpotService
         } else {
             $currency = $market->base_currency;
         }
-        $wallet = $this->walletRepository->getWalletWithLock($currency, $userId);
-
-        $wallet->decrement('locked_balance', $amountRefund);
+        // Use repository guarded method to avoid negative locked_balance and ensure row lock
+        $this->walletRepository->decreaseLockedBalance($userId, $currency, $amountRefund);
 
         // Set status based on whether order was partially filled
         if (Math::comp($order->filled_quantity, '0') !== 0) {
@@ -288,34 +287,71 @@ class SpotService
     }
 
     /**
-     * Cancel bot orders - clears locked_balance since no locked_balance_details exist
+     * Cancel bot orders - now uses LockedBalanceDetail for accurate tracking
+     * LockedBalanceDetail is created when bot order is persisted from Redis to DB
      */
     public function cancelBotOrder(int $userId, $order): void
     {
-        $market = $order->market;
+        $lockedDetail = $this->lockedBalanceRepository->getOne($order->id, LockedBalanceTypeEnum::SPOT);
 
-        // Calculate the amount that should be refunded
-        if ($order->side === SpotOrderSideEnum::BUY) {
-            $currency = $market->quote_currency;
-            $amountRefund = Math::mul($order->quantity, $order->price);
-            // For partial fills, subtract the filled value
-            if (Math::comp($order->filled_quantity, '0') !== 0) {
-                $amountRefund = Math::sub($amountRefund, $order->getFilledValue());
+        // Check if LockedBalanceDetail exists (should exist for orders persisted from Redis)
+        // For orders that were never matched (still in Redis), they won't have LockedBalanceDetail
+        // but they're cancelled via cancelBotOrdersForMarket which handles Redis orders separately
+        if (!$lockedDetail) {
+            // Fallback for edge cases: calculate refund manually if LockedBalanceDetail doesn't exist
+            // This can happen if order was created before the fix or if there's a race condition
+            \Illuminate\Support\Facades\Log::channel('spot-order-matching')->warning(
+                "LockedBalanceDetail not found for bot order {$order->id} during cancellation. Using fallback calculation."
+            );
+
+            $market = $order->market;
+            
+            // Calculate the amount that should be refunded
+            if ($order->side === SpotOrderSideEnum::BUY) {
+                $currency = $market->quote_currency;
+                $amountRefund = Math::mul($order->quantity, $order->price);
+                // For partial fills, subtract the filled value
+                if (Math::comp($order->filled_quantity, '0') !== 0) {
+                    $amountRefund = Math::sub($amountRefund, $order->getFilledValue());
+                }
+            } else {
+                $currency = $market->base_currency;
+                $amountRefund = $order->quantity;
+                // For partial fills, subtract the filled quantity
+                if (Math::comp($order->filled_quantity, '0') !== 0) {
+                    $amountRefund = Math::sub($amountRefund, $order->filled_quantity);
+                }
             }
+
+            // Use repository guarded method to avoid negative locked_balance and ensure row lock
+            $this->walletRepository->decreaseLockedBalance($userId, $currency, $amountRefund);
         } else {
-            $currency = $market->base_currency;
-            $amountRefund = $order->quantity;
-            // For partial fills, subtract the filled quantity
-            if (Math::comp($order->filled_quantity, '0') !== 0) {
-                $amountRefund = Math::sub($amountRefund, $order->filled_quantity);
+            // Use LockedBalanceDetail amount (which is kept up-to-date during partial fills)
+            $amountRefund = $lockedDetail->amount;
+
+            $market = $order->market;
+            if ($order->side === SpotOrderSideEnum::BUY) {
+                $currency = $market->quote_currency;
+            } else {
+                $currency = $market->base_currency;
             }
+
+            // Update description before deleting locked balance
+            $description = '';
+            if (Math::comp($order->filled_quantity, '0') !== 0) {
+                // Partially filled order
+                $description = "لغو سفارش ربات #{$order->id} - پر شده: " . formatNumberTrimZeros($order->filled_quantity) . " از " . formatNumberTrimZeros($order->quantity);
+            } else {
+                // Fully unfilled order
+                $description = "لغو سفارش ربات #{$order->id} - بدون پر شدن";
+            }
+
+            $lockedDetail->update(['description' => $description]);
+            $this->lockedBalanceRepository->deleteSpotOrderLockedBalance($order->id);
+
+            // Use repository guarded method to avoid negative locked_balance and ensure row lock
+            $this->walletRepository->decreaseLockedBalance($userId, $currency, $amountRefund);
         }
-
-        $wallet = $this->walletRepository->getWalletWithLock($currency, $userId);
-
-        // Decrement locked_balance by the refund amount (not set to zero!)
-        // Setting to zero would clear locks for other orders too
-        $wallet->decrement('locked_balance', $amountRefund);
 
         // Set status based on whether order was partially filled
         if (Math::comp($order->filled_quantity, '0') !== 0) {

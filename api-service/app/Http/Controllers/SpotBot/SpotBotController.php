@@ -231,16 +231,6 @@ class SpotBotController extends Controller
                 }
             }
 
-            Log::channel('spot-bot')->info('Bot orders generated successfully', [
-                'currency_id' => $currency_id,
-                'currency_symbol' => $currency->symbol,
-                'market_id' => $market->id,
-                'total_orders_generated' => count($generatedOrders),
-                'buy_orders_count' => $buyOrdersCount,
-                'sell_orders_count' => $sellOrdersCount,
-                'order_margin' => $setting->order_margin
-            ]);
-
             // Broadcast orderbook update after generating all orders
             \App\Jobs\BroadcastOrderBook::dispatch($market->id);
 
@@ -339,15 +329,6 @@ class SpotBotController extends Controller
 
                 // Store in Redis
                 $inMemoryOrderBook->storeOrder($order);
-
-                Log::channel('spot-bot')->info('Bot order created in memory', [
-                    'order_id' => $order->id,
-                    'user_id' => $userId,
-                    'market_id' => $marketId,
-                    'side' => $side->value,
-                    'price' => $price,
-                    'quantity' => $quantity
-                ]);
 
                 return $order;
             } catch (Throwable $exception) {
@@ -550,14 +531,23 @@ class SpotBotController extends Controller
 
         foreach ($redisOrders as $order) {
             try {
+                // Re-check order existence in Redis right before unlocking to avoid race with matching/persistence
+                if (!$inMemoryOrderBook->orderExists($order->id)) {
+                    Log::channel('spot-bot')->warning('Skip unlocking for missing Redis order (likely persisted/matched)', [
+                        'order_id' => $order->id,
+                        'user_id' => $order->user_id,
+                        'market_id' => $marketId,
+                    ]);
+                    continue;
+                }
                 // Release locked balance
                 if ($order->side === SpotOrderSideEnum::BUY) {
                     $totalValue = Math::mul($order->quantity, $order->price);
-                    $wallet = $wallets->getWalletWithLock($market->quote_currency, $order->user_id);
-                    $wallet->decrement('locked_balance', $totalValue);
+                    // Use repository guarded method to prevent negative locked_balance
+                    $wallets->decreaseLockedBalance($order->user_id, $market->quote_currency, $totalValue);
                 } else {
-                    $wallet = $wallets->getWalletWithLock($market->base_currency, $order->user_id);
-                    $wallet->decrement('locked_balance', $order->quantity);
+                    // Use repository guarded method to prevent negative locked_balance
+                    $wallets->decreaseLockedBalance($order->user_id, $market->base_currency, $order->quantity);
                 }
 
                 // Delete from Redis
@@ -805,15 +795,6 @@ class SpotBotController extends Controller
             // Final broadcast after all replacements are done
             \App\Jobs\BroadcastOrderBook::dispatch($market->id);
 
-            Log::channel('spot-bot')->info('Bot orders replaced successfully', [
-                'currency_id' => $currency_id,
-                'currency_symbol' => $currency->symbol,
-                'market_id' => $market->id,
-                'cancelled_redis_orders' => $cancelResult['cancelled_redis'],
-                'cancelled_db_orders' => $cancelResult['cancelled_db'],
-                'total_cancelled' => $cancelResult['total_cancelled'],
-                'created_orders_count' => count($createdOrders)
-            ]);
 
             return response()->json([
                 'success' => true,
