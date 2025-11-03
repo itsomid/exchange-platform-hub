@@ -514,9 +514,10 @@ class SpotBotController extends Controller
      * @param int $userId Bot user ID
      * @param int $marketId Market ID
      * @param Market $market Market model
+     * @param bool $skipLockedBalanceDecrease Skip locked balance decrease (used when balance is already reset)
      * @return array ['cancelled_redis' => int, 'cancelled_db' => int, 'errors' => array]
      */
-    private function cancelBotOrdersForMarket(int $userId, int $marketId, Market $market): array
+    private function cancelBotOrdersForMarket(int $userId, int $marketId, Market $market, bool $skipLockedBalanceDecrease = false): array
     {
         $inMemoryOrderBook = resolve(InMemoryOrderBookService::class);
         $wallets = resolve(WalletRepositoryInterface::class);
@@ -540,14 +541,17 @@ class SpotBotController extends Controller
                     ]);
                     continue;
                 }
-                // Release locked balance
-                if ($order->side === SpotOrderSideEnum::BUY) {
-                    $totalValue = Math::mul($order->quantity, $order->price);
-                    // Use repository guarded method to prevent negative locked_balance
-                    $wallets->decreaseLockedBalance($order->user_id, $market->quote_currency, $totalValue);
-                } else {
-                    // Use repository guarded method to prevent negative locked_balance
-                    $wallets->decreaseLockedBalance($order->user_id, $market->base_currency, $order->quantity);
+
+                // Release locked balance only if not skipped (when locked_balance wasn't reset to zero)
+                if (!$skipLockedBalanceDecrease) {
+                    if ($order->side === SpotOrderSideEnum::BUY) {
+                        $totalValue = Math::mul($order->quantity, $order->price);
+                        // Use repository guarded method to prevent negative locked_balance
+                        $wallets->decreaseLockedBalance($order->user_id, $market->quote_currency, $totalValue);
+                    } else {
+                        // Use repository guarded method to prevent negative locked_balance
+                        $wallets->decreaseLockedBalance($order->user_id, $market->base_currency, $order->quantity);
+                    }
                 }
 
                 // Delete from Redis
@@ -831,6 +835,40 @@ class SpotBotController extends Controller
     }
 
     /**
+     * Reset locked balance to zero for a specific user and currency
+     * This prevents negative locked_balance errors during order cancellation
+     *
+     * @param int $userId
+     * @param string $currency
+     * @return void
+     */
+    private function resetLockedBalance(int $userId, string $currency): void
+    {
+        try {
+            $walletRepository = resolve(WalletRepositoryInterface::class);
+            $wallet = $walletRepository->getWalletWithLock($currency, $userId);
+
+            if ($wallet && Math::comp($wallet->locked_balance, '0') !== 0) {
+                Log::channel('spot-bot')->info('Resetting locked_balance to zero before order cancellation', [
+                    'user_id' => $userId,
+                    'currency' => $currency,
+                    'previous_locked_balance' => $wallet->locked_balance
+                ]);
+
+                // Directly set locked_balance to zero to prevent negative balance errors
+                $wallet->locked_balance = '0';
+                $wallet->save();
+            }
+        } catch (Throwable $e) {
+            Log::channel('spot-bot')->warning('Failed to reset locked_balance', [
+                'user_id' => $userId,
+                'currency' => $currency,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Cancel bot orders for all active currencies
      *
      * @param Request $request
@@ -872,8 +910,12 @@ class SpotBotController extends Controller
                     continue;
                 }
 
-                // Cancel both Redis and partially filled DB orders
-                $cancelResult = $this->cancelBotOrdersForMarket($setting->fake_user_id, $market->id, $market);
+                // Reset locked balances to zero before canceling orders to prevent negative balance errors
+                $this->resetLockedBalance($setting->fake_user_id, $market->base_currency);
+                $this->resetLockedBalance($setting->fake_user_id, $market->quote_currency);
+
+                // Cancel both Redis and partially filled DB orders (skip locked balance decrease since we reset it)
+                $cancelResult = $this->cancelBotOrdersForMarket($setting->fake_user_id, $market->id, $market, true);
 
                 $totalCancelled += $cancelResult['total_cancelled'];
                 $totalErrors += count($cancelResult['errors']);
