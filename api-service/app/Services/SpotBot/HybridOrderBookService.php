@@ -42,7 +42,7 @@ class HybridOrderBookService
 
         // Get Redis asks
         $redisAsks = $this->inMemoryOrderBook->getMarketOrders($marketId, SpotOrderSideEnum::SELL, $limit);
-        
+
         // Combine and group asks by price
         $asksGrouped = $this->combineAndGroupOrders($dbAsks, $redisAsks, 'asc', $limit);
 
@@ -60,7 +60,7 @@ class HybridOrderBookService
 
         // Get Redis bids
         $redisBids = $this->inMemoryOrderBook->getMarketOrders($marketId, SpotOrderSideEnum::BUY, $limit);
-        
+        logger()->info('Redis bids', $redisBids);
         // Combine and group bids by price
         $bidsGrouped = $this->combineAndGroupOrders($dbBids, $redisBids, 'desc', $limit);
 
@@ -84,16 +84,16 @@ class HybridOrderBookService
         // First, round to remove any floating point precision issues
         // Use high precision (16 decimal places) for grouping key
         $normalized = bcadd($price, '0', 16);
-        
+
         // Remove trailing zeros but keep decimal if needed
         $normalized = rtrim($normalized, '0');
         $normalized = rtrim($normalized, '.');
-        
+
         // If no decimal part, add .0 for consistency
         if (strpos($normalized, '.') === false) {
             $normalized .= '.0';
         }
-        
+
         return $normalized;
     }
 
@@ -114,7 +114,7 @@ class HybridOrderBookService
         foreach ($dbOrders as $order) {
             $price = (string) $order->price;
             $priceKey = $this->normalizePriceKey($price);
-            
+
             if (!isset($grouped[$priceKey])) {
                 $grouped[$priceKey] = [
                     'price' => $price, // Keep original price for display
@@ -129,7 +129,7 @@ class HybridOrderBookService
         foreach ($redisOrders as $order) {
             $price = (string) $order->price;
             $priceKey = $this->normalizePriceKey($price);
-            
+
             if (!isset($grouped[$priceKey])) {
                 $grouped[$priceKey] = [
                     'price' => $price, // Keep original price for display
@@ -293,8 +293,8 @@ class HybridOrderBookService
      */
     public function hasOrdersOnOppositeSide(int $marketId, SpotOrderSideEnum $orderSide, ?int $excludeUserId = null): bool
     {
-        $oppositeSide = $orderSide === SpotOrderSideEnum::BUY 
-            ? SpotOrderSideEnum::SELL 
+        $oppositeSide = $orderSide === SpotOrderSideEnum::BUY
+            ? SpotOrderSideEnum::SELL
             : SpotOrderSideEnum::BUY;
 
         // Check database orders
@@ -314,7 +314,7 @@ class HybridOrderBookService
 
         // Check Redis orders (bot orders)
         $redisOrders = $this->inMemoryOrderBook->getMarketOrders($marketId, $oppositeSide, 1);
-        
+
         if (empty($redisOrders)) {
             return false;
         }
@@ -332,4 +332,3 @@ class HybridOrderBookService
         return true;
     }
 }
-
