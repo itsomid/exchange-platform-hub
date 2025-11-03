@@ -7,6 +7,7 @@ use App\Enums\SpotOrderSideEnum;
 use App\Enums\SpotOrderSourceEnum;
 use App\Enums\SpotOrderStatusEnum;
 use App\Enums\SpotOrderTypeEnum;
+use App\Helpers\Math;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -79,7 +80,7 @@ class SpotOrder extends Model
         return Math::sub($this->quantity, $this->filled_quantity);
     }
 
-    
+
 
     public function getRoleAttribute(): SpotOrderRoleEnum
     {
@@ -110,5 +111,57 @@ class SpotOrder extends Model
             return true;
         }
         return $this->takerTrades()->exists();
+    }
+
+    /**
+     * Calculate average price for market orders that filled multiple order book levels
+     * This is used when price is null (market orders)
+     */
+    public function getAveragePrice(): ?string
+    {
+        // Only calculate for orders with null price (market orders)
+        if ($this->price !== null) {
+            return null;
+        }
+
+        // Get all trades related to this order (both as maker and taker)
+        $allTrades = collect();
+        
+        // Add maker trades
+        $allTrades = $allTrades->merge($this->makerTrades);
+        
+        // Add taker trades  
+        $allTrades = $allTrades->merge($this->takerTrades);
+
+        if ($allTrades->isEmpty()) {
+            return null;
+        }
+
+        $totalValue = '0';
+        $totalQuantity = '0';
+
+        foreach ($allTrades as $trade) {
+            $tradeValue = bcmul($trade->price, $trade->quantity, 8);
+            $totalValue = bcadd($totalValue, $tradeValue, 8);
+            $totalQuantity = bcadd($totalQuantity, $trade->quantity, 8);
+        }
+
+        if (bccomp($totalQuantity, '0', 8) === 0) {
+            return null;
+        }
+
+        return bcdiv($totalValue, $totalQuantity, 8);
+    }
+
+    /**
+     * Get display price - returns actual price or average price for market orders
+     */
+    public function getDisplayPrice(): ?string
+    {
+        if ($this->price !== null) {
+            return $this->price;
+        }
+
+        return $this->getAveragePrice();
     }
 }

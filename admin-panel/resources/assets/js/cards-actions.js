@@ -48,10 +48,10 @@ $(function () {
                             '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
                             '<span class="fw-medium">اطلاعات با موفقیت به روز رسانی شد</div>'
                         );
-                    
+
                     // Auto-hide the alert after 5 seconds
-                    setTimeout(function() {
-                        $alert.find('.alert').fadeOut('slow', function() {
+                    setTimeout(function () {
+                        $alert.find('.alert').fadeOut('slow', function () {
                             $(this).remove();
                         });
                     }, 5000);
@@ -59,21 +59,32 @@ $(function () {
 
                 },
                 error: function (xhr) {
-                    console.error('Error refreshing balance:', xhr.responseJSON);
+                    var errorMessage = 'خطا در دریافت اطلاعات.';
+                    if (xhr.responseJSON && xhr.responseJSON.error) {
+                        errorMessage = xhr.responseJSON.error;
+                    } else if (xhr.responseText) {
+                        try {
+                            var parsed = JSON.parse(xhr.responseText);
+                            if (parsed && parsed.error) {
+                                errorMessage = parsed.error;
+                            }
+                        } catch (e) {
+                            // Fallback remains generic
+                        }
+                    }
+
                     card.unblock();
-                    // Optional: Show an error message to the user
                     var $alert = $this
                         .closest('.card')
                         .find('.card-alert')
                         .html(
                             '<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
                             '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
-                            '<span class="fw-medium">خطا در دریافت اطلاعات.</div>'
+                            '<span class="fw-medium">' + errorMessage + '</span></div>'
                         );
-                        
-                    // Auto-hide the alert after 5 seconds
-                    setTimeout(function() {
-                        $alert.find('.alert').fadeOut('slow', function() {
+
+                    setTimeout(function () {
+                        $alert.find('.alert').fadeOut('slow', function () {
                             $(this).remove();
                         });
                     }, 5000);

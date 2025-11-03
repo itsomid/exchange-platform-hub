@@ -17,6 +17,8 @@ use App\Models\SpotOrder;
 use App\Services\Spot\DTO\SpotOrderRequestDTO;
 use App\Services\Spot\OrderMatchingEngine;
 use App\Services\Spot\SpotService;
+use App\Services\SpotBot\InMemoryOrderBookService;
+use App\Services\SpotBot\DTO\InMemoryBotOrderDTO;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -239,6 +241,9 @@ class SpotBotController extends Controller
                 'order_margin' => $setting->order_margin
             ]);
 
+            // Broadcast orderbook update after generating all orders
+            \App\Jobs\BroadcastOrderBook::dispatch($market->id);
+
             return response()->json([
                 'success' => true,
                 'message' => "Orders generated successfully for {$currency->name}",
@@ -269,7 +274,8 @@ class SpotBotController extends Controller
     }
 
     /**
-     * Create a bot order using the same logic as user orders
+     * Create a bot order in Redis (in-memory) instead of database
+     * Orders will only be persisted to database when they are matched
      *
      * @param int $userId
      * @param int $marketId
@@ -277,39 +283,73 @@ class SpotBotController extends Controller
      * @param string $price
      * @param SpotOrderSideEnum $side
      * @param SpotOrderTypeEnum $type
-     * @return mixed
+     * @return InMemoryBotOrderDTO
      */
-    private function createBotOrder(int $userId, int $marketId, string $quantity, string $price, SpotOrderSideEnum $side, SpotOrderTypeEnum $type)
+    private function createBotOrder(int $userId, int $marketId, string $quantity, string $price, SpotOrderSideEnum $side, SpotOrderTypeEnum $type): InMemoryBotOrderDTO
     {
-        // Check if spot trading is enabled
-        // if (!Setting::isEnabled('spot_trading_enabled')) {
-        //     throw new \Exception('Spot trading is currently disabled');
-        // }
+        $wallets = resolve(WalletRepositoryInterface::class);
+        $inMemoryOrderBook = resolve(InMemoryOrderBookService::class);
 
         $lock = Cache::lock('bot_trade:' . $marketId . $userId, 40);
 
         if ($lock->get()) {
             try {
-                $spotService = resolve(SpotService::class);
-                $response = $spotService->trade(
-                    resolve(SpotOrderRequestDTO::class)
-                        ->setUserId($userId)
-                        ->setQuantity($quantity)
-                        ->setType($type)
-                        ->setSide($side)
-                        ->setPrice($price)
-                        ->setMarketId($marketId)
-                        ->setSource(SpotOrderSourceEnum::BOT)
-                );
-
-                $orderMatchingEngine = resolve(OrderMatchingEngine::class);
-                if ($type === SpotOrderTypeEnum::MARKET) {
-                    $orderMatchingEngine->market($response->getSpotOrderModel());
-                } elseif ($type === SpotOrderTypeEnum::LIMIT) {
-                    $orderMatchingEngine->limit($response->getSpotOrderModel());
+                // Reserve balance (lock funds) without creating database record
+                $market = Market::find($marketId);
+                
+                if ($side === SpotOrderSideEnum::BUY) {
+                    // For buy orders, lock quote currency
+                    $totalValue = Math::mul($quantity, $price);
+                    $wallet = $wallets->getOneOrCreateByCurrencyWithLock($market->quote_currency, $userId);
+                    
+                    if (Math::comp($wallet->available_balance, $totalValue) === -1) {
+                        throw new InsufficientBalanceException("Insufficient {$market->quote_currency} balance.");
+                    }
+                    
+                    // Lock the balance
+                    $wallet->locked_balance = Math::add($wallet->locked_balance, $totalValue);
+                    $wallet->save();
+                } else {
+                    // For sell orders, lock base currency
+                    $wallet = $wallets->getOneOrCreateByCurrencyWithLock($market->base_currency, $userId);
+                    
+                    if (Math::comp($wallet->available_balance, $quantity) === -1) {
+                        throw new InsufficientBalanceException("Insufficient {$market->base_currency} balance.");
+                    }
+                    
+                    // Lock the balance
+                    $wallet->locked_balance = Math::add($wallet->locked_balance, $quantity);
+                    $wallet->save();
                 }
 
-                return $response->getSpotOrderModel();
+                // Create in-memory order
+                $order = new InMemoryBotOrderDTO([
+                    'id' => $inMemoryOrderBook->generateOrderId(),
+                    'user_id' => $userId,
+                    'market_id' => $marketId,
+                    'quantity' => $quantity,
+                    'filled_quantity' => '0',
+                    'price' => $price,
+                    'side' => $side,
+                    'type' => $type,
+                    'status' => SpotOrderStatusEnum::OPEN,
+                    'created_at' => now()->timestamp,
+                    'updated_at' => now()->timestamp,
+                ]);
+
+                // Store in Redis
+                $inMemoryOrderBook->storeOrder($order);
+
+                Log::channel('spot-bot')->info('Bot order created in memory', [
+                    'order_id' => $order->id,
+                    'user_id' => $userId,
+                    'market_id' => $marketId,
+                    'side' => $side->value,
+                    'price' => $price,
+                    'quantity' => $quantity
+                ]);
+
+                return $order;
             } catch (Throwable $exception) {
                 Log::channel('spot-bot')->error('Bot order creation failed', [
                     'user_id' => $userId,
@@ -488,6 +528,88 @@ class SpotBotController extends Controller
     }
 
     /**
+     * Cancel bot orders (both Redis and partially filled DB orders) for a specific market
+     * 
+     * @param int $userId Bot user ID
+     * @param int $marketId Market ID
+     * @param Market $market Market model
+     * @return array ['cancelled_redis' => int, 'cancelled_db' => int, 'errors' => array]
+     */
+    private function cancelBotOrdersForMarket(int $userId, int $marketId, Market $market): array
+    {
+        $inMemoryOrderBook = resolve(InMemoryOrderBookService::class);
+        $wallets = resolve(WalletRepositoryInterface::class);
+        $spotService = resolve(SpotService::class);
+        
+        $cancelledRedis = 0;
+        $cancelledDb = 0;
+        $errors = [];
+        
+        // 1. Cancel Redis orders (in-memory bot orders)
+        $redisOrders = $inMemoryOrderBook->getUserMarketOrders($userId, $marketId);
+        
+        foreach ($redisOrders as $order) {
+            try {
+                // Release locked balance
+                if ($order->side === SpotOrderSideEnum::BUY) {
+                    $totalValue = Math::mul($order->quantity, $order->price);
+                    $wallet = $wallets->getWalletWithLock($market->quote_currency, $order->user_id);
+                    $wallet->decrement('locked_balance', $totalValue);
+                } else {
+                    $wallet = $wallets->getWalletWithLock($market->base_currency, $order->user_id);
+                    $wallet->decrement('locked_balance', $order->quantity);
+                }
+                
+                // Delete from Redis
+                $inMemoryOrderBook->deleteOrder($order->id);
+                $cancelledRedis++;
+                
+            } catch (Throwable $e) {
+                $errors[] = "Redis order {$order->id}: " . $e->getMessage();
+                Log::channel('spot-bot')->error('Failed to cancel Redis bot order', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+        
+        // 2. Cancel partially filled bot orders in database
+        $dbOrders = SpotOrder::where('market_id', $marketId)
+            ->where('user_id', $userId)
+            ->where('source', SpotOrderSourceEnum::BOT)
+            ->where('status', SpotOrderStatusEnum::OPEN)
+            ->whereColumn('filled_quantity', '>', \DB::raw('0')) // Partially filled
+            ->get();
+        
+        foreach ($dbOrders as $order) {
+            try {
+                $spotService->cancel($userId, $order->id);
+                $cancelledDb++;
+                
+                Log::channel('spot-bot')->info('Partially filled bot order cancelled', [
+                    'order_id' => $order->id,
+                    'filled_quantity' => $order->filled_quantity,
+                    'total_quantity' => $order->quantity,
+                ]);
+                
+            } catch (Throwable $e) {
+                $errors[] = "DB order {$order->id}: " . $e->getMessage();
+                Log::channel('spot-bot')->error('Failed to cancel DB bot order', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+        
+        return [
+            'cancelled_redis' => $cancelledRedis,
+            'cancelled_db' => $cancelledDb,
+            'total_cancelled' => $cancelledRedis + $cancelledDb,
+            'errors' => $errors,
+        ];
+    }
+
+    /**
      * Cancel bot orders for specific currency
      *
      * @param Request $request
@@ -528,62 +650,21 @@ class SpotBotController extends Controller
         }
 
         try {
-            // Get all open bot orders for this currency/market and fake user
-            $openOrders = SpotOrder::where('market_id', $market->id)
-                ->where('user_id', $setting->fake_user_id)
-                ->where('status', SpotOrderStatusEnum::OPEN)
-                ->get();
-
-            if ($openOrders->isEmpty()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => "No open bot orders found for {$currency->name}",
-                    'data' => [
-                        'currency' => $currency->symbol,
-                        'market_id' => $market->id,
-                        'cancelled_orders_count' => 0,
-                        'orders' => []
-                    ]
-                ]);
-            }
-
-            $spotService = resolve(SpotService::class);
-            $cancelledOrders = [];
-            $errors = [];
-
-            foreach ($openOrders as $order) {
-                try {
-                    $spotService->cancel($setting->fake_user_id, $order->id);
-                    $cancelledOrders[] = [
-                        'order_id' => $order->id,
-                        'side' => $order->side->value,
-                        'price' => $order->price,
-                        'quantity' => $order->quantity,
-                        'filled_quantity' => $order->filled_quantity,
-                        'status' => 'cancelled'
-                    ];
-                } catch (Throwable $exception) {
-                    Log::channel('spot-bot')->error('Bot order cancellation failed', [
-                        'order_id' => $order->id,
-                        'user_id' => $setting->fake_user_id,
-                        'market_id' => $market->id,
-                        'error' => $exception->getMessage()
-                    ]);
-                    $errors[] = [
-                        'order_id' => $order->id,
-                        'error' => $exception->getMessage()
-                    ];
-                }
-            }
+            // Cancel both Redis and partially filled DB orders
+            $result = $this->cancelBotOrdersForMarket($setting->fake_user_id, $market->id, $market);
 
             Log::channel('spot-bot')->info('Bot orders cancelled successfully', [
                 'currency_id' => $currency_id,
                 'currency_symbol' => $currency->symbol,
                 'market_id' => $market->id,
-                'total_orders_found' => $openOrders->count(),
-                'cancelled_orders_count' => count($cancelledOrders),
-                'failed_orders_count' => count($errors)
+                'cancelled_redis' => $result['cancelled_redis'],
+                'cancelled_db' => $result['cancelled_db'],
+                'total_cancelled' => $result['total_cancelled'],
+                'errors_count' => count($result['errors'])
             ]);
+
+            // Broadcast orderbook update after cancelling orders
+            \App\Jobs\BroadcastOrderBook::dispatch($market->id);
 
             return response()->json([
                 'success' => true,
@@ -591,11 +672,10 @@ class SpotBotController extends Controller
                 'data' => [
                     'currency' => $currency->symbol,
                     'market_id' => $market->id,
-                    'total_orders_found' => $openOrders->count(),
-                    'cancelled_orders_count' => count($cancelledOrders),
-                    'failed_orders_count' => count($errors),
-                    'orders' => $cancelledOrders,
-                    'errors' => $errors
+                    'cancelled_redis_orders' => $result['cancelled_redis'],
+                    'cancelled_db_orders' => $result['cancelled_db'],
+                    'total_cancelled' => $result['total_cancelled'],
+                    'errors' => $result['errors']
                 ]
             ]);
         } catch (Throwable $exception) {
@@ -707,69 +787,51 @@ class SpotBotController extends Controller
                 }
             }
 
-            // Step 2: Get existing orders to cancel
-            $existingOrders = SpotOrder::where('market_id', $market->id)
-                ->where('user_id', $setting->fake_user_id)
-                ->where('status', SpotOrderStatusEnum::OPEN)
-                ->get();
+            // Step 2: Cancel existing orders (both Redis and partially filled DB orders)
+            $cancelResult = $this->cancelBotOrdersForMarket($setting->fake_user_id, $market->id, $market);
+            
+            // Merge any cancellation errors with preparation errors
+            $errors = array_merge($errors, $cancelResult['errors']);
 
-            $spotService = resolve(SpotService::class);
-            $cancelledOrders = [];
             $createdOrders = [];
 
-            // Step 3: Atomic replacement - cancel old and create new in quick succession
-            \DB::transaction(function () use (
-                $existingOrders,
-                $newOrders,
-                $setting,
-                $market,
-                $spotService,
-                &$cancelledOrders,
-                &$createdOrders,
-                &$errors
-            ) {
-                // Cancel existing orders
-                foreach ($existingOrders as $order) {
-                    try {
-                        $spotService->cancel($setting->fake_user_id, $order->id);
-                        $cancelledOrders[] = [
-                            'order_id' => $order->id,
-                            'side' => $order->side->value,
-                            'price' => $order->price,
-                            'quantity' => $order->quantity,
-                            'status' => 'cancelled'
+            // Immediately create new orders
+            foreach ($newOrders as $orderData) {
+                try {
+                    $newOrder = $this->createBotOrder(
+                        $setting->fake_user_id,
+                        $market->id,
+                        $orderData['quantity'],
+                        $orderData['price'],
+                        $orderData['side'],
+                        $orderData['type']
+                    );
+
+                    if ($newOrder) {
+                        $createdOrders[] = [
+                            'side' => $orderData['side']->value,
+                            'price' => $orderData['price'],
+                            'quantity' => $orderData['quantity'],
+                            'order_id' => $newOrder->id
                         ];
-                    } catch (\Throwable $e) {
-                        $errors[] = "Cancelling order {$order->id}: " . $e->getMessage();
                     }
+                } catch (\Throwable $e) {
+                    $errors[] = "Creating new {$orderData['side']->value} order: " . $e->getMessage();
                 }
+            }
 
-                // Immediately create new orders
-                foreach ($newOrders as $orderData) {
-                    try {
-                        $newOrder = $this->createBotOrder(
-                            $setting->fake_user_id,
-                            $market->id,
-                            $orderData['quantity'],
-                            $orderData['price'],
-                            $orderData['side'],
-                            $orderData['type']
-                        );
+            // Final broadcast after all replacements are done
+            \App\Jobs\BroadcastOrderBook::dispatch($market->id);
 
-                        if ($newOrder) {
-                            $createdOrders[] = [
-                                'side' => $orderData['side']->value,
-                                'price' => $orderData['price'],
-                                'quantity' => $orderData['quantity'],
-                                'order_id' => $newOrder->id
-                            ];
-                        }
-                    } catch (\Throwable $e) {
-                        $errors[] = "Creating new {$orderData['side']->value} order: " . $e->getMessage();
-                    }
-                }
-            });
-
+            Log::channel('spot-bot')->info('Bot orders replaced successfully', [
+                'currency_id' => $currency_id,
+                'currency_symbol' => $currency->symbol,
+                'market_id' => $market->id,
+                'cancelled_redis_orders' => $cancelResult['cancelled_redis'],
+                'cancelled_db_orders' => $cancelResult['cancelled_db'],
+                'total_cancelled' => $cancelResult['total_cancelled'],
+                'created_orders_count' => count($createdOrders)
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -778,9 +840,10 @@ class SpotBotController extends Controller
                     'currency' => $currency->symbol,
                     'market_id' => $market->id,
                     'current_price' => $currentPrice,
-                    'cancelled_orders_count' => count($cancelledOrders),
+                    'cancelled_redis_orders' => $cancelResult['cancelled_redis'],
+                    'cancelled_db_orders' => $cancelResult['cancelled_db'],
+                    'total_cancelled' => $cancelResult['total_cancelled'],
                     'created_orders_count' => count($createdOrders),
-                    'cancelled_orders' => $cancelledOrders,
                     'created_orders' => $createdOrders,
                     'errors' => $errors
                 ]
@@ -846,42 +909,20 @@ class SpotBotController extends Controller
                     continue;
                 }
 
-                // Get all open bot orders for this currency/market and fake user
-                $openOrders = SpotOrder::where('market_id', $market->id)
-                    ->where('user_id', $setting->fake_user_id)
-                    ->where('status', SpotOrderStatusEnum::OPEN)
-                    ->get();
+                // Cancel both Redis and partially filled DB orders
+                $cancelResult = $this->cancelBotOrdersForMarket($setting->fake_user_id, $market->id, $market);
 
-                $spotService = resolve(SpotService::class);
-                $cancelledCount = 0;
-                $errorCount = 0;
-
-                foreach ($openOrders as $order) {
-                    try {
-                        $spotService->cancel($setting->fake_user_id, $order->id);
-                        $cancelledCount++;
-                    } catch (Throwable $exception) {
-                        Log::channel('spot-bot')->error('Bot order cancellation failed', [
-                            'order_id' => $order->id,
-                            'user_id' => $setting->fake_user_id,
-                            'market_id' => $market->id,
-                            'currency_id' => $setting->currency_id,
-                            'error' => $exception->getMessage()
-                        ]);
-                        $errorCount++;
-                    }
-                }
-
-                $totalCancelled += $cancelledCount;
-                $totalErrors += $errorCount;
+                $totalCancelled += $cancelResult['total_cancelled'];
+                $totalErrors += count($cancelResult['errors']);
 
                 $results[] = [
                     'currency_id' => $setting->currency_id,
                     'currency_name' => $setting->currency->name,
                     'status' => 'processed',
-                    'total_orders_found' => $openOrders->count(),
-                    'cancelled_orders_count' => $cancelledCount,
-                    'failed_orders_count' => $errorCount
+                    'cancelled_redis_orders' => $cancelResult['cancelled_redis'],
+                    'cancelled_db_orders' => $cancelResult['cancelled_db'],
+                    'total_cancelled' => $cancelResult['total_cancelled'],
+                    'errors_count' => count($cancelResult['errors'])
                 ];
             } catch (Throwable $exception) {
                 Log::channel('spot-bot')->error('Bot order cancellation process failed for currency', [

@@ -16,26 +16,39 @@ class OrderBookResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        // Convert to collection if it's array (from HybridOrderBookService)
+        $asks = is_array($this->resource['asks']) 
+            ? collect($this->resource['asks']) 
+            : $this->resource['asks'];
+        
+        $bids = is_array($this->resource['bids']) 
+            ? collect($this->resource['bids']) 
+            : $this->resource['bids'];
+
         // Find maximum quantity in asks and bids for depth calculation
-        $maxAsksQuantity = $this->resource['asks']->max('quantity') ?: 1;
-        $maxBidsQuantity = $this->resource['bids']->max('quantity') ?: 1;
+        $maxAsksQuantity = $asks->max('quantity') ?: 1;
+        $maxBidsQuantity = $bids->max('quantity') ?: 1;
 
         return [
-            'asks' => $this->resource['asks']->map(fn ($item) => [
-                'price' => $item->price,
-                'filled_quantity' => $item->filled_quantity,
-                'quantity' => $item->quantity,
-                'total' => $item->price ? Math::mul($item->price, $item->quantity) : null,
-                'depth_percent' => $item->quantity ? 
-                    Math::div($item->quantity, $maxAsksQuantity) * 100 : 0
+            'asks' => $asks->map(fn ($item) => [
+                'price' => is_object($item) ? $item->price : $item['price'],
+                'quantity' => is_object($item) ? $item->quantity : $item['quantity'],
+                'total' => isset($item->total) || (isset($item['total']) && $item['total'])
+                    ? (is_object($item) ? ($item->total ?? null) : ($item['total'] ?? null))
+                    : (is_object($item) && isset($item->price) ? Math::mul($item->price, $item->quantity) : null),
+                'depth_percent' => (is_object($item) ? $item->quantity : $item['quantity']) 
+                    ? Math::div((is_object($item) ? $item->quantity : $item['quantity']), (string)$maxAsksQuantity) * 100 
+                    : 0
             ]),
-            'bids' => $this->resource['bids']->map(fn ($item) => [
-                'price' => $item->price,
-                'filled_quantity' => $item->filled_quantity,
-                'quantity' => $item->quantity,
-                'total' => $item->price ? Math::mul($item->price, $item->quantity) : null,
-                'depth_percent' => $item->quantity ? 
-                    Math::div($item->quantity, $maxBidsQuantity) * 100 : 0
+            'bids' => $bids->map(fn ($item) => [
+                'price' => is_object($item) ? $item->price : $item['price'],
+                'quantity' => is_object($item) ? $item->quantity : $item['quantity'],
+                'total' => isset($item->total) || (isset($item['total']) && $item['total'])
+                    ? (is_object($item) ? ($item->total ?? null) : ($item['total'] ?? null))
+                    : (is_object($item) && isset($item->price) ? Math::mul($item->price, $item->quantity) : null),
+                'depth_percent' => (is_object($item) ? $item->quantity : $item['quantity']) 
+                    ? Math::div((is_object($item) ? $item->quantity : $item['quantity']), (string)$maxBidsQuantity) * 100 
+                    : 0
             ]),
         ];
     }

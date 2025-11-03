@@ -21,6 +21,7 @@ use App\Services\Spot\DTO\SpotOrderListsRequestDTO;
 use App\Services\Spot\DTO\SpotOrderListsResponseDTO;
 use App\Services\Spot\DTO\SpotOrderRequestDTO;
 use App\Services\Spot\DTO\SpotOrderResponseDTO;
+use App\Services\SpotBot\HybridOrderBookService;
 use InvalidArgumentException;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -32,6 +33,7 @@ class SpotService
         private readonly WalletRepositoryInterface $walletRepository,
         private readonly SpotOrderRepositoryInterface $spotOrderRepository,
         private readonly LockedBalanceRepositoryInterface $lockedBalanceRepository,
+        private readonly HybridOrderBookService $hybridOrderBook,
     ) {}
 
     public function trade(SpotOrderRequestDTO $requestDTO): SpotOrderResponseDTO
@@ -50,9 +52,9 @@ class SpotService
             throw new InvalidArgumentException('مقدار باید بزرگتر از صفر و معتبر باشد.');
         }
 
-        // For market orders, check if opposite side has orders
+        // For market orders, check if opposite side has orders (from both DB and Redis)
         if ($type === SpotOrderTypeEnum::MARKET) {
-            if (!$this->spotOrderRepository->hasOrdersOnOppositeSide($requestDTO->getMarketId(), $side, $requestDTO->getUserId())) {
+            if (!$this->hybridOrderBook->hasOrdersOnOppositeSide($requestDTO->getMarketId(), $side, $requestDTO->getUserId())) {
                 throw new InvalidArgumentException('امکان ثبت سفارش بازار وجود ندارد.');
             }
         }
@@ -163,7 +165,8 @@ class SpotService
 
     public function getLatestOrderBook(int $marketId, int $limit): array
     {
-        return $this->spotOrderRepository->getLatestOrders($marketId, $limit);
+        // Use hybrid order book service to get orders from both database and Redis
+        return $this->hybridOrderBook->getLatestOrderBook($marketId, $limit);
     }
 
     public function getDetail(int $userId, int $orderId): SpotOrderListsResponseDTO
@@ -173,8 +176,7 @@ class SpotService
             orderId: $orderId
         );
 
-        //        $filledValue = $order->makerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0);
-        //        $filledValue = Math::add($filledValue, $order->takerTrades->reduce(fn (int $carry, $item) => Math::add($carry, (Math::mul($item->price, $item->quantity))), 0));
+    
         $filledValue = formatNumberTrimZeros(bcmul($order->price, $order->filled_quantity, 8));
         return resolve(SpotOrderListsResponseDTO::class)
             ->setId($order->id)

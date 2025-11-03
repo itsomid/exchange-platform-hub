@@ -11,9 +11,12 @@ use App\Models\TradingCommission;
 use App\Models\SpotTrade;
 use App\Models\Market;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redis;
+use App\Enums\SpotOrderSideEnum;
 
 class SpotOrderController extends Controller
 {
+
     public function index(Request $request)
     {
         $query = SpotOrder::with([
@@ -127,7 +130,40 @@ class SpotOrderController extends Controller
             $query->orderBy('id', 'desc');
         }
 
-        $spotOrders = $query->paginate(50);
+        // Get database orders
+        $dbOrders = $query->get();
+
+        // If showing bot orders, also get in-memory orders from Redis
+        $allOrders = collect($dbOrders);
+
+        // Sort the combined collection
+        if ($request->filled('sortById')) {
+            $allOrders = $request->sortById === 'asc'
+                ? $allOrders->sortBy('id')
+                : $allOrders->sortByDesc('id');
+        } elseif ($request->filled('sortByPrice')) {
+            $allOrders = $request->sortByPrice === 'asc'
+                ? $allOrders->sortBy('price')
+                : $allOrders->sortByDesc('price');
+        } elseif ($request->filled('sortByCreatedAt')) {
+            $allOrders = $request->sortByCreatedAt === 'asc'
+                ? $allOrders->sortBy('created_at')
+                : $allOrders->sortByDesc('created_at');
+        } else {
+            $allOrders = $allOrders->sortByDesc('created_at');
+        }
+
+        // Manual pagination
+        $perPage = 50;
+        $currentPage = $request->input('page', 1);
+        $total = $allOrders->count();
+        $spotOrders = new \Illuminate\Pagination\LengthAwarePaginator(
+            $allOrders->forPage($currentPage, $perPage),
+            $total,
+            $perPage,
+            $currentPage,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
         // Calculate commission values for each order's trades
         foreach ($spotOrders as $order) {
@@ -166,6 +202,7 @@ class SpotOrderController extends Controller
         // Add these counts to your index method
         $userOrdersCount = SpotOrder::where('source', SpotOrderSourceEnum::USER->value)->count();
         $botOrdersCount = SpotOrder::where('source', SpotOrderSourceEnum::BOT->value)->count();
+
 
         // Get all markets for the filter dropdown
         $markets = Market::where('is_active', true)

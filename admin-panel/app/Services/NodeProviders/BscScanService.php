@@ -82,7 +82,7 @@ class BscScanService
                     ];
                 } else {
                     return [
-                        'error' => $data['message'] ?? 'Unknown error'
+                        'error' => $data['result'] ?? ($data['message'] ?? 'Unknown error')
                     ];
                 }
             }
@@ -129,7 +129,7 @@ class BscScanService
                     ];
                 } else {
                     return [
-                        'error' => $data['message'] ?? 'Unknown error'
+                        'error' => $data['result'] ?? ($data['message'] ?? 'Unknown error')
                     ];
                 }
             }

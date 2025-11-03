@@ -413,7 +413,24 @@
                                     <span class="ms-1 fw-bold">{{ formatNumberTrimZeros($spotOrder->quantity) }}</span>
                                     <small>{{ $spotOrder->market->base_currency }}</small>
                                 </td>
-                                <td class="fw-bold">{{ formatNumberTrimZeros($spotOrder->price) }}
+                                <td class="fw-bold">
+                                    @if ($spotOrder->price === null)
+                                        @php
+                                            $averagePrice = $spotOrder->getAveragePrice();
+                                        @endphp
+                                        @if ($averagePrice)
+                                            <span data-bs-toggle="tooltip" data-bs-placement="top"
+                                                data-bs-custom-class="tooltip-dark"
+                                                title="این قیمت میانگین معاملات match شده با این سفارش است">
+                                                {{ formatNumberTrimZeros($averagePrice) }}
+                                                <i class="fa-regular fa-info-circle ms-1"></i>
+                                            </span>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    @else
+                                        {{ formatNumberTrimZeros($spotOrder->price) }}
+                                    @endif
                                 </td>
                                 <td>{{ $spotOrder->user->email }}</td>
                                 <td>
@@ -424,12 +441,12 @@
                                                     stroke="#e9ecef" stroke-width="4"></circle>
                                                 <circle cx="18" cy="18" r="16" fill="none"
                                                     stroke="#6f38d4" stroke-width="4" stroke-dasharray="100"
-                                                    stroke-dashoffset="{{ 100 - formatNumberTrimZeros(($spotOrder->filled_quantity / $spotOrder->quantity) * 100) }}"
+                                                    stroke-dashoffset="{{ 100 - ($spotOrder->filled_quantity / $spotOrder->quantity) * 100 }}"
                                                     transform="rotate(-90 18 18)"></circle>
                                             </svg>
 
-                                            <span class="font-number position-absolute text-black fw-light"
-                                                style="font-size: 13px; top: 11px; right: 6px">{{ round(($spotOrder->filled_quantity / $spotOrder->quantity) * 100) }}%</span>
+                                            <span class="font-number position-absolute text-black fw-bold"
+                                                style="top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 8px;">{{ formatNumberTrimZeros($spotOrder->filled_quantity / $spotOrder->quantity, 4) * 100 }}%</span>
                                         </div>
 
                                         {{ formatNumberTrimZeros($spotOrder->filled_quantity) }}
@@ -443,7 +460,6 @@
                                 <td>
                                     <span class="badge bg-label-{{ $spotOrder->status->color() }}">
                                         {{ $spotOrder->status->label() }}
-
                                     </span>
                                     @if ($spotOrder->status === \App\Enums\SpotOrderStatusEnum::PARTIALLY_FILLED_CANCELED)
                                         <i class="fa-regular fa-info-circle fa-lg ms-2" data-bs-toggle="tooltip"

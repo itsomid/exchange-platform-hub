@@ -20,7 +20,11 @@ use App\Models\TradingCommission;
 use App\Repositories\DTO\Transaction\CreateTransactionRequestDTO;
 use App\Repositories\Interfaces\TransactionRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
+use App\Services\SpotBot\InMemoryOrderBookService;
+use App\Services\SpotBot\InMemoryOrderPersistenceService;
+use App\Services\SpotBot\DTO\InMemoryBotOrderDTO;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 readonly class OrderMatchingEngine
@@ -28,6 +32,8 @@ readonly class OrderMatchingEngine
     public function __construct(
         private WalletRepositoryInterface               $walletRepository,
         private readonly TransactionRepositoryInterface $transactionRepository,
+        private readonly InMemoryOrderBookService       $inMemoryOrderBook,
+        private readonly InMemoryOrderPersistenceService $persistenceService,
     ) {}
 
     public function processOrder(): void
@@ -65,21 +71,18 @@ readonly class OrderMatchingEngine
             return; // Already filled somehow before processing
         }
 
-        $oppositeOrders = SpotOrder::query()
-            ->where('side', $oppositeType)
-            ->where('market_id', $order->market_id)
-            ->where('status', SpotOrderStatusEnum::OPEN)
-            ->where('user_id', '!=', $order->user_id) // Prevent self-trading
-            ->orderBy('price', $sortType)
-            ->whereNotNull('price') // Ensure matching against LIMIT orders only
-            ->lockForUpdate()
-            ->get();
+        // Get opposite orders from both database and Redis (bot orders)
+        $oppositeOrdersData = $this->getOppositeOrders($order, $oppositeType, $sortType);
 
-        foreach ($oppositeOrders as $oppositeOrder) {
+        foreach ($oppositeOrdersData as $oppositeOrderData) {
             // Double check reminded quantity within the loop
             if ($order->getRemindedQuantity(true) <= 0) { // Use fresh value
                 break;
             }
+
+            // Convert to SpotOrder model (if bot order, will be persisted to DB)
+            $oppositeOrder = $this->ensureSpotOrderModel($oppositeOrderData);
+
             // Price is determined by the matched limit order (maker)
             // No need to set $order->price here, completeOrder uses $makerOrder->price
 
@@ -114,33 +117,16 @@ readonly class OrderMatchingEngine
         $oppositeType = $order->side === SpotOrderSideEnum::BUY ? SpotOrderSideEnum::SELL : SpotOrderSideEnum::BUY;
         $sortType = $order->side === SpotOrderSideEnum::BUY ? 'ASC' : 'DESC';
 
-        $oppositeOrders = SpotOrder::query()
-            ->where('side', $oppositeType)
-            ->where('market_id', $order->market_id)
-            ->where('status', SpotOrderStatusEnum::OPEN)
-            ->where('user_id', '!=', $order->user_id) // Prevent self-trading
-            ->where(function ($query) use ($order) {
-                // Match with:
-                // - Market orders (no price)
-                // - Limit orders that meet the price condition
-                $query->whereNull('price') // Market order
-                    ->orWhere(function ($q) use ($order) {
-                        if ($order->side === SpotOrderSideEnum::BUY) {
-                            $q->where('price', '<=', $order->price); // Buy: Match at or below limit price
-                        } else {
-                            $q->where('price', '>=', $order->price); // Sell: Match at or above limit price
-                        }
-                    });
-            })
-            ->orderByRaw('price IS NULL DESC') // Prioritize market orders (NULL price first)
-            ->orderBy('price', $sortType) // Then sort limit orders by price
-            ->lockForUpdate()
-            ->get();
+        // Get opposite orders from both database and Redis (bot orders)
+        $oppositeOrdersData = $this->getOppositeOrdersForLimit($order, $oppositeType, $sortType);
 
-        foreach ($oppositeOrders as $oppositeOrder) {
+        foreach ($oppositeOrdersData as $oppositeOrderData) {
             if ($order->getRemindedQuantity() <= 0) {
                 break;
             }
+
+            // Convert to SpotOrder model (if bot order, will be persisted to DB)
+            $oppositeOrder = $this->ensureSpotOrderModel($oppositeOrderData);
 
             // If matching with a market order, set its price to the limit order's price
             if ($oppositeOrder->price === null) {
@@ -635,5 +621,190 @@ readonly class OrderMatchingEngine
             // Rethrow or handle appropriately - failing to unlock funds is critical.
             throw $e;
         }
+    }
+
+    /**
+     * Get opposite orders from both database and Redis, prioritized by price
+     * 
+     * @param SpotOrder $order
+     * @param SpotOrderSideEnum $oppositeType
+     * @param string $sortType 'ASC' or 'DESC'
+     * @return array Array of SpotOrder objects (bot orders converted to database)
+     */
+    private function getOppositeOrders(SpotOrder $order, SpotOrderSideEnum $oppositeType, string $sortType): array
+    {
+        // Get database orders
+        $dbOrders = SpotOrder::query()
+            ->where('side', $oppositeType)
+            ->where('market_id', $order->market_id)
+            ->where('status', SpotOrderStatusEnum::OPEN)
+            ->where('user_id', '!=', $order->user_id) // Prevent self-trading
+            ->whereNotNull('price')
+            ->lockForUpdate()
+            ->get();
+
+        // Get Redis bot orders
+        $inMemoryOrders = $this->inMemoryOrderBook->getMarketOrders(
+            $order->market_id,
+            $oppositeType,
+            100
+        );
+
+        // Convert in-memory orders to database format and combine
+        $allOrders = $dbOrders->toArray();
+        
+        foreach ($inMemoryOrders as $inMemoryOrder) {
+            // Convert to database format for matching
+            $allOrders[] = [
+                'id' => $inMemoryOrder->id,
+                'user_id' => $inMemoryOrder->user_id,
+                'market_id' => $inMemoryOrder->market_id,
+                'side' => $inMemoryOrder->side->value,
+                'price' => $inMemoryOrder->price,
+                'quantity' => $inMemoryOrder->quantity,
+                'filled_quantity' => $inMemoryOrder->filled_quantity,
+                'status' => $inMemoryOrder->status->value,
+                'type' => $inMemoryOrder->type->value,
+                'is_bot_order' => true, // Flag to identify bot orders
+                'in_memory_order' => $inMemoryOrder, // Keep reference
+            ];
+        }
+
+        // Sort all orders by price
+        usort($allOrders, function ($a, $b) use ($sortType) {
+            $priceA = is_array($a) ? $a['price'] : $a->price;
+            $priceB = is_array($b) ? $b['price'] : $b->price;
+            
+            $comp = Math::comp($priceA, $priceB);
+            
+            return $sortType === 'ASC' ? $comp : -$comp;
+        });
+
+        return $allOrders;
+    }
+
+    /**
+     * Get opposite orders for limit order matching (includes market orders)
+     * 
+     * @param SpotOrder $order
+     * @param SpotOrderSideEnum $oppositeType
+     * @param string $sortType
+     * @return array
+     */
+    private function getOppositeOrdersForLimit(SpotOrder $order, SpotOrderSideEnum $oppositeType, string $sortType): array
+    {
+        // Get database orders (including market orders with price check)
+        $dbOrders = SpotOrder::query()
+            ->where('side', $oppositeType)
+            ->where('market_id', $order->market_id)
+            ->where('status', SpotOrderStatusEnum::OPEN)
+            ->where('user_id', '!=', $order->user_id)
+            ->where(function ($query) use ($order) {
+                $query->whereNull('price') // Market order
+                    ->orWhere(function ($q) use ($order) {
+                        if ($order->side === SpotOrderSideEnum::BUY) {
+                            $q->where('price', '<=', $order->price);
+                        } else {
+                            $q->where('price', '>=', $order->price);
+                        }
+                    });
+            })
+            ->orderByRaw('price IS NULL DESC') // Prioritize market orders (NULL price first)
+            ->orderBy('price', $sortType === 'ASC' ? 'asc' : 'desc')
+            ->lockForUpdate()
+            ->get();
+
+        // Get Redis bot orders (only limit orders with price check)
+        $inMemoryOrders = $this->inMemoryOrderBook->getMarketOrders(
+            $order->market_id,
+            $oppositeType,
+            100
+        );
+
+        // Filter in-memory orders by price condition
+        $filteredInMemoryOrders = array_filter($inMemoryOrders, function ($inMemoryOrder) use ($order) {
+            if ($order->side === SpotOrderSideEnum::BUY) {
+                return Math::comp($inMemoryOrder->price, $order->price) <= 0;
+            } else {
+                return Math::comp($inMemoryOrder->price, $order->price) >= 0;
+            }
+        });
+
+        // Combine orders
+        $allOrders = $dbOrders->toArray();
+        
+        foreach ($filteredInMemoryOrders as $inMemoryOrder) {
+            $allOrders[] = [
+                'id' => $inMemoryOrder->id,
+                'user_id' => $inMemoryOrder->user_id,
+                'market_id' => $inMemoryOrder->market_id,
+                'side' => $inMemoryOrder->side->value,
+                'price' => $inMemoryOrder->price,
+                'quantity' => $inMemoryOrder->quantity,
+                'filled_quantity' => $inMemoryOrder->filled_quantity,
+                'status' => $inMemoryOrder->status->value,
+                'type' => $inMemoryOrder->type->value,
+                'is_bot_order' => true,
+                'in_memory_order' => $inMemoryOrder,
+            ];
+        }
+
+        // Sort: market orders (null price) first, then by price
+        usort($allOrders, function ($a, $b) use ($sortType) {
+            $priceA = is_array($a) ? $a['price'] : $a->price;
+            $priceB = is_array($b) ? $b['price'] : $b->price;
+            
+            // Market orders (null) should come first
+            if ($priceA === null && $priceB !== null) return -1;
+            if ($priceA !== null && $priceB === null) return 1;
+            if ($priceA === null && $priceB === null) return 0;
+            
+            $comp = Math::comp($priceA, $priceB);
+            return $sortType === 'ASC' ? $comp : -$comp;
+        });
+
+        return $allOrders;
+    }
+
+    /**
+     * Convert array representation to SpotOrder model
+     * For bot orders, persist to database first
+     * 
+     * @param array|SpotOrder $orderData
+     * @return SpotOrder
+     */
+    private function ensureSpotOrderModel($orderData): SpotOrder
+    {
+        if ($orderData instanceof SpotOrder) {
+            return $orderData;
+        }
+
+        // Check if it's a bot order that needs to be persisted
+        if (isset($orderData['is_bot_order']) && $orderData['is_bot_order'] === true) {
+            $inMemoryOrder = $orderData['in_memory_order'];
+            
+            // Persist to database
+            $spotOrder = $this->persistenceService->persistOrder($inMemoryOrder);
+            
+            // Delete from Redis after persisting
+            $this->inMemoryOrderBook->deleteOrder($inMemoryOrder->id);
+            
+            Log::channel('spot-bot')->info('Bot order persisted for matching', [
+                'in_memory_id' => $inMemoryOrder->id,
+                'database_id' => $spotOrder->id,
+                'market_id' => $spotOrder->market_id,
+                'side' => $spotOrder->side->value,
+                'price' => $spotOrder->price,
+            ]);
+            
+            return $spotOrder;
+        }
+
+        // If it's array but not a bot order, find existing database record
+        if (isset($orderData['id'])) {
+            return SpotOrder::find($orderData['id']);
+        }
+
+        throw new \Exception('Unable to convert order data to SpotOrder model');
     }
 }
