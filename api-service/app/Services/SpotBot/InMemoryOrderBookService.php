@@ -18,7 +18,7 @@ class InMemoryOrderBookService
     private const REDIS_PREFIX = 'spot_bot_orders';
     private const MARKET_ORDERS_PREFIX = 'spot_bot_market_orders';
     private const USER_ORDERS_PREFIX = 'spot_bot_user_orders';
-    
+
     /**
      * Get Redis connection for bot orders
      */
@@ -27,7 +27,7 @@ class InMemoryOrderBookService
         $connection = config('spot-bot.redis_connection', 'default');
         return Redis::connection($connection);
     }
-    
+
     /**
      * Get TTL from config
      */
@@ -45,20 +45,20 @@ class InMemoryOrderBookService
         $orderId = $order->id;
         $orderKey = $this->getOrderKey($orderId);
         $ttl = $this->getOrderTTL();
-        
+
         // Store the order data
         $redis->setex($orderKey, $ttl, json_encode($order->toArray()));
-        
+
         // Add to market index (for matching engine)
         $marketKey = $this->getMarketOrdersKey($order->market_id, $order->side);
         $redis->zadd($marketKey, [$orderId => $order->price]);
         $redis->expire($marketKey, $ttl);
-        
+
         // Add to user index (for cancellation)
         $userKey = $this->getUserOrdersKey($order->user_id, $order->market_id);
         $redis->sadd($userKey, $orderId);
         $redis->expire($userKey, $ttl);
-        
+
         return true;
     }
 
@@ -70,11 +70,11 @@ class InMemoryOrderBookService
         $redis = $this->getRedisConnection();
         $orderKey = $this->getOrderKey($orderId);
         $data = $redis->get($orderKey);
-        
+
         if (!$data) {
             return null;
         }
-        
+
         return InMemoryBotOrderDTO::fromArray(json_decode($data, true));
     }
 
@@ -96,7 +96,7 @@ class InMemoryOrderBookService
 
         $redis = $this->getRedisConnection();
         $marketKey = $this->getMarketOrdersKey($marketId, $side);
-        
+
         \Log::info('[InMemoryOrderBookService] Redis key generated', [
             'marketKey' => $marketKey,
             'marketId' => $marketId,
@@ -115,7 +115,7 @@ class InMemoryOrderBookService
         $orderIds = $side === SpotOrderSideEnum::BUY
             ? $redis->zrevrange($marketKey, 0, $limit - 1)
             : $redis->zrange($marketKey, 0, $limit - 1);
-        
+
         \Log::info('[InMemoryOrderBookService] Order IDs retrieved from Redis', [
             'marketKey' => $marketKey,
             'side' => $side->value,
@@ -141,9 +141,24 @@ class InMemoryOrderBookService
             if ($order && $order->status === SpotOrderStatusEnum::OPEN) {
                 $orders[] = $order;
                 $openOrdersCount++;
+            } elseif (!$order) {
+                // Self-heal: remove stale orderId from market index when order key is missing
+                try {
+                    $redis->zrem($marketKey, $orderId);
+                    \Log::warning('[InMemoryOrderBookService] Removed stale orderId from market index', [
+                        'marketKey' => $marketKey,
+                        'orderId' => $orderId
+                    ]);
+                } catch (\Throwable $e) {
+                    \Log::error('[InMemoryOrderBookService] Failed to remove stale orderId', [
+                        'marketKey' => $marketKey,
+                        'orderId' => $orderId,
+                        'error' => $e->getMessage()
+                    ]);
+                }
             }
         }
-        
+
         \Log::info('[InMemoryOrderBookService] getMarketOrders completed', [
             'marketId' => $marketId,
             'side' => $side->value,
@@ -154,6 +169,33 @@ class InMemoryOrderBookService
         ]);
 
         return $orders;
+    }
+
+    /**
+     * Clear the market orders ZSET index for a specific side
+     */
+    public function clearMarketOrdersIndex(int $marketId, SpotOrderSideEnum $side): bool
+    {
+        $redis = $this->getRedisConnection();
+        $marketKey = $this->getMarketOrdersKey($marketId, $side);
+
+        try {
+            $redis->del($marketKey);
+            \Log::info('[InMemoryOrderBookService] Cleared market orders index', [
+                'marketId' => $marketId,
+                'side' => $side->value,
+                'marketKey' => $marketKey
+            ]);
+            return true;
+        } catch (\Throwable $e) {
+            \Log::error('[InMemoryOrderBookService] Failed to clear market orders index', [
+                'marketId' => $marketId,
+                'side' => $side->value,
+                'marketKey' => $marketKey,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
     }
 
     /**
@@ -168,7 +210,7 @@ class InMemoryOrderBookService
         $redis = $this->getRedisConnection();
         $userKey = $this->getUserOrdersKey($userId, $marketId);
         $orderIds = $redis->smembers($userKey);
-        
+
         $orders = [];
         foreach ($orderIds as $orderId) {
             $order = $this->getOrder($orderId);
@@ -176,7 +218,7 @@ class InMemoryOrderBookService
                 $orders[] = $order;
             }
         }
-        
+
         return $orders;
     }
 
@@ -188,7 +230,7 @@ class InMemoryOrderBookService
         $redis = $this->getRedisConnection();
         $orderKey = $this->getOrderKey($order->id);
         $order->updated_at = now()->timestamp;
-        
+
         return $redis->setex($orderKey, $this->getOrderTTL(), json_encode($order->toArray()));
     }
 
@@ -202,19 +244,19 @@ class InMemoryOrderBookService
         if (!$order) {
             return false;
         }
-        
+
         // Remove from main storage
         $orderKey = $this->getOrderKey($orderId);
         $redis->del($orderKey);
-        
+
         // Remove from market index
         $marketKey = $this->getMarketOrdersKey($order->market_id, $order->side);
         $redis->zrem($marketKey, $orderId);
-        
+
         // Remove from user index
         $userKey = $this->getUserOrdersKey($order->user_id, $order->market_id);
         $redis->srem($userKey, $orderId);
-        
+
         return true;
     }
 
@@ -225,13 +267,13 @@ class InMemoryOrderBookService
     {
         $orders = $this->getUserMarketOrders($userId, $marketId);
         $count = 0;
-        
+
         foreach ($orders as $order) {
             if ($this->deleteOrder($order->id)) {
                 $count++;
             }
         }
-        
+
         return $count;
     }
 
@@ -286,4 +328,3 @@ class InMemoryOrderBookService
         return $redis->zcard($marketKey);
     }
 }
-

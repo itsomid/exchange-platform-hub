@@ -587,6 +587,20 @@ class SpotBotController extends Controller
             }
         }
 
+        // 3. Ensure Redis market indexes are fully cleared to avoid stale orderIds
+        try {
+            $inMemoryOrderBook->clearMarketOrdersIndex($marketId, SpotOrderSideEnum::BUY);
+            $inMemoryOrderBook->clearMarketOrdersIndex($marketId, SpotOrderSideEnum::SELL);
+            Log::channel('spot-bot')->info('Cleared Redis market ZSET indexes after cancellation', [
+                'market_id' => $marketId
+            ]);
+        } catch (Throwable $e) {
+            Log::channel('spot-bot')->error('Failed clearing Redis market ZSET indexes after cancellation', [
+                'market_id' => $marketId,
+                'error' => $e->getMessage()
+            ]);
+        }
+
         return [
             'cancelled_redis' => $cancelledRedis,
             'cancelled_db' => $cancelledDb,
