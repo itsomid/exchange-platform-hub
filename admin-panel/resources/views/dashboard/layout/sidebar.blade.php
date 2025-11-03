@@ -53,13 +53,20 @@
             </li>
         @endcan
         @can('user.index')
+            <li class="menu-item @if (request()->is('admin/locked-balances*')) active @endif">
+                <a href="{{ route('admin.locked-balance.index') }}" class="menu-link">
+                    <i class="menu-icon fa-regular fa-lock fa-lg"></i>
+                    <div>دارایی مسدود شده</div>
+                    <span class="badge new-badge ms-auto">New</span>
+                </a>
+            </li>
+        @endcan
+        @can('user.index')
             <li class="menu-item @if (request()->is('admin/inquiry*')) active @endif">
                 <a disabled="" href="{{ route('admin.inquiry.index') }}" class="menu-link">
                     <i class="menu-icon fa-light fa-user-alt fa-lg"></i>
                     <div>استعلام کاربر</div>
-                    <span class="badge new-badge ms-auto">New</span>
                 </a>
-
             </li>
         @endcan
 

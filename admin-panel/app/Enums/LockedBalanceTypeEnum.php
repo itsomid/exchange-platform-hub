@@ -16,20 +16,17 @@ enum LockedBalanceTypeEnum: string
 
     public function label()
     {
-        return self::TYPE_LABEL[$this->value]??'';
+        return self::TYPE_LABEL[$this->value] ?? '';
     }
 
     const array TYPE_COLOR = [
-        self::WITHDRAWAL->value => 'danger',
+        self::WITHDRAWAL->value => 'secondary',
         self::ADMIN->value => 'primary',
-        self::SPOT->value => 'success',
+        self::SPOT->value => 'info',
     ];
 
     public function color()
     {
-        return self::TYPE_COLOR[$this->value]??'';
+        return self::TYPE_COLOR[$this->value] ?? '';
     }
-
 }
-
-

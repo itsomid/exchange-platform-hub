@@ -41,6 +41,55 @@ class LockedBalanceDetail extends Model
 
     public function spot(): BelongsTo
     {
-        return $this->belongsTo(SpotOrder::class);
+        return $this->belongsTo(SpotOrder::class, 'spot_order_id');
+    }
+
+    public function wallet(): BelongsTo
+    {
+        return $this->belongsTo(Wallet::class);
+    }
+
+    public function admin(): BelongsTo
+    {
+        return $this->belongsTo(Admin::class);
+    }
+
+    // Helper methods
+    public function getTypeLabel(): string
+    {
+        return $this->type->label();
+    }
+
+    public function getTypeColor(): string
+    {
+        return $this->type->color();
+    }
+
+    public function getRelatedEntityName(): ?string
+    {
+        switch ($this->type) {
+            case LockedBalanceTypeEnum::WITHDRAWAL:
+                return $this->withdrawal ? "برداشت #{$this->withdrawal->id}" : null;
+            case LockedBalanceTypeEnum::SPOT:
+                return $this->spot ? "سفارش اسپات #{$this->spot->id}" : null;
+            case LockedBalanceTypeEnum::ADMIN:
+                return $this->admin ? "ادمین: {$this->admin->fullname()}" : null;
+            default:
+                return null;
+        }
+    }
+
+    public function getRelatedEntityUrl(): ?string
+    {
+        switch ($this->type) {
+            case LockedBalanceTypeEnum::WITHDRAWAL:
+                return $this->withdrawal ? route('admin.withdrawal.index', $this->withdrawal->id) : null;
+            case LockedBalanceTypeEnum::SPOT:
+                return $this->spot ? route('admin.spot_orders.index', $this->spot->id) : null;
+            case LockedBalanceTypeEnum::ADMIN:
+                return $this->admin ? route('admin.admin.index', $this->admin->id) : null;
+            default:
+                return null;
+        }
     }
 }

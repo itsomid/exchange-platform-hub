@@ -37,6 +37,7 @@ use App\Http\Controllers\User\UserRegistrationReportController;
 use App\Http\Controllers\User\UserSecurityController;
 use App\Http\Controllers\User\UserWalletController;
 use App\Http\Controllers\Wallet\WalletController;
+use App\Http\Controllers\Wallet\LockedBalanceDetailController;
 use App\Http\Controllers\Withdrawal\WithdrawalController;
 use App\Http\Controllers\Withdrawal\WithdrawalReportController;
 use App\Http\Controllers\Stock\StockController;
@@ -269,6 +270,10 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::get('{user}/{wallet}/refresh', [WalletController::class, 'refresh'])->name('wallet.refresh');
         Route::post('generate-address', [WalletController::class, 'generateAddressFromHdWallet'])->name('wallet.generate-address')->can('wallet');
         Route::post('create-wallet-chains', [WalletController::class, 'createWalletChains'])->name('wallet.create-chains')->can('wallet');
+    });
+
+    Route::prefix('locked-balances')->group(function () {
+        Route::get('/', [LockedBalanceDetailController::class, 'index'])->name('locked-balance.index')->can('wallet');
     });
 
     Route::prefix('report')->group(function () {
