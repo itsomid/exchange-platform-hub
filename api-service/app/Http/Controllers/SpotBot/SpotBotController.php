@@ -68,42 +68,6 @@ class SpotBotController extends Controller
 
 
     /**
-     * Sync orders for specific currency
-     *
-     * @param Request $request
-     * @param int $currency_id
-     * @return JsonResponse
-     */
-    public function syncOrders(Request $request, int $currency_id): JsonResponse
-    {
-        $currency = Currency::find($currency_id);
-
-        if (!$currency) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Currency not found'
-            ], 404);
-        }
-
-        $setting = SpotBotSetting::where('currency_id', $currency_id)->first();
-
-        if (!$setting || !$setting->is_active) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Bot is not active for this currency'
-            ], 400);
-        }
-
-        // TODO: Implement order synchronization logic for specific currency
-        return response()->json([
-            'success' => true,
-            'message' => "Orders synchronized successfully for {$currency->name}"
-        ]);
-    }
-
-
-
-    /**
      * Generate orders for specific currency
      *
      * @param Request $request
@@ -284,32 +248,24 @@ class SpotBotController extends Controller
 
         if ($lock->get()) {
             try {
-                // Reserve balance (lock funds) without creating database record
+                // Validate balances without locking funds; bot orders do not use locked_balance
                 $market = Market::find($marketId);
 
                 if ($side === SpotOrderSideEnum::BUY) {
-                    // For buy orders, lock quote currency
+                    // For buy orders, ensure sufficient quote currency (no lock)
                     $totalValue = Math::mul($quantity, $price);
                     $wallet = $wallets->getOneOrCreateByCurrencyWithLock($market->quote_currency, $userId);
 
                     if (Math::comp($wallet->available_balance, $totalValue) === -1) {
                         throw new InsufficientBalanceException("Insufficient {$market->quote_currency} balance.");
                     }
-
-                    // Lock the balance
-                    $wallet->locked_balance = Math::add($wallet->locked_balance, $totalValue);
-                    $wallet->save();
                 } else {
-                    // For sell orders, lock base currency
+                    // For sell orders, ensure sufficient base currency (no lock)
                     $wallet = $wallets->getOneOrCreateByCurrencyWithLock($market->base_currency, $userId);
 
                     if (Math::comp($wallet->available_balance, $quantity) === -1) {
                         throw new InsufficientBalanceException("Insufficient {$market->base_currency} balance.");
                     }
-
-                    // Lock the balance
-                    $wallet->locked_balance = Math::add($wallet->locked_balance, $quantity);
-                    $wallet->save();
                 }
 
                 // Create in-memory order
@@ -439,88 +395,16 @@ class SpotBotController extends Controller
     }
 
     /**
-     * Match order for specific currency
-     *
-     * @param Request $request
-     * @param int $currency_id
-     * @return JsonResponse
-     */
-    public function matchOrder(Request $request, int $currency_id): JsonResponse
-    {
-        $currency = Currency::find($currency_id);
-
-        if (!$currency) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Currency not found'
-            ], 404);
-        }
-
-        $setting = SpotBotSetting::where('currency_id', $currency_id)->first();
-
-        if (!$setting || !$setting->is_active) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Bot is not active for this currency'
-            ], 400);
-        }
-
-        // TODO: Implement order matching logic for specific currency
-        return response()->json([
-            'success' => true,
-            'message' => "Order matched successfully for {$currency->name}"
-        ]);
-    }
-
-    /**
-     * Sync orders for all active currencies
-     *
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function syncAllOrders(Request $request): JsonResponse
-    {
-        $activeSettings = SpotBotSetting::with('currency')
-            ->where('is_active', true)
-            ->get();
-
-        if ($activeSettings->isEmpty()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No active bot settings found'
-            ], 400);
-        }
-
-        $results = [];
-        foreach ($activeSettings as $setting) {
-            // TODO: Implement order synchronization logic for each currency
-            $results[] = [
-                'currency_id' => $setting->currency_id,
-                'currency_name' => $setting->currency->name,
-                'status' => 'synchronized'
-            ];
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Orders synchronized for all active currencies',
-            'data' => $results
-        ]);
-    }
-
-    /**
      * Cancel bot orders (both Redis and partially filled DB orders) for a specific market
      * 
      * @param int $userId Bot user ID
      * @param int $marketId Market ID
      * @param Market $market Market model
-     * @param bool $skipLockedBalanceDecrease Skip locked balance decrease (used when balance is already reset)
      * @return array ['cancelled_redis' => int, 'cancelled_db' => int, 'errors' => array]
      */
-    private function cancelBotOrdersForMarket(int $userId, int $marketId, Market $market, bool $skipLockedBalanceDecrease = false): array
+    private function cancelBotOrdersForMarket(int $userId, int $marketId, Market $market): array
     {
         $inMemoryOrderBook = resolve(InMemoryOrderBookService::class);
-        $wallets = resolve(WalletRepositoryInterface::class);
         $spotService = resolve(SpotService::class);
 
         $cancelledRedis = 0;
@@ -534,24 +418,8 @@ class SpotBotController extends Controller
             try {
                 // Re-check order existence in Redis right before unlocking to avoid race with matching/persistence
                 if (!$inMemoryOrderBook->orderExists($order->id)) {
-                    Log::channel('spot-bot')->warning('Skip unlocking for missing Redis order (likely persisted/matched)', [
-                        'order_id' => $order->id,
-                        'user_id' => $order->user_id,
-                        'market_id' => $marketId,
-                    ]);
-                    continue;
-                }
 
-                // Release locked balance only if not skipped (when locked_balance wasn't reset to zero)
-                if (!$skipLockedBalanceDecrease) {
-                    if ($order->side === SpotOrderSideEnum::BUY) {
-                        $totalValue = Math::mul($order->quantity, $order->price);
-                        // Use repository guarded method to prevent negative locked_balance
-                        $wallets->decreaseLockedBalance($order->user_id, $market->quote_currency, $totalValue);
-                    } else {
-                        // Use repository guarded method to prevent negative locked_balance
-                        $wallets->decreaseLockedBalance($order->user_id, $market->base_currency, $order->quantity);
-                    }
+                    continue;
                 }
 
                 // Delete from Redis
@@ -591,9 +459,6 @@ class SpotBotController extends Controller
         try {
             $inMemoryOrderBook->clearMarketOrdersIndex($marketId, SpotOrderSideEnum::BUY);
             $inMemoryOrderBook->clearMarketOrdersIndex($marketId, SpotOrderSideEnum::SELL);
-            Log::channel('spot-bot')->info('Cleared Redis market ZSET indexes after cancellation', [
-                'market_id' => $marketId
-            ]);
         } catch (Throwable $e) {
             Log::channel('spot-bot')->error('Failed clearing Redis market ZSET indexes after cancellation', [
                 'market_id' => $marketId,
@@ -848,39 +713,7 @@ class SpotBotController extends Controller
         }
     }
 
-    /**
-     * Reset locked balance to zero for a specific user and currency
-     * This prevents negative locked_balance errors during order cancellation
-     *
-     * @param int $userId
-     * @param string $currency
-     * @return void
-     */
-    private function resetLockedBalance(int $userId, string $currency): void
-    {
-        try {
-            $walletRepository = resolve(WalletRepositoryInterface::class);
-            $wallet = $walletRepository->getWalletWithLock($currency, $userId);
-
-            if ($wallet && Math::comp($wallet->locked_balance, '0') !== 0) {
-                Log::channel('spot-bot')->info('Resetting locked_balance to zero before order cancellation', [
-                    'user_id' => $userId,
-                    'currency' => $currency,
-                    'previous_locked_balance' => $wallet->locked_balance
-                ]);
-
-                // Directly set locked_balance to zero to prevent negative balance errors
-                $wallet->locked_balance = '0';
-                $wallet->save();
-            }
-        } catch (Throwable $e) {
-            Log::channel('spot-bot')->warning('Failed to reset locked_balance', [
-                'user_id' => $userId,
-                'currency' => $currency,
-                'error' => $e->getMessage()
-            ]);
-        }
-    }
+    // Bot orders no longer use locked_balance; helper removed
 
     /**
      * Cancel bot orders for all active currencies
@@ -924,12 +757,8 @@ class SpotBotController extends Controller
                     continue;
                 }
 
-                // Reset locked balances to zero before canceling orders to prevent negative balance errors
-                $this->resetLockedBalance($setting->fake_user_id, $market->base_currency);
-                $this->resetLockedBalance($setting->fake_user_id, $market->quote_currency);
-
-                // Cancel both Redis and partially filled DB orders (skip locked balance decrease since we reset it)
-                $cancelResult = $this->cancelBotOrdersForMarket($setting->fake_user_id, $market->id, $market, true);
+                // Cancel both Redis and partially filled DB orders (bot orders don't use locked_balance)
+                $cancelResult = $this->cancelBotOrdersForMarket($setting->fake_user_id, $market->id, $market);
 
                 $totalCancelled += $cancelResult['total_cancelled'];
                 $totalErrors += count($cancelResult['errors']);

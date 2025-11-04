@@ -13,6 +13,7 @@ use App\Events\UserNotification;
 use App\Jobs\BroadcastOrderBook;
 use App\Helpers\Math;
 use App\Models\LockedBalanceDetail;
+use App\Enums\SpotOrderSourceEnum;
 use App\Models\Setting;
 use App\Models\SpotOrder;
 use App\Models\SpotTrade;
@@ -396,8 +397,19 @@ readonly class OrderMatchingEngine
 
             $takerReceiveQty = Math::sub($tradeQuantity, $takerCommission);
 
-            if ($takerOrder->type !== SpotOrderTypeEnum::MARKET) {
+            if ($takerOrder->type !== SpotOrderTypeEnum::MARKET && $takerOrder->source !== SpotOrderSourceEnum::BOT) {
+                // Reduce wallet locked balance by the actual trade cost
                 $this->walletRepository->decreaseLockedBalance($takerOrder->user_id, $quoteCurrency, $actualTradeCost);
+
+                // Keep LockedBalanceDetail in sync for BUY taker orders during partial fills
+                // Subtract the actual trade cost so the detail reflects remaining locked amount
+                $lockedDetail = \App\Models\LockedBalanceDetail::query()
+                    ->where('spot_order_id', $takerOrder->id)
+                    ->first();
+                if ($lockedDetail) {
+                    $lockedDetail->amount = \App\Helpers\Math::sub($lockedDetail->amount, $actualTradeCost);
+                    $lockedDetail->save();
+                }
             }
 
             $this->walletRepository->increaseBalance($takerOrder->user_id, $baseCurrency, $takerReceiveQty);
@@ -413,16 +425,18 @@ readonly class OrderMatchingEngine
                 if (Math::comp($refundAmount, 0) === 1) {
                     $this->walletRepository->increaseBalance($takerOrder->user_id, $quoteCurrency, $refundAmount);
                     // Also decrease the lock for the refunded amount, as it was initially locked based on expected cost
-                    $this->walletRepository->decreaseLockedBalance($takerOrder->user_id, $quoteCurrency, $refundAmount);
-                    
-                    // Update LockedBalanceDetail to reflect the refunded amount
-                    // This is critical to prevent negative locked_balance during order cancellation
+                    if ($takerOrder->source !== SpotOrderSourceEnum::BOT) {
+                        $this->walletRepository->decreaseLockedBalance($takerOrder->user_id, $quoteCurrency, $refundAmount);
+                    }
+
+                    // Update LockedBalanceDetail to also subtract the refunded amount
+                    // Net effect (actualTradeCost + refundAmount) removes expected locked portion for the executed fill
                     $lockedDetail = LockedBalanceDetail::query()->where('spot_order_id', $takerOrder->id)->first();
                     if ($lockedDetail) {
                         $lockedDetail->amount = Math::sub($lockedDetail->amount, $refundAmount);
                         $lockedDetail->save();
                     }
-                    
+
                     \Illuminate\Support\Facades\Log::channel('spot-order-matching')->info("Refunded {$refundAmount} {$quoteCurrency} to user {$takerOrder->user_id} for taker order {$takerOrder->id} due to better execution price.");
                 }
             }
@@ -431,9 +445,9 @@ readonly class OrderMatchingEngine
             // Commission is taken from quote currency (what they receive)
             $takerReceiveQuote = Math::sub($actualTradeCost, $takerCommission);
 
-            if ($takerOrder->type !== SpotOrderTypeEnum::MARKET) {
+            if ($takerOrder->type !== SpotOrderTypeEnum::MARKET && $takerOrder->source !== SpotOrderSourceEnum::BOT) {
                 $this->walletRepository->decreaseLockedBalance($takerOrder->user_id, $baseCurrency, $tradeQuantity);
-                
+
                 // Update LockedBalanceDetail for SELL orders during partial matches
                 $lockedDetail = LockedBalanceDetail::query()->where('spot_order_id', $takerOrder->id)->first();
                 if ($lockedDetail) {
@@ -461,8 +475,10 @@ readonly class OrderMatchingEngine
             //Decrease Quote Currency
             $this->walletRepository->decreaseBalance($makerOrder->user_id, $quoteCurrency, $actualTradeCost);
 
-            $this->walletRepository->decreaseLockedBalance($makerOrder->user_id, $quoteCurrency, $actualTradeCost);
-            
+            if ($makerOrder->source !== SpotOrderSourceEnum::BOT) {
+                $this->walletRepository->decreaseLockedBalance($makerOrder->user_id, $quoteCurrency, $actualTradeCost);
+            }
+
             // Update LockedBalanceDetail for BUY Maker orders during partial matches
             $lockedDetail = LockedBalanceDetail::query()->where('spot_order_id', $makerOrder->id)->first();
             if ($lockedDetail) {
@@ -475,8 +491,10 @@ readonly class OrderMatchingEngine
             $makerReceiveQuote = Math::sub($actualTradeCost, $makerCommission);
             $this->walletRepository->increaseBalance($makerOrder->user_id, $quoteCurrency, $makerReceiveQuote);
 
-            $this->walletRepository->decreaseLockedBalance($makerOrder->user_id, $baseCurrency, $tradeQuantity);
-            
+            if ($makerOrder->source !== SpotOrderSourceEnum::BOT) {
+                $this->walletRepository->decreaseLockedBalance($makerOrder->user_id, $baseCurrency, $tradeQuantity);
+            }
+
             // Update LockedBalanceDetail for SELL Maker orders during partial matches
             $lockedDetail = LockedBalanceDetail::query()->where('spot_order_id', $makerOrder->id)->first();
             if ($lockedDetail) {
@@ -524,27 +542,31 @@ readonly class OrderMatchingEngine
                 $order->status = $newStatus; // Use the determined status
                 $order->save();
 
-                // Release any remaining locked balance associated with the canceled portion
-                $this->releaseRemainingLockedBalance($order);
-
-                // Update description before deleting locked balance for canceled market order
-                $lockedDetail = LockedBalanceDetail::query()->where('spot_order_id', $order->id)->first();
-                if ($lockedDetail) {
-                    $description = '';
-                    if (Math::comp($filledQuantity, 0) !== 0) {
-                        // Partially filled market order
-                        $description = "لغو سفارش مارکت #{$order->id} - پر شده: {$filledQuantity} از {$initialQuantity}";
-                    } else {
-                        // Fully unfilled market order
-                        $description = "لغو سفارش مارکت #{$order->id} - بدون پر شدن";
-                    }
-                    $lockedDetail->update(['description' => $description]);
+                // Release remaining locked balance for non-bot orders only
+                if ($order->source !== SpotOrderSourceEnum::BOT) {
+                    $this->releaseRemainingLockedBalance($order);
                 }
 
-                // Clean up any potentially remaining locked balance detail entry
-                LockedBalanceDetail::query()
-                    ->where('spot_order_id', $order->id)
-                    ->delete();
+                // Update description before deleting locked balance for canceled market order (skip for bots)
+                if ($order->source !== SpotOrderSourceEnum::BOT) {
+                    $lockedDetail = LockedBalanceDetail::query()->where('spot_order_id', $order->id)->first();
+                    if ($lockedDetail) {
+                        $description = '';
+                        if (Math::comp($filledQuantity, 0) !== 0) {
+                            $description = "لغو سفارش مارکت #{$order->id} - پر شده: {$filledQuantity} از {$initialQuantity}";
+                        } else {
+                            $description = "لغو سفارش مارکت #{$order->id} - بدون پر شدن";
+                        }
+                        $lockedDetail->update(['description' => $description]);
+                    }
+                }
+
+                // Clean up any potentially remaining locked balance detail entry (skip for bots)
+                if ($order->source !== SpotOrderSourceEnum::BOT) {
+                    LockedBalanceDetail::query()
+                        ->where('spot_order_id', $order->id)
+                        ->delete();
+                }
 
                 // Optionally notify the user about the cancellation
                 // UserNotification::dispatch($order->user_id, __('user_notifications.spot_order.market_order_canceled', ['status' => $newStatus->value], locale: 'fa'));
@@ -652,7 +674,7 @@ readonly class OrderMatchingEngine
 
         // Convert in-memory orders to database format and combine
         $allOrders = $dbOrders->toArray();
-        
+
         foreach ($inMemoryOrders as $inMemoryOrder) {
             // Convert to database format for matching
             $allOrders[] = [
@@ -674,9 +696,9 @@ readonly class OrderMatchingEngine
         usort($allOrders, function ($a, $b) use ($sortType) {
             $priceA = is_array($a) ? $a['price'] : $a->price;
             $priceB = is_array($b) ? $b['price'] : $b->price;
-            
+
             $comp = Math::comp($priceA, $priceB);
-            
+
             return $sortType === 'ASC' ? $comp : -$comp;
         });
 
@@ -732,7 +754,7 @@ readonly class OrderMatchingEngine
 
         // Combine orders
         $allOrders = $dbOrders->toArray();
-        
+
         foreach ($filteredInMemoryOrders as $inMemoryOrder) {
             $allOrders[] = [
                 'id' => $inMemoryOrder->id,
@@ -753,12 +775,12 @@ readonly class OrderMatchingEngine
         usort($allOrders, function ($a, $b) use ($sortType) {
             $priceA = is_array($a) ? $a['price'] : $a->price;
             $priceB = is_array($b) ? $b['price'] : $b->price;
-            
+
             // Market orders (null) should come first
             if ($priceA === null && $priceB !== null) return -1;
             if ($priceA !== null && $priceB === null) return 1;
             if ($priceA === null && $priceB === null) return 0;
-            
+
             $comp = Math::comp($priceA, $priceB);
             return $sortType === 'ASC' ? $comp : -$comp;
         });
@@ -782,13 +804,13 @@ readonly class OrderMatchingEngine
         // Check if it's a bot order that needs to be persisted
         if (isset($orderData['is_bot_order']) && $orderData['is_bot_order'] === true) {
             $inMemoryOrder = $orderData['in_memory_order'];
-            
+
             // Persist to database
             $spotOrder = $this->persistenceService->persistOrder($inMemoryOrder);
-            
+
             // Delete from Redis after persisting
             $this->inMemoryOrderBook->deleteOrder($inMemoryOrder->id);
-            
+
             Log::channel('spot-bot')->info('Bot order persisted for matching', [
                 'in_memory_id' => $inMemoryOrder->id,
                 'database_id' => $spotOrder->id,
@@ -796,7 +818,7 @@ readonly class OrderMatchingEngine
                 'side' => $spotOrder->side->value,
                 'price' => $spotOrder->price,
             ]);
-            
+
             return $spotOrder;
         }
 

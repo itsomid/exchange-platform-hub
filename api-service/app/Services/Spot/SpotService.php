@@ -176,7 +176,7 @@ class SpotService
             orderId: $orderId
         );
 
-    
+
         $filledValue = formatNumberTrimZeros(bcmul($order->price, $order->filled_quantity, 8));
         return resolve(SpotOrderListsResponseDTO::class)
             ->setId($order->id)
@@ -287,73 +287,13 @@ class SpotService
     }
 
     /**
-     * Cancel bot orders - now uses LockedBalanceDetail for accurate tracking
-     * LockedBalanceDetail is created when bot order is persisted from Redis to DB
+     * Cancel bot orders without any locked_balance operations.
+     * Bot orders no longer lock funds; just update status accordingly.
      */
     public function cancelBotOrder(int $userId, $order): void
     {
-        $lockedDetail = $this->lockedBalanceRepository->getOne($order->id, LockedBalanceTypeEnum::SPOT);
+        // Simply set status based on whether order was partially filled
 
-        // Check if LockedBalanceDetail exists (should exist for orders persisted from Redis)
-        // For orders that were never matched (still in Redis), they won't have LockedBalanceDetail
-        // but they're cancelled via cancelBotOrdersForMarket which handles Redis orders separately
-        if (!$lockedDetail) {
-            // Fallback for edge cases: calculate refund manually if LockedBalanceDetail doesn't exist
-            // This can happen if order was created before the fix or if there's a race condition
-            \Illuminate\Support\Facades\Log::channel('spot-order-matching')->warning(
-                "LockedBalanceDetail not found for bot order {$order->id} during cancellation. Using fallback calculation."
-            );
-
-            $market = $order->market;
-            
-            // Calculate the amount that should be refunded
-            if ($order->side === SpotOrderSideEnum::BUY) {
-                $currency = $market->quote_currency;
-                $amountRefund = Math::mul($order->quantity, $order->price);
-                // For partial fills, subtract the filled value
-                if (Math::comp($order->filled_quantity, '0') !== 0) {
-                    $amountRefund = Math::sub($amountRefund, $order->getFilledValue());
-                }
-            } else {
-                $currency = $market->base_currency;
-                $amountRefund = $order->quantity;
-                // For partial fills, subtract the filled quantity
-                if (Math::comp($order->filled_quantity, '0') !== 0) {
-                    $amountRefund = Math::sub($amountRefund, $order->filled_quantity);
-                }
-            }
-
-            // Use repository guarded method to avoid negative locked_balance and ensure row lock
-            $this->walletRepository->decreaseLockedBalance($userId, $currency, $amountRefund);
-        } else {
-            // Use LockedBalanceDetail amount (which is kept up-to-date during partial fills)
-            $amountRefund = $lockedDetail->amount;
-
-            $market = $order->market;
-            if ($order->side === SpotOrderSideEnum::BUY) {
-                $currency = $market->quote_currency;
-            } else {
-                $currency = $market->base_currency;
-            }
-
-            // Update description before deleting locked balance
-            $description = '';
-            if (Math::comp($order->filled_quantity, '0') !== 0) {
-                // Partially filled order
-                $description = "لغو سفارش ربات #{$order->id} - پر شده: " . formatNumberTrimZeros($order->filled_quantity) . " از " . formatNumberTrimZeros($order->quantity);
-            } else {
-                // Fully unfilled order
-                $description = "لغو سفارش ربات #{$order->id} - بدون پر شدن";
-            }
-
-            $lockedDetail->update(['description' => $description]);
-            $this->lockedBalanceRepository->deleteSpotOrderLockedBalance($order->id);
-
-            // Use repository guarded method to avoid negative locked_balance and ensure row lock
-            $this->walletRepository->decreaseLockedBalance($userId, $currency, $amountRefund);
-        }
-
-        // Set status based on whether order was partially filled
         if (Math::comp($order->filled_quantity, '0') !== 0) {
             $order->update(['status' => SpotOrderStatusEnum::PARTIALLY_FILLED_CANCELED]);
         } else {

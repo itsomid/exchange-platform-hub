@@ -46,19 +46,28 @@ class InMemoryOrderBookService
         $orderKey = $this->getOrderKey($orderId);
         $ttl = $this->getOrderTTL();
 
-        // Store the order data
-        $redis->setex($orderKey, $ttl, json_encode($order->toArray()));
+        // Store the order data with or without TTL based on config
+        if ($ttl > 0) {
+            $redis->setex($orderKey, $ttl, json_encode($order->toArray()));
+        } else {
+            // TTL <= 0 means keep orders without expiration to avoid orphaned locks
+            $redis->set($orderKey, json_encode($order->toArray()));
+        }
 
         // Add to market index (for matching engine)
         $marketKey = $this->getMarketOrdersKey($order->market_id, $order->side);
         $redis->zadd($marketKey, [$orderId => $order->price]);
-        $redis->expire($marketKey, $ttl);
+        if ($ttl > 0) {
+            $redis->expire($marketKey, $ttl);
+        }
 
         // Add to user index (for cancellation)
         $userKey = $this->getUserOrdersKey($order->user_id, $order->market_id);
         $redis->sadd($userKey, $orderId);
-        $redis->expire($userKey, $ttl);
-
+        if ($ttl > 0) {
+            $redis->expire($userKey, $ttl);
+        }
+        
         return true;
     }
 
@@ -126,18 +135,18 @@ class InMemoryOrderBookService
         $orders = [];
         $processedCount = 0;
         $openOrdersCount = 0;
-        
+
         foreach ($orderIds as $orderId) {
             $processedCount++;
             $order = $this->getOrder($orderId);
-            
+
             \Log::debug('[InMemoryOrderBookService] Processing order', [
                 'orderId' => $orderId,
                 'orderFound' => $order !== null,
                 'orderStatus' => $order ? $order->status->value : null,
                 'processedCount' => $processedCount
             ]);
-            
+
             if ($order && $order->status === SpotOrderStatusEnum::OPEN) {
                 $orders[] = $order;
                 $openOrdersCount++;
@@ -230,8 +239,13 @@ class InMemoryOrderBookService
         $redis = $this->getRedisConnection();
         $orderKey = $this->getOrderKey($order->id);
         $order->updated_at = now()->timestamp;
+        $ttl = $this->getOrderTTL();
 
-        return $redis->setex($orderKey, $this->getOrderTTL(), json_encode($order->toArray()));
+        if ($ttl > 0) {
+            return $redis->setex($orderKey, $ttl, json_encode($order->toArray()));
+        }
+
+        return $redis->set($orderKey, json_encode($order->toArray()));
     }
 
     /**

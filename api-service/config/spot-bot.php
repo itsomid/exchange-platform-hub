@@ -10,10 +10,14 @@ return [
     | Redis before automatically expiring. This is a safety mechanism to
     | prevent orphaned orders if the cancellation logic fails.
     |
+    | Note: Set this value to 0 (or a negative number) to store orders
+    | without expiration. This helps prevent orphaned locked_balance when
+    | Redis restarts or TTL-based expiry removes orders before cancellation.
+    |
     | Default: 3600 seconds (1 hour)
     |
     */
-    'in_memory_order_ttl' => env('SPOT_BOT_ORDER_TTL', 3600),
+    'in_memory_order_ttl' => env('SPOT_BOT_ORDER_TTL', 0),
 
     /*
     |--------------------------------------------------------------------------
@@ -64,4 +68,3 @@ return [
     */
     'auto_persist_threshold' => env('SPOT_BOT_AUTO_PERSIST_THRESHOLD', 0),
 ];
-

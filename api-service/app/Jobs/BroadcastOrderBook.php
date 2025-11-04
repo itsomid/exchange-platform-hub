@@ -32,7 +32,7 @@ class BroadcastOrderBook implements ShouldQueue, ShouldBeUnique
     /**
      * Only one job per market should run within this window (seconds).
      */
-    public int $uniqueFor = 2;
+    public int $uniqueFor = 1;
 
     public function __construct(int $marketId)
     {

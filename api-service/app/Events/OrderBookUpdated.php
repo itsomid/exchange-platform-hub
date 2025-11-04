@@ -23,7 +23,7 @@ use Illuminate\Queue\SerializesModels;
  * - Carries `marketId` only; it does not handle throttling or uniqueness.
  * - Keep payload construction here to separate concerns from the Job.
  */
-class OrderBookUpdated implements ShouldBroadcast
+class OrderBookUpdated implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
