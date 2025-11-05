@@ -75,6 +75,11 @@ class SpotOrder extends Model
         );
     }
 
+    public function lockedBalanceDetails(): HasMany
+    {
+        return $this->hasMany(LockedBalanceDetail::class, 'spot_order_id');
+    }
+
     public function getRemindedQuantity(): string
     {
         return Math::sub($this->quantity, $this->filled_quantity);

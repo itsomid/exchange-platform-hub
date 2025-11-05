@@ -216,6 +216,8 @@ Route::middleware(['admin.2fa'])->group(function () {
 
         Route::get('/orders', [SpotOrderController::class, 'index'])->name('spot_orders.index')->can('spot');
         Route::post('/orders/excel-export', [SpotOrderController::class, 'excelExport'])->name('spot_orders.excel-export')->can('spot');
+        Route::post('/orders/{spotOrder}/cancel', [SpotOrderController::class, 'cancelOrder'])->name('spot_orders.cancel')->can('spot');
+        Route::post('/orders/cancel-all-open', [SpotOrderController::class, 'cancelAllOpenOrders'])->name('spot_orders.cancel-all-open')->can('spot');
     });
 
     Route::prefix('deposits')->group(function () {

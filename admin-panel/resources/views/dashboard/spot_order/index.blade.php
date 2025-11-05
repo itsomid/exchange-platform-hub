@@ -260,6 +260,14 @@
                         لیست سفارشات کاربران
                     @endif
                 </h5>
+                @if (request()->input('source', 'user') === 'user')
+                    <div class="card-title-elements ms-auto">
+                        <button type="button" class="btn btn-sm btn-danger" id="cancelAllOpenOrders">
+                            <i class="fas fa-times-circle me-1"></i>
+                            لغو تمام سفارشات باز
+                        </button>
+                    </div>
+                @endif
             </div>
         </div>
         <div class="table-responsive">
@@ -472,6 +480,16 @@
                                         data-bs-target="#order-{{ $spotOrder->id }}">
                                         <i class="fa-light fa-eye fa-lg"></i>
                                     </a>
+                                    @if (request()->input('source', 'user') === 'user' && 
+                                         $spotOrder->status === \App\Enums\SpotOrderStatusEnum::OPEN)
+                                        <button type="button" 
+                                                class="btn btn-sm btn-icon btn-danger cancel-single-order" 
+                                                data-order-id="{{ $spotOrder->id }}"
+                                                data-bs-toggle="tooltip"
+                                                title="لغو سفارش">
+                                            <i class="fa-light fa-times fa-lg"></i>
+                                        </button>
+                                    @endif
                                     <div class="modal fade " id="order-{{ $spotOrder->id }}" tabindex="-1"
                                         aria-modal="true" role="dialog" {{--                                     style="display: block" --}}>
                                         <div class="modal-dialog modal-xl" role="document">
@@ -758,6 +776,90 @@
                 $('#advancedFilters').show();
                 $('#toggleAdvancedFilter').html('<i class="fas fa-chevron-up me-1"></i>مخفی کردن فیلترهای پیشرفته');
             }
+
+            // Cancel All Open Orders Button
+            $('#cancelAllOpenOrders').click(function() {
+                if (!confirm('آیا مطمئن هستید که می‌خواهید تمام سفارشات باز را لغو کنید؟\n\nاین عملیات قابل بازگشت نیست.')) {
+                    return;
+                }
+
+                const button = $(this);
+                const originalText = button.html();
+
+                // Show loading state
+                button.prop('disabled', true);
+                button.html('<i class="fas fa-spinner fa-spin me-1"></i>در حال لغو...');
+
+                $.ajax({
+                    url: '{{ route('admin.spot_orders.cancel-all-open') }}',
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            alert(response.message);
+                            location.reload();
+                        } else {
+                            alert('خطا: ' + response.message);
+                            button.prop('disabled', false);
+                            button.html(originalText);
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMsg = 'خطا در لغو سفارشات';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+                        alert(errorMsg);
+                        button.prop('disabled', false);
+                        button.html(originalText);
+                    }
+                });
+            });
+
+            // Cancel Single Order Button
+            $(document).on('click', '.cancel-single-order', function() {
+                const orderId = $(this).data('order-id');
+                
+                if (!confirm('آیا مطمئن هستید که می‌خواهید این سفارش را لغو کنید؟\n\nسفارش #' + orderId + '\n\nاین عملیات قابل بازگشت نیست.')) {
+                    return;
+                }
+
+                const button = $(this);
+                const originalHtml = button.html();
+
+                // Show loading state
+                button.prop('disabled', true);
+                button.html('<i class="fas fa-spinner fa-spin"></i>');
+
+                $.ajax({
+                    url: '{{ route('admin.spot_orders.cancel', ':id') }}'.replace(':id', orderId),
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            alert(response.message);
+                            location.reload();
+                        } else {
+                            alert('خطا: ' + response.message);
+                            button.prop('disabled', false);
+                            button.html(originalHtml);
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMsg = 'خطا در لغو سفارش';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+                        alert(errorMsg);
+                        button.prop('disabled', false);
+                        button.html(originalHtml);
+                    }
+                });
+            });
         });
     </script>
 @endsection

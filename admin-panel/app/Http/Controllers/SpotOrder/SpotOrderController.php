@@ -297,4 +297,153 @@ class SpotOrderController extends Controller
 
         return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\SpotOrderExport($spotOrders), $filename . '.xlsx');
     }
+
+    /**
+     * Cancel a single spot order
+     */
+    public function cancelOrder(Request $request, SpotOrder $spotOrder)
+    {
+        try {
+            // Check if order can be canceled
+            if ($spotOrder->status !== SpotOrderStatusEnum::OPEN) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'فقط سفارشات باز قابل لغو هستند.'
+                ], 400);
+            }
+
+            // Check if order is from user (not bot)
+            if ($spotOrder->source !== SpotOrderSourceEnum::USER) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'فقط سفارشات کاربران قابل لغو هستند.'
+                ], 400);
+            }
+
+            \DB::beginTransaction();
+
+            // Update order status to canceled
+            $spotOrder->status = SpotOrderStatusEnum::CANCELED;
+            $spotOrder->save();
+
+            // Release locked balance
+            $this->releaseLockedBalance($spotOrder);
+
+            \DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "سفارش #{$spotOrder->id} با موفقیت لغو شد."
+            ]);
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Error canceling spot order', [
+                'order_id' => $spotOrder->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'خطا در لغو سفارش: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Cancel all open orders
+     */
+    public function cancelAllOpenOrders(Request $request)
+    {
+        try {
+            \DB::beginTransaction();
+
+            // Get all open user orders
+            $openOrders = SpotOrder::where('status', SpotOrderStatusEnum::OPEN)
+                ->where('source', SpotOrderSourceEnum::USER)
+                ->get();
+
+            $canceledCount = 0;
+            $errors = [];
+
+            foreach ($openOrders as $order) {
+                try {
+                    // Update order status to canceled
+                    $order->status = SpotOrderStatusEnum::CANCELED;
+                    $order->save();
+
+                    // Release locked balance
+                    $this->releaseLockedBalance($order);
+
+                    $canceledCount++;
+                } catch (\Exception $e) {
+                    $errors[] = "خطا در لغو سفارش #{$order->id}: " . $e->getMessage();
+                    \Log::error('Error canceling order in bulk', [
+                        'order_id' => $order->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+
+            \DB::commit();
+
+            $message = "$canceledCount سفارش با موفقیت لغو شد.";
+            if (count($errors) > 0) {
+                $message .= " " . count($errors) . " سفارش با خطا مواجه شد.";
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'canceled_count' => $canceledCount,
+                'errors' => $errors
+            ]);
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Error canceling all open orders', [
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'خطا در لغو سفارشات: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Release locked balance for a canceled order
+     */
+    private function releaseLockedBalance(SpotOrder $order)
+    {
+        // Find locked balance details for this order
+        $lockedBalanceDetails = \App\Models\LockedBalanceDetail::where('spot_order_id', $order->id)
+            ->whereNull('deleted_at')
+            ->get();
+
+        foreach ($lockedBalanceDetails as $detail) {
+            // Get the wallet
+            $wallet = $detail->wallet;
+            
+            if ($wallet) {
+                // Decrease locked_balance
+                $wallet->locked_balance = bcsub($wallet->locked_balance, $detail->amount, 8);
+                
+                // Make sure locked_balance doesn't go negative
+                if (bccomp($wallet->locked_balance, '0', 8) < 0) {
+                    $wallet->locked_balance = '0';
+                }
+                
+                
+                $wallet->save();
+
+                // Soft delete the locked balance detail
+                $detail->update([
+                    'description' => 'آزاد کردن موجودی قفل شده به دلیل لغو سفارش توسط ادمین'
+                ]);
+                $detail->delete();
+            }
+        }
+    }
 }
