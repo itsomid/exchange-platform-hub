@@ -295,7 +295,10 @@
                                 @endif
                             </a>
                         </th>
-                        <th class="text-nowrap">وضعیت سفارش</th>
+                        <th class="text-nowrap">وضعیت سفارش
+                            <i class="fa-regular fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top"
+                                data-bs-custom-class="tooltip-dark" title="بر اساس وضعیت سفارش maker"></i>
+                        </th>
                         <th class="text-nowrap">جزییات</th>
                     </tr>
                 </thead>
@@ -345,7 +348,7 @@
                                         class="badge bg-label-secondary">{{ $spotTrade->created_at->format('Y/m/d') }}</small>
                                 </td>
                                 <td>
-                                    <span class="badge bg-label-success">
+                                    <span class="badge bg-label-{{ $spotTrade->makerOrder->status->color() }}">
                                         {{ $spotTrade->makerOrder->status->label() }}
                                     </span>
                                 </td>
