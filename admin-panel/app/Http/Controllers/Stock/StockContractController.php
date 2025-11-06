@@ -116,6 +116,11 @@ class StockContractController extends Controller
         $stock = Stock::findOrFail($request['stock_id']);
         $totalValue = $stock->value * $request['amount'];
 
+        // Check if available quantity is sufficient
+        if ($stock->available_quantity < $request['amount']) {
+            return redirect()->back()->withErrors(['amount' => 'تعداد سهام موجود کافی نیست. موجودی فعلی: ' . $stock->available_quantity]);
+        }
+
         $wallet = $this->walletService->getUserWallet($request['user_id'], 'USDT');
         $ExchangeWallet = $this->walletService->getUserWallet($this->bitexroomUserId, 'USDT');
 
@@ -172,8 +177,13 @@ class StockContractController extends Controller
 
             $this->walletService->increaseBalance($this->bitexroomUserId,'USDT',$totalValue);
 
+        } else {
+            // For GIFT type, create contract without wallet operations
+            $contract = StockContract::create($contractData);
         }
 
+        // Decrease available quantity after successful contract creation
+        $stock->decrement('available_quantity', $request['amount']);
 
         // Generate PDF using external API
         $generatedPdfFilename    = $this->callExternalPdfApi($contract->id, $request['user_id']);

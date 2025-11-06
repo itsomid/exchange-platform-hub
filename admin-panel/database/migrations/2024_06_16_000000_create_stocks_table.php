@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->decimal('value', 18, 2);
+             $table->decimal('initial_quantity', 18, 3)->default(0);
+            $table->decimal('available_quantity', 18, 3)->default(0);
             $table->enum('type', ['normal', 'gift', 'partner']);
             $table->decimal('cancellation_fee',  5, 2)->comment('Percentage value (0-100)')->default(0);
             $table->text('description')->nullable();

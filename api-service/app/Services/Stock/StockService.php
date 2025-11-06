@@ -46,6 +46,12 @@ class StockService
             // Check wallet balance
             $stock = $this->stockRepository->getStockById($data['stock_id']);
             $totalValue = $data['amount'] * $stock->value;
+            
+            // Check if available quantity is sufficient
+            if ($stock->available_quantity < $data['amount']) {
+                throw new \Exception('تعداد سهام موجود کافی نیست. موجودی فعلی: ' . $stock->available_quantity);
+            }
+            
             $hasBalance = $this->walletService->checkBalance($user->id, 'USDT', $totalValue);
             if (!$hasBalance) {
                 throw new InsufficientBalanceException(trans('exceptions.' . \App\Exceptions\V1\Wallet\InsufficientBalanceException::class, ['currency' => 'USDT']));
@@ -96,6 +102,9 @@ class StockService
             );
 
             $this->walletService->increaseBalance(config('bitexroom.user_id'), 'USDT', $totalValue);
+
+            // Decrease available quantity after successful contract creation
+            $stock->decrement('available_quantity', $data['amount']);
 
             $generatedPdfPath = $this->generateContractPdf($stockContract, $stock);
 

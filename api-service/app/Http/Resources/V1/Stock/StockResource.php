@@ -18,6 +18,8 @@ class StockResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'value' => $this->value,
+            'initial_quantity' => $this->initial_quantity,
+            'available_quantity' => $this->available_quantity,
             'type' => $this->type,
             'cancellation_fee' => $this->cancellation_fee,
             'description' => $this->description,

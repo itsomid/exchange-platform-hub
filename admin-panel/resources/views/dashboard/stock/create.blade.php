@@ -31,6 +31,35 @@
                     @enderror
                 </div>
                 <div class="col-md-6 mt-3">
+                    <label class="form-label" for="initial_quantity">تعداد کل سهام اولیه:</label>
+                    <input type="number"
+                           name="initial_quantity"
+                           id="initial_quantity"
+                           class="form-control"
+                           value="{{old('initial_quantity', 0)}}"
+                           step="0.001"
+                           min="0"
+                           placeholder="تعداد کل سهام اولیه را وارد کنید">
+                    @error('initial_quantity')
+                    <small class="text-danger">{{$message}}</small>
+                    @enderror
+                    <small class="text-muted">این مقدار به عنوان مرجع برای محاسبه درصد موجودی استفاده می‌شود</small>
+                </div>
+                <div class="col-md-6 mt-3">
+                    <label class="form-label" for="available_quantity">تعداد سهام موجود:</label>
+                    <input type="number"
+                           name="available_quantity"
+                           id="available_quantity"
+                           class="form-control"
+                           value="{{old('available_quantity', 0)}}"
+                           step="0.001"
+                           min="0"
+                           placeholder="تعداد سهام موجود را وارد کنید">
+                    @error('available_quantity')
+                    <small class="text-danger">{{$message}}</small>
+                    @enderror
+                </div>
+                <div class="col-md-6 mt-3">
                     <label class="form-label" for="type">نوع سهام:</label>
                     <select name="type" id="type" class="form-control">
                         @foreach(\App\Enums\StockTypeEnum::cases() as $type)

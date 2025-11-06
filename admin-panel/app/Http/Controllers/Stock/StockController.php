@@ -35,6 +35,8 @@ class StockController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'value' => 'required|numeric',
+            'initial_quantity' => 'required|numeric|min:0',
+            'available_quantity' => 'required|numeric|min:0',
             'type' => 'required|in:normal,gift,partner',
             'cancellation_fee' => 'required|numeric|min:0|max:100',
             'description' => 'nullable|string',
@@ -50,6 +52,8 @@ class StockController extends Controller
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'value' => 'sometimes|required|numeric',
+            'initial_quantity' => 'sometimes|required|numeric|min:0',
+            'available_quantity' => 'sometimes|required|numeric|min:0',
             'type' => 'sometimes|required|in:normal,gift,partner',
             'cancellation_fee' => 'sometimes|required|numeric|min:0|max:100',
             'description' => 'nullable|string',

@@ -61,6 +61,7 @@
                     <th>ID</th>
                     <th>نام سهام</th>
                     <th>ارزش</th>
+                    <th>تعداد سهام موجود</th>
                     <th>نوع سهام</th>
                     <th>کارمزد ابطال</th>
                     <th class="text-wrap w-25">توضیحات</th>
@@ -88,7 +89,7 @@
                 <tbody class="table-border-bottom-0">
                 @if($stocks->isEmpty())
                     <tr>
-                        <td colspan="9" class="text-center">سهامی یافت نشد.</td>
+                        <td colspan="10" class="text-center">سهامی یافت نشد.</td>
                     </tr>
                 @else
 
@@ -102,6 +103,21 @@
                                 <span class="font-number" dir="ltr">
                                     {{$stock->value}}
                                 </span>
+                            </td>
+                            <td>
+                                @php
+                                    $percentageRemaining = $stock->initial_quantity > 0 ? ($stock->available_quantity / $stock->initial_quantity) * 100 : 0;
+                                    $isLowStock = $percentageRemaining < 10 && $stock->available_quantity > 0;
+                                @endphp
+                                <span class="font-number {{ $isLowStock ? 'text-danger fw-bold' : '' }}" dir="ltr">
+                                    {{formatNumberTrimZeros($stock->available_quantity, 3)}}/{{formatNumberTrimZeros($stock->initial_quantity, 3)}}
+                                </span>
+                                @if($isLowStock)
+                                    <i class="fa-solid fa-exclamation-triangle text-danger ms-1"></i>
+                                @endif
+                                @if($stock->available_quantity <= 0)
+                                    <span class="badge bg-label-danger ms-1">تمام شده</span>
+                                @endif
                             </td>
                             <td>
                                 {{$stock->type->label()}}
@@ -154,6 +170,27 @@
                                                     <h6 class="m-0 mb-2 mb-md-0 me-12">ارزش سهام</h6>
                                                     <div class="text-wrap font-number">
                                                         {{$stock->value}} USDT
+                                                    </div>
+                                                </div>
+                                                <div
+                                                    class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+                                                    <h6 class="m-0 mb-2 mb-md-0 me-12">تعداد سهام موجود</h6>
+                                                    <div class="d-flex gap-2 align-items-center">
+                                                        @php
+                                                            $percentageRemaining = $stock->initial_quantity > 0 ? ($stock->available_quantity / $stock->initial_quantity) * 100 : 0;
+                                                            $isLowStock = $percentageRemaining < 10 && $stock->available_quantity > 0;
+                                                        @endphp
+                                                        <span class="font-number {{ $isLowStock ? 'text-danger fw-bold' : '' }}" dir="ltr">
+                                                            {{number_format($stock->available_quantity, 3)}} / {{number_format($stock->initial_quantity, 3)}}
+                                                        </span>
+                                                        @if($isLowStock)
+                                                            <span class="badge bg-label-danger">
+                                                                در حال اتمام
+                                                            </span>
+                                                        @endif
+                                                        @if($stock->available_quantity <= 0)
+                                                            <span class="badge bg-label-danger">تمام شده</span>
+                                                        @endif
                                                     </div>
                                                 </div>
                                                 <div
