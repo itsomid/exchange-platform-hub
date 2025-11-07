@@ -77,7 +77,7 @@ readonly class OrderMatchingEngine
 
         foreach ($oppositeOrdersData as $oppositeOrderData) {
             // Double check reminded quantity within the loop
-            if ($order->getRemindedQuantity(true) <= 0) { // Use fresh value
+            if ($order->getRemindedQuantity() <= 0) { // Fresh value via model updates
                 break;
             }
 
@@ -117,6 +117,101 @@ readonly class OrderMatchingEngine
     {
         $oppositeType = $order->side === SpotOrderSideEnum::BUY ? SpotOrderSideEnum::SELL : SpotOrderSideEnum::BUY;
         $sortType = $order->side === SpotOrderSideEnum::BUY ? 'ASC' : 'DESC';
+
+        // -------------------------------------------------------------
+        // Price Deviation Protection for LIMIT orders
+        // Goal: Allow user to place any price but prevent an extremely
+        //       outlier price (far beyond current best opposite price)
+        //       from immediately matching against the book.
+        //       Instead, such an order should be posted untouched.
+        // Config: setting key 'spot_limit_max_deviation_percent'
+        //   - If not set or zero/negative -> feature disabled (legacy behavior)
+        //   - For BUY: if order.price > bestAsk * (1 + deviation%) skip matching
+        //   - For SELL: if order.price < bestBid * (1 - deviation%) skip matching
+        // -------------------------------------------------------------
+
+    // Read from config with default 10%
+    $maxDeviationPercent = (float) config('spot.spot_limit_max_deviation_percent', 10);
+
+        if ($maxDeviationPercent > 0 && $order->price !== null) {
+            // Fetch best opposite price from DB (existing open orders)
+            $dbBestOpposite = SpotOrder::query()
+                ->where('side', $oppositeType)
+                ->where('market_id', $order->market_id)
+                ->where('status', SpotOrderStatusEnum::OPEN)
+                ->where('user_id', '!=', $order->user_id)
+                ->whereNotNull('price')
+                ->orderBy('price', $order->side === SpotOrderSideEnum::BUY ? 'asc' : 'desc')
+                ->value('price');
+
+            // Fetch best opposite price from in-memory (bot) orders
+            $inMemoryOpposites = $this->inMemoryOrderBook->getMarketOrders($order->market_id, $oppositeType, 100);
+            $inMemoryBestOpposite = null;
+            foreach ($inMemoryOpposites as $memOrder) {
+                if ($memOrder->price === null) {
+                    continue; // skip market bot orders for deviation calc
+                }
+                if ($inMemoryBestOpposite === null) {
+                    $inMemoryBestOpposite = $memOrder->price;
+                } else {
+                    $comp = Math::comp($memOrder->price, $inMemoryBestOpposite);
+                    // For BUY we want lowest ask, for SELL we want highest bid
+                    if ($order->side === SpotOrderSideEnum::BUY) {
+                        if ($comp === -1) { // mem price < current best
+                            $inMemoryBestOpposite = $memOrder->price;
+                        }
+                    } else { // SELL -> choose highest bid
+                        if ($comp === 1) { // mem price > current best
+                            $inMemoryBestOpposite = $memOrder->price;
+                        }
+                    }
+                }
+            }
+
+            // Determine final best opposite price considering both sources
+            $bestOppositePrice = $dbBestOpposite;
+            if ($inMemoryBestOpposite !== null) {
+                if ($bestOppositePrice === null) {
+                    $bestOppositePrice = $inMemoryBestOpposite;
+                } else {
+                    $comp = Math::comp($inMemoryBestOpposite, $bestOppositePrice);
+                    if ($order->side === SpotOrderSideEnum::BUY) {
+                        if ($comp === -1) { // in-memory ask lower
+                            $bestOppositePrice = $inMemoryBestOpposite;
+                        }
+                    } else { // SELL
+                        if ($comp === 1) { // in-memory bid higher
+                            $bestOppositePrice = $inMemoryBestOpposite;
+                        }
+                    }
+                }
+            }
+
+            if ($bestOppositePrice !== null) {
+                // Calculate deviation percent
+                if ($order->side === SpotOrderSideEnum::BUY) {
+                    // Order price above best ask
+                    $priceDiff = Math::sub($order->price, $bestOppositePrice);
+                    if (Math::comp($priceDiff, 0) === 1) {
+                        $deviationPercent = Math::mul(Math::div($priceDiff, $bestOppositePrice), 100);
+                        if (Math::comp($deviationPercent, $maxDeviationPercent) === 1) {
+                            Log::channel('spot-order-matching')->info('[LIMIT-PROTECTION] Skipping immediate match for BUY order '.$order->id.' price='.$order->price.' bestAsk='.$bestOppositePrice.' deviation='.$deviationPercent.'% > '.$maxDeviationPercent.'%');
+                            return; // Post order without matching
+                        }
+                    }
+                } else { // SELL
+                    // Order price below best bid
+                    $priceDiff = Math::sub($bestOppositePrice, $order->price);
+                    if (Math::comp($priceDiff, 0) === 1) {
+                        $deviationPercent = Math::mul(Math::div($priceDiff, $bestOppositePrice), 100);
+                        if (Math::comp($deviationPercent, $maxDeviationPercent) === 1) {
+                            Log::channel('spot-order-matching')->info('[LIMIT-PROTECTION] Skipping immediate match for SELL order '.$order->id.' price='.$order->price.' bestBid='.$bestOppositePrice.' deviation='.$deviationPercent.'% > '.$maxDeviationPercent.'%');
+                            return; // Post order without matching
+                        }
+                    }
+                }
+            }
+        }
 
         // Get opposite orders from both database and Redis (bot orders)
         $oppositeOrdersData = $this->getOppositeOrdersForLimit($order, $oppositeType, $sortType);
@@ -398,16 +493,20 @@ readonly class OrderMatchingEngine
             $takerReceiveQty = Math::sub($tradeQuantity, $takerCommission);
 
             if ($takerOrder->type !== SpotOrderTypeEnum::MARKET && $takerOrder->source !== SpotOrderSourceEnum::BOT) {
-                // Reduce wallet locked balance by the actual trade cost
-                $this->walletRepository->decreaseLockedBalance($takerOrder->user_id, $quoteCurrency, $actualTradeCost);
+                // Expected cost based on taker limit price for this executed quantity
+                $expectedTradeCost = ($takerOrder->price !== null)
+                    ? Math::mul($tradeQuantity, $takerOrder->price)
+                    : $actualTradeCost;
+
+                // Reduce wallet locked balance by the expected cost (release full lock for this fill)
+                $this->walletRepository->decreaseLockedBalance($takerOrder->user_id, $quoteCurrency, $expectedTradeCost);
 
                 // Keep LockedBalanceDetail in sync for BUY taker orders during partial fills
-                // Subtract the actual trade cost so the detail reflects remaining locked amount
                 $lockedDetail = \App\Models\LockedBalanceDetail::query()
                     ->where('spot_order_id', $takerOrder->id)
                     ->first();
                 if ($lockedDetail) {
-                    $lockedDetail->amount = \App\Helpers\Math::sub($lockedDetail->amount, $actualTradeCost);
+                    $lockedDetail->amount = \App\Helpers\Math::sub($lockedDetail->amount, $expectedTradeCost);
                     $lockedDetail->save();
                 }
             }
@@ -417,29 +516,7 @@ readonly class OrderMatchingEngine
             //Decrease Quote Currency
             $this->walletRepository->decreaseBalance($takerOrder->user_id, $quoteCurrency, $actualTradeCost);
 
-            // **Refund remaining USDT if price was lower than expected**
-            // This logic only applies if the taker was a LIMIT order with a specific price
-            if ($takerOrder->type === SpotOrderTypeEnum::LIMIT && $takerOrder->price !== null) {
-                $expectedTradeCost = Math::mul($tradeQuantity, $takerOrder->price); // Calculate expected cost only for limit orders
-                $refundAmount = Math::sub($expectedTradeCost, $actualTradeCost);
-                if (Math::comp($refundAmount, 0) === 1) {
-                    $this->walletRepository->increaseBalance($takerOrder->user_id, $quoteCurrency, $refundAmount);
-                    // Also decrease the lock for the refunded amount, as it was initially locked based on expected cost
-                    if ($takerOrder->source !== SpotOrderSourceEnum::BOT) {
-                        $this->walletRepository->decreaseLockedBalance($takerOrder->user_id, $quoteCurrency, $refundAmount);
-                    }
-
-                    // Update LockedBalanceDetail to also subtract the refunded amount
-                    // Net effect (actualTradeCost + refundAmount) removes expected locked portion for the executed fill
-                    $lockedDetail = LockedBalanceDetail::query()->where('spot_order_id', $takerOrder->id)->first();
-                    if ($lockedDetail) {
-                        $lockedDetail->amount = Math::sub($lockedDetail->amount, $refundAmount);
-                        $lockedDetail->save();
-                    }
-
-                    \Illuminate\Support\Facades\Log::channel('spot-order-matching')->info("Refunded {$refundAmount} {$quoteCurrency} to user {$takerOrder->user_id} for taker order {$takerOrder->id} due to better execution price.");
-                }
-            }
+            // Refund logic removed: we already released the full expected lock for this fill above.
         } else {
             // Seller (Taker) receives quote currency, pays in base currency
             // Commission is taken from quote currency (what they receive)

@@ -10,6 +10,7 @@ use App\Enums\SpotOrderSourceEnum;
 use App\Jobs\BroadcastOrderBook;
 use App\Exceptions\V1\Wallet\InsufficientBalanceException;
 use App\Helpers\Math;
+use App\Models\SpotOrder;
 use App\Models\LockedBalanceDetail;
 use App\Repositories\DTO\SpotOrder\SpotOrderCreateRequestDTO;
 use App\Repositories\DTO\SpotOrder\TradeListRequestDTO;
@@ -62,6 +63,33 @@ class SpotService
         if ($type !== SpotOrderTypeEnum::MARKET) {
             if (is_null($price) || Math::comp($price, '0') !== 1) {
                 throw new InvalidArgumentException('قیمت باید بزرگتر از صفر و معتبر باشد.');
+            }
+
+            // ---------------------------------------------
+            // Price Deviation Validation for LIMIT orders
+            // Reject orders with price too far from best opposite price.
+            // Config value read from config('spot.spot_limit_max_deviation_percent')
+            // BUY: price > bestAsk * (1 + deviation%) -> reject
+            // SELL: price < bestBid * (1 - deviation%) -> reject
+            // ---------------------------------------------
+            $maxDeviationPercent = (float) config('spot.spot_limit_max_deviation_percent', 10);
+            if ($maxDeviationPercent > 0) {
+                $bestOpposite = $this->getBestOppositePrice($market->id, $side);
+                if ($bestOpposite !== null) {
+                    if ($side === SpotOrderSideEnum::BUY) {
+                        // price above best ask
+                        $threshold = Math::mul($bestOpposite, Math::add(1, Math::div($maxDeviationPercent, 100)));
+                        if (Math::comp($price, $threshold) === 1) {
+                            throw new InvalidArgumentException('قیمت سفارش خیلی با بازار فاصله دارد.');
+                        }
+                    } else { // SELL
+                        // price below best bid
+                        $threshold = Math::mul($bestOpposite, Math::sub(1, Math::div($maxDeviationPercent, 100)));
+                        if (Math::comp($price, $threshold) === -1) {
+                            throw new InvalidArgumentException('قیمت سفارش خیلی با بازار فاصله دارد.');
+                        }
+                    }
+                }
             }
         }
 
@@ -128,6 +156,63 @@ class SpotService
         }
 
         return $response;
+    }
+
+    /**
+     * Get best opposite price (best ask for BUY, best bid for SELL) from both DB and hybrid order book
+     */
+    private function getBestOppositePrice(int $marketId, SpotOrderSideEnum $side): ?string
+    {
+        $oppositeSide = $side === SpotOrderSideEnum::BUY ? SpotOrderSideEnum::SELL : SpotOrderSideEnum::BUY;
+
+        // DB query for best opposite price
+        $dbQuery = SpotOrder::query()
+            ->where('market_id', $marketId)
+            ->where('status', SpotOrderStatusEnum::OPEN)
+            ->where('side', $oppositeSide)
+            ->whereNotNull('price');
+
+        if ($side === SpotOrderSideEnum::BUY) {
+            $dbQuery->orderBy('price', 'asc'); // best ask = lowest sell
+        } else {
+            $dbQuery->orderBy('price', 'desc'); // best bid = highest buy
+        }
+        $dbBest = optional($dbQuery->first())->price;
+
+        // In-memory (hybrid) order book data
+        $orderBook = $this->hybridOrderBook->getLatestOrderBook($marketId, 50);
+        $bestMemory = null;
+        if ($side === SpotOrderSideEnum::BUY) {
+            // asks array (SELL side) objects or arrays
+            $asks = $orderBook['asks'] ?? [];
+            foreach ($asks as $ask) {
+                $askPrice = is_array($ask) ? ($ask['price'] ?? null) : ($ask->price ?? null);
+                if ($askPrice === null) continue;
+                if ($bestMemory === null || Math::comp($askPrice, $bestMemory) === -1) {
+                    $bestMemory = $askPrice;
+                }
+            }
+        } else {
+            // bids array (BUY side)
+            $bids = $orderBook['bids'] ?? [];
+            foreach ($bids as $bid) {
+                $bidPrice = is_array($bid) ? ($bid['price'] ?? null) : ($bid->price ?? null);
+                if ($bidPrice === null) continue;
+                if ($bestMemory === null || Math::comp($bidPrice, $bestMemory) === 1) {
+                    $bestMemory = $bidPrice;
+                }
+            }
+        }
+
+        // Decide best overall
+        if ($dbBest === null) return $bestMemory;
+        if ($bestMemory === null) return $dbBest;
+        if ($side === SpotOrderSideEnum::BUY) {
+            // choose lower ask
+            return Math::comp($bestMemory, $dbBest) === -1 ? $bestMemory : $dbBest;
+        }
+        // choose higher bid
+        return Math::comp($bestMemory, $dbBest) === 1 ? $bestMemory : $dbBest;
     }
 
     public function lists(SpotOrderListsRequestDTO $requestDTO): array
