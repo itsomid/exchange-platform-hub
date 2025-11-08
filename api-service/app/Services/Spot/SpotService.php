@@ -64,33 +64,6 @@ class SpotService
             if (is_null($price) || Math::comp($price, '0') !== 1) {
                 throw new InvalidArgumentException('قیمت باید بزرگتر از صفر و معتبر باشد.');
             }
-
-            // ---------------------------------------------
-            // Price Deviation Validation for LIMIT orders
-            // Reject orders with price too far from best opposite price.
-            // Config value read from config('spot.spot_limit_max_deviation_percent')
-            // BUY: price > bestAsk * (1 + deviation%) -> reject
-            // SELL: price < bestBid * (1 - deviation%) -> reject
-            // ---------------------------------------------
-            $maxDeviationPercent = (float) config('spot.spot_limit_max_deviation_percent', 10);
-            if ($maxDeviationPercent > 0) {
-                $bestOpposite = $this->getBestOppositePrice($market->id, $side);
-                if ($bestOpposite !== null) {
-                    if ($side === SpotOrderSideEnum::BUY) {
-                        // price above best ask
-                        $threshold = Math::mul($bestOpposite, Math::add(1, Math::div($maxDeviationPercent, 100)));
-                        if (Math::comp($price, $threshold) === 1) {
-                            throw new InvalidArgumentException('قیمت سفارش خیلی با بازار فاصله دارد.');
-                        }
-                    } else { // SELL
-                        // price below best bid
-                        $threshold = Math::mul($bestOpposite, Math::sub(1, Math::div($maxDeviationPercent, 100)));
-                        if (Math::comp($price, $threshold) === -1) {
-                            throw new InvalidArgumentException('قیمت سفارش خیلی با بازار فاصله دارد.');
-                        }
-                    }
-                }
-            }
         }
 
         // Determine currency for balance check
