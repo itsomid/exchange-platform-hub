@@ -356,7 +356,8 @@
                                 </td>
                                 <td>
                                     <div class="d-flex flex-column">
-                                        <a class="text-heading text-truncate">
+                                        <a class="text-heading text-truncate" target="_blank"
+                                            href="{{ route('admin.inquiry.user-details', [$transaction->user]) }}">
                                             <span class="fw-medium">{{ $transaction->user->email }}</span>
                                         </a>
                                         <small>{{ $transaction->user->username }}</small>
