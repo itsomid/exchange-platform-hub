@@ -77,20 +77,46 @@
     </div>
     <div class="card mb-3">
         <div class="card-body">
-            <h5 class="card-title">خروجی اکسل</h5>
-            <form class="row mt-3 d-flex align-items-end"
-                action="{{ route('admin.transaction.excel-export', request()->query()) }}" method="POST">
+            <h5 class="card-title">
+                <i class="fas fa-file-excel me-2 text-success"></i>
+                خروجی اکسل
+            </h5>
+            <form id="excelExportForm" class="row mt-3 d-flex align-items-end">
                 @csrf
                 <div class="col-md-2 user_role">
-                    <label class="form-label" for="UserRole">از آیدی :</label>
-                    <input type="number" class="form-control" placeholder="آیدی کاربر">
+                    <label class="form-label" for="from_id">
+                        <i class="fas fa-arrow-up me-1 text-primary"></i>
+                        از آیدی تراکنش: (اختیاری)
+                    </label>
+                    <input type="number" name="from_id" id="from_id" class="form-control" placeholder="مثلاً 1000">
+     
                 </div>
                 <div class="col-md-2 user_role">
-                    <label class="form-label" for="UserRole">تا آیدی :</label>
-                    <input type="number" class="form-control" placeholder="آیدی کاربر">
+                    <label class="form-label" for="to_id">
+                        <i class="fas fa-arrow-down me-1 text-danger"></i>
+                        تا آیدی تراکنش: (اختیاری)
+                    </label>
+                    <input type="number" name="to_id" id="to_id" class="form-control" placeholder="مثلاً 1200">
                 </div>
-                <div class="col-md-2 mt-2">
-                    <button class="btn btn-success class ">دانلود خروجی اکسل</button>
+                <div class="col-md-3 mt-2">
+                    <button type="submit" class="btn btn-success me-2" id="exportExcelBtn">
+                        <i class="fas fa-download me-2"></i>
+                        دانلود خروجی اکسل
+                    </button>
+                    <button type="button" class="btn btn-info" id="exportFilteredExcelBtn">
+                        <i class="fas fa-filter me-2"></i>
+                        خروجی با فیلترها
+                    </button>
+                </div>
+                <div class="col-md-12 mt-3">
+                    <div id="exportProgress" class="progress" style="display: none; height: 25px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
+                             role="progressbar" 
+                             style="width: 0%">
+                            <span class="progress-text">در حال آماده سازی...</span>
+                        </div>
+                    </div>
+                    <div id="exportMessage" class="alert mt-2" style="display: none;"></div>
                 </div>
             </form>
         </div>
@@ -356,8 +382,7 @@
                                 </td>
                                 <td>
                                     <div class="d-flex flex-column">
-                                        <a class="text-heading text-truncate" target="_blank"
-                                            href="{{ route('admin.inquiry.user-details', [$transaction->user]) }}">
+                                        <a class="text-heading text-truncate">
                                             <span class="fw-medium">{{ $transaction->user->email }}</span>
                                         </a>
                                         <small>{{ $transaction->user->username }}</small>
@@ -409,9 +434,164 @@
     </div>
 
 @endsection
+
 @section('vendor-script')
-    @vite([])
-@endsection
-@section('vendor-style')
-    @vite([])
+    <script>
+        $(document).ready(function() {
+            // Handle excel export with ID range
+            $('#excelExportForm').on('submit', function(e) {
+                e.preventDefault();
+                exportExcel(false);
+            });
+
+            // Handle excel export with filters
+            $('#exportFilteredExcelBtn').on('click', function(e) {
+                e.preventDefault();
+                exportExcel(true);
+            });
+
+            function exportExcel(useFilters) {
+                const $form = $('#excelExportForm');
+                const $progressBar = $('#exportProgress');
+                const $progressBarInner = $progressBar.find('.progress-bar');
+                const $progressText = $progressBar.find('.progress-text');
+                const $message = $('#exportMessage');
+                const $submitBtn = $('#exportExcelBtn');
+                const $filterBtn = $('#exportFilteredExcelBtn');
+
+                // Gather form data
+                let formData = {
+                    _token: $form.find('[name="_token"]').val()
+                };
+
+                // Add ID range if provided
+                const fromId = $('#from_id').val();
+                const toId = $('#to_id').val();
+                
+                if (fromId) formData.from_id = fromId;
+                if (toId) formData.to_id = toId;
+
+                // Add filters if requested
+                if (useFilters) {
+                    const filterForm = $('form[action="{{ route('admin.transaction.index') }}"]');
+                    
+                    // Get all filter values
+                    const type = filterForm.find('[name="type"]').val();
+                    const subtype = filterForm.find('[name="subtype"]').val();
+                    const currency = filterForm.find('[name="currency"]').val();
+                    const user = filterForm.find('[name="user"]').val();
+                    const transactionValueMin = filterForm.find('[name="transaction_value_min"]').val();
+                    const transactionValueMax = filterForm.find('[name="transaction_value_max"]').val();
+                    const sortById = '{{ request()->input("sortById") }}';
+                    const sortByAmount = '{{ request()->input("sortByAmount") }}';
+                    const sortByCreatedAt = '{{ request()->input("sortByCreatedAt") }}';
+
+                    if (type) formData.type = type;
+                    if (subtype) formData.subtype = subtype;
+                    if (currency) formData.currency = currency;
+                    if (user) formData.user = user;
+                    if (transactionValueMin) formData.transaction_value_min = transactionValueMin;
+                    if (transactionValueMax) formData.transaction_value_max = transactionValueMax;
+                    if (sortById) formData.sortById = sortById;
+                    if (sortByAmount) formData.sortByAmount = sortByAmount;
+                    if (sortByCreatedAt) formData.sortByCreatedAt = sortByCreatedAt;
+                }
+
+                // Reset UI
+                $message.hide();
+                $progressBar.show();
+                $progressBarInner.css('width', '0%').removeClass('bg-success bg-danger').addClass('bg-info');
+                $progressText.text('در حال آماده سازی...');
+                $submitBtn.prop('disabled', true);
+                $filterBtn.prop('disabled', true);
+
+                // Simulate progress
+                let progress = 0;
+                const progressInterval = setInterval(function() {
+                    progress += 5;
+                    if (progress <= 90) {
+                        $progressBarInner.css('width', progress + '%');
+                        $progressText.text('در حال پردازش... ' + progress + '%');
+                    }
+                }, 200);
+
+                // Make AJAX request
+                $.ajax({
+                    url: '{{ route('admin.transaction.excel-export') }}',
+                    type: 'POST',
+                    data: formData,
+                    xhrFields: {
+                        responseType: 'blob'
+                    },
+                    success: function(blob, status, xhr) {
+                        clearInterval(progressInterval);
+                        
+                        // Complete progress
+                        $progressBarInner.css('width', '100%').removeClass('bg-info').addClass('bg-success');
+                        $progressText.text('دانلود موفق! ');
+
+                        // Get filename from header or create default
+                        let filename = 'transactions_' + new Date().getTime() + '.xlsx';
+                        const disposition = xhr.getResponseHeader('Content-Disposition');
+                        if (disposition && disposition.indexOf('filename=') !== -1) {
+                            const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+                            if (matches != null && matches[1]) {
+                                filename = matches[1].replace(/['"]/g, '');
+                            }
+                        }
+
+                        // Create download link
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.style.display = 'none';
+                        a.href = url;
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+
+                        // Show success message
+                        $message.removeClass('alert-danger').addClass('alert-success')
+                            .html('<i class="fas fa-check-circle me-2"></i>فایل اکسل با موفقیت دانلود شد!')
+                            .show();
+
+                        // Reset after 3 seconds
+                        setTimeout(function() {
+                            $progressBar.fadeOut();
+                            $message.fadeOut();
+                            $submitBtn.prop('disabled', false);
+                            $filterBtn.prop('disabled', false);
+                        }, 3000);
+                    },
+                    error: function(xhr) {
+                        clearInterval(progressInterval);
+                        
+                        let errorMsg = 'خطا در دانلود فایل!';
+                        
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        } else if (xhr.status === 500) {
+                            errorMsg = 'خطای سرور! لطفاً بازه کوچکتری انتخاب کنید.';
+                        } else if (xhr.status === 422) {
+                            errorMsg = 'داده‌های ورودی نامعتبر است!';
+                        }
+
+                        $progressBarInner.css('width', '100%').removeClass('bg-info').addClass('bg-danger');
+                        $progressText.text('خطا!');
+                        
+                        $message.removeClass('alert-success').addClass('alert-danger')
+                            .html('<i class="fas fa-exclamation-circle me-2"></i>' + errorMsg)
+                            .show();
+
+                        setTimeout(function() {
+                            $progressBar.fadeOut();
+                            $submitBtn.prop('disabled', false);
+                            $filterBtn.prop('disabled', false);
+                        }, 3000);
+                    }
+                });
+            }
+        });
+    </script>
 @endsection
