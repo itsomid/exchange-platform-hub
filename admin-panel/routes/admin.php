@@ -63,6 +63,16 @@ Route::get('/profile/2fa', [ProfileController::class, 'twoFAEdit'])->name('profi
 // Dashboard page accessible without 2FA
 Route::get('/', [HomeController::class, 'index'])->name('dashboard');
 
+// Dashboard AJAX endpoints
+Route::prefix('dashboard/ajax')->name('dashboard.ajax.')->group(function () {
+    Route::get('/kpi-stats', [HomeController::class, 'getKPIStats'])->name('kpi-stats');
+    Route::get('/financial-summary', [HomeController::class, 'getFinancialSummary'])->name('financial-summary');
+    Route::get('/deposit-withdraw-charts', [HomeController::class, 'getDepositWithdrawCharts'])->name('deposit-withdraw-charts');
+    Route::get('/trading-stats', [HomeController::class, 'getTradingStats'])->name('trading-stats');
+    Route::get('/recent-activities', [HomeController::class, 'getRecentActivities'])->name('recent-activities');
+    Route::get('/top-trading-pairs', [HomeController::class, 'getTopTradingPairs'])->name('top-trading-pairs');
+});
+
 // All other admin routes require 2FA
 Route::middleware(['admin.2fa'])->group(function () {
     // *********ADMIN*********//
@@ -305,7 +315,6 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::get('/{stockContract}', [StockContractController::class, 'show'])->name('stock-contract.show')->can('stock');
         Route::get('/{stockContract}/edit', [StockContractController::class, 'edit'])->name('stock-contract.edit')->can('stock');
         Route::patch('/{stockContract}', [StockContractController::class, 'update'])->name('stock-contract.update')->can('stock');
-        Route::delete('/{stockContract}', [StockContractController::class, 'destroy'])->name('stock-contract.destroy')->can('stock');
         Route::post('/{stockContract}/regenerate-pdf', [StockContractController::class, 'generateContractPdfIfNotExists'])->name('stock-contract.regenerate-pdf')->can('stock');
     });
 

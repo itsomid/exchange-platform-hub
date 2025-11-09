@@ -17,346 +17,331 @@
     </div>
     @endif
 
-    <div class="row g-6">
-        <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between">
-                    <div class="card-title mb-0">
-                        <h5 class="mb-1">مجموع برداشت های کاربران</h5>
-                    </div>
-                    <div class="dropdown">
-                        <button class="btn btn-text-secondary rounded-pill text-muted border-0 p-2 me-n1" type="button"
-                                id="MonthlyCampaign" data-bs-toggle="dropdown" aria-haspopup="true"
-                                aria-expanded="false">
-                            <i class="fa-regular fa-grip-dots-vertical text-muted"></i>
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="MonthlyCampaign">
-                            <a class="dropdown-item" href="javascript:void(0);">امروز</a>
-                            <a class="dropdown-item" href="javascript:void(0);">ماه</a>
-                            <a class="dropdown-item" href="javascript:void(0);">سال</a>
-                        </div>
-                    </div>
-                </div>
+    <!-- KPI Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card">
                 <div class="card-body">
-                    <ul class="p-0 m-0">
-
-                        @forelse($withdrawalSums as $withdraw)
-                            <li class="mb-6 d-flex justify-content-between align-items-center">
-
-                                <img src="{{asset($withdraw->currency->coinLogo())}}" class="img-fluid" width="45px">
-
-                                <div class="d-flex justify-content-between w-100 flex-wrap">
-                                    <h6 class="mb-0 ms-4">{{$withdraw->currency_symbol}}</h6>
-                                    <div class="d-flex ">
-                                        <small class="me-2 align-self-end">{{$withdraw->currency_symbol}}</small>
-                                        <h5 class="mb-0 font-number">{{formatNumberTrimZeros($withdraw->total_amount)}}</h5>
-                                    </div>
-                                </div>
-                            </li>
-                        @empty
-                            <p class="text-right">برداشتی ثبت نشده است</p>
-                        @endforelse
-                    </ul>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between">
-                    <div class="card-title mb-0">
-                        <h5 class="mb-1">سود صرافی از محل کارمزدهای OTC</h5>
-                    </div>
-                    <div class="dropdown">
-                        <button class="btn btn-text-secondary rounded-pill text-muted border-0 p-2 me-n1" type="button"
-                                id="MonthlyCampaign" data-bs-toggle="dropdown" aria-haspopup="true"
-                                aria-expanded="false">
-                            <i class="fa-regular fa-grip-dots-vertical text-muted"></i>
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="MonthlyCampaign">
-                            <a class="dropdown-item" href="javascript:void(0);">امروز</a>
-                            <a class="dropdown-item" href="javascript:void(0);">ماه</a>
-                            <a class="dropdown-item" href="javascript:void(0);">سال</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <ul class="p-0 m-0">
-                        @forelse($OTCFeeTransactionsByCurrency as $currency)
-                            <li class="mb-6 d-flex justify-content-between align-items-center">
-                                <img src="{{asset(\App\Models\Currency::whereSymbol($currency->currency_symbol)->first()->coinLogo())}}" class="img-fluid"
-                                     width="45px">
-                                <div class="d-flex justify-content-between w-100 flex-wrap">
-                                    <h6 class="mb-0 ms-4">{{$currency->currency_symbol}}</h6>
-                                    <div class="d-flex ">
-                                        <small
-                                            class="me-2 align-self-end">{{$currency->currency_symbol}}</small>
-                                        <h5 class="mb-0 font-number">{{formatNumberTrimZeros($currency->total_amount)}}</h5>
-                                    </div>
-                                </div>
-                            </li>
-                        @empty
-                            <p class="text-right">معامله‌ای ثبت نشده است</p>
-                        @endforelse
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between">
-                    <div class="card-title mb-0">
-                        <h5 class="mb-1">سود صرافی از محل کارمزدهای برداشت</h5>
-                    </div>
-                    <div class="dropdown">
-                        <button class="btn btn-text-secondary rounded-pill text-muted border-0 p-2 me-n1" type="button"
-                                id="MonthlyCampaign" data-bs-toggle="dropdown" aria-haspopup="true"
-                                aria-expanded="false">
-                            <i class="fa-regular fa-grip-dots-vertical text-muted"></i>
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="MonthlyCampaign">
-                            <a class="dropdown-item waves-effect" href="javascript:void(0);">Refresh</a>
-                            <a class="dropdown-item waves-effect" href="javascript:void(0);">Download</a>
-                            <a class="dropdown-item waves-effect" href="javascript:void(0);">View All</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <ul class="p-0 m-0">
-                        @forelse($withdrawalFeeTransactionsByCurrency as $currency)
-                            <li class="mb-6 d-flex justify-content-between align-items-center">
-
-                                <img src="{{asset(\App\Models\Currency::whereSymbol($currency->currency_symbol)->first()->coinLogo())}}" class="img-fluid" width="45px">
-
-                                <div class="d-flex justify-content-between w-100 flex-wrap">
-                                    <h6 class="mb-0 ms-4">{{$currency->currency_symbol}}</h6>
-                                    <div class="d-flex ">
-                                        <small
-                                            class="me-2 align-self-end">{{$currency->currency_symbol}}</small>
-                                        <h5 class="mb-0 font-number">{{formatNumberTrimZeros($currency->total_amount)}}</h5>
-                                    </div>
-                                </div>
-                            </li>
-                        @empty
-                            <p class="text-right">برداشتی ثبت نشده است</p>
-                        @endforelse
-                    </ul>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between">
-                    <div class="card-title mb-0">
-                        <h5 class="mb-1">مجموع خرید از صرافی مرجع</h5>
-                    </div>
-                    <div class="dropdown">
-                        <button class="btn btn-text-secondary rounded-pill text-muted border-0 p-2 me-n1" type="button"
-                                id="MonthlyCampaign" data-bs-toggle="dropdown" aria-haspopup="true"
-                                aria-expanded="false">
-                            <i class="fa-regular fa-grip-dots-vertical text-muted"></i>
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="MonthlyCampaign">
-                            <a class="dropdown-item waves-effect" href="javascript:void(0);">Refresh</a>
-                            <a class="dropdown-item waves-effect" href="javascript:void(0);">Download</a>
-                            <a class="dropdown-item waves-effect" href="javascript:void(0);">View All</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <ul class="p-0 m-0">
-                        @forelse($boughtHistoryByCurrency as $currency)
-                            <li class="mb-6 d-flex justify-content-between align-items-center">
-
-                                <img src="{{asset($currency->currency->coinLogo())}}" class="img-fluid"
-                                     width="45px">
-
-                                <div class="d-flex justify-content-between w-100 flex-wrap">
-                                    <h6 class="mb-0 ms-4">{{$currency->currency_symbol}}</h6>
-                                    <div class="d-flex ">
-                                        <div class="d-flex align-items-center">
-                                            <small
-                                                class="me-2 align-self-end">USDT</small>
-                                            <h5 class="mb-0 font-number">{{formatNumberTrimZeros($currency->total_filled_value)}}</h5>
-                                        </div>
-                                        <span class="mx-3 align-self-end">=</span>
-                                        <div class="d-flex align-items-center">
-                                            <small class="me-2 align-self-end">{{$currency->currency_symbol}}</small>
-                                            <h5 class="mb-0 font-number">{{formatNumberTrimZeros($currency->total_amount)}}</h5>
-                                        </div>
-
-                                    </div>
-                                </div>
-                            </li>
-                        @empty
-                            <p class="text-right">برداشتی ثبت نشده است</p>
-                        @endforelse
-                    </ul>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between">
-                    <div class="card-title mb-0">
-                        <h5 class="mb-1">مجموع برداشت از صرافی مرجع </h5>
-                    </div>
-                    <div class="dropdown">
-                        <button class="btn btn-text-secondary rounded-pill text-muted border-0 p-2 me-n1" type="button"
-                                id="MonthlyCampaign" data-bs-toggle="dropdown" aria-haspopup="true"
-                                aria-expanded="false">
-                            <i class="fa-regular fa-grip-dots-vertical text-muted"></i>
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="MonthlyCampaign">
-                            <a class="dropdown-item" href="javascript:void(0);">امروز</a>
-                            <a class="dropdown-item" href="javascript:void(0);">ماه</a>
-                            <a class="dropdown-item" href="javascript:void(0);">سال</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <ul class="p-0 m-0">
-                        @foreach($refExchangeWithdrawalSum as $withdraw)
-                            <li class="mb-6 d-flex justify-content-between align-items-center">
-
-                                <img src="{{asset($withdraw->currency->coinLogo())}}" class="img-fluid" width="45px">
-
-                                <div class="d-flex justify-content-between w-100 flex-wrap">
-                                    <h6 class="mb-0 ms-4">{{$withdraw->currency_symbol}}</h6>
-                                    <div class="d-flex ">
-                                        <small class="me-2 align-self-end">{{$withdraw->currency_symbol}}</small>
-                                        <h5 class="mb-0 font-number">{{formatNumberTrimZeros($withdraw->total_amount)}}</h5>
-                                    </div>
-                                </div>
-                            </li>
-                        @endforeach
-                    </ul>
-                </div>
-            </div>
-        </div>
-        <div class="w-100 m-0"></div>
-        <div class="col-xl-3 col-12">
-            <div class="card h-100">
-                <div class="card-header">
                     <div class="d-flex justify-content-between">
-                        <h6 class="mb-0 text-body">واریز (هفته اخیر)</h6>
-                        <div class="badge bg-label-success">+0%</div>
-                    </div>
-                    <h4 class="card-title mb-1">${{formatNumberTrimZeros($totalDepositsValue)}}</h4>
-                </div>
-                <div class="card-body px-0">
-                    <div id="deposit"></div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-12">
-            <div class="card h-100">
-
-
-                <div class="card-header">
-                    <div class="d-flex justify-content-between">
-                        <h6 class="mb-0 text-body">برداشت (هفته اخیر)</h6>
-                        <div class="badge bg-label-danger">+0%</div>
-                    </div>
-                    <h4 class="card-title mb-1">${{formatNumberTrimZeros($totalWithdrawalValue)}}</h4>
-                </div>
-
-
-                <div class="card-body px-0">
-                    <div id="withdraw"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Support Tracker -->
-        <div class="col-sm-12 col-xl-4">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between pb-0">
-                    <div class="card-title mb-0">
-                        <h5 class="mb-0">آمار پشتیبانی</h5>
-                        <small class="text-muted">هفت روز گذشته</small>
-                    </div>
-                    <div class="dropdown">
-                        <button class="btn p-0" type="button" id="supportTrackerMenu" data-bs-toggle="dropdown"
-                                aria-haspopup="true" aria-expanded="false">
-                            <i class="ti ti-dots-vertical ti-sm text-muted"></i>
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="supportTrackerMenu">
-                            <a class="dropdown-item" href="javascript:void(0);">View More</a>
-                            <a class="dropdown-item" href="javascript:void(0);">Delete</a>
+                        <div>
+                            <h6 class="text-muted mb-1">کل کاربران</h6>
+                            <h3 class="mb-0" id="total-users">
+                                <span class="spinner-border spinner-border-sm" role="status"></span>
+                            </h3>
+                            <small class="text-success" id="today-registrations"></small>
                         </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-12 col-sm-4 col-md-12 col-lg-4">
-                            <div class="mt-lg-4 mt-lg-2 mb-lg-4 mb-2 pt-1">
-                                <h1 class="mb-0">0</h1>
-                                <p class="mb-0">تعداد تیکت ها</p>
+                        <div class="avatar">
+                            <div class="avatar-initial bg-label-primary rounded">
+                                <i class="fa fa-users fa-xl"></i>
                             </div>
-                            <ul class="p-0 m-0">
-                                <li class="d-flex gap-3 align-items-center mb-lg-3 pt-2 pb-1">
-                                    <div class="badge rounded bg-label-primary p-1"><i class="ti ti-ticket ti-sm"></i>
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-0 text-nowrap">تیکت های جدید</h6>
-                                        <small class="text-muted">0</small>
-                                    </div>
-                                </li>
-                                <li class="d-flex gap-3 align-items-center mb-lg-3 pb-1">
-                                    <div class="badge rounded bg-label-info p-1"><i
-                                            class="ti ti-circle-check ti-sm"></i></div>
-                                    <div>
-                                        <h6 class="mb-0 text-nowrap">تیکت های باز</h6>
-                                        <small class="text-muted">0</small>
-                                    </div>
-                                </li>
-                                <li class="d-flex gap-3 align-items-center pb-1">
-                                    <div class="badge rounded bg-label-warning p-1"><i class="ti ti-clock ti-sm"></i>
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-0 text-nowrap">میانگین زمان پاسخ گویی</h6>
-                                        <small class="text-muted">1 روز</small>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="col-12 col-sm-8 col-md-12 col-lg-8">
-                            <div id="supportTracker"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <!--/ Support Tracker -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-muted mb-1">کاربران آنلاین</h6>
+                            <h3 class="mb-0" id="active-users">
+                                <span class="spinner-border spinner-border-sm" role="status"></span>
+                            </h3>
+                            <small class="text-muted">فعال در ۱۰ دقیقه اخیر</small>
+                        </div>
+                        <div class="avatar">
+                            <div class="avatar-initial bg-label-success rounded">
+                                <i class="fa fa-user-check fa-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <ul class="nav nav-pills trading-volume-tabs mb-3" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="spot-today-tab" data-bs-toggle="pill" data-bs-target="#spot-today" 
+                                    type="button" role="tab">
+                                <i class="fa fa-chart-line me-1"></i>
+                                Spot امروز
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="otc-today-tab" data-bs-toggle="pill" data-bs-target="#otc-today" 
+                                    type="button" role="tab">
+                                <i class="fa fa-exchange-alt me-1"></i>
+                                OTC امروز
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="weekly-volume-tab" data-bs-toggle="pill" data-bs-target="#weekly-volume" 
+                                    type="button" role="tab" data-volume-type="weekly">
+                                <i class="fa fa-chart-area me-1"></i>
+                                هفته گذشته
+                            </button>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="spot-today" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">حجم معاملات Spot
+                                            <small class="text-muted">(امروز)</small>
+                                    </h6>
+                                    <h3 class="mb-0 font-number" id="today-spot-volume">
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    </h3>
+                              
+                                </div>
+                                <div class="avatar">
+                                    <div class="avatar-initial bg-label-primary rounded">
+                                        <i class="fa fa-chart-line fa-xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="otc-today" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">حجم معاملات OTC
+                                                  <small class="text-muted">(امروز)</small>
+                                    </h6>
+                                    <h3 class="mb-0 font-number" id="today-otc-volume">
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    </h3>
+                          
+                                </div>
+                                <div class="avatar">
+                                    <div class="avatar-initial bg-label-success rounded">
+                                        <i class="fa fa-exchange-alt fa-xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="weekly-volume" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">کل حجم معاملات
+                                        <small class="text-muted">(7 روز گذشته - Spot + OTC)</small>
+                                    </h6>
+                                    <h3 class="mb-0 font-number" id="weekly-volume-display">
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    </h3>
+                    
+                                </div>
+                                <div class="avatar">
+                                    <div class="avatar-initial bg-label-warning rounded">
+                                        <i class="fa fa-chart-area fa-xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <!-- Orders last week -->
-        <div class="col-xl-4 col-md-4 col-6">
+    </div>
+
+    <!-- Pending Actions and Trading Pairs -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
             <div class="card h-100">
-                <div class="card-header pb-3">
-                    <h5 class="card-title mb-1">نمودار خرید OTC</h5>
-                    <p class="card-subtitle">هفته گذشته</p>
-                </div>
                 <div class="card-body">
-                    <div id="OTCBuyLastWeek"></div>
-                    <div class="d-flex justify-content-between align-items-center gap-3">
-                        <h4 class="mb-0">0</h4>
-                        <small class="text-success">+0%</small>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">اقدامات در انتظار</h5>
+                        <i class="fa fa-clock text-warning fa-lg"></i>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center py-3">
+                        <div>
+                            <h6 class="mb-0">برداشت‌های در انتظار</h6>
+                            <small class="text-muted">نیاز به تایید</small>
+                        </div>
+                        <span class="badge bg-warning" id="pending-withdrawals">
+                            <span class="spinner-border spinner-border-sm" role="status"></span>
+                        </span>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-xl-4 col-md-4 col-6">
+        <div class="col-md-4">
             <div class="card h-100">
-                <div class="card-header pb-3">
-                    <h5 class="card-title mb-1">نمودار فروش OTC</h5>
-                    <p class="card-subtitle">هفته گذشته</p>
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="fa fa-chart-line text-primary me-2"></i>
+                               جفت ارزهای پر معامله Spot
+                    </h5>
+                    <ul class="list-unstyled mb-0" id="top-spot-pairs">
+                        <li class="text-center py-3">
+                            <span class="spinner-border spinner-border-sm" role="status"></span>
+                            <span class="me-2">در حال بارگذاری...</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="fa fa-exchange-alt text-success me-2"></i>
+                        جفت ارزهای پر معامله OTC
+                    </h5>
+                    <ul class="list-unstyled mb-0" id="top-otc-pairs">
+                        <li class="text-center py-3">
+                            <span class="spinner-border spinner-border-sm" role="status"></span>
+                            <span class="me-2">در حال بارگذاری...</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Summary with Tabs -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <h5 class="card-title mb-0">خلاصه مالی صرافی</h5>
                 </div>
                 <div class="card-body">
-                    <div id="OTCSellLastWeek"></div>
-                    <div class="d-flex justify-content-between align-items-center gap-3">
-                        <h4 class="mb-0">0</h4>
-                        <small class="text-success">+0%</small>
+                    <ul class="nav nav-pills nav-fill financial-tabs mb-4" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="withdrawals-tab" data-bs-toggle="tab" data-bs-target="#withdrawals" 
+                                    type="button" role="tab" data-type="withdrawals">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="fa fa-arrow-up fa-lg mb-2"></i>
+                                    <span>برداشت کاربران</span>
+                                </div>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="otc-fees-tab" data-bs-toggle="tab" data-bs-target="#otc-fees" 
+                                    type="button" role="tab" data-type="otc_fees">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="fa fa-coins fa-lg mb-2"></i>
+                                    <span>کارمزد OTC</span>
+                                </div>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="withdrawal-fees-tab" data-bs-toggle="tab" data-bs-target="#withdrawal-fees" 
+                                    type="button" role="tab" data-type="withdrawal_fees">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="fa fa-percent fa-lg mb-2"></i>
+                                    <span>کارمزد برداشت</span>
+                                </div>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="ref-purchases-tab" data-bs-toggle="tab" data-bs-target="#ref-purchases" 
+                                    type="button" role="tab" data-type="ref_purchases">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="fa fa-shopping-cart fa-lg mb-2"></i>
+                                    <span>خرید از صرافی مرجع</span>
+                                </div>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="ref-withdrawals-tab" data-bs-toggle="tab" data-bs-target="#ref-withdrawals" 
+                                    type="button" role="tab" data-type="ref_withdrawals">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="fa fa-exchange-alt fa-lg mb-2"></i>
+                                    <span>برداشت از صرافی مرجع</span>
+                                </div>
+                            </button>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <!-- همه تب‌ها از همین container استفاده می‌کنند -->
+                        <div id="financial-summary-content" class="py-3">
+                            <div class="text-center py-5">
+                                <span class="spinner-border spinner-border-sm" role="status"></span>
+                                <span class="me-2">در حال بارگذاری...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between">
+                    <h5 class="card-title mb-0">واریز (هفته اخیر)</h5>
+                    <div class="badge bg-label-success">+0%</div>
+                </div>
+                <div class="card-body">
+                    <h4 class="mb-3"><span id="total-deposits-value">0</span> <small class="text-muted">USDT</small></h4>
+                    <div id="deposit-chart"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between">
+                    <h5 class="card-title mb-0">برداشت (هفته اخیر)</h5>
+                    <div class="badge bg-label-danger">+0%</div>
+                </div>
+                <div class="card-body">
+                    <h4 class="mb-3"><span id="total-withdrawals-value">0</span> <small class="text-muted">USDT</small></h4>
+                    <div id="withdrawal-chart"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">آمار معاملات OTC</h5>
+                    <small class="text-muted">هفته گذشته</small>
+                </div>
+                <div class="card-body">
+                    <div id="otc-trading-chart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">آخرین فعالیت‌ها</h5>
+                    <button class="btn btn-sm btn-primary" onclick="loadRecentActivities()">
+                        <i class="fa fa-refresh"></i> بروزرسانی
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>نوع</th>
+                                    <th>کاربر</th>
+                                    <th>مقدار</th>
+                                    <th>ارز</th>
+                                    <th>زمان</th>
+                                    <th>وضعیت</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-activities-tbody">
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                        <span class="me-2">در حال بارگذاری...</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -364,21 +349,17 @@
     </div>
 
 @endsection
+
 @section('vendor-script')
     @vite([
             'resources/assets/vendor/libs/apex-charts/apexcharts.js',
-            'resources/assets/js/config.js',
-            'resources/assets/js/dashboard.js',
-            'resources/assets/js/dashboard-simple-deposit.js',
-            'resources/assets/js/dashboard-simple-withdraw.js',
-            'resources/assets/js/dashboard-simple-fee-income.js',
-            'resources/assets/js/dashboard-simple-profit-income.js',
-            'resources/assets/js/deposit.js',
+            'resources/assets/js/dashboard-modern.js',
          ])
 @endsection
 
 @section('vendor-style')
     @vite([
     'resources/assets/vendor/libs/apex-charts/apex-charts.scss',
+    'resources/assets/css/dashboard-modern.css',
 ])
 @endsection
