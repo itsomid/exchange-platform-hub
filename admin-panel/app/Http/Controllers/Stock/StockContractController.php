@@ -36,7 +36,8 @@ class StockContractController extends Controller
 
     public function index()
     {
-        $query = StockContract::with(['user', 'stock', 'transactions']);
+        $query = StockContract::filterBy(request()->all())
+            ->with(['user', 'stock', 'transactions']);
 
         // Handle sorting by created_at
         if (request()->has('sortByCreatedAt')) {
@@ -175,8 +176,7 @@ class StockContractController extends Controller
                 'description' => 'خرید سهام توسط ادمین (#' . auth()->user()->id . '-' . auth()->user()->fullname() . ') - شماره قرارداد: ' . $contract->contract_number,
             ]);
 
-            $this->walletService->increaseBalance($this->bitexroomUserId,'USDT',$totalValue);
-
+            $this->walletService->increaseBalance($this->bitexroomUserId, 'USDT', $totalValue);
         } else {
             // For GIFT type, create contract without wallet operations
             $contract = StockContract::create($contractData);
@@ -296,7 +296,7 @@ class StockContractController extends Controller
                     'status' => TransactionStatusEnum::SUCCESS,
                     'description' => 'بابت لغو سهام توسط ادمین (#' . auth()->user()->id . '-' . auth()->user()->fullname() . ') - شماره قرارداد: ' . $stockContract->contract_number,
                 ]);
-                $this->walletService->decreaseBalance($this->bitexroomUserId,'USDT',$refundAmount);
+                $this->walletService->decreaseBalance($this->bitexroomUserId, 'USDT', $refundAmount);
 
 
                 if ($deductFee) {
@@ -320,12 +320,5 @@ class StockContractController extends Controller
         $stockContract->update($updateData);
 
         return redirect()->route('admin.stock-contract.index')->with('success', 'قرارداد با موفقیت بروزرسانی شد.');
-    }
-
-    public function destroy(StockContract $stockContract)
-    {
-
-        $stockContract->delete();
-        return redirect()->route('admin.stock-contract.index')->with('success', 'قرارداد با موفقیت حذف شد.');
     }
 }

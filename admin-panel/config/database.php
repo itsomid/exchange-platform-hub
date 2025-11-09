@@ -158,7 +158,7 @@ return [
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
             // Use a unified prefix across services to access shared keys
-            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_') . '_database_'),
+            'prefix' => env('REDIS_PREFIX', \Illuminate\Support\Str::slug(env('APP_NAME', 'laravel'), '_') . '_database_'),
         ],
 
         'default' => [

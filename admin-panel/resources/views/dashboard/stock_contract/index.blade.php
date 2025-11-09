@@ -135,8 +135,109 @@
         </div>
     </div>
 
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="card-title header-elements">
+                <h5 class="m-0 me-2">فیلتر قراردادها</h5>
+            </div>
+
+            <form action="{{ route('admin.stock-contract.index') }}" method="get" id="filterForm">
+                <div class="row mb-3">
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
+                        <label class="form-label" for="user">کاربر:</label>
+                        <x-user-selection-component input-name="user" multiple="0"
+                            selected="{{ request()->filled('user') ? request()->input('user') : '' }}"
+                            selected-label="{{ request()->filled('user')
+                                ? '(#' .
+                                        request()->input('user') .
+                                        ') ' .
+                                        \App\Models\User::find(request()->input('user'))?->fullname() .
+                                        ' - ' .
+                                        \App\Models\User::find(request()->input('user'))?->email ??
+                                    'کاربر #' . request()->input('user')
+                                : '' }}">
+                        </x-user-selection-component>
+                    </div>
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
+                        <label class="form-label" for="status">وضعیت قرارداد:</label>
+                        <select name="status" id="status" class="form-select">
+                            <option value="">همه وضعیت‌ها</option>
+                            @foreach (\App\Enums\StockContractStatusEnum::cases() as $case)
+                                <option value="{{ $case->value }}"
+                                    {{ request()->input('status') == $case->value ? 'selected' : '' }}>
+                                    {{ $case->label() }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
+                        <label class="form-label" for="stock_type">نوع سهام:</label>
+                        <select name="stock_type" id="stock_type" class="form-select">
+                            <option value="">همه نوع‌ها</option>
+                            @foreach (\App\Enums\StockTypeEnum::cases() as $type)
+                                <option value="{{ $type->value }}"
+                                    {{ request()->input('stock_type') == $type->value ? 'selected' : '' }}>
+                                    {{ $type->label() }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-12 mb-2">
+                        <label class="form-label d-none d-lg-block">&nbsp;</label>
+                        <div class="d-flex flex-wrap gap-1 justify-content-start">
+                            <button class="btn btn-success btn-sm flex-fill" type="submit" style="min-width: 70px;">
+                                <i class="fas fa-search me-1"></i>جستجو
+                            </button>
+                            <a class="btn btn-outline-secondary btn-sm flex-fill"
+                                href="{{ route('admin.stock-contract.index') }}" style="min-width: 70px;">
+                                <i class="fas fa-times me-1"></i>پاک کردن
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                @if (request()->hasAny(['user', 'status', 'stock_type']))
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="alert alert-info d-flex align-items-center">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <span class="me-2">فیلترهای فعال:</span>
+                                <div class="d-flex flex-wrap gap-1">
+                                    @if (request()->filled('user'))
+                                        @php $selectedUser = \App\Models\User::find(request()->input('user')); @endphp
+                                        @if ($selectedUser)
+                                            <span class="badge bg-primary">کاربر: (#{{ $selectedUser->id }})
+                                                {{ $selectedUser->fullname() }} - {{ $selectedUser->email }}</span>
+                                        @else
+                                            <span class="badge bg-primary">کاربر:
+                                                #{{ request()->input('user') }}</span>
+                                        @endif
+                                    @endif
+
+                                    @if (request()->filled('status'))
+                                        @php $statusEnum = \App\Enums\StockContractStatusEnum::from(request()->input('status')); @endphp
+                                        <span class="badge bg-primary">وضعیت: {{ $statusEnum->label() }}</span>
+                                    @endif
+
+                                    @if (request()->filled('stock_type'))
+                                        @php $typeEnum = \App\Enums\StockTypeEnum::from(request()->input('stock_type')); @endphp
+                                        <span class="badge bg-primary">نوع سهام: {{ $typeEnum->label() }}</span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            </form>
+
+        </div>
+    </div>
 
     <div class="card">
+        <div class="card-body">
+
+
+        </div>
         <div class="card-header">
             <div class="card-title header-elements">
                 <h5 class="m-0 me-2">لیست قراردادها</h5>
@@ -148,6 +249,7 @@
 
             </div>
         </div>
+
         <div class="table-responsive text-nowrap">
             <table class="table table-striped">
                 <thead>
@@ -243,36 +345,25 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <div class="d-flex flex-column gap-2">
-                                        <div class="d-flex gap-2 pb-2 ">
-                                            <a class="text-secondary"
-                                                href="{{ route('admin.stock-contract.show', $contract->id) }}"
-                                                title="مشاهده">
-                                                <i class="fa fa-eye fa-lg"></i>
-                                            </a>
-                                            <a class="text-secondary"
-                                                href="{{ route('admin.stock-contract.edit', $contract->id) }}"
-                                                title="ویرایش">
-                                                <i class="fa fa-edit fa-lg"></i>
-                                            </a>
-                                        </div>
-                                        <div class="d-flex gap-2">
-                                            <button type="button" class="btn btn-link m-0 p-0 text-secondary"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#stock-contract-{{ $contract->id }}" title="تراکنش‌ها">
-                                                <i class="fa-light fa-memo-circle-info fa-lg"></i>
-                                            </button>
-                                            <form action="{{ route('admin.stock-contract.destroy', $contract->id) }}"
-                                                method="POST" class="d-inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-link text-danger p-0 m-0"
-                                                    onclick="return confirm('آیا از حذف این قرارداد اطمینان دارید؟')"
-                                                    title="حذف">
-                                                    <i class="fa-light fa-trash-alt fa-lg"></i>
-                                                </button>
-                                            </form>
-                                        </div>
+                                    <div class="d-flex gap-2">
+
+                                        <a class="text-secondary"
+                                            href="{{ route('admin.stock-contract.show', $contract->id) }}"
+                                            title="مشاهده">
+                                            <i class="fa fa-eye fa-lg"></i>
+                                        </a>
+                                        <a class="text-secondary"
+                                            href="{{ route('admin.stock-contract.edit', $contract->id) }}"
+                                            title="ویرایش">
+                                            <i class="fa fa-edit fa-lg"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-link m-0 p-0 text-secondary"
+                                            data-bs-toggle="modal" data-bs-target="#stock-contract-{{ $contract->id }}"
+                                            title="تراکنش‌ها">
+                                            <i class="fa-light fa-memo-circle-info fa-lg"></i>
+                                        </button>
+
+
                                     </div>
                                     <x-transaction-modal modal-id="stock-contract-{{ $contract->id }}"
                                         title="تراکنش های قرارداد #{{ $contract->id }}" :user="$contract->user"
