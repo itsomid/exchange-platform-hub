@@ -359,7 +359,6 @@
 
 @section('vendor-style')
     @vite([
-    'resources/assets/vendor/libs/apex-charts/apex-charts.scss',
-    'resources/assets/css/dashboard-modern.css',
+    'resources/assets/vendor/libs/apex-charts/apex-charts.scss'
 ])
 @endsection
