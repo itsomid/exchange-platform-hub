@@ -89,7 +89,7 @@
                         از آیدی تراکنش: (اختیاری)
                     </label>
                     <input type="number" name="from_id" id="from_id" class="form-control" placeholder="مثلاً 1000">
-     
+
                 </div>
                 <div class="col-md-2 user_role">
                     <label class="form-label" for="to_id">
@@ -110,8 +110,8 @@
                 </div>
                 <div class="col-md-12 mt-3">
                     <div id="exportProgress" class="progress" style="display: none; height: 25px;">
-                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
-                             role="progressbar" 
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                             role="progressbar"
                              style="width: 0%">
                             <span class="progress-text">در حال آماده سازی...</span>
                         </div>
@@ -382,7 +382,8 @@
                                 </td>
                                 <td>
                                     <div class="d-flex flex-column">
-                                        <a class="text-heading text-truncate">
+                                        <a class="text-heading text-truncate" target="_blank"
+                                           href="{{ route('admin.inquiry.user-details', [$transaction->user]) }}">
                                             <span class="fw-medium">{{ $transaction->user->email }}</span>
                                         </a>
                                         <small>{{ $transaction->user->username }}</small>
@@ -467,14 +468,14 @@
                 // Add ID range if provided
                 const fromId = $('#from_id').val();
                 const toId = $('#to_id').val();
-                
+
                 if (fromId) formData.from_id = fromId;
                 if (toId) formData.to_id = toId;
 
                 // Add filters if requested
                 if (useFilters) {
                     const filterForm = $('form[action="{{ route('admin.transaction.index') }}"]');
-                    
+
                     // Get all filter values
                     const type = filterForm.find('[name="type"]').val();
                     const subtype = filterForm.find('[name="subtype"]').val();
@@ -525,7 +526,7 @@
                     },
                     success: function(blob, status, xhr) {
                         clearInterval(progressInterval);
-                        
+
                         // Complete progress
                         $progressBarInner.css('width', '100%').removeClass('bg-info').addClass('bg-success');
                         $progressText.text('دانلود موفق! ');
@@ -566,9 +567,9 @@
                     },
                     error: function(xhr) {
                         clearInterval(progressInterval);
-                        
+
                         let errorMsg = 'خطا در دانلود فایل!';
-                        
+
                         if (xhr.responseJSON && xhr.responseJSON.message) {
                             errorMsg = xhr.responseJSON.message;
                         } else if (xhr.status === 500) {
@@ -579,7 +580,7 @@
 
                         $progressBarInner.css('width', '100%').removeClass('bg-info').addClass('bg-danger');
                         $progressText.text('خطا!');
-                        
+
                         $message.removeClass('alert-success').addClass('alert-danger')
                             .html('<i class="fas fa-exclamation-circle me-2"></i>' + errorMsg)
                             .show();
