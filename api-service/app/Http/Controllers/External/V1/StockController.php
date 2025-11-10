@@ -34,7 +34,9 @@ class StockController extends Controller
     public function purchaseStock(StockPurchaseRequest $request): JsonResponse
     {
         $system = $request->system;
-        $systemToken = $request->system_token;
+        // Pre-initialize variables so they are always defined for the catch block
+        $apiRequest = null; // Will hold the ApiRequest record after successful creation
+        $user = null;       // Will be set once user is found
 
         try {
             // Find user by email first
@@ -115,16 +117,40 @@ class StockController extends Controller
                 'error' => $e->getMessage()
             ]);
 
-            // Update API request with error response
-            $this->apiRequestRepository->update($apiRequest->id, [
-                'status' => 'failed',
-                'failure_reason' => $e->getMessage(),
-                'response_data' => [
-                    'success' => false,
-                    'error' => $e->getMessage()
-                ],
-                'processed_at' => now()
-            ]);
+            // Update API request with error response if it was created; otherwise create a failed record
+            if ($apiRequest) {
+                $this->apiRequestRepository->update($apiRequest->id, [
+                    'status' => 'failed',
+                    'failure_reason' => $e->getMessage(),
+                    'response_data' => [
+                        'success' => false,
+                        'error' => $e->getMessage()
+                    ],
+                    'processed_at' => now()
+                ]);
+            } elseif ($user) {
+                // Ensure failed attempts are also logged for audit purposes
+                $this->apiRequestRepository->create(
+                    resolve(CreateApiRequestDTO::class)
+                        ->setSystemId($system->id)
+                        ->setUserId($user->id)
+                        ->setType(ApiRequestType::STOCK_PURCHASE)
+                        ->setTrackingCode($request->tracking_code)
+                        ->setModelType(StockContract::class)
+                        ->setStatus('failed')
+                        ->setRequestData([
+                            'user_email' => $request->email,
+                            'stock_id' => $request->stock_id,
+                            'quantity' => $request->quantity,
+                            'tracking_code' => $request->tracking_code,
+                            'description' => $request->description
+                        ])
+                        ->setResponseData([
+                            'success' => false,
+                            'error' => $e->getMessage()
+                        ])
+                );
+            }
 
             return response()->json([
                 'success' => false,

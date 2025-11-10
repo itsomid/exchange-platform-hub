@@ -8,8 +8,8 @@ use App\Repositories\Stock\StockRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use App\Exceptions\V1\Wallet\InsufficientBalanceException;
 use App\Exceptions\V1\Stock\InvalidContractException;
-use App\Models\Stock;
-use Illuminate\Database\Eloquent\Collection;
+use App\Exceptions\V1\Stock\InsufficientStockQuantityException;
+use App\Exceptions\V1\Stock\ContractPdfGenerationFailedException;
 use App\Services\Wallet\WalletService;
 use ZanySoft\LaravelPDF\Facades\PDF;
 use Mpdf\Output\Destination;
@@ -49,12 +49,14 @@ class StockService
             
             // Check if available quantity is sufficient
             if ($stock->available_quantity < $data['amount']) {
-                throw new \Exception('تعداد سهام موجود کافی نیست. موجودی فعلی: ' . $stock->available_quantity);
+                throw new InsufficientStockQuantityException(
+                    trans('exceptions.' . InsufficientStockQuantityException::class, ['available' => $stock->available_quantity])
+                );
             }
             
             $hasBalance = $this->walletService->checkBalance($user->id, 'USDT', $totalValue);
             if (!$hasBalance) {
-                throw new InsufficientBalanceException(trans('exceptions.' . \App\Exceptions\V1\Wallet\InsufficientBalanceException::class, ['currency' => 'USDT']));
+                throw new InsufficientBalanceException(trans('exceptions.' . InsufficientBalanceException::class, ['currency' => 'USDT']));
             }
             $ExchangeWallet = $this->walletRepository->getOneByCurrency('USDT', config('bitexroom.user_id'));
             $stockContract = $this->stockRepository->createContract(
@@ -111,7 +113,9 @@ class StockService
             if ($generatedPdfPath) {
                 $stockContract->update(['contract_file' => $generatedPdfPath]);
             } else {
-                throw new \Exception('Failed to generate PDF for contract: ' . $stockContract->id);
+                throw new ContractPdfGenerationFailedException(
+                    trans('exceptions.' . ContractPdfGenerationFailedException::class)
+                );
             }
 
             return $stockContract;
@@ -124,11 +128,15 @@ class StockService
             $stockContract = $this->stockRepository->getContractById($contractId);
 
             if (!$stockContract || $stockContract->user_id !== $user->id) {
-                throw new InvalidContractException('قرارداد یافت نشد');
+                throw new InvalidContractException(
+                    trans('exceptions.' . InvalidContractException::class)
+                );
             }
 
             if ($stockContract->stock->type === StockTypeEnum::GIFT) {
-                throw new InvalidContractException('قرارداد هدیه نمی تواند فروخته شود');
+                throw new InvalidContractException(
+                    trans('exceptions.' . InvalidContractException::class)
+                );
             }
 
             $returnAmount = $stockContract->total_value - $stockContract->cancellation_fee;

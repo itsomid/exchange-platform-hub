@@ -15,6 +15,8 @@ return [
     \App\Exceptions\V1\OTC\SellTradeWasFiledException::class => 'Trading sell on :marketName is not possible at the moment.',
     \App\Exceptions\V1\Wallet\UserDoesNotHaveWalletAddress::class => 'You do not have an active wallet address. Please create a wallet address first.',
     \App\Exceptions\V1\Stock\InvalidContractException::class => 'Invalid contract or contract not found.',
+    \App\Exceptions\V1\Stock\InsufficientStockQuantityException::class => 'Insufficient available stock. Available: :available',
+    \App\Exceptions\V1\Stock\ContractPdfGenerationFailedException::class => 'Failed to generate contract PDF.',
     \App\Exceptions\V1\Auth\UserNotVerifiedException::class => 'Your account has not been verified.',
     \App\Exceptions\V1\Auth\UserIsSuspendException::class => 'Your account is suspended.',
     \App\Exceptions\Auth\IncompleteProfileException::class => 'Please complete your profile information (first name, last name, mobile, national code).',
