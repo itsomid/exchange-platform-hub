@@ -102,11 +102,11 @@ class User extends Authenticatable implements CanResetPassword, MustVerifyEmail
     /**
      * Send a password reset notification to the user.
      *
-     * @param string $token
+     * @param  string  $token
      */
     public function sendPasswordResetNotification($token): void
     {
-        $url = sprintf(config('frontend.reset-password-link'), $token);
+        $url = sprintf(config('frontend.reset-password-link'), $token, urlencode($this->email));
         $this->notify(new ResetPasswordNotification($this, $url));
     }
 

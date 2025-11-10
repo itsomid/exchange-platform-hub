@@ -173,7 +173,7 @@ class User extends Authenticatable implements CanResetPassword
      */
     public function sendPasswordResetNotification($token): void
     {
-        $url = sprintf(config('frontend.reset-password-link'), $token);
+        $url = sprintf(config('frontend.reset-password-link'), $token, urlencode($this->email));
         $this->notify(new ResetPasswordNotification($this, $url));
     }
 
