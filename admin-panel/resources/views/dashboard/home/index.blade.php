@@ -2,19 +2,20 @@
 @section('title', 'پیشخوان')
 @section('content')
 
-    @if(!$is2FAEnabled)
-    <div class="alert alert-warning mb-4">
-        <div class="d-flex">
-            <i class="fas fa-shield-alt me-2 mt-3 fa-lg"></i>
-            <div>
-                <h5 class="alert-heading">احراز هویت دو مرحله‌ای فعال نیست!</h5>
-                <p>برای افزایش امنیت پنل مدیریت، لطفا احراز هویت دو مرحله‌ای را فعال کنید. بدون فعال‌سازی احراز هویت دو مرحله‌ای، دسترسی شما به بخش‌های مختلف پنل محدود خواهد شد.</p>
-                <a href="{{route('admin.profile.2fa.edit')}}" class="btn btn-sm btn-warning">
-                    <i class="fas fa-lock me-1"></i> فعال‌سازی احراز هویت دو مرحله‌ای
-                </a>
+    @if (!$is2FAEnabled)
+        <div class="alert alert-warning mb-4">
+            <div class="d-flex">
+                <i class="fas fa-shield-alt me-2 mt-3 fa-lg"></i>
+                <div>
+                    <h5 class="alert-heading">احراز هویت دو مرحله‌ای فعال نیست!</h5>
+                    <p>برای افزایش امنیت پنل مدیریت، لطفا احراز هویت دو مرحله‌ای را فعال کنید. بدون فعال‌سازی احراز هویت دو
+                        مرحله‌ای، دسترسی شما به بخش‌های مختلف پنل محدود خواهد شد.</p>
+                    <a href="{{ route('admin.profile.2fa.edit') }}" class="btn btn-sm btn-warning">
+                        <i class="fas fa-lock me-1"></i> فعال‌سازی احراز هویت دو مرحله‌ای
+                    </a>
+                </div>
             </div>
         </div>
-    </div>
     @endif
 
     <!-- KPI Stats Cards -->
@@ -64,22 +65,22 @@
                 <div class="card-body">
                     <ul class="nav nav-pills trading-volume-tabs mb-3" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="spot-today-tab" data-bs-toggle="pill" data-bs-target="#spot-today" 
-                                    type="button" role="tab">
+                            <button class="nav-link active" id="spot-today-tab" data-bs-toggle="pill"
+                                data-bs-target="#spot-today" type="button" role="tab">
                                 <i class="fa fa-chart-line me-1"></i>
                                 Spot امروز
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="otc-today-tab" data-bs-toggle="pill" data-bs-target="#otc-today" 
-                                    type="button" role="tab">
+                            <button class="nav-link" id="otc-today-tab" data-bs-toggle="pill" data-bs-target="#otc-today"
+                                type="button" role="tab">
                                 <i class="fa fa-exchange-alt me-1"></i>
                                 OTC امروز
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="weekly-volume-tab" data-bs-toggle="pill" data-bs-target="#weekly-volume" 
-                                    type="button" role="tab" data-volume-type="weekly">
+                            <button class="nav-link" id="weekly-volume-tab" data-bs-toggle="pill"
+                                data-bs-target="#weekly-volume" type="button" role="tab" data-volume-type="weekly">
                                 <i class="fa fa-chart-area me-1"></i>
                                 هفته گذشته
                             </button>
@@ -90,12 +91,12 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h6 class="text-muted mb-1">حجم معاملات Spot
-                                            <small class="text-muted">(امروز)</small>
+                                        <small class="text-muted">(امروز)</small>
                                     </h6>
                                     <h3 class="mb-0 font-number" id="today-spot-volume">
                                         <span class="spinner-border spinner-border-sm" role="status"></span>
                                     </h3>
-                              
+
                                 </div>
                                 <div class="avatar">
                                     <div class="avatar-initial bg-label-primary rounded">
@@ -108,12 +109,12 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h6 class="text-muted mb-1">حجم معاملات OTC
-                                                  <small class="text-muted">(امروز)</small>
+                                        <small class="text-muted">(امروز)</small>
                                     </h6>
                                     <h3 class="mb-0 font-number" id="today-otc-volume">
                                         <span class="spinner-border spinner-border-sm" role="status"></span>
                                     </h3>
-                          
+
                                 </div>
                                 <div class="avatar">
                                     <div class="avatar-initial bg-label-success rounded">
@@ -131,7 +132,7 @@
                                     <h3 class="mb-0 font-number" id="weekly-volume-display">
                                         <span class="spinner-border spinner-border-sm" role="status"></span>
                                     </h3>
-                    
+
                                 </div>
                                 <div class="avatar">
                                     <div class="avatar-initial bg-label-warning rounded">
@@ -173,7 +174,7 @@
                 <div class="card-body">
                     <h5 class="card-title mb-3">
                         <i class="fa fa-chart-line text-primary me-2"></i>
-                               جفت ارزهای پر معامله Spot
+                        جفت ارزهای پر معامله Spot
                     </h5>
                     <ul class="list-unstyled mb-0" id="top-spot-pairs">
                         <li class="text-center py-3">
@@ -212,8 +213,8 @@
                 <div class="card-body">
                     <ul class="nav nav-pills nav-fill financial-tabs mb-4" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="withdrawals-tab" data-bs-toggle="tab" data-bs-target="#withdrawals" 
-                                    type="button" role="tab" data-type="withdrawals">
+                            <button class="nav-link active" id="withdrawals-tab" data-bs-toggle="tab"
+                                data-bs-target="#withdrawals" type="button" role="tab" data-type="withdrawals">
                                 <div class="d-flex flex-column align-items-center">
                                     <i class="fa fa-arrow-up fa-lg mb-2"></i>
                                     <span>برداشت کاربران</span>
@@ -221,8 +222,8 @@
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="otc-fees-tab" data-bs-toggle="tab" data-bs-target="#otc-fees" 
-                                    type="button" role="tab" data-type="otc_fees">
+                            <button class="nav-link" id="otc-fees-tab" data-bs-toggle="tab" data-bs-target="#otc-fees"
+                                type="button" role="tab" data-type="otc_fees">
                                 <div class="d-flex flex-column align-items-center">
                                     <i class="fa fa-coins fa-lg mb-2"></i>
                                     <span>کارمزد OTC</span>
@@ -230,8 +231,9 @@
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="withdrawal-fees-tab" data-bs-toggle="tab" data-bs-target="#withdrawal-fees" 
-                                    type="button" role="tab" data-type="withdrawal_fees">
+                            <button class="nav-link" id="withdrawal-fees-tab" data-bs-toggle="tab"
+                                data-bs-target="#withdrawal-fees" type="button" role="tab"
+                                data-type="withdrawal_fees">
                                 <div class="d-flex flex-column align-items-center">
                                     <i class="fa fa-percent fa-lg mb-2"></i>
                                     <span>کارمزد برداشت</span>
@@ -239,8 +241,8 @@
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="ref-purchases-tab" data-bs-toggle="tab" data-bs-target="#ref-purchases" 
-                                    type="button" role="tab" data-type="ref_purchases">
+                            <button class="nav-link" id="ref-purchases-tab" data-bs-toggle="tab"
+                                data-bs-target="#ref-purchases" type="button" role="tab" data-type="ref_purchases">
                                 <div class="d-flex flex-column align-items-center">
                                     <i class="fa fa-shopping-cart fa-lg mb-2"></i>
                                     <span>خرید از صرافی مرجع</span>
@@ -248,8 +250,9 @@
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="ref-withdrawals-tab" data-bs-toggle="tab" data-bs-target="#ref-withdrawals" 
-                                    type="button" role="tab" data-type="ref_withdrawals">
+                            <button class="nav-link" id="ref-withdrawals-tab" data-bs-toggle="tab"
+                                data-bs-target="#ref-withdrawals" type="button" role="tab"
+                                data-type="ref_withdrawals">
                                 <div class="d-flex flex-column align-items-center">
                                     <i class="fa fa-exchange-alt fa-lg mb-2"></i>
                                     <span>برداشت از صرافی مرجع</span>
@@ -280,7 +283,8 @@
                     <div class="badge bg-label-success">+0%</div>
                 </div>
                 <div class="card-body">
-                    <h4 class="mb-3"><span id="total-deposits-value">0</span> <small class="text-muted">USDT</small></h4>
+                    <h4 class="mb-3"><span id="total-deposits-value">0</span> <small class="text-muted">USDT</small>
+                    </h4>
                     <div id="deposit-chart"></div>
                 </div>
             </div>
@@ -292,7 +296,8 @@
                     <div class="badge bg-label-danger">+0%</div>
                 </div>
                 <div class="card-body">
-                    <h4 class="mb-3"><span id="total-withdrawals-value">0</span> <small class="text-muted">USDT</small></h4>
+                    <h4 class="mb-3"><span id="total-withdrawals-value">0</span> <small class="text-muted">USDT</small>
+                    </h4>
                     <div id="withdrawal-chart"></div>
                 </div>
             </div>
@@ -351,14 +356,14 @@
 @endsection
 
 @section('vendor-script')
-    @vite([
-            'resources/assets/vendor/libs/apex-charts/apexcharts.js',
-            'resources/assets/js/dashboard-modern.js',
-         ])
+    @vite(['resources/assets/vendor/libs/apex-charts/apexcharts.js', 'resources/assets/js/dashboard-modern.js'])
 @endsection
 
 @section('vendor-style')
-    @vite([
-    'resources/assets/vendor/libs/apex-charts/apex-charts.scss'
-])
+    @vite(['resources/assets/vendor/libs/apex-charts/apex-charts.scss'])
+    @if (session('theme', 'light') === 'dark')
+        @vite(['resources/assets/vendor/libs/dashboard/dashboard-modern-dark.scss'])
+    @else
+        @vite(['resources/assets/vendor/libs/dashboard/dashboard-modern.scss'])
+    @endif
 @endsection

@@ -1,20 +1,5 @@
 /* Modern Dashboard Dark Theme Styles */
 
-.font-number {
-    font-family: 'Roboto', 'Arial', sans-serif;
-}
-
-.card {
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    background: #2f3349;
-    border-color: #3b4062;
-
-    &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-    }
-}
-
 .avatar-initial {
     width: 48px;
     height: 48px;
@@ -131,11 +116,14 @@
 }
 
 @keyframes bounceIcon {
-    0%, 100% { 
-        transform: translateY(0); 
+
+    0%,
+    100% {
+        transform: translateY(0);
     }
-    50% { 
-        transform: translateY(-5px); 
+
+    50% {
+        transform: translateY(-5px);
     }
 }
 
@@ -230,13 +218,14 @@
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
     }
 }
 
-.card-body > * {
+.card-body>* {
     animation: fadeIn 0.3s ease-in-out;
 }
 
