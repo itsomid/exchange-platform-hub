@@ -122,6 +122,54 @@ class StockService
         });
     }
 
+    /**
+     * External purchase flow: do NOT touch user or exchange wallets
+     * - Skips balance check and wallet transactions
+     * - Creates contract, decrements stock quantity, and generates PDF
+     */
+    public function purchaseStockExternal(User $user, array $data)
+    {
+        return DB::transaction(function () use ($user, $data) {
+            $stock = $this->stockRepository->getStockById($data['stock_id']);
+            $totalValue = $data['amount'] * $stock->value;
+
+            // Ensure stock availability
+            if ($stock->available_quantity < $data['amount']) {
+                throw new InsufficientStockQuantityException(
+                    trans('exceptions.' . InsufficientStockQuantityException::class, ['available' => $stock->available_quantity])
+                );
+            }
+
+            // Create contract without wallet operations
+            $stockContract = $this->stockRepository->createContract(
+                user: $user,
+                amount: $data['amount'],
+                stock: $stock,
+                totalValue: $totalValue
+            );
+
+            // Optional: persist description if provided
+            if (!empty($data['description'])) {
+                $stockContract->update(['description' => $data['description']]);
+            }
+
+            // Decrease available stock quantity
+            $stock->decrement('available_quantity', $data['amount']);
+
+            // Generate and attach PDF
+            $generatedPdfPath = $this->generateContractPdf($stockContract, $stock);
+            if ($generatedPdfPath) {
+                $stockContract->update(['contract_file' => $generatedPdfPath]);
+            } else {
+                throw new ContractPdfGenerationFailedException(
+                    trans('exceptions.' . ContractPdfGenerationFailedException::class)
+                );
+            }
+
+            return $stockContract;
+        });
+    }
+
     public function sellStock(User $user, string $contractId): void
     {
         DB::transaction(function () use ($user, $contractId) {

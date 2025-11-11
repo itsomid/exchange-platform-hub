@@ -51,8 +51,8 @@ class StockController extends Controller
 
             DB::beginTransaction();
 
-            // Purchase stock using StockService
-            $result = $this->stockService->purchaseStock($user, [
+            // Purchase stock using StockService (external flow without wallet impact)
+            $result = $this->stockService->purchaseStockExternal($user, [
                 'stock_id' => $request->stock_id,
                 'amount' => $request->quantity,
                 'description' => $request->description
