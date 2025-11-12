@@ -22,7 +22,7 @@ class StockPurchaseRequest extends FormRequest
         return [
             'email' => 'required|email|exists:users,email',
             'stock_id' => 'required|integer|exists:stocks,id',
-            'quantity' => 'required|numeric|min:1',
+            'amount' => 'required|numeric|min:0.01',
             'tracking_code' => 'required|string|max:100',
             'description' => 'nullable|string|max:255'
         ];
@@ -40,15 +40,12 @@ class StockPurchaseRequest extends FormRequest
             'stock_id.required' => 'شناسه سهام الزامی است',
             'stock_id.integer' => 'شناسه سهام باید عددی باشد',
             'stock_id.exists' => 'سهام انتخاب شده معتبر نیست',
-            'quantity.required' => 'تعداد سهام الزامی است',
-            'quantity.integer' => 'تعداد سهام باید عددی باشد',
-            'quantity.min' => 'تعداد سهام باید حداقل 1 باشد',
+            'amount.required' => 'مبلغ خرید الزامی است',
+            'amount.numeric' => 'مبلغ خرید باید عددی باشد',
+            'amount.min' => 'مبلغ خرید باید حداقل 0.01 دلار باشد',
             'tracking_code.required' => 'کد پیگیری الزامی است',
             'tracking_code.string' => 'کد پیگیری باید متن باشد',
             'tracking_code.max' => 'کد پیگیری نباید بیشتر از 100 کاراکتر باشد',
-            'price.required' => 'قیمت الزامی است',
-            'price.numeric' => 'قیمت باید عددی باشد',
-            'price.min' => 'قیمت باید بیشتر از صفر باشد',
             'description.max' => 'توضیحات نباید بیشتر از 255 کاراکتر باشد'
         ];
     }

@@ -49,13 +49,27 @@ class StockController extends Controller
                 ], 400);
             }
 
+            // Find stock to get price
+            $stock = $this->stockRepository->getStockById($request->stock_id);
+            if (!$stock) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'سهام یافت نشد',
+                    'error' => 'سهام یافت نشد'
+                ], 400);
+            }
+
+            // Calculate quantity based on amount and stock price
+            $quantity = $request->amount / $stock->value;
+            $totalValue = $request->amount;
+
             DB::beginTransaction();
 
             // Purchase stock using StockService (external flow without wallet impact)
             $result = $this->stockService->purchaseStockExternal($user, [
                 'stock_id' => $request->stock_id,
-                'amount' => $request->quantity,
-                'description' => $request->description
+                'amount' => $quantity,
+                'description' => '[External API] ' . ($request->description ?? 'خرید سهام از طریق External API')
             ]);
 
             // Log API request with complete information after successful operation
@@ -71,7 +85,8 @@ class StockController extends Controller
                     ->setRequestData([
                         'user_email' => $request->email,
                         'stock_id' => $request->stock_id,
-                        'quantity' => $request->quantity,
+                        'amount' => $request->amount,
+                        'quantity' => $quantity,
                         'tracking_code' => $request->tracking_code,
                         'description' => $request->description
                     ])
@@ -79,16 +94,13 @@ class StockController extends Controller
                         'success' => true,
                         'user_id' => $user->id,
                         'contract_id' => $result->id ?? null,
-                        'amount' => $request->quantity,
+                        'amount' => $request->amount,
+                        'quantity' => $quantity,
                         'total_value' => $result->total_value ?? null
                     ])
             );
 
             DB::commit();
-
-            // Find stock to get stock name
-            $stock = $this->stockRepository->getStockById($request->stock_id);
-            $stockName = $stock ? $stock->name : null;
 
             return response()->json([
                 'success' => true,
@@ -98,8 +110,9 @@ class StockController extends Controller
                     'contract_id' => $result->contract_number ?? null,
                     'user_email' => $request->email,
                     'stock_id' => $request->stock_id,
-                    'stock_name' => $stockName,
-                    'quantity' => $request->quantity,
+                    'stock_name' => $stock->name,
+                    'amount' => $request->amount,
+                    'quantity' => $quantity,
                     'stock_price' => (float) $stock->value,
                     'total_value' => $result->total_value ?? null,
                     'contract_file_url' => $result->contract_file_url ?? null,
@@ -141,7 +154,7 @@ class StockController extends Controller
                         ->setRequestData([
                             'user_email' => $request->email,
                             'stock_id' => $request->stock_id,
-                            'quantity' => $request->quantity,
+                            'amount' => $request->amount,
                             'tracking_code' => $request->tracking_code,
                             'description' => $request->description
                         ])
@@ -247,6 +260,7 @@ class StockController extends Controller
                     'stock_id' => $purchase->request_data['stock_id'] ?? null,
                     'stock_name' => $stock ? $stock->name : null,
                     'stock_type' => $stock ? $stock->type->value : null,
+                    'amount' => $purchase->request_data['amount'] ?? null,
                     'quantity' => $purchase->request_data['quantity'] ?? null,
                     'price' => $stock ? $stock->value : null,
                     'total_amount' => $purchase->response_data['total_amount'] ?? ($contract ? $contract->total_value : null),
