@@ -137,40 +137,145 @@
     <div class="card mb-4">
         <div class="card-body">
             <div class="card-title header-elements">
-                <h5 class="m-0 me-2">فیلتر</h5>
+                <h5 class="m-0 me-2">فیلتر پیشرفته برداشت‌ها</h5>
             </div>
-            <form action="{{ route('admin.withdrawal.index') }}" method="get">
-                <div class="row">
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label class="form-label" for="type">وضعیت برداشت:</label>
-                            <select name="status" class="form-control" id="type">
-                                <option value="">همه</option>
-                                @foreach (\App\Enums\WithdrawalStatusEnum::cases() as $case)
-                                    <option value="{{ $case->value }}"
-                                        {{ request()->has('status') && request()->input('status') == $case->value ? 'selected' : '' }}>
-                                        {{ $case->label() }}
-                                    </option>
-                                @endforeach
-                            </select>
+            <form action="{{ route('admin.withdrawal.index') }}" method="get" id="filterForm">
+                <!-- Basic Filters Row -->
+                <div class="row mb-3">
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
+                        <label class="form-label" for="status">وضعیت برداشت:</label>
+                        <select name="status" class="form-select" id="status">
+                            <option value="">همه</option>
+                            @foreach (\App\Enums\WithdrawalStatusEnum::cases() as $case)
+                                <option value="{{ $case->value }}"
+                                    {{ request()->has('status') && request()->input('status') == $case->value ? 'selected' : '' }}>
+                                    {{ $case->label() }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
+                        <label class="form-label" for="currency">کوین:</label>
+                        <select name="currency" class="form-select" id="currency">
+                            <option value="">همه کوین‌ها</option>
+                            @foreach ($currencies as $currency)
+                                <option value="{{ $currency->symbol }}"
+                                    {{ request()->has('currency') && request()->input('currency') == $currency->symbol ? 'selected' : '' }}>
+                                    {{ $currency->symbol }} - {{ $currency->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
+                        <label class="form-label" for="currencyChain">شبکه:</label>
+                        <select name="currencyChain" class="form-select" id="currencyChain">
+                            <option value="">همه شبکه‌ها</option>
+                            @foreach ($chains as $chain)
+                                <option value="{{ $chain->value }}"
+                                    {{ request()->has('currencyChain') && request()->input('currencyChain') == $chain->value ? 'selected' : '' }}>
+                                    {{ $chain->chain_name() }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-12 col-12 mb-2">
+                        <label class="form-label d-none d-lg-block">&nbsp;</label>
+                        <div class="d-flex flex-wrap gap-1 justify-content-start">
+                            <button class="btn btn-success btn-sm flex-fill" type="submit" style="min-width: 70px;">
+                                <i class="fas fa-search me-1"></i>جستجو
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm flex-fill" type="button" id="clearFilters"
+                                style="min-width: 70px;">
+                                <i class="fas fa-times me-1"></i>پاک کردن
+                            </button>
                         </div>
                     </div>
-                    <div class="col-md-6 ">
-                        <label class="form-label" for="user">کاربر :</label>
+                </div>
+
+                <!-- Second Row for User and Search Filters -->
+                <div class="row mb-3">
+                    <div class="col-lg-6 col-md-6 col-sm-12 mb-2">
+                        <label class="form-label" for="user">کاربر:</label>
                         <x-user-selection-component input-name="user" multiple="0"
                             selected="{{ request()->filled('user') && $withdraws->isNotEmpty() && $withdraws[0]->user ? $withdraws[0]->user->id : '' }}"
                             selected-label="{{ request()->filled('user') && $withdraws->isNotEmpty() && $withdraws[0]->user
                                 ? '(' . $withdraws[0]->user->id . '#) ' . $withdraws[0]->user->fullname() . ' | ' . $withdraws[0]->user->email
                                 : '' }}"></x-user-selection-component>
                     </div>
-                    <div class="col-md-2 align-self-end">
-
-                        <button class="btn btn-success text-white" type="submit">
-                            <span>فیلتر</span><i class="fas fa-filter mx-3"></i>
-                        </button>
-
+                    
+                    <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
+                        <label class="form-label" for="address">آدرس برداشت:</label>
+                        <input type="text" name="address" id="address" class="form-control font-monospace" 
+                            placeholder="آدرس کیف پول..." 
+                            value="{{ request()->input('address') }}">
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
+                        <label class="form-label" for="transactionHash">هش تراکنش (TxID):</label>
+                        <input type="text" name="transactionHash" id="transactionHash" class="form-control font-monospace" 
+                            placeholder="هش تراکنش..." 
+                            value="{{ request()->input('transactionHash') }}">
                     </div>
                 </div>
+
+                <!-- Filter Summary (Show active filters) -->
+                @if (request()->hasAny(['status', 'currency', 'currencyChain', 'user', 'address', 'transactionHash']))
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="alert alert-info d-flex align-items-center">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <span class="me-2">فیلترهای فعال:</span>
+                                <div class="d-flex flex-wrap gap-1">
+                                    @if (request()->filled('status'))
+                                        @php
+                                            $selectedStatus = \App\Enums\WithdrawalStatusEnum::tryFrom(
+                                                request()->input('status'),
+                                            );
+                                        @endphp
+                                        <span class="badge bg-primary">وضعیت:
+                                            {{ $selectedStatus?->label() ?? request()->input('status') }}</span>
+                                    @endif
+                                    @if (request()->filled('currency'))
+                                        @php
+                                            $selectedCurrency = $currencies->firstWhere('symbol', request()->input('currency'));
+                                        @endphp
+                                        <span class="badge bg-primary">کوین:
+                                            {{ $selectedCurrency ? $selectedCurrency->symbol . ' - ' . $selectedCurrency->name : request()->input('currency') }}</span>
+                                    @endif
+                                    @if (request()->filled('currencyChain'))
+                                        @php
+                                            $selectedChain = \App\Enums\CurrencyChainEnum::tryFrom(
+                                                request()->input('currencyChain'),
+                                            );
+                                        @endphp
+                                        <span class="badge bg-primary">شبکه:
+                                            {{ $selectedChain?->chain_name() ?? request()->input('currencyChain') }}</span>
+                                    @endif
+                                    @if (request()->filled('user'))
+                                        @php
+                                            $selectedUser = $withdraws->isNotEmpty() && $withdraws[0]->user ? $withdraws[0]->user : \App\Models\User::find(request()->input('user'));
+                                        @endphp
+                                        @if ($selectedUser)
+                                            <span class="badge bg-primary">کاربر: (#{{ $selectedUser->id }})
+                                                {{ $selectedUser->fullname() }} - {{ $selectedUser->email }}</span>
+                                        @else
+                                            <span class="badge bg-primary">کاربر: #{{ request()->input('user') }}</span>
+                                        @endif
+                                    @endif
+                                    @if (request()->filled('address'))
+                                        <span class="badge bg-success">آدرس: {{ Str::limit(request()->input('address'), 20) }}</span>
+                                    @endif
+                                    @if (request()->filled('transactionHash'))
+                                        <span class="badge bg-warning">TxID: {{ Str::limit(request()->input('transactionHash'), 20) }}</span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </form>
         </div>
     </div>
@@ -471,6 +576,11 @@
                         icon.removeClass('fa-solid fa-check').addClass(originalIcon);
                     }, 2000);
                 });
+            });
+
+            // Clear filters button
+            $('#clearFilters').on('click', function() {
+                window.location.href = "{{ route('admin.withdrawal.index') }}";
             });
         });
     </script>

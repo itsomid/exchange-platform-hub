@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Withdrawal;
 
 use App\Enums\WithdrawalStatusEnum;
+use App\Enums\CurrencyChainEnum;
 use App\Exports\DepositExport;
 use App\Exports\WithdrawalExport;
 use App\Functions\FlashMessages\Toast;
@@ -10,6 +11,7 @@ use App\Helpers\DateFormatter;
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
 use App\Models\Withdrawal;
+use App\Models\Currency;
 
 use App\Services\Withdrawal\WithdrawalService;
 use Illuminate\Http\Request;
@@ -58,9 +60,12 @@ class WithdrawalController extends Controller
             ->take(5);
         $totalTopUsersWithdrawals = $topUsers->sum('totalWithdraw');
 
-        $withdraws = Withdrawal::filterBy(request()->all())->with(['user', 'currency', 'transaction'])
+        $withdraws = Withdrawal::filterBy(request()->all())->with(['user', 'currency', 'currencyChain', 'transaction'])
             ->orderBy('id', request()->input('sortById', 'desc'))
             ->paginate(20);
+
+        $currencies = Currency::all();
+        $chains = CurrencyChainEnum::cases();
 
         return view('dashboard.withdraw.index', [
             'withdraws' => $withdraws,
@@ -68,6 +73,8 @@ class WithdrawalController extends Controller
             'totalWithdrawalsValue' => $totalWithdrawalsValue,
             'topUsers' => $topUsers,
             'totalTopUsersWithdrawals' => $totalTopUsersWithdrawals,
+            'currencies' => $currencies,
+            'chains' => $chains,
         ]);
     }
 
