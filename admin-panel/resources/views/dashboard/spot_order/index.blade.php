@@ -472,7 +472,7 @@
                                     @if ($spotOrder->status === \App\Enums\SpotOrderStatusEnum::PARTIALLY_FILLED_CANCELED)
                                         <i class="fa-regular fa-info-circle fa-lg ms-2" data-bs-toggle="tooltip"
                                             data-bs-placement="top" data-bs-custom-class="tooltip-dark"
-                                            title="با توجه به اینکه دیگر سفارش از نوع {{ $spotOrder->side === \App\Enums\SpotOrderSideEnum::BUY ? \App\Enums\SpotOrderSideEnum::SELL->label() : \App\Enums\SpotOrderSideEnum::BUY->label() }} برای پر کردن این سفارش موجود نبود. سفارش به صورت ناقص پر شده و مابقی مبلغ به حساب کاربر بازگردانده شد."></i>
+                                            title="با توجه به اینکه دیگر سفارش از نوع {{ $spotOrder->side === \App\Enums\SpotOrderSideEnum::BUY ? \App\Enums\SpotOrderSideEnum::SELL->label() : \App\Enums\SpotOrderSideEnum::BUY->label() }} برای پر کردن این سفارش موجود نبود یا سفارش به صورت ناقص پر شده مابقی مبلغ به حساب کاربر بازگردانده شد."></i>
                                     @endif
                                 </td>
                                 <td>
@@ -491,7 +491,7 @@
                                         </button>
                                     @endif
                                     <div class="modal fade " id="order-{{ $spotOrder->id }}" tabindex="-1"
-                                        aria-modal="true" role="dialog" {{--                                     style="display: block" --}}>
+                                        aria-modal="true" role="dialog">
                                         <div class="modal-dialog modal-xl" role="document">
                                             <div class="modal-content">
                                                 <div class="modal-header justify-content-between">
@@ -569,9 +569,13 @@
                                                         class="d-flex align-items-sm-center justify-content-between border-bottom py-4 mb-4">
                                                         <h6 class="m-0 mb-2 mb-md-0 me-12">ارزش اجرا شده</h6>
                                                         <div class="d-flex flex-wrap gap-1 font-number" dir="ltr">
-
-                                                            <span>{{ $spotOrder->price ? formatNumberTrimZeros(bcmul($spotOrder->price, $spotOrder->filled_quantity, 8)) : 'سفارش بازار' }}</span>
-                                                            <span>{{ $spotOrder->price ? 'USDT' : '' }}</span>
+                                                            @php
+                                                                $executedValue = $spotOrder->makerTrades->merge($spotOrder->takerTrades)->sum(function($trade) {
+                                                                    return bcmul($trade->price, $trade->quantity, 8);
+                                                                });
+                                                            @endphp
+                                                            <span>{{ formatNumberTrimZeros($executedValue) }}</span>
+                                                            <span>USDT</span>
                                                         </div>
                                                     </div>
                                                     <div

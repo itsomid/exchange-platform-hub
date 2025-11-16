@@ -322,8 +322,12 @@ class SpotOrderController extends Controller
 
             \DB::beginTransaction();
 
-            // Update order status to canceled
-            $spotOrder->status = SpotOrderStatusEnum::CANCELED;
+            // Update order status based on filled quantity
+            if (bccomp($spotOrder->filled_quantity, '0', 8) > 0) {
+                $spotOrder->status = SpotOrderStatusEnum::PARTIALLY_FILLED_CANCELED;
+            } else {
+                $spotOrder->status = SpotOrderStatusEnum::CANCELED;
+            }
             $spotOrder->save();
 
             // Release locked balance
@@ -368,8 +372,12 @@ class SpotOrderController extends Controller
 
             foreach ($openOrders as $order) {
                 try {
-                    // Update order status to canceled
-                    $order->status = SpotOrderStatusEnum::CANCELED;
+                    // Update order status based on filled quantity
+                    if (bccomp($order->filled_quantity, '0', 8) > 0) {
+                        $order->status = SpotOrderStatusEnum::PARTIALLY_FILLED_CANCELED;
+                    } else {
+                        $order->status = SpotOrderStatusEnum::CANCELED;
+                    }
                     $order->save();
 
                     // Release locked balance
