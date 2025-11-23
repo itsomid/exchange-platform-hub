@@ -100,9 +100,11 @@
                                 {{$stock->name}}
                             </td>
                             <td>
+                                <small class="me-2">USDT</small>
                                 <span class="font-number" dir="ltr">
                                     {{$stock->value}}
                                 </span>
+
                             </td>
                             <td>
                                 @php
@@ -110,7 +112,7 @@
                                     $isLowStock = $percentageRemaining < 10 && $stock->available_quantity > 0;
                                 @endphp
                                 <span class="font-number {{ $isLowStock ? 'text-danger fw-bold' : '' }}" dir="ltr">
-                                    {{formatNumberTrimZeros($stock->available_quantity, 3)}}/{{formatNumberTrimZeros($stock->initial_quantity, 3)}}
+                                    {{formatNumberTrimZeros($stock->available_quantity, 3)}}/<b>{{formatNumberTrimZeros($stock->initial_quantity, 3)}}</b>
                                 </span>
                                 @if($isLowStock)
                                     <i class="fa-solid fa-exclamation-triangle text-danger ms-1"></i>

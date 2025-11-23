@@ -32,7 +32,7 @@
                     <label class="form-label" for="amount">تعداد سهم:</label>
                     <input type="number" name="amount" id="amount"
                         class="form-control @error('amount') is-invalid @enderror" value="{{ old('amount') }}"
-                        placeholder="تعداد سهم را وارد کنید" min="1" step="0.001" required>
+                        placeholder="تعداد سهم را وارد کنید"  step="0.01" required>
                     @error('amount')
                         <small class="text-danger">{{ $message }}</small>
                     @enderror

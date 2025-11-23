@@ -25,6 +25,7 @@
                            id="value"
                            class="form-control"
                            value="{{old('value')}}"
+                           step="0.01"
                            placeholder="ارزش سهام را وارد کنید">
                     @error('value')
                     <small class="text-danger">{{$message}}</small>
@@ -114,4 +115,4 @@
             </form>
         </div>
     </div>
-@endsection 
+@endsection

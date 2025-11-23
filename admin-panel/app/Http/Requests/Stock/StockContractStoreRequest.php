@@ -16,7 +16,7 @@ class StockContractStoreRequest extends FormRequest
         return [
             'user_id' => 'required|exists:users,id',
             'stock_id' => 'required|exists:stocks,id',
-            'amount' => 'required|numeric|min:1',
+            'amount' => 'required|numeric|min:0.01',
             'contract_status' => 'required|in:active',
             'description' => 'nullable|string',
         ];
