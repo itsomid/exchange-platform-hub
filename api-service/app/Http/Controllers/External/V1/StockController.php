@@ -31,7 +31,7 @@ class StockController extends Controller
     /**
      * Purchase stock for a user
      */
-    public function purchaseStock(StockPurchaseRequest $request): JsonResponse
+    public function purchaseStock(StockPurchaseRequest $request)
     {
         $system = $request->system;
         // Pre-initialize variables so they are always defined for the catch block
@@ -60,8 +60,7 @@ class StockController extends Controller
             }
 
             // Calculate quantity based on amount and stock price
-            $quantity = $request->amount / $stock->value;
-            $totalValue = $request->amount;
+            return $quantity = round($request->amount / 104, 2);
 
             DB::beginTransaction();
 
@@ -88,7 +87,7 @@ class StockController extends Controller
                         'amount' => $request->amount,
                         'quantity' => $quantity,
                         'tracking_code' => $request->tracking_code,
-                        'description' => $request->description
+                        'description' => $request->description . " (" . $system->name . ")"
                     ])
                     ->setResponseData([
                         'success' => true,
