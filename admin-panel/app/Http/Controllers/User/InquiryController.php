@@ -31,7 +31,32 @@ class InquiryController extends Controller
             'email' => ['required'],
         ]);
         $email = request()->input('email');
-        $user = User::query()->where('email', 'LIKE', '%' . $email . '%')->first();
+        $user = null;
+
+        if (str_starts_with($email, '#')) {
+            $id = trim(ltrim($email, '#'));
+            if (ctype_digit($id)) {
+                $user = User::query()->find((int) $id);
+            }
+        }
+
+        if (! $user) {
+            $user = User::query()->where('email', $email)->first();
+        }
+
+        if (! $user) {
+            $user = User::query()
+                ->where('email', 'LIKE', $email.'%')
+                ->orderByRaw('email_verified_at IS NULL')
+                ->first();
+        }
+
+        if (! $user) {
+            $user = User::query()
+                ->where('email', 'LIKE', '%'.$email.'%')
+                ->orderByRaw('email_verified_at IS NULL')
+                ->first();
+        }
         if (!$user){
             Toast::message('کاربر با این شناسه یا ایمیل یافت نشد.')->warning()->notify();
             return redirect()->back()->withInput();
