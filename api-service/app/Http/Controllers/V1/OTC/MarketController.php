@@ -17,6 +17,15 @@ class MarketController
         return new MarketCollection($this->OTCService->markets());
     }
 
+    public function prices(int $marketId)
+    {
+        $data = $this->OTCService->getPrices($marketId);
+        if (isset($data['status']) && $data['status'] === 404) {
+            return response($data, 404);
+        }
+        return response($data);
+    }
+
     /**
      * @OA\Get(
      *     path="/api/v1/otc/bitexroom-available-balance",

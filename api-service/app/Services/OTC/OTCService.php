@@ -85,6 +85,23 @@ class OTCService
         )->toArray();
     }
 
+    public function getPrices(int $marketId): array
+    {
+        $market = $this->marketRepository->getMarketById($marketId);
+
+        if (!$market || !$market->exchangePrice) {
+            return [
+                'message' => 'Market not found',
+                'status' => 404,
+            ];
+        }
+
+        return [
+            'buy_price' => $market->exchangePrice->buy_price,
+            'sell_price' => $market->exchangePrice->sell_price,
+        ];
+    }
+
     public function bitexroomAvailableBalance(int $marketId): string
     {
         $market = $this->marketRepository->getMarketById($marketId);
