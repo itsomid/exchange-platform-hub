@@ -67,7 +67,7 @@ class InMemoryOrderBookService
         if ($ttl > 0) {
             $redis->expire($userKey, $ttl);
         }
-        
+
         return true;
     }
 
@@ -207,6 +207,30 @@ class InMemoryOrderBookService
         }
     }
 
+    public function clearUserMarketOrdersIndex(int $userId, int $marketId): bool
+    {
+        $redis = $this->getRedisConnection();
+        $userKey = $this->getUserOrdersKey($userId, $marketId);
+
+        try {
+            $redis->del($userKey);
+            \Log::info('[InMemoryOrderBookService] Cleared user orders index', [
+                'userId' => $userId,
+                'marketId' => $marketId,
+                'userKey' => $userKey
+            ]);
+            return true;
+        } catch (\Throwable $e) {
+            \Log::error('[InMemoryOrderBookService] Failed to clear user orders index', [
+                'userId' => $userId,
+                'marketId' => $marketId,
+                'userKey' => $userKey,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+
     /**
      * Get all open orders for a user in a specific market
      * 
@@ -279,12 +303,19 @@ class InMemoryOrderBookService
      */
     public function deleteUserMarketOrders(int $userId, int $marketId): int
     {
-        $orders = $this->getUserMarketOrders($userId, $marketId);
+        $redis = $this->getRedisConnection();
+        $userKey = $this->getUserOrdersKey($userId, $marketId);
+        $orderIds = $redis->smembers($userKey);
         $count = 0;
 
-        foreach ($orders as $order) {
-            if ($this->deleteOrder($order->id)) {
+        foreach ($orderIds as $orderId) {
+            if ($this->deleteOrder($orderId)) {
                 $count++;
+            } else {
+                try {
+                    $redis->srem($userKey, $orderId);
+                } catch (\Throwable $e) {
+                }
             }
         }
 

@@ -198,6 +198,9 @@ class SpotBotController extends Controller
             // Broadcast orderbook update after generating all orders
             \App\Jobs\BroadcastOrderBook::dispatch($market->id);
 
+            // Trigger matching for existing user orders with newly created bot orders
+            $matchingResult = $this->triggerMatchingForExistingOrders($market->id);
+
             return response()->json([
                 'success' => true,
                 'message' => "Orders generated successfully for {$currency->name}",
@@ -208,6 +211,8 @@ class SpotBotController extends Controller
                     'total_orders_generated' => count($generatedOrders),
                     'buy_orders_count' => $buyOrdersCount,
                     'sell_orders_count' => $sellOrdersCount,
+                    'matched_user_orders' => $matchingResult['matched_orders'],
+                    'matching_errors' => $matchingResult['errors'],
                     'order_margin' => $setting->order_margin,
                     'orders' => $generatedOrders,
                     'errors' => $errors
@@ -411,27 +416,15 @@ class SpotBotController extends Controller
         $cancelledDb = 0;
         $errors = [];
 
-        // 1. Cancel Redis orders (in-memory bot orders)
-        $redisOrders = $inMemoryOrderBook->getUserMarketOrders($userId, $marketId);
-
-        foreach ($redisOrders as $order) {
-            try {
-                // Re-check order existence in Redis right before unlocking to avoid race with matching/persistence
-                if (!$inMemoryOrderBook->orderExists($order->id)) {
-
-                    continue;
-                }
-
-                // Delete from Redis
-                $inMemoryOrderBook->deleteOrder($order->id);
-                $cancelledRedis++;
-            } catch (Throwable $e) {
-                $errors[] = "Redis order {$order->id}: " . $e->getMessage();
-                Log::channel('spot-bot')->error('Failed to cancel Redis bot order', [
-                    'order_id' => $order->id,
-                    'error' => $e->getMessage()
-                ]);
-            }
+        try {
+            $cancelledRedis += $inMemoryOrderBook->deleteUserMarketOrders($userId, $marketId);
+        } catch (Throwable $e) {
+            $errors[] = 'Redis orders deletion failed: ' . $e->getMessage();
+            Log::channel('spot-bot')->error('Failed to delete Redis bot orders for user market', [
+                'user_id' => $userId,
+                'market_id' => $marketId,
+                'error' => $e->getMessage()
+            ]);
         }
 
         // 2. Cancel bot orders in database (both partially filled and unfilled)
@@ -459,9 +452,11 @@ class SpotBotController extends Controller
         try {
             $inMemoryOrderBook->clearMarketOrdersIndex($marketId, SpotOrderSideEnum::BUY);
             $inMemoryOrderBook->clearMarketOrdersIndex($marketId, SpotOrderSideEnum::SELL);
+            $inMemoryOrderBook->clearUserMarketOrdersIndex($userId, $marketId);
         } catch (Throwable $e) {
-            Log::channel('spot-bot')->error('Failed clearing Redis market ZSET indexes after cancellation', [
+            Log::channel('spot-bot')->error('Failed clearing Redis indexes after cancellation', [
                 'market_id' => $marketId,
+                'user_id' => $userId,
                 'error' => $e->getMessage()
             ]);
         }
@@ -678,6 +673,8 @@ class SpotBotController extends Controller
             // Final broadcast after all replacements are done
             \App\Jobs\BroadcastOrderBook::dispatch($market->id);
 
+            // Trigger matching for existing user orders with newly created bot orders
+            $matchingResult = $this->triggerMatchingForExistingOrders($market->id);
 
             return response()->json([
                 'success' => true,
@@ -691,6 +688,8 @@ class SpotBotController extends Controller
                     'total_cancelled' => $cancelResult['total_cancelled'],
                     'created_orders_count' => count($createdOrders),
                     'created_orders' => $createdOrders,
+                    'matched_user_orders' => $matchingResult['matched_orders'],
+                    'matching_errors' => $matchingResult['errors'],
                     'errors' => $errors
                 ]
             ]);
@@ -762,6 +761,8 @@ class SpotBotController extends Controller
 
                 $totalCancelled += $cancelResult['total_cancelled'];
                 $totalErrors += count($cancelResult['errors']);
+
+                \App\Jobs\BroadcastOrderBook::dispatch($market->id);
 
                 $results[] = [
                     'currency_id' => $setting->currency_id,
@@ -949,6 +950,9 @@ class SpotBotController extends Controller
                     $totalErrors += count($orderErrors);
                 }
 
+                // Trigger matching for existing user orders with newly created bot orders
+                $matchingResult = $this->triggerMatchingForExistingOrders($market->id);
+
                 $results[] = [
                     'currency_id' => $setting->currency_id,
                     'currency_name' => $setting->currency->name,
@@ -959,6 +963,8 @@ class SpotBotController extends Controller
                     'buy_orders_requested' => $setting->buy_orders_count,
                     'sell_orders_requested' => $setting->sell_orders_count,
                     'total_orders_generated' => $ordersGenerated,
+                    'matched_user_orders' => $matchingResult['matched_orders'],
+                    'matching_errors' => $matchingResult['errors'],
                     'order_margin' => $setting->order_margin,
                     'orders' => $generatedOrders,
                     'errors' => $orderErrors
@@ -1033,10 +1039,104 @@ class SpotBotController extends Controller
         $parts = explode('.', $value);
 
         if (count($parts) === 1) {
-            // No decimal part, always valid
-            return true;
+            return true; // No decimal part, precision is valid
         }
 
-        return strlen($parts[1]) <= $precision;
+        $decimalPart = $parts[1];
+        return strlen($decimalPart) <= $precision;
+    }
+
+    /**
+     * Trigger matching engine for existing user orders after bot creates new orders
+     * This ensures user maker orders get matched with newly created bot orders
+     * 
+     * @param int $marketId
+     * @return array ['matched_orders' => int, 'errors' => array]
+     */
+    private function triggerMatchingForExistingOrders(int $marketId): array
+    {
+        $matchedOrders = 0;
+        $errors = [];
+
+        try {
+            // Get all open user orders (non-bot) for this market
+            $userOrders = SpotOrder::query()
+                ->where('market_id', $marketId)
+                ->where('status', SpotOrderStatusEnum::OPEN)
+                ->where('source', '!=', SpotOrderSourceEnum::BOT)
+                ->orderBy('created_at', 'asc') // Process older orders first
+                ->get();
+
+            if ($userOrders->isEmpty()) {
+                Log::channel('spot-bot')->info('No user orders to match for market', [
+                    'market_id' => $marketId
+                ]);
+                return ['matched_orders' => 0, 'errors' => []];
+            }
+
+            $orderMatchingEngine = resolve(OrderMatchingEngine::class);
+
+            foreach ($userOrders as $order) {
+                try {
+                    // Refresh order to get latest state
+                    $order->refresh();
+
+                    // Skip if order is no longer open (might have been matched by another process)
+                    if ($order->status !== SpotOrderStatusEnum::OPEN) {
+                        continue;
+                    }
+
+                    // Store initial filled quantity to detect if matching occurred
+                    $initialFilledQuantity = $order->filled_quantity;
+
+                    // Try to match this order with bot orders
+                    if ($order->type === SpotOrderTypeEnum::LIMIT) {
+                        $orderMatchingEngine->limit($order);
+                    } elseif ($order->type === SpotOrderTypeEnum::MARKET) {
+                        $orderMatchingEngine->market($order);
+                    }
+
+                    // Check if order was matched (status changed or filled_quantity increased)
+                    $order->refresh();
+                    if ($order->status === SpotOrderStatusEnum::COMPLETED || 
+                        Math::comp($order->filled_quantity, $initialFilledQuantity) === 1) {
+                        $matchedOrders++;
+                        Log::channel('spot-bot')->info('User order matched with bot orders', [
+                            'order_id' => $order->id,
+                            'user_id' => $order->user_id,
+                            'market_id' => $marketId,
+                            'initial_filled' => $initialFilledQuantity,
+                            'final_filled' => $order->filled_quantity,
+                            'status' => $order->status->value
+                        ]);
+                    }
+                } catch (Throwable $e) {
+                    $errors[] = "Order {$order->id}: " . $e->getMessage();
+                    Log::channel('spot-bot')->error('Failed to match user order with bot orders', [
+                        'order_id' => $order->id,
+                        'market_id' => $marketId,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+
+            Log::channel('spot-bot')->info('Completed matching existing user orders with bot orders', [
+                'market_id' => $marketId,
+                'total_user_orders' => $userOrders->count(),
+                'matched_orders' => $matchedOrders,
+                'errors_count' => count($errors)
+            ]);
+        } catch (Throwable $e) {
+            Log::channel('spot-bot')->error('Failed to trigger matching for existing orders', [
+                'market_id' => $marketId,
+                'error' => $e->getMessage()
+            ]);
+            $errors[] = 'Matching process failed: ' . $e->getMessage();
+        }
+
+        return [
+            'matched_orders' => $matchedOrders,
+            'errors' => $errors
+        ];
     }
 }
