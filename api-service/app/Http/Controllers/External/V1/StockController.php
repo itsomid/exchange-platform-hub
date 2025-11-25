@@ -60,7 +60,7 @@ class StockController extends Controller
             }
 
             // Calculate quantity based on amount and stock price
-            return $quantity = round($request->amount / 104, 2);
+            $quantity = round($request->amount / 104, 2);
 
             DB::beginTransaction();
 
