@@ -181,7 +181,7 @@ class StockController extends Controller
             // Get system from authenticated request (added by ApiSystemAuthMiddleware)
             $system = $request->system;
             $page = $request->get('page', 1);
-            $perPage = 20;
+            $perPage = $request->get('per_page', 20);
 
             // Build query for API requests of type STOCK_PURCHASE for this system
             $query = ApiRequest::where('type', ApiRequestType::STOCK_PURCHASE)
@@ -252,6 +252,7 @@ class StockController extends Controller
 
                 return [
                     'id' => $purchase->id,
+                    'tracking_code' => $purchase->tracking_code,
                     'contract_id' => $contract ? $contract->id : null,
                     'contract_number' => $contract ? $contract->contract_number : null,
                     'user_email' => $purchase->request_data['user_email'] ?? null,
