@@ -86,10 +86,21 @@
                 <li class="mt-2 d-flex justify-content-between">
                     <span class="h6">مکان:</span>
                     @if ($user->latestActiveToken)
-                        <div>
-                            <span
-                                class="ms-1">{{ $user->latestActiveToken->ip ? App\Helpers\LocationFinder::getCountryAndCity($user->latestActiveToken->ip) : 'N/A' }}</span>
-                            <span>({{ $user->latestActiveToken->ip }})</span>
+                        @php
+                            $locationData = $user->latestActiveToken->ip 
+                                ? App\Helpers\LocationFinder::getLocationData($user->latestActiveToken->ip) 
+                                : ['country' => 'نامشخص', 'city' => '-', 'country_code' => ''];
+                        @endphp
+                        <div class="d-flex align-items-center">
+                   
+                            <div class="text-end">
+                                <div class="fw-semibold">@if ($locationData['country_code'])
+                                <span class="fi fi-{{ $locationData['country_code'] }}" style="font-size: 0.8rem; margin-left: 8px;"></span>
+                            @endif{{ $locationData['country'] }}</div>
+                                <small class="text-muted">{{ $locationData['city'] }}</small>
+                                <br>
+                                <code class="text-primary" style="font-size: 0.75rem;">{{ $user->latestActiveToken->ip }}</code>
+                            </div>
                         </div>
                     @else
                         <span>بدون فعالیت</span>
@@ -128,6 +139,10 @@
 </div>
 
 
+@section('vendor-style')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.0.0/css/flag-icons.min.css">
+@endsection
+
 @section('vendor-script')
     <script>
         $(document).ready(function() {
@@ -135,3 +150,4 @@
         });
     </script>
 @endsection
+

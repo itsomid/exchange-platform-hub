@@ -114,6 +114,7 @@ class User extends Authenticatable implements CanResetPassword
     public function latestActiveToken()
     {
         return $this->hasOne(PersonalAccessToken::class, 'tokenable_id')
+            ->where('name','desktop')
             ->whereNotNull('last_used_at')
             ->latest('last_used_at'); // Orders by last_used_at DESC
     }

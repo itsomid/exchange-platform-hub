@@ -18,12 +18,12 @@ class UserSecurityController extends Controller
     public function index(User $user)
     {
         $agent = new Agent();
-        $tokens = $user->tokens()->orderBy('created_at','DESC')->paginate(10);
-        
+        $tokens = $user->tokens()->orderBy('created_at', 'DESC')->paginate(10);
+
         // Process each token to add location and device data
         $tokens->getCollection()->transform(function ($token) use ($agent) {
             $agent->setUserAgent($token->user_agent);
-            
+
             // Get location data
             if ($token->ip) {
                 $locationData = \App\Helpers\LocationFinder::getLocationData($token->ip);
@@ -35,7 +35,7 @@ class UserSecurityController extends Controller
                 $token->location_city = '-';
                 $token->location_country_code = '';
             }
-            
+
             // Get device information
             $token->browser_name = $agent->browser();
             $token->browser_version = $agent->version($agent->browser());
@@ -44,10 +44,10 @@ class UserSecurityController extends Controller
             $token->device_type = $agent->isDesktop() ? 'دسکتاپ' : ($agent->isTablet() ? 'تبلت' : ($agent->isMobile() ? 'موبایل' : 'نامشخص'));
             $token->device_model = $agent->device();
             $token->is_active = $token->expires_at > now();
-            
+
             return $token;
         });
-        
+
         return view('dashboard.user.security', [
             'user' => $user,
             'agent' => $agent,
@@ -57,10 +57,10 @@ class UserSecurityController extends Controller
 
     public function sendResetLinkEmail(User $user)
     {
-//        \Mail::raw('This is a test email from Laravel.', function ($message) {
-//            $message->to(['o.shabani@hotmail.com', 'omid.it.shabani@gmail.com']) // Replace 'another@example.com' with the second recipient's email
-//            ->subject('Test Email');
-//        });
+        //        \Mail::raw('This is a test email from Laravel.', function ($message) {
+        //            $message->to(['o.shabani@hotmail.com', 'omid.it.shabani@gmail.com']) // Replace 'another@example.com' with the second recipient's email
+        //            ->subject('Test Email');
+        //        });
 
         $status = Password::sendResetLink(
             ['email' => $user->email]
@@ -68,7 +68,7 @@ class UserSecurityController extends Controller
 
         if ($status === Password::RESET_LINK_SENT) {
             Toast::message('لینک بازیابی رمز عبور با موفقیت به کاربر ارسال شد')->success()->notify();
-        }elseif ($status === Password::RESET_THROTTLED){
+        } elseif ($status === Password::RESET_THROTTLED) {
             Toast::message('تعداد درخواست از حد مجاز بیشتر شده است. دقایقی بعد تلاش کنید.')->danger()->notify();
         } else {
             report("Panel can not send reset link {$user->id}");
