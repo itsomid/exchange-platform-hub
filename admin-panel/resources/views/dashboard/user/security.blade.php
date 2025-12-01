@@ -48,7 +48,7 @@
                         <th>مکان</th>
                         <th>نام نشست</th>
                         <th>آدرس IP</th>
-                        <th>آخرین فعالیت</th>
+                        <th>تاریخ‌ها</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -105,9 +105,28 @@
                                 <code class="text-primary">{{ $token->ip ?? 'N/A' }}</code>
                             </td>
                             <td>
-                                <small class="text-muted">
-                                    {{ \App\Helpers\DateFormatter::convertToPersianDate($token->last_used_at, 'H:i %Y/%m/%d') }}
-                                </small>
+                                <div>
+                                    <div class="mb-1 d-flex align-items-center">
+                                        <small class="text-muted d-block">
+                                            <i class="fas fa-clock ms-1"></i> آخرین فعالیت:
+                                        </small>
+                                        <span class="text-sm ms-1">{{ \App\Helpers\DateFormatter::convertToPersianDate($token->last_used_at, 'H:i %Y/%m/%d') }}</span>
+                                    </div>
+                                    <div class="mb-1 d-flex align-items-center">
+                                        <small class="text-muted d-block">
+                                            <i class="fas fa-calendar-plus ms-1"></i> تاریخ ایجاد:
+                                        </small>
+                                        <span class="text-sm ms-1">{{ \App\Helpers\DateFormatter::convertToPersianDate($token->created_at, '%Y/%m/%d') }}</span>
+                                    </div>
+                                    @if ($token->expires_at)
+                                        <div class="d-flex align-items-center">
+                                            <small class="text-muted d-block">
+                                                <i class="fas fa-calendar-times ms-1"></i> تاریخ انقضا:
+                                            </small>
+                                            <span class="badge bg-label-{{ $token->is_active ? 'success' : 'danger' }} ms-1">{{ \App\Helpers\DateFormatter::convertToPersianDate($token->expires_at, '%Y/%m/%d') }}</span>
+                                        </div>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @endforeach
