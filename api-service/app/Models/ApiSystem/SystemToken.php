@@ -41,14 +41,6 @@ class SystemToken extends Model
     }
 
     /**
-     * Generate a new token
-     */
-    public static function generateToken(): string
-    {
-        return 'btr_' . Str::random(40);
-    }
-
-    /**
      * Check if token is active and not expired
      */
     public function isActive(): bool

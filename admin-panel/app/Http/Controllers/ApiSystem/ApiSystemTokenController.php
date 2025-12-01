@@ -54,8 +54,15 @@ class ApiSystemTokenController extends Controller
 
         $validated['system_id'] = $system->id;
 
-        // Generate the token
-        $token = SystemToken::generateToken($validated);
+        $generatedToken = SystemToken::generateToken();
+        $token = SystemToken::create([
+            'system_id' => $validated['system_id'],
+            'name' => $validated['name'],
+            'scopes' => $validated['scopes'],
+            'expires_at' => $validated['expires_at'] ?? null,
+            'is_active' => $validated['is_active'] ?? true,
+            'token' => $generatedToken,
+        ]);
 
         return redirect()
             ->route('admin.api-system.tokens.show', [$system, $token])
@@ -143,7 +150,8 @@ class ApiSystemTokenController extends Controller
      */
     public function regenerate(System $system, SystemToken $token): RedirectResponse
     {
-        $newToken = $token->generateToken();
+        $token->regenerate();
+        $newToken = $token->token;
 
         return redirect()
             ->route('admin.api-system.tokens.show', [$system, $token])

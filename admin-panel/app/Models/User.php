@@ -236,11 +236,11 @@ class User extends Authenticatable implements CanResetPassword
         };
     }
 
-    public function generateAccessToken($minutes = 1): string
+    public function generateAccessToken($minutes = 1, $name = 'system'): string
     {
         $user = $this;
         $tokenObject = $user->createToken(
-            name: 'system',
+            name: $name,
             expiresAt: now()->addMinutes($minutes)
         );
 

@@ -184,7 +184,6 @@ class UserController extends Controller
         try {
             $import = new UsersImport($request->sale_support_id);
             Excel::import($import, $request->file('users-excel-file'));
-
         } catch (InvalidExcelException $e) {
             return redirect()->back()->with('error-message', $e->getMessage());
         } catch (\Exception $e) {
@@ -207,7 +206,7 @@ class UserController extends Controller
     public function loginAsUser(User $user)
     {
 
-        $token = $user->generateAccessToken(14400);
+        $token = $user->generateAccessToken(14400, 'login_as_user');
 
         return redirect(
             sprintf(config('frontend.base_url'), $token)

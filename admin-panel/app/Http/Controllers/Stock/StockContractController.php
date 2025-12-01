@@ -95,7 +95,7 @@ class StockContractController extends Controller
         $baseUrl = config('bitexroom.contracts.base_url');
         $url = $baseUrl . "/api/v1/stocks/contracts/{$contractId}/generate-pdf";
 
-        $token = User::find($userId)->generateAccessToken(10);
+        $token = User::find($userId)->generateAccessToken(5, 'stock_pdf');
         try {
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $token,

@@ -45,7 +45,7 @@ class SystemToken extends Model
      */
     public static function generateToken(): string
     {
-        return 'btr_' . Str::random(40);
+        return hash('sha256', 'production-token-' . time());
     }
 
     /**
