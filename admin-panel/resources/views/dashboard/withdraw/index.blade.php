@@ -154,7 +154,7 @@
                             @endforeach
                         </select>
                     </div>
-                    
+
                     <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
                         <label class="form-label" for="currency">کوین:</label>
                         <select name="currency" class="form-select" id="currency">
@@ -167,7 +167,7 @@
                             @endforeach
                         </select>
                     </div>
-                    
+
                     <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
                         <label class="form-label" for="currencyChain">شبکه:</label>
                         <select name="currencyChain" class="form-select" id="currencyChain">
@@ -180,7 +180,7 @@
                             @endforeach
                         </select>
                     </div>
-                    
+
                     <div class="col-lg-3 col-md-12 col-12 mb-2">
                         <label class="form-label d-none d-lg-block">&nbsp;</label>
                         <div class="d-flex flex-wrap gap-1 justify-content-start">
@@ -205,18 +205,17 @@
                                 ? '(' . $withdraws[0]->user->id . '#) ' . $withdraws[0]->user->fullname() . ' | ' . $withdraws[0]->user->email
                                 : '' }}"></x-user-selection-component>
                     </div>
-                    
+
                     <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
                         <label class="form-label" for="address">آدرس برداشت:</label>
-                        <input type="text" name="address" id="address" class="form-control font-monospace" 
-                            placeholder="آدرس کیف پول..." 
-                            value="{{ request()->input('address') }}">
+                        <input type="text" name="address" id="address" class="form-control font-monospace"
+                            placeholder="آدرس کیف پول..." value="{{ request()->input('address') }}">
                     </div>
-                    
+
                     <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
                         <label class="form-label" for="transactionHash">هش تراکنش (TxID):</label>
-                        <input type="text" name="transactionHash" id="transactionHash" class="form-control font-monospace" 
-                            placeholder="هش تراکنش..." 
+                        <input type="text" name="transactionHash" id="transactionHash"
+                            class="form-control font-monospace" placeholder="هش تراکنش..."
                             value="{{ request()->input('transactionHash') }}">
                     </div>
                 </div>
@@ -240,7 +239,10 @@
                                     @endif
                                     @if (request()->filled('currency'))
                                         @php
-                                            $selectedCurrency = $currencies->firstWhere('symbol', request()->input('currency'));
+                                            $selectedCurrency = $currencies->firstWhere(
+                                                'symbol',
+                                                request()->input('currency'),
+                                            );
                                         @endphp
                                         <span class="badge bg-primary">کوین:
                                             {{ $selectedCurrency ? $selectedCurrency->symbol . ' - ' . $selectedCurrency->name : request()->input('currency') }}</span>
@@ -256,7 +258,10 @@
                                     @endif
                                     @if (request()->filled('user'))
                                         @php
-                                            $selectedUser = $withdraws->isNotEmpty() && $withdraws[0]->user ? $withdraws[0]->user : \App\Models\User::find(request()->input('user'));
+                                            $selectedUser =
+                                                $withdraws->isNotEmpty() && $withdraws[0]->user
+                                                    ? $withdraws[0]->user
+                                                    : \App\Models\User::find(request()->input('user'));
                                         @endphp
                                         @if ($selectedUser)
                                             <span class="badge bg-primary">کاربر: (#{{ $selectedUser->id }})
@@ -266,10 +271,12 @@
                                         @endif
                                     @endif
                                     @if (request()->filled('address'))
-                                        <span class="badge bg-success">آدرس: {{ Str::limit(request()->input('address'), 20) }}</span>
+                                        <span class="badge bg-success">آدرس:
+                                            {{ Str::limit(request()->input('address'), 20) }}</span>
                                     @endif
                                     @if (request()->filled('transactionHash'))
-                                        <span class="badge bg-warning">TxID: {{ Str::limit(request()->input('transactionHash'), 20) }}</span>
+                                        <span class="badge bg-warning">TxID:
+                                            {{ Str::limit(request()->input('transactionHash'), 20) }}</span>
                                     @endif
                                 </div>
                             </div>
@@ -464,10 +471,14 @@
 
                                 </td>
                                 <td class="font-number">
-                                    {{ \App\Helpers\DateFormatter::convertToPersianDate($withdraw->created_at, 'H:i:s %Y/%m/%d') }}
+                                    {{ \App\Helpers\DateFormatter::convertToPersianDate($withdraw->created_at, 'H:i:s %Y/%m/%d') }}<br>
+                                    <small class="text-muted ">{{ $withdraw->created_at->format('Y/m/d') }}</small>
                                 </td>
                                 <td class="font-number">
-                                    {{ \App\Helpers\DateFormatter::convertToPersianDate($withdraw->confirmed_at, 'H:i:s %Y/%m/%d') }}
+                                    {{ \App\Helpers\DateFormatter::convertToPersianDate($withdraw->confirmed_at, 'H:i:s %Y/%m/%d') }}<br>
+                                    <small class="text-muted">
+                                        {{ $withdraw->confirmed_at ? $withdraw->confirmed_at->format('Y/m/d') : '' }}
+                                    </small>
                                 </td>
 
                                 <td>

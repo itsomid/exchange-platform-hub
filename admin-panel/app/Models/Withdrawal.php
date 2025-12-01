@@ -23,6 +23,7 @@ class Withdrawal extends Model
     {
         return [
             'status' => WithdrawalStatusEnum::class,
+            'confirmed_at' => 'datetime',
         ];
     }
 
