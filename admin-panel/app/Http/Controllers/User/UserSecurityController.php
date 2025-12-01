@@ -19,6 +19,35 @@ class UserSecurityController extends Controller
     {
         $agent = new Agent();
         $tokens = $user->tokens()->orderBy('created_at','DESC')->paginate(10);
+        
+        // Process each token to add location and device data
+        $tokens->getCollection()->transform(function ($token) use ($agent) {
+            $agent->setUserAgent($token->user_agent);
+            
+            // Get location data
+            if ($token->ip) {
+                $locationData = \App\Helpers\LocationFinder::getLocationData($token->ip);
+                $token->location_country = $locationData['country'];
+                $token->location_city = $locationData['city'];
+                $token->location_country_code = $locationData['country_code'];
+            } else {
+                $token->location_country = 'نامشخص';
+                $token->location_city = '-';
+                $token->location_country_code = '';
+            }
+            
+            // Get device information
+            $token->browser_name = $agent->browser();
+            $token->browser_version = $agent->version($agent->browser());
+            $token->platform_name = $agent->platform();
+            $token->platform_version = $agent->version($agent->platform());
+            $token->device_type = $agent->isDesktop() ? 'دسکتاپ' : ($agent->isTablet() ? 'تبلت' : ($agent->isMobile() ? 'موبایل' : 'نامشخص'));
+            $token->device_model = $agent->device();
+            $token->is_active = $token->expires_at > now();
+            
+            return $token;
+        });
+        
         return view('dashboard.user.security', [
             'user' => $user,
             'agent' => $agent,
