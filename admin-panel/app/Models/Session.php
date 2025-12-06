@@ -20,11 +20,6 @@ class Session extends Model
         return $this->last_activity < Carbon::now()->subMinutes(config('session.lifetime'))->getTimestamp();
     }
 
-    public function expires_at()
-    {
-        return DateFormatter::convertUnixTimeToPersianDate($this->last_activity, 120,'H:i:s %Y-%m-%d');
-    }
-
     public function is_desktop()
     {
         $agent = $this->createAgent();

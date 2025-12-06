@@ -94,6 +94,7 @@ Route::middleware(['admin.2fa'])->group(function () {
 
         Route::delete('/{admin}/sessions/{session}', [SessionController::class, 'destroy'])->name('session.destroy')->can('session.destroy');
         Route::delete('/{admin}/sessions/purge/all', [SessionController::class, 'purge'])->name('session.purge')->can('session.destroy');
+        Route::delete('/{admin}/sessions/purge/expired', [SessionController::class, 'destroyExpired'])->name('session.destroy-expired')->can('session.destroy');
 
         Route::get('/notifications', [AdminNotificationController::class, 'index'])->name('admin.notifications.index')->can('notifications');
         Route::patch('/notifications/mark-read/{id}', [AdminNotificationController::class, 'markAsRead'])->name('admin.notifications.mark-read')->can('notifications');

@@ -17,6 +17,10 @@ use Illuminate\Support\Facades\Storage;
 use ZanySoft\LaravelPDF\Facades\PDF;
 
 
+Route::get('/', function () {
+    return redirect()->route('admin.dashboard');
+});
+
 Route::get('/test-email', function () {
     try {
         Mail::raw('This is a test email from Laravel.', function ($message) {

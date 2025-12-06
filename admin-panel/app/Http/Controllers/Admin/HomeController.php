@@ -44,13 +44,13 @@ class HomeController extends Controller
     }
 
     // AJAX Endpoints
-    
+
     public function getKPIStats()
     {
         $totalUsers = User::count();
         $activeUsers = User::online()->count();
         $todayRegistrations = User::whereDate('created_at', today())->count();
-        
+
         // حجم معاملات هفته گذشته (Spot + OTC)
         $weeklySpotVolume = SpotTrade::whereBetween('created_at', [now()->subDays(7), now()])
             ->with('market')
@@ -81,7 +81,7 @@ class HomeController extends Controller
             ->with('market')
             ->get()
             ->sum(function ($order) {
-                return $order->quantity * $order->price ;
+                return $order->quantity * $order->price;
             });
 
         $pendingWithdrawals = Withdrawal::where('status', 'pending')->count();
@@ -91,8 +91,8 @@ class HomeController extends Controller
             'activeUsers' => number_format($activeUsers),
             'todayRegistrations' => number_format($todayRegistrations),
             'weeklyTradingVolume' => formatNumberTrimZeros($weeklyTradingVolume),
-            'todaySpotVolume' =>  formatNumberTrimZeros($todaySpotVolume,2),
-            'todayOTCVolume' => formatNumberTrimZeros($todayOTCVolume,2),
+            'todaySpotVolume' =>  formatNumberTrimZeros($todaySpotVolume, 2),
+            'todayOTCVolume' => formatNumberTrimZeros($todayOTCVolume, 2),
             'pendingWithdrawals' => number_format($pendingWithdrawals),
         ]);
     }
@@ -100,7 +100,7 @@ class HomeController extends Controller
     public function getFinancialSummary(Request $request)
     {
         $type = $request->input('type', 'withdrawals');
-        
+
         switch ($type) {
             case 'withdrawals':
                 $data = Withdrawal::selectRaw('currency_symbol, SUM(amount) as total_amount')
@@ -114,7 +114,7 @@ class HomeController extends Controller
                         return $item;
                     });
                 break;
-                
+
             case 'otc_fees':
                 $data = Transaction::where('type', TransactionTypeEnum::FEE)
                     ->where('subtype', TransactionSubTypeEnum::OTC)
@@ -128,7 +128,7 @@ class HomeController extends Controller
                         return $item;
                     });
                 break;
-                
+
             case 'withdrawal_fees':
                 $data = Transaction::where('type', TransactionTypeEnum::FEE)
                     ->where('subtype', TransactionSubTypeEnum::EXCHANGE_WITHDRAWAL_FEE)
@@ -142,7 +142,7 @@ class HomeController extends Controller
                         return $item;
                     });
                 break;
-                
+
             case 'ref_purchases':
                 $data = ExchangeTransaction::with('currency')
                     ->selectRaw('currency_symbol, SUM(amount) as total_amount')
@@ -158,7 +158,7 @@ class HomeController extends Controller
                         return $transaction;
                     });
                 break;
-                
+
             case 'ref_withdrawals':
                 $data = ExchangeAssetsWithdrawal::selectRaw('currency_symbol, SUM(amount) as total_amount')
                     ->groupBy('currency_symbol')
@@ -169,7 +169,7 @@ class HomeController extends Controller
                         return $item;
                     });
                 break;
-                
+
             default:
                 $data = collect();
         }
@@ -231,7 +231,7 @@ class HomeController extends Controller
                 'count' => 0,
                 'value' => 0
             ];
-            
+
             if ($withdrawalsData->has($dayData['date'])) {
                 $dayWithdrawals = $withdrawalsData[$dayData['date']];
                 $dayData['count'] = $dayWithdrawals->count();
@@ -239,7 +239,7 @@ class HomeController extends Controller
                     return $withdrawal->amount * ($withdrawal->currency?->exchange_price ?? 0);
                 });
             }
-            
+
             $withdrawals->push($dayData);
         }
 
@@ -328,7 +328,7 @@ class HomeController extends Controller
                 if (!$trade->market) {
                     return null;
                 }
-                
+
                 return [
                     'pair' => $trade->market->base_currency . '/' . $trade->market->quote_currency,
                     'trades' => number_format($trade->trades_count),
@@ -353,7 +353,7 @@ class HomeController extends Controller
                 if (!$order->market) {
                     return null;
                 }
-                
+
                 return [
                     'pair' => $order->market->base_currency . '/' . $order->market->quote_currency,
                     'trades' => number_format($order->trades_count),

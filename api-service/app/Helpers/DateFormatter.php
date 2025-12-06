@@ -25,9 +25,9 @@ class DateFormatter
     }
     public static function convertUnixTimeToPersianDate($timestamp, $addMinutes = 0, $format = '%A, %d %B %Y  H:i:s')
     {
-         $date = Carbon::createFromTimestamp($timestamp, 'UTC') // Start in UTC
-        ->addMinutes($addMinutes) // Adjust time if needed
-        ->setTimezone('Asia/Tehran'); // Convert to Iran Standard Time
+        $date = Carbon::createFromTimestamp($timestamp, 'UTC') // Start in UTC
+            ->addMinutes($addMinutes) // Adjust time if needed
+            ->setTimezone('Asia/Tehran'); // Convert to Iran Standard Time
 
         return Jalalian::forge($date->toDateTimeString())->format($format);
     }
@@ -94,5 +94,4 @@ class DateFormatter
 
         return str_replace($englishNumbers, $persianNumbers, floor($number));
     }
-
 }
