@@ -538,14 +538,136 @@
                                         </a>
                                     @endif
                                     @if ($withdraw->status === \App\Enums\WithdrawalStatusEnum::AWAITING_APPROVAL)
-                                        <a href="{{ route('admin.withdrawal.confirm-withdrawal', ['withdraw' => $withdraw]) }}"
-                                            class="btn btn-icon btn-success me-2">
+                                        {{-- Confirm Withdrawal Button --}}
+                                        <button type="button" class="btn btn-icon btn-success me-2" 
+                                            data-bs-toggle="modal" data-bs-target="#confirmWithdrawModal-{{ $withdraw->id }}">
                                             <i class="fa-regular fa-badge-check fa-lg"></i>
-                                        </a>
-                                        <a href="{{ route('admin.withdrawal.cancel-withdrawal', ['withdraw' => $withdraw]) }}"
-                                            class="btn btn-icon btn-danger">
+                                        </button>
+
+                                        {{-- Reject Withdrawal Button --}}
+                                        <button type="button" class="btn btn-icon btn-danger" 
+                                            data-bs-toggle="modal" data-bs-target="#rejectWithdrawModal-{{ $withdraw->id }}">
                                             <i class="fa-regular fa-xmark fa-lg"></i>
-                                        </a>
+                                        </button>
+
+                                        {{-- Confirm Withdrawal Modal --}}
+                                        <div class="modal fade" id="confirmWithdrawModal-{{ $withdraw->id }}" tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content">
+                                                    <div class="modal-body text-center py-4">
+                                                        <div class="mb-4">
+                                                            <div class="avatar avatar-lg mx-auto" style="width: 80px; height: 80px;">
+                                                                <span class="avatar-initial rounded-circle bg-success shadow-lg" style="font-size: 2.5rem;">
+                                                                    <i class="fa-regular fa-badge-check"></i>
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <h4 class="mb-2 text-success fw-bold">تایید برداشت</h4>
+                                                        <p class="text-muted mb-4">آیا از تایید این برداشت اطمینان دارید؟</p>
+                                                        
+                                                        <div class="card bg-light border-0 mb-4 mx-auto" style="max-width: 350px;">
+                                                            <div class="card-body py-3">
+                                                                <div class="row text-start g-3">
+                                                                    <div class="col-6">
+                                                                        <small class="text-muted d-block">کاربر</small>
+                                                                        <span class="fw-medium">{{ $withdraw->user->fullname() }}</span>
+                                                                    </div>
+                                                                    <div class="col-6 text-end">
+                                                                        <small class="text-muted d-block">شناسه برداشت</small>
+                                                                        <span class="fw-medium font-number">#{{ $withdraw->id }}</span>
+                                                                    </div>
+                                                                    <div class="col-12">
+                                                                        <hr class="my-0">
+                                                                    </div>
+                                                                    <div class="col-6">
+                                                                        <small class="text-muted d-block">مقدار</small>
+                                                                        <span class="fw-bold text-dark font-number">{{ formatNumberTrimZeros($withdraw->amount) }} {{ $withdraw->currency_symbol }}</span>
+                                                                    </div>
+                                                                    <div class="col-6 text-end">
+                                                                        <small class="text-muted d-block">ارزش</small>
+                                                                        <span class="fw-bold text-success font-number">USDT {{ formatNumberTrimZeros($withdraw->usdt_value) }}</span>
+                                                                    </div>
+                                                              
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="d-flex justify-content-center gap-3">
+                                                            <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+                                                                <i class="fa-regular fa-xmark me-2"></i>انصراف
+                                                            </button>
+                                                            <a href="{{ route('admin.withdrawal.confirm-withdrawal', ['withdraw' => $withdraw]) }}" 
+                                                                class="btn btn-success px-4">
+                                                                <i class="fa-regular fa-badge-check me-2"></i>تایید برداشت
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {{-- Reject Withdrawal Modal --}}
+                                        <div class="modal fade" id="rejectWithdrawModal-{{ $withdraw->id }}" tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content">
+                                                    <div class="modal-body text-center py-4">
+                                                        <div class="mb-4">
+                                                            <div class="avatar avatar-lg mx-auto" style="width: 80px; height: 80px;">
+                                                                <span class="avatar-initial rounded-circle bg-danger shadow-lg" style="font-size: 2.5rem;">
+                                                                    <i class="fa-regular fa-triangle-exclamation"></i>
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <h4 class="mb-2 text-danger fw-bold">رد برداشت</h4>
+                                                        <p class="text-muted mb-4">آیا از رد این درخواست برداشت اطمینان دارید؟</p>
+                                                        
+                                                        <div class="alert alert-warning d-flex align-items-center mb-4 text-start" role="alert">
+                                                            <i class="fa-regular fa-circle-info me-3 fs-5"></i>
+                                                            <div>
+                                                                <strong>توجه:</strong> با رد این درخواست، مبلغ برداشت به کیف پول کاربر بازگردانده می‌شود.
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="card bg-light border-0 mb-4 mx-auto" style="max-width: 350px;">
+                                                            <div class="card-body py-3">
+                                                                <div class="row text-start g-3">
+                                                                    <div class="col-6">
+                                                                        <small class="text-muted d-block">کاربر</small>
+                                                                        <span class="fw-medium">{{ $withdraw->user->fullname() }}</span>
+                                                                    </div>
+                                                                    <div class="col-6 text-end">
+                                                                        <small class="text-muted d-block">شناسه برداشت</small>
+                                                                        <span class="fw-medium font-number">#{{ $withdraw->id }}</span>
+                                                                    </div>
+                                                                    <div class="col-12">
+                                                                        <hr class="my-0">
+                                                                    </div>
+                                                                    <div class="col-6">
+                                                                        <small class="text-muted d-block">مقدار</small>
+                                                                        <span class="fw-bold text-dark font-number">{{ formatNumberTrimZeros($withdraw->amount) }} {{ $withdraw->currency_symbol }}</span>
+                                                                    </div>
+                                                                    <div class="col-6 text-end">
+                                                                        <small class="text-muted d-block">ارزش</small>
+                                                                        <span class="fw-bold text-danger font-number">USDT {{ formatNumberTrimZeros($withdraw->usdt_value) }}</span>
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="d-flex justify-content-center gap-3">
+                                                            <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+                                                                <i class="fa-regular fa-xmark me-2"></i>انصراف
+                                                            </button>
+                                                            <a href="{{ route('admin.withdrawal.cancel-withdrawal', ['withdraw' => $withdraw]) }}" 
+                                                                class="btn btn-danger px-4">
+                                                                <i class="fa-regular fa-ban me-2"></i>رد برداشت
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     @endif
                                 </td>
                             </tr>
