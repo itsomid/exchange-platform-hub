@@ -74,14 +74,17 @@
     </div>
 @endif
 
-@if ($withdraw->status === \App\Enums\WithdrawalStatusEnum::FAILED)
+@if ($withdraw->admin_id)
     <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
-        <h6 class="m-0 mb-2 mb-md-0 me-12 text-danger">عدم تایید توسط ادمین</h6>
+        <h6
+            class="m-0 mb-2 mb-md-0 me-12 {{ in_array($withdraw->status, [\App\Enums\WithdrawalStatusEnum::REJECTED, \App\Enums\WithdrawalStatusEnum::FAILED]) ? 'text-danger' : 'text-success' }}">
+            {{ in_array($withdraw->status, [\App\Enums\WithdrawalStatusEnum::REJECTED, \App\Enums\WithdrawalStatusEnum::FAILED]) ? 'عدم تایید توسط ادمین' : 'تایید توسط ادمین' }}
+        </h6>
         <div class="text-wrap font-number">
-            @if ($withdraw->admin_id)
-                {{ $withdraw->admin->fullname() }} - #{{ $withdraw->admin->id }}
+            @if ($withdraw->admin)
+                {{ $withdraw->admin->fullname() }} - {{ $withdraw->admin->id }}#
             @else
-                <span class="badge bg-label-danger">خیر</span>
+                #{{ $withdraw->admin_id }}
             @endif
         </div>
     </div>

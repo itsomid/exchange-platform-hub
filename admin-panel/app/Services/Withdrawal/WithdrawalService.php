@@ -203,7 +203,7 @@ class WithdrawalService
             $withdrawal->update([
                 'status' => WithdrawalStatusEnum::QUEUED,
                 'admin_id' => $admin_id, // Store which admin approved the withdrawal
-                'description' => 'Withdrawal approved by admin and queued for processing',
+                'description' => 'Withdrawal approved by admin (#' . $admin_id . ') and queued for processing',
             ]);
 
             // Dispatch job to process withdrawal
@@ -235,7 +235,7 @@ class WithdrawalService
 
             // Update withdrawal status to 'approved'
             $withdrawal->update([
-                'status' => WithdrawalStatusEnum::FAILED,
+                'status' => WithdrawalStatusEnum::REJECTED,
                 'admin_id' => $admin_id, // Store which admin Canceled the withdrawal
                 'description' => 'Withdraw canceled by admin (#' . $admin_id . ')',
             ]);
