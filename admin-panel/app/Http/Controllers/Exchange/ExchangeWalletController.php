@@ -24,6 +24,7 @@ class ExchangeWalletController extends Controller
     protected $bscScan;
     protected $tronScan;
     protected $etherScan;
+    protected $bitexroomUserId;
 
     public function __construct(
         WalletService     $walletService,
@@ -43,6 +44,7 @@ class ExchangeWalletController extends Controller
 
         // Fetch and cache the balance for one hour
         $this->cacheBalances();
+        $this->bitexroomUserId = config('bitexroom.user_id', 1);
     }
 
     /**
@@ -189,8 +191,7 @@ class ExchangeWalletController extends Controller
         $currency = Currency::whereSymbol($currency_symbol)->first();
 
         $currencyChains = $currency->chains;
-        $wallet = Wallet::where('currency_symbol', $currency->symbol)->first();
-
+        $wallet = Wallet::where('user_id',$this->bitexroomUserId)->where('currency_symbol', $currency->symbol)->first();
 
         $walletChains = $wallet->walletChains;
 
@@ -199,9 +200,5 @@ class ExchangeWalletController extends Controller
             'currencyChains' => $currencyChains,
             'walletChains' => $walletChains,
         ]);
-        $chainName = $request->input('chain_name');
-        $walletChain = WalletChain::where('currency_chain', $chainName)->first();
-
-        $coldWalletAddress = $request->input('cold_wallet_address');
     }
 }

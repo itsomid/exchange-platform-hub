@@ -73,7 +73,7 @@
                                 <span class="mx-2 ">({{$chain->currency_chain}})</span>
                             </label>
                             <input type="text" name="withdrawal_address" id="withdrawal_address_{{ $chain->currency_chain }}" class="form-control text-end font-number"
-                                   value="{{$chain->address}}" placeholder="آدرس برداشت">
+                                   value="{{$chain->address}}" placeholder="آدرس برداشت" readonly>
                         </div>
                         <div class="w-100"></div>
                     @endforeach
@@ -161,7 +161,7 @@
             const selectedChain = chainSelect.value;
             const chainText = chainSelect.options[chainSelect.selectedIndex].text;
             const amount = document.getElementById('amount').value;
-            
+
             // Get the correct withdrawal address based on the selected chain
             const addressField = document.getElementById('withdrawal_address_' + selectedChain);
             const address = addressField ? addressField.value : '';
