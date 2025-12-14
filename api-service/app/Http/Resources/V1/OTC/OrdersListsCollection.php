@@ -86,19 +86,21 @@ class OrdersListsCollection extends ResourceCollection
      */
     public function toArray(Request $request): array
     {
-        return $this->collection->map(fn(OTCOrderListsResponseDTO $responseDTO) => [
-            'created_at' => $responseDTO->getCreatedAt(),
-            'type' => $responseDTO->getType()->value,
-            'status' => $responseDTO->getStatus()->value,
-            'status_label' => __('enum.otc.status.' . $responseDTO->getStatus()->name),
-            'quantity' => $responseDTO->getQuantity(),
-            'price' => $responseDTO->getPrice(),
-            'fee' => $responseDTO->getFee(),
-            'received_amount' => $responseDTO->getReceivedAmount(),
-            'market_name' => $responseDTO->getMarket(),
-            'base_currency' => $responseDTO->getBaseCurrency(),
-            'quote_currency' => $responseDTO->getQuoteCurrency(),
-            'currency_logo' => $responseDTO->getCurrencyLogo(),
-        ])->toArray();
+        return [
+            'data' => $this->collection->map(fn(OTCOrderListsResponseDTO $responseDTO) => [
+                'created_at' => $responseDTO->getCreatedAt(),
+                'type' => $responseDTO->getType()->value,
+                'status' => $responseDTO->getStatus()->value,
+                'status_label' => __('enum.otc.status.' . $responseDTO->getStatus()->name),
+                'quantity' => $responseDTO->getQuantity(),
+                'price' => $responseDTO->getPrice(),
+                'fee' => $responseDTO->getFee(),
+                'received_amount' => $responseDTO->getReceivedAmount(),
+                'market_name' => $responseDTO->getMarket(),
+                'base_currency' => $responseDTO->getBaseCurrency(),
+                'quote_currency' => $responseDTO->getQuoteCurrency(),
+                'currency_logo' => $responseDTO->getCurrencyLogo(),
+            ]),
+        ];
     }
 }

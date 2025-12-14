@@ -35,6 +35,18 @@ class OTCOrderRepository implements OTCOrderRepositoryInterface
             ->get();
     }
 
+    public function listsPaginated(int $userId, array $queryString, int $page = 1, int $perPage = 10): \Illuminate\Pagination\LengthAwarePaginator
+    {
+        $query = OTCOrder::query()
+            ->with('market')
+            ->where('user_id', $userId)
+            ->whereIn('status', [OTCOrderStatusEnum::SUCCESS, OTCOrderStatusEnum::PENDING])
+            ->latest()
+            ->filterBy($queryString);
+
+        return $query->paginate($perPage, ['*'], 'page', $page);
+    }
+
     public function getOneById(int $id): OTCOrder
     {
         return OTCOrder::query()->find($id);

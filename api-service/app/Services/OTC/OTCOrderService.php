@@ -13,11 +13,16 @@ class OTCOrderService
 {
     public function __construct(private readonly OTCOrderRepositoryInterface $orderRepository) {}
 
-    public function lists(OTCOrderListsRequestDTO $requestDTO): array
+    public function lists(OTCOrderListsRequestDTO $requestDTO): \Illuminate\Pagination\LengthAwarePaginator
     {
-        $orders = $this->orderRepository->lists($requestDTO->getUserId(), $requestDTO->getFilterQueryString());
+        $paginator = $this->orderRepository->listsPaginated(
+            $requestDTO->getUserId(),
+            $requestDTO->getFilterQueryString() ?? [],
+            $requestDTO->getPage(),
+            $requestDTO->getLimit()
+        );
 
-        return $orders->map(function (OTCOrder $order) {
+        $items = collect($paginator->items())->map(function (OTCOrder $order) {
             if ($order->type === OTCOrderTypeEnum::BUY) {
                 $receivedAmount = Math::sub($order->quantity, $order->fee);
             } else {
@@ -39,6 +44,17 @@ class OTCOrderService
                 ->setCurrencyLogo($order->market->currency->logo)
                 ->setBaseCurrency($order->market->base_currency)
                 ->setQuoteCurrency($order->market->quote_currency);
-        })->toArray();
+        });
+
+        return new \Illuminate\Pagination\LengthAwarePaginator(
+            $items,
+            $paginator->total(),
+            $paginator->perPage(),
+            $paginator->currentPage(),
+            [
+                'path' => request()->url(),
+                'query' => request()->query(),
+            ]
+        );
     }
 }
