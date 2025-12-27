@@ -37,4 +37,36 @@ class MarketController
             )
         );
     }
+
+    public function topTraded()
+    {
+        $topPairs = \App\Models\OTCOrder::query()
+            ->with(['market.baseCurrency', 'market.quoteCurrency'])
+            ->where('status', \App\Enums\OTCOrderStatusEnum::SUCCESS)
+            ->whereBetween('created_at', [now()->subDays(700), now()])
+            ->whereNotNull('market_id')
+            ->selectRaw('market_id, COUNT(*) as trades_count, SUM(quantity * price) as volume')
+            ->groupBy('market_id')
+            ->orderByDesc('volume')
+            ->take(5)
+            ->get()
+            ->map(function ($order) {
+                if (!$order->market) {
+                    return null;
+                }
+                $prices = $this->OTCService->getPrices($order->market_id);
+                $buyPrice = (isset($prices['status']) && $prices['status'] === 404) ? null : $prices['buy_price'];
+                $sellPrice = (isset($prices['status']) && $prices['status'] === 404) ? null : $prices['sell_price'];
+                return [
+                    'pair' => $order->market->base_currency . '/' . $order->market->quote_currency,
+                    'volume' => formatNumberTrimZeros($order->volume),
+                    'buy_price' => $buyPrice !== null ? formatNumberTrimZeros($buyPrice) : null,
+                    'sell_price' => $sellPrice !== null ? formatNumberTrimZeros($sellPrice) : null,
+                ];
+            })
+            ->filter()
+            ->values();
+
+        return response(['data' => $topPairs]);
+    }
 }

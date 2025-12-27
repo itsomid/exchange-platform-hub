@@ -67,6 +67,7 @@ Route::prefix('/otc')->group(function () {
     // get-markets
     Route::get('/markets', [\App\Http\Controllers\V1\OTC\MarketController::class, 'lists'])->name('otc.markets')->withoutMiddleware(['auth:sanctum', 'verified']);
     Route::get('/markets/prices/{marketId}', [\App\Http\Controllers\V1\OTC\MarketController::class, 'prices'])->withoutMiddleware(['auth:sanctum', 'verified']);
+    Route::get('/markets/top-traded', [\App\Http\Controllers\V1\OTC\MarketController::class, 'topTraded'])->withoutMiddleware(['auth:sanctum', 'verified']);
 
     Route::post('/buy', [\App\Http\Controllers\V1\OTC\BuyController::class, 'create'])->name('otc.buy')->middleware(['throttle:' . config('bitexroom.otc.buy_attempts.max_attempts') . ',' . config('bitexroom.otc.buy_attempts.minutes'), FinancialTradeBlockMiddleware::class]);
     Route::post('/sell', [\App\Http\Controllers\V1\OTC\SellController::class, 'create'])->name('otc.sell')->middleware(['throttle:' . config('bitexroom.otc.sell_attempts.max_attempts') . ',' . config('bitexroom.otc.sell_attempts.minutes'), FinancialTradeBlockMiddleware::class]);
