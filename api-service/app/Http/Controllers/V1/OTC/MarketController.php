@@ -43,7 +43,7 @@ class MarketController
         $topPairs = \App\Models\OTCOrder::query()
             ->with(['market.baseCurrency', 'market.quoteCurrency'])
             ->where('status', \App\Enums\OTCOrderStatusEnum::SUCCESS)
-            ->whereBetween('created_at', [now()->subDays(700), now()])
+            ->whereBetween('created_at', [now()->subDays(30), now()])
             ->whereNotNull('market_id')
             ->selectRaw('market_id, COUNT(*) as trades_count, SUM(quantity * price) as volume')
             ->groupBy('market_id')
