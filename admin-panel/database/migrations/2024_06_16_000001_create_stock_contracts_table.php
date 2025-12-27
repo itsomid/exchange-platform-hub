@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('stock_id')->constrained('stocks')->onDelete('cascade');
             $table->string('contract_number')->unique();
             $table->string('contract_file')->nullable();
-            $table->decimal('amount', 18, 2);
+            $table->decimal('amount', 18, 4);
             $table->decimal('total_value', 18, 4);
             $table->decimal('cancellation_fee', 18, 2)->default(0);
             $table->timestamp('cancelled_at')->nullable();
