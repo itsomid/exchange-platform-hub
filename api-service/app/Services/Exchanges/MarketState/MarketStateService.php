@@ -2,9 +2,9 @@
 
 namespace App\Services\Exchanges\MarketState;
 
+use App\Models\MarketHistory;
 use App\Models\SpotTrade;
 use App\Repositories\Interfaces\MarketRepositoryInterface;
-use Illuminate\Support\Facades\Http;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 readonly class MarketStateService
@@ -17,23 +17,34 @@ readonly class MarketStateService
         if (is_null($market)) {
             throw new NotFoundHttpException;
         }
-        $response = Http::get('https://api.coinex.com/v2/spot/ticker', [
-            'market' => $market->market_name,
-        ])->json();
-
-        $data = $response['data'][0];
+        $last = $market->exchangePrice?->price;
 
         $volume = SpotTrade::query()
             ->where('market_id', $market->id)
             ->where('created_at', '>=', now()->subHours(24))
             ->sum('quantity');
 
-        return ['low' => $data['low'],
-            'high' => $data['high'],
+        $latestHistory = MarketHistory::query()
+            ->where('market_id', $market->id)
+            ->latest('timestamp')
+            ->first();
+
+        $low = $latestHistory?->low;
+        $high = $latestHistory?->high;
+        $open = $latestHistory?->open;
+
+        $priceChangePercentage = 0.0;
+        if (! is_null($last) && ! is_null($open) && (float) $open != 0.0) {
+            $priceChangePercentage = round((($last - $open) / $open) * 100, 2);
+        }
+
+        return [
+            'low' => $low ?? $last,
+            'high' => $high ?? $last,
             'volume' => $volume,
-            'last' => $data['last'],
-            'open' => $data['open'],
-            'price_change_percentage' => round((($data['last'] - $data['open']) / $data['open']) * 100, 2),
+            'last' => $last,
+            'open' => $open ?? $last,
+            'price_change_percentage' => $priceChangePercentage,
         ];
     }
 }
