@@ -16,6 +16,8 @@ enum TransactionSubTypeEnum: string
     case COINEX = 'coinex';
     case REF_EXCHANGE_BUY = 'ref_exchange_buy';
     case REF_EXCHANGE_BUY_FEE = 'ref_exchange_buy_fee';
+    case REF_EXCHANGE_SELL = 'ref_exchange_sell';
+    case REF_EXCHANGE_SELL_FEE = 'ref_exchange_sell_fee';
     case REF_EXCHANGE_WITHDRAWAL = 'ref_exchange_withdrawal';
     case REF_EXCHANGE_WITHDRAWAL_FEE = 'ref_exchange_withdrawal_fee';
     case STOCK = 'stock';

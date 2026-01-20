@@ -10,6 +10,7 @@ use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Exceptions\V1\OTC\BuyTradeWasFiledException;
+use App\Exceptions\V1\OTC\SellTradeWasFiledException;
 use App\Exceptions\V1\Wallet\InsufficientBalanceException;
 use App\Helpers\Math;
 use App\Models\Currency;
@@ -29,6 +30,7 @@ use App\Repositories\Interfaces\TransactionRepositoryInterface;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Services\Exchanges\DTO\ExchangeBuyRequestDTO;
+use App\Services\Exchanges\DTO\ExchangeSellRequestDTO;
 use App\Services\Exchanges\ExchangeService;
 use App\Services\OTC\DTO\CompletedOrderRequestDTO;
 use App\Services\OTC\DTO\MarketResponseDTO;
@@ -404,57 +406,52 @@ class OTCService
                     ->setMarketId($market->id)
                     ->setQuantity($sellAmount)
                     ->setPrice($market->exchangePrice->sell_price)
+                    ->setExchangeId($activeExchange->id)
                     ->setFee($fee)
                     ->setType(OTCOrderTypeEnum::SELL)
                     ->setStatus(OTCOrderStatusEnum::PENDING)
             );
 
-            //WITHDRAW USDT From Ref exchange IN SELL
+            $doComplete = true;
             if (Math::comp($buyerQuoteWallet->available_balance, $receivedAmount) === -1) {
-
-                $usdtWallet = $this->walletRepository
-                    ->getBitexroomWallet(
-                        'USDT'
-                    );
-
-                $chargeUSDTTransaction = $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
-                    ->setUserId(config('bitexroom.user_id'))
-                    ->setWalletId($usdtWallet->id)
-                    ->setOtcOrderId($otc_order->id)
-                    ->setAmount($receivedAmount)
-                    ->setCoinPrice("1")
-                    ->setExchangeId($activeExchange->id)
-                    ->setType(TransactionTypeEnum::REF_EXCHANGE)
-                    ->setSubtype(TransactionSubTypeEnum::REF_EXCHANGE_WITHDRAWAL)
-                    ->setStatus(TransactionStatusEnum::SUCCESS)
-                    ->setDescription(
-                        sprintf(
-                            'برداشت USDT به مقدار %s از صرافی مرجع (%s)',
-                            formatNumberTrimZeros((float)$receivedAmount),
-                            $market->exchangePrice->exchange->name
-                        )
-                    ));
-
-                $this->refExchangeWithdrawalRepository->create(
-                    resolve(CreateOTCRefExchangeWithdrawalRequestDTO::class)
-                        ->setCurrencyId($market->quoteCurrency->id)
-                        ->setTransactionId($chargeUSDTTransaction->id)
-                        ->setStatus(OTCRefExchangeWithdrawalStatusEnum::PENDING)
+                $exchangeService = resolve(ExchangeService::class);
+                $resultSellRefExchange = $exchangeService->sell(
+                    resolve(ExchangeSellRequestDTO::class)
+                        ->setMarketId($requestDTO->getMarketId())
+                        ->setOtcId($otc_order->id)
+                        ->setQuantity($sellAmount)
                 );
+
+                $doComplete = $resultSellRefExchange->isDone();
             }
 
-            $this->completeSellOrder(
-                resolve(CompletedOrderRequestDTO::class)
-                    ->setOtcId($otc_order->id)
-                    ->setBuyerUserId(config('bitexroom.user_id'))
-                    ->setSellerUserId(Auth::id())
-            );
-            if ($otc_order->user->introducer_code) {
-                $this->referralCommissionService->processReferralCommission($otc_order, $fee);
-            }
-            $user->notify(new OTCSellCreated($market->base_currency . $market->quote_currency, $requestDTO->getQuantity(), $user->name));
+            if ($doComplete) {
+                $this->completeSellOrder(
+                    resolve(CompletedOrderRequestDTO::class)
+                        ->setOtcId($otc_order->id)
+                        ->setBuyerUserId(config('bitexroom.user_id'))
+                        ->setSellerUserId(Auth::id())
+                );
+                if ($otc_order->user->introducer_code) {
+                    $this->referralCommissionService->processReferralCommission($otc_order, $fee);
+                }
+                $user->notify(new OTCSellCreated($market->base_currency . $market->quote_currency, $requestDTO->getQuantity(), $user->name));
 
-            DB::commit();
+                DB::commit();
+            } else {
+                if ($resultSellRefExchange->getSpotStatus() === SpotStatusEnum::NotEnoughBalance) {
+                    $exchangeName = $otc_order->exchange->name;
+                    $description = 'به علت نداشتن موجودی ' . $market->base_currency . ' در ' . $exchangeName . ' سفارش لغو شد.';
+                } else {
+                    $description = $resultSellRefExchange->getErrorMessage() . '- Code: ' . $resultSellRefExchange->getErrorCode();
+                }
+                $otc_order->update([
+                    'status' => OTCOrderStatusEnum::CANCELED,
+                    'ref_exchange_description' => $description,
+                ]);
+                DB::commit();
+                throw new SellTradeWasFiledException(marketName: $market->base_currency . $market->quote_currency);
+            }
         } catch (Throwable $exception) {
             DB::rollBack();
             report($exception);

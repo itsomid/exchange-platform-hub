@@ -24,6 +24,7 @@ use App\Services\Exchanges\DTO\ChargeUSDTRequestDTO;
 use App\Services\Exchanges\DTO\ChargeUSDTResponse;
 use App\Services\Exchanges\DTO\ExchangeBuyRequestDTO;
 use App\Services\Exchanges\DTO\ExchangeBuyResponseDTO;
+use App\Services\Exchanges\DTO\ExchangeSellRequestDTO;
 use Throwable;
 
 class ExchangeService
@@ -163,6 +164,137 @@ class ExchangeService
                     ->setTransactionId($baseCurrencyTransaction->id)
                     ->setStatus(OTCRefExchangeWithdrawalStatusEnum::PENDING)
             );
+        }
+
+        return resolve(ExchangeBuyResponseDTO::class)
+            ->setIsDone($response->isDone())
+            ->setErrorMessage($response->getErrorMessage())
+            ->setErrorCode($response->getErrorCode())
+            ->setSpotStatus($response->getSpotStatus());
+    }
+
+    public function sell(ExchangeSellRequestDTO $requestDTO): ExchangeBuyResponseDTO
+    {
+        $market = $this->marketRepository->getMarketById($requestDTO->getMarketId());
+        $exchangeName = $market->exchangePrice->exchange->slug;
+        $asset = AssetFactory::make($exchangeName);
+
+        $response = $asset->placeOrder(
+            resolve(BuyDTORequest::class)
+                ->setSide('sell')
+                ->setMarket($market->base_currency . $market->quote_currency)
+                ->setMarketType('SPOT')
+                ->setQuantity($requestDTO->getQuantity())
+                ->setOrderType('market')
+                ->setCurrency($market->base_currency)
+        );
+
+        if ($response->isDone()) {
+            $otcOrder = $this->otcOrderRepository->getOneById($requestDTO->getOtcId());
+            $otcOrder->refExchangeTransactions()->create([
+                'order_id' => $response->getOrderId(),
+                'exchange_id' => $market->exchangePrice->exchange->id,
+                'market' => $response->getMarket(),
+                'currency_symbol' => $response->getCurrencySymbol(),
+                'amount' => $response->getAmount(),
+                'fee' => $response->getDiscountFee(),
+                'filled_amount' => $response->getFilledAmount(),
+                'side' => 'sell',
+                'response' => $response->getResponseBody(),
+            ]);
+
+            $feeCurrency = $this->getFeeCurrencyForExchange($exchangeName);
+
+            $feeWallet = $this->walletRepository
+                ->getOrCreateWallet(
+                    config('bitexroom.user_id'),
+                    $feeCurrency
+                );
+            $quoteCurrencyWallet = $this->walletRepository
+                ->getOrCreateWallet(
+                    config('bitexroom.user_id'),
+                    $market->quote_currency
+                );
+            $baseCurrencyWallet = $this->walletRepository
+                ->getOneOrCreateByCurrencyWithLock(
+                    $market->base_currency,
+                    config('bitexroom.user_id')
+                );
+
+            $feeMarket = $this->marketRepository->getMarketBySymbol($feeCurrency, 'USDT');
+            $feePrice = $feeMarket ? $feeMarket->exchangePrice->price : 0;
+
+            if ((float)$response->getDiscountFee() > 0) {
+                $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
+                    ->setUserId(config('bitexroom.user_id'))
+                    ->setWalletId($feeWallet->id)
+                    ->setOtcOrderId($otcOrder->id)
+                    ->setAmount(-$response->getDiscountFee())
+                    ->setCoinPrice($feeCurrency === 'USDT' ? "1" : $feePrice)
+                    ->setExchangeId($market->exchangePrice->exchange->id)
+                    ->setType(TransactionTypeEnum::REF_EXCHANGE)
+                    ->setSubtype(TransactionSubTypeEnum::REF_EXCHANGE_SELL_FEE)
+                    ->setStatus(TransactionStatusEnum::SUCCESS)
+                    ->setDescription(
+                        sprintf(
+                            'استفاده %s به مقدار %s برای فی فروش در صرافی مرجع (%s)',
+                            $feeCurrency,
+                            formatNumberTrimZeros((float)$response->getDiscountFee()),
+                            $market->exchangePrice->exchange->name
+                        ),
+                    ));
+            }
+
+            $quoteAmount = $response->getFilledValue();
+            if ($feeCurrency === $market->quote_currency && (float)$response->getDiscountFee() > 0) {
+                $quoteAmount = bcsub($quoteAmount, $response->getDiscountFee(), 8);
+            }
+
+            $quoteCoinPrice = "1";
+            if ($market->quote_currency !== 'USDT') {
+                $quoteMarket = $this->marketRepository->getMarketBySymbol($market->quote_currency, 'USDT');
+                $quoteCoinPrice = $quoteMarket ? $quoteMarket->exchangePrice->price : "0";
+            }
+
+            $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
+                ->setUserId(config('bitexroom.user_id'))
+                ->setWalletId($quoteCurrencyWallet->id)
+                ->setOtcOrderId($otcOrder->id)
+                ->setAmount($quoteAmount)
+                ->setCoinPrice($quoteCoinPrice)
+                ->setExchangeId($market->exchangePrice->exchange->id)
+                ->setType(TransactionTypeEnum::REF_EXCHANGE)
+                ->setSubtype(TransactionSubTypeEnum::REF_EXCHANGE_SELL)
+                ->setStatus(TransactionStatusEnum::SUCCESS)
+                ->setDescription(
+                    sprintf(
+                        'دریافت %s به مقدار %s از فروش در صرافی مرجع (%s)',
+                        $market->quote_currency,
+                        formatNumberTrimZeros((float)$quoteAmount),
+                        $market->exchangePrice->exchange->name
+                    ),
+                ));
+            $quoteCurrencyWallet->increment('balance', (float)$quoteAmount);
+
+            $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
+                ->setUserId(config('bitexroom.user_id'))
+                ->setWalletId($baseCurrencyWallet->id)
+                ->setOtcOrderId($otcOrder->id)
+                ->setAmount((string)(-$response->getFilledAmount()))
+                ->setCoinPrice($market->exchangePrice->price)
+                ->setExchangeId($market->exchangePrice->exchange->id)
+                ->setType(TransactionTypeEnum::REF_EXCHANGE)
+                ->setSubtype(TransactionSubTypeEnum::REF_EXCHANGE_SELL)
+                ->setStatus(TransactionStatusEnum::SUCCESS)
+                ->setDescription(
+                    sprintf(
+                        'فروش %s به مقدار %s در صرافی مرجع (%s)',
+                        $market->base_currency,
+                        formatNumberTrimZeros((float)$response->getFilledAmount()),
+                        $market->exchangePrice->exchange->name
+                    ),
+                ));
+            $baseCurrencyWallet->decrement('balance', (float)$response->getFilledAmount());
         }
 
         return resolve(ExchangeBuyResponseDTO::class)
