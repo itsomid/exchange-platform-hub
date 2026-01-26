@@ -17,12 +17,22 @@ class Market extends Model
         'min_otc_amount',
         'max_otc_amount',
         'is_active',
-        'price_update_enabled'
+        'price_update_enabled',
+        'ref_exchange_sell_enabled'
     ];
 
     protected $appends = [
       'name'
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_active' => 'boolean',
+            'price_update_enabled' => 'boolean',
+            'ref_exchange_sell_enabled' => 'boolean',
+        ];
+    }
 
     public function baseCurrency(): BelongsTo
     {

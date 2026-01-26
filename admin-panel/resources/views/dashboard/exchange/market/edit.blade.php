@@ -301,6 +301,16 @@
                         <div class="row">
                             <div class="col-md-6 mt-5">
                                 <label class="switch  switch-lg">
+                                    <input type="checkbox" class="switch-input" name="ref_exchange_sell_enabled"
+                                        value="1" {{ $market->ref_exchange_sell_enabled ? 'checked' : '' }} />
+                                    <span class="switch-toggle-slider"></span>
+                                    <span class="switch-label">وضعیت فروش در صرافی مرجع در هر معامله OTC(فعال/غیرفعال)</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mt-5">
+                                <label class="switch switch-lg">
                                     <input type="checkbox" class="switch-input" name="price_update_enabled"
                                         value="1" {{ $market->price_update_enabled ? 'checked' : '' }} />
                                     <span class="switch-toggle-slider"></span>

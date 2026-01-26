@@ -65,6 +65,7 @@ class MarketController extends Controller
             'max_trade_amount' => $request->max_trade_amount,
             'is_active' => $request->has('is_active') ? $request->is_active : false,
             'price_update_enabled' => $request->has('price_update_enabled') ? $request->price_update_enabled : false,
+            'ref_exchange_sell_enabled' => $request->has('ref_exchange_sell_enabled') ? $request->ref_exchange_sell_enabled : false,
         ]);
 
         // Create the exchange price record
@@ -113,6 +114,7 @@ class MarketController extends Controller
             'max_trade_amount' => $request->max_trade_amount,
             'is_active' => $request->has('is_active') ? $request->is_active : false,
             'price_update_enabled' => $request->has('price_update_enabled') ? $request->price_update_enabled : false,
+            'ref_exchange_sell_enabled' => $request->has('ref_exchange_sell_enabled') ? $request->ref_exchange_sell_enabled : false,
         ]);
         $market->activeExchangePrice->exchange_profit_sell = $request->exchange_profit_sell;
         $market->activeExchangePrice->exchange_profit_buy = $request->exchange_profit_buy;

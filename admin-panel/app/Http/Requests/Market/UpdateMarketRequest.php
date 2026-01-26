@@ -31,6 +31,7 @@ class UpdateMarketRequest extends FormRequest
             'is_active'        => ['nullable', 'boolean'],
             'exchange_id' => ['required', 'numeric', 'exists:exchanges,id'],
             'price_update_enabled' => ['nullable', 'boolean'],
+            'ref_exchange_sell_enabled' => ['nullable', 'boolean'],
         ];
     }
     protected function prepareForValidation(): void

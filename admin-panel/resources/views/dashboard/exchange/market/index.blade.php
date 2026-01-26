@@ -1,5 +1,5 @@
 @extends('dashboard.layout.master')
-@section('title', 'مدیریت کوین ها')
+@section('title', 'مدیریت بازارها')
 @section('content')
 
     <div class="row g-4 mb-4">
@@ -70,8 +70,6 @@
                         <option value="" {{ request('is_active') == '' ? 'selected' : '' }}>همه</option>
                         <option value="1" {{ request('is_active') == '1' ? 'selected' : '' }}>فعال</option>
                         <option value="0" {{ request('is_active') == '0' ? 'selected' : '' }}>غیرفعال</option>
-
-
                     </select>
                 </div>
             </form>
@@ -105,7 +103,7 @@
                             <th>حداقل مقدار معامله</th>
                             <th>حداکثر مقدار معامله</th>
                             <th>وضعیت</th>
-                            <th>عملیات</th>
+                            <th class="sticky-column">عملیات</th>
                         </tr>
                     </thead>
                     <tbody class="table-border-bottom-0">
@@ -189,15 +187,13 @@
                                         @endif
                                     </div>
                                 </td>
-                                <td>
-                                    <div class="d-flex align-items-center">
+                                <td class="sticky-column">
+                                    <div class="d-flex align-items-center flex-column gap-1">
                                         <a class="text-secondary me-3"
                                             href="{{ route('admin.market.edit', ['market' => $market->id]) }}">
                                             <i class="fa-light fa-pen-to-square fa-lg"></i>
                                         </a>
-                                        <a class="text-secondary me-3" href="">
-                                            <i class="fa-light fa-eye fa-lg"></i>
-                                        </a>
+                                    
                                     </div>
                                 </td>
                             </tr>
@@ -208,4 +204,34 @@
         </div>
     </div>
 
+@endsection
+@section('vendor-style')
+   <style>
+        .table-responsive {
+            overflow-x: auto;
+            position: relative;
+        }
+        
+        .table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        
+        .sticky-column {
+            position: sticky;
+            left: 0;
+            background-color: #fff !important;
+            z-index: 2 !important;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        .table thead .sticky-column {
+            z-index: 3 !important;
+            background-color: #fff !important;
+        }
+        
+        .table tbody tr:hover .sticky-column {
+            background-color: #f8f9fa !important;
+        }
+    </style>
 @endsection
