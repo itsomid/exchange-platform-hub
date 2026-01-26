@@ -413,7 +413,8 @@ class OTCService
             );
 
             $doComplete = true;
-            if (Math::comp($buyerQuoteWallet->available_balance, $receivedAmount) === -1) {
+            $refExchangeFailDescription = null;
+            if ($market->ref_exchange_sell_enabled) {
                 $exchangeService = resolve(ExchangeService::class);
                 $resultSellRefExchange = $exchangeService->sell(
                     resolve(ExchangeSellRequestDTO::class)
@@ -423,6 +424,9 @@ class OTCService
                 );
 
                 $doComplete = $resultSellRefExchange->isDone();
+            } elseif (Math::comp($buyerQuoteWallet->available_balance, $receivedAmount) === -1) {
+                $doComplete = false;
+                $refExchangeFailDescription = 'فروش در صرافی مرجع برای این بازار غیرفعال است.';
             }
 
             if ($doComplete) {
@@ -439,7 +443,9 @@ class OTCService
 
                 DB::commit();
             } else {
-                if ($resultSellRefExchange->getSpotStatus() === SpotStatusEnum::NotEnoughBalance) {
+                if (!empty($refExchangeFailDescription)) {
+                    $description = $refExchangeFailDescription;
+                } elseif ($resultSellRefExchange->getSpotStatus() === SpotStatusEnum::NotEnoughBalance) {
                     $exchangeName = $otc_order->exchange->name;
                     $description = 'به علت نداشتن موجودی ' . $market->base_currency . ' در ' . $exchangeName . ' سفارش لغو شد.';
                 } else {
@@ -450,7 +456,7 @@ class OTCService
                     'ref_exchange_description' => $description,
                 ]);
                 DB::commit();
-                throw new SellTradeWasFiledException(marketName: $market->base_currency . $market->quote_currency);
+                throw new SellTradeWasFiledException(message: $description, marketName: $market->base_currency . $market->quote_currency);
             }
         } catch (Throwable $exception) {
             DB::rollBack();

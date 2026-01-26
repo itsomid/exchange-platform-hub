@@ -304,7 +304,7 @@
                                     <input type="checkbox" class="switch-input" name="ref_exchange_sell_enabled"
                                         value="1" {{ $market->ref_exchange_sell_enabled ? 'checked' : '' }} />
                                     <span class="switch-toggle-slider"></span>
-                                    <span class="switch-label">وضعیت فروش در صرافی مرجع در هر معامله OTC(فعال/غیرفعال)</span>
+                                    <span class="switch-label">وضعیت فروش در صرافی مرجع در هر معامله OTC/SPOT (فعال/غیرفعال)</span>
                                 </label>
                             </div>
                         </div>

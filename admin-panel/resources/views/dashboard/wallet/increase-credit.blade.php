@@ -108,17 +108,6 @@
     </script>
 @endpush
 
-@section('vendor-style')
-    @vite([
 
-    ])
-
-@endsection
-@section('vendor-script')
-
-    @vite([
-
-    ])
-@endsection
 
 

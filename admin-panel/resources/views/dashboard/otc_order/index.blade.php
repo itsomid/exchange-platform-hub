@@ -1,5 +1,60 @@
 @extends('dashboard.layout.master')
-@section('title', 'مدیریت معاملات')
+@section('title', 'مدیریت بازارهای OTC')
+@section('vendor-style')
+   <style>
+       .table-responsive {
+            overflow-x: auto;
+            position: relative;
+        }
+        
+        .table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        
+        .sticky-column {
+            position: sticky;
+            left: 0;
+            background-color: #fff !important;
+            z-index: 1;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        .table thead .sticky-column {
+            z-index: 3 !important;
+            background-color: #fff !important;
+        }
+        
+        .table tbody tr .sticky-column {
+            background-color: #fff !important;
+        }
+        
+        .table tbody tr:hover .sticky-column {
+            background-color: #f8f9fa !important;
+        }
+        
+        /* Support for colored rows */
+        .table tbody tr.table-success .sticky-column {
+            background-color: #d1e7dd !important;
+        }
+        
+        .table tbody tr.table-danger .sticky-column {
+            background-color: #f8d7da !important;
+        }
+        
+        .table tbody tr.table-warning .sticky-column {
+            background-color: #fff3cd !important;
+        }
+        
+        .table tbody tr.table-info .sticky-column {
+            background-color: #cff4fc !important;
+        }
+        
+        .table tbody tr.table-primary .sticky-column {
+            background-color: #cfe2ff !important;
+        }
+    </style>
+@endsection
 @section('content')
     {{--    TODO: Complete OTC ORder Card --}}
     <div class="row g-4 mb-4">
@@ -290,7 +345,7 @@
 
                         </th>
                         <th>وضعیت</th>
-                        <th>عملیات</th>
+                        <th class="sticky-column">عملیات</th>
                     </tr>
                 </thead>
                 <tbody class="table-border-bottom-0">
@@ -300,6 +355,7 @@
                         </tr>
                     @else
                         @foreach ($otcOrders as $order)
+                        
                             <tr class="table-{{ $order->status->color() }}">
                                 <td>{{ $order->id }}</td>
                                 <td class="text-heading fw-medium">
@@ -355,31 +411,42 @@
                                     <span
                                         class="badge bg-{{ $order->status->color() }}">{{ $order->status->label() }}</span>
                                 </td>
-                                <td>
+                                <td class="sticky-column">
+                                     @if ($order->status !== \App\Enums\OTCOrderStatusEnum::CANCELED)
                                     <a href="" class="btn btn-icon btn-text-secondary" data-bs-toggle="modal"
                                         data-bs-target="#otc-{{ $order->id }}">
-                                        <i class="fa-light fa-memo-circle-info fa-xl"></i>
+                                        <i class="fa-light fa-memo-circle-info fa-lg"></i>
                                     </a>
+                                    @endif
                                     @if ($order->status === \App\Enums\OTCOrderStatusEnum::CANCELED)
                                         <a href="#" class="btn btn-icon btn-text-secondary" data-bs-toggle="modal"
                                             data-bs-target="#otc-description-{{ $order->id }}">
-                                            <i class="fa-regular fa-eye fa-xl"></i>
+                                            <i class="fa-regular fa-eye fa-lg"></i>
                                         </a>
                                     @endif
-                                    @include('dashboard.otc_order.otc-description-modal', [
-                                        'order' => $order,
-                                    ])
-                                    <x-transaction-modal modal-id="otc-{{ $order->id }}"
-                                        title="تراکنش های معامله #{{ $order->id }}" :user="$order->user" :transactions="$order->transactions"
-                                        route-name="admin.transaction.index" route-param="otc_order_id"
-                                        :route-param-value="$order->id" />
                                 </td>
+                                 
                             </tr>
                         @endforeach
                     @endif
                 </tbody>
             </table>
         </div>
+        
+        {{-- Description Modals --}}
+        @foreach ($otcOrders as $order)
+            @include('dashboard.otc_order.otc-description-modal', [
+                'order' => $order,
+            ])
+        @endforeach
+        
+        {{-- Transaction Modals --}}
+        @foreach ($otcOrders as $order)
+            <x-transaction-modal modal-id="otc-{{ $order->id }}"
+                title="تراکنش های معامله #{{ $order->id }}" :user="$order->user" :transactions="$order->transactions"
+                route-name="admin.transaction.index" route-param="otc_order_id"
+                :route-param-value="$order->id" />
+        @endforeach
         <div class="row mt-4">
             <div class="col-md-12">
                 {{ $otcOrders->appends(request()->all())->links() }}
@@ -388,6 +455,7 @@
     </div>
 
 @endsection
+
 @section('vendor-script')
     <script>
         $(document).ready(function() {

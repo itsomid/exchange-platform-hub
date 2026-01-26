@@ -1,6 +1,6 @@
 @props(['modalId', 'title', 'user' => null, 'transactions', 'routeName', 'routeParam', 'routeParamValue'])
 
-<div class="modal fade" id="{{ $modalId }}" tabindex="-1" aria-model="true" role="dialog">
+<div class="modal fade" id="{{ $modalId }}" tabindex="-1"  role="dialog" aria-hidden="true">>
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header justify-content-between">

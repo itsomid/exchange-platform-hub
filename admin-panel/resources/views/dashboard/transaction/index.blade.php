@@ -1,5 +1,45 @@
 @extends('dashboard.layout.master')
 @section('title', 'مدیریت تراکنش ها')
+
+@section('vendor-style')
+   <style>
+        .table-responsive {
+            overflow-x: auto;
+            position: relative;
+        }
+        
+        .table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        
+        .sticky-column {
+            position: sticky;
+            left: 0;
+            background-color: #fff !important;
+            z-index: 1;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1) !important;
+
+        }
+        
+        .table thead .sticky-column {
+            background-color: #fff !important;
+            z-index: 2;
+        }
+
+        /* When a Bootstrap modal is open, ensure sticky cells don't participate in stacking */
+        body.modal-open .sticky-column {
+            z-index: auto !important;
+            box-shadow: none !important;
+        }
+        
+        .table tbody tr:hover .sticky-column {
+            background-color: #f8f9fa !important;
+        }
+       
+    </style>
+@endsection
+
 @section('content')
 
     <div class="row g-4 mb-4">
@@ -98,7 +138,7 @@
                     </label>
                     <input type="number" name="to_id" id="to_id" class="form-control" placeholder="مثلاً 1200">
                 </div>
-                <div class="col-md-3 mt-2">
+                <div class="col-md-5 mt-2">
                     <button type="submit" class="btn btn-success me-2" id="exportExcelBtn">
                         <i class="fas fa-download me-2"></i>
                         دانلود خروجی اکسل
@@ -323,7 +363,7 @@
                             <br>
                             <small>(قبل از تراکنش)</small>
                         </th>
-                        <th class="text-wrap font-number w-25">توضیحات</th>
+                        <th class="text-wrap w-25">توضیحات</th>
                         <th>
                             @php
                                 $currentParams = request()->except('sortByCreatedAt');
@@ -342,7 +382,7 @@
                         </th>
 
                         <th>وضعیت</th>
-                        <th>عملیات</th>
+                        <th class="sticky-column">عملیات</th>
                     </tr>
                 </thead>
                 <tbody class="table-border-bottom-0">
@@ -414,19 +454,22 @@
                                         {{ $transaction->status->label() }}
                                     </span>
                                 </td>
-                                <td>
+                                <td class="sticky-column">
                                     <a href="" class="btn btn-icon btn-text-secondary" data-bs-toggle="modal"
                                         data-bs-target="#transaction-{{ $transaction->id }}">
                                         <i class="fa-regular fa-eye fa-xl"></i>
-                                    </a>
-                                    <x-transaction-details-modal :transaction="$transaction" />
+                                    </a>  
                                 </td>
                             </tr>
+                         
                         @endforeach
                     @endif
                 </tbody>
             </table>
         </div>
+        @foreach ($transactions as $transaction)
+             <x-transaction-details-modal :transaction="$transaction" />
+        @endforeach
         <div class="row mt-4">
             <div class="col-md-12">
                 {{ $transactions->appends(request()->all())->links() }}
