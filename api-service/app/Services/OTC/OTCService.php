@@ -4,7 +4,7 @@ namespace App\Services\OTC;
 
 use App\Enums\OTCOrderStatusEnum;
 use App\Enums\OTCOrderTypeEnum;
-use App\Enums\OTCRefExchangeWithdrawalStatusEnum;
+use App\Enums\RefExchangeSellStatusEnum;
 use App\Enums\SpotStatusEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
@@ -13,14 +13,11 @@ use App\Exceptions\V1\OTC\BuyTradeWasFiledException;
 use App\Exceptions\V1\OTC\SellTradeWasFiledException;
 use App\Exceptions\V1\Wallet\InsufficientBalanceException;
 use App\Helpers\Math;
-use App\Models\Currency;
 use App\Models\Market;
 use App\Models\Setting;
-use App\Models\Transaction;
 use App\Notifications\OTCBuyCreated;
 use App\Notifications\OTCSellCreated;
 use App\Repositories\DTO\OTCOrder\CreateOTCOrderRequestDTO;
-use App\Repositories\DTO\OTCRefExchangeWithdrawal\CreateOTCRefExchangeWithdrawalRequestDTO;
 use App\Repositories\DTO\Transaction\CreateTransactionRequestDTO;
 use App\Repositories\Interfaces\ExchangeRepositoryInterface;
 use App\Repositories\Interfaces\MarketRepositoryInterface;
@@ -37,6 +34,7 @@ use App\Services\OTC\DTO\MarketResponseDTO;
 use App\Services\OTC\DTO\OTCBuyRequestDTO;
 use App\Services\OTC\DTO\OTCBuyResponseDTO;
 use App\Services\OTC\DTO\OTCSellRequestDTO;
+use App\Services\Exchanges\AdminNotification;
 use App\Services\ReferralCode\ReferralCommissionService;
 use App\Repositories\Interfaces\CurrencyRepositoryInterface;
 use Illuminate\Support\Facades\Auth;
@@ -414,6 +412,7 @@ class OTCService
 
             $doComplete = true;
             $refExchangeFailDescription = null;
+            $notEnoughBalanceInRefExchange = false;
             if ($market->ref_exchange_sell_enabled) {
                 $exchangeService = resolve(ExchangeService::class);
                 $resultSellRefExchange = $exchangeService->sell(
@@ -423,7 +422,15 @@ class OTCService
                         ->setQuantity($sellAmount)
                 );
 
-                $doComplete = $resultSellRefExchange->isDone();
+                if (!$resultSellRefExchange->isDone()) {
+                    if ($resultSellRefExchange->getSpotStatus() === SpotStatusEnum::NotEnoughBalance) {
+                        // Reference exchange has no balance, but we'll complete the order anyway
+                        $notEnoughBalanceInRefExchange = true;
+                        $doComplete = true;
+                    } else {
+                        $doComplete = false;
+                    }
+                }
             } elseif (Math::comp($buyerQuoteWallet->available_balance, $receivedAmount) === -1) {
                 $doComplete = false;
                 $refExchangeFailDescription = 'فروش در صرافی مرجع برای این بازار غیرفعال است.';
@@ -441,13 +448,26 @@ class OTCService
                 }
                 $user->notify(new OTCSellCreated($market->base_currency . $market->quote_currency, $requestDTO->getQuantity(), $user->name));
 
+                // Notify admin if reference exchange had insufficient balance
+                if ($notEnoughBalanceInRefExchange) {
+                    
+                    AdminNotification::sendRefExchangeNotEnoughBalance(
+                        $otc_order->exchange->name,
+                        $market->base_currency,
+                        $sellAmount,
+                        'sell'
+                    );
+                    
+                    // Set ref_exchange_sell_status to PENDING so admin can trigger it later
+                    $otc_order->update([
+                        'ref_exchange_sell_status' => RefExchangeSellStatusEnum::PENDING,
+                    ]);
+                }
+
                 DB::commit();
             } else {
                 if (!empty($refExchangeFailDescription)) {
                     $description = $refExchangeFailDescription;
-                } elseif ($resultSellRefExchange->getSpotStatus() === SpotStatusEnum::NotEnoughBalance) {
-                    $exchangeName = $otc_order->exchange->name;
-                    $description = 'به علت نداشتن موجودی ' . $market->base_currency . ' در ' . $exchangeName . ' سفارش لغو شد.';
                 } else {
                     $description = $resultSellRefExchange->getErrorMessage() . '- Code: ' . $resultSellRefExchange->getErrorCode();
                 }

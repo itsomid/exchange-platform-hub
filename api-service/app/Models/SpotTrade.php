@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 /**
  * @property int    $id
@@ -29,5 +30,15 @@ class SpotTrade extends Model
     public function commission(): BelongsTo
     {
         return $this->belongsTo(TradingCommission::class);
+    }
+
+    public function market(): BelongsTo
+    {
+        return $this->belongsTo(Market::class);
+    }
+
+    public function refExchangeTransaction(): MorphOne
+    {
+        return $this->morphOne(ExchangeTransaction::class, 'orderable');
     }
 }

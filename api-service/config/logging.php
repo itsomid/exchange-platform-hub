@@ -146,6 +146,13 @@ return [
             'path' => storage_path('logs/spot-order-matching.log'),
             'replace_placeholders' => true,
         ],
+        
+        'spot-ref-exchange' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/spot-ref-exchange.log'),
+            'replace_placeholders' => true,
+        ],
+
         'locked-balance-detail' => [
             'driver' => 'single',
             'path' => storage_path('logs/locked-balance-detail.log'),

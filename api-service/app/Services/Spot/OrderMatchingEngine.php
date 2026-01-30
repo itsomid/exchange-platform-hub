@@ -11,9 +11,11 @@ use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Events\UserNotification;
 use App\Jobs\BroadcastOrderBook;
+use App\Jobs\SellOnRefExchangeForSpotTrade;
 use App\Helpers\Math;
 use App\Models\LockedBalanceDetail;
 use App\Enums\SpotOrderSourceEnum;
+use App\Models\Market;
 use App\Models\Setting;
 use App\Models\SpotOrder;
 use App\Models\SpotTrade;
@@ -305,6 +307,10 @@ readonly class OrderMatchingEngine
         $this->addTransactions($oppositeOrder, $spotTrade, $makerCommissionAmount, $takerCommissionAmount);
 
         $this->updateWallets($takerOrder, $makerOrder, $tradeQuantity, $makerOrder->price, $makerCommissionAmount, $takerCommissionAmount);
+
+        
+        // Dispatch ref exchange sell if user is selling to bot (bot is buying)
+        $this->dispatchRefExchangeSellIfBotBuying($takerOrder, $makerOrder, $spotTrade, $tradeQuantity);
 
         if ($order->getRemindedQuantity() <= 0) {
             // $order->price = $order->getOriginal('price'); // REMOVE THIS for market orders
@@ -905,5 +911,62 @@ readonly class OrderMatchingEngine
         }
 
         throw new \Exception('Unable to convert order data to SpotOrder model');
+    }
+
+    /**
+     * Dispatch a job to sell on reference exchange if a bot is buying in this trade.
+     * This ensures that when a user sells to the bot, the equivalent coins are sold
+     * on the reference exchange to maintain balance consistency.
+     *
+     * @param SpotOrder $takerOrder
+     * @param SpotOrder $makerOrder
+     * @param SpotTrade $spotTrade
+     * @param string $tradeQuantity
+     * @return void
+     */
+    private function dispatchRefExchangeSellIfBotBuying(
+        SpotOrder $takerOrder,
+        SpotOrder $makerOrder,
+        SpotTrade $spotTrade,
+        string $tradeQuantity
+    ): void {
+        // Check if ref exchange sell is enabled for this market
+        $market = Market::find($spotTrade->market_id);
+        if (!$market || !$market->ref_exchange_sell_enabled) {
+            return;
+        }
+
+        // Determine if bot is involved and is buying (user is selling to bot)
+        $botOrder = null;
+
+        // Check if taker is bot and is buying
+        if ($takerOrder->source === SpotOrderSourceEnum::BOT && $takerOrder->side === SpotOrderSideEnum::BUY) {
+            $botOrder = $takerOrder;
+        }
+
+        // Check if maker is bot and is buying
+        if ($makerOrder->source === SpotOrderSourceEnum::BOT && $makerOrder->side === SpotOrderSideEnum::BUY) {
+            $botOrder = $makerOrder;
+        }
+
+        // If no bot is buying, do nothing
+        if ($botOrder === null) {
+            return;
+        }
+
+        Log::channel('spot-ref-exchange')->info('User selling to bot in spot trade, dispatching ref exchange sell job', [
+            'spot_trade_id' => $spotTrade->id,
+            'market_id' => $spotTrade->market_id,
+            'quantity' => $tradeQuantity,
+            'bot_order_id' => $botOrder->id,
+            'bot_side' => $botOrder->side->value,
+        ]);
+
+        // Dispatch the job to sell on reference exchange
+        SellOnRefExchangeForSpotTrade::dispatch(
+            $spotTrade->id,
+            $spotTrade->market_id,
+            $tradeQuantity
+        );
     }
 }

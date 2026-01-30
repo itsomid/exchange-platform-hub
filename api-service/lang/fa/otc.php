@@ -7,4 +7,5 @@ return [
     'buy_order_failed' => 'سفارش خرید با خطا مواجه شد.',
     'sell_order_submitted' => 'سفارش فروش با موفقیت ثبت شد.',
     'sell_order_failed' => 'سفارش فروش با خطا مواجه شد.',
+    'trading_disabled' => 'معاملات OTC در حال حاضر غیرفعال است.',
 ];

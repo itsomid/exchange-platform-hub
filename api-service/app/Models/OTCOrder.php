@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\OTCOrderStatusEnum;
 use App\Enums\OTCOrderTypeEnum;
+use App\Enums\RefExchangeSellStatusEnum;
 use App\Filters\Filterable;
 use App\Helpers\Math;
 use Carbon\Carbon;
@@ -25,6 +26,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property int                $user_id
  * @property string             $received_amount
  * @property int                $market_id
+ * @property RefExchangeSellStatusEnum $ref_exchange_sell_status
  */
 class OTCOrder extends Model
 {
@@ -32,7 +34,7 @@ class OTCOrder extends Model
 
     protected $table = 'otc_orders';
 
-    protected $fillable = ['user_id', 'market_id', 'quantity', 'price', 'fee', 'type', 'status', 'exchange_id', 'ref_exchange_description'];
+    protected $fillable = ['user_id', 'market_id', 'quantity', 'price', 'fee', 'type', 'status', 'exchange_id', 'ref_exchange_description', 'ref_exchange_sell_status'];
 
     public string $filterNameSpace = 'App\Filters\OTCOrderFilter';
 
@@ -41,6 +43,7 @@ class OTCOrder extends Model
         return [
             'type' => OTCOrderTypeEnum::class,
             'status' => OTCOrderStatusEnum::class,
+            'ref_exchange_sell_status' => RefExchangeSellStatusEnum::class,
         ];
     }
 

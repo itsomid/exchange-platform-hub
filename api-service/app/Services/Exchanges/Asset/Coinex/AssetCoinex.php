@@ -54,8 +54,8 @@ class AssetCoinex implements AssetInterface
         //Balance Not Enough
         if ($response->json('code') === 3109) {
             Log::channel('ref-exchange')->info('Coinex Balance Not Enough In USDT');
-            AdminNotification::sendCoinexNotEnoughBalance($request->getMarket(), $request->getQuantity());
-
+            // Notification will be sent by the caller (OTCService) with complete context
+            
             return resolve(BuyDTOResponse::class)
                 ->setSpotStatus(SpotStatusEnum::NotEnoughBalance)
                 ->setErrorCode($response->json('code'))
@@ -143,7 +143,7 @@ class AssetCoinex implements AssetInterface
         //Balance Not Enough
         if ($response->json('code') === 3109) {
             Log::channel('ref-exchange')->warning('Coinex Balance Not Enough In USDT');
-            AdminNotification::sendCoinexNotEnoughBalance('USDT', $requestDTO->getAmount());
+            AdminNotification::sendRefExchangeNotEnoughBalance('coinex', 'USDT', $requestDTO->getAmount(), 'withdraw');
         }
         if (! $response->successful() || $response->json('code') !== 0) {
             Log::channel('ref-exchange')->warning($response->body());

@@ -7,4 +7,5 @@ return [
     'buy_order_failed' => 'The buy order was failed',
     'sell_order_submitted' => 'The sell order has been submitted successfully.',
     'sell_order_failed' => 'The sell order was failed',
+    'trading_disabled' => 'OTC trading is currently disabled.',
 ];
