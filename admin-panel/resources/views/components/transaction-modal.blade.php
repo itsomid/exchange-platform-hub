@@ -1,4 +1,4 @@
-@props(['modalId', 'title', 'user' => null, 'transactions', 'routeName', 'routeParam', 'routeParamValue'])
+@props(['modalId', 'title', 'user' => null, 'transactions', 'routeName', 'routeParam', 'routeParamValue', 'refExchangeDescription' => null])
 
 <div class="modal fade" id="{{ $modalId }}" tabindex="-1"  role="dialog" aria-hidden="true">>
     <div class="modal-dialog modal-xl" role="document">
@@ -102,6 +102,19 @@
                             @endif
                         </tbody>
                     </table>
+                    
+                    {{-- Reference Exchange Description Alert --}}
+                    @if ($refExchangeDescription)
+                        <div class="alert alert-warning d-flex align-items-center mt-3" role="alert">
+                            <span class="alert-icon rounded-circle">
+                                <i class="fa-solid fa-triangle-exclamation fa-lg"></i>
+                            </span>
+                            <div class="ms-3">
+                                <h6 class="alert-heading mb-1">توضیحات صرافی مرجع</h6>
+                                <span>{{ $refExchangeDescription }}</span>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
             <div class="modal-footer">

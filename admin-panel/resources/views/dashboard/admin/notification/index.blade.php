@@ -75,7 +75,6 @@
                     <thead>
                     <tr>
                         <th>تاریخ</th>
-                        <th>کاربر</th>
                         <th>نوع اعلان</th>
                         <th>متن پیام</th>
                         <th>وضعیت</th>
@@ -89,14 +88,12 @@
                             <td>
                                 {{\App\Helpers\DateFormatter::convertToPersianDate($notification->created_at,'H:i:s %Y/%m/%d')}}
                             </td>
-                            <td>
-                                {{ $notification->notifiable_type === 'App\Models\Admin' ? 'Admin' : 'Other' }}
-                            </td>
+                        
                             <td>
                                 <span
                                     class="badge bg-label-primary">{{ \App\Enums\NotificationTypeEnum::getLabel($notification->type) }}</span>
                             </td>
-                            <td>{{ $notification->data['message'] }}</td>
+                            <td class="text-wrap">{{ $notification->data['message'] }}</td>
                             <td>
                                 @if ($notification->read_at == null)
                                     <span class="text-primary">خوانده نشده</span>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\V1\OTC;
 use App\Events\OTCOrderCreated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\OTC\OTCBuyRequest;
+use App\Models\Setting;
 use App\Services\OTC\DTO\OTCBuyRequestDTO;
 use App\Services\OTC\OTCService;
 use Illuminate\Support\Facades\Auth;
@@ -70,6 +71,13 @@ class BuyController extends Controller
      */
     public function create(OTCBuyRequest $request)
     {
+        // Check if OTC trading is enabled
+        if (!Setting::isEnabled('otc_trading_enabled')) {
+            return response([
+                'message' => __('otc.trading_disabled'),
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         $validateData = $request->validated();
 
         $lock = Cache::lock('order-buy:'.$validateData['market_id'].Auth::id(), 40);
