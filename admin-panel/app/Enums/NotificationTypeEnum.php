@@ -4,7 +4,7 @@ namespace App\Enums;
 
 enum NotificationTypeEnum :string
 {
-    case CoinexNotEnoughBalance = 'App\Notifications\CoinexNotEnoughBalance';
+    case RefExchangeNotEnoughBalance = 'App\Notifications\RefExchangeNotEnoughBalance';
     case HotWalletNotEnoughBalance = 'App\Notifications\HotWalletNotEnoughBalance';
     case CoinexWithdrawalProblem = 'App\Notifications\CoinexWithdrawalProblem';
     case CoinexSpotTradingIsTooSmall = 'App\Notifications\CoinexSpotTradingIsTooSmall';
@@ -13,7 +13,7 @@ enum NotificationTypeEnum :string
     public static function getLabel(string $type): string
     {
         return match ($type) {
-            self::CoinexNotEnoughBalance->value => 'عدم موجودی coinex',
+            self::RefExchangeNotEnoughBalance->value => 'عدم موجودی صرافی مرجع',
             self::HotWalletNotEnoughBalance->value => 'عدم موجودی Hot Wallet',
             self::CoinexWithdrawalProblem->value => 'مشکل در برداشت coinex',
             self::CoinexSpotTradingIsTooSmall->value => 'مشکل در معامله coinex',

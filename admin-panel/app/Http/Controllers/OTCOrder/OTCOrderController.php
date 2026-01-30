@@ -4,10 +4,12 @@ namespace App\Http\Controllers\OTCOrder;
 
 use App\Enums\OTCOrderStatusEnum;
 use App\Enums\OTCOrderTypeEnum;
+use App\Enums\RefExchangeSellStatusEnum;
 use App\Exports\OTCOrderExport;
 use App\Helpers\DateFormatter;
 use App\Http\Controllers\Controller;
 use App\Models\OTCOrder;
+use App\Services\Exchanges\ExchangeService;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -105,5 +107,67 @@ class OTCOrderController extends Controller
         });
 
         return Excel::download(new OTCOrderExport($otcOrders), $filename . '.xlsx');
+    }
+
+    /**
+     * Trigger sell in reference exchange for an OTC order
+     */
+    public function triggerRefExchangeSell(int $otcOrderId, ExchangeService $exchangeService)
+    {
+        $otcOrder = OTCOrder::findOrFail($otcOrderId);
+
+        // Validate the order
+        if ($otcOrder->type !== OTCOrderTypeEnum::SELL) {
+            return response()->json([
+                'success' => false,
+                'message' => 'این عملیات فقط برای سفارشات فروش قابل انجام است.',
+            ], 400);
+        }
+
+        if ($otcOrder->status !== OTCOrderStatusEnum::SUCCESS) {
+            return response()->json([
+                'success' => false,
+                'message' => 'فقط سفارشات موفق قابل تکمیل در صرافی مرجع هستند.',
+            ], 400);
+        }
+
+        if ($otcOrder->ref_exchange_sell_status !== RefExchangeSellStatusEnum::PENDING) {
+            return response()->json([
+                'success' => false,
+                'message' => 'این سفارش در وضعیت مناسب برای فروش در صرافی مرجع نیست.',
+            ], 400);
+        }
+
+        $result = $exchangeService->triggerRefExchangeSell($otcOrderId);
+
+        return response()->json([
+            'success' => $result->isSuccess(),
+            'message' => $result->getMessage(),
+        ], $result->isSuccess() ? 200 : 400);
+    }
+
+    /**
+     * Reset the ref exchange sell status to pending (for retry)
+     */
+    public function resetRefExchangeSellStatus(int $otcOrderId)
+    {
+        $otcOrder = OTCOrder::findOrFail($otcOrderId);
+
+        if ($otcOrder->ref_exchange_sell_status !== RefExchangeSellStatusEnum::FAILED) {
+            return response()->json([
+                'success' => false,
+                'message' => 'فقط سفارشات ناموفق قابل ریست هستند.',
+            ], 400);
+        }
+
+        $otcOrder->update([
+            'ref_exchange_sell_status' => RefExchangeSellStatusEnum::PENDING,
+            'ref_exchange_description' => null, // Clear the error description
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'وضعیت سفارش به "در انتظار" تغییر یافت. می‌توانید مجدداً تلاش کنید.',
+        ]);
     }
 }

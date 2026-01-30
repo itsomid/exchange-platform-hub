@@ -7,6 +7,20 @@ use Illuminate\Database\Eloquent\Model;
 
 class ExchangeTransaction extends Model {
 
+    protected $fillable = [
+        'order_id',
+        'exchange_id',
+        'market',
+        'currency_symbol',
+        'amount',
+        'fee',
+        'filled_amount',
+        'side',
+        'response',
+        'orderable_id',
+        'orderable_type',
+    ];
+
     public function getResponseAttribute($value)
     {
         return json_decode(json_decode($value, true)); // Decode twice

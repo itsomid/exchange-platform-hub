@@ -4,9 +4,11 @@ namespace App\Models;
 
 use App\Enums\OTCOrderStatusEnum;
 use App\Enums\OTCOrderTypeEnum;
+use App\Enums\RefExchangeSellStatusEnum;
 use App\Filters\Filterable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Laravel\Sanctum\HasApiTokens;
 
 class OTCOrder extends Model
@@ -15,11 +17,12 @@ class OTCOrder extends Model
     public $filterNameSpace = 'App\Filters\OTCOrderFilter';
 
     protected $table = 'otc_orders';
-    protected $fillable = ['user_id','market_id','quantity','price','fee','type','status'];
+    protected $fillable = ['user_id','market_id','quantity','price','fee','type','status','ref_exchange_sell_status','ref_exchange_description'];
 
     protected $casts = [
         'type' => OTCOrderTypeEnum::class,
         'status' => OTCOrderStatusEnum::class,
+        'ref_exchange_sell_status' => RefExchangeSellStatusEnum::class,
     ];
     protected static function booted()
     {
@@ -45,6 +48,11 @@ class OTCOrder extends Model
     public function exchange()
     {
         return $this->belongsTo(Exchange::class,'exchange_id');
+    }
+
+    public function refExchangeTransactions(): MorphOne
+    {
+        return $this->morphOne(ExchangeTransaction::class, 'orderable');
     }
 
 //    public function getTotalValueAttribute()
