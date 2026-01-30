@@ -36,6 +36,7 @@ class InternalSettingController extends Controller
         $spotTickerEnabled = Setting::where('key', 'spot_ticker_enabled')->first();
         $orderMatchingEnabled = Setting::where('key', 'order_matching_enabled')->first();
         $spotTradingEnabled = Setting::where('key', 'spot_trading_enabled')->first();
+        $otcTradingEnabled = Setting::where('key', 'otc_trading_enabled')->first();
 
         $exchangeWalletChains = $this->walletService->getExchangeAllWalletChain();
 
@@ -55,6 +56,7 @@ class InternalSettingController extends Controller
             'spotTickerEnabled' => $spotTickerEnabled,
             'orderMatchingEnabled' => $orderMatchingEnabled,
             'spotTradingEnabled' => $spotTradingEnabled,
+            'otcTradingEnabled' => $otcTradingEnabled,
             'exchangeWalletChains' => $exchangeWalletChains,
 
         ]);
@@ -243,6 +245,23 @@ class InternalSettingController extends Controller
         );
 
         Toast::message('تنظیمات اسپات با موفقیت ذخیره شد')->success()->notify();
+        // Redirect with success message
+        return redirect()->back();
+    }
+
+    public function updateOtcSettings(Request $request)
+    {
+        // Update OTC trading enabled status
+        Setting::updateOrCreate(
+            ['key' => 'otc_trading_enabled'],
+            [
+                'value' => $request->has('otc_trading_enabled') ? $request->input('otc_trading_enabled') : false,
+                'name' => 'وضعیت فعال‌سازی معاملات OTC',
+                'type' => 'boolean'
+            ]
+        );
+
+        Toast::message('تنظیمات OTC با موفقیت ذخیره شد')->success()->notify();
         // Redirect with success message
         return redirect()->back();
     }

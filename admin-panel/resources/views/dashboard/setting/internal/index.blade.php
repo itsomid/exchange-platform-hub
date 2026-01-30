@@ -6,13 +6,46 @@
             <div class="card">
                 <div class="card-body">
                     <div class="card-title header-elements">
-                        <h5 class="m-0 me-2">کارمزد خرید و فروش OTC</h5>
-
+                        <h5 class="m-0 me-2">تنظیمات OTC
+                            <span
+                                class="text-{{ $otcTradingEnabled && $otcTradingEnabled->value ? 'success' : 'danger' }}">({{ $otcTradingEnabled && $otcTradingEnabled->value ? 'فعال' : 'غیرفعال' }})</span>
+                        </h5>
                     </div>
+               
+           
+
+                    <h6 class="mb-3">تنظیمات فعال‌سازی</h6>
+                    <form action="{{ route('admin.setting.int.update-otc-settings') }}" method="post">
+                        @csrf
+                        <div class="row">
+                            <div class="col-xl-12">
+                                <label class="switch switch-lg">
+                                    <input type="checkbox" class="switch-input" name="otc_trading_enabled"
+                                        value="1"
+                                        {{ $otcTradingEnabled && $otcTradingEnabled->value ? 'checked' : '' }} />
+                                    <span class="switch-toggle-slider"></span>
+                                    <span class="switch-label">فعال‌سازی معاملات OTC</span>
+                                </label>
+                                <small class="text-muted d-block mt-2">این گزینه کل سیستم معاملات OTC را کنترل می‌کند. در
+                                    صورت غیرفعال بودن، هیچ خرید یا فروشی در بازار OTC امکان‌پذیر نخواهد بود</small>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-start mt-3">
+                            <button class="btn btn-primary">
+                                <i class="fa fa-save mx-2"></i>
+                                ذخیره تنظیمات
+                            </button>
+                        </div>
+                    </form>
+
+                             <hr class="my-4">
+
+                                  
+                    <h6 class="mt-4 mb-3">کارمزد خرید و فروش</h6>
                     <form action="{{ route('admin.setting.int.update-otc-commission') }}" method="post">
                         @csrf
-                        <div class="row mt-5">
-                            <div class="col-xl-4">
+                        <div class="row">
+                            <div class="col-xl-6">
                                 <div class="form-group">
                                     <label class="form-label" for="otc_buy_fee">کارمزد فروش به مشتری (درصد)</label>
                                     <input name="otc_buy_fee" id="otc_buy_fee" class="form-control"
@@ -22,7 +55,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-xl-4">
+                            <div class="col-xl-6">
                                 <div class="form-group">
                                     <label class="form-label" for="otc_sell_fee">کارمزد خرید از مشتری (درصد)</label>
                                     <input name="otc_sell_fee" id="otc_sell_fee" class="form-control"
@@ -32,144 +65,14 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class=" d-flex justify-content-start mt-5">
-
-                                <button class="btn btn-primary ">
-                                    <i class="fa fa-save mx-2"></i>
-                                    ذخیره
-                                </button>
-
-                            </div>
+                        </div>
+                        <div class="d-flex justify-content-start mt-3">
+                            <button class="btn btn-primary">
+                                <i class="fa fa-save mx-2"></i>
+                                ذخیره کارمزد
+                            </button>
                         </div>
                     </form>
-
-                </div>
-            </div>
-        </div>
-
-
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-body">
-                    <div class="card-title header-elements">
-                        <h5 class="m-0 me-2">کارمزد Taker و Maker در فروش اسپات</h5>
-
-                    </div>
-                    <form action="{{ route('admin.setting.int.update-spot-commission') }}" method="post">
-                        @csrf
-                        <div class="row mt-5">
-                            <div class="col-xl-4">
-                                <div class="form-group">
-                                    <label class="form-label" for="spot_maker_fee">کارمزد Maker (درصد)</label>
-                                    <input name="spot_maker_fee" id="spot_maker_fee" class="form-control"
-                                        placeholder="کارمزد Maker (درصد)" value="{{ $spotMakerFee->value }}" required>
-                                    @error('spotMakerFee')
-                                        <small class="text-danger">{{ $message }}</small>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-xl-4">
-                                <div class="form-group">
-                                    <label class="form-label" for="spot_taker_fee">کارمزد Taker (درصد)</label>
-                                    <input name="spot_taker_fee" id="spot_taker_fee" class="form-control"
-                                        placeholder="کارمزد Taker (درصد)" value="{{ $spotTakerFee->value }}" required>
-                                    @error('spotTakerFee')
-                                        <small class="text-danger">{{ $message }}</small>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class=" d-flex justify-content-start mt-5">
-
-                                <button class="btn btn-primary ">
-                                    <i class="fa fa-save mx-2"></i>
-                                    ذخیره
-                                </button>
-
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-body">
-                    <div class="card-title header-elements">
-                        <h5 class="m-0 me-2">تنظیمات دعوت از دوستان
-
-                            <span
-                                class="text-{{ $referralProfitStatus->value ? 'success' : 'danger' }}">({{ $referralProfitStatus->value ? 'فعال' : 'غیرفعال' }})</span>
-                        </h5>
-                    </div>
-                    <form action="{{ route('admin.setting.int.update-referral-setting') }}" method="post">
-                        @csrf
-                        <div class="row mt-5">
-                            <div class="col-xl-4">
-                                <div class="form-group">
-                                    <label class="form-label" for="referral_profit_percentage">حداکثر درصد اهدایی به کاربران
-                                        برای معرفی دوستان</label>
-                                    <input type="number" name="referral_profit_percentage" id="referral_profit_percentage"
-                                        class="form-control" placeholder="درصد اهدایی به کاربران برای معرفی دوستان"
-                                        value="{{ $referralProfitPercentage->value }}" required>
-                                    @error('otcBuyFee')
-                                        <small class="text-danger">{{ $message }}</small>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-xl-4">
-                                <div class="form-group">
-                                    <label class="form-label" for="referral_usage_limit_count">حداکثر تعداد استفاده کاربر از
-                                        کد معرف</label>
-                                    <input type="number" name="referral_usage_limit_count" id="referral_usage_limit_count"
-                                        class="form-control" placeholder="حداکثر تعداد استفاده کاربر از کد معرف"
-                                        value="{{ $referralUsageLimitCount->value }}" required>
-                                    @error('otcBuyFee')
-                                        <small class="text-danger">{{ $message }}</small>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-xl-6 mt-5">
-                                    <label class="switch  switch-lg">
-                                        <input type="checkbox" class="switch-input" name="referral_profit_status"
-                                            value="1" {{ $referralProfitStatus->value ? 'checked' : '' }} />
-                                        <span class="switch-toggle-slider"></span>
-                                        <span class="switch-label">وضعیت سیستم رفرال(فعال/غیرفعال)</span>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class=" d-flex justify-content-start mt-5">
-
-                                <button class="btn btn-primary ">
-                                    <i class="fa fa-save mx-2"></i>
-                                    ذخیره
-                                </button>
-
-                            </div>
-                        </div>
-                    </form>
-
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-
-            <div class="card">
-                <div class="card-body">
-                    <div class="card-title header-elements">
-                        <h5 class="m-0 me-2">تنظیمات و پیکربندی مجوزها </h5>
-                    </div>
-                    <form action="{{ route('admin.setting.int.update-permissions') }}" method="post">
-                        @csrf
-                        <button class="btn btn-success w-100">
-                            <i class="fa fa-refresh mx-2"></i>
-                            بروزرسانی مجوزها
-                        </button>
-                    </form>
-                    <h6 class="text-center my-3">آخرین مجوزهای اضافه شده:</h6>
-                    @foreach ($last3permissions as $last3permission)
-                        <p>{{ $last3permission->name }}</p>
-                    @endforeach
 
                 </div>
             </div>
@@ -229,6 +132,138 @@
                 </div>
             </div>
         </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title header-elements">
+                        <h5 class="m-0 me-2">کارمزد Taker و Maker در فروش اسپات</h5>
+
+                    </div>
+                    <form action="{{ route('admin.setting.int.update-spot-commission') }}" method="post">
+                        @csrf
+                        <div class="row mt-5">
+                            <div class="col-12 col-xl-6">
+                                <div class="form-group">
+                                    <label class="form-label" for="spot_maker_fee">کارمزد Maker (درصد)</label>
+                                    <input name="spot_maker_fee" id="spot_maker_fee" class="form-control"
+                                        placeholder="کارمزد Maker (درصد)" value="{{ $spotMakerFee->value }}" required>
+                                    @error('spotMakerFee')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-12 col-xl-6">
+                                <div class="form-group">
+                                    <label class="form-label" for="spot_taker_fee">کارمزد Taker (درصد)</label>
+                                    <input name="spot_taker_fee" id="spot_taker_fee" class="form-control"
+                                        placeholder="کارمزد Taker (درصد)" value="{{ $spotTakerFee->value }}" required>
+                                    @error('spotTakerFee')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class=" d-flex justify-content-start mt-5">
+
+                                <button class="btn btn-primary ">
+                                    <i class="fa fa-save mx-2"></i>
+                                    ذخیره
+                                </button>
+
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+      
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title header-elements">
+                        <h5 class="m-0 me-2">تنظیمات دعوت از دوستان
+
+                            <span
+                                class="text-{{ $referralProfitStatus->value ? 'success' : 'danger' }}">({{ $referralProfitStatus->value ? 'فعال' : 'غیرفعال' }})</span>
+                        </h5>
+                    </div>
+                    <form action="{{ route('admin.setting.int.update-referral-setting') }}" method="post">
+                        @csrf
+                        <div class="row mt-5">
+                            <div class="col-12 col-xl-6">
+                                <div class="form-group">
+                                    <label class="form-label" for="referral_profit_percentage">حداکثر درصد اهدایی به کاربران
+                                        برای معرفی دوستان</label>
+                                    <input type="number" name="referral_profit_percentage" id="referral_profit_percentage"
+                                        class="form-control" placeholder="درصد اهدایی به کاربران برای معرفی دوستان"
+                                        value="{{ $referralProfitPercentage->value }}" required>
+                                    @error('otcBuyFee')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-12 col-xl-6">
+                                <div class="form-group">
+                                    <label class="form-label" for="referral_usage_limit_count">حداکثر تعداد استفاده کاربر از
+                                        کد معرف</label>
+                                    <input type="number" name="referral_usage_limit_count" id="referral_usage_limit_count"
+                                        class="form-control" placeholder="حداکثر تعداد استفاده کاربر از کد معرف"
+                                        value="{{ $referralUsageLimitCount->value }}" required>
+                                    @error('otcBuyFee')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xl-12 mt-5">
+                                    <label class="switch  switch-lg">
+                                        <input type="checkbox" class="switch-input" name="referral_profit_status"
+                                            value="1" {{ $referralProfitStatus->value ? 'checked' : '' }} />
+                                        <span class="switch-toggle-slider"></span>
+                                        <span class="switch-label">وضعیت سیستم رفرال(فعال/غیرفعال)</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class=" d-flex justify-content-start mt-5">
+
+                                <button class="btn btn-primary ">
+                                    <i class="fa fa-save mx-2"></i>
+                                    ذخیره
+                                </button>
+
+                            </div>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title header-elements">
+                        <h5 class="m-0 me-2">تنظیمات و پیکربندی مجوزها </h5>
+                    </div>
+                    <form action="{{ route('admin.setting.int.update-permissions') }}" method="post">
+                        @csrf
+                        <button class="btn btn-success w-100">
+                            <i class="fa fa-refresh mx-2"></i>
+                            بروزرسانی مجوزها
+                        </button>
+                    </form>
+                    <h6 class="text-center my-3">آخرین مجوزهای اضافه شده:</h6>
+                    @foreach ($last3permissions as $last3permission)
+                        <p>{{ $last3permission->name }}</p>
+                    @endforeach
+
+                </div>
+            </div>
+        </div>
+
+    
 
         <div class="col-md-6">
             <div class="card">
@@ -270,7 +305,7 @@
                             </div>
                         </div>
                         <div class="row mt-5">
-                            <div class="col-xl-4">
+                            <div class="col-12 col-xl-6">
                                 <div class="form-group">
                                     <label class="form-label" for="exchange_withdrawal_period_time">پارامتر زمان برای
                                         برداشت از صرافی مرجع</label>
@@ -282,7 +317,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-xl-4">
+                            <div class="col-12 col-xl-6">
                                 <div class="form-group">
                                     <label class="form-label" for="exchange_withdrawal_period_buy">پارامتر تعداد خرید
                                         برای برداشت از صرافی مرجع</label>
@@ -295,7 +330,7 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-xl-6 mt-5">
+                                <div class="col-12 mt-5">
                                     <label class="switch  switch-lg">
                                         <input type="checkbox" class="switch-input" name="exchange_withdrawal_status"
                                             value="1" {{ $exchangeWithdrawalStatus->value ? 'checked' : '' }} />

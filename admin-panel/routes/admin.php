@@ -219,6 +219,8 @@ Route::middleware(['admin.2fa'])->group(function () {
     Route::prefix('otc_orders')->group(function () {
         Route::get('/', [OTCOrderController::class, 'index'])->name('otc_orders.index')->can('otc_order');
         Route::post('/excel-export', [OTCOrderController::class, 'excelExport'])->name('otc_orders.excel-export')->can('otc_order');
+        Route::post('/{otcOrderId}/trigger-ref-exchange-sell', [OTCOrderController::class, 'triggerRefExchangeSell'])->name('otc_orders.trigger-ref-exchange-sell')->can('otc_order');
+        Route::post('/{otcOrderId}/reset-ref-exchange-sell', [OTCOrderController::class, 'resetRefExchangeSellStatus'])->name('otc_orders.reset-ref-exchange-sell')->can('otc_order');
     });
 
     Route::prefix('spot')->group(function () {
@@ -253,6 +255,7 @@ Route::middleware(['admin.2fa'])->group(function () {
     Route::post('/internal-settings/update-referral-setting', [InternalSettingController::class, 'updateReferralSetting'])->name('setting.int.update-referral-setting')->can('setting.int.index');
     Route::post('/internal-settings/update-exchange-withdrawal-setting', [InternalSettingController::class, 'updateExchangeWithdrawalSetting'])->name('setting.int.update-exchange-withdrawal-setting')->can('setting.int.index');
     Route::post('/internal-settings/update-spot-settings', [InternalSettingController::class, 'updateSpotSettings'])->name('setting.int.update-spot-settings')->can('setting.int.index');
+    Route::post('/internal-settings/update-otc-settings', [InternalSettingController::class, 'updateOtcSettings'])->name('setting.int.update-otc-settings')->can('setting.int.index');
 
     Route::get('/external-settings', [ExternalSettingController::class, 'index'])->name('external-setting.index')->can('setting.ext.index');
     Route::post('/external-settings/update-ref-address', [ExternalSettingController::class, 'updateRefAddress'])->name('setting.ext.update-ref-address')->can('setting.ext.index');
