@@ -410,6 +410,12 @@
                                 <td>
                                     <span
                                         class="badge bg-{{ $order->status->color() }}">{{ $order->status->label() }}</span>
+                                    @if ($order->ref_exchange_sell_status && $order->ref_exchange_sell_status !== \App\Enums\RefExchangeSellStatusEnum::NOT_REQUIRED)
+                                        <br>
+                                        <small class="badge bg-label-{{ $order->ref_exchange_sell_status->color() }} mt-1">
+                                            صرافی مرجع: {{ $order->ref_exchange_sell_status->label() }}
+                                        </small>
+                                    @endif
                                 </td>
                                 <td class="sticky-column">
                                      @if ($order->status !== \App\Enums\OTCOrderStatusEnum::CANCELED)
@@ -424,8 +430,29 @@
                                             <i class="fa-regular fa-eye fa-lg"></i>
                                         </a>
                                     @endif
+                                    
+                                    {{-- Trigger Reference Exchange Sell Button --}}
+                                    @if ($order->ref_exchange_sell_status === \App\Enums\RefExchangeSellStatusEnum::PENDING)
+                                        <button type="button" 
+                                            class="btn btn-icon btn-text-warning trigger-ref-exchange-sell" 
+                                            data-order-id="{{ $order->id }}"
+                                            data-bs-toggle="tooltip"
+                                            title="تکمیل فروش در صرافی مرجع">
+                                            <i class="fa-solid fa-arrow-right-arrow-left fa-lg"></i>
+                                        </button>
+                                    @endif
+                                    
+                                    {{-- Reset Failed Status Button --}}
+                                    @if ($order->ref_exchange_sell_status === \App\Enums\RefExchangeSellStatusEnum::FAILED)
+                                        <button type="button" 
+                                            class="btn btn-icon btn-text-danger reset-ref-exchange-sell" 
+                                            data-order-id="{{ $order->id }}"
+                                            data-bs-toggle="tooltip"
+                                            title="ریست و تلاش مجدد">
+                                            <i class="fa-solid fa-rotate-right fa-lg"></i>
+                                        </button>
+                                    @endif
                                 </td>
-                                 
                             </tr>
                         @endforeach
                     @endif
@@ -445,7 +472,8 @@
             <x-transaction-modal modal-id="otc-{{ $order->id }}"
                 title="تراکنش های معامله #{{ $order->id }}" :user="$order->user" :transactions="$order->transactions"
                 route-name="admin.transaction.index" route-param="otc_order_id"
-                :route-param-value="$order->id" />
+                :route-param-value="$order->id" 
+                :ref-exchange-description="$order->ref_exchange_description" />
         @endforeach
         <div class="row mt-4">
             <div class="col-md-12">
@@ -457,9 +485,181 @@
 @endsection
 
 @section('vendor-script')
+    {{-- SweetAlert2 --}}
+    @vite(['resources/assets/vendor/libs/sweetalert2/sweetalert2.js'])
     <script>
         $(document).ready(function() {
             $('[data-bs-toggle="tooltip"]').tooltip();
+            
+            // Trigger Reference Exchange Sell
+            $('.trigger-ref-exchange-sell').on('click', function() {
+                const button = $(this);
+                const orderId = button.data('order-id');
+                
+                Swal.fire({
+                    title: 'تکمیل فروش در صرافی مرجع',
+                    text: 'آیا از تکمیل فروش در صرافی مرجع اطمینان دارید؟',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#696cff',
+                    cancelButtonColor: '#8592a3',
+                    confirmButtonText: 'بله، انجام بده',
+                    cancelButtonText: 'انصراف',
+                    customClass: {
+                        confirmButton: 'btn btn-primary me-2',
+                        cancelButton: 'btn btn-label-secondary'
+                    },
+                    buttonsStyling: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        button.prop('disabled', true);
+                        button.find('i').removeClass('fa-arrow-right-arrow-left').addClass('fa-spinner fa-spin');
+                        
+                        $.ajax({
+                            url: '{{ route("admin.otc_orders.index") }}/' + orderId + '/trigger-ref-exchange-sell',
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        title: 'موفق!',
+                                        text: response.message,
+                                        icon: 'success',
+                                        confirmButtonText: 'باشه',
+                                        confirmButtonColor: '#696cff',
+                                        customClass: {
+                                            confirmButton: 'btn btn-primary'
+                                        },
+                                        buttonsStyling: false
+                                    }).then(() => {
+                                        location.reload();
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        title: 'خطا!',
+                                        text: response.message || 'خطا در تکمیل فروش',
+                                        icon: 'error',
+                                        confirmButtonText: 'باشه',
+                                        confirmButtonColor: '#696cff',
+                                        customClass: {
+                                            confirmButton: 'btn btn-primary'
+                                        },
+                                        buttonsStyling: false
+                                    });
+                                    location.reload();
+                                    button.prop('disabled', false);
+                                    button.find('i').removeClass('fa-spinner fa-spin').addClass('fa-arrow-right-arrow-left');
+                                }
+                            },
+                            error: function(xhr) {
+                                const message = xhr.responseJSON?.message || 'خطا در ارتباط با سرور';
+                                Swal.fire({
+                                    title: 'خطا!',
+                                    text: message,
+                                    icon: 'error',
+                                    confirmButtonText: 'باشه',
+                                    confirmButtonColor: '#696cff',
+                                    customClass: {
+                                        confirmButton: 'btn btn-primary'
+                                    },
+                                    buttonsStyling: false
+                                });
+                                location.reload();
+                                button.prop('disabled', false);
+                                button.find('i').removeClass('fa-spinner fa-spin').addClass('fa-arrow-right-arrow-left');
+                            }
+                        });
+                    }
+                });
+            });
+            
+            // Reset Failed Reference Exchange Sell Status
+            $('.reset-ref-exchange-sell').on('click', function() {
+                const button = $(this);
+                const orderId = button.data('order-id');
+                
+                Swal.fire({
+                    title: 'ریست وضعیت',
+                    text: 'آیا از ریست کردن وضعیت اطمینان دارید؟',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#696cff',
+                    cancelButtonColor: '#8592a3',
+                    confirmButtonText: 'بله، ریست کن',
+                    cancelButtonText: 'انصراف',
+                    customClass: {
+                        confirmButton: 'btn btn-primary me-2',
+                        cancelButton: 'btn btn-label-secondary'
+                    },
+                    buttonsStyling: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        button.prop('disabled', true);
+                        button.find('i').removeClass('fa-rotate-right').addClass('fa-spinner fa-spin');
+                        
+                        $.ajax({
+                            url: '{{ route("admin.otc_orders.index") }}/' + orderId + '/reset-ref-exchange-sell',
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        title: 'موفق!',
+                                        text: response.message,
+                                        icon: 'success',
+                                        confirmButtonText: 'باشه',
+                                        confirmButtonColor: '#696cff',
+                                        customClass: {
+                                            confirmButton: 'btn btn-primary'
+                                        },
+                                        buttonsStyling: false
+                                    }).then(() => {
+                                        location.reload();
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        title: 'خطا!',
+                                        text: response.message || 'خطا در ریست وضعیت',
+                                        icon: 'error',
+                                        confirmButtonText: 'باشه',
+                                        confirmButtonColor: '#696cff',
+                                        customClass: {
+                                            confirmButton: 'btn btn-primary'
+                                        },
+                                        buttonsStyling: false
+                                    });
+                                    button.prop('disabled', false);
+                                    button.find('i').removeClass('fa-spinner fa-spin').addClass('fa-rotate-right');
+                                }
+                            },
+                            error: function(xhr) {
+                                const message = xhr.responseJSON?.message || 'خطا در ارتباط با سرور';
+                                Swal.fire({
+                                    title: 'خطا!',
+                                    text: message,
+                                    icon: 'error',
+                                    confirmButtonText: 'باشه',
+                                    confirmButtonColor: '#696cff',
+                                    customClass: {
+                                        confirmButton: 'btn btn-primary'
+                                    },
+                                    buttonsStyling: false
+                                });
+                                button.prop('disabled', false);
+                                button.find('i').removeClass('fa-spinner fa-spin').addClass('fa-rotate-right');
+                            }
+                        });
+                    }
+                });
+            });
         });
     </script>
+@endsection
+@section('vendor-style')
+    {{-- SweetAlert2 --}}
+    @vite(['resources/assets/vendor/libs/sweetalert2/sweetalert2.scss'] )
 @endsection
