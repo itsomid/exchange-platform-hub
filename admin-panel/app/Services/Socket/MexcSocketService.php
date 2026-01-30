@@ -417,7 +417,6 @@ class MexcSocketService
     private function fetchMarkets(): array
     {
         return Market::query()
-            ->where('is_active', true)
             ->where('price_update_enabled', true)
             ->whereHas('activeExchangePrice', function ($query) {
                 $query->where('exchange_id', $this->mexcID);
