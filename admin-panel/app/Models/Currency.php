@@ -27,7 +27,42 @@ class Currency extends Model
         'amount_precision',
         'inter_transfer_enabled',
         'max_auto_withdraw_amount',
+        'ref_exchange_withdrawal_enabled',
+        'ref_exchange_withdrawal_interval_minutes',
+        'ref_exchange_withdrawal_min_count',
     ];
+
+    protected $casts = [
+        'ref_exchange_withdrawal_enabled' => 'boolean',
+        'ref_exchange_withdrawal_interval_minutes' => 'integer',
+        'ref_exchange_withdrawal_min_count' => 'integer',
+    ];
+
+    /**
+     * Get the effective withdrawal interval for this currency.
+     * Falls back to global setting if not set.
+     */
+    public function getEffectiveWithdrawalInterval(): int
+    {
+        if ($this->ref_exchange_withdrawal_interval_minutes !== null) {
+            return $this->ref_exchange_withdrawal_interval_minutes;
+        }
+        
+        return (int) \App\Models\Setting::getSetting('exchange_withdrawal_period_time', 60);
+    }
+
+    /**
+     * Get the effective minimum count for this currency.
+     * Falls back to global setting if not set.
+     */
+    public function getEffectiveWithdrawalMinCount(): int
+    {
+        if ($this->ref_exchange_withdrawal_min_count !== null) {
+            return $this->ref_exchange_withdrawal_min_count;
+        }
+        
+        return (int) \App\Models\Setting::getSetting('exchange_withdrawal_period_buy', 1);
+    }
 
     public function chains(): HasMany
     {

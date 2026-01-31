@@ -209,6 +209,12 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::get('/assets-gathering-to-hd-wallet/create', [RefExchangeAssetsWithdrawalController::class, 'create'])->name('ref-exchange.assets-gathering-to-hd-wallet.create');
         Route::post('/assets-gathering-to-hd-wallet/', [RefExchangeAssetsWithdrawalController::class, 'store'])->name('ref-exchange.assets-gathering-to-hd-wallet.store');
         Route::get('/assets-gathering-to-hd-wallet/pending-withdrawal/', [RefExchangeAssetsWithdrawalController::class, 'getPendingRefExchangeWithdrawal'])->name('ref-exchange.assets-gathering-to-hd-wallet.pending-withdrawal');
+        Route::post('/assets-gathering-to-hd-wallet/bulk-aggregate/', [RefExchangeAssetsWithdrawalController::class, 'bulkAggregate'])->name('ref-exchange.assets-gathering-to-hd-wallet.bulk-aggregate');
+        
+        // Currency withdrawal settings routes
+        Route::patch('/currency/{currencyId}/withdrawal-settings', [RefExchangeAssetsWithdrawalController::class, 'updateCurrencyWithdrawalSettings'])->name('ref-exchange.currency.withdrawal-settings.update');
+        Route::post('/currency/withdrawal-settings/bulk', [RefExchangeAssetsWithdrawalController::class, 'bulkUpdateCurrencyWithdrawalSettings'])->name('ref-exchange.currency.withdrawal-settings.bulk-update');
+        Route::post('/currency/{currencyId}/toggle-withdrawal', [RefExchangeAssetsWithdrawalController::class, 'toggleCurrencyWithdrawalStatus'])->name('ref-exchange.currency.toggle-withdrawal');
     });
 
     Route::prefix('transactions')->group(function () {

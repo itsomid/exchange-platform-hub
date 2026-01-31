@@ -11,6 +11,7 @@ use App\Models\CurrencyChain;
 use App\Models\ExchangeAssetsWithdrawal;
 use App\Models\OTCRefExchangeWithdrawal;
 use App\Models\Exchange;
+use App\Models\Setting;
 use App\Services\Exchanges\Asset\AssetFactory;
 use App\Services\Exchanges\DTO\ChargeCurrencyRequestDTO;
 use App\Repositories\ExchangeRepository;
@@ -19,6 +20,7 @@ use App\Services\Wallet\WalletService;
 use App\Http\Requests\Exchange\RefExchangeAssetsWithdrawalRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class RefExchangeAssetsWithdrawalController extends Controller
 {
@@ -166,11 +168,270 @@ class RefExchangeAssetsWithdrawalController extends Controller
             ->with('currency') // To get currency details
             ->get();
 
+        // Get all exchanges for aggregation form
+        $exchanges = Exchange::all();
+
+        // Get all currencies for withdrawal settings
+        $allCurrencies = Currency::orderBy('symbol')->get();
+
+        // Get global withdrawal settings
+        $globalWithdrawalInterval = (int) Setting::getSetting('exchange_withdrawal_period_time', 60);
+        $globalWithdrawalMinCount = (int) Setting::getSetting('exchange_withdrawal_period_buy', 1);
+        $withdrawalType = Setting::getSetting('exchange_withdrawal_type', 'exchange_withdrawal_period_time');
+
+        // Calculate timer data for each pending withdrawal currency
+        $currencyTimerData = [];
+        foreach ($pendingWithdrawals as $pending) {
+            $currency = $pending->currency;
+            $cacheKey = 'exchange_withdrawal_period_time_last_hit_' . $currency->id;
+            $lastHit = Cache::get($cacheKey);
+            
+            $intervalMinutes = $currency->ref_exchange_withdrawal_interval_minutes ?? $globalWithdrawalInterval;
+            $minCount = $currency->ref_exchange_withdrawal_min_count ?? $globalWithdrawalMinCount;
+            
+            // Count pending transactions for this currency
+            $pendingCount = OTCRefExchangeWithdrawal::where('currency_id', $currency->id)
+                ->where('status', OTCRefExchangeWithdrawalStatusEnum::PENDING)
+                ->count();
+            
+            $remainingSeconds = 0;
+            $isReady = false;
+            $readyReason = null;
+            
+            if (!$currency->ref_exchange_withdrawal_enabled) {
+                // Withdrawal disabled
+                $remainingSeconds = -1; // Special value for disabled
+            } elseif ($lastHit) {
+                $minutesPassed = now()->diffInMinutes($lastHit, true);
+                $remainingMinutes = max(0, $intervalMinutes - $minutesPassed);
+                $remainingSeconds = $remainingMinutes * 60;
+                
+                // Check if ready based on time
+                if ($remainingMinutes <= 0) {
+                    $isReady = true;
+                    $readyReason = 'time';
+                }
+            } else {
+                // No cache = first time, ready immediately
+                $isReady = true;
+                $readyReason = 'first_run';
+            }
+            
+            // Check count condition
+            if ($pendingCount >= $minCount && !$isReady) {
+                $isReady = true;
+                $readyReason = 'count';
+            }
+            
+            $currencyTimerData[$currency->id] = [
+                'remaining_seconds' => $remainingSeconds,
+                'interval_minutes' => $intervalMinutes,
+                'min_count' => $minCount,
+                'pending_count' => $pendingCount,
+                'is_ready' => $isReady,
+                'ready_reason' => $readyReason,
+                'last_hit' => $lastHit ? $lastHit->toDateTimeString() : null,
+                'enabled' => $currency->ref_exchange_withdrawal_enabled,
+            ];
+        }
 
         return view('dashboard.exchange.ref_exchange.pending-assets-withdrawal-history', [
             'withdrawals' => $withdrawals,
             'pendingWithdrawals' => $pendingWithdrawals,
-            //            '$pendingWithdrawalsCount' =>
+            'exchanges' => $exchanges,
+            'allCurrencies' => $allCurrencies,
+            'globalWithdrawalInterval' => $globalWithdrawalInterval,
+            'globalWithdrawalMinCount' => $globalWithdrawalMinCount,
+            'withdrawalType' => $withdrawalType,
+            'currencyTimerData' => $currencyTimerData,
+        ]);
+    }
+
+    /**
+     * Bulk aggregation of multiple currencies
+     */
+    public function bulkAggregate(Request $request)
+    {
+        $request->validate([
+            'exchange_slug' => 'required|string|exists:exchanges,slug',
+            'currencies' => 'required|array|min:1',
+            'currencies.*.selected' => 'sometimes|in:1',
+            'currencies.*.currency_id' => 'required|exists:currencies,id',
+            'currencies.*.symbol' => 'required|string',
+            'currencies.*.type' => 'required|in:amount,percent',
+            'currencies.*.value' => 'required|numeric|min:0',
+        ]);
+
+        $selectedExchange = $this->exchangeRepository->getExchangeBySlug($request->input('exchange_slug'));
+
+        if (!$selectedExchange) {
+            Toast::message('صرافی انتخاب شده معتبر نیست.')
+                ->danger()
+                ->notify();
+            return redirect()->back();
+        }
+
+        $currencies = collect($request->input('currencies'))
+            ->filter(fn($currency) => isset($currency['selected']) && $currency['selected'] == '1');
+
+        if ($currencies->isEmpty()) {
+            Toast::message('لطفاً حداقل یک ارز را انتخاب کنید.')
+                ->warning()
+                ->notify();
+            return redirect()->back();
+        }
+
+        $exchangeService = resolve(ExchangeService::class);
+        $successCount = 0;
+        $failedCurrencies = [];
+
+        foreach ($currencies as $currencyData) {
+            try {
+                $currency = Currency::find($currencyData['currency_id']);
+                
+                if (!$currency) {
+                    $failedCurrencies[] = $currencyData['symbol'] . ' (ارز یافت نشد)';
+                    continue;
+                }
+
+                // Calculate actual amount based on type
+                $pendingAmount = OTCRefExchangeWithdrawal::select(DB::raw('SUM(transactions.amount) as total'))
+                    ->join('transactions', 'transactions.id', '=', 'otc_ref_exchange_withdrawals.transaction_id')
+                    ->where('otc_ref_exchange_withdrawals.status', OTCRefExchangeWithdrawalStatusEnum::PENDING->value)
+                    ->where('otc_ref_exchange_withdrawals.currency_id', $currency->id)
+                    ->value('total') ?? 0;
+
+                $amount = $currencyData['type'] === 'percent'
+                    ? ($pendingAmount * floatval($currencyData['value'])) / 100
+                    : floatval($currencyData['value']);
+
+                if ($amount <= 0) {
+                    $failedCurrencies[] = $currencyData['symbol'] . ' (مقدار نامعتبر)';
+                    continue;
+                }
+
+                // Ensure amount doesn't exceed pending amount
+                $amount = min($amount, $pendingAmount);
+
+                // Get default chain for currency (first available chain)
+                $currencyChain = $currency->chains()->first();
+                
+                if (!$currencyChain) {
+                    $failedCurrencies[] = $currencyData['symbol'] . ' (شبکه یافت نشد)';
+                    continue;
+                }
+
+                $exchangeService->chargeCurrency(
+                    resolve(ChargeCurrencyRequestDTO::class)
+                        ->setCurrency($currency->symbol)
+                        ->setCurrencyChain($currencyChain->chain->value)
+                        ->setQuantity($amount)
+                        ->setExchangeSlug($selectedExchange->slug)
+                );
+
+                $successCount++;
+
+            } catch (\Throwable $e) {
+                report($e);
+                $failedCurrencies[] = $currencyData['symbol'] . ' (' . class_basename($e) . ')';
+            }
+        }
+
+        // Generate appropriate message
+        if ($successCount > 0 && empty($failedCurrencies)) {
+            Toast::message("عملیات تجمیع برای {$successCount} ارز با موفقیت آغاز شد.")
+                ->success()
+                ->notify();
+        } elseif ($successCount > 0 && !empty($failedCurrencies)) {
+            Toast::message("عملیات تجمیع برای {$successCount} ارز موفق و " . count($failedCurrencies) . " ارز ناموفق بود: " . implode(', ', $failedCurrencies))
+                ->warning()
+                ->notify();
+        } else {
+            Toast::message('عملیات تجمیع با شکست مواجه شد: ' . implode(', ', $failedCurrencies))
+                ->danger()
+                ->notify();
+        }
+
+        return redirect()->route('admin.ref-exchange.assets-gathering-to-hd-wallet.pending-withdrawal');
+    }
+
+    /**
+     * Update withdrawal settings for a currency
+     */
+    public function updateCurrencyWithdrawalSettings(Request $request, int $currencyId)
+    {
+        $request->validate([
+            'ref_exchange_withdrawal_enabled' => 'required|boolean',
+            'ref_exchange_withdrawal_interval_minutes' => 'required|integer|min:1',
+            'ref_exchange_withdrawal_min_count' => 'required|integer|min:1',
+        ]);
+
+        $currency = Currency::findOrFail($currencyId);
+
+        $currency->update([
+            'ref_exchange_withdrawal_enabled' => $request->boolean('ref_exchange_withdrawal_enabled'),
+            'ref_exchange_withdrawal_interval_minutes' => $request->input('ref_exchange_withdrawal_interval_minutes'),
+            'ref_exchange_withdrawal_min_count' => $request->input('ref_exchange_withdrawal_min_count'),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "تنظیمات برداشت {$currency->symbol} با موفقیت بروزرسانی شد.",
+            'currency' => $currency,
+        ]);
+    }
+
+    /**
+     * Bulk update withdrawal settings for multiple currencies
+     */
+    public function bulkUpdateCurrencyWithdrawalSettings(Request $request)
+    {
+        $request->validate([
+            'currencies' => 'required|array|min:1',
+            'currencies.*.id' => 'required|exists:currencies,id',
+            'currencies.*.ref_exchange_withdrawal_enabled' => 'nullable|in:0,1',
+            'currencies.*.ref_exchange_withdrawal_interval_minutes' => 'nullable|integer|min:1',
+            'currencies.*.ref_exchange_withdrawal_min_count' => 'nullable|integer|min:1',
+        ]);
+
+        $updatedCount = 0;
+        
+        foreach ($request->input('currencies') as $currencyData) {
+            $currency = Currency::find($currencyData['id']);
+            if ($currency) {
+                $currency->update([
+                    'ref_exchange_withdrawal_enabled' => isset($currencyData['ref_exchange_withdrawal_enabled']) && $currencyData['ref_exchange_withdrawal_enabled'] == '1',
+                    'ref_exchange_withdrawal_interval_minutes' => !empty($currencyData['ref_exchange_withdrawal_interval_minutes']) ? $currencyData['ref_exchange_withdrawal_interval_minutes'] : null,
+                    'ref_exchange_withdrawal_min_count' => !empty($currencyData['ref_exchange_withdrawal_min_count']) ? $currencyData['ref_exchange_withdrawal_min_count'] : null,
+                ]);
+                $updatedCount++;
+            }
+        }
+
+        Toast::message("تنظیمات برداشت {$updatedCount} ارز با موفقیت بروزرسانی شد.")
+            ->success()
+            ->notify();
+
+        return redirect()->back();
+    }
+
+    /**
+     * Toggle withdrawal status for a currency (AJAX)
+     */
+    public function toggleCurrencyWithdrawalStatus(int $currencyId)
+    {
+        $currency = Currency::findOrFail($currencyId);
+
+        $currency->update([
+            'ref_exchange_withdrawal_enabled' => !$currency->ref_exchange_withdrawal_enabled,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'enabled' => $currency->ref_exchange_withdrawal_enabled,
+            'message' => $currency->ref_exchange_withdrawal_enabled 
+                ? "برداشت {$currency->symbol} فعال شد." 
+                : "برداشت {$currency->symbol} غیرفعال شد.",
         ]);
     }
 }

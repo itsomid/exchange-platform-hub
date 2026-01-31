@@ -203,6 +203,7 @@ class ExchangeService
                 ]);
 
                 // Create exchange transaction record
+                // Note: json_encode is used to match the double-encoded format expected by the model's accessor
                 $otcOrder->refExchangeTransactions()->create([
                     'order_id' => $response->getOrderId(),
                     'exchange_id' => $exchange->id,
@@ -212,7 +213,7 @@ class ExchangeService
                     'fee' => $response->getDiscountFee(),
                     'filled_amount' => $response->getFilledAmount(),
                     'side' => 'sell',
-                    'response' => $response->getResponseBody(),
+                    'response' => json_encode($response->getResponseBody()),
                 ]);
 
                 // Create wallet transactions like api-service does
