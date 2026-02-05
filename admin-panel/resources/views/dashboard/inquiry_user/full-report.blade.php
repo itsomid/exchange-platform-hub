@@ -145,7 +145,7 @@
                                                 <span
                                                     class="position-absolute top-50 start-50 translate-middle font-number fw-bold"
                                                     style="font-size: 0.6rem;">
-                                                    {{ $totalAssetsValue > 0 ? formatNumber(($wallet->assetValue / $totalAssetsValue) * 100) : 0 }}%
+                                                    {{ $totalAssetsValue > 0 ? formatNumber(($wallet->assetValue / $totalAssetsValue) * 100,1) : 0 }}%
                                                 </span>
                                             </div>
                                         </div>

@@ -45,6 +45,7 @@ use App\Http\Controllers\Stock\StockContractController;
 use App\Http\Controllers\Setting\SpotBotSettingController;
 use App\Http\Controllers\ApiSystem\ApiSystemController;
 use App\Http\Controllers\ApiSystem\ApiSystemTokenController;
+use App\Http\Controllers\Report\HdWalletIndexReportController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -305,6 +306,13 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::get('user-registration-report', [UserRegistrationReportController::class, 'index'])->name('report.getUserRegistrationState')->can('user.index');
         Route::get('user-registration-report/month', [UserRegistrationReportController::class, 'getUserRegistrationState'])->name('report.getUserRegistrationState.month')->can('user.index');
         Route::get('ref-exchange/bought-history', [RefExchangeController::class, 'boughtHistory'])->name('report.ref-exchange.bought-history')->can('report');
+        
+        // HD Wallet Index Balance Report
+        Route::get('hd-wallet-index', [HdWalletIndexReportController::class, 'index'])->name('report.hd-wallet-index')->can('wallet');
+        Route::post('hd-wallet-index/balance-data', [HdWalletIndexReportController::class, 'getBalanceData'])->name('report.hd-wallet-index.balance-data')->can('wallet');
+        Route::post('hd-wallet-index/currency-chains', [HdWalletIndexReportController::class, 'getCurrencyChains'])->name('report.hd-wallet-index.currency-chains')->can('wallet');
+        Route::post('hd-wallet-index/export-excel', [HdWalletIndexReportController::class, 'exportExcel'])->name('report.hd-wallet-index.export-excel')->can('wallet');
+        Route::post('hd-wallet-index/query-blockchain', [HdWalletIndexReportController::class, 'queryBlockchainBalance'])->name('report.hd-wallet-index.query-blockchain')->can('wallet');
     });
 
     // *********STOCKS*********//

@@ -174,4 +174,159 @@ class EtherScanService
 
         return null;
     }
+
+    /**
+     * Get outgoing (sent) transactions for a given address and currency.
+     * This fetches ERC20 token transfers or native ETH transfers where the address is the sender.
+     *
+     * @param string $currency The currency symbol (e.g., 'USDT', 'ETH')
+     * @param string $address The wallet address to query
+     * @param int|null $startBlock Only get transactions after this block number
+     * @return array ['transactions' => array] or ['error' => string]
+     */
+    public function getOutgoingTransactions(string $currency, string $address, ?int $startBlock = null): array
+    {
+        $apiKey = Config::get('etherscan.api_key');
+        $currency = strtoupper($currency);
+
+        if ($currency === 'ETH') {
+            return $this->getEthOutgoingTransactions($address, $apiKey, $startBlock);
+        }
+
+        return $this->getErc20OutgoingTransactions($currency, $address, $apiKey, $startBlock);
+    }
+
+    /**
+     * Get native ETH outgoing transactions
+     */
+    protected function getEthOutgoingTransactions(string $address, string $apiKey, ?int $startBlock = null): array
+    {
+        $params = [
+            'chainid' => 1,
+            'module' => 'account',
+            'action' => 'txlist',
+            'address' => $address,
+            'startblock' => $startBlock ?? 0,
+            'endblock' => 99999999,
+            'page' => 1,
+            'offset' => 200,
+            'sort' => 'desc',
+            'apikey' => $apiKey,
+        ];
+
+        try {
+            $response = Http::get($this->baseUrl, $params);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $transactions = [];
+
+                if ($data['status'] === '1' && isset($data['result']) && is_array($data['result'])) {
+                    foreach ($data['result'] as $tx) {
+                        // Only include outgoing transactions (where this address is the sender)
+                        // and successful transactions (isError = 0)
+                        if (isset($tx['from']) && strtolower($tx['from']) === strtolower($address) && ($tx['isError'] ?? '1') === '0') {
+                            $amount = isset($tx['value']) ? bcdiv($tx['value'], bcpow('10', '18'), 18) : '0';
+                            
+                            // Skip zero-value transactions (contract interactions)
+                            if (bccomp($amount, '0', 18) === 0) {
+                                continue;
+                            }
+
+                            $transactions[] = [
+                                'transaction_hash' => $tx['hash'] ?? '',
+                                'from_address' => $tx['from'] ?? '',
+                                'to_address' => $tx['to'] ?? '',
+                                'amount' => $amount,
+                                'block_number' => isset($tx['blockNumber']) ? (int)$tx['blockNumber'] : null,
+                                'transaction_at' => isset($tx['timeStamp']) ? (int)$tx['timeStamp'] : null,
+                            ];
+                        }
+                    }
+                }
+
+                return ['transactions' => $transactions];
+            }
+
+            return [
+                'error' => 'API request failed',
+                'details' => $response->body()
+            ];
+        } catch (\Exception $e) {
+            return [
+                'error' => 'API request error',
+                'details' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Get ERC20 token outgoing transactions
+     */
+    protected function getErc20OutgoingTransactions(string $currency, string $address, string $apiKey, ?int $startBlock = null): array
+    {
+        $contractAddress = $this->getContractAddress($currency);
+        
+        $params = [
+            'chainid' => 1,
+            'module' => 'account',
+            'action' => 'tokentx',
+            'address' => $address,
+            'startblock' => $startBlock ?? 0,
+            'endblock' => 99999999,
+            'page' => 1,
+            'offset' => 200,
+            'sort' => 'desc',
+            'apikey' => $apiKey,
+        ];
+
+        if ($contractAddress) {
+            $params['contractaddress'] = $contractAddress;
+        }
+
+        try {
+            $response = Http::get($this->baseUrl, $params);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $transactions = [];
+
+                if ($data['status'] === '1' && isset($data['result']) && is_array($data['result'])) {
+                    foreach ($data['result'] as $tx) {
+                        // Only include outgoing transactions (where this address is the sender)
+                        if (isset($tx['from']) && strtolower($tx['from']) === strtolower($address)) {
+                            // Filter by token symbol if no contract address was specified
+                            if (!$contractAddress && isset($tx['tokenSymbol']) && strtoupper($tx['tokenSymbol']) !== $currency) {
+                                continue;
+                            }
+
+                            $decimals = $tx['tokenDecimal'] ?? $this->tokenDecimals[$currency] ?? 18;
+                            $amount = isset($tx['value']) ? bcdiv($tx['value'], bcpow('10', (string)$decimals), (int)$decimals) : '0';
+
+                            $transactions[] = [
+                                'transaction_hash' => $tx['hash'] ?? '',
+                                'from_address' => $tx['from'] ?? '',
+                                'to_address' => $tx['to'] ?? '',
+                                'amount' => $amount,
+                                'block_number' => isset($tx['blockNumber']) ? (int)$tx['blockNumber'] : null,
+                                'transaction_at' => isset($tx['timeStamp']) ? (int)$tx['timeStamp'] : null,
+                            ];
+                        }
+                    }
+                }
+
+                return ['transactions' => $transactions];
+            }
+
+            return [
+                'error' => 'API request failed',
+                'details' => $response->body()
+            ];
+        } catch (\Exception $e) {
+            return [
+                'error' => 'API request error',
+                'details' => $e->getMessage()
+            ];
+        }
+    }
 }

@@ -241,4 +241,153 @@ class TronScanService
         // Fallback to hardcoded mapping
         return $this->tokenDecimals[$currency] ?? 6; // Default to 6 decimals for most TRC20 tokens
     }
+
+    /**
+     * Get outgoing (sent) transactions for a given address and currency.
+     * This fetches TRC20 token transfers or native TRX transfers where the address is the sender.
+     *
+     * @param string $currency The currency symbol (e.g., 'USDT', 'TRX')
+     * @param string $address The wallet address to query
+     * @param int|null $startTimestamp Only get transactions after this timestamp (milliseconds)
+     * @return array ['transactions' => array] or ['error' => string]
+     */
+    public function getOutgoingTransactions(string $currency, string $address, ?int $startTimestamp = null): array
+    {
+        $currency = strtoupper($currency);
+
+        if ($currency === 'TRX') {
+            return $this->getTrxOutgoingTransactions($address, $startTimestamp);
+        }
+
+        return $this->getTrc20OutgoingTransactions($currency, $address, $startTimestamp);
+    }
+
+    /**
+     * Get native TRX outgoing transactions
+     */
+    protected function getTrxOutgoingTransactions(string $address, ?int $startTimestamp = null): array
+    {
+        $url = $this->baseUrl . '/transaction';
+        $params = [
+            'address' => $address,
+            'limit' => 200,
+            'sort' => '-timestamp',
+        ];
+
+        if ($startTimestamp) {
+            $params['start_timestamp'] = $startTimestamp;
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'TRON-PRO-API-KEY' => Config::get('tronscan.api_key')
+            ])->get($url, $params);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $transactions = [];
+
+                if (isset($data['data']) && is_array($data['data'])) {
+                    foreach ($data['data'] as $tx) {
+                        // Only include outgoing transactions (where this address is the sender)
+                        if (isset($tx['ownerAddress']) && strtolower($tx['ownerAddress']) === strtolower($address)) {
+                            // Filter only TRX transfer transactions
+                            if (isset($tx['contractType']) && $tx['contractType'] === 1) { // TransferContract
+                                $amount = isset($tx['amount']) ? bcdiv((string)$tx['amount'], bcpow('10', '6'), 6) : '0';
+                                
+                                $transactions[] = [
+                                    'transaction_hash' => $tx['hash'] ?? '',
+                                    'from_address' => $tx['ownerAddress'] ?? '',
+                                    'to_address' => $tx['toAddress'] ?? '',
+                                    'amount' => $amount,
+                                    'block_number' => $tx['block'] ?? null,
+                                    'transaction_at' => isset($tx['timestamp']) ? (int)($tx['timestamp'] / 1000) : null,
+                                ];
+                            }
+                        }
+                    }
+                }
+
+                return ['transactions' => $transactions];
+            }
+
+            return [
+                'error' => 'API request failed',
+                'details' => $response->body()
+            ];
+        } catch (\Exception $e) {
+            return [
+                'error' => 'API request error',
+                'details' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Get TRC20 token outgoing transactions
+     */
+    protected function getTrc20OutgoingTransactions(string $currency, string $address, ?int $startTimestamp = null): array
+    {
+        $contractAddress = $this->getContractAddress($currency);
+        
+        $url = $this->baseUrl . '/token_trc20/transfers';
+        $params = [
+            'relatedAddress' => $address,
+            'limit' => 200,
+            'sort' => '-timestamp',
+        ];
+
+        if ($contractAddress) {
+            $params['contract_address'] = $contractAddress;
+        } else {
+            // If no contract address, filter by token name
+            $params['tokenName'] = $currency;
+        }
+
+        if ($startTimestamp) {
+            $params['start_timestamp'] = $startTimestamp;
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'TRON-PRO-API-KEY' => Config::get('tronscan.api_key')
+            ])->get($url, $params);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $transactions = [];
+
+                if (isset($data['token_transfers']) && is_array($data['token_transfers'])) {
+                    foreach ($data['token_transfers'] as $tx) {
+                        // Only include outgoing transactions (where this address is the sender)
+                        if (isset($tx['from_address']) && strtolower($tx['from_address']) === strtolower($address)) {
+                            $decimals = $tx['tokenInfo']['tokenDecimal'] ?? $this->tokenDecimals[$currency] ?? 6;
+                            $amount = isset($tx['quant']) ? bcdiv((string)$tx['quant'], bcpow('10', (string)$decimals), $decimals) : '0';
+                            
+                            $transactions[] = [
+                                'transaction_hash' => $tx['transaction_id'] ?? '',
+                                'from_address' => $tx['from_address'] ?? '',
+                                'to_address' => $tx['to_address'] ?? '',
+                                'amount' => $amount,
+                                'block_number' => $tx['block'] ?? null,
+                                'transaction_at' => isset($tx['block_ts']) ? (int)($tx['block_ts'] / 1000) : null,
+                            ];
+                        }
+                    }
+                }
+
+                return ['transactions' => $transactions];
+            }
+
+            return [
+                'error' => 'API request failed',
+                'details' => $response->body()
+            ];
+        } catch (\Exception $e) {
+            return [
+                'error' => 'API request error',
+                'details' => $e->getMessage()
+            ];
+        }
+    }
 }

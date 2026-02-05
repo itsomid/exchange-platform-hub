@@ -253,6 +253,12 @@
                     <div>کیف پول های صرافی</div>
                 </a>
                 <ul class="menu-sub">
+                    <li class="menu-item @if (request()->is('admin/exchange/wallets/hotWallets*')) active @endif">
+                        <a href="{{ route('admin.exchange.hot-wallet') }}" class="menu-link">
+                            <i class="menu-icon fa-light fa-key fa-sm"></i>
+                            <div>HD Wallet</div>
+                        </a>
+                    </li>
                     <li class="menu-item @if (request()->is('admin/exchange/wallets/localWallets')) active @endif">
                         <a href="{{ route('admin.exchange.local-wallet') }}" class="menu-link">
                             <i class="menu-icon fa-light fa-key fa-sm"></i>
@@ -277,6 +283,7 @@
                             <div>Hot Wallet</div>
                         </a>
                     </li>
+                 
                 </ul>
 
             </li>
@@ -365,6 +372,14 @@
                 </a>
             </li>
         @endcanany
+        @can('wallet')
+            <li class="menu-item @if (request()->is('admin/report/hd-wallet-index*')) active @endif">
+                <a href="{{ route('admin.report.hd-wallet-index') }}" class="menu-link">
+                    <i class="menu-icon fa-regular fa-wallet"></i>
+                    <div>گزارش موجودی HD Wallet</div>
+                </a>
+            </li>
+        @endcan
         @canany(['setting.int.index', 'setting.ext.index'])
             <li class="menu-header small text-uppercase">
                 <span class="menu-header-text">مدیریت سیستم</span>
