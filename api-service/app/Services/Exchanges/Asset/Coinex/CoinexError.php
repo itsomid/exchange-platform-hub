@@ -50,9 +50,15 @@ enum CoinexError: int
     case REQUEST_TOO_FREQUENT = 4213; // درخواست‌ها خیلی زیاد است، لطفا بعدا تلاش کنید.
     case INSUFFICIENT_SUBACCOUNT_PERMISSIONS = 4512; // مجوزهای زیر حساب ناکافی است، لطفا بررسی کنید.
 
-    public static function mapErrorToResponse(CoinexError $errorEnum): string
+    public static function mapErrorToResponse(?CoinexError $errorEnum, ?string $fallbackMessage = null): string
     {
-        return match ($errorEnum) {
+        $unknownMessage = 'خطای ناشناخته، لطفا دوباره تلاش کنید.';
+
+        if ($errorEnum === null) {
+            return $fallbackMessage ?: $unknownMessage;
+        }
+
+        $mappedMessage = match ($errorEnum) {
             CoinexError::SERVICE_BUSY => 'سرویس مشغول است، لطفا بعدا تلاش کنید.',
             CoinexError::INSUFFICIENT_BALANCE => 'موجودی کافی نیست، مقدار سفارش را تنظیم کنید یا واریز دیگری انجام دهید.',
             CoinexError::BELOW_MIN_ORDER => 'مقدار سفارش کمتر از حداقل مقدار مورد نیاز است. لطفا مقدار سفارش را تنظیم کنید.',
@@ -64,7 +70,9 @@ enum CoinexError: int
             CoinexError::PARAMETER_ERROR => 'خطای پارامتر، لطفا پارامترهای درخواست را بررسی کنید.',
             CoinexError::REQUEST_TIMEOUT => 'زمان درخواست به پایان رسید، لطفا بعدا تلاش کنید.',
             CoinexError::RATE_LIMIT_TRIGGERED => 'محدودیت نرخ درخواست اعمال شده است، لطفا نرخ درخواست خود را کاهش دهید.',
-            default => 'خطای ناشناخته، لطفا دوباره تلاش کنید.',
+            default => null,
         };
+
+        return $mappedMessage ?: ($fallbackMessage ?: $unknownMessage);
     }
 }

@@ -30,12 +30,14 @@ class Currency extends Model
         'ref_exchange_withdrawal_enabled',
         'ref_exchange_withdrawal_interval_minutes',
         'ref_exchange_withdrawal_min_count',
+        'ref_exchange_withdrawal_aggregation_percent',
     ];
 
     protected $casts = [
         'ref_exchange_withdrawal_enabled' => 'boolean',
         'ref_exchange_withdrawal_interval_minutes' => 'integer',
         'ref_exchange_withdrawal_min_count' => 'integer',
+        'ref_exchange_withdrawal_aggregation_percent' => 'integer',
     ];
 
     /**

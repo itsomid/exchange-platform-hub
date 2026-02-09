@@ -89,7 +89,7 @@ class InMemoryOrderBookService
 
     /**
      * Get orders for a market sorted by price (for matching)
-     * 
+     *
      * @param int $marketId
      * @param SpotOrderSideEnum $side
      * @param int $limit
@@ -97,27 +97,11 @@ class InMemoryOrderBookService
      */
     public function getMarketOrders(int $marketId, SpotOrderSideEnum $side, int $limit = 100): array
     {
-        \Log::info('[InMemoryOrderBookService] getMarketOrders called', [
-            'marketId' => $marketId,
-            'side' => $side->value,
-            'limit' => $limit
-        ]);
+
 
         $redis = $this->getRedisConnection();
         $marketKey = $this->getMarketOrdersKey($marketId, $side);
 
-        \Log::info('[InMemoryOrderBookService] Redis key generated', [
-            'marketKey' => $marketKey,
-            'marketId' => $marketId,
-            'side' => $side->value
-        ]);
-
-        // Check if key exists in Redis
-        $keyExists = $redis->exists($marketKey);
-        \Log::info('[InMemoryOrderBookService] Redis key existence check', [
-            'marketKey' => $marketKey,
-            'exists' => $keyExists
-        ]);
 
         // For BUY orders: get highest prices first (DESC)
         // For SELL orders: get lowest prices first (ASC)
@@ -125,39 +109,24 @@ class InMemoryOrderBookService
             ? $redis->zrevrange($marketKey, 0, $limit - 1)
             : $redis->zrange($marketKey, 0, $limit - 1);
 
-        \Log::info('[InMemoryOrderBookService] Order IDs retrieved from Redis', [
-            'marketKey' => $marketKey,
-            'side' => $side->value,
-            'orderIds' => $orderIds,
-            'count' => count($orderIds)
-        ]);
 
         $orders = [];
-        $processedCount = 0;
-        $openOrdersCount = 0;
+
 
         foreach ($orderIds as $orderId) {
-            $processedCount++;
+
             $order = $this->getOrder($orderId);
 
-            \Log::debug('[InMemoryOrderBookService] Processing order', [
-                'orderId' => $orderId,
-                'orderFound' => $order !== null,
-                'orderStatus' => $order ? $order->status->value : null,
-                'processedCount' => $processedCount
-            ]);
+
 
             if ($order && $order->status === SpotOrderStatusEnum::OPEN) {
                 $orders[] = $order;
-                $openOrdersCount++;
+
             } elseif (!$order) {
                 // Self-heal: remove stale orderId from market index when order key is missing
                 try {
                     $redis->zrem($marketKey, $orderId);
-                    \Log::warning('[InMemoryOrderBookService] Removed stale orderId from market index', [
-                        'marketKey' => $marketKey,
-                        'orderId' => $orderId
-                    ]);
+
                 } catch (\Throwable $e) {
                     \Log::error('[InMemoryOrderBookService] Failed to remove stale orderId', [
                         'marketKey' => $marketKey,
@@ -167,15 +136,6 @@ class InMemoryOrderBookService
                 }
             }
         }
-
-        \Log::info('[InMemoryOrderBookService] getMarketOrders completed', [
-            'marketId' => $marketId,
-            'side' => $side->value,
-            'totalOrderIds' => count($orderIds),
-            'processedOrders' => $processedCount,
-            'openOrders' => $openOrdersCount,
-            'finalOrdersCount' => count($orders)
-        ]);
 
         return $orders;
     }
@@ -190,11 +150,7 @@ class InMemoryOrderBookService
 
         try {
             $redis->del($marketKey);
-            \Log::info('[InMemoryOrderBookService] Cleared market orders index', [
-                'marketId' => $marketId,
-                'side' => $side->value,
-                'marketKey' => $marketKey
-            ]);
+
             return true;
         } catch (\Throwable $e) {
             \Log::error('[InMemoryOrderBookService] Failed to clear market orders index', [
@@ -214,11 +170,7 @@ class InMemoryOrderBookService
 
         try {
             $redis->del($userKey);
-            \Log::info('[InMemoryOrderBookService] Cleared user orders index', [
-                'userId' => $userId,
-                'marketId' => $marketId,
-                'userKey' => $userKey
-            ]);
+
             return true;
         } catch (\Throwable $e) {
             \Log::error('[InMemoryOrderBookService] Failed to clear user orders index', [
@@ -233,7 +185,7 @@ class InMemoryOrderBookService
 
     /**
      * Get all open orders for a user in a specific market
-     * 
+     *
      * @param int $userId
      * @param int $marketId
      * @return array<InMemoryBotOrderDTO>

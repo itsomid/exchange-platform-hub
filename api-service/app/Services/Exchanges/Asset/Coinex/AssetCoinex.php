@@ -43,22 +43,24 @@ class AssetCoinex implements AssetInterface
                 'amount' => $request->getQuantity(),
                 'ccy' => $request->getCurrency(),
             ]);
-        } catch (ConnectionException|Throwable $exception) {
+        } catch (ConnectionException | Throwable $exception) {
             report($exception);
 
             return resolve(BuyDTOResponse::class)
                 ->setSpotStatus(SpotStatusEnum::ConnectionLosses)
                 ->setErrorCode(0)
+                ->setErrorMessage('عدم ارتباط با صرافی مرجع، لطفا بعدا تلاش کنید.')
                 ->setIsDone(false);
         }
         //Balance Not Enough
         if ($response->json('code') === 3109) {
             Log::channel('ref-exchange')->info('Coinex Balance Not Enough In USDT');
             // Notification will be sent by the caller (OTCService) with complete context
-            
+
             return resolve(BuyDTOResponse::class)
                 ->setSpotStatus(SpotStatusEnum::NotEnoughBalance)
                 ->setErrorCode($response->json('code'))
+                ->setErrorMessage(CoinexError::mapErrorToResponse(CoinexError::INSUFFICIENT_BALANCE))
                 ->setIsDone(false);
         }
         if ($response->json('code') === 3127) {
@@ -68,15 +70,17 @@ class AssetCoinex implements AssetInterface
             return resolve(BuyDTOResponse::class)
                 ->setSpotStatus(SpotStatusEnum::AmountTooSmall)
                 ->setErrorCode($response->json('code'))
+                ->setErrorMessage(CoinexError::mapErrorToResponse(CoinexError::BELOW_MIN_ORDER))
                 ->setIsDone(false);
         }
         if ($response->json('code') === 3606) {
             Log::channel('ref-exchange')->info('Order price and the latest price deviation is too large');
-            AdminNotification::sendPriceDifferenceTooLarge($request->getMarket(), $request->getQuantity(),$response->json('message'));
-            
+            AdminNotification::sendPriceDifferenceTooLarge($request->getMarket(), $request->getQuantity(), $response->json('message'));
+
             return resolve(BuyDTOResponse::class)
                 ->setSpotStatus(SpotStatusEnum::PriceDifferenceTooLarge)
                 ->setErrorCode($response->json('code'))
+                ->setErrorMessage(CoinexError::mapErrorToResponse(CoinexError::PRICE_DIFFERENCE_TOO_LARGE, $response->json('message')))
                 ->setIsDone(false);
         }
         if (! $response->ok() || $response->json('code') !== 0) {
@@ -90,7 +94,8 @@ class AssetCoinex implements AssetInterface
                     CoinexError::mapErrorToResponse(
                         CoinexError::tryFrom(
                             $response->json('code')
-                        )
+                        ),
+                        $response->json('message')
                     )
                 )
                 ->setIsDone(false);
@@ -135,7 +140,7 @@ class AssetCoinex implements AssetInterface
         }
         try {
             $response = CoinexRequest::send(MethodEnum::POST, '/v2/assets/withdraw', $requestBody);
-        } catch (ConnectionException|Throwable $exception) {
+        } catch (ConnectionException | Throwable $exception) {
             report($exception);
             throw new CantResolveCoinexException("Can't Resolve https://api.coinex.com");
         }

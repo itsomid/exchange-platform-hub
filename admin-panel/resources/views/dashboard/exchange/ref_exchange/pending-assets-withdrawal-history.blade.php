@@ -153,7 +153,7 @@
                             </thead>
                             <tbody>
                                 @foreach($pendingWithdrawals as $index => $withdraw)
-                                    <tr class="aggregation-row" data-currency="{{ $withdraw->currency->symbol }}" data-total="{{ $withdraw->total_withdraw_amount }}">
+                                    <tr class="aggregation-row" data-currency="{{ $withdraw->currency->symbol }}" data-total="{{ $withdraw->total_withdraw_amount }}" data-default-aggregation-percent="{{ $withdraw->currency->ref_exchange_withdrawal_aggregation_percent }}">
                                         <td>
                                             <div class="form-check">
                                                 <input class="form-check-input currency-checkbox" 
@@ -185,7 +185,7 @@
                                                 <input type="radio" class="btn-check amount-type" 
                                                        name="currencies[{{ $index }}][type]" 
                                                        id="amount_type_{{ $index }}" 
-                                                       value="amount" checked
+                                                       value="amount" {{ $withdraw->currency->ref_exchange_withdrawal_aggregation_percent ? '' : 'checked' }}
                                                        data-index="{{ $index }}">
                                                 <label class="btn btn-outline-primary btn-sm" for="amount_type_{{ $index }}">
                                                     <i class="fas fa-coins me-1"></i>تعداد
@@ -194,7 +194,7 @@
                                                 <input type="radio" class="btn-check amount-type" 
                                                        name="currencies[{{ $index }}][type]" 
                                                        id="percent_type_{{ $index }}" 
-                                                       value="percent"
+                                                       value="percent" {{ $withdraw->currency->ref_exchange_withdrawal_aggregation_percent ? 'checked' : '' }}
                                                        data-index="{{ $index }}">
                                                 <label class="btn btn-outline-success btn-sm" for="percent_type_{{ $index }}">
                                                     <i class="fas fa-percentage me-1"></i>درصد
@@ -371,6 +371,7 @@
                                         <th style="width: 120px;">وضعیت برداشت</th>
                                         <th style="width: 180px;">بازه زمانی (دقیقه)</th>
                                         <th style="width: 180px;">حداقل تعداد خرید</th>
+                                        <th style="width: 180px;">درصد تجمیع پیش‌فرض</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -417,6 +418,18 @@
                                                        min="1"
                                                        placeholder="پیش‌فرض ({{ $globalWithdrawalMinCount }})">
                                             </td>
+                                            <td>
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number" 
+                                                           class="form-control form-control-sm font-number" 
+                                                           name="currencies[{{ $index }}][ref_exchange_withdrawal_aggregation_percent]"
+                                                           value="{{ $currency->ref_exchange_withdrawal_aggregation_percent }}"
+                                                           min="1"
+                                                           max="100"
+                                                           placeholder="خالی = 100%">
+                                                    <span class="input-group-text">%</span>
+                                                </div>
+                                            </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -427,6 +440,8 @@
                         <div class="alert alert-info mt-3 mb-0">
                             <i class="fas fa-info-circle me-2"></i>
                             <strong>راهنما:</strong> اگر مقادیر بازه زمانی یا حداقل تعداد خرید خالی باشد، از تنظیمات کلی سیستم استفاده می‌شود.
+                            <br>
+                            <strong>درصد تجمیع:</strong> اگر مقدار درصد تجمیع ست شود، هنگام تجمیع به صورت پیش‌فرض آن درصد از مقدار کل برداشت می‌شود. اگر خالی باشد، تمام مقدار تجمیع می‌شود.
                             <br>
                             <small class="text-muted">تنظیمات کلی فعلی: بازه زمانی = <strong>{{ $globalWithdrawalInterval }} دقیقه</strong> | حداقل تعداد خرید = <strong>{{ $globalWithdrawalMinCount }}</strong></small>
                         </div>
@@ -706,6 +721,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // مقداردهی اولیه
     updateSelectedCount();
+
+    // ===== مقداردهی پیش‌فرض درصد تجمیع =====
+    document.querySelectorAll('.aggregation-row').forEach(row => {
+        const defaultPercent = row.dataset.defaultAggregationPercent;
+        if (defaultPercent && parseInt(defaultPercent) > 0) {
+            const index = row.querySelector('.amount-input')?.dataset.index;
+            if (index !== undefined) {
+                const amountInput = document.querySelector(`.amount-input[data-index="${index}"]`);
+                const unitLabel = document.querySelector(`.unit-label[data-index="${index}"]`);
+                
+                // مقدار درصد پیش‌فرض را ست کن
+                amountInput.value = defaultPercent;
+                amountInput.placeholder = 'درصد (0-100)';
+                amountInput.max = 100;
+                if (unitLabel) unitLabel.textContent = '%';
+                
+                // محاسبه مقدار نهایی
+                calculateFinalAmount(index);
+            }
+        }
+    });
 
     // ===== Modal تنظیمات برداشت =====
     const currencySearch = document.getElementById('currencySearch');

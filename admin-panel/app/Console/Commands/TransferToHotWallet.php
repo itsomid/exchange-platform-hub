@@ -81,13 +81,35 @@ class TransferToHotWallet extends Command
             $lastHit = Cache::get($cacheKey);
             $intervalMinutes = $currency->getEffectiveWithdrawalInterval();
 
-            if ($lastHit && now()->diffInMinutes($lastHit, true) < $intervalMinutes) {
+            // Check if there are any pending withdrawals for this currency
+            $hasPending = OTCRefExchangeWithdrawal::query()
+                ->where('currency_id', $currency->id)
+                ->where('status', OTCRefExchangeWithdrawalStatusEnum::PENDING)
+                ->exists();
+
+            if (!$hasPending) {
+                // No pending withdrawals, clear cache if exists
+                if ($lastHit) {
+                    Cache::forget($cacheKey);
+                }
+                continue;
+            }
+
+            // If no cache exists, initialize it and skip this run
+            if (!$lastHit) {
+                Cache::forever($cacheKey, now());
+                $this->info("Initializing timer for {$currency->symbol}. Next withdrawal in {$intervalMinutes} minutes.");
+                continue;
+            }
+
+            if (now()->diffInMinutes($lastHit, true) < $intervalMinutes) {
                 $this->info("Remaining time to withdraw {$currency->symbol}: " . ($intervalMinutes - now()->diffInMinutes($lastHit, true)) . " minutes");
                 continue;
             }
 
             $this->transferCurrency($currency, self::TRIGGER_TYPE_TIME);
-            Cache::put($cacheKey, now(), now()->addMinutes($intervalMinutes));
+            // Clear cache after transfer so next cycle starts fresh
+            Cache::forget($cacheKey);
         }
     }
 
@@ -158,21 +180,36 @@ class TransferToHotWallet extends Command
             $cacheKey = self::CACHE_KEY . '_' . $currency->id;
             $lastHit = Cache::get($cacheKey);
             $intervalMinutes = $currency->getEffectiveWithdrawalInterval();
+
+            // Check if there are any pending withdrawals for this currency
+            $hasPending = OTCRefExchangeWithdrawal::query()
+                ->where('currency_id', $currency->id)
+                ->where('status', OTCRefExchangeWithdrawalStatusEnum::PENDING)
+                ->exists();
+
+            if (!$hasPending) {
+                // No pending withdrawals, clear cache if exists
+                if ($lastHit) {
+                    Cache::forget($cacheKey);
+                }
+                continue;
+            }
+            
+            // If no cache exists, initialize it and skip this run
+            if (!$lastHit) {
+                Cache::forever($cacheKey, now());
+                $this->info("Initializing timer for {$currency->symbol}. Next withdrawal check in {$intervalMinutes} minutes.");
+                continue;
+            }
             
             // Check time condition for this specific currency
-            $timeConditionMet = !$lastHit || now()->diffInMinutes($lastHit, true) >= $intervalMinutes;
+            $timeConditionMet = now()->diffInMinutes($lastHit, true) >= $intervalMinutes;
 
             if ($timeConditionMet) {
-                $hasPendingForThisCurrency = OTCRefExchangeWithdrawal::query()
-                    ->where('currency_id', $currency->id)
-                    ->where('status', OTCRefExchangeWithdrawalStatusEnum::PENDING)
-                    ->exists();
-
-                if ($hasPendingForThisCurrency) {
-                    $this->info("Time condition met for {$currency->symbol}. Attempting transfer.");
-                    $this->transferCurrency($currency, self::TRIGGER_TYPE_TIME);
-                    Cache::put($cacheKey, now(), now()->addMinutes($intervalMinutes));
-                }
+                $this->info("Time condition met for {$currency->symbol}. Attempting transfer.");
+                $this->transferCurrency($currency, self::TRIGGER_TYPE_TIME);
+                // Clear cache after transfer so next cycle starts fresh
+                Cache::forget($cacheKey);
             } else {
                 // Check count condition
                 if ($this->isCountConditionMetForCurrency($currency)) {
@@ -205,6 +242,14 @@ class TransferToHotWallet extends Command
         $quantityNeeded = 0;
         foreach ($pendingLists as $data) {
             $quantityNeeded = Math::add($quantityNeeded, $data->transaction->amount);
+        }
+
+        // Apply aggregation percentage if set for this currency
+        $aggregationPercent = $currency->ref_exchange_withdrawal_aggregation_percent;
+        if ($aggregationPercent !== null && $aggregationPercent > 0 && $aggregationPercent < 100) {
+            $originalQuantity = $quantityNeeded;
+            $quantityNeeded = Math::mul($quantityNeeded, $aggregationPercent / 100);
+            $this->info("{$currency->symbol}: Applying aggregation percent {$aggregationPercent}% — original: {$originalQuantity}, adjusted: {$quantityNeeded}");
         }
 
         $quantityNeeded = number_format($quantityNeeded, $currency->amount_precision, '.', '');

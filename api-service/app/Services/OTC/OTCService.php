@@ -188,7 +188,11 @@ class OTCService
                     $exchangeName = $otc_order->exchange->name;
                     $description = 'به علت نداشتن موجودی تتری در ' . $exchangeName . ' سفارش لغو شد.';
                 } else {
-                    $description = $resultBuyRefExchange->getErrorMessage() . '- Code: ' . $resultBuyRefExchange->getErrorCode();
+                    $errorMessage = trim((string)($resultBuyRefExchange->getErrorMessage() ?? ''));
+                    if ($errorMessage === '') {
+                        $errorMessage = 'خطای ناشناخته از صرافی مرجع';
+                    }
+                    $description = $errorMessage . ' - Code: ' . $resultBuyRefExchange->getErrorCode();
                 }
                 $otc_order->update([
                     'status' => OTCOrderStatusEnum::CANCELED,
@@ -469,7 +473,11 @@ class OTCService
                 if (!empty($refExchangeFailDescription)) {
                     $description = $refExchangeFailDescription;
                 } else {
-                    $description = $resultSellRefExchange->getErrorMessage() . '- Code: ' . $resultSellRefExchange->getErrorCode();
+                    $errorMessage = trim((string)($resultSellRefExchange->getErrorMessage() ?? ''));
+                    if ($errorMessage === '') {
+                        $errorMessage = 'خطای ناشناخته از صرافی مرجع';
+                    }
+                    $description = $errorMessage . ' - Code: ' . $resultSellRefExchange->getErrorCode();
                 }
                 $otc_order->update([
                     'status' => OTCOrderStatusEnum::CANCELED,

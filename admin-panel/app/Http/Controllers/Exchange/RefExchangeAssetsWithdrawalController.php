@@ -212,9 +212,10 @@ class RefExchangeAssetsWithdrawalController extends Controller
                     $readyReason = 'time';
                 }
             } else {
-                // No cache = first time, ready immediately
-                $isReady = true;
-                $readyReason = 'first_run';
+                // No cache = waiting for schedule:run to initialize timer
+                $remainingSeconds = $intervalMinutes * 60;
+                $isReady = false;
+                $readyReason = null;
             }
             
             // Check count condition
@@ -392,6 +393,7 @@ class RefExchangeAssetsWithdrawalController extends Controller
             'currencies.*.ref_exchange_withdrawal_enabled' => 'nullable|in:0,1',
             'currencies.*.ref_exchange_withdrawal_interval_minutes' => 'nullable|integer|min:1',
             'currencies.*.ref_exchange_withdrawal_min_count' => 'nullable|integer|min:1',
+            'currencies.*.ref_exchange_withdrawal_aggregation_percent' => 'nullable|integer|min:1|max:100',
         ]);
 
         $updatedCount = 0;
@@ -399,11 +401,23 @@ class RefExchangeAssetsWithdrawalController extends Controller
         foreach ($request->input('currencies') as $currencyData) {
             $currency = Currency::find($currencyData['id']);
             if ($currency) {
+                // Store old interval to detect changes
+                $oldInterval = $currency->ref_exchange_withdrawal_interval_minutes;
+                
                 $currency->update([
                     'ref_exchange_withdrawal_enabled' => isset($currencyData['ref_exchange_withdrawal_enabled']) && $currencyData['ref_exchange_withdrawal_enabled'] == '1',
                     'ref_exchange_withdrawal_interval_minutes' => !empty($currencyData['ref_exchange_withdrawal_interval_minutes']) ? $currencyData['ref_exchange_withdrawal_interval_minutes'] : null,
                     'ref_exchange_withdrawal_min_count' => !empty($currencyData['ref_exchange_withdrawal_min_count']) ? $currencyData['ref_exchange_withdrawal_min_count'] : null,
+                    'ref_exchange_withdrawal_aggregation_percent' => !empty($currencyData['ref_exchange_withdrawal_aggregation_percent']) ? $currencyData['ref_exchange_withdrawal_aggregation_percent'] : null,
                 ]);
+                
+                // If interval changed, reset the cache timer to restart from now
+                $newInterval = !empty($currencyData['ref_exchange_withdrawal_interval_minutes']) ? $currencyData['ref_exchange_withdrawal_interval_minutes'] : null;
+                if ($oldInterval !== $newInterval) {
+                    $cacheKey = 'exchange_withdrawal_period_time_last_hit_' . $currency->id;
+                    Cache::forever($cacheKey, now());
+                }
+                
                 $updatedCount++;
             }
         }
