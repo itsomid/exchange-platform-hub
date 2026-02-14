@@ -1,8 +1,8 @@
-import {defineConfig} from 'vite';
+import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue'
 import vuetify from 'vite-plugin-vuetify'
-import {glob} from 'glob';
+import { glob } from 'glob';
 import dotenv from 'dotenv';
 // Load environment variables from .env file
 dotenv.config();
@@ -51,6 +51,9 @@ export default defineConfig({
         }),
 
     ],
+    build: {
+        chunkSizeWarningLimit: 1500,
+    },
     server: {
         host: '0.0.0.0',
         port: 3000,
