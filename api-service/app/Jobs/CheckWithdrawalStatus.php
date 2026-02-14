@@ -4,7 +4,7 @@ namespace App\Jobs;
 
 use App\Enums\WithdrawalStatusEnum;
 use App\Infrastructure\HDWallet\DTO\Withdrawal\GetWithdrawalStatusRequestDTO;
-use App\Infrastructure\HDWallet\HDWalletWithdrawalService;
+use App\Infrastructure\HDWalletNew\HDWalletFacade;
 use App\Models\Withdrawal;
 use App\Notifications\WithdrawalSuccessful;
 use App\Services\Exchanges\AdminNotification;
@@ -60,9 +60,9 @@ class CheckWithdrawalStatus implements ShouldQueue
         }
 
         try {
-            $hdWalletService = resolve(HDWalletWithdrawalService::class);
+            $hdWalletService = resolve(HDWalletFacade::class);
 
-            $responseDTO = $hdWalletService->getStatus(
+            $responseDTO = $hdWalletService->getWithdrawalStatus(
                 resolve(GetWithdrawalStatusRequestDTO::class)
                     ->setWithdrawalId($withdrawal->id)
                     ->setBlockchain($withdrawal->currencyChain->blockchain_name->value)

@@ -20,6 +20,7 @@ use App\Exceptions\V1\Wallet\InternalWalletHasProblemException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Log;
 
 class WalletController extends Controller
 {
@@ -305,13 +306,21 @@ class WalletController extends Controller
                 'message' => 'آدرس با موفقیت تولید شد.'
             ]);
         } catch (InternalWalletHasProblemException $e) {
+            \Log::channel('hd-wallet')->error('Internal wallet problem:', [
+                'error_message' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString(),
+            ]);
             Toast::message('خطا در تولید آدرس. لطفا دوباره تلاش کنید.')->danger()->notify();
             return response()->json([
                 'success' => false,
                 'message' => 'خطا در تولید آدرس. لطفا دوباره تلاش کنید.'
             ], 500);
         } catch (\Throwable $e) {
-            report($e);
+
+            Log::channel('hd-wallet')->error('Unexpected error in generateAddressFromHdWallet:', [
+                'error_message' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString(),
+            ]);
             Toast::message('خطای سیستمی رخ داده است.')->danger()->notify();
             return response()->json([
                 'success' => false,
@@ -332,32 +341,74 @@ class WalletController extends Controller
 
     public function refresh(User $user, Wallet $wallet)
     {
+        try {
+            $hasNewTransaction = resolve(CheckWalletService::class)
+                ->checkUserDeposit(
+                    resolve(CheckUserDepositRequestDTO::class)
+                        ->setUserId($user->id)
+                        ->setCurrencySymbol($wallet->currency_symbol)
+                );
 
-        $hasNewTransaction = resolve(CheckWalletService::class)
-            ->checkUserDeposit(
-                resolve(CheckUserDepositRequestDTO::class)
-                    ->setUserId($user->id)
-                    ->setCurrencySymbol($wallet->currency_symbol)
-            );
+            if ($hasNewTransaction) {
+                $transactionCount = session('deposit_transaction_count', 0);
+                $totalAmount = session('total_deposit_amount', 0);
+                $currencySymbol = session('currency_symbol', '');
 
-        if ($hasNewTransaction) {
-            $transactionCount = session('deposit_transaction_count', 0);
-            $totalAmount = session('total_deposit_amount', 0);
-            $currencySymbol = session('currency_symbol', '');
+                Toast::message('واریزی جدید برای کاربر یافت شد')->success()->notify();
 
-            Toast::message('واریزی جدید برای کاربر یافت شد')->success()->notify();
+                // پاک کردن اطلاعات سشن
+                session()->forget(['deposit_transaction_count', 'total_deposit_amount', 'currency_symbol']);
 
-            // پاک کردن اطلاعات سشن
-            session()->forget(['deposit_transaction_count', 'total_deposit_amount', 'currency_symbol']);
-
-            return redirect()->back()->with('success', "واریزی های جدید با موفقیت به حساب کاربر اعمال شد. تعداد واریز: {$transactionCount}، مجموع واریزی: {$totalAmount} {$currencySymbol}");
-        } else {
-            // Only show "no new deposits" message if there's no existing toast message
-            if (!session()->has('toast')) {
-                Toast::message('واریزی جدیدی یافت نشد.')->info()->notify();
+                return redirect()->back()->with('success', "واریزی های جدید با موفقیت به حساب کاربر اعمال شد. تعداد واریز: {$transactionCount}، مجموع واریزی: {$totalAmount} {$currencySymbol}");
+            } else {
+                // Only show "no new deposits" message if there's no existing toast message
+                if (!session()->has('toast')) {
+                    Toast::message('واریزی جدیدی یافت نشد.')->info()->notify();
+                }
             }
+        } catch (\App\Exceptions\V1\Wallet\InternalWalletHasProblemException $exception) {
+            Toast::message('سرویس کیف پول در دسترس نیست. لطفاً بعداً تلاش کنید.')->danger()->notify();
+        } catch (\Throwable $exception) {
+            report($exception);
+            Toast::message('خطایی در چک کردن واریز رخ داد: ' . $exception->getMessage())->danger()->notify();
         }
 
+        return redirect()->back();
+    }
+
+    /**
+     * Refresh wallet balance for a specific chain
+     */
+    public function refreshByChain(User $user, $walletChainId)
+    {
+        try {
+            $hasNewTransaction = resolve(CheckWalletService::class)
+                ->checkUserDepositByChain($user->id, $walletChainId);
+            
+            if ($hasNewTransaction) {
+                $transactionCount = session('deposit_transaction_count', 0);
+                $totalAmount = session('total_deposit_amount', 0);
+                $currencySymbol = session('currency_symbol', '');
+                $chainName = session('chain_name', '');
+                
+                Toast::message("واریزی جدید در شبکه {$chainName} برای کاربر یافت شد")->success()->notify();
+                
+                // پاک کردن اطلاعات سشن
+                session()->forget(['deposit_transaction_count', 'total_deposit_amount', 'currency_symbol', 'chain_name']);
+                
+                return redirect()->back()->with('success', "واریزی های جدید با موفقیت به حساب کاربر اعمال شد. تعداد واریز: {$transactionCount}، مجموع واریزی: {$totalAmount} {$currencySymbol}");
+            } else {
+                if (!session()->has('toast')) {
+                    Toast::message('واریزی جدیدی یافت نشد.')->info()->notify();
+                }
+            }
+        } catch (\App\Exceptions\V1\Wallet\InternalWalletHasProblemException $exception) {
+            Toast::message('سرویس کیف پول در دسترس نیست. لطفاً بعداً تلاش کنید.')->danger()->notify();
+        } catch (\Throwable $exception) {
+            report($exception);
+            Toast::message('خطایی در چک کردن واریز رخ داد: ' . $exception->getMessage())->danger()->notify();
+        }
+        
         return redirect()->back();
     }
 

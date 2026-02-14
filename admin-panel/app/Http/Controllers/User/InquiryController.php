@@ -4,12 +4,15 @@ namespace App\Http\Controllers\User;
 
 use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
+use App\Models\Currency;
 use App\Models\Deposit;
 use App\Models\OTCOrder;
 use App\Models\StockContract;
 use App\Models\User;
 use App\Models\Withdrawal;
+use App\Repositories\WalletRepository;
 use App\Services\Wallet\WalletService;
+use Illuminate\Http\Request;
 
 class InquiryController extends Controller
 {
@@ -79,7 +82,7 @@ class InquiryController extends Controller
         $stockContracts = StockContract::query()->whereUserId($user->id)->with(['stock', 'transactions'])->orderBy('created_at', 'desc')->take(5)->get();
         $totalStockOrdersCount = StockContract::query()->whereUserId($user->id)->count();
 
-        $wallets = $user->wallets()->with('walletChains')->get();
+        $wallets = $user->wallets()->with(['walletChains', 'currency.chains'])->get();
 
         $totalAssetsValue = $this->walletService->totalAssetsValue($user);
         $totalAvailableAssetsValue = $this->walletService->totalAvailableAssetsValue($user);
@@ -94,6 +97,9 @@ class InquiryController extends Controller
             $wallet->assetValue = $specificAssetValue; // Add the value to the wallet object
             return $wallet;
         })->sortByDesc('assetValue');
+
+        // Get all currencies for wallet creation modal
+        $currencies = Currency::orderBy('symbol')->get();
 
         return view('dashboard.inquiry_user.full-report', [
             'user' => $user,
@@ -110,6 +116,46 @@ class InquiryController extends Controller
             'totalAvailableAssetsValue' => $totalAvailableAssetsValue,
             'totalBlockedAssetsValue' => $totalBlockedAssetsValue,
             'yesterdayProfitLoss' => $yesterdayProfitLoss,
+            'currencies' => $currencies,
         ]);
+    }
+
+    /**
+     * Create a new wallet for a user
+     */
+    public function createWallet(Request $request, WalletRepository $walletRepository)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'currency_symbol' => 'required|exists:currencies,symbol',
+        ]);
+
+        try {
+            $userId = $request->user_id;
+            $currencySymbol = $request->currency_symbol;
+
+            // Check if wallet already exists
+            $existingWallet = \App\Models\Wallet::where('user_id', $userId)
+                ->where('currency_symbol', $currencySymbol)
+                ->first();
+
+            if ($existingWallet) {
+                Toast::message('این کیف پول قبلاً ایجاد شده است.')->warning()->notify();
+                return redirect()->back();
+            }
+
+            // Create wallet using WalletRepository
+            $wallet = $walletRepository->getOrCreateWallet($userId, $currencySymbol);
+
+            if ($wallet) {
+                Toast::message('کیف پول با موفقیت ایجاد شد. اکنون می‌توانید آدرس‌های شبکه را برای آن ایجاد کنید.')->success()->notify();
+            } else {
+                Toast::message('خطا در ایجاد کیف پول.')->danger()->notify();
+            }
+        } catch (\Exception $e) {
+            Toast::message('خطا: ' . $e->getMessage())->danger()->notify();
+        }
+
+        return redirect()->back();
     }
 }

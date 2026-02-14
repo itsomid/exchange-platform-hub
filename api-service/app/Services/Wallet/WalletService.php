@@ -7,7 +7,8 @@ use App\Exceptions\V1\Wallet\InternalWalletHasProblemException;
 use App\Helpers\Math;
 use App\Infrastructure\HDWallet\Exceptions\HDDWalletUnavailable;
 use App\Infrastructure\HDWallet\Exceptions\HDWalletException;
-use App\Infrastructure\HDWallet\Wallet;
+use App\Infrastructure\HDWallet\HDWallet;
+use App\Infrastructure\HDWalletNew\HDWalletFacade;
 use App\Models\Market;
 use App\Repositories\Interfaces\MarketRepositoryInterface;
 use App\Repositories\Interfaces\WalletChainRepositoryInterface;
@@ -57,14 +58,20 @@ class WalletService
             );
 
             $address = $chain->address;
+
             if (is_null($address)) {
                 //Generate Public Key
-                $hdWallet = resolve(Wallet::class);
-                $blockchainName = $chain->wallet->currency->chains->where('chain', $chain->currency_chain)->first()->blockchain_name->value; //TODO
+                $hdWallet = resolve(HDWalletFacade::class);
+
+                $blockchainName = $chain->wallet->currency->chains->where('chain', $chain->currency_chain)->first()->blockchain_name->value;
+        
+
+                $currencySymbol = $chain->wallet->currency->symbol;
                 try {
                     $address = $hdWallet->generateAddress(
                         $requestDTO->getUserId(),
-                        $blockchainName
+                        $blockchainName,
+                        $currencySymbol
                     );
                 } catch (HDWalletException $exception) {
                     report($exception);

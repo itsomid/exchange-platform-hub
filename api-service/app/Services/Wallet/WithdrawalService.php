@@ -9,7 +9,7 @@ use App\Enums\TransactionTypeEnum;
 use App\Enums\WithdrawalStatusEnum;
 use App\Helpers\Math;
 
-use App\Infrastructure\HDWallet\HDWalletWithdrawalService;
+use App\Infrastructure\HDWalletNew\HDWalletFacade;
 use App\Exceptions\V1\Wallet\InsufficientAmountForFeeException;
 use App\Models\Wallet;
 use App\Models\Withdrawal;
@@ -35,7 +35,7 @@ class WithdrawalService
         private readonly WalletRepositoryInterface $walletRepository,
         private readonly CurrencyRepositoryInterface $currencyRepository,
         private readonly WithdrawalRepositoryInterface $withdrawalRepository,
-        private readonly HDWalletWithdrawalService $withdrawalService,
+        private readonly HDWalletFacade $hdWalletService,
         private readonly LockedBalanceRepositoryInterface $lockedBalanceRepository,
         private readonly TransactionRepositoryInterface $transactionRepository,
         private readonly ExchangeRepositoryInterface $exchangeRepository,

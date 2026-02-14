@@ -4,7 +4,7 @@ namespace App\Jobs;
 
 use App\Enums\WithdrawalStatusEnum;
 use App\Infrastructure\HDWallet\DTO\Withdrawal\GetWithdrawalStatusRequestDTO;
-use App\Infrastructure\HDWallet\HDWalletWithdrawalService;
+use App\Infrastructure\HDWalletNew\HDWalletFacade;
 use App\Models\Withdrawal;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -53,7 +53,7 @@ class CheckWithdrawalStatus implements ShouldQueue
         }
 
         try {
-            $hdWalletService = resolve(HDWalletWithdrawalService::class);
+            $hdWalletService = resolve(HDWalletFacade::class);
             
             $responseDTO = $hdWalletService->getStatus(
                 resolve(GetWithdrawalStatusRequestDTO::class)

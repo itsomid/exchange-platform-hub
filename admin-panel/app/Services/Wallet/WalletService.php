@@ -11,11 +11,8 @@ use App\Models\Wallet;
 use App\Models\WalletChain;
 use App\Models\CurrencyChain;
 use App\Services\Wallet\DTO\UpdateBalanceRequestDTO;
-use App\Infrastructure\HDWallet\HDWallet;
-use App\Infrastructure\HDWallet\Exceptions\HDDWalletUnavailable;
+use App\Infrastructure\HDWalletNew\HDWalletFacade;
 use App\Exceptions\V1\Wallet\InternalWalletHasProblemException;
-use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -617,37 +614,17 @@ class WalletService
             if ($walletChain->address) {
                 return $walletChain->address;
             }
-            // Generate new address using HDWallet\
 
-            try {
-
-                $response = Http::post(HDWallet::getBaseUrl() . "/api/v1/wallet/{$blockchainName}", [
-                    'user_id' => $userId,
-                    'blockchain' => $blockchainName,
-                ]);
-            } catch (ConnectionException $exception) {
-                report($exception);
-                throw new HDDWalletUnavailable;
-            }
-
-            // If address already exists in HDWallet, get it
-            if ($response->badRequest()) {
-                $response = Http::get(HDWallet::getBaseUrl() . "/api/v1/wallet/{$blockchainName}/{$userId}");
-            }
-
-            if (!($response->ok() || $response->created())) {
-                report($response->body());
-                throw new InternalWalletHasProblemException('HDWallet server error');
-            }
-
-            $address = $response->json('address');
+            // Generate new address using HDWallet Facade
+            $hdWalletFacade = resolve(HDWalletFacade::class);
+            $address = $hdWalletFacade->generateAddress($userId, $blockchainName, $currency);
 
             // Update wallet chain with the new address
             $walletChain->update(['address' => $address]);
 
             return $address;
-        } catch (HDDWalletUnavailable $exception) {
-            throw new InternalWalletHasProblemException('HDWallet service unavailable');
+        } catch (InternalWalletHasProblemException $exception) {
+            throw $exception;
         } catch (\Throwable $exception) {
             report($exception);
             throw new InternalWalletHasProblemException('Failed to generate address: ' . $exception->getMessage());

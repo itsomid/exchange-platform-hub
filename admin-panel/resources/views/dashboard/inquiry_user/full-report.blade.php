@@ -85,7 +85,18 @@
                 </div>
             </div>
 
-            <div class="card  mt-4">
+            <div class="card mt-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fa-regular fa-wallet me-2"></i>
+                        لیست کیف پول‌ها
+                    </h5>
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                        data-bs-target="#createWalletModal">
+                        <i class="fa-regular fa-plus me-1"></i>
+                        ساخت کیف پول
+                    </button>
+                </div>
 
                 <div class="table-responsive text-nowrap">
                     <table class="table table-striped">
@@ -145,60 +156,78 @@
                                                 <span
                                                     class="position-absolute top-50 start-50 translate-middle font-number fw-bold"
                                                     style="font-size: 0.6rem;">
-                                                    {{ $totalAssetsValue > 0 ? formatNumber(($wallet->assetValue / $totalAssetsValue) * 100,1) : 0 }}%
+                                                    {{ $totalAssetsValue > 0 ? formatNumber(($wallet->assetValue / $totalAssetsValue) * 100, 1) : 0 }}%
                                                 </span>
                                             </div>
                                         </div>
                                     </td>
                                     <th>
-                                        @if ($wallet->walletChains->isNotEmpty())
-                                            @foreach ($wallet->walletChains as $walletChain)
-                                                @if ($walletChain->address)
-                                                    <a href="{{ $walletChain->explorer_address_url }}" target="_blank"
-                                                        class="my-1">
-                                                        <i class="fa-regular fa-clone me-1"></i>
-                                                        <span class="font-number">{{ shorten_hash($walletChain->address) }}
-                                                            ({{ $walletChain->currency_chain }})
-                                                        </span>
-                                                    </a><br>
-                                                @else
-                                                    <div class="d-flex align-items-center">
-                                                        <span class="text-danger me-2"> آدرس شبکه
-                                                            ({{ $walletChain->currency_chain }}) ست نشده است</span>
+                                        @if ($wallet->currency && $wallet->currency->chains->isNotEmpty())
+                                            @foreach ($wallet->currency->chains as $currencyChain)
+                                                @php
+                                                    $chainValue = is_string($currencyChain->chain) 
+                                                        ? $currencyChain->chain 
+                                                        : $currencyChain->chain->value;
+                                                    $walletChain = $wallet->walletChains
+                                                        ->where('currency_chain', $chainValue)
+                                                        ->first();
+                                                @endphp
+
+                                                @if ($walletChain && $walletChain->address)
+                                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                                        <a href="{{ $walletChain->explorer_address_url }}" target="_blank"
+                                                            class="text-decoration-none">
+                                                            <i class="fa-regular fa-clone me-1"></i>
+                                                            <span class="font-number">{{ shorten_hash($walletChain->address) }}</span>
+                                                        </a>
+                                                        <span class="badge bg-label-secondary">{{ $chainValue }}</span>
+                                                        <a href="{{ route('admin.wallet.refresh-by-chain', ['user' => $user->id, 'walletChain' => $walletChain->id]) }}"
+                                                            class="btn btn-sm btn-icon btn-primary"
+                                                            title="چک واریز {{ $chainValue }}">
+                                                            <i class="fa-solid fa-rotate-right"></i>
+                                                        </a>
+                                                    </div>
+                                                @elseif ($walletChain && !$walletChain->address)
+                                                    <div class="d-flex align-items-center mb-1">
+                                                        <span class="text-danger me-2">آدرس شبکه
+                                                            ({{ $chainValue }}) ست نشده است</span>
                                                         <button type="button"
                                                             class="btn btn-success btn-xs generate-address-btn"
                                                             data-user-id="{{ $user->id }}"
                                                             data-currency="{{ $wallet->currency_symbol }}"
-                                                            data-chain="{{ $walletChain->currency_chain }}"
+                                                            data-chain="{{ $chainValue }}"
                                                             data-wallet-chain-id="{{ $walletChain->id }}">
                                                             <i class="fa-solid fa-plus me-1"></i>تولید آدرس
                                                         </button>
+                                                    </div>
+                                                @else
+                                                    <div class="d-flex align-items-center mb-1">
+                                                        <span class="text-warning me-2">شبکه {{ $chainValue }} ایجاد نشده</span>
+                                                        <form method="POST" action="{{ route('admin.wallet.create-chains') }}"
+                                                            class="d-inline">
+                                                            @csrf
+                                                            <input type="hidden" name="user_id" value="{{ $user->id }}">
+                                                            <input type="hidden" name="currency_symbol"
+                                                                value="{{ $wallet->currency_symbol }}">
+                                                            <button type="submit" class="btn btn-primary btn-xs">
+                                                                <i class="fa-solid fa-plus me-1"></i>ایجاد WalletChain
+                                                            </button>
+                                                        </form>
                                                     </div>
                                                 @endif
                                             @endforeach
                                         @else
                                             <div class="d-flex align-items-center">
-                                                <span class="text-danger me-2">N/A Wallet Chain</span>
-                                                <form method="POST" action="{{ route('admin.wallet.create-chains') }}"
-                                                    class="d-inline">
-                                                    @csrf
-                                                    <input type="hidden" name="user_id" value="{{ $user->id }}">
-                                                    <input type="hidden" name="currency_symbol"
-                                                        value="{{ $wallet->currency_symbol }}">
-                                                    <button type="submit" class="btn btn-primary btn-xs">
-                                                        <i class="fa-solid fa-plus me-1"></i>ایجاد WalletChain
-                                                    </button>
-                                                </form>
+                                                <span class="text-muted">شبکه‌ای تعریف نشده</span>
                                             </div>
                                         @endif
                                     </th>
                                     <td>
-                                        <a href="{{ route('admin.wallet.refresh', ['user' => $user->id, 'wallet' => $wallet->id]) }}"
-                                            class="btn btn-primary btn-xs me-2">
-                                            <i class="fa-solid fa-rotate-right me-1"></i>چک واریز</a>
-                                        <a class="btn btn-link p-0 text-secondary me-2"
-                                            href="{{ route('admin.wallet.detail', ['user' => $user->id, 'wallet' => $wallet->id, 'type' => 'deposit']) }}"><i
-                                                class="fa-light fa-eye fa-lg"></i></a>
+                                        <a class="btn btn-link p-0 text-secondary"
+                                            href="{{ route('admin.wallet.detail', ['user' => $user->id, 'wallet' => $wallet->id, 'type' => 'deposit']) }}"
+                                            title="مشاهده جزئیات">
+                                            <i class="fa-light fa-eye fa-lg"></i>
+                                        </a>
                                     </td>
                                 </tr>
                             @endforeach
@@ -729,6 +758,92 @@
 
     </div>
 
+    {{-- Create Wallet Modal --}}
+    <div class="modal fade" id="createWalletModal" tabindex="-1" aria-labelledby="createWalletModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createWalletModalLabel">
+                        <i class="fa-regular fa-wallet me-2"></i>
+                        انتخاب کوین برای ساخت کیف پول
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {{-- جستجو --}}
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-regular fa-search"></i></span>
+                                <input type="text" class="form-control" id="currencySearchInput"
+                                    placeholder="جستجوی کوین...">
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- جدول کوین‌ها --}}
+                    <div class="table-responsive" style="max-height: 400px;">
+                        <table class="table table-hover table-sm" id="currencySelectTable">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th style="width: 60px;">#</th>
+                                    <th>کوین</th>
+                                    <th style="width: 100px;">انتخاب</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($currencies as $index => $currency)
+                                    <tr class="currency-row" data-symbol="{{ strtolower($currency->symbol) }}"
+                                        data-name="{{ strtolower($currency->name ?? '') }}"
+                                        data-persian-name="{{ strtolower($currency->persian_name ?? '') }}"
+                                        data-currency-symbol="{{ $currency->symbol }}"
+                                        data-logo="{{ $currency->coinLogo() }}">
+                                        <td>{{ $index + 1 }}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="position-relative">
+                                                    <img src="{{ $currency->coinLogo() }}" class="rounded-circle"
+                                                        width="36" height="36">
+                                                </div>
+                                                <div>
+                                                    <span class="fw-semibold">{{ $currency->symbol }}</span>
+                                                    <small
+                                                        class="text-muted d-block">{{ $currency->persian_name ?? $currency->name }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <button type="button"
+                                                class="btn btn-sm btn-outline-primary select-currency-for-wallet-btn">
+                                                <i class="fa-regular fa-check me-1"></i>انتخاب
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {{-- راهنما --}}
+                    <div class="alert alert-info mt-3 mb-0">
+                        <i class="fa-regular fa-info-circle me-2"></i>
+                        <small>با انتخاب کوین، کیف پول برای کاربر ساخته می‌شود و می‌توانید بعداً آدرس‌های شبکه‌های مختلف را
+                            برای آن ایجاد کنید.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="d-flex justify-content-between w-100">
+                        <div>
+                            <span class="text-muted" id="currencyCountInfoCreate">{{ $currencies->count() }} کوین</span>
+                        </div>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">بستن</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @endsection
 
 @push('scripts')
@@ -771,6 +886,84 @@
                 });
             });
 
+            // Currency search filter for create wallet modal
+            const currencySearchInput = document.getElementById('currencySearchInput');
+            const currencyCountInfoCreate = document.getElementById('currencyCountInfoCreate');
+
+            if (currencySearchInput) {
+                currencySearchInput.addEventListener('input', function() {
+                    const searchTerm = (this.value || '').toLowerCase();
+                    const rows = document.querySelectorAll('.currency-row');
+                    let visibleCount = 0;
+
+                    rows.forEach(row => {
+                        const symbol = row.dataset.symbol || '';
+                        const name = row.dataset.name || '';
+                        const persianName = row.dataset.persianName || '';
+
+                        const matchesSearch = symbol.includes(searchTerm) ||
+                            name.includes(searchTerm) ||
+                            persianName.includes(searchTerm);
+
+                        if (matchesSearch) {
+                            row.style.display = '';
+                            visibleCount++;
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+
+                    if (currencyCountInfoCreate) {
+                        currencyCountInfoCreate.textContent = `${visibleCount} کوین`;
+                    }
+                });
+            }
+
+            // Handle select currency for wallet creation
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.select-currency-for-wallet-btn')) {
+                    e.preventDefault();
+                    const btn = e.target.closest('.select-currency-for-wallet-btn');
+                    const row = btn.closest('.currency-row');
+
+                    if (row) {
+                        const currencySymbol = row.dataset.currencySymbol;
+                        const userId = {{ $user->id }};
+
+                        // Disable button and show loading state
+                        btn.disabled = true;
+                        const originalText = btn.innerHTML;
+                        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>در حال ایجاد...';
+
+                        // Create form and submit
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = '{{ route('admin.inquiry.create-wallet') }}';
+
+                        const csrfInput = document.createElement('input');
+                        csrfInput.type = 'hidden';
+                        csrfInput.name = '_token';
+                        csrfInput.value = document.querySelector('meta[name="csrf-token"]').content;
+                        form.appendChild(csrfInput);
+
+                        const userIdInput = document.createElement('input');
+                        userIdInput.type = 'hidden';
+                        userIdInput.name = 'user_id';
+                        userIdInput.value = userId;
+                        form.appendChild(userIdInput);
+
+                        const currencyInput = document.createElement('input');
+                        currencyInput.type = 'hidden';
+                        currencyInput.name = 'currency_symbol';
+                        currencyInput.value = currencySymbol;
+                        form.appendChild(currencyInput);
+
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                }
+            });
+
             // Handle generate address button clicks
             document.addEventListener('click', function(e) {
                 if (e.target.classList.contains('generate-address-btn') || e.target.closest(
@@ -810,6 +1003,21 @@
                                 // Reload the page to show the new address
                                 location.reload();
                             } else {
+                                if (window.Toastify) {
+                                    Toastify({
+                                        text: data.message ||
+                                            'خطا در تولید آدرس. لطفا دوباره تلاش کنید.',
+                                        duration: 5000,
+                                        close: true,
+                                        gravity: 'top',
+                                        position: 'right',
+                                        stopOnFocus: true,
+                                        style: {
+                                            background: '#EA5455',
+                                        },
+                                        onClick: function() {}
+                                    }).showToast();
+                                }
 
                                 // Re-enable button
                                 button.disabled = false;
@@ -819,6 +1027,20 @@
                         .catch(error => {
                             console.error('Error:', error);
 
+                            if (window.Toastify) {
+                                Toastify({
+                                    text: 'خطا در تولید آدرس. لطفا دوباره تلاش کنید.',
+                                    duration: 5000,
+                                    close: true,
+                                    gravity: 'top',
+                                    position: 'right',
+                                    stopOnFocus: true,
+                                    style: {
+                                        background: '#EA5455',
+                                    },
+                                    onClick: function() {}
+                                }).showToast();
+                            }
 
                             // Re-enable button
                             button.disabled = false;

@@ -14,7 +14,7 @@ use App\Models\Transaction;
 use App\Services\Wallet\WalletService;
 use Carbon\Carbon;
 use App\Infrastructure\HDWallet\DTO\Withdrawal\GetWithdrawalStatusRequestDTO;
-use App\Infrastructure\HDWallet\HDWalletWithdrawalService;
+use App\Infrastructure\HDWalletNew\HDWalletFacade;
 use App\Infrastructure\HDWallet\Exceptions\NotFoundException;
 use App\Services\Wallet\DTO\Withdrawal\CheckWithdrawalResponseDTO;
 use Illuminate\Database\Eloquent\Collection;
@@ -25,9 +25,9 @@ class WithdrawalService
 {
     protected $walletService;
     protected $bitexroomUserId;
-    private HDWalletWithdrawalService $hdWalletWithdrawalService;
+    private HDWalletFacade $hdWalletWithdrawalService;
 
-    public function __construct(WalletService $walletService, HDWalletWithdrawalService $hdWalletWithdrawalService)
+    public function __construct(WalletService $walletService, HDWalletFacade $hdWalletWithdrawalService)
     {
         $this->walletService = $walletService;
         $this->hdWalletWithdrawalService = $hdWalletWithdrawalService;

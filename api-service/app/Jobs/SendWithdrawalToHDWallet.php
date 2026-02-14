@@ -4,7 +4,7 @@ namespace App\Jobs;
 
 use App\Enums\WithdrawalStatusEnum;
 use App\Infrastructure\HDWallet\DTO\Withdrawal\WithdrawRequestDTO;
-use App\Infrastructure\HDWallet\HDWalletWithdrawalService;
+use App\Infrastructure\HDWalletNew\HDWalletFacade;
 use App\Models\Withdrawal;
 use App\Helpers\Math;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -61,7 +61,7 @@ class SendWithdrawalToHDWallet implements ShouldQueue
             $receivedAmount = Math::sub($withdrawal->amount, $fee);
 
             // Send to HD Wallet
-            $hdWalletService = resolve(HDWalletWithdrawalService::class);
+            $hdWalletService = resolve(HDWalletFacade::class);
             $hdWalletService->withdraw(
                 resolve(WithdrawRequestDTO::class)
                     ->setAmount($receivedAmount)

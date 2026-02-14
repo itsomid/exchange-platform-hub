@@ -238,10 +238,11 @@ class BscScanService
 
         try {
             $response = Http::get($this->baseUrl, $params);
-
+            
             if ($response->successful()) {
                 $data = $response->json();
                 $transactions = [];
+
 
                 if ($data['status'] === '1' && isset($data['result']) && is_array($data['result'])) {
                     foreach ($data['result'] as $tx) {

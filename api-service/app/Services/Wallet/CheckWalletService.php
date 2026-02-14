@@ -11,7 +11,7 @@ use App\Exceptions\V1\Wallet\UserDoesNotHaveWalletAddress;
 use App\Exceptions\V1\Wallet\UserDoesNotHaveWalletChainAddress;
 use App\Helpers\Math;
 use App\Infrastructure\HDWallet\DTO\HDDeposit\GetDepositListsRequestDTO;
-use App\Infrastructure\HDWallet\HDWalletDepositService;
+use App\Infrastructure\HDWalletNew\HDWalletFacade;
 use App\Models\Currency;
 use App\Notifications\DepositSuccessful;
 use App\Repositories\DTO\Deposit\CreateDepositRequestDTO;
@@ -61,7 +61,7 @@ class CheckWalletService
             throw new UserDoesNotHaveWalletChainAddress;
         }
 
-        $hdDeposit = resolve(HDWalletDepositService::class);
+        $hdWalletService = resolve(HDWalletFacade::class);
 
         foreach ($walletChains as $walletChain) {
             if (empty($walletChain->address)) {
@@ -69,20 +69,20 @@ class CheckWalletService
             }
 
             $currencyChain = $walletChain->wallet->currency->chains->where('chain', $walletChain->currency_chain)->first();
-
+      
             // Check if deposit is enabled for this currency chain
             if (!$currencyChain || !$currencyChain->deposit_enabled) {
                 continue;
             }
 
-            $transactions = $hdDeposit->getDepositLists(
+            $transactions = $hdWalletService->getDepositLists(
                 resolve(GetDepositListsRequestDTO::class)
                     ->setCurrencySymbol($wallet->currency_symbol)
                     ->setWalletAddress($walletChain->address)
                     ->setBlockchain($currencyChain->blockchain_name->value)
                     ->setContractAddress($currencyChain->contract_address ?? null)
             );
-
+            
             foreach ($transactions as $transaction) {
                 if ($this->depositRepository->isDepositExists($transaction->getTransactionHash())) {
                     continue;
@@ -147,10 +147,10 @@ class CheckWalletService
     {
         $pendingDeposits = $this->depositRepository->getPendingDeposits();
 
-        $hdDeposit = resolve(HDWalletDepositService::class);
+        $hdWalletService = resolve(HDWalletFacade::class);
         foreach ($pendingDeposits as $deposit) {
 
-            $transactions = $hdDeposit->getDepositLists(
+            $transactions = $hdWalletService->getDepositLists(
                 resolve(GetDepositListsRequestDTO::class)
                     ->setCurrencySymbol($deposit->currency_symbol)
                     ->setWalletAddress($deposit->address)
