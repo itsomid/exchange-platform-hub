@@ -48,6 +48,58 @@
 
                     </div>
 
+                    @can('sweeper.management')
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title text-white">مدیریت کانتینرهای Sweeper</h5>
+                                    <p class="card-text">مدیریت کلیه کانتینرهای پروژه Sweeper شامل Redis، MongoDB، API و Front</p>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <form action="{{ route('admin.docker.sweeper-start') }}" method="POST" class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-light"
+                                                onclick="return confirm('آیا از راه‌اندازی تمام کانتینرهای Sweeper اطمینان دارید؟')">
+                                                <i class="fas fa-play me-1"></i> راه‌اندازی همه کانتینرها
+                                            </button>
+                                        </form>
+                                        <form action="{{ route('admin.docker.sweeper-stop') }}" method="POST" class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-warning"
+                                                onclick="return confirm('آیا از متوقف کردن تمام کانتینرهای Sweeper اطمینان دارید؟')">
+                                                <i class="fas fa-stop me-1"></i> متوقف کردن همه کانتینرها
+                                            </button>
+                                        </form>
+                                        <button type="button" class="btn btn-light" onclick="refreshSweeperStatus()">
+                                            <i class="fas fa-sync-alt me-1"></i> بروزرسانی وضعیت
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title">وضعیت کانتینرهای Sweeper</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="sweeper-status">
+                                        <div class="text-center">
+                                            <div class="spinner-border" role="status">
+                                                <span class="visually-hidden">در حال بارگذاری...</span>
+                                            </div>
+                                            <p class="mt-2">در حال دریافت وضعیت کانتینرهای Sweeper...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endcan
+
                     <div class="row mt-4">
                         <div class="col-12">
                             <div class="card">
@@ -242,9 +294,75 @@
                 });
         }
 
+        function refreshSweeperStatus() {
+            const statusDiv = document.getElementById('sweeper-status');
+            statusDiv.innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">در حال بارگذاری...</span>
+                    </div>
+                    <p class="mt-2">در حال دریافت وضعیت کانتینرهای Sweeper...</p>
+                </div>
+            `;
+
+            fetch('{{ route('admin.docker.sweeper-status') }}')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        let html = '<div class="table-responsive"><table class="table table-bordered table-hover">';
+                        html += '<thead class="table-light"><tr>';
+                        html += '<th class="text-center">نام کانتینر</th>';
+                        html += '<th class="text-center">وضعیت</th>';
+                        html += '<th class="text-center">درحال اجرا</th>';
+                        html += '</tr></thead><tbody>';
+                        
+                        const containers = ['sweeper-redis', 'sweeper-mongodb', 'sweeper-api', 'sweeper-front'];
+                        containers.forEach(container => {
+                            const status = data.containers[container];
+                            const statusBadge = status.running ? 
+                                '<span class="badge bg-success"><i class="fas fa-check-circle"></i> فعال</span>' : 
+                                status.exists ? 
+                                '<span class="badge bg-danger"><i class="fas fa-times-circle"></i> متوقف</span>' :
+                                '<span class="badge bg-secondary"><i class="fas fa-question-circle"></i> یافت نشد</span>';
+                            
+                            const runningBadge = status.running ? 
+                                '<span class="badge bg-success">Yes</span>' : 
+                                '<span class="badge bg-secondary">No</span>';
+                            
+                            html += '<tr>';
+                            html += `<td class="text-center"><strong>${container}</strong></td>`;
+                            html += `<td class="text-center">${statusBadge}</td>`;
+                            html += `<td class="text-center">${runningBadge}</td>`;
+                            html += '</tr>';
+                        });
+                        
+                        html += '</tbody></table></div>';
+                        statusDiv.innerHTML = html;
+                    } else {
+                        statusDiv.innerHTML = `
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                خطا در دریافت وضعیت کانتینرهای Sweeper: ${data.error}
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    statusDiv.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            خطا در ارتباط با سرور: ${error.message}
+                        </div>
+                    `;
+                });
+        }
+
         // بارگذاری اولیه وضعیت کانتینرها
         document.addEventListener('DOMContentLoaded', function() {
             refreshContainerStatus();
+            @can('sweeper.management')
+            refreshSweeperStatus();
+            @endcan
         });
     </script>
 @endsection

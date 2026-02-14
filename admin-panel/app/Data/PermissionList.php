@@ -36,6 +36,8 @@ class PermissionList
 
             ['setting.int.index', 'مشاهده تنظیمات داخلی'],
             ['setting.int.view-logs', 'مشاهده لاگ ها و خطاهای سیستم'],
+            
+            ['sweeper.management', 'مدیریت کانتینرهای Sweeper'],
 
             ['currency','مدیریت کوین ها'],
             ['market','مدیریت بازار'],

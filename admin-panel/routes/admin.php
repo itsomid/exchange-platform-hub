@@ -147,6 +147,7 @@ Route::middleware(['admin.2fa'])->group(function () {
 
     Route::get('/inquiry', [InquiryController::class, 'index'])->name('inquiry.index')->can('user.index');
     Route::post('/inquiry', [InquiryController::class, 'submit'])->name('inquiry.submit')->can('user.index');
+    Route::post('/inquiry/create-wallet', [InquiryController::class, 'createWallet'])->name('inquiry.create-wallet')->can('user.index');
 
     Route::get('/role/{admin}', [AdminRoleController::class, 'edit'])->name('role.user.edit')->can('roles.permissions');
     Route::patch('/role/{admin}', [AdminRoleController::class, 'update'])->name('role.user.update')->can('roles.permissions');
@@ -272,6 +273,11 @@ Route::middleware(['admin.2fa'])->group(function () {
     Route::get('/docker/container-status', [DockerController::class, 'getContainerStatus'])->name('docker.container-status')->can('setting.int.index');
     Route::get('/docker/exchange-listen-logs', [DockerController::class, 'getExchangeListenLogs'])->name('docker.exchange-listen-logs')->can('setting.int.index');
     Route::get('/docker/debug-paths', [DockerController::class, 'debugDockerPaths'])->name('docker.debug-paths')->can('setting.int.index');
+    
+    // Sweeper Containers Management
+    Route::get('/docker/sweeper-status', [DockerController::class, 'getSweeperContainersStatus'])->name('docker.sweeper-status')->can('sweeper.management');
+    Route::post('/docker/sweeper-start', [DockerController::class, 'startSweeperContainers'])->name('docker.sweeper-start')->can('sweeper.management');
+    Route::post('/docker/sweeper-stop', [DockerController::class, 'stopSweeperContainers'])->name('docker.sweeper-stop')->can('sweeper.management');
 
     # *********SPOT BOT SETTINGS*********#
     Route::prefix('bot')->group(function () {
@@ -292,6 +298,7 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::post('{wallet}/create-chain-address/{chain_name}', [WalletController::class, 'createExchangeWalletChain'])->name('wallet.create-chain-address');
         Route::post('update-chain-address/{wallet_chain}', [WalletController::class, 'updateExchangeWalletChain'])->name('wallet.update-chain-address');
         Route::get('{user}/{wallet}/refresh', [WalletController::class, 'refresh'])->name('wallet.refresh');
+        Route::get('{user}/chain/{walletChain}/refresh', [WalletController::class, 'refreshByChain'])->name('wallet.refresh-by-chain');
         Route::post('generate-address', [WalletController::class, 'generateAddressFromHdWallet'])->name('wallet.generate-address')->can('wallet');
         Route::post('create-wallet-chains', [WalletController::class, 'createWalletChains'])->name('wallet.create-chains')->can('wallet');
     });
@@ -313,6 +320,10 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::post('hd-wallet-index/currency-chains', [HdWalletIndexReportController::class, 'getCurrencyChains'])->name('report.hd-wallet-index.currency-chains')->can('wallet');
         Route::post('hd-wallet-index/export-excel', [HdWalletIndexReportController::class, 'exportExcel'])->name('report.hd-wallet-index.export-excel')->can('wallet');
         Route::post('hd-wallet-index/query-blockchain', [HdWalletIndexReportController::class, 'queryBlockchainBalance'])->name('report.hd-wallet-index.query-blockchain')->can('wallet');
+        Route::post('hd-wallet-index/sweep-selected', [HdWalletIndexReportController::class, 'sweepSelectedIndices'])->name('report.hd-wallet-index.sweep-selected')->can('wallet');
+        Route::get('hd-wallet-index/sweeper-wallets', [HdWalletIndexReportController::class, 'getSweeperWallets'])->name('report.hd-wallet-index.sweeper-wallets')->can('wallet');
+        Route::post('hd-wallet-index/start-sync', [HdWalletIndexReportController::class, 'startSync'])->name('report.hd-wallet-index.start-sync')->can('wallet');
+        Route::get('hd-wallet-index/sync-progress/{syncId}', [HdWalletIndexReportController::class, 'getSyncProgress'])->name('report.hd-wallet-index.sync-progress')->can('wallet');
     });
 
     // *********STOCKS*********//

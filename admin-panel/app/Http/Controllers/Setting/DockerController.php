@@ -392,4 +392,130 @@ class DockerController extends Controller
             ]);
         }
     }
+
+    // Sweeper Containers Management
+    private function getSweeperContainerNames()
+    {
+        return ['sweeper-redis', 'sweeper-front', 'sweeper-mongodb', 'sweeper-api'];
+    }
+
+    private function checkSingleContainerStatus($containerName)
+    {
+        try {
+            $dockerCommand = $this->getDockerCommand();
+            $result = Process::run($dockerCommand . ' ps -a --filter "name=' . $containerName . '" --format "{{.State}}"');
+            
+            if ($result->successful()) {
+                $status = trim($result->output());
+                return [
+                    'exists' => !empty($status),
+                    'running' => $status === 'running',
+                    'status' => $status ?: 'not-found'
+                ];
+            }
+            
+            return [
+                'exists' => false,
+                'running' => false,
+                'status' => 'error'
+            ];
+        } catch (\Exception $e) {
+            return [
+                'exists' => false,
+                'running' => false,
+                'status' => 'error',
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    public function getSweeperContainersStatus()
+    {
+        try {
+            $containers = $this->getSweeperContainerNames();
+            $statuses = [];
+            
+            foreach ($containers as $container) {
+                $statuses[$container] = $this->checkSingleContainerStatus($container);
+            }
+            
+            return response()->json([
+                'success' => true,
+                'containers' => $statuses
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function startSweeperContainers()
+    {
+        try {
+            $dockerCommand = $this->getDockerCommand();
+            $containers = $this->getSweeperContainerNames();
+            $results = [];
+            $hasError = false;
+            
+            foreach ($containers as $container) {
+                $result = Process::run($dockerCommand . ' start ' . $container);
+                $results[$container] = [
+                    'success' => $result->successful(),
+                    'output' => $result->output(),
+                    'error' => $result->errorOutput()
+                ];
+                
+                if (!$result->successful()) {
+                    $hasError = true;
+                }
+            }
+            
+            if (!$hasError) {
+                Toast::message('تمام کانتینرهای Sweeper با موفقیت راه‌اندازی شدند')->success()->notify();
+            } else {
+                Toast::message('برخی از کانتینرها با خطا مواجه شدند. جزئیات را بررسی کنید')->warning()->notify();
+            }
+            
+            return redirect()->back();
+        } catch (\Exception $e) {
+            Toast::message('خطا در راه‌اندازی کانتینرها: ' . $e->getMessage())->danger()->notify();
+            return redirect()->back();
+        }
+    }
+
+    public function stopSweeperContainers()
+    {
+        try {
+            $dockerCommand = $this->getDockerCommand();
+            $containers = $this->getSweeperContainerNames();
+            $results = [];
+            $hasError = false;
+            
+            foreach ($containers as $container) {
+                $result = Process::run($dockerCommand . ' stop ' . $container);
+                $results[$container] = [
+                    'success' => $result->successful(),
+                    'output' => $result->output(),
+                    'error' => $result->errorOutput()
+                ];
+                
+                if (!$result->successful()) {
+                    $hasError = true;
+                }
+            }
+            
+            if (!$hasError) {
+                Toast::message('تمام کانتینرهای Sweeper با موفقیت متوقف شدند')->success()->notify();
+            } else {
+                Toast::message('برخی از کانتینرها با خطا مواجه شدند. جزئیات را بررسی کنید')->warning()->notify();
+            }
+            
+            return redirect()->back();
+        } catch (\Exception $e) {
+            Toast::message('خطا در توقف کانتینرها: ' . $e->getMessage())->danger()->notify();
+            return redirect()->back();
+        }
+    }
 }

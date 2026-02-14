@@ -251,6 +251,12 @@ class InternalSettingController extends Controller
 
     public function updateOtcSettings(Request $request)
     {
+        $request->validate([
+            'otc_trading_enabled' => 'nullable|boolean',
+            'otc_buy_fee' => 'required|numeric|min:0',
+            'otc_sell_fee' => 'required|numeric|min:0',
+        ]);
+
         // Update OTC trading enabled status
         Setting::updateOrCreate(
             ['key' => 'otc_trading_enabled'],
@@ -259,6 +265,16 @@ class InternalSettingController extends Controller
                 'name' => 'وضعیت فعال‌سازی معاملات OTC',
                 'type' => 'boolean'
             ]
+        );
+
+        Setting::updateOrCreate(
+            ['key' => 'otc_buy_fee'],
+            ['value' => $request->input('otc_buy_fee')]
+        );
+
+        Setting::updateOrCreate(
+            ['key' => 'otc_sell_fee'],
+            ['value' => $request->input('otc_sell_fee')]
         );
 
         Toast::message('تنظیمات OTC با موفقیت ذخیره شد')->success()->notify();
