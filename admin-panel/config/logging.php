@@ -68,6 +68,12 @@ return [
             'driver' => 'single',
             'path' => storage_path('logs/ref-exchange.log'),
         ],
+        'hd-wallet' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/hd-wallet.log'),
+            'level' => 'info',
+            'replace_placeholders' => true,
+        ],
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),

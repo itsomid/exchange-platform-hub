@@ -6,12 +6,12 @@
             overflow-x: auto;
             position: relative;
         }
-        
+
         .table {
             border-collapse: separate;
             border-spacing: 0;
         }
-        
+
         .sticky-column {
             position: sticky;
             left: 0;
@@ -19,37 +19,37 @@
             z-index: 1;
             box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1) !important;
         }
-        
+
         .table thead .sticky-column {
             z-index: 3 !important;
             background-color: #fff !important;
         }
-        
+
         .table tbody tr .sticky-column {
             background-color: #fff !important;
         }
-        
+
         .table tbody tr:hover .sticky-column {
             background-color: #f8f9fa !important;
         }
-        
+
         /* Support for colored rows */
         .table tbody tr.table-success .sticky-column {
             background-color: #d1e7dd !important;
         }
-        
+
         .table tbody tr.table-danger .sticky-column {
             background-color: #f8d7da !important;
         }
-        
+
         .table tbody tr.table-warning .sticky-column {
             background-color: #fff3cd !important;
         }
-        
+
         .table tbody tr.table-info .sticky-column {
             background-color: #cff4fc !important;
         }
-        
+
         .table tbody tr.table-primary .sticky-column {
             background-color: #cfe2ff !important;
         }
@@ -355,7 +355,7 @@
                         </tr>
                     @else
                         @foreach ($otcOrders as $order)
-                        
+
                             <tr class="table-{{ $order->status->color() }}">
                                 <td>{{ $order->id }}</td>
                                 <td class="text-heading fw-medium">
@@ -430,22 +430,22 @@
                                             <i class="fa-regular fa-eye fa-lg"></i>
                                         </a>
                                     @endif
-                                    
+
                                     {{-- Trigger Reference Exchange Sell Button --}}
                                     @if ($order->ref_exchange_sell_status === \App\Enums\RefExchangeSellStatusEnum::PENDING)
-                                        <button type="button" 
-                                            class="btn btn-icon btn-text-warning trigger-ref-exchange-sell" 
+                                        <button type="button"
+                                            class="btn btn-icon btn-text-warning trigger-ref-exchange-sell"
                                             data-order-id="{{ $order->id }}"
                                             data-bs-toggle="tooltip"
                                             title="تکمیل فروش در صرافی مرجع">
                                             <i class="fa-solid fa-arrow-right-arrow-left fa-lg"></i>
                                         </button>
                                     @endif
-                                    
+
                                     {{-- Reset Failed Status Button --}}
                                     @if ($order->ref_exchange_sell_status === \App\Enums\RefExchangeSellStatusEnum::FAILED)
-                                        <button type="button" 
-                                            class="btn btn-icon btn-text-danger reset-ref-exchange-sell" 
+                                        <button type="button"
+                                            class="btn btn-icon btn-text-danger reset-ref-exchange-sell"
                                             data-order-id="{{ $order->id }}"
                                             data-bs-toggle="tooltip"
                                             title="ریست و تلاش مجدد">
@@ -459,20 +459,20 @@
                 </tbody>
             </table>
         </div>
-        
+
         {{-- Description Modals --}}
         @foreach ($otcOrders as $order)
             @include('dashboard.otc_order.otc-description-modal', [
                 'order' => $order,
             ])
         @endforeach
-        
+
         {{-- Transaction Modals --}}
         @foreach ($otcOrders as $order)
             <x-transaction-modal modal-id="otc-{{ $order->id }}"
                 title="تراکنش های معامله #{{ $order->id }}" :user="$order->user" :transactions="$order->transactions"
                 route-name="admin.transaction.index" route-param="otc_order_id"
-                :route-param-value="$order->id" 
+                :route-param-value="$order->id"
                 :ref-exchange-description="$order->ref_exchange_description" />
         @endforeach
         <div class="row mt-4">
@@ -490,12 +490,12 @@
     <script>
         $(document).ready(function() {
             $('[data-bs-toggle="tooltip"]').tooltip();
-            
+
             // Trigger Reference Exchange Sell
             $('.trigger-ref-exchange-sell').on('click', function() {
                 const button = $(this);
                 const orderId = button.data('order-id');
-                
+
                 Swal.fire({
                     title: 'تکمیل فروش در صرافی مرجع',
                     text: 'آیا از تکمیل فروش در صرافی مرجع اطمینان دارید؟',
@@ -514,7 +514,7 @@
                     if (result.isConfirmed) {
                         button.prop('disabled', true);
                         button.find('i').removeClass('fa-arrow-right-arrow-left').addClass('fa-spinner fa-spin');
-                        
+
                         $.ajax({
                             url: '{{ route("admin.otc_orders.index") }}/' + orderId + '/trigger-ref-exchange-sell',
                             method: 'POST',
@@ -574,12 +574,12 @@
                     }
                 });
             });
-            
+
             // Reset Failed Reference Exchange Sell Status
             $('.reset-ref-exchange-sell').on('click', function() {
                 const button = $(this);
                 const orderId = button.data('order-id');
-                
+
                 Swal.fire({
                     title: 'ریست وضعیت',
                     text: 'آیا از ریست کردن وضعیت اطمینان دارید؟',
@@ -598,7 +598,7 @@
                     if (result.isConfirmed) {
                         button.prop('disabled', true);
                         button.find('i').removeClass('fa-rotate-right').addClass('fa-spinner fa-spin');
-                        
+
                         $.ajax({
                             url: '{{ route("admin.otc_orders.index") }}/' + orderId + '/reset-ref-exchange-sell',
                             method: 'POST',
@@ -661,5 +661,5 @@
 @endsection
 @section('vendor-style')
     {{-- SweetAlert2 --}}
-    @vite(['resources/assets/vendor/libs/sweetalert2/sweetalert2.scss'] )
+{{--    @vite(['resources/assets/vendor/libs/sweetalert2/sweetalert2.scss'] )--}}
 @endsection

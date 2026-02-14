@@ -11,8 +11,8 @@
                                 class="text-{{ $otcTradingEnabled && $otcTradingEnabled->value ? 'success' : 'danger' }}">({{ $otcTradingEnabled && $otcTradingEnabled->value ? 'فعال' : 'غیرفعال' }})</span>
                         </h5>
                     </div>
-               
-           
+
+
 
                     <h6 class="mb-3">تنظیمات فعال‌سازی</h6>
                     <form action="{{ route('admin.setting.int.update-otc-settings') }}" method="post">
@@ -20,8 +20,7 @@
                         <div class="row">
                             <div class="col-xl-12">
                                 <label class="switch switch-lg">
-                                    <input type="checkbox" class="switch-input" name="otc_trading_enabled"
-                                        value="1"
+                                    <input type="checkbox" class="switch-input" name="otc_trading_enabled" value="1"
                                         {{ $otcTradingEnabled && $otcTradingEnabled->value ? 'checked' : '' }} />
                                     <span class="switch-toggle-slider"></span>
                                     <span class="switch-label">فعال‌سازی معاملات OTC</span>
@@ -30,27 +29,17 @@
                                     صورت غیرفعال بودن، هیچ خرید یا فروشی در بازار OTC امکان‌پذیر نخواهد بود</small>
                             </div>
                         </div>
-                        <div class="d-flex justify-content-start mt-3">
-                            <button class="btn btn-primary">
-                                <i class="fa fa-save mx-2"></i>
-                                ذخیره تنظیمات
-                            </button>
-                        </div>
-                    </form>
+                        <hr class="my-4">
 
-                             <hr class="my-4">
 
-                                  
-                    <h6 class="mt-4 mb-3">کارمزد خرید و فروش</h6>
-                    <form action="{{ route('admin.setting.int.update-otc-commission') }}" method="post">
-                        @csrf
+                        <h6 class="mt-4 mb-3">کارمزد خرید و فروش</h6>
                         <div class="row">
                             <div class="col-xl-6">
                                 <div class="form-group">
                                     <label class="form-label" for="otc_buy_fee">کارمزد فروش به مشتری (درصد)</label>
                                     <input name="otc_buy_fee" id="otc_buy_fee" class="form-control"
                                         placeholder="کارمزد فروش به مشتری (درصد)" value="{{ $otcBuyFee->value }}" required>
-                                    @error('otcBuyFee')
+                                    @error('otc_buy_fee')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
                                 </div>
@@ -60,7 +49,7 @@
                                     <label class="form-label" for="otc_sell_fee">کارمزد خرید از مشتری (درصد)</label>
                                     <input name="otc_sell_fee" id="otc_sell_fee" class="form-control"
                                         placeholder="کارمزد خرید از مشتری (درصد)" value="{{ $otcSellFee->value }}" required>
-                                    @error('otcSellFee')
+                                    @error('otc_sell_fee')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
                                 </div>
@@ -69,7 +58,7 @@
                         <div class="d-flex justify-content-start mt-3">
                             <button class="btn btn-primary">
                                 <i class="fa fa-save mx-2"></i>
-                                ذخیره کارمزد
+                                ذخیره تنظیمات
                             </button>
                         </div>
                     </form>
@@ -89,8 +78,7 @@
                         <div class="row mt-5">
                             <div class="col-xl-6 mt-3">
                                 <label class="switch switch-lg">
-                                    <input type="checkbox" class="switch-input" name="spot_trading_enabled"
-                                        value="1"
+                                    <input type="checkbox" class="switch-input" name="spot_trading_enabled" value="1"
                                         {{ $spotTradingEnabled && $spotTradingEnabled->value ? 'checked' : '' }} />
                                     <span class="switch-toggle-slider"></span>
                                     <span class="switch-label">فعال‌سازی معاملات اسپات</span>
@@ -101,8 +89,7 @@
                             </div>
                             <div class="col-xl-6 mt-3">
                                 <label class="switch switch-lg">
-                                    <input type="checkbox" class="switch-input" name="spot_ticker_enabled"
-                                        value="1"
+                                    <input type="checkbox" class="switch-input" name="spot_ticker_enabled" value="1"
                                         {{ $spotTickerEnabled && $spotTickerEnabled->value ? 'checked' : '' }} />
                                     <span class="switch-toggle-slider"></span>
                                     <span class="switch-label">فعال‌سازی Spot Ticker</span>
@@ -112,8 +99,7 @@
                             </div>
                             <div class="col-xl-6 mt-3">
                                 <label class="switch switch-lg">
-                                    <input type="checkbox" class="switch-input" name="order_matching_enabled"
-                                        value="1"
+                                    <input type="checkbox" class="switch-input" name="order_matching_enabled" value="1"
                                         {{ $orderMatchingEnabled && $orderMatchingEnabled->value ? 'checked' : '' }} />
                                     <span class="switch-toggle-slider"></span>
                                     <span class="switch-label">فعال‌سازی Order Matching</span>
@@ -176,7 +162,7 @@
             </div>
         </div>
 
-      
+
 
         <div class="col-md-6">
             <div class="card">
@@ -193,10 +179,12 @@
                         <div class="row mt-5">
                             <div class="col-12 col-xl-6">
                                 <div class="form-group">
-                                    <label class="form-label" for="referral_profit_percentage">حداکثر درصد اهدایی به کاربران
+                                    <label class="form-label" for="referral_profit_percentage">حداکثر درصد اهدایی به
+                                        کاربران
                                         برای معرفی دوستان</label>
-                                    <input type="number" name="referral_profit_percentage" id="referral_profit_percentage"
-                                        class="form-control" placeholder="درصد اهدایی به کاربران برای معرفی دوستان"
+                                    <input type="number" name="referral_profit_percentage"
+                                        id="referral_profit_percentage" class="form-control"
+                                        placeholder="درصد اهدایی به کاربران برای معرفی دوستان"
                                         value="{{ $referralProfitPercentage->value }}" required>
                                     @error('otcBuyFee')
                                         <small class="text-danger">{{ $message }}</small>
@@ -205,10 +193,12 @@
                             </div>
                             <div class="col-12 col-xl-6">
                                 <div class="form-group">
-                                    <label class="form-label" for="referral_usage_limit_count">حداکثر تعداد استفاده کاربر از
+                                    <label class="form-label" for="referral_usage_limit_count">حداکثر تعداد استفاده کاربر
+                                        از
                                         کد معرف</label>
-                                    <input type="number" name="referral_usage_limit_count" id="referral_usage_limit_count"
-                                        class="form-control" placeholder="حداکثر تعداد استفاده کاربر از کد معرف"
+                                    <input type="number" name="referral_usage_limit_count"
+                                        id="referral_usage_limit_count" class="form-control"
+                                        placeholder="حداکثر تعداد استفاده کاربر از کد معرف"
                                         value="{{ $referralUsageLimitCount->value }}" required>
                                     @error('otcBuyFee')
                                         <small class="text-danger">{{ $message }}</small>
@@ -239,7 +229,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-6">
 
             <div class="card">
@@ -263,7 +253,7 @@
             </div>
         </div>
 
-    
+
 
         <div class="col-md-6">
             <div class="card">

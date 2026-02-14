@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Report;
 use App\Enums\CurrencyChainEnum;
 use App\Enums\DepositStatusEnum;
 use App\Http\Controllers\Controller;
+use App\Jobs\SyncHdWalletOutgoingTransactionsJob;
 use App\Models\Currency;
 use App\Models\CurrencyChain;
 use App\Models\Deposit;
@@ -16,7 +17,9 @@ use App\Services\NodeProviders\BscScanService;
 use App\Services\NodeProviders\EtherScanService;
 use App\Services\NodeProviders\TronScanService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class HdWalletIndexReportController extends Controller
 {
@@ -27,7 +30,7 @@ class HdWalletIndexReportController extends Controller
     {
         // Get all currencies that have chains (for the currency selection modal)
         $currencies = Currency::whereHas('chains')->orderBy('symbol')->get();
-        
+
         // Get all currency chains with their currency info for the modal list
         $currencyChainsList = CurrencyChain::with('currency')
             ->whereNotNull('chain')
@@ -59,6 +62,7 @@ class HdWalletIndexReportController extends Controller
 
         $currencySymbol = $request->currency_symbol;
         $currencyChainId = $request->currency_chain_id;
+
         $minBalance = $request->min_balance ?? 0;
         $perPage = $request->per_page ?? 20;
         $includeWithdrawals = $request->boolean('include_withdrawals', true);
@@ -69,7 +73,7 @@ class HdWalletIndexReportController extends Controller
             $chainBindings = $currencyChainId ? [$currencyChainId] : [];
 
             $sql = "
-                SELECT 
+                SELECT
                     d.user_id as hd_wallet_index,
                     d.currency_symbol,
                     d.currency_chain_id,
@@ -81,7 +85,7 @@ class HdWalletIndexReportController extends Controller
                     d.last_deposit_at,
                     d.first_deposit_at
                 FROM (
-                    SELECT 
+                    SELECT
                         user_id,
                         currency_symbol,
                         currency_chain_id,
@@ -89,26 +93,26 @@ class HdWalletIndexReportController extends Controller
                         COUNT(*) as deposit_count,
                         MAX(created_at) as last_deposit_at,
                         MIN(created_at) as first_deposit_at
-                    FROM deposits 
-                    WHERE status = ? 
-                        AND transaction_hash IS NOT NULL 
+                    FROM deposits
+                    WHERE status = ?
+                        AND transaction_hash IS NOT NULL
                         AND currency_symbol = ?
                         {$chainCondition}
                     GROUP BY user_id, currency_symbol, currency_chain_id
                 ) as d
                 LEFT JOIN (
-                    SELECT 
+                    SELECT
                         user_id,
                         currency_symbol,
                         currency_chain_id,
                         SUM(amount) as total_outgoing,
                         COUNT(*) as outgoing_count
-                    FROM hd_wallet_outgoing_transactions 
+                    FROM hd_wallet_outgoing_transactions
                     WHERE currency_symbol = ?
                         {$chainCondition}
                     GROUP BY user_id, currency_symbol, currency_chain_id
-                ) as o ON d.user_id = o.user_id 
-                    AND d.currency_symbol = o.currency_symbol 
+                ) as o ON d.user_id = o.user_id
+                    AND d.currency_symbol = o.currency_symbol
                     AND d.currency_chain_id = o.currency_chain_id
                 HAVING total_balance > ?
                 ORDER BY total_balance DESC
@@ -132,7 +136,7 @@ class HdWalletIndexReportController extends Controller
             $paginatedBindings = array_merge($bindings, [$perPage, $offset]);
 
             $results = DB::select($paginatedSql, $paginatedBindings);
-            
+
             $balances = new \Illuminate\Pagination\LengthAwarePaginator(
                 collect($results),
                 $totalCount,
@@ -267,7 +271,7 @@ class HdWalletIndexReportController extends Controller
         ]);
 
         $currency = Currency::where('symbol', $request->currency_symbol)->first();
-        
+
         $chains = CurrencyChain::where('currency_id', $currency->id)
             ->whereNotNull('chain')
             ->get(['id', 'chain_name', 'chain']);
@@ -321,6 +325,197 @@ class HdWalletIndexReportController extends Controller
             new \App\Exports\HdWalletIndexBalanceExport($balances, $currencySymbol, $chainName),
             "hd-wallet-index-balance-{$currencySymbol}-{$chainName}-" . now()->format('Y-m-d') . ".xlsx"
         );
+    }
+
+    /**
+     * Map CurrencyChainEnum to HD Wallet Sweeper network name.
+     */
+    private function mapChainToSweeperNetwork(string $chainValue): ?string
+    {
+        return match ($chainValue) {
+            CurrencyChainEnum::BTC->value => 'bitcoin',
+            CurrencyChainEnum::ERC20->value => 'ethereum',
+            CurrencyChainEnum::TRC20->value => 'tron',
+            CurrencyChainEnum::BSC->value => 'bnb',
+            CurrencyChainEnum::DOGE->value => 'dogecoin',
+            default => null,
+        };
+    }
+
+    /**
+     * Determine if the currency is native for its chain.
+     */
+    private function isNativeCoinForChain(string $chainValue, string $currencySymbol): bool
+    {
+        return match ($chainValue) {
+            CurrencyChainEnum::TRC20->value => $currencySymbol === 'TRX',
+            CurrencyChainEnum::ERC20->value => $currencySymbol === 'ETH',
+            CurrencyChainEnum::BSC->value => $currencySymbol === 'BNB',
+            CurrencyChainEnum::BTC->value => $currencySymbol === 'BTC',
+            CurrencyChainEnum::DOGE->value => $currencySymbol === 'DOGE',
+            default => false,
+        };
+    }
+
+    /**
+     * Sweep selected indices via HD Wallet Sweeper API.
+     * Sends selected HD wallet indices to the sweeper to create admin_approval transactions.
+     */
+    public function sweepSelectedIndices(Request $request)
+    {
+        $request->validate([
+            'indices' => 'required|array|min:1|max:100',
+            'indices.*' => 'required|integer|min:0',
+            'currency_symbol' => 'required|string|exists:currencies,symbol',
+            'currency_chain_id' => 'required|integer|exists:currency_chains,id',
+            'wallet_id' => 'required|string|max:50',
+            'force' => 'nullable|boolean',
+        ]);
+
+        $indices = $request->indices;
+        $currencySymbol = $request->currency_symbol;
+        $currencyChainId = $request->currency_chain_id;
+        $walletId = $request->wallet_id;
+        $force = $request->boolean('force', false);
+
+        // Get chain info
+        $currencyChain = CurrencyChain::with('currency')->find($currencyChainId);
+        if (!$currencyChain) {
+            return response()->json([
+                'success' => false,
+                'error' => 'زنجیره پیدا نشد',
+            ], 404);
+        }
+
+        // Map chain to sweeper network name
+        $chainValue = $currencyChain->chain instanceof CurrencyChainEnum
+            ? $currencyChain->chain->value
+            : (string) $currencyChain->chain;
+
+        $sweeperNetwork = $this->mapChainToSweeperNetwork($chainValue);
+        if (!$sweeperNetwork) {
+            return response()->json([
+                'success' => false,
+                'error' => "شبکه {$chainValue} در سیستم برداشت پشتیبانی نمی‌شود",
+            ], 400);
+        }
+
+        // Determine coinType (native or token)
+        $isNative = $this->isNativeCoinForChain($chainValue, $currencySymbol);
+        $coinType = $isNative ? 'native' : 'token';
+
+        // Build request body for sweeper API
+        $requestBody = [
+            'network' => $sweeperNetwork,
+            'walletId' => $walletId,
+            'indices' => array_map('intval', $indices),
+            'coinType' => $coinType,
+            'force' => $force,
+        ];
+
+        // Add symbol for token sweeps
+        if ($coinType === 'token') {
+            $requestBody['symbol'] = $currencySymbol;
+        }
+
+        // Call HD Wallet Sweeper API
+        $baseUrl = config('hd-wallet.new_base_url');
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(120)
+                ->post("{$baseUrl}/api/admin-panel/sweep-indices", $requestBody);
+
+            if (!$response->successful()) {
+                \Illuminate\Support\Facades\Log::channel('hd-wallet')->error('Sweep indices failed:', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                    'request' => $requestBody,
+                ]);
+
+                // Get error message from sweeper response
+                $errorMessage = $response->json('error') ?? 'خطا در ارسال درخواست برداشت';
+
+                return response()->json([
+                    'success' => false,
+                    'error' => $errorMessage,
+                    'walletInfo' => $response->json('walletInfo'),
+                ], $response->status());
+            }
+
+            $responseData = $response->json();
+
+            \Illuminate\Support\Facades\Log::channel('hd-wallet')->info('Sweep indices result:', [
+                'request' => $requestBody,
+                'summary' => $responseData['data']['summary'] ?? null,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'data' => $responseData['data'] ?? [],
+                'message' => sprintf(
+                    '%d ایندکس با موفقیت به پروسه برداشت ارسال شد (موفق: %d، ناموفق: %d)',
+                    count($indices),
+                    $responseData['data']['summary']['successful'] ?? 0,
+                    $responseData['data']['summary']['failed'] ?? 0,
+                ),
+            ]);
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            \Log::channel('hd-wallet')->error('Sweep indices connection failed:', [
+                'exception' => $e->getMessage(),
+                'request' => $requestBody,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'سرویس HD Wallet Sweeper در دسترس نیست',
+            ], 503);
+        } catch (\Exception $e) {
+            \Log::channel('hd-wallet')->error('Sweep indices exception:', [
+                'exception' => $e->getMessage(),
+                'request' => $requestBody,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'خطای داخلی: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get list of wallets from HD Wallet Sweeper service.
+     * Proxies the request to the sweeper's admin-panel wallets endpoint.
+     */
+    public function getSweeperWallets(Request $request)
+    {
+        $baseUrl = config('sweeper.base_url');
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(15)
+                ->get("{$baseUrl}/api/admin-panel/wallets", [
+                    'status' => $request->query('status', 'active'),
+                ]);
+
+            if (!$response->successful()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'خطا در دریافت لیست والت‌ها',
+                    'details' => $response->body(),
+                ], $response->status());
+            }
+
+            return response()->json($response->json());
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'سرویس HD Wallet Sweeper در دسترس نیست',
+            ], 503);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'خطای داخلی: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -437,5 +632,65 @@ class HdWalletIndexReportController extends Controller
                     'error' => "استعلام موجودی برای شبکه {$chainValue} پشتیبانی نمی‌شود",
                 ];
         }
+    }
+
+    /**
+     * Start sync process for outgoing transactions.
+     */
+    public function startSync(Request $request)
+    {
+        $request->validate([
+            'currency_symbol' => 'required|string|exists:currencies,symbol',
+            'currency_chain_id' => 'required|integer|exists:currency_chains,id',
+            'delay' => 'nullable|integer|min:100|max:5000',
+        ]);
+
+        $currencySymbol = $request->currency_symbol;
+        $currencyChainId = $request->currency_chain_id;
+        $delay = $request->delay ?? 500;
+
+        // Generate unique sync ID
+        $syncId = 'sync_' . Str::uuid();
+
+        // Dispatch job
+        SyncHdWalletOutgoingTransactionsJob::dispatch($syncId, $currencySymbol, $currencyChainId, $delay);
+
+        // Store initial progress
+        Cache::put("sync_progress:{$syncId}", [
+            'sync_id' => $syncId,
+            'currency_symbol' => $currencySymbol,
+            'currency_chain_id' => $currencyChainId,
+            'percentage' => 0,
+            'message' => 'در حال شروع...',
+            'status' => 'starting',
+            'updated_at' => now()->toIso8601String(),
+            'data' => [],
+        ], 3600);
+
+        return response()->json([
+            'success' => true,
+            'sync_id' => $syncId,
+            'message' => 'پروسه همگام‌سازی شروع شد',
+        ]);
+    }
+
+    /**
+     * Get sync progress.
+     */
+    public function getSyncProgress(Request $request, string $syncId)
+    {
+        $progress = Cache::get("sync_progress:{$syncId}");
+
+        if (!$progress) {
+            return response()->json([
+                'success' => false,
+                'error' => 'اطلاعات همگام‌سازی یافت نشد',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'progress' => $progress,
+        ]);
     }
 }

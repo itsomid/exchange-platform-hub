@@ -25,7 +25,7 @@ class SyncHdWalletOutgoingTransactions extends Command
      *
      * @var string
      */
-    protected $signature = 'hd-wallet:sync-outgoing-transactions 
+    protected $signature = 'hd-wallet:sync-outgoing-transactions
                             {--coin= : The currency symbol (e.g., USDT, TRX, ETH)}
                             {--chain= : The chain type (e.g., TRC20, ERC20, BSC, BTC)}
                             {--address= : Sync only for a specific address}
@@ -77,12 +77,6 @@ class SyncHdWalletOutgoingTransactions extends Command
             return 1;
         }
 
-        $chain = CurrencyChain::where('chain', $chainType)->first();
-        if (!$chain) {
-            $this->error("Chain '{$chainType}' not found.");
-            return 1;
-        }
-
         // Find currency if specified
         $currency = null;
         if ($coinSymbol) {
@@ -93,8 +87,22 @@ class SyncHdWalletOutgoingTransactions extends Command
             }
         }
 
+        $chainQuery = CurrencyChain::query()->where('chain', $chainType);
+        if ($currency) {
+            $chainQuery->where('currency_id', $currency->id);
+        } else {
+            $chainQuery->where('is_base_coin', true);
+        }
+
+        $chain = $chainQuery->first();
+        if (!$chain) {
+            $suffix = $currency ? " for currency '{$currency->symbol}'" : '';
+            $this->error("Chain '{$chainType}'{$suffix} not found.");
+            return 1;
+        }
+
         $this->info("Starting outgoing transactions sync...");
-        $this->info("Chain: {$chain->name}");
+        $this->info("Chain: {$chain->chain->value}");
         if ($currency) {
             $this->info("Currency: {$currency->symbol}");
         }
@@ -103,7 +111,7 @@ class SyncHdWalletOutgoingTransactions extends Command
 
         // Get addresses to process
         $addresses = $this->getAddressesToProcess($chain, $currency, $specificAddress, $limit);
-        
+
         if ($addresses->isEmpty()) {
             $this->warn('No addresses found to process.');
             return 0;
@@ -136,7 +144,7 @@ class SyncHdWalletOutgoingTransactions extends Command
             }
 
             $bar->advance();
-            
+
             // Delay between API calls
             usleep($delay * 1000);
         }
@@ -146,7 +154,7 @@ class SyncHdWalletOutgoingTransactions extends Command
 
         $this->info("Sync completed!");
         $this->info("New transactions saved: {$totalNewTransactions}");
-        
+
         if (!empty($errors)) {
             $this->newLine();
             $this->warn("Errors occurred for " . count($errors) . " addresses:");
@@ -203,7 +211,7 @@ class SyncHdWalletOutgoingTransactions extends Command
     {
         // $chain->chain is already a CurrencyChainEnum (cast in model)
         $chainEnum = $chain->chain;
-        
+
         if (!$chainEnum instanceof CurrencyChainEnum) {
             return 0;
         }
@@ -259,8 +267,8 @@ class SyncHdWalletOutgoingTransactions extends Command
                     'from_address' => $tx['from_address'],
                     'to_address' => $tx['to_address'],
                     'block_number' => $tx['block_number'],
-                    'transaction_at' => $tx['transaction_at'] 
-                        ? \Carbon\Carbon::createFromTimestamp($tx['transaction_at']) 
+                    'transaction_at' => $tx['transaction_at']
+                        ? \Carbon\Carbon::createFromTimestamp($tx['transaction_at'])
                         : now(),
                     'source' => 'sync',
                 ]);
