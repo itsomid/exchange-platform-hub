@@ -62,11 +62,11 @@ class OTCBuyRequest extends FormRequest
 
                 if ($market) {
                     if ($quantity < $market->min_otc_amount) {
-                        throw new MinOTCAmountException("The quantity must be at least {$market->min_otc_amount}.");
+                        throw new MinOTCAmountException(null, null, $market->min_otc_amount);
                     }
 
                     if ($quantity > $market->max_otc_amount) {
-                        throw new MaxOTCAmountException("The quantity may not be greater than {$market->max_otc_amount}.");
+                        throw new MaxOTCAmountException(null, null, $market->max_otc_amount);
                     }
                 }
             }

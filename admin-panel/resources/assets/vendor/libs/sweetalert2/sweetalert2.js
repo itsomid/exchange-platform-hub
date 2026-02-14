@@ -2,6 +2,6 @@ import Swal from 'sweetalert2';
 
 try {
     window.Swal = Swal;
-} catch (e) {}
+} catch (e) { }
 
 export { Swal };
