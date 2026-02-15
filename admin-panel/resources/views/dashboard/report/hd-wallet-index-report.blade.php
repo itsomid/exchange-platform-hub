@@ -702,13 +702,13 @@ $chainIcon = $isNativeCoin
             async function loadSweeperWallets() {
                 try {
                     const response = await fetch(
-                    '{{ route('admin.report.hd-wallet-index.sweeper-wallets') }}', {
-                        method: 'GET',
-                        headers: {
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        }
-                    });
+                        '{{ route('admin.hd-wallet.sweeper-wallets') }}', {
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            }
+                        });
 
                     const result = await response.json();
 
@@ -871,7 +871,7 @@ $chainIcon = $isNativeCoin
 
                 try {
                     const response = await fetch(
-                        '{{ route('admin.report.hd-wallet-index.sweep-selected') }}', {
+                        '{{ route('admin.hd-wallet.sweep-selected') }}', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -1034,7 +1034,7 @@ $chainIcon = $isNativeCoin
 
                     const form = document.createElement('form');
                     form.method = 'POST';
-                    form.action = '{{ route('admin.report.hd-wallet-index.export-excel') }}';
+                    form.action = '{{ route('admin.hd-wallet.export-excel') }}';
 
                     const csrfInput = document.createElement('input');
                     csrfInput.type = 'hidden';
@@ -1083,7 +1083,7 @@ $chainIcon = $isNativeCoin
 
                 try {
                     console.log(currentCurrency, currentChainId);
-                    const response = await fetch('{{ route('admin.report.hd-wallet-index.balance-data') }}', {
+                    const response = await fetch('{{ route('admin.hd-wallet.balance-data') }}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1411,7 +1411,7 @@ $chainIcon = $isNativeCoin
 
                     try {
                         const response = await fetch(
-                            '{{ route('admin.report.hd-wallet-index.query-blockchain') }}', {
+                            '{{ route('admin.hd-wallet.query-blockchain') }}', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -1500,7 +1500,7 @@ $chainIcon = $isNativeCoin
             // Start Sync Process
             async function startSync() {
                 try {
-                    const response = await fetch('{{ route('admin.report.hd-wallet-index.start-sync') }}', {
+                    const response = await fetch('{{ route('admin.hd-wallet.start-sync') }}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1579,7 +1579,7 @@ $chainIcon = $isNativeCoin
 
                 try {
                     const response = await fetch(
-                        `{{ url('admin/report/hd-wallet-index/sync-progress') }}/${currentSyncId}`, {
+                        `{{ url('admin/hd-wallet/sync-progress') }}/${currentSyncId}`, {
                             headers: {
                                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                             }

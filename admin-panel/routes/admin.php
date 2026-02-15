@@ -212,7 +212,7 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::post('/assets-gathering-to-hd-wallet/', [RefExchangeAssetsWithdrawalController::class, 'store'])->name('ref-exchange.assets-gathering-to-hd-wallet.store');
         Route::get('/assets-gathering-to-hd-wallet/pending-withdrawal/', [RefExchangeAssetsWithdrawalController::class, 'getPendingRefExchangeWithdrawal'])->name('ref-exchange.assets-gathering-to-hd-wallet.pending-withdrawal');
         Route::post('/assets-gathering-to-hd-wallet/bulk-aggregate/', [RefExchangeAssetsWithdrawalController::class, 'bulkAggregate'])->name('ref-exchange.assets-gathering-to-hd-wallet.bulk-aggregate');
-        
+
         // Currency withdrawal settings routes
         Route::patch('/currency/{currencyId}/withdrawal-settings', [RefExchangeAssetsWithdrawalController::class, 'updateCurrencyWithdrawalSettings'])->name('ref-exchange.currency.withdrawal-settings.update');
         Route::post('/currency/withdrawal-settings/bulk', [RefExchangeAssetsWithdrawalController::class, 'bulkUpdateCurrencyWithdrawalSettings'])->name('ref-exchange.currency.withdrawal-settings.bulk-update');
@@ -273,7 +273,7 @@ Route::middleware(['admin.2fa'])->group(function () {
     Route::get('/docker/container-status', [DockerController::class, 'getContainerStatus'])->name('docker.container-status')->can('setting.int.index');
     Route::get('/docker/exchange-listen-logs', [DockerController::class, 'getExchangeListenLogs'])->name('docker.exchange-listen-logs')->can('setting.int.index');
     Route::get('/docker/debug-paths', [DockerController::class, 'debugDockerPaths'])->name('docker.debug-paths')->can('setting.int.index');
-    
+
     // Sweeper Containers Management
     Route::get('/docker/sweeper-status', [DockerController::class, 'getSweeperContainersStatus'])->name('docker.sweeper-status')->can('sweeper.management');
     Route::post('/docker/sweeper-start', [DockerController::class, 'startSweeperContainers'])->name('docker.sweeper-start')->can('sweeper.management');
@@ -303,6 +303,20 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::post('create-wallet-chains', [WalletController::class, 'createWalletChains'])->name('wallet.create-chains')->can('wallet');
     });
 
+    // HD Wallet Balance management
+    Route::prefix('hd-wallet')->group(function () {
+        Route::get('index', [HdWalletIndexReportController::class, 'index'])->name('hd-wallet.index')->can('hd_wallet');
+        Route::post('balance-data', [HdWalletIndexReportController::class, 'getBalanceData'])->name('hd-wallet.balance-data')->can('hd_wallet');
+        Route::post('currency-chains', [HdWalletIndexReportController::class, 'getCurrencyChains'])->name('hd-wallet.currency-chains')->can('hd_wallet');
+        Route::post('export-excel', [HdWalletIndexReportController::class, 'exportExcel'])->name('hd-wallet.export-excel')->can('hd_wallet');
+        Route::post('query-blockchain', [HdWalletIndexReportController::class, 'queryBlockchainBalance'])->name('hd-wallet.query-blockchain')->can('hd_wallet');
+        Route::post('sweep-selected', [HdWalletIndexReportController::class, 'sweepSelectedIndices'])->name('hd-wallet.sweep-selected')->can('hd_wallet');
+        Route::get('sweeper-wallets', [HdWalletIndexReportController::class, 'getSweeperWallets'])->name('hd-wallet.sweeper-wallets')->can('hd_wallet');
+        Route::post('start-sync', [HdWalletIndexReportController::class, 'startSync'])->name('hd-wallet.start-sync')->can('hd_wallet');
+        Route::get('sync-progress/{syncId}', [HdWalletIndexReportController::class, 'getSyncProgress'])->name('hd-wallet.sync-progress')->can('hd_wallet');
+    });
+
+
     Route::prefix('locked-balances')->group(function () {
         Route::get('/', [LockedBalanceDetailController::class, 'index'])->name('locked-balance.index')->can('wallet');
     });
@@ -313,17 +327,6 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::get('user-registration-report', [UserRegistrationReportController::class, 'index'])->name('report.getUserRegistrationState')->can('user.index');
         Route::get('user-registration-report/month', [UserRegistrationReportController::class, 'getUserRegistrationState'])->name('report.getUserRegistrationState.month')->can('user.index');
         Route::get('ref-exchange/bought-history', [RefExchangeController::class, 'boughtHistory'])->name('report.ref-exchange.bought-history')->can('report');
-        
-        // HD Wallet Index Balance Report
-        Route::get('hd-wallet-index', [HdWalletIndexReportController::class, 'index'])->name('report.hd-wallet-index')->can('wallet');
-        Route::post('hd-wallet-index/balance-data', [HdWalletIndexReportController::class, 'getBalanceData'])->name('report.hd-wallet-index.balance-data')->can('wallet');
-        Route::post('hd-wallet-index/currency-chains', [HdWalletIndexReportController::class, 'getCurrencyChains'])->name('report.hd-wallet-index.currency-chains')->can('wallet');
-        Route::post('hd-wallet-index/export-excel', [HdWalletIndexReportController::class, 'exportExcel'])->name('report.hd-wallet-index.export-excel')->can('wallet');
-        Route::post('hd-wallet-index/query-blockchain', [HdWalletIndexReportController::class, 'queryBlockchainBalance'])->name('report.hd-wallet-index.query-blockchain')->can('wallet');
-        Route::post('hd-wallet-index/sweep-selected', [HdWalletIndexReportController::class, 'sweepSelectedIndices'])->name('report.hd-wallet-index.sweep-selected')->can('wallet');
-        Route::get('hd-wallet-index/sweeper-wallets', [HdWalletIndexReportController::class, 'getSweeperWallets'])->name('report.hd-wallet-index.sweeper-wallets')->can('wallet');
-        Route::post('hd-wallet-index/start-sync', [HdWalletIndexReportController::class, 'startSync'])->name('report.hd-wallet-index.start-sync')->can('wallet');
-        Route::get('hd-wallet-index/sync-progress/{syncId}', [HdWalletIndexReportController::class, 'getSyncProgress'])->name('report.hd-wallet-index.sync-progress')->can('wallet');
     });
 
     // *********STOCKS*********//

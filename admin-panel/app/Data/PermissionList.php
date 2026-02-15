@@ -36,30 +36,31 @@ class PermissionList
 
             ['setting.int.index', 'مشاهده تنظیمات داخلی'],
             ['setting.int.view-logs', 'مشاهده لاگ ها و خطاهای سیستم'],
-            
+
             ['sweeper.management', 'مدیریت کانتینرهای Sweeper'],
 
-            ['currency','مدیریت کوین ها'],
-            ['market','مدیریت بازار'],
-            ['ref-exchanges','مدیریت صرافی های مرجع'],
-            ['wallet','مدیریت کیف پول ها'],
+            ['currency', 'مدیریت کوین ها'],
+            ['market', 'مدیریت بازار'],
+            ['ref-exchanges', 'مدیریت صرافی های مرجع'],
+            ['wallet', 'مدیریت کیف پول ها'],
+            ['hd_wallet', 'مدیریت hd-wallet'],
 
-            ['transaction','مدیریت تراکنش ها'],
+            ['transaction', 'مدیریت تراکنش ها'],
             ['otc_order', 'مشاهده لیست سفارش ها'],
             ['spot', 'مشاهده لیست اسپات'],
             ['deposit', 'مشاهده لیست واریزی ها'],
             ['withdrawal', 'مشاهده لیست برداشت ها'],
             ['stock', 'مدیریت معجزه قرن'],
-            ['api-system','مدیریت سیستم API'],
+            ['api-system', 'مدیریت سیستم API'],
 
-            ['report','لیست گزارش ها'],
-            ['view-logs','لیست ارورها'],
+            ['report', 'لیست گزارش ها'],
+            ['view-logs', 'لیست ارورها'],
 
-            ['notifications','لیست اعلان های مدیریت'],
-            ['all_notifications','مشاهده تمام اعلان های مدیریت'],
-            ['support','پشتیبانی کاربر'],
-            ['viewTelescope','لاراول تلسکوپ'],
-            ['viewPulse','لاراول پالس'],
+            ['notifications', 'لیست اعلان های مدیریت'],
+            ['all_notifications', 'مشاهده تمام اعلان های مدیریت'],
+            ['support', 'پشتیبانی کاربر'],
+            ['viewTelescope', 'لاراول تلسکوپ'],
+            ['viewPulse', 'لاراول پالس'],
 
         ];
 

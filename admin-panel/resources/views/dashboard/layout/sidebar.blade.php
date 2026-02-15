@@ -302,29 +302,29 @@
                     </li>
                 </ul>
             </li>
-                <li class="menu-item @if (request()->is('admin/ref-exchanges/assets-gathering-to-hd-wallet*')) active open @endif">
-                <a href="javascript:void(0);" class="menu-link menu-toggle">
-                    <i class="menu-icon fa-regular fa-wallet"></i>
-                    <div>مدیریت HD Wallet</div>
-                </a>
-                <ul class="menu-sub">
-                    @can('wallet')
-                        <li class="menu-item @if (request()->is('admin/report/hd-wallet-index*')) active @endif">
-                            <a href="{{ route('admin.report.hd-wallet-index') }}" class="menu-link">
+            @can('hd_wallet')
+                <li class="menu-item @if (request()->is('admin/hd-wallet*')) active open @endif">
+                    <a href="javascript:void(0);" class="menu-link menu-toggle">
+                        <i class="menu-icon fa-regular fa-wallet"></i>
+                        <div>مدیریت HD Wallet</div>
+                    </a>
+                    <ul class="menu-sub">
+                        <li class="menu-item @if (request()->is('admin/hd-wallet/index*')) active @endif">
+                            <a href="{{ route('admin.hd-wallet.index') }}" class="menu-link">
                                 <i class="menu-icon fa-regular fa-wallet"></i>
                                 <div>گزارش موجودی HD Wallet</div>
                             </a>
                         </li>
                         <li class="menu-item @if (request()->is('admin/hd-wallet/index')) active @endif">
-                            <a href="" class="menu-link">
+                            <a href="{{ route('admin.hd-wallet.index') }}" class="menu-link">
                                 <i class="menu-icon fa-regular fa-wallet"></i>
                                 <div>لیست کیف پول‌ها</div>
                             </a>
                         </li>
-                    @endcan
-                  
-                </ul>
-            </li>
+
+                    </ul>
+                </li>
+            @endcan
         @endcanany
 
         <li class="menu-header small text-uppercase">
@@ -388,7 +388,7 @@
                 </a>
             </li>
         @endcanany
- 
+
         @canany(['setting.int.index', 'setting.ext.index'])
             <li class="menu-header small text-uppercase">
                 <span class="menu-header-text">مدیریت سیستم</span>
