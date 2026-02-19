@@ -236,7 +236,7 @@ class ExchangeService
 
                 // Get fee currency price
                 $feeMarket = $this->marketRepository->getMarketBySymbol($feeCurrency, 'USDT');
-                $feePrice = $feeMarket ? $feeMarket->exchangePrice->price : 0;
+                $feePrice = $feeMarket ? $feeMarket->activeExchangePrice->price : 0;
 
                 // Fee transaction
                 if ((float)$response->getDiscountFee() > 0) {
@@ -269,7 +269,7 @@ class ExchangeService
                 $quoteCoinPrice = "1";
                 if ($market->quote_currency !== 'USDT') {
                     $quoteMarket = $this->marketRepository->getMarketBySymbol($market->quote_currency, 'USDT');
-                    $quoteCoinPrice = $quoteMarket ? $quoteMarket->exchangePrice->price : "0";
+                    $quoteCoinPrice = $quoteMarket ? $quoteMarket->activeExchangePrice->price : "0";
                 }
 
                 Transaction::create([
@@ -299,7 +299,7 @@ class ExchangeService
                     'otc_order_id' => $otcOrder->id,
                     'amount' => -$response->getFilledAmount(),
                     'balance' => $baseCurrencyWallet->balance - (float)$response->getFilledAmount(),
-                    'coin_price' => $market->exchangePrice->price ?? "0",
+                    'coin_price' => $market->activeExchangePrice->price ?? "0",
                     'exchange_id' => $exchange->id,
                     'type' => TransactionTypeEnum::REF_EXCHANGE,
                     'subtype' => TransactionSubTypeEnum::REF_EXCHANGE_SELL,
