@@ -93,7 +93,7 @@ class OldHDWalletService
                 'limit' => $requestDTO->getLimit() ?? 50
             ];
 
-            $response = Http::post($this->baseUrl() . '/api/v1/universal/deposit/transaction-history', $requestBody);
+            $response = Http::timeout(60)->post($this->baseUrl() . '/api/v1/universal/deposit/transaction-history', $requestBody);
         } catch (ConnectionException $exception) {
             report($exception);
             Toast::message('سرویس کیف پول موقتاً در دسترس نیست. لطفاً بعداً تلاش کنید.')
@@ -190,7 +190,7 @@ class OldHDWalletService
             report($exception);
             throw new HDDWalletUnavailable;
         }
-        
+
         $data = $response->json();
         if (! $response->successful()) {
             $logMessage = [
@@ -237,7 +237,7 @@ class OldHDWalletService
         if ($response->notFound()) {
             throw new NotFoundException;
         }
-        
+
         $data = $response->json();
         if (! $response->successful()) {
             report($response->body());
