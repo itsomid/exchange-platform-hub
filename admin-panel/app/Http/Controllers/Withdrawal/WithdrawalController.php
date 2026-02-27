@@ -4,12 +4,10 @@ namespace App\Http\Controllers\Withdrawal;
 
 use App\Enums\WithdrawalStatusEnum;
 use App\Enums\CurrencyChainEnum;
-use App\Exports\DepositExport;
 use App\Exports\WithdrawalExport;
 use App\Functions\FlashMessages\Toast;
 use App\Helpers\DateFormatter;
 use App\Http\Controllers\Controller;
-use App\Models\Deposit;
 use App\Models\Withdrawal;
 use App\Models\Currency;
 
@@ -135,10 +133,6 @@ class WithdrawalController extends Controller
             $withdrawalCollection = new \Illuminate\Database\Eloquent\Collection([$withdrawal]);
             $response = $withdrawalService->checkWithdrawal($withdrawalCollection);
 
-            \Log::channel('hd-wallet')->info('Check Withdrawal - Withdrawal IDdddddddddd: ' . $withdrawal->id . ' - Response from HD Wallet: ', [
-                'status' => $response->getStatus(),
-                'transactionHash' => $response->getTransactionHash(),
-            ]);
 
             if ($response->getStatus() === null) {
                 Toast::message('هیچ تغییری در وضعیت برداشت یافت نشد.')->info()->notify();

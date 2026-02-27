@@ -86,7 +86,6 @@ class NewHDWalletService
                 ->setTotalDeposited($data['totalDeposited'] ?? '0')
                 ->setLastDepositAt($data['lastDepositAt'] ?? null)
                 ->setCreatedAt($data['createdAt']);
-
         } catch (ConnectionException $exception) {
             Log::channel('hd-wallet')->error('HD Wallet New - Connection Failed:', [
                 'user_id' => $requestDTO->getUserId(),
@@ -149,7 +148,6 @@ class NewHDWalletService
                 ->setToAddress($data['toAddress'])
                 ->setCreatedAt($data['createdAt'])
                 ->setEstimatedProcessingTime($data['estimatedProcessingTime'] ?? null);
-
         } catch (ConnectionException $exception) {
             Log::channel('hd-wallet')->error('HD Wallet New - Withdrawal Connection Failed:', [
                 'withdrawal_id' => $requestDTO->getWithdrawalId(),
@@ -170,7 +168,7 @@ class NewHDWalletService
     public function getWithdrawalStatus(GetWithdrawalStatusRequestDTO $requestDTO): GetWithdrawalStatusResponseDTO
     {
         try {
-            
+
             $response = $this->httpClient()
                 ->get($this->baseUrl() . '/api/withdrawals/' . $requestDTO->getWithdrawalId());
 
@@ -189,7 +187,7 @@ class NewHDWalletService
 
             $data = $response->json('data');
 
-          
+
 
             $dto = resolve(GetWithdrawalStatusResponseDTO::class)
                 ->setWithdrawalId($data['withdrawalId'])
@@ -209,12 +207,16 @@ class NewHDWalletService
                 ->setConfirmedAt($data['confirmedAt'] ?? null);
 
             if (isset($data['failureReason'])) {
+                \Log::channel('hd-wallet')->error('HD Wallet New - Withdrawal Failed:', [
+                    'withdrawal_id' => $requestDTO->getWithdrawalId(),
+                    'failure_reason' => $data['failureReason'],
+                    'error' => $data['error']
+                ]);
                 $dto->setFailureReason($data['failureReason']);
                 $dto->setFailedAt($data['failedAt'] ?? null);
             }
 
             return $dto;
-
         } catch (ConnectionException $exception) {
             Log::channel('hd-wallet')->error('HD Wallet New - Get Withdrawal Status Connection Failed:', [
                 'withdrawal_id' => $requestDTO->getWithdrawalId(),
@@ -292,7 +294,6 @@ class NewHDWalletService
                     ->setDetectedAt($item['detectedAt'] ?? null)
                     ->setCreatedAt($item['detectedAt'] ?? null);
             }, $deposits);
-
         } catch (ConnectionException $exception) {
             Log::channel('hd-wallet')->error('HD Wallet New - Get Deposit Lists Connection Failed:', [
                 'user_id' => $requestDTO->getUserId(),

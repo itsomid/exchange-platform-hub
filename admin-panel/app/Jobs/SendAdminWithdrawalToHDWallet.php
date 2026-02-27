@@ -3,9 +3,9 @@
 namespace App\Jobs;
 
 use App\Enums\WithdrawalStatusEnum;
+use App\Models\Withdrawal;
 use App\Infrastructure\HDWallet\DTO\Withdrawal\WithdrawRequestDTO;
 use App\Infrastructure\HDWalletNew\HDWalletFacade;
-use App\Models\Withdrawal;
 use App\Helpers\Math;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
-class SendWithdrawalToHDWallet implements ShouldQueue
+class SendAdminWithdrawalToHDWallet implements ShouldQueue
 {
     use Queueable, InteractsWithQueue, SerializesModels;
 
@@ -27,7 +27,7 @@ class SendWithdrawalToHDWallet implements ShouldQueue
      */
     public function __construct(private readonly int $withdrawalId)
     {
-        $this->onQueue('api-withdrawal');
+        $this->onQueue('admin-withdrawal');
     }
 
     /**
@@ -35,9 +35,14 @@ class SendWithdrawalToHDWallet implements ShouldQueue
      */
     public function handle(): void
     {
-
         $withdrawal = Withdrawal::with(['currencyChain', 'user'])->find($this->withdrawalId);
 
+        Log::info("Starting SendWithdrawalToHDWallet job for withdrawal IDddddddddddddddd: {$this->withdrawalId}");
+
+         if (!$withdrawal) {
+            Log::error("Withdrawal not found: {$this->withdrawalId}");
+            return;
+        }
         if (!$withdrawal) {
             Log::error("Withdrawal not found: {$this->withdrawalId}");
             return;
@@ -45,12 +50,13 @@ class SendWithdrawalToHDWallet implements ShouldQueue
 
         // Check if withdrawal is still in pending status
         if ($withdrawal->status !== WithdrawalStatusEnum::QUEUED) {
-            Log::info("Withdrawal {$this->withdrawalId} is not in queued status: {$withdrawal->status->value}");
+            Log::info("Withdrawal {$this->withdrawalId} is not in pending status: {$withdrawal->status->value}");
             return;
         }
 
         try {
             DB::beginTransaction();
+
             // Update status to processing
             $withdrawal->update([
                 'status' => WithdrawalStatusEnum::PROCESSING,
@@ -81,10 +87,11 @@ class SendWithdrawalToHDWallet implements ShouldQueue
 
             // Schedule automatic status checking
             CheckWithdrawalStatus::dispatch($this->withdrawalId)
-                ->onQueue('api-withdrawal-check')
+                ->onQueue('admin-withdrawal-check')
                ->delay(now()->addMinutes(2)); // Start checking after 2 minutes
 
             Log::info("Withdrawal {$this->withdrawalId} sent to HD Wallet successfully and status checking scheduled");
+
         } catch (Throwable $e) {
             DB::rollBack();
 
@@ -116,6 +123,7 @@ class SendWithdrawalToHDWallet implements ShouldQueue
                 Log::error("Withdrawal {$this->withdrawalId} marked as failed after all retry attempts", [
                     'error' => $exception->getMessage()
                 ]);
+
             } catch (Throwable $e) {
                 DB::rollBack();
                 Log::error("Failed to mark withdrawal {$this->withdrawalId} as failed", [

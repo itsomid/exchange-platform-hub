@@ -18,6 +18,7 @@ use App\Infrastructure\HDWalletNew\HDWalletFacade;
 use App\Infrastructure\HDWallet\Exceptions\NotFoundException;
 use App\Services\Wallet\DTO\Withdrawal\CheckWithdrawalResponseDTO;
 use Illuminate\Database\Eloquent\Collection;
+use App\Jobs\SendAdminWithdrawalToHDWallet;
 use Throwable;
 use Illuminate\Support\Facades\DB;
 
@@ -226,7 +227,7 @@ class WithdrawalService
             ]);
 
             // Dispatch job to process withdrawal
-            \App\Jobs\SendAdminWithdrawalToHDWallet::dispatch($withdrawal->id);
+            SendAdminWithdrawalToHDWallet::dispatch($withdrawal->id);
 
             DB::commit();
 

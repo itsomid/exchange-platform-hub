@@ -34,6 +34,13 @@
         <span class="font-number">{{ formatNumberTrimZeros($withdraw->total_fee) }}</span>
     </div>
 </div>
+<div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+    <h6 class="m-0 mb-2 mb-md-0 me-12">کارمزد واقعی شبکه</h6>
+    <div class="d-flex gap-4 align-items-center">
+        <small> {{ $withdraw->currency_symbol }}</small>
+        <span class="font-number">{{ formatNumberTrimZeros($withdraw->hd_wallet_network_fee) }}</span>
+    </div>
+</div>
 @if ($withdraw->status === \App\Enums\WithdrawalStatusEnum::COMPLETED)
     <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
         <h6 class="m-0 mb-2 mb-md-0 me-12">موجودی کاربر پس از برداشت</h6>

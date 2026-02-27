@@ -14,11 +14,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Repositories\DTO\Transaction\CreateTransactionRequestDTO;
-use App\Enums\TransactionTypeEnum;
-use App\Enums\TransactionSubTypeEnum;
-use App\Enums\TransactionStatusEnum;
-use App\Utils\Math;
+
 use Throwable;
 
 class CheckWithdrawalStatus implements ShouldQueue

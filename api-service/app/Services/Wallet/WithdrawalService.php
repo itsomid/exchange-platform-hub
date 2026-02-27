@@ -11,6 +11,7 @@ use App\Helpers\Math;
 
 use App\Infrastructure\HDWalletNew\HDWalletFacade;
 use App\Exceptions\V1\Wallet\InsufficientAmountForFeeException;
+use App\Jobs\SendWithdrawalToHDWallet;
 use App\Models\Wallet;
 use App\Models\Withdrawal;
 
@@ -43,11 +44,11 @@ class WithdrawalService
     ) {}
 
     public function createWithdrawal(CreateWithdrawalRequestDTO $requestDTO): CreateWithdrawalResponseDTO
-    {
+    {       
         try {
 
             // Fetch the wallet
-
+       
             $wallet = $this->walletRepository->getWalletWithLock(
                 $requestDTO->getCurrencySymbol(),
                 $requestDTO->getUserId()
@@ -98,8 +99,10 @@ class WithdrawalService
                     'status' => WithdrawalStatusEnum::QUEUED,
                     'description' => 'Withdrawal queued for processing'
                 ]);
+
                 // Dispatch job to process withdrawal
-                \App\Jobs\SendWithdrawalToHDWallet::dispatch($withdrawal->id);
+
+                SendWithdrawalToHDWallet::dispatch($withdrawal->id);
             }
             DB::commit();
 

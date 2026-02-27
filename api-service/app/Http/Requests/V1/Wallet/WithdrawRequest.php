@@ -73,6 +73,17 @@ class WithdrawRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $currency = $this->input('currency');
+        $currencyChain = $this->input('currency_chain');
+
+        $this->merge([
+            'currency' => is_string($currency) ? strtoupper(trim($currency)) : $currency,
+            'currency_chain' => is_string($currencyChain) ? strtoupper(trim($currencyChain)) : $currencyChain,
+        ]);
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -81,7 +92,7 @@ class WithdrawRequest extends FormRequest
     public function rules(): array
     {
         $currency = Currency::query()->where('symbol', $this->input('currency'))->first(['id']);
-       
+
         $rules = [
             'currency' => ['required', Rule::exists(Currency::class, 'symbol')],
             'currency_chain' => ['required', Rule::exists(CurrencyChain::class, 'chain')->where('currency_id', $currency?->id)->where('withdraw_enabled', 1)],

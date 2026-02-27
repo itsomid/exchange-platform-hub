@@ -31,7 +31,7 @@ class CheckWithdrawalStatus implements ShouldQueue
         private readonly int $retryCount = 0
     ) {
         $this->currentRetry = $retryCount;
-        $this->onQueue('api-withdrawal-check');
+        $this->onQueue('admin-withdrawal-check');
     }
 
     /**
@@ -126,7 +126,7 @@ class CheckWithdrawalStatus implements ShouldQueue
                 'type' => \App\Enums\TransactionTypeEnum::WITHDRAWAL,
                 'subtype' => \App\Enums\TransactionSubTypeEnum::USER_INITIATED,
                 'status' => \App\Enums\TransactionStatusEnum::SUCCESS,
-                'description' => 'Withdrawal completed automatically'
+                'description' => 'برداشت به آدرس: ' . $withdrawal->address . ' هش تراکنش: ' . $responseDTO->getTransactionHash()
             ]);
 
             DB::commit();
