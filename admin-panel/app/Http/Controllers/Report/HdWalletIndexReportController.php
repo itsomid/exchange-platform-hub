@@ -421,9 +421,11 @@ class HdWalletIndexReportController extends Controller
 
         // Call HD Wallet Sweeper API
         $baseUrl = config('sweeper.base_url');
+        $apiKey = config('sweeper.api_key');
 
         try {
             $response = \Illuminate\Support\Facades\Http::timeout(120)
+                ->withHeaders(['x-api-key' => $apiKey])
                 ->post("{$baseUrl}/api/admin-panel/sweep-indices", $requestBody);
 
             if (!$response->successful()) {
@@ -543,9 +545,10 @@ class HdWalletIndexReportController extends Controller
 
         // Call HD Wallet Sweeper API
         $baseUrl = config('sweeper.base_url');
-
+        $apiKey = config('sweeper.api_key');
         try {
             $response = \Illuminate\Support\Facades\Http::timeout(300)
+                ->withHeaders(['x-api-key' => $apiKey])
                 ->post("{$baseUrl}/api/admin-panel/fund-indices", $requestBody);
 
             if (!$response->successful()) {
@@ -613,9 +616,10 @@ class HdWalletIndexReportController extends Controller
     public function getSweeperWallets(Request $request)
     {
         $baseUrl = config('sweeper.base_url');
-
+        $apiKey = config('sweeper.api_key');
         try {
             $response = \Illuminate\Support\Facades\Http::timeout(15)
+                ->withHeaders(['x-api-key' => $apiKey])
                 ->get("{$baseUrl}/api/admin-panel/wallets", [
                     'status' => $request->query('status', 'active'),
                 ]);
