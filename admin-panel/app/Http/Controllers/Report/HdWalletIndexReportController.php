@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Jobs\SyncHdWalletOutgoingTransactionsJob;
 use App\Models\Currency;
 use App\Models\CurrencyChain;
+use App\Models\ExchangePrice;
 use App\Models\Deposit;
 use App\Models\HdWalletOutgoingTransaction;
 use App\Models\Wallet;
@@ -147,14 +148,14 @@ class HdWalletIndexReportController extends Controller
         } else {
             // Original behavior - only deposits (no withdrawal calculation)
             $depositsSubQuery = Deposit::select(
-                    'user_id',
-                    'currency_symbol',
-                    'currency_chain_id',
-                    DB::raw('SUM(amount) as total_deposits'),
-                    DB::raw('COUNT(*) as deposit_count'),
-                    DB::raw('MAX(created_at) as last_deposit_at'),
-                    DB::raw('MIN(created_at) as first_deposit_at')
-                )
+                'user_id',
+                'currency_symbol',
+                'currency_chain_id',
+                DB::raw('SUM(amount) as total_deposits'),
+                DB::raw('COUNT(*) as deposit_count'),
+                DB::raw('MAX(created_at) as last_deposit_at'),
+                DB::raw('MIN(created_at) as first_deposit_at')
+            )
                 ->where('status', DepositStatusEnum::CONFIRMED)
                 ->whereNotNull('transaction_hash')
                 ->where('currency_symbol', $currencySymbol)
@@ -299,14 +300,14 @@ class HdWalletIndexReportController extends Controller
 
         // Exclude manual deposits (those without transaction_hash) from export
         $balances = Deposit::select(
-                'user_id as hd_wallet_index',
-                'currency_symbol',
-                'currency_chain_id',
-                DB::raw('SUM(amount) as total_balance'),
-                DB::raw('COUNT(*) as deposit_count'),
-                DB::raw('MAX(created_at) as last_deposit_at'),
-                DB::raw('MIN(created_at) as first_deposit_at')
-            )
+            'user_id as hd_wallet_index',
+            'currency_symbol',
+            'currency_chain_id',
+            DB::raw('SUM(amount) as total_balance'),
+            DB::raw('COUNT(*) as deposit_count'),
+            DB::raw('MAX(created_at) as last_deposit_at'),
+            DB::raw('MIN(created_at) as first_deposit_at')
+        )
             ->where('status', DepositStatusEnum::CONFIRMED)
             ->whereNotNull('transaction_hash') // Exclude manual/admin deposits
             ->where('currency_symbol', $currencySymbol)
@@ -419,7 +420,7 @@ class HdWalletIndexReportController extends Controller
         }
 
         // Call HD Wallet Sweeper API
-        $baseUrl = config('hd-wallet.new_base_url');
+        $baseUrl = config('sweeper.base_url');
 
         try {
             $response = \Illuminate\Support\Facades\Http::timeout(120)
@@ -471,6 +472,129 @@ class HdWalletIndexReportController extends Controller
             ], 503);
         } catch (\Exception $e) {
             \Log::channel('hd-wallet')->error('Sweep indices exception:', [
+                'exception' => $e->getMessage(),
+                'request' => $requestBody,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'خطای داخلی: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Fund selected indices with native coin from index 1 via HD Wallet Sweeper API.
+     * Sends native coin from index 1 to each selected address for gas fee coverage.
+     */
+    public function fundSelectedIndices(Request $request)
+    {
+        $request->validate([
+            'indices' => 'required|array|min:1|max:100',
+            'indices.*' => 'required|integer|min:0',
+            'currency_chain_id' => 'required|integer|exists:currency_chains,id',
+            'wallet_id' => 'required|string|max:50',
+            'amount' => 'required|numeric|gt:0',
+        ]);
+
+        $indices = $request->indices;
+        $currencyChainId = $request->currency_chain_id;
+        $walletId = $request->wallet_id;
+        $amount = $request->amount;
+
+        // Get chain info
+        $currencyChain = CurrencyChain::with('currency')->find($currencyChainId);
+        if (!$currencyChain) {
+            return response()->json([
+                'success' => false,
+                'error' => 'زنجیره پیدا نشد',
+            ], 404);
+        }
+
+        // Map chain to sweeper network name
+        $chainValue = $currencyChain->chain instanceof CurrencyChainEnum
+            ? $currencyChain->chain->value
+            : (string) $currencyChain->chain;
+
+        $sweeperNetwork = $this->mapChainToSweeperNetwork($chainValue);
+        if (!$sweeperNetwork) {
+            return response()->json([
+                'success' => false,
+                'error' => "شبکه {$chainValue} در سیستم پشتیبانی نمی‌شود",
+            ], 400);
+        }
+
+        // Only EVM and Tron networks support gas funding
+        if (!in_array($sweeperNetwork, ['ethereum', 'tron', 'bnb'])) {
+            return response()->json([
+                'success' => false,
+                'error' => 'واریز گس فقط برای شبکه‌های ERC20، TRC20 و BSC امکان‌پذیر است',
+            ], 400);
+        }
+
+        // Build request body for sweeper API
+        $requestBody = [
+            'network' => $sweeperNetwork,
+            'walletId' => $walletId,
+            'indices' => array_map('intval', $indices),
+            'amount' => (string) $amount,
+            'maxConcurrent' => 1,
+        ];
+
+        // Call HD Wallet Sweeper API
+        $baseUrl = config('sweeper.base_url');
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(300)
+                ->post("{$baseUrl}/api/admin-panel/fund-indices", $requestBody);
+
+            if (!$response->successful()) {
+                \Illuminate\Support\Facades\Log::channel('hd-wallet')->error('Fund indices failed:', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                    'request' => $requestBody,
+                ]);
+
+                $responseData = $response->json();
+                $errorMessage = $responseData['error'] ?? 'خطا در ارسال درخواست واریز گس';
+
+                return response()->json([
+                    'success' => false,
+                    'error' => $errorMessage,
+                    'data' => $responseData['data'] ?? null,
+                    'walletInfo' => $responseData['walletInfo'] ?? null,
+                ], $response->status());
+            }
+
+            $responseData = $response->json();
+
+            \Illuminate\Support\Facades\Log::channel('hd-wallet')->info('Fund indices result:', [
+                'request' => $requestBody,
+                'summary' => $responseData['data']['summary'] ?? null,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'data' => $responseData['data'] ?? [],
+                'message' => sprintf(
+                    'واریز گس: %d موفق، %d ناموفق از %d درخواست',
+                    $responseData['data']['summary']['successful'] ?? 0,
+                    $responseData['data']['summary']['failed'] ?? 0,
+                    count($indices),
+                ),
+            ]);
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            \Log::channel('hd-wallet')->error('Fund indices connection failed:', [
+                'exception' => $e->getMessage(),
+                'request' => $requestBody,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'سرویس HD Wallet Sweeper در دسترس نیست',
+            ], 503);
+        } catch (\Exception $e) {
+            \Log::channel('hd-wallet')->error('Fund indices exception:', [
                 'exception' => $e->getMessage(),
                 'request' => $requestBody,
             ]);
@@ -692,5 +816,160 @@ class HdWalletIndexReportController extends Controller
             'success' => true,
             'progress' => $progress,
         ]);
+    }
+
+    /**
+     * Estimate gas funding cost for token transfers (ERC20/BSC/TRC20).
+     * Returns the estimated gas cost per address and total cost with USD price.
+     */
+    public function estimateGasFunding(Request $request)
+    {
+        $request->validate([
+            'currency_chain_id' => 'required|integer|exists:currency_chains,id',
+            'indices_count' => 'required|integer|min:1|max:100',
+        ]);
+
+        $currencyChainId = $request->currency_chain_id;
+        $indicesCount = $request->indices_count;
+
+        // Get chain info
+        $currencyChain = CurrencyChain::with('currency')->find($currencyChainId);
+        if (!$currencyChain) {
+            return response()->json([
+                'success' => false,
+                'error' => 'زنجیره پیدا نشد',
+            ], 404);
+        }
+
+        $chainValue = $currencyChain->chain instanceof CurrencyChainEnum
+            ? $currencyChain->chain->value
+            : (string) $currencyChain->chain;
+
+        // Only EVM and Tron networks need gas funding
+        if (!in_array($chainValue, ['ERC20', 'BSC', 'TRC20'])) {
+            return response()->json([
+                'success' => false,
+                'error' => 'تخمین گس فقط برای شبکه‌های ERC20, BSC و TRC20 امکان‌پذیر است',
+            ], 400);
+        }
+
+        // Native coin symbols
+        $nativeCoinMap = [
+            'ERC20' => 'ETH',
+            'BSC' => 'BNB',
+            'TRC20' => 'TRX',
+        ];
+        $nativeCoin = $nativeCoinMap[$chainValue];
+
+        try {
+            $gasEstimate = null;
+
+            // Get gas estimation based on network
+            if ($chainValue === 'ERC20') {
+                $service = new EtherScanService();
+                $gasEstimate = $service->estimateTokenTransferGasCost($currencyChain->currency->symbol, 'SafeGasPrice');
+            } elseif ($chainValue === 'BSC') {
+                $service = new BscScanService();
+                $gasEstimate = $service->estimateTokenTransferGasCost($currencyChain->currency->symbol, 'SafeGasPrice');
+            } elseif ($chainValue === 'TRC20') {
+                // For TRC20, use approximate values (TronGrid doesn't have simple gas oracle)
+                // Typical TRC20 transfer consumes ~35k energy, ~270 bandwidth
+                // At current network prices (~140 SUN/energy), cost is about 5 TRX
+                $gasEstimate = [
+                    'gasPrice' => '140', // SUN per energy unit (approximate)
+                    'gasLimit' => '35000', // Energy units (approximate)
+                    'totalCostTRX' => '12', // Approximate TRX needed
+                    'nativeSymbol' => 'TRX',
+                    'note' => 'تخمینی برای TRC20 (حدود ۵ ترون برای یک انتقال توکن)',
+                ];
+            }
+
+            if (isset($gasEstimate['error'])) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'خطا در دریافت اطلاعات گس: ' . $gasEstimate['error'],
+                ], 500);
+            }
+
+            // Get native coin price in USD
+            // First try from API response (if available), then fallback to database
+            $nativeCoinPrice = null;
+
+            try {
+                $exchangePrice = ExchangePrice::whereHas('market.baseCurrency', function ($query) use ($nativeCoin) {
+                    $query->where('symbol', $nativeCoin);
+                })
+                    ->where('exchange_id', 1) // Main exchange
+                    ->select('id', 'price')
+                    ->first();
+
+                if ($exchangePrice) {
+                    $nativeCoinPrice = (float) $exchangePrice->price;
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Failed to get native coin price', ['error' => $e->getMessage()]);
+            }
+
+
+            // Calculate costs
+            $costPerAddress = $chainValue === 'TRC20'
+                ? $gasEstimate['totalCostTRX']
+                : ($gasEstimate['totalCostETH'] ?? $gasEstimate['totalCostBNB'] ?? '0');
+
+            $totalCostNative = bcmul($costPerAddress, (string) $indicesCount, 18);
+            $totalCostNative = rtrim(rtrim($totalCostNative, '0'), '.');
+
+            $totalCostUSD = null;
+            if ($nativeCoinPrice) {
+                $totalCostUSD = bcmul($totalCostNative, (string) $nativeCoinPrice, 8);
+            }
+
+            // Prepare all levels data
+            $allLevelsData = [];
+            if (isset($gasEstimate['allLevels'])) {
+                foreach ($gasEstimate['allLevels'] as $level => $data) {
+                    $levelCostPerAddress = $data['cost'];
+                    $levelTotalCost = bcmul($levelCostPerAddress, (string) $indicesCount, 18);
+                    $levelTotalCost = rtrim(rtrim($levelTotalCost, '0'), '.');
+                    $levelTotalCostUSD = $nativeCoinPrice ? bcmul($levelTotalCost, (string) $nativeCoinPrice, 8) : null;
+
+                    $allLevelsData[$level] = [
+                        'gwei' => $data['gwei'],
+                        'costPerAddress' => $levelCostPerAddress,
+                        'totalCost' => $levelTotalCost,
+                        'totalCostUSD' => $levelTotalCostUSD,
+                    ];
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'chainName' => $currencyChain->chain_name,
+                    'chainValue' => $chainValue,
+                    'nativeSymbol' => $nativeCoin,
+                    'gasPrice' => $gasEstimate['gasPrice'] ?? null,
+                    'gasLimit' => $gasEstimate['gasLimit'] ?? null,
+                    'costPerAddress' => $costPerAddress,
+                    'costPerAddressFormatted' => $costPerAddress . ' ' . $nativeCoin,
+                    'indicesCount' => $indicesCount,
+                    'totalCostNative' => $totalCostNative,
+                    'totalCostNativeFormatted' => $totalCostNative . ' ' . $nativeCoin,
+                    'nativeCoinPriceUSD' => $nativeCoinPrice,
+                    'totalCostUSD' => $totalCostUSD,
+                    'totalCostUSDFormatted' => $totalCostUSD ? '$' . rtrim(rtrim(number_format($totalCostUSD, 8, '.', ','), '0'), '.') : null,
+                    'note' => $gasEstimate['note'] ?? null,
+                    'recommendation' => "توصیه می‌شود حداقل " . ($allLevelsData['SafeGasPrice']['costPerAddress'] ?? $costPerAddress) . " {$nativeCoin} به هر آدرس واریز کنید",
+                    'allLevels' => $allLevelsData,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to estimate gas funding', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'error' => 'خطا در تخمین هزینه گس',
+                'details' => $e->getMessage(),
+            ], 500);
+        }
     }
 }

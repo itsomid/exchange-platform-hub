@@ -226,7 +226,7 @@ class WithdrawalService
             ]);
 
             // Dispatch job to process withdrawal
-            \App\Jobs\SendWithdrawalToHDWallet::dispatch($withdrawal->id);
+            \App\Jobs\SendAdminWithdrawalToHDWallet::dispatch($withdrawal->id);
 
             DB::commit();
 
@@ -324,7 +324,7 @@ class WithdrawalService
         $checkWithdrawalResponseDTO = resolve(CheckWithdrawalResponseDTO::class);
 
         foreach ($pendingWithdrawal as $withdrawal) {
-            $user = $withdrawal->user;
+
             try {
 
                 $responseDTO = $this->hdWalletWithdrawalService->getStatus(
@@ -346,15 +346,10 @@ class WithdrawalService
 
                 if ($responseDTO->getStatus() === 'failed') {
 
-                    // Prevent duplicate unlock/refund when admin re-checks an already failed withdrawal.
-                    if ($withdrawal->status !== WithdrawalStatusEnum::FAILED) {
-                        $withdrawal->update([
-                            'status' => WithdrawalStatusEnum::FAILED,
-                            'description' => 'Withdrawal failed in HD Wallet'
-                        ]);
-
-                        $this->failedWithdrawal($withdrawal);
-                    }
+                    $withdrawal->update([
+                        'status' => WithdrawalStatusEnum::FAILED,
+                        'description' => $responseDTO->getDescription()
+                    ]);
 
                     $checkWithdrawalResponseDTO->setStatus(WithdrawalStatusEnum::FAILED);
                 } elseif ($responseDTO->getStatus() === 'completed') {
@@ -380,29 +375,5 @@ class WithdrawalService
         }
 
         return $checkWithdrawalResponseDTO;
-    }
-
-    /**
-     * Handle failed withdrawal - unlock balance
-     *
-     * @param Withdrawal $withdrawal
-     * @return void
-     */
-    private function failedWithdrawal(Withdrawal $withdrawal): void
-    {
-        DB::transaction(function () use ($withdrawal) {
-            $wallet = Wallet::query()
-                ->where('user_id', $withdrawal->user_id)
-                ->where('currency_symbol', $withdrawal->currency_symbol)
-                ->lockForUpdate()
-                ->first();
-
-            if (! $wallet) {
-                return;
-            }
-
-            $wallet->increment('balance', $withdrawal->amount);
-            $wallet->decrement('locked_balance', $withdrawal->amount);
-        });
     }
 }

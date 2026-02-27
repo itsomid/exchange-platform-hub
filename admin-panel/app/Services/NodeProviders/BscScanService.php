@@ -284,6 +284,110 @@ class BscScanService
     }
 
     /**
+     * Get gas oracle data (current gas prices)
+     *
+     * @return array ['SafeGasPrice' => string, 'ProposeGasPrice' => string, 'FastGasPrice' => string] or ['error' => string]
+     */
+    public function getGasOracle(): array
+    {
+        $apiKey = Config::get('etherscan.api_key');
+
+        $params = [
+            'chainid' => $this->chainId,
+            'module' => 'gastracker',
+            'action' => 'gasoracle',
+            'apikey' => $apiKey,
+        ];
+
+        try {
+            $response = Http::get($this->baseUrl, $params);
+
+            if ($response->successful()) {
+                $data = $response->json();
+
+                if ($data['status'] === '1' && isset($data['result'])) {
+                    return [
+                        'SafeGasPrice' => $data['result']['SafeGasPrice'] ?? '3',
+                        'ProposeGasPrice' => $data['result']['ProposeGasPrice'] ?? '5',
+                        'FastGasPrice' => $data['result']['FastGasPrice'] ?? '10',
+                        'suggestBaseFee' => $data['result']['suggestBaseFee'] ?? '3',
+                        'gasUsedRatio' => $data['result']['gasUsedRatio'] ?? null,
+                        'UsdPrice' => $data['result']['UsdPrice'] ?? null,
+                        'LastBlock' => $data['result']['LastBlock'] ?? null,
+                    ];
+                }
+
+                return [
+                    'error' => $data['message'] ?? 'Failed to get gas oracle',
+                ];
+            }
+
+            return [
+                'error' => 'API request failed',
+            ];
+        } catch (\Exception $e) {
+            return [
+                'error' => 'API request error: ' . $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Estimate gas cost for a BEP20 token transfer
+     *
+     * @param string $currency Token symbol
+     * @param string $gasPriceLevel 'SafeGasPrice', 'ProposeGasPrice', or 'FastGasPrice'
+     * @return array ['gasPrice' => string, 'gasLimit' => string, 'totalCostBNB' => string] or ['error' => string]
+     */
+    public function estimateTokenTransferGasCost(string $currency = 'USDT', string $gasPriceLevel = 'ProposeGasPrice'): array
+    {
+        $currency = strtoupper($currency);
+
+        // Get gas oracle
+        $gasOracle = $this->getGasOracle();
+        if (isset($gasOracle['error'])) {
+            return $gasOracle;
+        }
+
+        // Get gas price in Gwei
+        $gasPriceGwei = $gasOracle[$gasPriceLevel] ?? $gasOracle['ProposeGasPrice'] ?? '5';
+        $gasPriceWei = bcmul($gasPriceGwei, '1000000000', 0); // Convert Gwei to Wei
+
+        // Estimate gas limit for token transfer (typically 65000 for BEP20)
+        $gasLimit = '65000';
+
+        // Calculate total cost in Wei
+        $totalCostWei = bcmul($gasPriceWei, $gasLimit, 0);
+
+        // Convert to BNB (18 decimals)
+        $totalCostBNB = bcdiv($totalCostWei, bcpow('10', '18'), 18);
+
+        // Calculate costs for all gas price levels
+        $costs = [];
+        foreach (['SafeGasPrice', 'ProposeGasPrice', 'FastGasPrice'] as $level) {
+            $levelGwei = $gasOracle[$level] ?? '5';
+            $levelWei = bcmul($levelGwei, '1000000000', 0);
+            $levelCostWei = bcmul($levelWei, $gasLimit, 0);
+            $levelCostBNB = bcdiv($levelCostWei, bcpow('10', '18'), 18);
+            $costs[$level] = [
+                'gwei' => $levelGwei,
+                'cost' => rtrim(rtrim($levelCostBNB, '0'), '.'),
+            ];
+        }
+
+        return [
+            'gasPrice' => $gasPriceGwei, // In Gwei
+            'gasPriceWei' => $gasPriceWei,
+            'gasLimit' => $gasLimit,
+            'totalCostWei' => $totalCostWei,
+            'totalCostBNB' => rtrim(rtrim($totalCostBNB, '0'), '.'),
+            'nativeSymbol' => 'BNB',
+            'UsdPrice' => $gasOracle['UsdPrice'] ?? null,
+            'allLevels' => $costs,
+        ];
+    }
+
+    /**
      * Get BEP20 token outgoing transactions
      */
     protected function getBep20OutgoingTransactions(string $currency, string $address, string $apiKey, ?int $startBlock = null): array

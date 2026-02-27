@@ -1,19 +1,31 @@
-@import 'sweetalert2/dist/sweetalert2.min.css';
+@import "sweetalert2/dist/sweetalert2.min.css";
 
 // Custom RTL support
 .swal2-rtl {
-  direction: rtl;
+    direction: rtl;
 }
 
 // Custom styling to match admin theme
 .swal2-popup {
-  font-family: inherit;
+    font-family: inherit;
 }
 
 .swal2-title {
-  font-weight: 600;
+    font-weight: 600;
 }
 
 .swal2-html-container {
-  font-size: 0.9375rem;
+    font-size: 0.9375rem;
+}
+
+.swal2-container {
+    z-index: 20000 !important;
+}
+.swal2-icon {
+    width: 3em;
+    height: 3em;
+    margin: 1.5em auto 0.6em;
+    .swal2-icon-content {
+        font-size: 2.5em;
+    }
 }

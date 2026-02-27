@@ -46,6 +46,7 @@ use App\Http\Controllers\Setting\SpotBotSettingController;
 use App\Http\Controllers\ApiSystem\ApiSystemController;
 use App\Http\Controllers\ApiSystem\ApiSystemTokenController;
 use App\Http\Controllers\Report\HdWalletIndexReportController;
+use App\Http\Controllers\Report\HdWalletCurrencyController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -311,9 +312,16 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::post('export-excel', [HdWalletIndexReportController::class, 'exportExcel'])->name('hd-wallet.export-excel')->can('hd_wallet');
         Route::post('query-blockchain', [HdWalletIndexReportController::class, 'queryBlockchainBalance'])->name('hd-wallet.query-blockchain')->can('hd_wallet');
         Route::post('sweep-selected', [HdWalletIndexReportController::class, 'sweepSelectedIndices'])->name('hd-wallet.sweep-selected')->can('hd_wallet');
+        Route::post('fund-selected', [HdWalletIndexReportController::class, 'fundSelectedIndices'])->name('hd-wallet.fund-selected')->can('hd_wallet');
+        Route::post('estimate-gas-funding', [HdWalletIndexReportController::class, 'estimateGasFunding'])->name('hd-wallet.estimate-gas-funding')->can('hd_wallet');
         Route::get('sweeper-wallets', [HdWalletIndexReportController::class, 'getSweeperWallets'])->name('hd-wallet.sweeper-wallets')->can('hd_wallet');
         Route::post('start-sync', [HdWalletIndexReportController::class, 'startSync'])->name('hd-wallet.start-sync')->can('hd_wallet');
         Route::get('sync-progress/{syncId}', [HdWalletIndexReportController::class, 'getSyncProgress'])->name('hd-wallet.sync-progress')->can('hd_wallet');
+
+        Route::get('currencies', [HdWalletCurrencyController::class, 'index'])->name('hd-wallet.currencies')->can('hd_wallet');
+        Route::post('currencies/create', [HdWalletCurrencyController::class, 'create'])->name('hd-wallet.currencies.create')->can('hd_wallet');
+        Route::post('currencies/update', [HdWalletCurrencyController::class, 'update'])->name('hd-wallet.currencies.update')->can('hd_wallet');
+        Route::post('currencies/delete', [HdWalletCurrencyController::class, 'destroy'])->name('hd-wallet.currencies.delete')->can('hd_wallet');
     });
 
 
