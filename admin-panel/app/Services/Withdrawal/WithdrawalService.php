@@ -144,8 +144,24 @@ class WithdrawalService
 
             $wallet = Wallet::findOrFail($walletId);
 
-            if ($withdrawal->status !== WithdrawalStatusEnum::PENDING) {
+            if (! in_array($withdrawal->status, [
+                WithdrawalStatusEnum::PENDING,
+                WithdrawalStatusEnum::PROCESSING,
+                WithdrawalStatusEnum::FAILED,
+            ])) {
                 throw new \Exception('Withdrawal is already processed.');
+            }
+
+            $wasFailed = $withdrawal->status === WithdrawalStatusEnum::FAILED;
+
+            // If withdrawal was previously marked as failed, funds were already returned to user balance.
+            // Move funds out of balance again before finalizing completion.
+            if ($wasFailed) {
+                if ($wallet->balance < $withdrawal->amount) {
+                    throw new \Exception('Insufficient balance to finalize previously failed withdrawal.');
+                }
+
+                $wallet->decrement('balance', $withdrawal->amount);
             }
 
             // Update withdrawal record
@@ -156,8 +172,11 @@ class WithdrawalService
                 'description' => 'Withdraw Completed',
             ]);
 
-            // Unlock funds and deduct locked balance
-            $wallet->decrement('locked_balance', $withdrawal->amount);
+            // Unlock funds for pending/processing records. For previously failed withdrawals,
+            // locked balance is already released and should not be decremented again.
+            if (! $wasFailed) {
+                $wallet->decrement('locked_balance', $withdrawal->amount);
+            }
 
             // Create the transaction record
             Transaction::create([
@@ -327,12 +346,15 @@ class WithdrawalService
 
                 if ($responseDTO->getStatus() === 'failed') {
 
-                    $withdrawal->update([
-                        'status' => WithdrawalStatusEnum::FAILED,
-                        'description' => 'Withdrawal failed in HD Wallet'
-                    ]);
+                    // Prevent duplicate unlock/refund when admin re-checks an already failed withdrawal.
+                    if ($withdrawal->status !== WithdrawalStatusEnum::FAILED) {
+                        $withdrawal->update([
+                            'status' => WithdrawalStatusEnum::FAILED,
+                            'description' => 'Withdrawal failed in HD Wallet'
+                        ]);
 
-                    $this->failedWithdrawal($withdrawal);
+                        $this->failedWithdrawal($withdrawal);
+                    }
 
                     $checkWithdrawalResponseDTO->setStatus(WithdrawalStatusEnum::FAILED);
                 } elseif ($responseDTO->getStatus() === 'completed') {
