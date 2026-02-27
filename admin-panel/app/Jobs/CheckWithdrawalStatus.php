@@ -31,7 +31,7 @@ class CheckWithdrawalStatus implements ShouldQueue
         private readonly int $retryCount = 0
     ) {
         $this->currentRetry = $retryCount;
-        $this->onQueue('admin-withdrawal-check');
+        $this->onQueue('api-withdrawal-check');
     }
 
     /**

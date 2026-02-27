@@ -315,10 +315,10 @@
                                 <div>گزارش موجودی HD Wallet</div>
                             </a>
                         </li>
-                        <li class="menu-item @if (request()->is('admin/hd-wallet/index')) active @endif">
-                            <a href="{{ route('admin.hd-wallet.index') }}" class="menu-link">
+                        <li class="menu-item @if (request()->is('admin/hd-wallet/currencies')) active @endif">
+                            <a href="{{ route('admin.hd-wallet.currencies') }}" class="menu-link">
                                 <i class="menu-icon fa-regular fa-wallet"></i>
-                                <div>لیست کیف پول‌ها</div>
+                                <div>لیست ارزها</div>
                             </a>
                         </li>
 

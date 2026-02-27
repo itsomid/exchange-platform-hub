@@ -101,7 +101,7 @@ class ExchangeService
                 'amount' => $response->getAmount(),
                 'coin_price' =>  $baseMarket ? $baseMarket->activeExchangePrice->price : 1,
                 'exchange_id' => $exchange->id,
-                'type' => TransactionTypeEnum::ًREF_EXCHANGE,
+                'type' => TransactionTypeEnum::REF_EXCHANGE,
                 'subtype' => TransactionSubTypeEnum::REF_EXCHANGE_WITHDRAWAL,
                 'status' => TransactionStatusEnum::SUCCESS,
                 'description' => sprintf(
@@ -119,7 +119,7 @@ class ExchangeService
                     'amount' => -$response->getFee(),
                     'coin_price' =>  $feeMarket ? $feeMarket->activeExchangePrice->price : 0,
                     'exchange_id' => $exchange->id,
-                    'type' => TransactionTypeEnum::ًREF_EXCHANGE,
+                    'type' => TransactionTypeEnum::REF_EXCHANGE,
                     'subtype' => TransactionSubTypeEnum::REF_EXCHANGE_WITHDRAWAL_FEE,
                     'status' => TransactionStatusEnum::SUCCESS,
                     'description' => sprintf(

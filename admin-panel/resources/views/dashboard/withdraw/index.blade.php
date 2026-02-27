@@ -513,10 +513,33 @@
                                                         'withdraw' => $withdraw,
                                                     ])
                                                 </div>
-                                                <div class="modal-footer">
+                                                <div class="modal-footer d-flex justify-content-between align-items-center">
                                                     <button type="button" class="btn btn-label-secondary"
                                                         data-bs-dismiss="modal">بستن
                                                     </button>
+                                                    @if (in_array($withdraw->status, [
+                                                        \App\Enums\WithdrawalStatusEnum::PENDING,
+                                                        \App\Enums\WithdrawalStatusEnum::PROCESSING,
+                                                        \App\Enums\WithdrawalStatusEnum::FAILED,
+                                                    ]))
+                                                        <a href="{{ route('admin.withdrawal.check-withdrawal', $withdraw->id) }}"
+                                                            class="btn {{ $withdraw->status === \App\Enums\WithdrawalStatusEnum::PROCESSING
+                                                                ? 'btn-info'
+                                                                : ($withdraw->status === \App\Enums\WithdrawalStatusEnum::FAILED
+                                                                    ? 'btn-danger'
+                                                                    : 'btn-warning') }} d-flex align-items-center gap-2">
+                                                            <i class="fa-solid fa-rotate-right"></i>
+                                                            <span>
+                                                                @if ($withdraw->status === \App\Enums\WithdrawalStatusEnum::PROCESSING)
+                                                                    بررسی دستی وضعیت از HD Wallet
+                                                                @elseif ($withdraw->status === \App\Enums\WithdrawalStatusEnum::FAILED)
+                                                                    بررسی مجدد وضعیت برداشت ناموفق
+                                                                @else
+                                                                    بررسی وضعیت برداشت
+                                                                @endif
+                                                            </span>
+                                                        </a>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
@@ -530,12 +553,6 @@
                                         <x-transaction-modal :modalId="'withdraw-' . $withdraw->id" :title="'تراکنش های برداشت #' . $withdraw->id" :user="$withdraw->user"
                                             :transactions="$withdraw->transactions" route-name="admin.transaction.index"
                                             route-param="withdrawal_id" :route-param-value="$withdraw->id" />
-                                    @endif
-                                    @if ($withdraw->status === \App\Enums\WithdrawalStatusEnum::PENDING)
-                                        <a href="{{ route('admin.withdrawal.check-withdrawal', $withdraw->id) }}"
-                                            class="btn btn-sm btn-icon btn-warning">
-                                            <i class="fa-solid fa-rotate-right"></i>
-                                        </a>
                                     @endif
                                     @if ($withdraw->status === \App\Enums\WithdrawalStatusEnum::AWAITING_APPROVAL)
                                         {{-- Confirm Withdrawal Button --}}

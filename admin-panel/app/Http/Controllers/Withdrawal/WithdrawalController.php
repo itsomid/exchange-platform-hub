@@ -13,6 +13,7 @@ use App\Models\Deposit;
 use App\Models\Withdrawal;
 use App\Models\Currency;
 
+use App\Infrastructure\HDWallet\Exceptions\NotFoundException;
 use App\Services\Withdrawal\WithdrawalService;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
@@ -118,15 +119,26 @@ class WithdrawalController extends Controller
         try {
             $withdrawalService = resolve(\App\Services\Withdrawal\WithdrawalService::class);
 
-            // Check if withdrawal is in pending status
-            if ($withdrawal->status !== \App\Enums\WithdrawalStatusEnum::PENDING) {
-                Toast::message('این برداشت در وضعیت انتظار نیست.')->warning()->notify();
+            // Check if withdrawal is in a checkable status (pending, processing, or failed)
+            $checkableStatuses = [
+                \App\Enums\WithdrawalStatusEnum::PENDING,
+                \App\Enums\WithdrawalStatusEnum::PROCESSING,
+                \App\Enums\WithdrawalStatusEnum::FAILED,
+            ];
+
+            if (!in_array($withdrawal->status, $checkableStatuses)) {
+                Toast::message('این برداشت قابل بررسی نیست.')->warning()->notify();
                 return redirect()->back();
             }
 
             // Check the specific withdrawal
             $withdrawalCollection = new \Illuminate\Database\Eloquent\Collection([$withdrawal]);
             $response = $withdrawalService->checkWithdrawal($withdrawalCollection);
+
+            \Log::channel('hd-wallet')->info('Check Withdrawal - Withdrawal IDdddddddddd: ' . $withdrawal->id . ' - Response from HD Wallet: ', [
+                'status' => $response->getStatus(),
+                'transactionHash' => $response->getTransactionHash(),
+            ]);
 
             if ($response->getStatus() === null) {
                 Toast::message('هیچ تغییری در وضعیت برداشت یافت نشد.')->info()->notify();
@@ -138,6 +150,9 @@ class WithdrawalController extends Controller
                 Toast::message('فرآیند چک برداشت آغاز شد.')->success()->notify();
             }
 
+            return redirect()->back();
+        } catch (NotFoundException $exception) {
+            Toast::message('این برداشت در سرویس HD Wallet یافت نشد.')->warning()->notify();
             return redirect()->back();
         } catch (\Throwable $exception) {
             report($exception);

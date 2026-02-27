@@ -17,7 +17,9 @@ use App\Infrastructure\HDWalletNew\DTO\Withdrawal\GetWithdrawalStatusRequestDTO 
 use App\Infrastructure\HDWalletNew\DTO\Withdrawal\GetWithdrawalStatusResponseDTO as NewGetWithdrawalStatusResponseDTO;
 use App\Infrastructure\HDWalletNew\DTO\Withdrawal\WithdrawRequestDTO as NewWithdrawRequestDTO;
 use App\Infrastructure\HDWalletNew\DTO\Withdrawal\WithdrawResponseDTO as NewWithdrawResponseDTO;
+use App\Infrastructure\HDWallet\Exceptions\NotFoundException;
 use App\Infrastructure\HDWalletNew\BlockchainNetworkMapper;
+use App\Infrastructure\HDWalletNew\Exceptions\HDWalletNewNotFoundException;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -219,7 +221,11 @@ class HDWalletFacade
             $newRequestDTO = resolve(NewGetWithdrawalStatusRequestDTO::class)
                 ->setWithdrawalId((string) $requestDTO->getWithdrawalId());
 
-            $newResponse = $this->newService->getWithdrawalStatus($newRequestDTO);
+            try {
+                $newResponse = $this->newService->getWithdrawalStatus($newRequestDTO);
+            } catch (HDWalletNewNotFoundException $e) {
+                throw new NotFoundException($e->getMessage());
+            }
 
             // Map status from new to old system format
             $status = $this->mapWithdrawalStatus($newResponse->getStatus());

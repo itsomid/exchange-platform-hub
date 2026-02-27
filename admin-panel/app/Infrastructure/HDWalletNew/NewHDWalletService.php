@@ -26,7 +26,7 @@ class NewHDWalletService
 
     private function apiKey(): string
     {
-        return config('hd-wallet.new_api_key');
+        return config('hd-wallet.api_key');
     }
 
     private function httpClient()
@@ -170,6 +170,7 @@ class NewHDWalletService
     public function getWithdrawalStatus(GetWithdrawalStatusRequestDTO $requestDTO): GetWithdrawalStatusResponseDTO
     {
         try {
+            
             $response = $this->httpClient()
                 ->get($this->baseUrl() . '/api/withdrawals/' . $requestDTO->getWithdrawalId());
 
@@ -188,7 +189,7 @@ class NewHDWalletService
 
             $data = $response->json('data');
 
-            Log::channel('hd-wallet')->info('HD Wallet New - Withdrawal Status:', $data);
+          
 
             $dto = resolve(GetWithdrawalStatusResponseDTO::class)
                 ->setWithdrawalId($data['withdrawalId'])
@@ -265,7 +266,7 @@ class NewHDWalletService
 
             $data = $response->json('data');
             $deposits = $data['deposits'] ?? [];
-            
+
             // Extract parent-level data
             $network = $data['network'];
             $currency = $data['currency'];

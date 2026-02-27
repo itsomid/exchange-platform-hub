@@ -265,14 +265,14 @@ class NewHDWalletService
 
             $data = $response->json('data');
             $deposits = $data['deposits'] ?? [];
-
-            return array_map(function (array $item) {
+            
+            return array_map(function (array $item) use ($data) {
                 return resolve(GetDepositListsResponseDTO::class)
                     ->setDepositId($item['depositId'])
                     ->setTxHash($item['txHash'])
-                    ->setNetwork($item['network'])
-                    ->setCurrencySymbol($item['currency'])
-                    ->setUserId($item['userId'] ?? null)
+                    ->setNetwork($data['network'])
+                    ->setCurrencySymbol($data['currency'])
+                    ->setUserId($data['userId'] ?? null)
                     ->setAmount((string) $item['amount'])
                     ->setStatus($item['status'])
                     ->setConfirmations($item['confirmations'] ?? null)

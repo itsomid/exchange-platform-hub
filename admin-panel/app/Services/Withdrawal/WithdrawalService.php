@@ -157,7 +157,7 @@ class WithdrawalService
             ]);
 
             // Unlock funds and deduct locked balance
-            $wallet->decrement('locked_balance', $withdrawal->amount + $withdrawal->total_fee);
+            $wallet->decrement('locked_balance', $withdrawal->amount);
 
             // Create the transaction record
             Transaction::create([
@@ -314,6 +314,7 @@ class WithdrawalService
                         ->setBlockchain($withdrawal->currencyChain->blockchain_name->value)
                         ->setCurrencySymbol($withdrawal->currency_symbol)
                 );
+
                 $checkWithdrawalResponseDTO
                     ->setWithdrawId($withdrawal->id)
                     ->setCurrencyChain($withdrawal->currencyChain->chain->value)
@@ -335,15 +336,12 @@ class WithdrawalService
 
                     $checkWithdrawalResponseDTO->setStatus(WithdrawalStatusEnum::FAILED);
                 } elseif ($responseDTO->getStatus() === 'completed') {
+                    $wallet = Wallet::query()
+                        ->where('user_id', $withdrawal->user_id)
+                        ->where('currency_symbol', $withdrawal->currency_symbol)
+                        ->firstOrFail();
 
-                    $withdrawal->update([
-                        'status' => WithdrawalStatusEnum::COMPLETED,
-                        'transaction_hash' => $responseDTO->getTransactionHash(),
-                        'confirmed_at' => now(),
-                        'description' => 'Withdrawal completed successfully'
-                    ]);
-
-                    $this->confirmWithdrawal($withdrawal->id, $user->getWallet($withdrawal->currency_symbol)->id, $responseDTO->getTransactionHash());
+                    $this->confirmWithdrawal($withdrawal->id, $wallet->id, $responseDTO->getTransactionHash());
 
                     $checkWithdrawalResponseDTO
                         ->setStatus(WithdrawalStatusEnum::COMPLETED)
@@ -351,8 +349,7 @@ class WithdrawalService
                         ->setConfirmedAt(now());
                 }
             } catch (NotFoundException $exception) {
-                // Withdrawal not found in HD Wallet, keep as pending
-                continue;
+                throw $exception;
             } catch (Throwable $exception) {
                 report($exception);
                 // Log error but continue processing other withdrawals
@@ -371,13 +368,19 @@ class WithdrawalService
      */
     private function failedWithdrawal(Withdrawal $withdrawal): void
     {
-        $wallet = $withdrawal->user->getWallet($withdrawal->currency_symbol);
+        DB::transaction(function () use ($withdrawal) {
+            $wallet = Wallet::query()
+                ->where('user_id', $withdrawal->user_id)
+                ->where('currency_symbol', $withdrawal->currency_symbol)
+                ->lockForUpdate()
+                ->first();
 
-        if ($wallet) {
-            DB::transaction(function () use ($wallet, $withdrawal) {
-                $wallet->increment('balance', $withdrawal->amount);
-                $wallet->decrement('locked_balance', $withdrawal->amount);
-            });
-        }
+            if (! $wallet) {
+                return;
+            }
+
+            $wallet->increment('balance', $withdrawal->amount);
+            $wallet->decrement('locked_balance', $withdrawal->amount);
+        });
     }
 }

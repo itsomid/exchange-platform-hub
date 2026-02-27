@@ -221,9 +221,7 @@ class HDWalletFacade
                     ->setLimit($requestDTO->getLimit());
 
                 $newDeposits = $this->newService->getDepositLists($newRequestDTO);
-                Log::channel('hd-wallet')->info('HD Wallet Facade - New system deposit lists', [
-                    'deposits' => $newDeposits,
-                ]);
+         
                 // Map new response back to old GetDepositListsResponseDTO format
                 return array_map(function (NewGetDepositListsResponseDTO $deposit) use ($requestDTO) {
                     return resolve(OldGetDepositListsResponseDTO::class)
