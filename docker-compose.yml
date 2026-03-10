@@ -178,6 +178,8 @@ services:
       ]
     networks:
       - laravel
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   api-queue:
     build:
