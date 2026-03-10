@@ -81,6 +81,22 @@
     </div>
 @endif
 
+@if ($withdraw->status === \App\Enums\WithdrawalStatusEnum::QUEUED)
+    <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
+        <h6 class="m-0 mb-2 mb-md-0 me-12">ارسال مجدد به صف برداشت</h6>
+        <div class="d-flex gap-4 align-items-center">
+            <form action="{{ route('admin.withdrawal.redispatch-job', $withdraw) }}" method="POST" class="d-inline"
+                  onsubmit="return confirm('آیا مطمئن هستید که می‌خواهید جاب برداشت را مجدداً در صف قرار دهید؟')">
+                @csrf
+                <button type="submit" class="btn btn-warning btn-sm">
+                    <i class="fa-solid fa-rotate-right me-1"></i>
+                    ارسال مجدد جاب برداشت
+                </button>
+            </form>
+        </div>
+    </div>
+@endif
+
 @if ($withdraw->admin_id)
     <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
         <h6

@@ -8,12 +8,14 @@ use App\Exports\WithdrawalExport;
 use App\Functions\FlashMessages\Toast;
 use App\Helpers\DateFormatter;
 use App\Http\Controllers\Controller;
+use App\Jobs\SendAdminWithdrawalToHDWallet;
 use App\Models\Withdrawal;
 use App\Models\Currency;
 
 use App\Infrastructure\HDWallet\Exceptions\NotFoundException;
 use App\Services\Withdrawal\WithdrawalService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 
 class WithdrawalController extends Controller
@@ -153,6 +155,41 @@ class WithdrawalController extends Controller
             Toast::message('خطا در بررسی برداشت: ' . $exception->getMessage())->danger()->notify();
             return redirect()->back();
         }
+    }
+
+    public function redispatchWithdrawalJob(Withdrawal $withdrawal)
+    {
+        if ($withdrawal->status !== WithdrawalStatusEnum::QUEUED) {
+            Toast::message('این عملیات فقط برای برداشت‌های با وضعیت «در صف ارسال» مجاز است.')->warning()->notify();
+            return redirect()->back();
+        }
+
+        // Check if a job already exists for this withdrawal in the database queue
+        $jobExists = DB::table('jobs')
+            ->where('queue', 'admin-withdrawal')
+            ->where('payload', 'LIKE', '%SendAdminWithdrawalToHDWallet%')
+            ->get()
+            ->contains(function ($job) use ($withdrawal) {
+                try {
+                    $payload = json_decode($job->payload, true);
+                    $command = unserialize($payload['data']['command']);
+                    $reflection = new \ReflectionProperty($command, 'withdrawalId');
+                    $reflection->setAccessible(true);
+                    return $reflection->getValue($command) === $withdrawal->id;
+                } catch (\Throwable) {
+                    return false;
+                }
+            });
+
+        if ($jobExists) {
+            Toast::message('جاب برداشت برای این تراکنش از قبل در صف موجود است.')->warning()->notify();
+            return redirect()->back();
+        }
+
+        SendAdminWithdrawalToHDWallet::dispatch($withdrawal->id);
+
+        Toast::message('جاب برداشت با موفقیت مجدداً در صف قرار گرفت.')->success()->notify();
+        return redirect()->back();
     }
 
     public function excelExport(Request $request)
