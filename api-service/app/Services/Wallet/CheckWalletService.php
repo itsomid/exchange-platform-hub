@@ -6,6 +6,7 @@ use App\Enums\DepositStatusEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
+use App\Events\DepositDetected;
 use App\Exceptions\V1\Wallet\InternalWalletHasProblemException;
 use App\Exceptions\V1\Wallet\UserDoesNotHaveWalletAddress;
 use App\Exceptions\V1\Wallet\UserDoesNotHaveWalletChainAddress;
@@ -129,6 +130,15 @@ class CheckWalletService
                     if ($depositStatus === DepositStatusEnum::CONFIRMED) {
                         $wallet->increment('balance', $transaction->getAmount());
                         $user->notify(new DepositSuccessful($transaction->getCryptocurrency(), $transaction->getAmount(), $user->name));
+
+                        // Broadcast deposit detected event via WebSocket
+                  
+                        DepositDetected::dispatch($user->id, [
+                            'currency' => $transaction->getCryptocurrency(),
+                            'amount' => $transaction->getAmount(),
+                            'tx_hash' => $transaction->getTransactionHash(),
+                            'status' => 'confirmed',
+                        ]);
                     }
                     DB::commit();
                     $hasNewTransaction = true;

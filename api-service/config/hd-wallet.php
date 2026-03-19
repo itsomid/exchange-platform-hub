@@ -6,7 +6,7 @@ return [
     
     // New HD Wallet Settings
     'new_base_url' => env('HD_WALLET_NEW_BASE_URL', 'http://localhost:3000'),
-    'new_api_key' => env('HD_WALLET_NEW_API_KEY', ''),
+    'api_key' => env('HD_WALLET_NEW_API_KEY', 'a8F3kLm92QxT7vBn4ZpR6sWd1YhJ9uKc5MxN2tGq8LrV0bHy7DpE3fSa6ZxC1'),
     
     // Switch between old and new system
     // Set to 'old' or 'new'

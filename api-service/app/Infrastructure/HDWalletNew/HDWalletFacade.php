@@ -255,6 +255,42 @@ class HDWalletFacade
     // ──────────────────────────────────────────────
 
     /**
+     * Start watching an address for deposits (new system only)
+     */
+    public function watchDeposit(int $userId, string $address, string $blockchain, string $currencySymbol, int $ttlMinutes = 10): ?array
+    {
+        if (!$this->isNewSystem()) {
+            return null;
+        }
+
+        $newNetwork = BlockchainNetworkMapper::toNewNetwork($blockchain);
+        return $this->newService->watchDeposit(
+            (string) $userId,
+            $address,
+            $newNetwork,
+            $currencySymbol,
+            $ttlMinutes,
+        );
+    }
+
+    /**
+     * Stop watching an address for deposits (new system only)
+     */
+    public function unwatchDeposit(int $userId, string $blockchain, string $currencySymbol): void
+    {
+        if (!$this->isNewSystem()) {
+            return;
+        }
+
+        $newNetwork = BlockchainNetworkMapper::toNewNetwork($blockchain);
+        $this->newService->unwatchDeposit(
+            (string) $userId,
+            $newNetwork,
+            $currencySymbol,
+        );
+    }
+
+    /**
      * Map withdrawal status from new system to old system format
      */
     private function mapWithdrawalStatus(string $newStatus): string

@@ -26,7 +26,7 @@ class NewHDWalletService
 
     private function apiKey(): string
     {
-        return config('hd-wallet.new_api_key');
+        return config('hd-wallet.api_key');
     }
 
     private function httpClient()
@@ -293,6 +293,62 @@ class NewHDWalletService
                 'exception' => $exception->getMessage(),
             ]);
             throw new HDWalletNewUnavailable('HD Wallet New service is unavailable');
+        }
+    }
+
+    // ──────────────────────────────────────────────
+    //  Deposit Watch
+    // ──────────────────────────────────────────────
+
+    /**
+     * Start watching an address for deposits
+     * POST /api/deposits/watch
+     */
+    public function watchDeposit(string $userId, string $address, string $network, string $currencySymbol, int $ttlMinutes = 10): array
+    {
+        try {
+            $response = $this->httpClient()
+                ->post($this->baseUrl() . '/api/deposits/watch', [
+                    'userId' => $userId,
+                    'address' => $address,
+                    'network' => $network,
+                    'currencySymbol' => $currencySymbol,
+                    'ttlMinutes' => $ttlMinutes,
+                ]);
+
+            if (! $response->successful()) {
+                Log::channel('hd-wallet')->error('HD Wallet New - Watch Deposit Failed:', [
+                    'user_id' => $userId,
+                    'response_status' => $response->status(),
+                    'response_body' => $response->body(),
+                ]);
+                throw new HDWalletNewServerError($response->body());
+            }
+
+            return $response->json('data');
+        } catch (ConnectionException $exception) {
+            Log::channel('hd-wallet')->error('HD Wallet New - Watch Deposit Connection Failed:', [
+                'user_id' => $userId,
+                'exception' => $exception->getMessage(),
+            ]);
+            throw new HDWalletNewUnavailable('HD Wallet New service is unavailable');
+        }
+    }
+
+    /**
+     * Stop watching an address for deposits
+     * DELETE /api/deposits/watch/:userId/:network/:currencySymbol
+     */
+    public function unwatchDeposit(string $userId, string $network, string $currencySymbol): void
+    {
+        try {
+            $this->httpClient()
+                ->delete($this->baseUrl() . "/api/deposits/watch/{$userId}/{$network}/{$currencySymbol}");
+        } catch (ConnectionException $exception) {
+            Log::channel('hd-wallet')->warning('HD Wallet New - Unwatch Deposit Connection Failed:', [
+                'user_id' => $userId,
+                'exception' => $exception->getMessage(),
+            ]);
         }
     }
 }

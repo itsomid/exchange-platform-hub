@@ -70,8 +70,13 @@ class CheckWithdrawalStatus implements ShouldQueue
             } elseif ($responseDTO->getStatus() === 'failed') {
                 $this->handleFailedWithdrawal($withdrawal, $responseDTO);
                 Log::channel('hd-wallet')->error("Withdrawal {$this->withdrawalId} marked as failed automatically with description: {$responseDTO->getDescription()}");
+            } elseif ($responseDTO->getStatus() === 'broadcasted') {
+                // Transaction has been broadcasted to the network but not yet confirmed.
+                // The withdrawal-processor may still be working on it; reschedule the check.
+                Log::info("Withdrawal {$this->withdrawalId} is broadcasted but not yet confirmed, scheduling next check (retry {$this->currentRetry})");
+                $this->scheduleNextCheck();
             } else {
-                Log::info("Withdrawal {$this->withdrawalId} marked as pending automatically");
+                Log::info("Withdrawal {$this->withdrawalId} status is '{$responseDTO->getStatus()}', scheduling next check (retry {$this->currentRetry})");
                 // Status is still pending/processing, schedule another check
                 $this->scheduleNextCheck();
             }

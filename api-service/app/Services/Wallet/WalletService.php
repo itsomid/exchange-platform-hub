@@ -59,29 +59,39 @@ class WalletService
 
             $address = $chain->address;
 
-            if (is_null($address)) {
-                //Generate Public Key
-                $hdWallet = resolve(HDWalletFacade::class);
+            $hdWallet = resolve(HDWalletFacade::class);
 
-                $blockchainName = $chain->wallet->currency->chains->where('chain', $chain->currency_chain)->first()->blockchain_name->value;
-        
-
+            // When using the new HD wallet system, always call the new service even if
+            // an address already exists in MySQL. This ensures user_addresses in MongoDB
+            // stays populated. The new service's getUserAddress() is idempotent:
+            // it returns the existing address if found, otherwise generates a new one.
+            if (is_null($address) || $hdWallet->isNewSystem()) {
+                $blockchainName = $chain->wallet->currency->chains
+                    ->where('chain', $chain->currency_chain)->first()->blockchain_name->value;
                 $currencySymbol = $chain->wallet->currency->symbol;
+
                 try {
-                    $address = $hdWallet->generateAddress(
+                    $newAddress = $hdWallet->generateAddress(
                         $requestDTO->getUserId(),
                         $blockchainName,
                         $currencySymbol
                     );
+
+                    if ($newAddress !== $address) {
+                        $address = $newAddress;
+                        $this->walletChainRepository->savePublicKey(
+                            $chain->id,
+                            $address
+                        );
+                    }
                 } catch (HDWalletException $exception) {
                     report($exception);
-                    throw new InternalWalletHasProblemException;
+                    if (is_null($address)) {
+                        // No address at all — cannot continue
+                        throw new InternalWalletHasProblemException;
+                    }
+                    // Address already exists — log the failure but continue with existing address
                 }
-
-                $this->walletChainRepository->savePublicKey(
-                    $chain->id,
-                    $address
-                );
             }
             DB::commit();
         } catch (Throwable $exception) {

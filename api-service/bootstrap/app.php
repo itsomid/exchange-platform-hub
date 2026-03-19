@@ -30,6 +30,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
             Route::middleware(['api'])->prefix('/api/external/v1')
                 ->group(base_path('routes/external_v1.php'));
+
+            // Internal webhook routes (wallet service → api service)
+            Route::middleware(['api'])->prefix('/api/hdwallet/v1') 
+                ->group(base_path('routes/hdwallet_v1.php'));
         }
     )
     ->withBroadcasting(

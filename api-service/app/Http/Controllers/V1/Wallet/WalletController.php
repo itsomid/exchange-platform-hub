@@ -17,6 +17,9 @@ use App\Services\Wallet\DTO\Wallet\GetOneWalletRequestDTO;
 use App\Services\Wallet\DTO\Wallet\WalletListsRequestDTO;
 use App\Services\Wallet\DTO\Wallet\WalletValueUSDTRequestDTO;
 use App\Services\Wallet\WalletService;
+use App\Infrastructure\HDWalletNew\HDWalletFacade;
+use App\Repositories\Interfaces\WalletRepositoryInterface;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -103,5 +106,115 @@ class WalletController extends Controller
                 'has_new_transaction' => $hasNewTransaction,
             ],
         ]);
+    }
+
+    /**
+     * Start watching a currency's chains for deposits
+     * POST /api/v1/wallets/watch-deposit
+     */
+    public function watchDeposit(Request $request)
+    {
+        $request->validate([
+            'currency_symbol' => 'required|string|exists:currencies,symbol',
+        ]);
+
+        $userId = Auth::id();
+        $currencySymbol = $request->input('currency_symbol');
+
+        $wallet = resolve(WalletRepositoryInterface::class)->getOneByCurrency($currencySymbol, $userId);
+
+        if (!$wallet) {
+            return response(['message' => __('messages.wallet_not_found')], 404);
+        }
+
+        $wallet->load('chains.wallet.currency.chains');
+        $walletChains = $wallet->chains;
+
+        $hdWalletFacade = resolve(HDWalletFacade::class);
+        $watchedChains = [];
+
+        foreach ($walletChains as $walletChain) {
+            if (empty($walletChain->address)) {
+                continue;
+            }
+
+            $currencyChain = $walletChain->wallet->currency->chains
+                ->where('chain', $walletChain->currency_chain)->first();
+
+            if (!$currencyChain || !$currencyChain->deposit_enabled) {
+                continue;
+            }
+
+            try {
+                $result = $hdWalletFacade->watchDeposit(
+                    $userId,
+                    $walletChain->address,
+                    $currencyChain->blockchain_name->value,
+                    $currencySymbol,
+                    10,
+                );
+
+                if ($result) {
+                    $watchedChains[] = [
+                        'chain' => $walletChain->currency_chain,
+                        'address' => $walletChain->address,
+                        'expires_at' => $result['expiresAt'] ?? null,
+                    ];
+                }
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
+        return response([
+            'message' => 'واریز شما در حال بررسی است',
+            'data' => [
+                'watched_chains' => $watchedChains,
+                'ttl_minutes' => 10,
+                'expires_at' => now()->addMinutes(10)->format('Y-m-d H:i:s'),
+            ],
+        ]);
+    }
+
+    /**
+     * Stop watching a currency's chains for deposits
+     * DELETE /api/v1/wallets/watch-deposit
+     */
+    public function unwatchDeposit(Request $request)
+    {
+        $request->validate([
+            'currency_symbol' => 'required|string',
+        ]);
+
+        $userId = Auth::id();
+        $currencySymbol = $request->input('currency_symbol');
+
+        $wallet = resolve(WalletRepositoryInterface::class)->getOneByCurrency($currencySymbol, $userId);
+
+        if (!$wallet) {
+            return response(['message' => 'ok']);
+        }
+
+        $wallet->load('chains.wallet.currency.chains');
+        $hdWalletFacade = resolve(HDWalletFacade::class);
+
+        foreach ($wallet->chains as $walletChain) {
+            $currencyChain = $walletChain->wallet->currency->chains
+                ->where('chain', $walletChain->currency_chain)->first();
+
+            if (!$currencyChain) continue;
+
+            try {
+                $hdWalletFacade->unwatchDeposit(
+                    $userId,
+                    $currencyChain->blockchain_name->value,
+                    $currencySymbol,
+                );
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
+        return response(['message' => 'ok']);
     }
 }

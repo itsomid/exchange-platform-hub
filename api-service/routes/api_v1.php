@@ -40,6 +40,8 @@ Route::prefix('/currencies')->group(function () {
 Route::prefix('/wallets')->group(function () {
     Route::post('/generate-address', [WalletController::class, 'generateAddress'])->name('wallets.generate-address');
     Route::post('/refresh', [WalletController::class, 'refresh'])->name('wallets.refresh')->middleware(['throttle:wallet-check']);
+    Route::post('/watch-deposit', [WalletController::class, 'watchDeposit'])->name('wallets.watch-deposit');
+    Route::delete('/watch-deposit', [WalletController::class, 'unwatchDeposit'])->name('wallets.unwatch-deposit');
     Route::get('/lists', [WalletController::class, 'lists'])->name('wallets.lists');
     Route::get('/value-usdt', [WalletController::class, 'assetsUSDTValue'])->name('wallets.value-usdt');
 
