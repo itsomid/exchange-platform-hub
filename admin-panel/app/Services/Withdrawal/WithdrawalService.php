@@ -176,6 +176,7 @@ class WithdrawalService
             // Unlock funds for pending/processing records. For previously failed withdrawals,
             // locked balance is already released and should not be decremented again.
             if (! $wasFailed) {
+                $wallet->decrement('balance', $withdrawal->amount);
                 $wallet->decrement('locked_balance', $withdrawal->amount);
             }
 

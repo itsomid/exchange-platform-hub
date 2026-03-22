@@ -93,46 +93,30 @@ class CheckWithdrawalStatus implements ShouldQueue
     private function handleCompletedWithdrawal(Withdrawal $withdrawal, $responseDTO): void
     {
         try {
-            DB::beginTransaction();
+            $withdrawalService = resolve(\App\Services\Withdrawal\WithdrawalService::class);
 
-            // Get wallet and update balances
             $wallet = \App\Models\Wallet::query()
                 ->where('user_id', $withdrawal->user_id)
                 ->where('currency_symbol', $withdrawal->currency_symbol)
-                ->lockForUpdate()
                 ->first();
 
-            if ($wallet) {
-                // Deduct from locked_balance only (balance was already deducted during creation)
-                $wallet->decrement('locked_balance', $withdrawal->amount);
+            if (!$wallet) {
+                Log::error("Wallet not found for withdrawal {$this->withdrawalId}");
+                return;
             }
 
-            // Update withdrawal record
+            $withdrawalService->confirmWithdrawal(
+                $withdrawal->id,
+                $wallet->id,
+                $responseDTO->getTransactionHash()
+            );
+
+            // Update HD wallet network fee (not handled by the service)
             $withdrawal->update([
-                'transaction_hash' => $responseDTO->getTransactionHash(),
-                'status' => WithdrawalStatusEnum::COMPLETED,
                 'hd_wallet_network_fee' => $responseDTO->getFee(),
-                'confirmed_at' => now(),
-                'description' => 'Withdrawal completed automatically',
             ]);
-
-            // Create transaction record
-            \App\Models\Transaction::create([
-                'user_id' => $withdrawal->user_id,
-                'wallet_id' => $wallet->id,
-                'withdrawal_id' => $withdrawal->id,
-                'amount' => -$withdrawal->amount,
-                'balance' => $wallet->balance,
-                'type' => \App\Enums\TransactionTypeEnum::WITHDRAWAL,
-                'subtype' => \App\Enums\TransactionSubTypeEnum::USER_INITIATED,
-                'status' => \App\Enums\TransactionStatusEnum::SUCCESS,
-                'description' => 'برداشت به آدرس: ' . $withdrawal->address . ' هش تراکنش: ' . $responseDTO->getTransactionHash()
-            ]);
-
-            DB::commit();
 
         } catch (Throwable $e) {
-            DB::rollBack();
             Log::error("Failed to handle completed withdrawal {$this->withdrawalId}: " . $e->getMessage());
             throw $e;
         }

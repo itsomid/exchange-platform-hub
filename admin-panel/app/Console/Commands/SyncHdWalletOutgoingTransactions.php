@@ -8,8 +8,7 @@ use App\Models\Currency;
 use App\Models\CurrencyChain;
 use App\Models\Deposit;
 use App\Models\HdWalletOutgoingTransaction;
-use App\Models\Wallet;
-use App\Models\WalletChain;
+
 use App\Services\NodeProviders\BlockchairService;
 use App\Services\NodeProviders\BscScanService;
 use App\Services\NodeProviders\EtherScanService;
