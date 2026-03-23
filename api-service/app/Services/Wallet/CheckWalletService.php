@@ -132,13 +132,15 @@ class CheckWalletService
                         $user->notify(new DepositSuccessful($transaction->getCryptocurrency(), $transaction->getAmount(), $user->name));
 
                         // Broadcast deposit detected event via WebSocket
-                  
-                        DepositDetected::dispatch($user->id, [
-                            'currency' => $transaction->getCryptocurrency(),
-                            'amount' => $transaction->getAmount(),
-                            'tx_hash' => $transaction->getTransactionHash(),
-                            'status' => 'confirmed',
-                        ]);
+                        if($hdWalletService->isNewSystem()){
+                            DepositDetected::dispatch($user->id, [
+                                'currency' => $transaction->getCryptocurrency(),
+                                'amount' => $transaction->getAmount(),
+                                'tx_hash' => $transaction->getTransactionHash(),
+                                'status' => 'confirmed',
+                            ]);
+                        }
+                       
                     }
                     DB::commit();
                     $hasNewTransaction = true;
