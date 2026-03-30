@@ -176,7 +176,6 @@ class WithdrawalService
             // Unlock funds for pending/processing records. For previously failed withdrawals,
             // locked balance is already released and should not be decremented again.
             if (! $wasFailed) {
-                $wallet->decrement('balance', $withdrawal->amount);
                 $wallet->decrement('locked_balance', $withdrawal->amount);
             }
 
@@ -268,7 +267,52 @@ class WithdrawalService
                 ->first();
 
             if ($wallet) {
+                // Restore balance that was deducted during withdrawal creation
+                $wallet->increment('balance', $withdrawal->amount);
                 $wallet->decrement('locked_balance', $withdrawal->amount);
+            }
+
+            DB::commit();
+
+            return $withdrawal;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
+    /**
+     * Cancel a queued/failed withdrawal by admin and restore user balance.
+     */
+    public function adminCancelQueuedWithdrawal(int $withdrawalId, int $admin_id, string $reason): Withdrawal
+    {
+        DB::beginTransaction();
+
+        try {
+            $withdrawal = Withdrawal::where('id', $withdrawalId)->lockForUpdate()->firstOrFail();
+
+            if (!in_array($withdrawal->status, [WithdrawalStatusEnum::QUEUED])) {
+                throw new \Exception('This withdrawal is not in a cancellable state.');
+            }
+
+            $withdrawal->update([
+                'status' => WithdrawalStatusEnum::REJECTED,
+                'admin_id' => $admin_id,
+                'description' => 'Cancelled by admin (#' . $admin_id . '): ' . $reason,
+            ]);
+
+            $wallet = \App\Models\Wallet::query()
+                ->where('user_id', $withdrawal->user_id)
+                ->where('currency_symbol', $withdrawal->currency_symbol)
+                ->lockForUpdate()
+                ->first();
+
+            if ($wallet) {
+                $amountToUnlock = min($wallet->locked_balance, $withdrawal->amount);
+                if ($amountToUnlock > 0) {
+                    $wallet->decrement('locked_balance', $amountToUnlock);
+                }
+                $wallet->increment('balance', $withdrawal->amount);
             }
 
             DB::commit();
@@ -348,10 +392,34 @@ class WithdrawalService
 
                 if ($responseDTO->getStatus() === 'failed') {
 
-                    $withdrawal->update([
-                        'status' => WithdrawalStatusEnum::FAILED,
-                        'description' => $responseDTO->getDescription()
-                    ]);
+                    DB::beginTransaction();
+                    try {
+                        $lockedWithdrawal = Withdrawal::where('id', $withdrawal->id)->lockForUpdate()->first();
+                        if ($lockedWithdrawal && $lockedWithdrawal->status !== WithdrawalStatusEnum::FAILED) {
+                            $lockedWithdrawal->update([
+                                'status' => WithdrawalStatusEnum::FAILED,
+                                'description' => $responseDTO->getDescription()
+                            ]);
+
+                            $failedWallet = Wallet::query()
+                                ->where('user_id', $lockedWithdrawal->user_id)
+                                ->where('currency_symbol', $lockedWithdrawal->currency_symbol)
+                                ->lockForUpdate()
+                                ->first();
+
+                            if ($failedWallet) {
+                                $amountToUnlock = min($failedWallet->locked_balance, $lockedWithdrawal->amount);
+                                if ($amountToUnlock > 0) {
+                                    $failedWallet->decrement('locked_balance', $amountToUnlock);
+                                }
+                                $failedWallet->increment('balance', $lockedWithdrawal->amount);
+                            }
+                        }
+                        DB::commit();
+                    } catch (Throwable $e) {
+                        DB::rollBack();
+                        throw $e;
+                    }
 
                     $checkWithdrawalResponseDTO->setStatus(WithdrawalStatusEnum::FAILED);
                 } elseif ($responseDTO->getStatus() === 'completed') {

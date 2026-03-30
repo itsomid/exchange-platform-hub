@@ -97,50 +97,44 @@ class SendWithdrawalToHDWallet implements ShouldQueue
      */
     public function failed(Throwable $exception): void
     {
-        $withdrawal = Withdrawal::find($this->withdrawalId);
+        try {
+            DB::beginTransaction();
 
-        if ($withdrawal) {
-            try {
-                DB::beginTransaction();
+            $withdrawal = Withdrawal::where('id', $this->withdrawalId)
+                ->lockForUpdate()
+                ->first();
 
-                $withdrawal->update([
-                    'status' => WithdrawalStatusEnum::FAILED,
-                    'description' => 'Failed to process withdrawal after multiple attempts: ' . $exception->getMessage()
-                ]);
-
-                // Unlock the balance
-                $this->unlockBalance($withdrawal);
-
+            if (!$withdrawal) {
                 DB::commit();
-
-                Log::error("Withdrawal {$this->withdrawalId} marked as failed after all retry attempts", [
-                    'error' => $exception->getMessage()
-                ]);
-            } catch (Throwable $e) {
-                DB::rollBack();
-                Log::error("Failed to mark withdrawal {$this->withdrawalId} as failed", [
-                    'error' => $e->getMessage()
-                ]);
+                Log::error("Withdrawal not found for failure handling: {$this->withdrawalId}");
+                return;
             }
-        }
-    }
 
-    /**
-     * Unlock the balance when withdrawal fails
-     */
-    private function unlockBalance(Withdrawal $withdrawal): void
-    {
-        $lockedBalanceRepository = resolve(\App\Repositories\Interfaces\LockedBalanceRepositoryInterface::class);
-        $lockedBalanceRepository->deleteWithdrawalLockedBalance($withdrawal->id);
+            if (!in_array($withdrawal->status, [WithdrawalStatusEnum::QUEUED, WithdrawalStatusEnum::PROCESSING])) {
+                DB::commit();
+                Log::info("Withdrawal {$this->withdrawalId} already handled (status: {$withdrawal->status->value}), skipping failure handler.");
+                return;
+            }
 
-        $wallet = \App\Models\Wallet::query()
-            ->where('user_id', $withdrawal->user_id)
-            ->where('currency_symbol', $withdrawal->currency_symbol)
-            ->lockForUpdate()
-            ->first();
+            // Keep status as QUEUED so the user doesn't see a failure.
+            $withdrawal->update([
+                'status' => WithdrawalStatusEnum::QUEUED,
+                'job_failed_at' => now(),
+                'description' => 'Job failed: ' . $exception->getMessage(),
+            ]);
 
-        if ($wallet) {
-            $wallet->decrement('locked_balance', $withdrawal->amount);
+            // Do NOT unlock balance here - it stays locked until resolved
+
+            DB::commit();
+
+            Log::error("Withdrawal {$this->withdrawalId} job failed, kept as QUEUED for review", [
+                'error' => $exception->getMessage()
+            ]);
+        } catch (Throwable $e) {
+            DB::rollBack();
+            Log::error("Failed to update withdrawal {$this->withdrawalId} after job failure", [
+                'error' => $e->getMessage()
+            ]);
         }
     }
 }

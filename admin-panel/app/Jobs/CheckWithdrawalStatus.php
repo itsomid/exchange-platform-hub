@@ -130,6 +130,16 @@ class CheckWithdrawalStatus implements ShouldQueue
         try {
             DB::beginTransaction();
 
+            // Re-fetch with lock to prevent race conditions
+            $withdrawal = Withdrawal::where('id', $withdrawal->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$withdrawal || $withdrawal->status !== WithdrawalStatusEnum::PROCESSING) {
+                DB::commit();
+                return;
+            }
+
             // Update withdrawal status
             $withdrawal->update([
                 'status' => WithdrawalStatusEnum::FAILED,
@@ -176,7 +186,13 @@ class CheckWithdrawalStatus implements ShouldQueue
             ->first();
 
         if ($wallet) {
-            $wallet->decrement('locked_balance', $withdrawal->amount);
+            // Prevent locked_balance from going negative
+            $amountToUnlock = min($wallet->locked_balance, $withdrawal->amount);
+            if ($amountToUnlock > 0) {
+                $wallet->decrement('locked_balance', $amountToUnlock);
+            }
+            // Restore balance that was deducted during withdrawal creation
+            $wallet->increment('balance', $withdrawal->amount);
         }
     }
 
