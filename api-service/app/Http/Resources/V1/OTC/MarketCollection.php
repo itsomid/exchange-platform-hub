@@ -24,7 +24,7 @@ class MarketCollection extends ResourceCollection
             'base_currency' => $DTO->getBaseCurrency(),
             'currency_name' => $DTO->getCurrencyName(),
             'currency_persian_name' => $DTO->getCurrencyPersianName(),
-            'currency_logo' => $DTO->getCurrencyLogo(),
+            'currency_logo' => $DTO->getCurrencyLogo() ? config('bitexroom.currency_logo_base_url') . '/' . $DTO->getCurrencyLogo() : null,
             'quote_currency' => $DTO->getQuoteCurrency(),
             'is_active' => $DTO->getIsActive(),
             'min_trade_amount' => $DTO->getMinTradeAmount(),

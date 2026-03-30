@@ -27,4 +27,5 @@ return [
     'contracts' => [
         'base_url' => env('CONTRACTS_FILE_BASE_URL', 'http://127.0.0.1:8001'),
     ],
+    'currency_logo_base_url' => env('CURRENCY_LOGO_BASE_URL', env('APP_URL') . '/images/currencies'),
 ];

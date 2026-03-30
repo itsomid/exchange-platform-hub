@@ -21,7 +21,7 @@ class ConfigCollection extends ResourceCollection
                 'ccy' => $configResponseDTO->getSymbol(),
                 'currency_name' => $configResponseDTO->getCurrencyName(),
                 'currency_persian_name' => $configResponseDTO->getCurrencyPersianName(),
-                'currency_logo' => $configResponseDTO->getCurrencyLogo(),
+                'currency_logo' => $configResponseDTO->getCurrencyLogo() ? config('bitexroom.currency_logo_base_url') . '/' . $configResponseDTO->getCurrencyLogo() : null,
                 'inter_transfer_enabled' => $configResponseDTO->getInterTransferEnabled(),
                 'max_auto_withdraw_amount' => $configResponseDTO->getMaxAutoWithdrawAmount(),
                 'price_precision' => $configResponseDTO->getPricePrecision(),

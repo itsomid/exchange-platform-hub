@@ -31,7 +31,7 @@ class WalletListsCollection extends ResourceCollection
         return $this->collection->map(fn(WalletListsResponseDTO $walletListsResponseDTO) => [
             'id' => $walletListsResponseDTO->getId(),
             'currency' => $walletListsResponseDTO->getCurrency(),
-            'currency_logo' => $walletListsResponseDTO->getCurrencyLogo(),
+            'currency_logo' => $walletListsResponseDTO->getCurrencyLogo() ? config('bitexroom.currency_logo_base_url') . '/' . $walletListsResponseDTO->getCurrencyLogo() : null,
             'balance' => $walletListsResponseDTO->getBalance(),
             'frozen_balance' => $walletListsResponseDTO->getLockedBalance(),
             'available_balance' => $walletListsResponseDTO->getAvailableBalance(),
