@@ -72,6 +72,7 @@
                         <option value="BTC">BTC</option>
                         <option value="DOGE">DOGE</option>
                         <option value="LTC">LTC</option>
+                        <option value="ARBITRUM">Arbitrum One</option>
                     </select>
                 </div>
             </div>
@@ -83,9 +84,24 @@
                             <th>شبکه</th>
                             <th>hd-wallet-sweeper</th>
                             <th>hd-wallet-service_new</th>
+                            <th>کیف پول اختصاص یافته</th>
                         </tr>
                     </thead>
                     <tbody class="table-border-bottom-0">
+                        @php
+                            // Build network -> assignedWalletId map from native coins
+                            $nativeWalletMap = [];
+                            foreach ($items as $_nativeItem) {
+                                if (($_nativeItem['service_payload']['isNative'] ?? false) && $_nativeItem['network']) {
+                                    $nativeWalletMap[$_nativeItem['network']] = $_nativeItem['service_payload']['assignedWalletId'] ?? null;
+                                }
+                            }
+                            // Build walletId -> wallet name map
+                            $walletNameMap = [];
+                            foreach ($wallets as $_w) {
+                                $walletNameMap[$_w['walletId']] = $_w['name'];
+                            }
+                        @endphp
                         @foreach ($items as $item)
                             <tr class="" data-chain="{{ $item['chain'] }}"
                                 data-search="{{ strtolower($item['symbol'] . ' ' . ($item['persian_name'] ?? '') . ' ' . ($item['display_name'] ?? '') . ' ' . ($item['network_label'] ?? '') . ' ' . ($item['chain'] ?? '')) }}">
@@ -100,6 +116,8 @@
                                             'BTC' => $symbol === 'BTC',
                                             'DOGE' => $symbol === 'DOGE',
                                             'LTC' => $symbol === 'LTC',
+                                            'POLYGON' => $symbol === 'POL',
+                                            'ARBITRUM' => $symbol === 'ETH',
                                             default => false,
                                         };
                                         $chainIcon = $isNativeCoin
@@ -111,6 +129,8 @@
                                                 'BTC' => asset('images/coins/btc.svg'),
                                                 'DOGE' => asset('images/coins/doge.svg'),
                                                 'LTC' => asset('images/coins/ltc.svg'),
+                                                'POLYGON' => asset('images/coins/pol.svg'),
+                                                'ARBITRUM' => asset('images/coins/eth.svg'),
                                                 default => null,
                                             };
                                     @endphp
@@ -207,7 +227,10 @@
                                                 data-decimals="{{ $item['service_payload']['decimals'] ?? $item['decimals'] }}"
                                                 data-required-confirmations="{{ $item['service_payload']['networkConfig']['confirmations'] ?? '' }}"
                                                 data-description="{{ $item['service_payload']['description'] ?? $item['description'] }}"
-                                                data-is-active="{{ $item['service_payload']['isActive'] ?? true ? '1' : '0' }}">
+                                                data-is-active="{{ $item['service_payload']['isActive'] ?? true ? '1' : '0' }}"
+                                                data-assigned-wallet-id="{{ $item['service_payload']['assignedWalletId'] ?? '' }}"
+                                                data-network="{{ $item['network'] }}"
+                                                data-is-native="{{ ($item['service_payload']['isNative'] ?? false) ? '1' : '0' }}">
                                                 <i class="fa-regular fa-edit"></i>
                                             </button>
                                             @if ($item['service_payload']['isActive'] ?? true)
@@ -243,6 +266,40 @@
                                             @endif
                                         @endif
                                     </div>
+                                </td>
+                                <td>
+                                    @if ($item['exists_service'] && $item['service_identifier'])
+                                        @php
+                                            $isNative = $item['service_payload']['isNative'] ?? false;
+                                            $assignedWallet = $item['service_payload']['assignedWalletId'] ?? null;
+                                        @endphp
+                                        @if ($isNative)
+                                            @if ($assignedWallet)
+                                                <span class="badge bg-label-info">
+                                                    <i class="fa-regular fa-wallet me-1"></i>
+                                                    {{ $assignedWallet }}
+                                                </span>
+                                            @else
+                                                <span class="badge bg-label-secondary">
+                                                    <i class="fa-regular fa-random me-1"></i>
+                                                    پیش‌فرض شبکه
+                                                </span>
+                                            @endif
+                                        @else
+                                            @php
+                                                $parentWalletId = $nativeWalletMap[$item['network']] ?? null;
+                                                $parentWalletName = $parentWalletId
+                                                    ? ($walletNameMap[$parentWalletId] ?? $parentWalletId)
+                                                    : null;
+                                            @endphp
+                                            <span class="badge bg-label-warning" title="ارث‌بری از کوین مادر">
+                                                <i class="fa-regular fa-link me-1"></i>
+                                                {{ $parentWalletId ?? 'پیش‌فرض شبکه' }}
+                                            </span>
+                                        @endif
+                                    @else
+                                        <span class="text-secondary">-</span>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
@@ -351,6 +408,23 @@
                                     <option value="0">غیرفعال</option>
                                 </select>
                             </div>
+                            <div class="col-md-12" id="walletDropdownWrapper" style="display: none;">
+                                <label class="form-label">کیف پول </label>
+                                <select class="form-select" name="assigned_wallet_id" id="editAssignedWalletId">
+                                    <option value="">پیش‌فرض شبکه (اولین کیف پول فعال)</option>
+                                    @foreach ($wallets as $w)
+                                        <option value="{{ $w['walletId'] }}"
+                                            data-networks="{{ implode(',', $w['supportedNetworks'] ?? []) }}">
+                                            {{ $w['name'] }} ({{ $w['walletId'] }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <div class="form-text d-none" id="walletTokenHint">
+                                    <i class="fa-regular fa-info-circle me-1"></i>
+                                    تغییر کیف پول فقط برای کوین‌های مادر امکان‌پذیر است. توکن‌ها به صورت خودکار از HDWallet ای که به کوین مادر منصوب شد استفاده می‌کنند.
+                                </div>
+                            </div>
+
                             <div class="col-md-12">
                                 <label class="form-label">آدرس قرارداد (Contract Address)</label>
                                 <input type="text" class="form-control" name="contract_address"
@@ -399,6 +473,8 @@
             const editRequiredConfirmations = document.getElementById('editRequiredConfirmations');
             const editIsActive = document.getElementById('editIsActive');
             const editDescription = document.getElementById('editDescription');
+            const editAssignedWalletId = document.getElementById('editAssignedWalletId');
+            const walletDropdownWrapper = document.getElementById('walletDropdownWrapper');
             const currencySearch = document.getElementById('currencySearch');
             const chainFilter = document.getElementById('chainFilter');
 
@@ -433,7 +509,8 @@
                     return;
                 }
 
-                editTarget.value = button.dataset.target || '';
+                const target = button.dataset.target || '';
+                editTarget.value = target;
                 editIdentifier.value = button.dataset.identifier || '';
                 editDisplayName.value = button.dataset.displayName || '';
                 editSymbol.value = button.dataset.symbol || '';
@@ -442,6 +519,42 @@
                 editRequiredConfirmations.value = button.dataset.requiredConfirmations || '';
                 editIsActive.value = button.dataset.isActive === '0' ? '0' : '1';
                 editDescription.value = button.dataset.description || '';
+
+                const walletTokenHint = document.getElementById('walletTokenHint');
+
+                // Show/hide and populate wallet dropdown only for service_new
+                if (target === 'service_new') {
+                    walletDropdownWrapper.style.display = '';
+                    const currentNetwork = button.dataset.network || '';
+                    const currentWalletId = button.dataset.assignedWalletId || '';
+                    const isNative = button.dataset.isNative === '1';
+
+                    // Filter wallet options by network
+                    Array.from(editAssignedWalletId.options).forEach(function(opt) {
+                        if (!opt.value) {
+                            // Always show the default option
+                            return;
+                        }
+                        const networks = (opt.dataset.networks || '').split(',');
+                        opt.style.display = (!currentNetwork || networks.includes(currentNetwork)) ? '' : 'none';
+                    });
+
+                    // Only native coins can change wallet; tokens inherit from parent
+                    if (isNative) {
+                        editAssignedWalletId.disabled = false;
+                        editAssignedWalletId.value = currentWalletId;
+                        walletTokenHint.classList.add('d-none');
+                    } else {
+                        editAssignedWalletId.disabled = true;
+                        editAssignedWalletId.value = '';
+                        walletTokenHint.classList.remove('d-none');
+                    }
+                } else {
+                    walletDropdownWrapper.style.display = 'none';
+                    editAssignedWalletId.value = '';
+                    editAssignedWalletId.disabled = false;
+                }
+
                 editModal.show();
             });
 

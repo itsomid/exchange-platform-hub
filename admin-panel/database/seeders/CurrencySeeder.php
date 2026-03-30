@@ -131,43 +131,36 @@ class CurrencySeeder extends Seeder
                 'max_auto_withdraw_amount' => 10000,
             ],
             [
-                'name' => 'The Sandbox',
-                'persian_name' => 'سندباکس',
-                'symbol' => 'SAND',
-                'logo' => 'sand.svg',
+                'name' => 'Polygon',
+                'persian_name' => 'پالیگان',
+                'symbol' => 'POL',
+                'logo' => 'pol.webp',
                 'price_precision' => 4,
                 'amount_precision' => 2,
                 'max_auto_withdraw_amount' => 100000,
             ],
             [
-                'name' => 'Gala',
-                'persian_name' => 'گالا',
-                'symbol' => 'GALA',
-                'logo' => 'gala.svg',
-                'price_precision' => 5,
-                'amount_precision' => 2,
-                'max_auto_withdraw_amount' => 100000,
-            ],
-            [
-                'name' => 'Uniswap',
-                'persian_name' => 'یونی‌سواپ',
-                'symbol' => 'UNI',
-                'logo' => 'uni.svg',
-                'price_precision' => 2,
-                'amount_precision' => 2,
-                'max_auto_withdraw_amount' => 10000,
-            ],
-            [
-                'name' => 'xMoney',
-                'persian_name' => 'اکس مانی',
-                'symbol' => 'UTK',
-                'logo' => 'utk.svg',
+                'name' => 'Arbitrum',
+                'persian_name' => 'آربیتروم',
+                'symbol' => 'ARB',
+                'logo' => 'arb.webp',
                 'price_precision' => 4,
                 'amount_precision' => 2,
                 'max_auto_withdraw_amount' => 100000,
-            ],
+            ]
         ];
 
-        \DB::table('currencies')->insert($currencies);
+        \DB::table('currencies')->upsert(
+            $currencies,
+            ['symbol'],
+            [
+                'name',
+                'persian_name',
+                'logo',
+                'price_precision',
+                'amount_precision',
+                'max_auto_withdraw_amount',
+            ]
+        );
     }
 }
