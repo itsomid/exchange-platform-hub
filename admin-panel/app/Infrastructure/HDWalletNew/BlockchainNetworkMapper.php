@@ -21,6 +21,8 @@ class BlockchainNetworkMapper
         'BITCOIN' => 'bitcoin',
         'TRON' => 'tron',
         'ETHEREUM' => 'ethereum',
+        'POLYGON' => 'polygon',
+        'ARBITRUM' => 'arbitrum'
     ];
 
     /**
@@ -32,6 +34,8 @@ class BlockchainNetworkMapper
         'bitcoin' => 'BITCOIN',
         'tron' => 'TRON',
         'ethereum' => 'ETHEREUM',
+        'polygon' => 'POLYGON',
+        'arbitrum' => 'ARBITRUM'
     ];
 
     /**

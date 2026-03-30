@@ -9,5 +9,6 @@ enum CurrencyBlockChainNameEnum: string
     case BINANCE = 'BINANCE';
     case ETHEREUM = 'ETHEREUM';
     case DOGE = 'DOGE';
-
+    case POLYGON = 'POLYGON';
+    case ARBITRUM = 'ARBITRUM';
 }

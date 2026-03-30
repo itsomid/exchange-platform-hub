@@ -31,7 +31,8 @@ class EtherScanService
         'SUSHI' => 18,
         'CRV' => 18,
         'BAL' => 18,
-        'MATIC' => 18,
+        'POL' => 18,
+        'ARB' => 18,
         'ETH' => 18, // Native ETH
         'TLM' => 4
     ];

@@ -14,7 +14,7 @@ enum CurrencyChainEnum: string
     case BSC = 'BSC';         // Binance Smart Chain (Native chain)
     case DOGE = 'DOGE';       // Dogecoin blockchain
     case SOL = 'SOL';         // Solana blockchain
-    case POLYGON = 'MATIC';   // Polygon (previously Matic Network)
+    case POLYGON = 'POLYGON'; // Polygon blockchain
     case LTC = 'LTC';         // Litecoin blockchain
     case AVAX = 'AVAX';       // Avalanche blockchain
     case FTM = 'FTM';         // Fantom blockchain
@@ -24,4 +24,5 @@ enum CurrencyChainEnum: string
     case MITH = 'MITH';       // MITH (Mithril) blockchain
     case COSMOS = 'COSMOS';   // Cosmos blockchain
     case TEZOS = 'TEZOS';     // Tezos blockchain
+    case ARBITRUM = 'ARBITRUM'; // Arbitrum One (L2)
 }

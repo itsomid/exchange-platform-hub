@@ -10,6 +10,8 @@ class CryptoExplorerService
         'ERC20' => 'https://etherscan.io/address/',
         'TRC20' => 'https://tronscan.org/#/address/',
         'BSC' => 'https://bscscan.com/address/',
+        'POLYGON' => 'https://polygonscan.com/address/',
+        'ARBITRUM' => 'https://arbiscan.io/address/',
     ];
 
     public static function getExplorerUrl(string $network, string $address): ?string

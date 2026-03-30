@@ -9,8 +9,10 @@ enum CurrencyChainEnum: string
     case TRC20 = 'TRC20';     // TRON TRC-20 token standard
     case BSC = 'BSC';         // Binance Smart Chain (Native chain)
     case DOGE = 'DOGE';       // Dogecoin blockchain
-    case SOL = 'SOL';         // Solana blockchain
-    case POLYGON = 'MATIC';   // Polygon (previously Matic Network)
+    case POLYGON = 'POLYGON';   // Polygon
+    case ARBITRUM = 'ARBITRUM'; // Arbitrum One (L2)
+
+
     case LTC = 'LTC';         // Litecoin blockchain
     case AVAX = 'AVAX';       // Avalanche blockchain
     case FTM = 'FTM';         // Fantom blockchain
@@ -20,6 +22,8 @@ enum CurrencyChainEnum: string
     case MITH = 'MITH';       // MITH (Mithril) blockchain
     case COSMOS = 'COSMOS';   // Cosmos blockchain
     case TEZOS = 'TEZOS';     // Tezos blockchain
+    case SOL = 'SOL';         // Solana blockchain
+
 
     public function chain_name(): string
     {
@@ -29,8 +33,9 @@ enum CurrencyChainEnum: string
             self::TRC20 => 'TRON (TRC20)',
             self::BSC => 'BSC (BEP20)',
             self::DOGE => 'Dogecoin',
-            self::SOL => 'Solana',
             self::POLYGON => 'Polygon',
+            self::ARBITRUM => 'Arbitrum One',
+            self::SOL => 'Solana',
             self::LTC => 'Litecoin',
             self::AVAX => 'Avalanche',
             self::FTM => 'Fantom',
@@ -40,6 +45,7 @@ enum CurrencyChainEnum: string
             self::MITH => 'MITH (Mithril)',
             self::COSMOS => 'Cosmos',
             self::TEZOS => 'Tezos',
+         
         };
     }
 
@@ -57,6 +63,7 @@ enum CurrencyChainEnum: string
             self::AVAX => 'AVALANCHE',
             self::FTM => 'FANTOM',
             self::XLM => 'STELLAR',
+            self::ARBITRUM => 'ARBITRUM',
         };
     }
 }

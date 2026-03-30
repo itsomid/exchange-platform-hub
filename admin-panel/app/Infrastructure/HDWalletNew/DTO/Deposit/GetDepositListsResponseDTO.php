@@ -85,10 +85,11 @@ class GetDepositListsResponseDTO
     public function getConfirmationBlocks(): ?int { return $this->confirmations; }
 
     /**
-     * Get timestamp as Carbon instance for compatibility with old system
+     * Get timestamp as Carbon instance for compatibility with old system.
+     * Prefers creditedAt (actual credit time) over createdAt when available.
      */
     public function getTimestamp(): \Carbon\Carbon
     {
-        return \Carbon\Carbon::parse($this->createdAt);
+        return \Carbon\Carbon::parse($this->creditedAt ?? $this->createdAt);
     }
 }

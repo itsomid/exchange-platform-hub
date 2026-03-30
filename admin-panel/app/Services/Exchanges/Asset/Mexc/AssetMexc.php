@@ -370,7 +370,8 @@ class AssetMexc implements AssetInterface
             'TRX' => 'TRX',      // Tron native
             'DOGE' => 'DOGE',    // Dogecoin
             'SOL' => 'SOL',      // Solana
-            'MATIC' => 'POLYGON', // Polygon
+            'POLYGON' => 'POLYGON', // Polygon
+            'ARBITRUM' => 'ARB',  // Arbitrum
             'LTC' => 'LTC',      // Litecoin
             'AVAX' => 'AVAX',    // Avalanche
             'FTM' => 'FTM',      // Fantom

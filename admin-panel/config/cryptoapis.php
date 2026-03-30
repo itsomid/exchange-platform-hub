@@ -27,5 +27,13 @@ return [
             'type' => 'evm',
             'chain' => 'binance-smart-chain'
         ],
+        'POL' => [
+            'type' => 'evm',
+            'chain' => 'polygon'
+        ],
+        'ARB' => [
+            'type' => 'evm',
+            'chain' => 'arbitrum'
+        ]
     ]
 ];

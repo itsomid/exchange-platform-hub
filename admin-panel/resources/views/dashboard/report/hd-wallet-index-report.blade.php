@@ -283,6 +283,7 @@
                                 <option value="BSC">BSC (BEP20)</option>
                                 <option value="BTC">BTC</option>
                                 <option value="DOGE">DOGE</option>
+                                <option value="ARBITRUM">Arbitrum One</option>
                             </select>
                         </div>
                     </div>
@@ -310,6 +311,8 @@ $isNativeCoin = match ($chain->chain) {
     \App\Enums\CurrencyChainEnum::BTC => $chain->currency->symbol === 'BTC',
     \App\Enums\CurrencyChainEnum::DOGE => $chain->currency->symbol === 'DOGE',
     \App\Enums\CurrencyChainEnum::LTC => $chain->currency->symbol === 'LTC',
+    \App\Enums\CurrencyChainEnum::POLYGON => $chain->currency->symbol === 'POL',
+    \App\Enums\CurrencyChainEnum::ARBITRUM => $chain->currency->symbol === 'ETH',
     default => false,
 };
 
@@ -322,6 +325,8 @@ $chainIcon = $isNativeCoin
         \App\Enums\CurrencyChainEnum::BTC => asset('images/coins/btc.svg'),
         \App\Enums\CurrencyChainEnum::DOGE => asset('images/coins/doge.svg'),
         \App\Enums\CurrencyChainEnum::LTC => asset('images/coins/ltc.svg'),
+        \App\Enums\CurrencyChainEnum::POLYGON => asset('images/coins/pol.svg'),
+        \App\Enums\CurrencyChainEnum::ARBITRUM => asset('images/coins/eth.svg'),
                                                 default => null,
                                             };
                                     @endphp
@@ -1026,6 +1031,8 @@ $chainIcon = $isNativeCoin
             'BTC': 'https://blockchair.com/bitcoin/transaction/',
             'DOGE': 'https://blockchair.com/dogecoin/transaction/',
             'LTC': 'https://blockchair.com/litecoin/transaction/',
+            'POLYGON': 'https://polygonscan.com/tx/',
+            'ARBITRUM': 'https://arbiscan.io/tx/',
         };
         const chainExplorerAddr = {
             'ERC20': 'https://etherscan.io/address/',
@@ -1034,6 +1041,8 @@ $chainIcon = $isNativeCoin
             'BTC': 'https://blockchair.com/bitcoin/address/',
             'DOGE': 'https://blockchair.com/dogecoin/address/',
             'LTC': 'https://blockchair.com/litecoin/address/',
+            'POLYGON': 'https://polygonscan.com/address/',
+            'ARBITRUM': 'https://arbiscan.io/address/',
         };
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -1267,7 +1276,8 @@ $chainIcon = $isNativeCoin
                     'ERC20': 'ethereum',
                     'TRC20': 'tron',
                     'BSC': 'bnb',
-                    'DOGE': 'dogecoin'
+                    'DOGE': 'dogecoin',
+                    'ARBITRUM': 'arbitrum'
                 };
 
                 const requiredNetwork = chainToNetwork[currentChainEnum];
@@ -1955,7 +1965,8 @@ $chainIcon = $isNativeCoin
                     'ERC20': 'ethereum',
                     'TRC20': 'tron',
                     'BSC': 'bnb',
-                    'DOGE': 'dogecoin'
+                    'DOGE': 'dogecoin',
+                    'ARBITRUM': 'arbitrum'
                 };
 
                 const requiredNetwork = chainToNetwork[currentChainEnum];
