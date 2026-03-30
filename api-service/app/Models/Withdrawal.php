@@ -33,6 +33,7 @@ class Withdrawal extends Model
         'description',
         'remark',
         'confirmed_at',
+        'job_failed_at',
     ];
 
     protected function casts(): array
@@ -40,6 +41,7 @@ class Withdrawal extends Model
         return [
             'status' => WithdrawalStatusEnum::class,
             'confirmed_at' => 'datetime',
+            'job_failed_at' => 'datetime',
         ];
     }
 

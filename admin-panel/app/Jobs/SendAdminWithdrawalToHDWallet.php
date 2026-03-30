@@ -35,27 +35,29 @@ class SendAdminWithdrawalToHDWallet implements ShouldQueue
      */
     public function handle(): void
     {
-        $withdrawal = Withdrawal::with(['currencyChain', 'user'])->find($this->withdrawalId);
-
-        Log::info("Starting SendWithdrawalToHDWallet job for withdrawal IDddddddddddddddd: {$this->withdrawalId}");
-
-         if (!$withdrawal) {
-            Log::error("Withdrawal not found: {$this->withdrawalId}");
-            return;
-        }
-        if (!$withdrawal) {
-            Log::error("Withdrawal not found: {$this->withdrawalId}");
-            return;
-        }
-
-        // Check if withdrawal is still in pending status
-        if ($withdrawal->status !== WithdrawalStatusEnum::QUEUED) {
-            Log::info("Withdrawal {$this->withdrawalId} is not in pending status: {$withdrawal->status->value}");
-            return;
-        }
+        Log::info("Starting SendWithdrawalToHDWallet job for withdrawal ID: {$this->withdrawalId}");
 
         try {
             DB::beginTransaction();
+
+            // Atomically lock and check the withdrawal to prevent duplicate processing
+            $withdrawal = Withdrawal::with(['currencyChain', 'user'])
+                ->where('id', $this->withdrawalId)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$withdrawal) {
+                Log::error("Withdrawal not found: {$this->withdrawalId}");
+                DB::commit();
+                return;
+            }
+
+            // Check if withdrawal is still in QUEUED status (prevents duplicate processing)
+            if ($withdrawal->status !== WithdrawalStatusEnum::QUEUED) {
+                Log::info("Withdrawal {$this->withdrawalId} is not in QUEUED status: {$withdrawal->status->value}, skipping.");
+                DB::commit();
+                return;
+            }
 
             // Update status to processing
             $withdrawal->update([
@@ -104,32 +106,48 @@ class SendAdminWithdrawalToHDWallet implements ShouldQueue
      */
     public function failed(Throwable $exception): void
     {
-        $withdrawal = Withdrawal::find($this->withdrawalId);
+        try {
+            DB::beginTransaction();
 
-        if ($withdrawal) {
-            try {
-                DB::beginTransaction();
+            // Atomically lock and verify status to prevent duplicate failure handling
+            $withdrawal = Withdrawal::where('id', $this->withdrawalId)
+                ->lockForUpdate()
+                ->first();
 
-                $withdrawal->update([
-                    'status' => WithdrawalStatusEnum::FAILED,
-                    'description' => 'Failed to process withdrawal after multiple attempts: ' . $exception->getMessage()
-                ]);
-
-                // Unlock the balance
-                $this->unlockBalance($withdrawal);
-
+            if (!$withdrawal) {
                 DB::commit();
-
-                Log::error("Withdrawal {$this->withdrawalId} marked as failed after all retry attempts", [
-                    'error' => $exception->getMessage()
-                ]);
-
-            } catch (Throwable $e) {
-                DB::rollBack();
-                Log::error("Failed to mark withdrawal {$this->withdrawalId} as failed", [
-                    'error' => $e->getMessage()
-                ]);
+                Log::error("Withdrawal not found for failure handling: {$this->withdrawalId}");
+                return;
             }
+
+            // Only handle failure if withdrawal is still in a processable state
+            if (!in_array($withdrawal->status, [WithdrawalStatusEnum::QUEUED, WithdrawalStatusEnum::PROCESSING])) {
+                DB::commit();
+                Log::info("Withdrawal {$this->withdrawalId} already handled (status: {$withdrawal->status->value}), skipping failure handler.");
+                return;
+            }
+
+            // Keep status as QUEUED so the user doesn't see a failure.
+            // Admin will decide to retry or cancel via the panel.
+            $withdrawal->update([
+                'status' => WithdrawalStatusEnum::QUEUED,
+                'job_failed_at' => now(),
+                'description' => 'Job failed: ' . $exception->getMessage(),
+            ]);
+
+            // Do NOT unlock balance here - it stays locked until admin decides
+
+            DB::commit();
+
+            Log::error("Withdrawal {$this->withdrawalId} job failed, kept as QUEUED for admin review", [
+                'error' => $exception->getMessage()
+            ]);
+
+        } catch (Throwable $e) {
+            DB::rollBack();
+            Log::error("Failed to update withdrawal {$this->withdrawalId} after job failure", [
+                'error' => $e->getMessage()
+            ]);
         }
     }
 
@@ -148,7 +166,13 @@ class SendAdminWithdrawalToHDWallet implements ShouldQueue
             ->first();
 
         if ($wallet) {
-            $wallet->decrement('locked_balance', $withdrawal->amount);
+            // Prevent locked_balance from going negative
+            $amountToUnlock = min($wallet->locked_balance, $withdrawal->amount);
+            if ($amountToUnlock > 0) {
+                $wallet->decrement('locked_balance', $amountToUnlock);
+            }
+            // Restore balance that was deducted during withdrawal creation
+            $wallet->increment('balance', $withdrawal->amount);
         }
     }
 }

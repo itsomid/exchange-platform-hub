@@ -20,6 +20,8 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class WithdrawalController extends Controller
 {
+    private WithdrawalService $withdrawalService;
+
     public function __construct(WithdrawalService $withdrawalService)
     {
         $this->withdrawalService = $withdrawalService;
@@ -188,8 +190,39 @@ class WithdrawalController extends Controller
 
         SendAdminWithdrawalToHDWallet::dispatch($withdrawal->id);
 
+        // Reset job_failed_at since we're retrying
+        $withdrawal->update([
+            'job_failed_at' => null,
+            'description' => 'Redispatched by admin (#' . \Auth::user()->id . ')',
+        ]);
+
         Toast::message('جاب برداشت با موفقیت مجدداً در صف قرار گرفت.')->success()->notify();
         return redirect()->back();
+    }
+
+    public function cancelQueuedWithdrawal(Request $request, Withdrawal $withdrawal)
+    {
+        $request->validate([
+            'cancel_reason' => 'required|string|max:500',
+        ]);
+
+        try {
+            $admin_id = \Auth::user()->id;
+            $this->withdrawalService->adminCancelQueuedWithdrawal(
+                $withdrawal->id,
+                $admin_id,
+                $request->input('cancel_reason')
+            );
+
+            Toast::message('برداشت لغو شد و وجه به کیف پول کاربر بازگردانده شد.')->success()->notify();
+
+            return redirect()->back();
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            Toast::message('خطا در لغو برداشت: ' . $exception->getMessage())->danger()->notify();
+            return redirect()->back();
+        }
     }
 
     public function excelExport(Request $request)
