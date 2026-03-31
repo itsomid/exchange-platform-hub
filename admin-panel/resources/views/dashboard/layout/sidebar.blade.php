@@ -21,7 +21,12 @@
                 <div>داشبورد</div>
             </a>
         </li>
-
+        <li class="menu-item @if (request()->is('admin/financial-dashboard*')) active @endif">
+            <a href="{{ route('admin.financial-dashboard') }}" class="menu-link">
+                <i class="menu-icon  fa-regular fa-chart-pie-simple fa-sm"></i>
+                <div>داشبورد مالی</div>
+            </a>
+        </li>
         <li class="menu-header small text-uppercase">
             <span class="menu-header-text">افراد و دپارتمان ها</span>
         </li>

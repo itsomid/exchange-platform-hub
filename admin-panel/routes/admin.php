@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Controllers\Admin\AdminRoleController;
 use App\Http\Controllers\Admin\AdminSecurityController;
+use App\Http\Controllers\Admin\FinancialDashboardController;
 use App\Http\Controllers\Admin\HomeController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ReferralCodeController;
@@ -73,6 +74,14 @@ Route::prefix('dashboard/ajax')->name('dashboard.ajax.')->group(function () {
     Route::get('/trading-stats', [HomeController::class, 'getTradingStats'])->name('trading-stats');
     Route::get('/recent-activities', [HomeController::class, 'getRecentActivities'])->name('recent-activities');
     Route::get('/top-trading-pairs', [HomeController::class, 'getTopTradingPairs'])->name('top-trading-pairs');
+});
+
+// Financial Dashboard
+Route::get('/financial-dashboard', [FinancialDashboardController::class, 'index'])->name('financial-dashboard');
+
+// Financial Dashboard AJAX endpoints
+Route::prefix('financial-dashboard/ajax')->name('financial-dashboard.ajax.')->group(function () {
+    Route::get('/trade-stats', [FinancialDashboardController::class, 'getTradeStats'])->name('trade-stats');
 });
 
 // All other admin routes require 2FA
