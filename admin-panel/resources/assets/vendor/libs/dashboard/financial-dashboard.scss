@@ -1,0 +1,72 @@
+/* Financial Dashboard Styles */
+
+.financial-kpi-card {
+    transition: all 0.3s ease;
+    border-radius: 12px !important;
+
+    &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    h3 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #2c3e50;
+    }
+
+    .avatar-initial {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+    }
+}
+
+/* Placeholder loading animation */
+.placeholder-glow .placeholder {
+    height: 28px;
+    border-radius: 6px;
+}
+
+.placeholder-sm {
+    height: 14px !important;
+}
+
+/* Font number styling */
+.font-number {
+    font-family: 'Roboto', 'Segoe UI', sans-serif;
+    letter-spacing: 0.5px;
+    direction: ltr;
+    display: inline-block;
+}
+
+/* Error state cursor */
+.cursor-pointer {
+    cursor: pointer;
+}
+
+/* Filter section */
+#volume-start-date,
+#volume-end-date,
+#trade-count-date {
+    border-radius: 8px;
+}
+
+/* Range badge */
+.badge.bg-label-info,
+.badge.bg-label-warning {
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+/* Card border styling */
+.financial-kpi-card.card.border {
+    border-color: #e9ecef !important;
+}
