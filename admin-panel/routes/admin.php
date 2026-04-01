@@ -82,6 +82,11 @@ Route::get('/financial-dashboard', [FinancialDashboardController::class, 'index'
 // Financial Dashboard AJAX endpoints
 Route::prefix('financial-dashboard/ajax')->name('financial-dashboard.ajax.')->group(function () {
     Route::get('/trade-stats', [FinancialDashboardController::class, 'getTradeStats'])->name('trade-stats');
+    Route::get('/revenue-stats', [FinancialDashboardController::class, 'getRevenueStats'])->name('revenue-stats');
+    Route::get('/asset-stats', [FinancialDashboardController::class, 'getAssetStats'])->name('asset-stats');
+    Route::get('/liability-stats', [FinancialDashboardController::class, 'getLiabilityStats'])->name('liability-stats');
+    Route::get('/cash-flow-stats', [FinancialDashboardController::class, 'getCashFlowStats'])->name('cash-flow-stats');
+    Route::get('/expense-stats', [FinancialDashboardController::class, 'getExpenseStats'])->name('expense-stats');
 });
 
 // All other admin routes require 2FA

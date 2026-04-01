@@ -215,14 +215,683 @@
         </div>
     </div>
 
+    <!-- Section: Revenue -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="card-title mb-1"><i class="fa fa-coins text-success me-2"></i>درآمد (کارمزد)</h5>
+                <small class="text-muted">خلاصه کارمزدهای دریافتی از معاملات Spot و OTC</small>
+            </div>
+            <button class="btn btn-sm btn-outline-success" id="btn-refresh-revenue" onclick="loadRevenueStats()">
+                <i class="fa fa-refresh me-1"></i> بروزرسانی
+            </button>
+        </div>
+        <div class="card-body">
+
+            <!-- Date Range Filter for Revenue -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <label class="form-label mb-0 text-nowrap">بازه زمانی کارمزد:</label>
+                        <input type="date" class="form-control form-control-sm" id="revenue-start-date" style="max-width: 160px;">
+                        <span class="text-muted">تا</span>
+                        <input type="date" class="form-control form-control-sm" id="revenue-end-date" style="max-width: 160px;">
+                        <button class="btn btn-sm btn-success" id="btn-apply-revenue-filter" onclick="applyRevenueFilter()">
+                            <i class="fa fa-filter me-1"></i> اعمال
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" id="btn-reset-revenue-filter" onclick="resetRevenueFilter()">
+                            <i class="fa fa-times me-1"></i> ریست
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Revenue KPI Cards -->
+            <div class="row g-4">
+
+                <!-- Card 1: Commission Earned Today / Range -->
+                <div class="col-xl-6 col-md-6">
+                    <div class="card border shadow-none h-100 financial-kpi-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <h6 class="text-muted mb-0 me-2" id="revenue-today-label">کارمزد دریافتی امروز</h6>
+                                        <span class="badge bg-label-info rounded-pill" id="revenue-range-badge" style="display:none;"></span>
+                                    </div>
+                                    <h3 class="mb-2 font-number" id="today-commission">
+                                        <div class="placeholder-glow">
+                                            <span class="placeholder col-8 rounded"></span>
+                                        </div>
+                                    </h3>
+                                    <div class="d-flex gap-3 flex-wrap">
+                                        <small class="text-muted">
+                                            <span class="text-primary fw-semibold">Spot:</span>
+                                            <span class="font-number" id="today-spot-commission">--</span>
+                                        </small>
+                                        <small class="text-muted">
+                                            <span class="text-success fw-semibold">OTC:</span>
+                                            <span class="font-number" id="today-otc-commission">--</span>
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="avatar flex-shrink-0 ms-3">
+                                    <div class="avatar-initial bg-label-success rounded">
+                                        <i class="fa fa-coins fa-xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3 pt-2 border-top">
+                                <small class="text-muted"><i class="fa fa-dollar-sign me-1"></i>معادل USDT</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: All Time Commission -->
+                <div class="col-xl-6 col-md-6">
+                    <div class="card border shadow-none h-100 financial-kpi-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="text-muted mb-2">کل کارمزد دریافتی</h6>
+                                    <h3 class="mb-2 font-number" id="alltime-commission">
+                                        <div class="placeholder-glow">
+                                            <span class="placeholder col-8 rounded"></span>
+                                        </div>
+                                    </h3>
+                                    <div class="d-flex gap-3 flex-wrap">
+                                        <small class="text-muted">
+                                            <span class="text-primary fw-semibold">Spot:</span>
+                                            <span class="font-number" id="alltime-spot-commission">--</span>
+                                        </small>
+                                        <small class="text-muted">
+                                            <span class="text-success fw-semibold">OTC:</span>
+                                            <span class="font-number" id="alltime-otc-commission">--</span>
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="avatar flex-shrink-0 ms-3">
+                                    <div class="avatar-initial bg-label-warning rounded">
+                                        <i class="fa fa-sack-dollar fa-xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3 pt-2 border-top">
+                                <small class="text-muted"><i class="fa fa-infinity me-1"></i>از ابتدا تاکنون (USDT)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: Assets -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="card-title mb-1"><i class="fa fa-wallet text-info me-2"></i>دارایی‌ها</h5>
+                <small class="text-muted">وضعیت لحظه‌ای دارایی‌های صرافی</small>
+            </div>
+            <button class="btn btn-sm btn-outline-info" id="btn-refresh-assets" onclick="loadAssetStats()">
+                <i class="fa fa-refresh me-1"></i> بروزرسانی
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+
+                <!-- Card 1: Total Exchange Wallet Balance -->
+                <div class="col-xl-4 col-md-6">
+                    <div class="card border shadow-none h-100 financial-kpi-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="text-muted mb-2">موجودی کل کیف پول صرافی</h6>
+                                    <h3 class="mb-2 font-number" id="total-exchange-balance">
+                                        <div class="placeholder-glow">
+                                            <span class="placeholder col-8 rounded"></span>
+                                        </div>
+                                    </h3>
+                                </div>
+                                <div class="avatar flex-shrink-0 ms-3">
+                                    <div class="avatar-initial bg-label-info rounded">
+                                        <i class="fa fa-building-columns fa-xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3 pt-2 border-top">
+                                <small class="text-muted"><i class="fa fa-dollar-sign me-1"></i>معادل USDT - لحظه‌ای</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Hot Wallet Balance -->
+                <div class="col-xl-4 col-md-6">
+                    <div class="card border shadow-none h-100 financial-kpi-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="text-muted mb-2">موجودی Hot Wallet</h6>
+                                    <h3 class="mb-2 font-number" id="total-hot-wallet-balance">
+                                        <div class="placeholder-glow">
+                                            <span class="placeholder col-8 rounded"></span>
+                                        </div>
+                                    </h3>
+                                </div>
+                                <div class="avatar flex-shrink-0 ms-3">
+                                    <div class="avatar-initial bg-label-warning rounded">
+                                        <i class="fa fa-fire fa-xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3 pt-2 border-top">
+                                <small class="text-muted"><i class="fa fa-link me-1"></i>موجودی آنچین (USDT)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Net Exchange Assets -->
+                <div class="col-xl-4 col-md-6">
+                    <div class="card border shadow-none h-100 financial-kpi-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="text-muted mb-2">خالص دارایی صرافی</h6>
+                                    <h3 class="mb-2 font-number" id="net-exchange-assets">
+                                        <div class="placeholder-glow">
+                                            <span class="placeholder col-8 rounded"></span>
+                                        </div>
+                                    </h3>
+                                    <small class="text-muted">
+                                        بدهی کاربران:
+                                        <span class="font-number" id="total-user-liabilities">--</span>
+                                        <span>USDT</span>
+                                    </small>
+                                </div>
+                                <div class="avatar flex-shrink-0 ms-3">
+                                    <div class="avatar-initial bg-label-primary rounded" id="net-assets-icon">
+                                        <i class="fa fa-scale-balanced fa-xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3 pt-2 border-top">
+                                <small class="text-muted"><i class="fa fa-calculator me-1"></i>دارایی صرافی منهای بدهی کاربران</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: Liabilities -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="card-title mb-1"><i class="fa fa-handshake text-danger me-2"></i>بدهی‌ها و تعهدات</h5>
+                <small class="text-muted">وضعیت بدهی صرافی به کاربران به تفکیک ارز</small>
+            </div>
+            <button class="btn btn-sm btn-outline-danger" id="btn-refresh-liabilities" onclick="loadLiabilityStats()">
+                <i class="fa fa-refresh me-1"></i> بروزرسانی
+            </button>
+        </div>
+        <div class="card-body">
+
+            <!-- KPI Card: Total Exchange Debt -->
+            <div class="row g-4 mb-4">
+                <div class="col-xl-6 col-md-8">
+                    <div class="card border shadow-none h-100 financial-kpi-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="text-muted mb-2">کل بدهی صرافی به کاربران</h6>
+                                    <h3 class="mb-2 font-number" id="total-debt-usdt">
+                                        <div class="placeholder-glow">
+                                            <span class="placeholder col-8 rounded"></span>
+                                        </div>
+                                    </h3>
+                                    <small class="text-muted" id="liability-currency-count">
+                                        <i class="fa fa-coins me-1"></i>--
+                                    </small>
+                                </div>
+                                <div class="avatar flex-shrink-0 ms-3">
+                                    <div class="avatar-initial bg-label-danger rounded">
+                                        <i class="fa fa-hand-holding-dollar fa-xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3 pt-2 border-top">
+                                <small class="text-muted"><i class="fa fa-dollar-sign me-1"></i>مجموع موجودی کاربران (USDT)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Currency Balance Breakdown Table -->
+            <div class="card border shadow-none">
+                <div class="card-header d-flex justify-content-between align-items-center py-3">
+                    <h6 class="mb-0"><i class="fa fa-table me-2 text-muted"></i>تفکیک موجودی به ازای هر ارز</h6>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="input-group input-group-sm" style="max-width: 220px;">
+                            <span class="input-group-text"><i class="fa fa-search"></i></span>
+                            <input type="text" class="form-control" id="liability-search" placeholder="جستجوی ارز..." oninput="filterLiabilityTable()">
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="liability-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="cursor-pointer" onclick="sortLiabilityTable('symbol')">
+                                    ارز <i class="fa fa-sort text-muted ms-1" id="sort-icon-symbol"></i>
+                                </th>
+                                <th class="cursor-pointer text-end" onclick="sortLiabilityTable('userBalanceUsdt')">
+                                    موجودی کاربران <i class="fa fa-sort text-muted ms-1" id="sort-icon-userBalanceUsdt"></i>
+                                </th>
+                                <th class="cursor-pointer text-end" onclick="sortLiabilityTable('exchangeBalanceUsdt')">
+                                    موجودی صرافی <i class="fa fa-sort text-muted ms-1" id="sort-icon-exchangeBalanceUsdt"></i>
+                                </th>
+                                <th class="cursor-pointer text-end" onclick="sortLiabilityTable('differenceUsdt')">
+                                    تفاوت (USDT) <i class="fa fa-sort text-muted ms-1" id="sort-icon-differenceUsdt"></i>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="liability-table-body">
+                            <!-- Skeleton rows -->
+                            @for ($i = 0; $i < 5; $i++)
+                                <tr>
+                                    <td><span class="placeholder-glow"><span class="placeholder col-6 rounded"></span></span></td>
+                                    <td class="text-end"><span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span></td>
+                                    <td class="text-end"><span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span></td>
+                                    <td class="text-end"><span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span></td>
+                                </tr>
+                            @endfor
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer text-muted text-center py-2 d-none" id="liability-no-results">
+                    <i class="fa fa-info-circle me-1"></i> نتیجه‌ای یافت نشد
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Section: Cash Flow -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="card-title mb-1"><i class="fa fa-money-bill-transfer text-purple me-2"></i>جریان نقدینگی</h5>
+                <small class="text-muted">خلاصه واریز و برداشت‌های کاربران</small>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary" id="btn-refresh-cashflow" onclick="loadCashFlowStats()">
+                <i class="fa fa-refresh me-1"></i> بروزرسانی
+            </button>
+        </div>
+        <div class="card-body">
+
+            <!-- Date Range Filter -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <label class="form-label mb-0 text-nowrap">بازه زمانی:</label>
+                        <input type="date" class="form-control form-control-sm" id="cashflow-start-date" style="max-width: 160px;">
+                        <span class="text-muted">تا</span>
+                        <input type="date" class="form-control form-control-sm" id="cashflow-end-date" style="max-width: 160px;">
+                        <button class="btn btn-sm btn-primary" onclick="applyCashFlowFilter()">
+                            <i class="fa fa-filter me-1"></i> اعمال
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="resetCashFlowFilter()">
+                            <i class="fa fa-times me-1"></i> ریست
+                        </button>
+                        <span class="badge bg-label-info rounded-pill" id="cashflow-range-badge" style="display:none;"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI Cards Row -->
+            <div class="row g-4 mb-4">
+
+                <!-- Card 1: Total Deposits -->
+                <div class="col-xl-4 col-md-6">
+                    <div class="card border shadow-none h-100 financial-kpi-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="text-muted mb-2" id="cashflow-deposit-label">کل واریزی‌ها امروز</h6>
+                                    <h3 class="mb-2 font-number text-success" id="total-deposit-usdt">
+                                        <div class="placeholder-glow">
+                                            <span class="placeholder col-8 rounded"></span>
+                                        </div>
+                                    </h3>
+                                    <small class="text-muted" id="cashflow-deposit-count">
+                                        <i class="fa fa-hashtag me-1"></i>--
+                                    </small>
+                                </div>
+                                <div class="avatar flex-shrink-0 ms-3">
+                                    <div class="avatar-initial bg-label-success rounded">
+                                        <i class="fa fa-arrow-down fa-xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3 pt-2 border-top">
+                                <small class="text-muted"><i class="fa fa-dollar-sign me-1"></i>معادل USDT</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Total Withdrawals -->
+                <div class="col-xl-4 col-md-6">
+                    <div class="card border shadow-none h-100 financial-kpi-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="text-muted mb-2" id="cashflow-withdrawal-label">کل برداشت‌ها امروز</h6>
+                                    <h3 class="mb-2 font-number text-danger" id="total-withdrawal-usdt">
+                                        <div class="placeholder-glow">
+                                            <span class="placeholder col-8 rounded"></span>
+                                        </div>
+                                    </h3>
+                                    <small class="text-muted" id="cashflow-withdrawal-count">
+                                        <i class="fa fa-hashtag me-1"></i>--
+                                    </small>
+                                </div>
+                                <div class="avatar flex-shrink-0 ms-3">
+                                    <div class="avatar-initial bg-label-danger rounded">
+                                        <i class="fa fa-arrow-up fa-xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3 pt-2 border-top">
+                                <small class="text-muted"><i class="fa fa-dollar-sign me-1"></i>معادل USDT</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Net Cash Flow -->
+                <div class="col-xl-4 col-md-6">
+                    <div class="card border shadow-none h-100 financial-kpi-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="text-muted mb-2" id="cashflow-net-label">خالص جریان نقدینگی امروز</h6>
+                                    <h3 class="mb-2 font-number" id="net-cashflow-usdt">
+                                        <div class="placeholder-glow">
+                                            <span class="placeholder col-8 rounded"></span>
+                                        </div>
+                                    </h3>
+                                    <small class="text-muted" id="cashflow-currency-count">
+                                        <i class="fa fa-coins me-1"></i>--
+                                    </small>
+                                </div>
+                                <div class="avatar flex-shrink-0 ms-3">
+                                    <div class="avatar-initial bg-label-primary rounded" id="net-cashflow-icon">
+                                        <i class="fa fa-money-bill-transfer fa-xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3 pt-2 border-top">
+                                <small class="text-muted"><i class="fa fa-calculator me-1"></i>واریز منهای برداشت (USDT)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Cash Flow Breakdown Table -->
+            <div class="card border shadow-none">
+                <div class="card-header d-flex justify-content-between align-items-center py-3">
+                    <h6 class="mb-0"><i class="fa fa-table me-2 text-muted"></i>تفکیک جریان نقدینگی به ازای هر ارز</h6>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="input-group input-group-sm" style="max-width: 220px;">
+                            <span class="input-group-text"><i class="fa fa-search"></i></span>
+                            <input type="text" class="form-control" id="cashflow-search" placeholder="جستجوی ارز..." oninput="filterCashFlowTable()">
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="cashflow-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="cursor-pointer" onclick="sortCashFlowTable('symbol')">
+                                    ارز <i class="fa fa-sort text-muted ms-1" id="cf-sort-icon-symbol"></i>
+                                </th>
+                                <th class="cursor-pointer text-end" onclick="sortCashFlowTable('depositUsdt')">
+                                    واریز (USDT) <i class="fa fa-sort text-muted ms-1" id="cf-sort-icon-depositUsdt"></i>
+                                </th>
+                                <th class="cursor-pointer text-end" onclick="sortCashFlowTable('withdrawalUsdt')">
+                                    برداشت (USDT) <i class="fa fa-sort text-muted ms-1" id="cf-sort-icon-withdrawalUsdt"></i>
+                                </th>
+                                <th class="cursor-pointer text-end" onclick="sortCashFlowTable('netUsdt')">
+                                    خالص (USDT) <i class="fa fa-sort text-muted ms-1" id="cf-sort-icon-netUsdt"></i>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="cashflow-table-body">
+                            @for ($i = 0; $i < 5; $i++)
+                                <tr>
+                                    <td><span class="placeholder-glow"><span class="placeholder col-6 rounded"></span></span></td>
+                                    <td class="text-end"><span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span></td>
+                                    <td class="text-end"><span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span></td>
+                                    <td class="text-end"><span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span></td>
+                                </tr>
+                            @endfor
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer text-muted text-center py-2 d-none" id="cashflow-no-results">
+                    <i class="fa fa-info-circle me-1"></i> نتیجه‌ای یافت نشد
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Section: Expenses -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="card-title mb-1"><i class="fa fa-file-invoice-dollar text-warning me-2"></i>هزینه‌ها (کارمزدهای پرداختی)</h5>
+                <small class="text-muted">کارمزدهای پرداختی صرافی شامل فی انتقال، شبکه و صرافی مرجع</small>
+            </div>
+            <button class="btn btn-sm btn-outline-warning" id="btn-refresh-expenses" onclick="loadExpenseStats()">
+                <i class="fa fa-refresh me-1"></i> بروزرسانی
+            </button>
+        </div>
+        <div class="card-body">
+
+            <!-- Date Range Filter -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <label class="form-label mb-0 text-nowrap">بازه زمانی:</label>
+                        <input type="date" class="form-control form-control-sm" id="expense-start-date" style="max-width: 160px;">
+                        <span class="text-muted">تا</span>
+                        <input type="date" class="form-control form-control-sm" id="expense-end-date" style="max-width: 160px;">
+                        <button class="btn btn-sm btn-warning" onclick="applyExpenseFilter()">
+                            <i class="fa fa-filter me-1"></i> اعمال
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="resetExpenseFilter()">
+                            <i class="fa fa-times me-1"></i> ریست
+                        </button>
+                        <span class="badge bg-label-info rounded-pill" id="expense-range-badge" style="display:none;"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI Card + Pie Chart Row -->
+            <div class="row g-4 mb-4">
+
+                <!-- Card: Total Fees Paid -->
+                <div class="col-xl-4 col-md-6">
+                    <div class="card border shadow-none h-100 financial-kpi-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="text-muted mb-2" id="expense-total-label">کل هزینه‌ها امروز</h6>
+                                    <h3 class="mb-2 font-number text-warning" id="total-fees-usdt">
+                                        <div class="placeholder-glow">
+                                            <span class="placeholder col-8 rounded"></span>
+                                        </div>
+                                    </h3>
+                                    <small class="text-muted" id="expense-currency-count">
+                                        <i class="fa fa-coins me-1"></i>--
+                                    </small>
+                                </div>
+                                <div class="avatar flex-shrink-0 ms-3">
+                                    <div class="avatar-initial bg-label-warning rounded">
+                                        <i class="fa fa-file-invoice-dollar fa-xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3 pt-2 border-top">
+                                <small class="text-muted"><i class="fa fa-dollar-sign me-1"></i>مجموع کارمزدهای پرداختی (USDT)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fee Type Breakdown Cards -->
+                <div class="col-xl-8 col-md-6">
+                    <div class="row g-3 h-100">
+                        <div class="col-md-4">
+                            <div class="card border shadow-none h-100">
+                                <div class="card-body p-3 text-center">
+                                    <div class="avatar avatar-sm mx-auto mb-2">
+                                        <div class="avatar-initial bg-label-info rounded" style="width:36px;height:36px;">
+                                            <i class="fa fa-exchange-alt"></i>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted d-block mb-1">فی انتقال</small>
+                                    <h5 class="mb-0 font-number" id="total-transfer-fees">
+                                        <span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span>
+                                    </h5>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border shadow-none h-100">
+                                <div class="card-body p-3 text-center">
+                                    <div class="avatar avatar-sm mx-auto mb-2">
+                                        <div class="avatar-initial bg-label-danger rounded" style="width:36px;height:36px;">
+                                            <i class="fa fa-network-wired"></i>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted d-block mb-1">فی شبکه</small>
+                                    <h5 class="mb-0 font-number" id="total-network-fees">
+                                        <span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span>
+                                    </h5>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border shadow-none h-100">
+                                <div class="card-body p-3 text-center">
+                                    <div class="avatar avatar-sm mx-auto mb-2">
+                                        <div class="avatar-initial bg-label-primary rounded" style="width:36px;height:36px;">
+                                            <i class="fa fa-building"></i>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted d-block mb-1">فی صرافی مرجع</small>
+                                    <h5 class="mb-0 font-number" id="total-ref-exchange-fees">
+                                        <span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span>
+                                    </h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Pie Chart -->
+            <div class="row mb-4">
+                <div class="col-xl-6 col-md-8 mx-auto">
+                    <div class="card border shadow-none">
+                        <div class="card-body">
+                            <h6 class="text-center text-muted mb-3"><i class="fa fa-chart-pie me-1"></i>توزیع هزینه‌ها بر اساس نوع</h6>
+                            <div id="expense-pie-chart" style="min-height: 280px;">
+                                <div class="d-flex justify-content-center align-items-center" style="height: 280px;">
+                                    <div class="spinner-border text-warning" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expense Breakdown Table -->
+            <div class="card border shadow-none">
+                <div class="card-header d-flex justify-content-between align-items-center py-3">
+                    <h6 class="mb-0"><i class="fa fa-table me-2 text-muted"></i>تفکیک هزینه‌ها به ازای هر ارز</h6>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="input-group input-group-sm" style="max-width: 220px;">
+                            <span class="input-group-text"><i class="fa fa-search"></i></span>
+                            <input type="text" class="form-control" id="expense-search" placeholder="جستجوی ارز..." oninput="filterExpenseTable()">
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="expense-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="cursor-pointer" onclick="sortExpenseTable('symbol')">
+                                    ارز <i class="fa fa-sort text-muted ms-1" id="exp-sort-icon-symbol"></i>
+                                </th>
+                                <th class="cursor-pointer text-end" onclick="sortExpenseTable('transferFeesUsdt')">
+                                    فی انتقال <i class="fa fa-sort text-muted ms-1" id="exp-sort-icon-transferFeesUsdt"></i>
+                                </th>
+                                <th class="cursor-pointer text-end" onclick="sortExpenseTable('networkFeesUsdt')">
+                                    فی شبکه <i class="fa fa-sort text-muted ms-1" id="exp-sort-icon-networkFeesUsdt"></i>
+                                </th>
+                                <th class="cursor-pointer text-end" onclick="sortExpenseTable('refExchangeFeesUsdt')">
+                                    فی صرافی مرجع <i class="fa fa-sort text-muted ms-1" id="exp-sort-icon-refExchangeFeesUsdt"></i>
+                                </th>
+                                <th class="cursor-pointer text-end" onclick="sortExpenseTable('totalUsdt')">
+                                    مجموع (USDT) <i class="fa fa-sort text-muted ms-1" id="exp-sort-icon-totalUsdt"></i>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="expense-table-body">
+                            @for ($i = 0; $i < 5; $i++)
+                                <tr>
+                                    <td><span class="placeholder-glow"><span class="placeholder col-6 rounded"></span></span></td>
+                                    <td class="text-end"><span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span></td>
+                                    <td class="text-end"><span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span></td>
+                                    <td class="text-end"><span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span></td>
+                                    <td class="text-end"><span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span></td>
+                                </tr>
+                            @endfor
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer text-muted text-center py-2 d-none" id="expense-no-results">
+                    <i class="fa fa-info-circle me-1"></i> نتیجه‌ای یافت نشد
+                </div>
+            </div>
+
+        </div>
+    </div>
+
 @endsection
 
 @section('vendor-script')
-    @vite(['resources/assets/js/financial-dashboard.js'])
+    @vite(['resources/assets/vendor/libs/apex-charts/apexcharts.js', 'resources/assets/js/financial-dashboard.js'])
 @endsection
 
 @section('vendor-style')
-    @vite(['resources/assets/vendor/libs/dashboard/financial-dashboard.scss'])
+    @vite(['resources/assets/vendor/libs/apex-charts/apex-charts.scss', 'resources/assets/vendor/libs/dashboard/financial-dashboard.scss'])
     @if (session('theme', 'light') === 'dark')
         @vite(['resources/assets/vendor/libs/dashboard/financial-dashboard-dark.scss'])
     @endif

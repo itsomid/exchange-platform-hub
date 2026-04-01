@@ -57,3 +57,14 @@
 .financial-kpi-card.card.border {
     border-color: rgba(255, 255, 255, 0.1) !important;
 }
+
+/* Liability, Cash Flow & Expense Tables - Dark */
+#liability-table,
+#cashflow-table,
+#expense-table {
+    th {
+        &:hover {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+    }
+}
