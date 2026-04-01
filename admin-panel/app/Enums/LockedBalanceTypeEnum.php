@@ -19,6 +19,15 @@ enum LockedBalanceTypeEnum: string
         return self::TYPE_LABEL[$this->value] ?? '';
     }
 
+    public static function getFieldName(self $type): string
+    {
+        return match ($type) {
+            self::WITHDRAWAL => 'withdrawal_id',
+            self::SPOT => 'spot_order_id',
+            self::ADMIN => 'admin_id',
+        };
+    }
+
     const array TYPE_COLOR = [
         self::WITHDRAWAL->value => 'secondary',
         self::ADMIN->value => 'primary',
