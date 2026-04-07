@@ -3,20 +3,25 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\DepositStatusEnum;
+use App\Enums\OTCOrderTypeEnum;
+use App\Enums\StockContractStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Enums\WithdrawalStatusEnum;
+use App\Exports\StockPurchaseExport;
 use App\Http\Controllers\Controller;
 use App\Models\Currency;
 use App\Models\Deposit;
 use App\Models\OTCOrder;
 use App\Models\SpotTrade;
+use App\Models\StockContract;
 use App\Models\Transaction;
 use App\Models\Wallet;
 use App\Models\Withdrawal;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Maatwebsite\Excel\Facades\Excel;
 
 class FinancialDashboardController extends Controller
 {
@@ -447,5 +452,251 @@ class FinancialDashboardController extends Controller
             'currencyCount' => count($breakdown),
             'breakdown' => $breakdown,
         ]);
+    }
+
+    public function getProfitLossStats(Request $request)
+    {
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        $dateStart = $startDate ? Carbon::parse($startDate)->startOfDay() : now()->startOfDay();
+        $dateEnd = $endDate ? Carbon::parse($endDate)->endOfDay() : now();
+
+        // ============ TRADE SPREAD (OTC Orders) ============
+        $orders = OTCOrder::where('status', 'success')
+            ->whereBetween('created_at', [$dateStart, $dateEnd])
+            ->with(['market.activeExchangePrice', 'market.quoteCurrency', 'market.baseCurrency'])
+            ->get();
+
+        $currencies = Currency::all()->keyBy('symbol');
+        $spreadBySymbol = [];
+
+        foreach ($orders as $order) {
+            $exchangePrice = $order->market?->activeExchangePrice;
+            if (!$exchangePrice) continue;
+
+            $baseCurrency = $order->market->base_currency;
+            $quoteExchangePrice = $order->market?->quoteCurrency?->exchange_price ?? 1;
+            $isBuy = $order->type === OTCOrderTypeEnum::BUY;
+
+            $markup = $isBuy ? $exchangePrice->exchange_profit_sell : $exchangePrice->exchange_profit_buy;
+            $denominator = 100 + $markup;
+
+            if ($denominator == 0 || $markup == 0) {
+                $spreadPerUnit = 0;
+            } else {
+                $spreadPerUnit = $isBuy
+                    ? $order->price * $markup / $denominator
+                    : $order->price * (-$markup) / $denominator;
+            }
+
+            $spreadUsdt = $spreadPerUnit * $order->quantity * $quoteExchangePrice;
+            $volumeUsdt = $order->price * $order->quantity * $quoteExchangePrice;
+
+            if (!isset($spreadBySymbol[$baseCurrency])) {
+                $currency = $currencies->get($baseCurrency);
+                $spreadBySymbol[$baseCurrency] = [
+                    'symbol' => $baseCurrency,
+                    'name' => $currency->name ?? $baseCurrency,
+                    'tradeCount' => 0,
+                    'buyCount' => 0,
+                    'sellCount' => 0,
+                    'spreadUsdt' => 0,
+                    'volumeUsdt' => 0,
+                ];
+            }
+
+            $spreadBySymbol[$baseCurrency]['tradeCount']++;
+            $spreadBySymbol[$baseCurrency][$isBuy ? 'buyCount' : 'sellCount']++;
+            $spreadBySymbol[$baseCurrency]['spreadUsdt'] += $spreadUsdt;
+            $spreadBySymbol[$baseCurrency]['volumeUsdt'] += $volumeUsdt;
+        }
+
+        // Calculate avg spread % and round values
+        $spreadBreakdown = array_values(array_map(function ($item) {
+            $item['avgSpreadPct'] = $item['volumeUsdt'] > 0
+                ? round($item['spreadUsdt'] / $item['volumeUsdt'] * 100, 2)
+                : 0;
+            $item['spreadUsdt'] = round($item['spreadUsdt'], 2);
+            $item['volumeUsdt'] = round($item['volumeUsdt'], 2);
+            return $item;
+        }, $spreadBySymbol));
+
+        usort($spreadBreakdown, fn($a, $b) => $b['spreadUsdt'] <=> $a['spreadUsdt']);
+
+        $totalSpread = array_sum(array_column($spreadBreakdown, 'spreadUsdt'));
+
+        // ============ COMMISSION REVENUE ============
+        $commissionRevenue = (float) Transaction::where('type', TransactionTypeEnum::FEE)
+            ->whereIn('subtype', [TransactionSubTypeEnum::OTC, TransactionSubTypeEnum::SPOT])
+            ->whereBetween('created_at', [$dateStart, $dateEnd])
+            ->selectRaw('SUM(ABS(amount) * coin_price) as total')
+            ->value('total') ?? 0;
+
+        // ============ EXPENSES ============
+        $expenseSubtypes = [
+            TransactionSubTypeEnum::EXCHANGE_WITHDRAWAL_FEE,
+            TransactionSubTypeEnum::NETWORK_WITHDRAWAL_FEE,
+            TransactionSubTypeEnum::HD_WALLET_FEE,
+            TransactionSubTypeEnum::REF_EXCHANGE_BUY_FEE,
+            TransactionSubTypeEnum::REF_EXCHANGE_SELL_FEE,
+            TransactionSubTypeEnum::REF_EXCHANGE_WITHDRAWAL_FEE,
+        ];
+
+        $totalExpenses = (float) Transaction::where('type', TransactionTypeEnum::FEE)
+            ->whereIn('subtype', $expenseSubtypes)
+            ->whereBetween('created_at', [$dateStart, $dateEnd])
+            ->selectRaw('SUM(ABS(amount) * coin_price) as total')
+            ->value('total') ?? 0;
+
+        // ============ P&L CALCULATIONS ============
+        $totalRevenue = $totalSpread + $commissionRevenue;
+        $totalProfitLoss = $totalRevenue - $totalExpenses;
+        $netProfitMargin = $totalRevenue > 0 ? ($totalProfitLoss / $totalRevenue) * 100 : 0;
+
+        return response()->json([
+            'totalSpread' => formatNumberTrimZeros($totalSpread, 2),
+            'totalSpreadRaw' => round($totalSpread, 2),
+            'totalCommission' => formatNumberTrimZeros($commissionRevenue, 2),
+            'totalExpenses' => formatNumberTrimZeros($totalExpenses, 2),
+            'totalRevenue' => formatNumberTrimZeros($totalRevenue, 2),
+            'totalProfitLoss' => formatNumberTrimZeros(abs($totalProfitLoss), 2),
+            'totalProfitLossRaw' => round($totalProfitLoss, 2),
+            'isProfitNegative' => $totalProfitLoss < 0,
+            'netProfitMargin' => number_format(abs($netProfitMargin), 1),
+            'isMarginNegative' => $netProfitMargin < 0,
+            'currencyCount' => count($spreadBreakdown),
+            'spreadBreakdown' => $spreadBreakdown,
+        ]);
+    }
+
+    public function getStockPurchaseStats(Request $request)
+    {
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $search = $request->input('search');
+        $sortField = $request->input('sort', 'created_at');
+        $sortDir = $request->input('direction', 'desc');
+        $perPage = (int) $request->input('per_page', 15);
+
+        $allowedSorts = ['created_at', 'amount', 'total_value', 'contract_number'];
+        if (!in_array($sortField, $allowedSorts)) {
+            $sortField = 'created_at';
+        }
+        $sortDir = $sortDir === 'asc' ? 'asc' : 'desc';
+
+        $query = StockContract::with(['user:id,first_name,last_name,email', 'stock:id,name,value,type']);
+
+        if ($startDate) {
+            $query->where('created_at', '>=', Carbon::parse($startDate)->startOfDay());
+        }
+        if ($endDate) {
+            $query->where('created_at', '<=', Carbon::parse($endDate)->endOfDay());
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('contract_number', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($uq) use ($search) {
+                        $uq->where('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $query->orderBy($sortField, $sortDir);
+
+        $paginated = $query->paginate($perPage);
+
+        // Summary stats
+        $summaryQuery = StockContract::query();
+        if ($startDate) {
+            $summaryQuery->where('created_at', '>=', Carbon::parse($startDate)->startOfDay());
+        }
+        if ($endDate) {
+            $summaryQuery->where('created_at', '<=', Carbon::parse($endDate)->endOfDay());
+        }
+
+        $totalContracts = $summaryQuery->count();
+        $totalValue = (float) $summaryQuery->sum('total_value');
+        $totalAmount = (float) $summaryQuery->sum('amount');
+        $activeContracts = (clone $summaryQuery)->where('contract_status', StockContractStatusEnum::ACTIVE)->count();
+
+        $items = $paginated->map(function ($contract) {
+            $userName = '';
+            if ($contract->user) {
+                $parts = array_filter([$contract->user->first_name, $contract->user->last_name]);
+                $userName = implode(' ', $parts) ?: $contract->user->email;
+            }
+
+            return [
+                'id' => $contract->id,
+                'contractNumber' => $contract->contract_number,
+                'userName' => $userName,
+                'userEmail' => $contract->user?->email ?? '',
+                'stockName' => $contract->stock?->name ?? '-',
+                'stockType' => $contract->stock?->type?->value ?? '-',
+                'amount' => formatNumberTrimZeros($contract->amount, 4),
+                'totalValue' => formatNumberTrimZeros($contract->total_value, 2),
+                'status' => $contract->contract_status?->value ?? '-',
+                'statusLabel' => $contract->contract_status?->label() ?? '-',
+                'statusColor' => $contract->contract_status?->color() ?? 'secondary',
+                'date' => $contract->created_at?->format('Y/m/d H:i'),
+            ];
+        });
+
+        return response()->json([
+            'totalContracts' => number_format($totalContracts),
+            'totalValue' => formatNumberTrimZeros($totalValue, 2),
+            'totalAmount' => formatNumberTrimZeros($totalAmount, 4),
+            'activeContracts' => number_format($activeContracts),
+            'items' => $items,
+            'pagination' => [
+                'currentPage' => $paginated->currentPage(),
+                'lastPage' => $paginated->lastPage(),
+                'perPage' => $paginated->perPage(),
+                'total' => $paginated->total(),
+                'from' => $paginated->firstItem(),
+                'to' => $paginated->lastItem(),
+            ],
+        ]);
+    }
+
+    public function exportStockPurchases(Request $request)
+    {
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        $query = StockContract::with(['user:id,first_name,last_name,email', 'stock:id,name,value,type'])
+            ->orderBy('created_at', 'desc');
+
+        if ($startDate) {
+            $query->where('created_at', '>=', Carbon::parse($startDate)->startOfDay());
+        }
+        if ($endDate) {
+            $query->where('created_at', '<=', Carbon::parse($endDate)->endOfDay());
+        }
+
+        $data = $query->get()->map(function ($contract) {
+            $userName = '';
+            if ($contract->user) {
+                $parts = array_filter([$contract->user->first_name, $contract->user->last_name]);
+                $userName = implode(' ', $parts) ?: $contract->user->email;
+            }
+
+            return [
+                $contract->contract_number,
+                $contract->created_at?->format('Y/m/d H:i'),
+                $userName,
+                $contract->user?->email ?? '',
+                $contract->stock?->name ?? '-',
+                formatNumberTrimZeros($contract->amount, 4),
+                formatNumberTrimZeros($contract->total_value, 2),
+                $contract->contract_status?->label() ?? '-',
+            ];
+        });
+
+        return Excel::download(new StockPurchaseExport($data), 'stock-purchases-' . now()->format('Y-m-d') . '.xlsx');
     }
 }

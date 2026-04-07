@@ -884,6 +884,379 @@
         </div>
     </div>
 
+    <!-- Section: Profit & Loss -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="card-title mb-1"><i class="fa fa-scale-balanced text-info me-2"></i>سود و زیان</h5>
+                <small class="text-muted">تحلیل سودآوری صرافی — اسپرد معاملات OTC + کارمزدها − هزینه‌ها</small>
+            </div>
+            <button class="btn btn-sm btn-outline-info" id="btn-refresh-pnl" onclick="loadProfitLossStats()">
+                <i class="fa fa-refresh me-1"></i> بروزرسانی
+            </button>
+        </div>
+        <div class="card-body">
+
+            <!-- Date Filter -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <label class="form-label mb-0 text-nowrap">بازه زمانی:</label>
+                        <input type="date" class="form-control form-control-sm" id="pnl-start-date" style="max-width: 160px;">
+                        <span class="text-muted">تا</span>
+                        <input type="date" class="form-control form-control-sm" id="pnl-end-date" style="max-width: 160px;">
+                        <button class="btn btn-sm btn-info" onclick="applyPnlFilter()">
+                            <i class="fa fa-filter me-1"></i> اعمال
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="resetPnlFilter()">
+                            <i class="fa fa-times me-1"></i> ریست
+                        </button>
+                        <span class="badge bg-label-info" id="pnl-range-badge" style="display: none;"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI Cards Row -->
+            <div class="row g-3 mb-4">
+                <!-- Trade Spread Card -->
+                <div class="col-md-4">
+                    <div class="card financial-kpi-card border shadow-none h-100">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="avatar avatar-lg me-3">
+                                <span class="avatar-initial rounded-circle bg-label-info">
+                                    <i class="fa fa-arrows-left-right fa-lg"></i>
+                                </span>
+                            </div>
+                            <div>
+                                <small class="text-muted d-block mb-1" id="pnl-spread-label">سود اسپرد معاملات امروز</small>
+                                <h3 class="mb-0 font-number" id="total-spread-usdt">
+                                    <span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span>
+                                </h3>
+                                <small class="text-muted">USDT</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total P/L Card -->
+                <div class="col-md-4">
+                    <div class="card financial-kpi-card border shadow-none h-100">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="avatar avatar-lg me-3">
+                                <span class="avatar-initial rounded-circle bg-label-success" id="pnl-icon-bg">
+                                    <i class="fa fa-chart-line fa-lg"></i>
+                                </span>
+                            </div>
+                            <div>
+                                <small class="text-muted d-block mb-1" id="pnl-total-label">سود/زیان خالص امروز</small>
+                                <h3 class="mb-0 font-number" id="total-profit-loss">
+                                    <span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span>
+                                </h3>
+                                <div>
+                                    <small class="text-muted">USDT</small>
+                                    <span class="badge bg-label-secondary ms-2" id="pnl-revenue-badge">
+                                        <span class="placeholder-glow"><span class="placeholder col-6 placeholder-sm rounded"></span></span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Net Profit Margin Card -->
+                <div class="col-md-4">
+                    <div class="card financial-kpi-card border shadow-none h-100">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="avatar avatar-lg me-3">
+                                <span class="avatar-initial rounded-circle bg-label-primary" id="margin-icon-bg">
+                                    <i class="fa fa-percent fa-lg"></i>
+                                </span>
+                            </div>
+                            <div>
+                                <small class="text-muted d-block mb-1" id="pnl-margin-label">حاشیه سود خالص امروز</small>
+                                <h3 class="mb-0 font-number" id="net-profit-margin">
+                                    <span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span>
+                                </h3>
+                                <small class="text-muted">درصد</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Revenue / Expense / Commission Summary -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center p-3 rounded" style="background-color: rgba(40, 199, 111, 0.08);">
+                        <i class="fa fa-arrow-up text-success me-2"></i>
+                        <div>
+                            <small class="text-muted d-block">مجموع درآمد</small>
+                            <span class="font-number fw-semibold" id="pnl-total-revenue">
+                                <span class="placeholder-glow"><span class="placeholder col-6 rounded"></span></span>
+                            </span>
+                            <small class="text-muted ms-1">USDT</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center p-3 rounded" style="background-color: rgba(234, 84, 85, 0.08);">
+                        <i class="fa fa-arrow-down text-danger me-2"></i>
+                        <div>
+                            <small class="text-muted d-block">مجموع هزینه‌ها</small>
+                            <span class="font-number fw-semibold" id="pnl-total-expenses">
+                                <span class="placeholder-glow"><span class="placeholder col-6 rounded"></span></span>
+                            </span>
+                            <small class="text-muted ms-1">USDT</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center p-3 rounded" style="background-color: rgba(115, 103, 240, 0.08);">
+                        <i class="fa fa-coins text-primary me-2"></i>
+                        <div>
+                            <small class="text-muted d-block">کارمزد معاملات</small>
+                            <span class="font-number fw-semibold" id="pnl-total-commission">
+                                <span class="placeholder-glow"><span class="placeholder col-6 rounded"></span></span>
+                            </span>
+                            <small class="text-muted ms-1">USDT</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Spread Breakdown Table -->
+            <div class="card border shadow-none">
+                <div class="card-header d-flex justify-content-between align-items-center py-3">
+                    <h6 class="mb-0">
+                        <i class="fa fa-table me-2 text-muted"></i>تفکیک اسپرد به ازای هر ارز
+                        <span class="badge bg-label-info ms-2" id="pnl-currency-count"></span>
+                    </h6>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="input-group input-group-sm" style="max-width: 220px;">
+                            <span class="input-group-text"><i class="fa fa-search"></i></span>
+                            <input type="text" class="form-control" id="pnl-search" placeholder="جستجوی ارز..." oninput="filterPnlTable()">
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="pnl-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="cursor-pointer" onclick="sortPnlTable('symbol')">
+                                    ارز <i class="fa fa-sort text-muted ms-1" id="pnl-sort-icon-symbol"></i>
+                                </th>
+                                <th class="cursor-pointer text-end" onclick="sortPnlTable('tradeCount')">
+                                    تعداد معاملات <i class="fa fa-sort text-muted ms-1" id="pnl-sort-icon-tradeCount"></i>
+                                </th>
+                                <th class="cursor-pointer text-end" onclick="sortPnlTable('volumeUsdt')">
+                                    حجم (USDT) <i class="fa fa-sort text-muted ms-1" id="pnl-sort-icon-volumeUsdt"></i>
+                                </th>
+                                <th class="cursor-pointer text-end" onclick="sortPnlTable('spreadUsdt')">
+                                    سود اسپرد (USDT) <i class="fa fa-sort text-muted ms-1" id="pnl-sort-icon-spreadUsdt"></i>
+                                </th>
+                                <th class="cursor-pointer text-end" onclick="sortPnlTable('avgSpreadPct')">
+                                    میانگین اسپرد <i class="fa fa-sort text-muted ms-1" id="pnl-sort-icon-avgSpreadPct"></i>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="pnl-table-body">
+                            @for ($i = 0; $i < 5; $i++)
+                                <tr>
+                                    <td><span class="placeholder-glow"><span class="placeholder col-6 rounded"></span></span></td>
+                                    <td class="text-end"><span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span></td>
+                                    <td class="text-end"><span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span></td>
+                                    <td class="text-end"><span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span></td>
+                                    <td class="text-end"><span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span></td>
+                                </tr>
+                            @endfor
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer text-muted text-center py-2 d-none" id="pnl-no-results">
+                    <i class="fa fa-info-circle me-1"></i> نتیجه‌ای یافت نشد
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Section: Stock Purchases -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="card-title mb-1"><i class="fa fa-building-columns text-dark me-2"></i>گزارش خرید سهام</h5>
+                <small class="text-muted">لیست تراکنش‌های خرید سهام با امکان خروجی اکسل</small>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-success" id="btn-export-stock" onclick="exportStockPurchases()">
+                    <i class="fa fa-file-excel me-1"></i> خروجی اکسل
+                </button>
+                <button class="btn btn-sm btn-outline-dark" id="btn-refresh-stock" onclick="loadStockPurchaseStats()">
+                    <i class="fa fa-refresh me-1"></i> بروزرسانی
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+
+            <!-- Date Filter + Search -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <label class="form-label mb-0 text-nowrap">بازه زمانی:</label>
+                        <input type="date" class="form-control form-control-sm" id="stock-start-date" style="max-width: 160px;">
+                        <span class="text-muted">تا</span>
+                        <input type="date" class="form-control form-control-sm" id="stock-end-date" style="max-width: 160px;">
+                        <button class="btn btn-sm btn-dark" onclick="applyStockFilter()">
+                            <i class="fa fa-filter me-1"></i> اعمال
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="resetStockFilter()">
+                            <i class="fa fa-times me-1"></i> ریست
+                        </button>
+                        <span class="badge bg-label-dark" id="stock-range-badge" style="display: none;"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex justify-content-md-end">
+                        <div class="input-group input-group-sm" style="max-width: 250px;">
+                            <span class="input-group-text"><i class="fa fa-search"></i></span>
+                            <input type="text" class="form-control" id="stock-search" placeholder="جستجوی کاربر یا شماره قرارداد..." oninput="handleStockSearch()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary KPI Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="card financial-kpi-card border shadow-none h-100">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="avatar avatar-lg me-3">
+                                <span class="avatar-initial rounded-circle bg-label-dark">
+                                    <i class="fa fa-file-contract fa-lg"></i>
+                                </span>
+                            </div>
+                            <div>
+                                <small class="text-muted d-block mb-1" id="stock-total-label">تعداد قراردادها</small>
+                                <h3 class="mb-0 font-number" id="stock-total-contracts">
+                                    <span class="placeholder-glow"><span class="placeholder col-6 rounded"></span></span>
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card financial-kpi-card border shadow-none h-100">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="avatar avatar-lg me-3">
+                                <span class="avatar-initial rounded-circle bg-label-success">
+                                    <i class="fa fa-check-circle fa-lg"></i>
+                                </span>
+                            </div>
+                            <div>
+                                <small class="text-muted d-block mb-1">قراردادهای فعال</small>
+                                <h3 class="mb-0 font-number" id="stock-active-contracts">
+                                    <span class="placeholder-glow"><span class="placeholder col-6 rounded"></span></span>
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card financial-kpi-card border shadow-none h-100">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="avatar avatar-lg me-3">
+                                <span class="avatar-initial rounded-circle bg-label-info">
+                                    <i class="fa fa-cubes fa-lg"></i>
+                                </span>
+                            </div>
+                            <div>
+                                <small class="text-muted d-block mb-1">مجموع تعداد سهام</small>
+                                <h3 class="mb-0 font-number" id="stock-total-amount">
+                                    <span class="placeholder-glow"><span class="placeholder col-6 rounded"></span></span>
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card financial-kpi-card border shadow-none h-100">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="avatar avatar-lg me-3">
+                                <span class="avatar-initial rounded-circle bg-label-warning">
+                                    <i class="fa fa-money-bill-wave fa-lg"></i>
+                                </span>
+                            </div>
+                            <div>
+                                <small class="text-muted d-block mb-1">مجموع مبلغ خرید</small>
+                                <h3 class="mb-0 font-number" id="stock-total-value">
+                                    <span class="placeholder-glow"><span class="placeholder col-6 rounded"></span></span>
+                                </h3>
+                                <small class="text-muted">تومان</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stock Purchases Table -->
+            <div class="card border shadow-none">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="stock-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="cursor-pointer" onclick="sortStockTable('created_at')">
+                                    تاریخ <i class="fa fa-sort text-muted ms-1" id="stock-sort-icon-created_at"></i>
+                                </th>
+                                <th>
+                                    کاربر
+                                </th>
+                                <th>
+                                    سهم
+                                </th>
+                                <th class="cursor-pointer text-end" onclick="sortStockTable('amount')">
+                                    تعداد <i class="fa fa-sort text-muted ms-1" id="stock-sort-icon-amount"></i>
+                                </th>
+                                <th class="cursor-pointer text-end" onclick="sortStockTable('total_value')">
+                                    مبلغ کل <i class="fa fa-sort text-muted ms-1" id="stock-sort-icon-total_value"></i>
+                                </th>
+                                <th class="cursor-pointer text-center" onclick="sortStockTable('contract_number')">
+                                    شماره قرارداد <i class="fa fa-sort text-muted ms-1" id="stock-sort-icon-contract_number"></i>
+                                </th>
+                                <th class="text-center">
+                                    وضعیت
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="stock-table-body">
+                            @for ($i = 0; $i < 5; $i++)
+                                <tr>
+                                    <td><span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span></td>
+                                    <td><span class="placeholder-glow"><span class="placeholder col-6 rounded"></span></span></td>
+                                    <td><span class="placeholder-glow"><span class="placeholder col-5 rounded"></span></span></td>
+                                    <td class="text-end"><span class="placeholder-glow"><span class="placeholder col-4 rounded"></span></span></td>
+                                    <td class="text-end"><span class="placeholder-glow"><span class="placeholder col-6 rounded"></span></span></td>
+                                    <td class="text-center"><span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span></td>
+                                    <td class="text-center"><span class="placeholder-glow"><span class="placeholder col-4 rounded"></span></span></td>
+                                </tr>
+                            @endfor
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer text-muted text-center py-2 d-none" id="stock-no-results">
+                    <i class="fa fa-info-circle me-1"></i> نتیجه‌ای یافت نشد
+                </div>
+                <!-- Pagination -->
+                <div class="card-footer d-flex justify-content-between align-items-center py-2" id="stock-pagination-wrapper">
+                    <small class="text-muted" id="stock-pagination-info"></small>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0" id="stock-pagination"></ul>
+                    </nav>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
 @endsection
 
 @section('vendor-script')

@@ -15,8 +15,15 @@
     let currentCashFlowEndDate = null;
     let currentExpenseStartDate = null;
     let currentExpenseEndDate = null;
-
-    // Load Trade Stats
+    let currentPnlStartDate = null;
+    let currentPnlEndDate = null;
+    let pnlSpreadData = [];
+    let currentStockStartDate = null;
+    let currentStockEndDate = null;
+    let currentStockSearch = null;
+    let stockSortField = 'created_at';
+    let stockSortDir = 'desc';
+    let stockCurrentPage = 1;
     async function loadTradeStats() {
         const btn = document.getElementById('btn-refresh-trades');
         if (btn) {
@@ -318,6 +325,18 @@
     window.resetExpenseFilter = resetExpenseFilter;
     window.filterExpenseTable = filterExpenseTable;
     window.sortExpenseTable = sortExpenseTable;
+    window.loadProfitLossStats = loadProfitLossStats;
+    window.applyPnlFilter = applyPnlFilter;
+    window.resetPnlFilter = resetPnlFilter;
+    window.filterPnlTable = filterPnlTable;
+    window.sortPnlTable = sortPnlTable;
+    window.loadStockPurchaseStats = loadStockPurchaseStats;
+    window.applyStockFilter = applyStockFilter;
+    window.resetStockFilter = resetStockFilter;
+    window.handleStockSearch = handleStockSearch;
+    window.sortStockTable = sortStockTable;
+    window.goToStockPage = goToStockPage;
+    window.exportStockPurchases = exportStockPurchases;
 
     // ====== Asset Stats ======
     async function loadAssetStats() {
@@ -1134,6 +1153,537 @@
         }
     }
 
+    // ====== Profit & Loss Stats ======
+    let pnlSortField = 'spreadUsdt';
+    let pnlSortAsc = false;
+
+    async function loadProfitLossStats() {
+        const btn = document.getElementById('btn-refresh-pnl');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> بارگذاری...';
+        }
+
+        showPnlSkeletonLoading();
+
+        try {
+            const params = new URLSearchParams();
+            if (currentPnlStartDate) params.append('start_date', currentPnlStartDate);
+            if (currentPnlEndDate) params.append('end_date', currentPnlEndDate);
+
+            const response = await fetch(`/admin/financial-dashboard/ajax/profit-loss-stats?${params.toString()}`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+            const data = await response.json();
+
+            // Trade Spread
+            updateElement('total-spread-usdt', data.totalSpread);
+
+            // Total P/L with color
+            const pnlEl = document.getElementById('total-profit-loss');
+            if (pnlEl) {
+                const prefix = data.isProfitNegative ? '-' : '+';
+                pnlEl.innerHTML = `<span class="${data.isProfitNegative ? 'text-danger' : 'text-success'}">${prefix}${data.totalProfitLoss}</span>`;
+            }
+
+            const pnlIconBg = document.getElementById('pnl-icon-bg');
+            if (pnlIconBg) {
+                pnlIconBg.className = `avatar-initial rounded-circle ${data.isProfitNegative ? 'bg-label-danger' : 'bg-label-success'}`;
+            }
+
+            // Revenue badge
+            const revBadge = document.getElementById('pnl-revenue-badge');
+            if (revBadge) {
+                revBadge.innerHTML = `درآمد: ${data.totalRevenue} USDT`;
+                revBadge.className = 'badge bg-label-secondary ms-2';
+            }
+
+            // Net Profit Margin
+            const marginEl = document.getElementById('net-profit-margin');
+            if (marginEl) {
+                const sign = data.isMarginNegative ? '-' : '';
+                marginEl.innerHTML = `<span class="${data.isMarginNegative ? 'text-danger' : 'text-success'}">${sign}${data.netProfitMargin}%</span>`;
+            }
+
+            const marginIconBg = document.getElementById('margin-icon-bg');
+            if (marginIconBg) {
+                marginIconBg.className = `avatar-initial rounded-circle ${data.isMarginNegative ? 'bg-label-danger' : 'bg-label-primary'}`;
+            }
+
+            // Summary items
+            updateElement('pnl-total-revenue', data.totalRevenue);
+            updateElement('pnl-total-expenses', data.totalExpenses);
+            updateElement('pnl-total-commission', data.totalCommission);
+
+            // Currency count badge
+            const countEl = document.getElementById('pnl-currency-count');
+            if (countEl) countEl.textContent = `${data.currencyCount} ارز`;
+
+            // Store and render table
+            pnlSpreadData = data.spreadBreakdown || [];
+            renderPnlTable();
+
+            updateLastRefreshTime();
+        } catch (error) {
+            console.error('Error loading P&L stats:', error);
+            showPnlErrorState();
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa fa-refresh me-1"></i> بروزرسانی';
+            }
+        }
+    }
+
+    function renderPnlTable() {
+        const tbody = document.getElementById('pnl-table-body');
+        if (!tbody) return;
+
+        const searchTerm = (document.getElementById('pnl-search')?.value || '').toLowerCase();
+        let filtered = pnlSpreadData;
+
+        if (searchTerm) {
+            filtered = pnlSpreadData.filter(item =>
+                item.symbol.toLowerCase().includes(searchTerm) ||
+                (item.name && item.name.toLowerCase().includes(searchTerm))
+            );
+        }
+
+        // Sort
+        filtered.sort((a, b) => {
+            let valA = a[pnlSortField];
+            let valB = b[pnlSortField];
+
+            if (typeof valA === 'string') {
+                valA = valA.toLowerCase();
+                valB = valB.toLowerCase();
+            }
+
+            if (valA < valB) return pnlSortAsc ? -1 : 1;
+            if (valA > valB) return pnlSortAsc ? 1 : -1;
+            return 0;
+        });
+
+        const noResults = document.getElementById('pnl-no-results');
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = '';
+            if (noResults) noResults.classList.remove('d-none');
+            return;
+        }
+
+        if (noResults) noResults.classList.add('d-none');
+
+        tbody.innerHTML = filtered.map(item => {
+            const spreadClass = item.spreadUsdt < 0 ? 'text-danger' : 'text-success';
+            const spreadIcon = item.spreadUsdt < 0 ? '<i class="fa fa-arrow-down me-1"></i>' : '<i class="fa fa-arrow-up me-1"></i>';
+            const pctClass = item.avgSpreadPct < 0 ? 'text-danger' : 'text-success';
+
+            return `<tr>
+                <td>
+                    <span class="fw-semibold">${escapeHtml(item.symbol)}</span>
+                    <small class="text-muted d-block">${escapeHtml(item.name)}</small>
+                </td>
+                <td class="text-end">
+                    <span class="font-number">${item.tradeCount.toLocaleString('en-US')}</span>
+                    <small class="text-muted d-block">
+                        <span class="text-success">${item.buyCount} خرید</span> /
+                        <span class="text-danger">${item.sellCount} فروش</span>
+                    </small>
+                </td>
+                <td class="text-end">
+                    <span class="font-number">${formatNumber(item.volumeUsdt)}</span>
+                </td>
+                <td class="text-end">
+                    <span class="${spreadClass} font-number fw-semibold">${spreadIcon}${formatNumber(Math.abs(item.spreadUsdt))}</span>
+                </td>
+                <td class="text-end">
+                    <span class="${pctClass} font-number fw-semibold">${item.avgSpreadPct}%</span>
+                </td>
+            </tr>`;
+        }).join('');
+
+        // Update sort icons
+        document.querySelectorAll('[id^="pnl-sort-icon-"]').forEach(icon => {
+            icon.className = 'fa fa-sort text-muted ms-1';
+        });
+        const activeIcon = document.getElementById(`pnl-sort-icon-${pnlSortField}`);
+        if (activeIcon) {
+            activeIcon.className = pnlSortAsc
+                ? 'fa fa-sort-up text-primary ms-1'
+                : 'fa fa-sort-down text-primary ms-1';
+        }
+    }
+
+    function sortPnlTable(field) {
+        if (pnlSortField === field) {
+            pnlSortAsc = !pnlSortAsc;
+        } else {
+            pnlSortField = field;
+            pnlSortAsc = field === 'symbol';
+        }
+        renderPnlTable();
+    }
+
+    function filterPnlTable() {
+        renderPnlTable();
+    }
+
+    function applyPnlFilter() {
+        const startDate = document.getElementById('pnl-start-date').value;
+        const endDate = document.getElementById('pnl-end-date').value;
+
+        if (startDate) {
+            currentPnlStartDate = startDate;
+            currentPnlEndDate = endDate || null;
+
+            const badge = document.getElementById('pnl-range-badge');
+            if (badge) {
+                badge.textContent = endDate ? `${startDate} تا ${endDate}` : `از ${startDate}`;
+                badge.style.display = 'inline-block';
+            }
+
+            updateElement('pnl-spread-label', 'سود اسپرد معاملات');
+            updateElement('pnl-total-label', 'سود/زیان خالص');
+            updateElement('pnl-margin-label', 'حاشیه سود خالص');
+        }
+
+        loadProfitLossStats();
+    }
+
+    function resetPnlFilter() {
+        currentPnlStartDate = null;
+        currentPnlEndDate = null;
+
+        document.getElementById('pnl-start-date').value = '';
+        document.getElementById('pnl-end-date').value = '';
+
+        const badge = document.getElementById('pnl-range-badge');
+        if (badge) badge.style.display = 'none';
+
+        updateElement('pnl-spread-label', 'سود اسپرد معاملات امروز');
+        updateElement('pnl-total-label', 'سود/زیان خالص امروز');
+        updateElement('pnl-margin-label', 'حاشیه سود خالص امروز');
+
+        loadProfitLossStats();
+    }
+
+    function showPnlSkeletonLoading() {
+        ['total-spread-usdt', 'total-profit-loss', 'net-profit-margin'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = '<span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span>';
+        });
+
+        ['pnl-total-revenue', 'pnl-total-expenses', 'pnl-total-commission'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = '<span class="placeholder-glow"><span class="placeholder col-6 rounded"></span></span>';
+        });
+
+        const revBadge = document.getElementById('pnl-revenue-badge');
+        if (revBadge) revBadge.innerHTML = '<span class="placeholder-glow"><span class="placeholder col-6 placeholder-sm rounded"></span></span>';
+
+        const countEl = document.getElementById('pnl-currency-count');
+        if (countEl) countEl.innerHTML = '<span class="placeholder col-4 placeholder-sm rounded"></span>';
+
+        const tbody = document.getElementById('pnl-table-body');
+        if (tbody) {
+            let rows = '';
+            for (let i = 0; i < 5; i++) {
+                rows += `<tr>
+                    <td><span class="placeholder-glow"><span class="placeholder col-6 rounded"></span></span></td>
+                    <td class="text-end"><span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span></td>
+                    <td class="text-end"><span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span></td>
+                    <td class="text-end"><span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span></td>
+                    <td class="text-end"><span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span></td>
+                </tr>`;
+            }
+            tbody.innerHTML = rows;
+        }
+    }
+
+    function showPnlErrorState() {
+        ['total-spread-usdt', 'total-profit-loss', 'net-profit-margin'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = '<span class="text-danger cursor-pointer" onclick="loadProfitLossStats()" title="کلیک برای تلاش مجدد"><i class="fa fa-exclamation-triangle me-1"></i>خطا</span>';
+        });
+
+        ['pnl-total-revenue', 'pnl-total-expenses', 'pnl-total-commission'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = '<span class="text-danger">--</span>';
+        });
+
+        const tbody = document.getElementById('pnl-table-body');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4 cursor-pointer" onclick="loadProfitLossStats()">
+                <i class="fa fa-exclamation-triangle me-2"></i>خطا در بارگذاری - کلیک برای تلاش مجدد
+            </td></tr>`;
+        }
+    }
+
+    // ====== Stock Purchase Stats ======
+    let stockSearchTimeout = null;
+
+    async function loadStockPurchaseStats(page) {
+        if (page !== undefined) stockCurrentPage = page;
+
+        const btn = document.getElementById('btn-refresh-stock');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> بارگذاری...';
+        }
+
+        showStockSkeletonLoading();
+
+        try {
+            const params = new URLSearchParams();
+            params.append('page', stockCurrentPage);
+            params.append('sort', stockSortField);
+            params.append('direction', stockSortDir);
+            if (currentStockStartDate) params.append('start_date', currentStockStartDate);
+            if (currentStockEndDate) params.append('end_date', currentStockEndDate);
+            if (currentStockSearch) params.append('search', currentStockSearch);
+
+            const response = await fetch(`/admin/financial-dashboard/ajax/stock-purchase-stats?${params.toString()}`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+            const data = await response.json();
+
+            // Update KPI cards
+            updateElement('stock-total-contracts', data.totalContracts);
+            updateElement('stock-active-contracts', data.activeContracts);
+            updateElement('stock-total-amount', data.totalAmount);
+            updateElement('stock-total-value', data.totalValue);
+
+            // Render table
+            renderStockTable(data.items);
+
+            // Render pagination
+            renderStockPagination(data.pagination);
+
+            updateLastRefreshTime();
+        } catch (error) {
+            console.error('Error loading stock purchase stats:', error);
+            showStockErrorState();
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa fa-refresh me-1"></i> بروزرسانی';
+            }
+        }
+    }
+
+    function renderStockTable(items) {
+        const tbody = document.getElementById('stock-table-body');
+        if (!tbody) return;
+
+        const noResults = document.getElementById('stock-no-results');
+
+        if (!items || items.length === 0) {
+            tbody.innerHTML = '';
+            if (noResults) noResults.classList.remove('d-none');
+            return;
+        }
+
+        if (noResults) noResults.classList.add('d-none');
+
+        tbody.innerHTML = items.map(item => `<tr>
+            <td>
+                <span class="font-number text-nowrap">${escapeHtml(item.date || '-')}</span>
+            </td>
+            <td>
+                <span class="fw-semibold">${escapeHtml(item.userName || '-')}</span>
+                <small class="text-muted d-block">${escapeHtml(item.userEmail || '')}</small>
+            </td>
+            <td>
+                <span>${escapeHtml(item.stockName)}</span>
+            </td>
+            <td class="text-end">
+                <span class="font-number">${escapeHtml(item.amount)}</span>
+            </td>
+            <td class="text-end">
+                <span class="font-number fw-semibold">${formatNumber(parseFloat(String(item.totalValue).replace(/,/g, '')) || 0)}</span>
+            </td>
+            <td class="text-center">
+                <code class="small">${escapeHtml(item.contractNumber)}</code>
+            </td>
+            <td class="text-center">
+                <span class="badge bg-label-${item.statusColor}">${escapeHtml(item.statusLabel)}</span>
+            </td>
+        </tr>`).join('');
+
+        // Update sort icons
+        document.querySelectorAll('[id^="stock-sort-icon-"]').forEach(icon => {
+            icon.className = 'fa fa-sort text-muted ms-1';
+        });
+        const activeIcon = document.getElementById(`stock-sort-icon-${stockSortField}`);
+        if (activeIcon) {
+            activeIcon.className = stockSortDir === 'asc'
+                ? 'fa fa-sort-up text-primary ms-1'
+                : 'fa fa-sort-down text-primary ms-1';
+        }
+    }
+
+    function renderStockPagination(pagination) {
+        const info = document.getElementById('stock-pagination-info');
+        const paginationEl = document.getElementById('stock-pagination');
+        const wrapper = document.getElementById('stock-pagination-wrapper');
+
+        if (!pagination || pagination.total === 0) {
+            if (info) info.textContent = '';
+            if (paginationEl) paginationEl.innerHTML = '';
+            if (wrapper) wrapper.classList.add('d-none');
+            return;
+        }
+
+        if (wrapper) wrapper.classList.remove('d-none');
+
+        if (info) {
+            info.textContent = `نمایش ${pagination.from || 0} تا ${pagination.to || 0} از ${pagination.total} مورد`;
+        }
+
+        if (paginationEl) {
+            let html = '';
+
+            // Previous
+            html += `<li class="page-item ${pagination.currentPage <= 1 ? 'disabled' : ''}">
+                <a class="page-link" href="javascript:void(0)" onclick="goToStockPage(${pagination.currentPage - 1})"><i class="fa fa-chevron-right"></i></a>
+            </li>`;
+
+            // Page numbers
+            const start = Math.max(1, pagination.currentPage - 2);
+            const end = Math.min(pagination.lastPage, pagination.currentPage + 2);
+
+            if (start > 1) {
+                html += `<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="goToStockPage(1)">1</a></li>`;
+                if (start > 2) html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+            }
+
+            for (let i = start; i <= end; i++) {
+                html += `<li class="page-item ${i === pagination.currentPage ? 'active' : ''}">
+                    <a class="page-link" href="javascript:void(0)" onclick="goToStockPage(${i})">${i}</a>
+                </li>`;
+            }
+
+            if (end < pagination.lastPage) {
+                if (end < pagination.lastPage - 1) html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                html += `<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="goToStockPage(${pagination.lastPage})">${pagination.lastPage}</a></li>`;
+            }
+
+            // Next
+            html += `<li class="page-item ${pagination.currentPage >= pagination.lastPage ? 'disabled' : ''}">
+                <a class="page-link" href="javascript:void(0)" onclick="goToStockPage(${pagination.currentPage + 1})"><i class="fa fa-chevron-left"></i></a>
+            </li>`;
+
+            paginationEl.innerHTML = html;
+        }
+    }
+
+    function goToStockPage(page) {
+        if (page < 1) return;
+        loadStockPurchaseStats(page);
+    }
+
+    function sortStockTable(field) {
+        if (stockSortField === field) {
+            stockSortDir = stockSortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+            stockSortField = field;
+            stockSortDir = field === 'contract_number' ? 'asc' : 'desc';
+        }
+        stockCurrentPage = 1;
+        loadStockPurchaseStats();
+    }
+
+    function handleStockSearch() {
+        clearTimeout(stockSearchTimeout);
+        stockSearchTimeout = setTimeout(() => {
+            currentStockSearch = document.getElementById('stock-search')?.value || null;
+            if (currentStockSearch === '') currentStockSearch = null;
+            stockCurrentPage = 1;
+            loadStockPurchaseStats();
+        }, 400);
+    }
+
+    function applyStockFilter() {
+        const startDate = document.getElementById('stock-start-date').value;
+        const endDate = document.getElementById('stock-end-date').value;
+
+        if (startDate) {
+            currentStockStartDate = startDate;
+            currentStockEndDate = endDate || null;
+
+            const badge = document.getElementById('stock-range-badge');
+            if (badge) {
+                badge.textContent = endDate ? `${startDate} تا ${endDate}` : `از ${startDate}`;
+                badge.style.display = 'inline-block';
+            }
+        }
+
+        stockCurrentPage = 1;
+        loadStockPurchaseStats();
+    }
+
+    function resetStockFilter() {
+        currentStockStartDate = null;
+        currentStockEndDate = null;
+
+        document.getElementById('stock-start-date').value = '';
+        document.getElementById('stock-end-date').value = '';
+
+        const badge = document.getElementById('stock-range-badge');
+        if (badge) badge.style.display = 'none';
+
+        stockCurrentPage = 1;
+        loadStockPurchaseStats();
+    }
+
+    function exportStockPurchases() {
+        const params = new URLSearchParams();
+        if (currentStockStartDate) params.append('start_date', currentStockStartDate);
+        if (currentStockEndDate) params.append('end_date', currentStockEndDate);
+
+        const url = `/admin/financial-dashboard/ajax/stock-purchase-export?${params.toString()}`;
+        window.location.href = url;
+    }
+
+    function showStockSkeletonLoading() {
+        ['stock-total-contracts', 'stock-active-contracts', 'stock-total-amount', 'stock-total-value'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = '<span class="placeholder-glow"><span class="placeholder col-6 rounded"></span></span>';
+        });
+
+        const tbody = document.getElementById('stock-table-body');
+        if (tbody) {
+            let rows = '';
+            for (let i = 0; i < 5; i++) {
+                rows += `<tr>
+                    <td><span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span></td>
+                    <td><span class="placeholder-glow"><span class="placeholder col-6 rounded"></span></span></td>
+                    <td><span class="placeholder-glow"><span class="placeholder col-5 rounded"></span></span></td>
+                    <td class="text-end"><span class="placeholder-glow"><span class="placeholder col-4 rounded"></span></span></td>
+                    <td class="text-end"><span class="placeholder-glow"><span class="placeholder col-6 rounded"></span></span></td>
+                    <td class="text-center"><span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span></td>
+                    <td class="text-center"><span class="placeholder-glow"><span class="placeholder col-4 rounded"></span></span></td>
+                </tr>`;
+            }
+            tbody.innerHTML = rows;
+        }
+    }
+
+    function showStockErrorState() {
+        ['stock-total-contracts', 'stock-active-contracts', 'stock-total-amount', 'stock-total-value'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = '<span class="text-danger cursor-pointer" onclick="loadStockPurchaseStats()" title="کلیک برای تلاش مجدد"><i class="fa fa-exclamation-triangle me-1"></i>خطا</span>';
+        });
+
+        const tbody = document.getElementById('stock-table-body');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4 cursor-pointer" onclick="loadStockPurchaseStats()">
+                <i class="fa fa-exclamation-triangle me-2"></i>خطا در بارگذاری - کلیک برای تلاش مجدد
+            </td></tr>`;
+        }
+    }
+
     // Initialize on DOM ready
     document.addEventListener('DOMContentLoaded', function () {
         // Load initial data
@@ -1143,6 +1693,8 @@
         loadLiabilityStats();
         loadCashFlowStats();
         loadExpenseStats();
+        loadProfitLossStats();
+        loadStockPurchaseStats();
 
         // Auto refresh every 60 seconds
         refreshInterval = setInterval(() => {
@@ -1152,6 +1704,8 @@
             loadLiabilityStats();
             loadCashFlowStats();
             loadExpenseStats();
+            loadProfitLossStats();
+            loadStockPurchaseStats();
         }, 60000);
     });
 
