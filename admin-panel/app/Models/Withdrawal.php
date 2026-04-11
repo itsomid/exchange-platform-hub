@@ -16,7 +16,7 @@ class Withdrawal extends Model
     public $filterNameSpace = 'App\Filters\WithdrawalFilter';
 
     protected $fillable = [
-        'user_id', 'admin_id', 'wallet_id', 'currency_chain_id', 'currency_symbol', 'amount', 'total_fee','exchange_fee','network_fee','hd_wallet_network_fee','usdt_value', 'address', 'transaction_hash', 'status', 'description', 'confirmed_at',
+        'user_id', 'admin_id', 'wallet_id', 'currency_chain_id', 'currency_symbol', 'amount', 'total_fee','exchange_fee','network_fee','hd_wallet_network_fee','usdt_value', 'address', 'transaction_hash', 'status', 'description', 'confirmed_at', 'job_failed_at',
     ];
 
     protected function casts(): array
@@ -24,6 +24,7 @@ class Withdrawal extends Model
         return [
             'status' => WithdrawalStatusEnum::class,
             'confirmed_at' => 'datetime',
+            'job_failed_at' => 'datetime',
         ];
     }
 
