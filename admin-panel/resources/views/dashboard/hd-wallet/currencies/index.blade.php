@@ -35,7 +35,7 @@
                 <div class="col-md-6">
                     <div class="border rounded p-3 h-100 d-flex align-items-center justify-content-between">
                         <div>
-                            <div class="fw-semibold mb-1">HD Wallet سرویس</div>
+                            <div class="fw-semibold mb-1">سرویس HD Wallet</div>
                             @if ($serviceStatus['success'])
                                 <span class="badge bg-label-success">فعال</span>
                             @else
