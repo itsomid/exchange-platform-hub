@@ -216,8 +216,8 @@
                                 @if($currency->chains->count())
                                     <div class="d-flex flex-column gap-2 align-items-center">
                                         @foreach($currency->chains as $chain)
-                                            <div class="rounded border px-2 py-1" style="min-width: 130px; font-size: 0.75rem;">
-                                                <div class="fw-semibold text-muted mb-1 border-bottom pb-1" style="font-size: 0.7rem;">
+                                            <div class="d-flex rounded border px-2 py-1" style="min-width: 130px; font-size: 0.75rem;">
+                                                <div class="fw-semibold text-muted me-1 border-end pe-1" style="font-size: 0.7rem;">
                                                     {{ $chain->chain }}
                                                 </div>
                                                 <div class="d-flex align-items-center justify-content-between gap-2">
