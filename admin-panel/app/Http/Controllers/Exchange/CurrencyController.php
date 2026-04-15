@@ -23,6 +23,8 @@ class CurrencyController extends Controller
     public function index()
     {
 
+        $availableChains = CurrencyChain::query()->distinct()->orderBy('chain')->pluck('chain');
+
         $currencies = Currency::query()->with('chains')->filterBy(request()->all())->get();
 
         $currenciesWithChainsCount = $currencies->filter(function ($currency) {
@@ -36,6 +38,7 @@ class CurrencyController extends Controller
             'currencies' => $currencies,
             'currenciesWithChainsCount' => $currenciesWithChainsCount,
             'currenciesWithoutChainsCount' => $currenciesWithoutChainsCount,
+            'availableChains' => $availableChains,
         ]);
     }
 
