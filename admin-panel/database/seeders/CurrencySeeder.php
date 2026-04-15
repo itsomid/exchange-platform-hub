@@ -150,17 +150,6 @@ class CurrencySeeder extends Seeder
             ]
         ];
 
-        \DB::table('currencies')->upsert(
-            $currencies,
-            ['symbol'],
-            [
-                'name',
-                'persian_name',
-                'logo',
-                'price_precision',
-                'amount_precision',
-                'max_auto_withdraw_amount',
-            ]
-        );
+        \DB::table('currencies')->insertOrIgnore($currencies);
     }
 }
