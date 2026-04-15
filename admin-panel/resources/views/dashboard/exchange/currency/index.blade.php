@@ -60,17 +60,15 @@
     {{-- Search & Filter --}}
     <div class="card mb-4">
         <div class="card-body">
-            <form id="filterForm" class="row g-3 align-items-end"
-                  action="{{ route('admin.currency.index') }}" method="get">
+            <form id="filterForm" class="row g-3 align-items-end" action="{{ route('admin.currency.index') }}" method="get">
 
                 <div class="col-md-4">
                     <label class="form-label" for="search">
                         <i class="fa-light fa-magnifying-glass me-1"></i>
                         جست‌وجو (نام / سیمبول)
                     </label>
-                    <input type="text" id="search" name="search" class="form-control"
-                           placeholder="مثال: Bitcoin یا BTC ..."
-                           value="{{ request('search') }}">
+                    <input type="text" id="search" name="search" class="form-control" placeholder="مثال: Bitcoin یا BTC ..."
+                        value="{{ request('search') }}">
                 </div>
 
                 <div class="col-md-3">
@@ -95,8 +93,10 @@
                     </label>
                     <select id="status" name="status" class="form-select">
                         <option value="">همه</option>
-                        <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>فعال (دارای شبکه)</option>
-                        <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>غیرفعال (بدون شبکه)</option>
+                        <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>فعال (دارای شبکه)
+                        </option>
+                        <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>غیرفعال (بدون شبکه)
+                        </option>
                     </select>
                 </div>
 
@@ -140,122 +140,132 @@
                     </tr>
                 </thead>
                 <tbody>
-                @forelse($currencies as $currency)
-                    <tr>
-                        <td class="text-center text-muted">{{ $currency->id }}</td>
+                    @forelse($currencies as $currency)
+                        <tr>
+                            <td class="text-center text-muted">{{ $currency->id }}</td>
 
-                        {{-- Coin Info (combined avatar + name + symbol) --}}
-                        <td>
-                            <div class="d-flex align-items-center gap-3">
-                                <img src="{{ asset($currency->coinLogo()) }}" class="rounded-circle" width="40" height="40" alt="{{ $currency->symbol }}">
-                                <div>
-                                    <div class="fw-semibold">{{ $currency->name }}</div>
-                                    <small class="text-muted">{{ $currency->symbol }}</small>
+                            {{-- Coin Info (combined avatar + name + symbol) --}}
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <img src="{{ asset($currency->coinLogo()) }}" class="rounded-circle" width="40" height="40"
+                                        alt="{{ $currency->symbol }}">
+                                    <div>
+                                        <div class="fw-semibold">{{ $currency->name }}</div>
+                                        <small class="text-muted">{{ $currency->symbol }}</small>
+                                    </div>
                                 </div>
-                            </div>
-                        </td>
+                            </td>
 
-                        {{-- Chains --}}
-                        <td class="text-center">
-                            @if($currency->chains->count())
-                                          @foreach($currency->chains as $chain)
-                                <div class="d-flex flex-wrap justify-content-center gap-1 px-2 py-1 ">
-                      
-                                    <span class="badge bg-label-primary d-block">{{ $chain->chain }}</span>
-                            
-                                </div>
-                                      @endforeach
-                            @else
-                                <span class="badge bg-label-danger">بدون شبکه</span>
-                            @endif
-                        </td>
-
-                        {{-- Exchange Withdrawal Fee --}}
-                        <td class="text-center">
+                            {{-- Chains --}}
+                            <td class="text-center">
                                 @if($currency->chains->count())
-                                <div class="d-flex flex-column gap-1 align-items-center">
                                     @foreach($currency->chains as $chain)
-                                        <div class="d-flex align-items-center gap-1 rounded px-2 py-1 bg-label-secondary" style="font-size: 0.78rem;">
-                                              <span class="text-muted">{{ $currency->symbol }}</span>
-                                            <span class="fw-semibold font-number text-dark mb-1">{{ formatNumberTrimZeros($chain->exchange_withdrawal_fee, $currency->amount_precision) }}</span>
-                                        
-                                              <span class="badge bg-label-primary" style="font-size: 0.68rem;">{{ $chain->chain }}</span>
+                                        <div class="d-flex flex-wrap justify-content-center gap-1 px-2 py-1 ">
+
+                                            <span class="badge bg-label-primary d-block">{{ $chain->chain }}</span>
+
                                         </div>
                                     @endforeach
-                                </div>
-                            @else
-                                <span class="text-muted">—</span>
-                            @endif
-                        </td>
+                                @else
+                                    <span class="badge bg-label-danger">بدون شبکه</span>
+                                @endif
+                            </td>
 
-                        {{-- Network Fee --}}
-                        <td class="text-center">
-                            @if($currency->chains->count())
-                                <div class="d-flex flex-column gap-1 align-items-center">
-                                    @foreach($currency->chains as $chain)
-                                        <div class="d-flex align-items-center gap-1 rounded px-2 py-1 bg-label-secondary" style="font-size: 0.78rem;">
-                                            <span class="text-muted">{{ $currency->symbol }}</span>
-                                            <span class="fw-semibold font-number text-dark mb-1">{{ formatNumberTrimZeros($chain->network_fee, $currency->amount_precision) }}</span>
-                                            <span class="badge bg-label-info" style="font-size: 0.68rem;">{{ $chain->chain }}</span>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            @else
-                                <span class="text-muted">—</span>
-                            @endif
-                        </td>
+                            {{-- Exchange Withdrawal Fee --}}
+                            <td class="text-center">
+                                @if($currency->chains->count())
+                                    <div class="d-flex flex-column gap-1 align-items-center">
+                                        @foreach($currency->chains as $chain)
+                                            <div class="d-flex align-items-center gap-1 rounded px-2 py-1 bg-label-secondary"
+                                                style="font-size: 0.78rem;">
+                                                <span class="text-muted">{{ $currency->symbol }}</span>
+                                                <span
+                                                    class="fw-semibold font-number text-dark mb-1">{{ formatNumberTrimZeros($chain->exchange_withdrawal_fee, $currency->amount_precision) }}</span>
 
-                        {{-- Status --}}
-                        <td class="text-center">
-                            @if($currency->chains->count())
-                                <div class="d-flex flex-column gap-2 align-items-center">
-                                    @foreach($currency->chains as $chain)
-                                        <div class="rounded border px-2 py-1" style="min-width: 130px; font-size: 0.75rem;">
-                                            <div class="fw-semibold text-muted mb-1 border-bottom pb-1" style="font-size: 0.7rem;">{{ $chain->chain }}</div>
-                                            <div class="d-flex align-items-center justify-content-between gap-2">
-                                                <span class="d-flex align-items-center gap-1">
-                                                    <i class="fa-solid fa-circle-arrow-down {{ $chain->deposit_enabled ? 'text-success' : 'text-danger' }}"></i>
-                                                    <span class="{{ $chain->deposit_enabled ? 'text-success' : 'text-danger' }}">واریز</span>
-                                                </span>
-                                                <span class="d-flex align-items-center gap-1">
-                                                    <i class="fa-solid fa-circle-arrow-up {{ $chain->withdraw_enabled ? 'text-success' : 'text-danger' }}"></i>
-                                                    <span class="{{ $chain->withdraw_enabled ? 'text-success' : 'text-danger' }}">برداشت</span>
-                                                </span>
+                                                <span class="badge bg-label-primary"
+                                                    style="font-size: 0.68rem;">{{ $chain->chain }}</span>
                                             </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            @else
-                                <span class="badge bg-label-danger">بدون شبکه</span>
-                            @endif
-                        </td>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
+                            </td>
 
-                        {{-- Actions --}}
-                        <td class="text-center">
-                            <div class="d-flex justify-content-center gap-2">
-                                <a class="btn btn-icon btn-sm btn-outline-primary"
-                                   href="{{ route('admin.currency.edit', ['currency' => $currency->id]) }}"
-                                   title="ویرایش">
-                                    <i class="fa-light fa-pen-to-square"></i>
-                                </a>
-                                <a class="btn btn-icon btn-sm btn-outline-secondary"
-                                   href="{{ route('admin.currency.show', ['currency' => $currency->id]) }}"
-                                   title="مشاهده">
-                                    <i class="fa-light fa-eye"></i>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="7" class="text-center py-5">
-                            <div class="text-muted">
-                                <i class="fa-light fa-inbox fa-3x mb-3 d-block"></i>
-                                کوینی یافت نشد
-                            </div>
-                        </td>
-                    </tr>
-                @endforelse
+                            {{-- Network Fee --}}
+                            <td class="text-center">
+                                @if($currency->chains->count())
+                                    <div class="d-flex flex-column gap-1 align-items-center">
+                                        @foreach($currency->chains as $chain)
+                                            <div class="d-flex align-items-center gap-1 rounded px-2 py-1 bg-label-secondary"
+                                                style="font-size: 0.78rem;">
+                                                <span class="text-muted">{{ $currency->symbol }}</span>
+                                                <span
+                                                    class="fw-semibold font-number text-dark mb-1">{{ formatNumberTrimZeros($chain->network_fee, $currency->amount_precision) }}</span>
+                                                <span class="badge bg-label-info" style="font-size: 0.68rem;">{{ $chain->chain }}</span>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
+                            </td>
+
+                            {{-- Status --}}
+                            <td class="text-center">
+                                @if($currency->chains->count())
+                                    <div class="d-flex flex-column gap-2 align-items-center">
+                                        @foreach($currency->chains as $chain)
+                                            <div class="rounded border px-2 py-1" style="min-width: 130px; font-size: 0.75rem;">
+                                                <div class="fw-semibold text-muted mb-1 border-bottom pb-1" style="font-size: 0.7rem;">
+                                                    {{ $chain->chain }}
+                                                </div>
+                                                <div class="d-flex align-items-center justify-content-between gap-2">
+                                                    <span class="d-flex align-items-center gap-1">
+                                                        <i
+                                                            class="fa-solid fa-circle-arrow-down {{ $chain->deposit_enabled ? 'text-success' : 'text-danger' }}"></i>
+                                                        <span
+                                                            class="{{ $chain->deposit_enabled ? 'text-success' : 'text-danger' }}">واریز</span>
+                                                    </span>
+                                                    <span class="d-flex align-items-center gap-1">
+                                                        <i
+                                                            class="fa-solid fa-circle-arrow-up {{ $chain->withdraw_enabled ? 'text-success' : 'text-danger' }}"></i>
+                                                        <span
+                                                            class="{{ $chain->withdraw_enabled ? 'text-success' : 'text-danger' }}">برداشت</span>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <span class="badge bg-label-danger">بدون شبکه</span>
+                                @endif
+                            </td>
+
+                            {{-- Actions --}}
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a class="btn btn-icon btn-sm btn-outline-primary"
+                                        href="{{ route('admin.currency.edit', ['currency' => $currency->id]) }}" title="ویرایش">
+                                        <i class="fa-light fa-pen-to-square"></i>
+                                    </a>
+                                    <a class="btn btn-icon btn-sm btn-outline-secondary"
+                                        href="{{ route('admin.currency.show', ['currency' => $currency->id]) }}" title="مشاهده">
+                                        <i class="fa-light fa-eye"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="fa-light fa-inbox fa-3x mb-3 d-block"></i>
+                                    کوینی یافت نشد
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>

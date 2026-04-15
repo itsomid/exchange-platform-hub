@@ -33,10 +33,10 @@ class CurrencyChain extends Model
     ];
 
     protected $casts = [
-        'network_fee' => 'float',
-        'exchange_withdrawal_fee' => 'float',
-        'min_deposit_amount' => 'float',
-        'min_withdraw_amount' => 'float',
+        'network_fee' => 'decimal:8',
+        'exchange_withdrawal_fee' => 'decimal:8',
+        'min_deposit_amount' => 'decimal:8',
+        'min_withdraw_amount' => 'decimal:8',
         'deposit_enabled' => 'boolean',
         'withdraw_enabled' => 'boolean',
         'is_memo_required_for_deposit' => 'boolean',
