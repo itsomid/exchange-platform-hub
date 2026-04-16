@@ -84,8 +84,7 @@ class WithdrawalService
                 throw new \Exception('Insufficient balance in the wallet.');
             }
 
-            // Deduct balance and lock funds
-            $wallet->decrement('balance', $totalAmount);
+            // Lock funds (balance is deducted upon confirmation, matching api-service approach)
             $wallet->increment('locked_balance', $totalAmount);
 
             // Set timestamps
@@ -155,15 +154,11 @@ class WithdrawalService
 
             $wasFailed = $withdrawal->status === WithdrawalStatusEnum::FAILED;
 
-            // If withdrawal was previously marked as failed, funds were already returned to user balance.
-            // Move funds out of balance again before finalizing completion.
-            if ($wasFailed) {
-                if ($wallet->balance < $withdrawal->amount) {
-                    throw new \Exception('Insufficient balance to finalize previously failed withdrawal.');
-                }
-
-                $wallet->decrement('balance', $withdrawal->amount);
+            // Deduct balance (balance was only locked during creation, not deducted)
+            if ($wallet->balance < $withdrawal->amount) {
+                throw new \Exception('Insufficient balance to finalize withdrawal.');
             }
+            $wallet->decrement('balance', $withdrawal->amount);
 
             // Update withdrawal record
             $withdrawal->update([
@@ -174,7 +169,7 @@ class WithdrawalService
             ]);
 
             // Unlock funds for pending/processing records. For previously failed withdrawals,
-            // locked balance is already released and should not be decremented again.
+            // locked balance was already released and should not be decremented again.
             if (! $wasFailed) {
                 $wallet->decrement('locked_balance', $withdrawal->amount);
             }
@@ -267,8 +262,7 @@ class WithdrawalService
                 ->first();
 
             if ($wallet) {
-                // Restore balance that was deducted during withdrawal creation
-                $wallet->increment('balance', $withdrawal->amount);
+                // Release locked funds (balance was never deducted, only locked)
                 $wallet->decrement('locked_balance', $withdrawal->amount);
             }
 
@@ -308,11 +302,11 @@ class WithdrawalService
                 ->first();
 
             if ($wallet) {
+                // Release locked funds (balance was never deducted, only locked)
                 $amountToUnlock = min($wallet->locked_balance, $withdrawal->amount);
                 if ($amountToUnlock > 0) {
                     $wallet->decrement('locked_balance', $amountToUnlock);
                 }
-                $wallet->increment('balance', $withdrawal->amount);
             }
 
             DB::commit();
@@ -408,11 +402,11 @@ class WithdrawalService
                                 ->first();
 
                             if ($failedWallet) {
+                                // Release locked funds (balance was never deducted, only locked)
                                 $amountToUnlock = min($failedWallet->locked_balance, $lockedWithdrawal->amount);
                                 if ($amountToUnlock > 0) {
                                     $failedWallet->decrement('locked_balance', $amountToUnlock);
                                 }
-                                $failedWallet->increment('balance', $lockedWithdrawal->amount);
                             }
                         }
                         DB::commit();
