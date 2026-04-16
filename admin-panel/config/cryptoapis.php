@@ -38,6 +38,10 @@ return [
         'OP' => [
             'type' => 'evm',
             'chain' => 'optimism'
+        ],
+        'AVAX' => [
+            'type' => 'evm',
+            'chain' => 'avalanche'
         ]
     ]
 ];

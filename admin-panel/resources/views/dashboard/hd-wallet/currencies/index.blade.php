@@ -73,6 +73,7 @@
                         <option value="BTC">BTC</option>
                         <option value="DOGE">DOGE</option>
                         <option value="OPTIMISM">Optimism</option>
+                        <option value="AVALANCHE">Avalanche</option>
                         <option value="LTC">LTC</option>
                         <option value="ARBITRUM">Arbitrum One</option>
                     </select>
@@ -112,6 +113,7 @@
                             'LTC' => 'LTC',
                             'POLYGON' => 'POL',
                             'OPTIMISM' => 'ETH',
+                            'AVALANCHE' => 'AVAX',
                             'ARBITRUM' => 'ETH',
                         ];
 
@@ -213,6 +215,7 @@
                                             'LTC' => asset('images/coins/ltc.svg'),
                                             'POLYGON' => asset('images/coins/pol.svg'),
                                             'OPTIMISM' => asset('images/coins/eth.svg'),
+                                            'AVALANCHE' => asset('images/coins/default.png'),
                                             'ARBITRUM' => asset('images/coins/eth.svg'),
                                             default => null,
                                         };

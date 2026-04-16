@@ -48,7 +48,7 @@ class GeneralBlockchainAddress implements ValidationRule
             'XLM' => $this->isValidStellarAddress($address),
             'ADA' => $this->isValidCardanoAddress($address),
             'DOT' => $this->isValidPolkadotAddress($address),
-            'AVAX' => $this->isValidAvalancheAddress($address),
+            'AVAX', 'AVALANCHE' => $this->isValidAvalancheAddress($address),
             'FTM' => $this->isValidFantomAddress($address),
             'COSMOS' => $this->isValidCosmosAddress($address),
             'TEZOS' => $this->isValidTezosAddress($address),
