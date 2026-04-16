@@ -146,13 +146,11 @@
                 <span class="badge bg-primary me-2" id="selectedCountBadge" style="display: none;">
                     <span id="selectedCount">0</span> انتخاب شده
                 </span>
-                <button type="button" class="btn btn-warning btn-sm" id="sweepSelectedBtn" style="display: none;"
-                    disabled>
+                <button type="button" class="btn btn-warning btn-sm" id="sweepSelectedBtn" style="display: none;" disabled>
                     <i class="fa-regular fa-paper-plane me-1"></i>
                     ارسال به برداشت
                 </button>
-                <button type="button" class="btn btn-success btn-sm" id="fundSelectedBtn" style="display: none;"
-                    disabled>
+                <button type="button" class="btn btn-success btn-sm" id="fundSelectedBtn" style="display: none;" disabled>
                     <i class="fa-regular fa-gas-pump me-1"></i>
                     واریز گس
                 </button>
@@ -175,8 +173,7 @@
             <div class="row mb-4">
                 <div class="col-md-3">
                     <label class="form-label">حداقل موجودی</label>
-                    <input type="number" class="form-control" id="minBalanceFilter" value="0" min="0"
-                        step="any">
+                    <input type="number" class="form-control" id="minBalanceFilter" value="0" min="0" step="any">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">تعداد در هر صفحه</label>
@@ -217,8 +214,7 @@
                     <thead class="table-light">
                         <tr>
                             <th style="width: 40px;">
-                                <input class="form-check-input" type="checkbox" id="selectAllCheckbox"
-                                    title="انتخاب همه">
+                                <input class="form-check-input" type="checkbox" id="selectAllCheckbox" title="انتخاب همه">
                             </th>
                             <th>#</th>
                             <th>ایندکس HD Wallet</th>
@@ -283,6 +279,7 @@
                                 <option value="BSC">BSC (BEP20)</option>
                                 <option value="BTC">BTC</option>
                                 <option value="DOGE">DOGE</option>
+                                <option value="OPTIMISM">Optimism</option>
                                 <option value="ARBITRUM">Arbitrum One</option>
                             </select>
                         </div>
@@ -304,39 +301,39 @@
                                     @php
                                         // Get chain icon based on chain type
                                         // Don't show chain icon for native/parent coins
-$isNativeCoin = match ($chain->chain) {
-    \App\Enums\CurrencyChainEnum::TRC20 => $chain->currency->symbol === 'TRX',
-    \App\Enums\CurrencyChainEnum::ERC20 => $chain->currency->symbol === 'ETH',
-    \App\Enums\CurrencyChainEnum::BSC => $chain->currency->symbol === 'BNB',
-    \App\Enums\CurrencyChainEnum::BTC => $chain->currency->symbol === 'BTC',
-    \App\Enums\CurrencyChainEnum::DOGE => $chain->currency->symbol === 'DOGE',
-    \App\Enums\CurrencyChainEnum::LTC => $chain->currency->symbol === 'LTC',
-    \App\Enums\CurrencyChainEnum::POLYGON => $chain->currency->symbol === 'POL',
-    \App\Enums\CurrencyChainEnum::ARBITRUM => $chain->currency->symbol === 'ETH',
-    default => false,
-};
+                                        $isNativeCoin = match ($chain->chain) {
+                                            \App\Enums\CurrencyChainEnum::TRC20 => $chain->currency->symbol === 'TRX',
+                                            \App\Enums\CurrencyChainEnum::ERC20 => $chain->currency->symbol === 'ETH',
+                                            \App\Enums\CurrencyChainEnum::BSC => $chain->currency->symbol === 'BNB',
+                                            \App\Enums\CurrencyChainEnum::BTC => $chain->currency->symbol === 'BTC',
+                                            \App\Enums\CurrencyChainEnum::DOGE => $chain->currency->symbol === 'DOGE',
+                                            \App\Enums\CurrencyChainEnum::LTC => $chain->currency->symbol === 'LTC',
+                                            \App\Enums\CurrencyChainEnum::POLYGON => $chain->currency->symbol === 'POL',
+                                            \App\Enums\CurrencyChainEnum::OPTIMISM => $chain->currency->symbol === 'ETH',
+                                            \App\Enums\CurrencyChainEnum::ARBITRUM => $chain->currency->symbol === 'ETH',
+                                            default => false,
+                                        };
 
-$chainIcon = $isNativeCoin
-    ? null
-    : match ($chain->chain) {
-        \App\Enums\CurrencyChainEnum::TRC20 => asset('images/coins/trx.svg'),
-        \App\Enums\CurrencyChainEnum::ERC20 => asset('images/coins/eth.svg'),
-        \App\Enums\CurrencyChainEnum::BSC => asset('images/coins/bnb.svg'),
-        \App\Enums\CurrencyChainEnum::BTC => asset('images/coins/btc.svg'),
-        \App\Enums\CurrencyChainEnum::DOGE => asset('images/coins/doge.svg'),
-        \App\Enums\CurrencyChainEnum::LTC => asset('images/coins/ltc.svg'),
-        \App\Enums\CurrencyChainEnum::POLYGON => asset('images/coins/pol.svg'),
-        \App\Enums\CurrencyChainEnum::ARBITRUM => asset('images/coins/eth.svg'),
+                                        $chainIcon = $isNativeCoin
+                                            ? null
+                                            : match ($chain->chain) {
+                                                \App\Enums\CurrencyChainEnum::TRC20 => asset('images/coins/trx.svg'),
+                                                \App\Enums\CurrencyChainEnum::ERC20 => asset('images/coins/eth.svg'),
+                                                \App\Enums\CurrencyChainEnum::BSC => asset('images/coins/bnb.svg'),
+                                                \App\Enums\CurrencyChainEnum::BTC => asset('images/coins/btc.svg'),
+                                                \App\Enums\CurrencyChainEnum::DOGE => asset('images/coins/doge.svg'),
+                                                \App\Enums\CurrencyChainEnum::LTC => asset('images/coins/ltc.svg'),
+                                                \App\Enums\CurrencyChainEnum::POLYGON => asset('images/coins/pol.svg'),
+                                                \App\Enums\CurrencyChainEnum::OPTIMISM => asset('images/coins/eth.svg'),
+                                                \App\Enums\CurrencyChainEnum::ARBITRUM => asset('images/coins/eth.svg'),
                                                 default => null,
                                             };
                                     @endphp
-                                    <tr class="currency-chain-row"
-                                        data-symbol="{{ strtolower($chain->currency->symbol) }}"
+                                    <tr class="currency-chain-row" data-symbol="{{ strtolower($chain->currency->symbol) }}"
                                         data-name="{{ strtolower($chain->currency->name ?? '') }}"
                                         data-chain="{{ strtolower($chain->chain_name) }}"
-                                        data-currency-symbol="{{ $chain->currency->symbol }}"
-                                        data-chain-id="{{ $chain->id }}" data-chain-name="{{ $chain->chain_name }}"
-                                        data-chain-enum="{{ $chain->chain->value }}"
+                                        data-currency-symbol="{{ $chain->currency->symbol }}" data-chain-id="{{ $chain->id }}"
+                                        data-chain-name="{{ $chain->chain_name }}" data-chain-enum="{{ $chain->chain->value }}"
                                         data-logo="{{ $chain->currency->coinLogo() }}">
                                         <td>{{ $index + 1 }}</td>
                                         <td>
@@ -346,9 +343,8 @@ $chainIcon = $isNativeCoin
                                                         width="36" height="36">
                                                     @if ($chainIcon)
                                                         <img src="{{ $chainIcon }}"
-                                                            class="position-absolute rounded-circle border border-white"
-                                                            width="18" height="18"
-                                                            style="bottom: -2px; right: -2px; background: #fff;"
+                                                            class="position-absolute rounded-circle border border-white" width="18"
+                                                            height="18" style="bottom: -2px; right: -2px; background: #fff;"
                                                             title="{{ $chain->chain_name }}">
                                                     @endif
                                                 </div>
@@ -363,8 +359,7 @@ $chainIcon = $isNativeCoin
                                             <span class="badge bg-label-primary">{{ $chain->chain_name }}</span>
                                         </td>
                                         <td>
-                                            <button type="button"
-                                                class="btn btn-sm btn-outline-primary select-currency-btn">
+                                            <button type="button" class="btn btn-sm btn-outline-primary select-currency-btn">
                                                 <i class="fa-regular fa-check me-1"></i>انتخاب
                                             </button>
                                         </td>
@@ -583,8 +578,8 @@ $chainIcon = $isNativeCoin
     </div>
 
     {{-- Sync Progress Modal --}}
-    <div class="modal fade" id="syncProgressModal" tabindex="-1" aria-labelledby="syncProgressModalLabel"
-        aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal fade" id="syncProgressModal" tabindex="-1" aria-labelledby="syncProgressModalLabel" aria-hidden="true"
+        data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
@@ -708,8 +703,8 @@ $chainIcon = $isNativeCoin
     </div>
 
     {{-- Fund Gas Modal - Wallet & Amount Selection --}}
-    <div class="modal modal-lg fade" id="fundWalletSelectModal" tabindex="-1"
-        aria-labelledby="fundWalletSelectModalLabel" aria-hidden="true">
+    <div class="modal modal-lg fade" id="fundWalletSelectModal" tabindex="-1" aria-labelledby="fundWalletSelectModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -814,8 +809,8 @@ $chainIcon = $isNativeCoin
                             <label for="fundAmountInput" class="form-label fw-bold">
                                 مقدار واریز به هر آدرس (<span id="fundNativeCoinLabel2">-</span>)
                             </label>
-                            <input type="number" class="form-control" id="fundAmountInput"
-                                placeholder="مثلاً 0.001 یا 2" step="any" min="0">
+                            <input type="number" class="form-control" id="fundAmountInput" placeholder="مثلاً 0.001 یا 2"
+                                step="any" min="0">
                             <div class="form-text mt-2">
                                 مجموع مورد نیاز: <strong id="fundTotalRequired" class="ms-1 fs-6">0</strong>
                                 <span id="fundNativeCoinLabel3">-</span>
@@ -845,8 +840,8 @@ $chainIcon = $isNativeCoin
     </div>
 
     {{-- Fund Progress Modal --}}
-    <div class="modal fade" id="fundProgressModal" tabindex="-1" aria-labelledby="fundProgressModalLabel"
-        aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal fade" id="fundProgressModal" tabindex="-1" aria-labelledby="fundProgressModalLabel" aria-hidden="true"
+        data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
@@ -997,7 +992,7 @@ $chainIcon = $isNativeCoin
 @section('vendor-script')
     @vite(['resources/assets/vendor/libs/block-ui/block-ui.js', 'resources/assets/vendor/libs/sweetalert2/sweetalert2.js'])
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             $('[data-bs-toggle="tooltip"]').tooltip();
         });
     </script>
@@ -1032,6 +1027,7 @@ $chainIcon = $isNativeCoin
             'DOGE': 'https://blockchair.com/dogecoin/transaction/',
             'LTC': 'https://blockchair.com/litecoin/transaction/',
             'POLYGON': 'https://polygonscan.com/tx/',
+            'OPTIMISM': 'https://optimistic.etherscan.io/tx/',
             'ARBITRUM': 'https://arbiscan.io/tx/',
         };
         const chainExplorerAddr = {
@@ -1042,10 +1038,11 @@ $chainIcon = $isNativeCoin
             'DOGE': 'https://blockchair.com/dogecoin/address/',
             'LTC': 'https://blockchair.com/litecoin/address/',
             'POLYGON': 'https://polygonscan.com/address/',
+            'OPTIMISM': 'https://optimistic.etherscan.io/address/',
             'ARBITRUM': 'https://arbiscan.io/address/',
         };
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // State
             let currentCurrency = null;
             let currentChainId = null;
@@ -1118,7 +1115,7 @@ $chainIcon = $isNativeCoin
             }
 
             // Row checkbox change - event delegation
-            document.addEventListener('change', function(e) {
+            document.addEventListener('change', function (e) {
                 if (e.target.classList.contains('row-select-checkbox')) {
                     const index = parseInt(e.target.dataset.index);
                     if (e.target.checked) {
@@ -1131,7 +1128,7 @@ $chainIcon = $isNativeCoin
             });
 
             // Fund results copy button - event delegation
-            document.addEventListener('click', function(e) {
+            document.addEventListener('click', function (e) {
                 const btn = e.target.closest('.fund-copy-btn');
                 if (!btn) return;
                 const text = btn.dataset.copyText;
@@ -1142,11 +1139,11 @@ $chainIcon = $isNativeCoin
                         icon.classList.replace('fa-clone', 'fa-check');
                         setTimeout(() => icon.classList.replace('fa-check', 'fa-clone'), 1500);
                     }
-                }).catch(() => {});
+                }).catch(() => { });
             });
 
             // Sweep results copy button - event delegation
-            document.addEventListener('click', function(e) {
+            document.addEventListener('click', function (e) {
                 const btn = e.target.closest('.sweep-copy-btn');
                 if (!btn) return;
                 const text = btn.dataset.copyText;
@@ -1157,12 +1154,12 @@ $chainIcon = $isNativeCoin
                         icon.classList.replace('fa-clone', 'fa-check');
                         setTimeout(() => icon.classList.replace('fa-check', 'fa-clone'), 1500);
                     }
-                }).catch(() => {});
+                }).catch(() => { });
             });
 
             // Select All checkbox
             if (selectAllCheckbox) {
-                selectAllCheckbox.addEventListener('change', function() {
+                selectAllCheckbox.addEventListener('change', function () {
                     const checkboxes = document.querySelectorAll('.row-select-checkbox');
                     checkboxes.forEach(cb => {
                         cb.checked = selectAllCheckbox.checked;
@@ -1191,7 +1188,7 @@ $chainIcon = $isNativeCoin
 
             // Sweep Selected Button Click → Open wallet selection modal
             if (sweepSelectedBtn) {
-                sweepSelectedBtn.addEventListener('click', function() {
+                sweepSelectedBtn.addEventListener('click', function () {
                     if (selectedIndices.size === 0) {
                         showToast('لطفاً حداقل یک ایندکس انتخاب کنید', 'warning');
                         return;
@@ -1223,12 +1220,12 @@ $chainIcon = $isNativeCoin
                 try {
                     const response = await fetch(
                         '{{ route('admin.hd-wallet.sweeper-wallets') }}', {
-                            method: 'GET',
-                            headers: {
-                                'Accept': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                            }
-                        });
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        }
+                    });
 
                     const result = await response.json();
 
@@ -1277,6 +1274,7 @@ $chainIcon = $isNativeCoin
                     'TRC20': 'tron',
                     'BSC': 'bnb',
                     'DOGE': 'dogecoin',
+                    'OPTIMISM': 'optimism',
                     'ARBITRUM': 'arbitrum'
                 };
 
@@ -1305,38 +1303,38 @@ $chainIcon = $isNativeCoin
                         'fa-IR') : '-';
 
                     return `
-                        <a href="#" class="list-group-item list-group-item-action wallet-select-item ${wallet.status !== 'active' ? 'opacity-50' : ''}"
-                           data-wallet-id="${wallet.walletId}"
-                           data-wallet-name="${wallet.name}"
-                           data-wallet-status="${wallet.status}">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-1">
-                                        <i class="fa-regular fa-wallet me-2 text-primary"></i>
-                                        ${wallet.name}
-                                        <small class="text-secondary ms-1">(${wallet.walletId})</small>
-                                    </h6>
-                                    <small class="text-secondary d-block">
-                                        <i class="fa-regular fa-network-wired me-1"></i>
-                                        شبکه‌ها: ${networks}
-                                    </small>
-                                    ${wallet.description ? `<small class="text-secondary d-block"><i class="fa-regular fa-info-circle me-1"></i>${wallet.description}</small>` : ''}
-                                    <small class="text-secondary d-block">
-                                        <i class="fa-regular fa-clock me-1"></i>
-                                        آخرین استفاده: ${lastUsed}
-                                    </small>
+                            <a href="#" class="list-group-item list-group-item-action wallet-select-item ${wallet.status !== 'active' ? 'opacity-50' : ''}"
+                               data-wallet-id="${wallet.walletId}"
+                               data-wallet-name="${wallet.name}"
+                               data-wallet-status="${wallet.status}">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <i class="fa-regular fa-wallet me-2 text-primary"></i>
+                                            ${wallet.name}
+                                            <small class="text-secondary ms-1">(${wallet.walletId})</small>
+                                        </h6>
+                                        <small class="text-secondary d-block">
+                                            <i class="fa-regular fa-network-wired me-1"></i>
+                                            شبکه‌ها: ${networks}
+                                        </small>
+                                        ${wallet.description ? `<small class="text-secondary d-block"><i class="fa-regular fa-info-circle me-1"></i>${wallet.description}</small>` : ''}
+                                        <small class="text-secondary d-block">
+                                            <i class="fa-regular fa-clock me-1"></i>
+                                            آخرین استفاده: ${lastUsed}
+                                        </small>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge ${statusInfo.class}">${statusInfo.text}</span>
+                                    </div>
                                 </div>
-                                <div class="text-end">
-                                    <span class="badge ${statusInfo.class}">${statusInfo.text}</span>
-                                </div>
-                            </div>
-                        </a>
-                    `;
+                            </a>
+                        `;
                 }).join('');
             }
 
             // Handle wallet selection click → execute sweep
-            document.addEventListener('click', async function(e) {
+            document.addEventListener('click', async function (e) {
                 const walletItem = e.target.closest('.wallet-select-item');
                 if (!walletItem) return;
 
@@ -1405,19 +1403,19 @@ $chainIcon = $isNativeCoin
                         try {
                             const response = await fetch(
                                 '{{ route('admin.hd-wallet.sweep-selected') }}', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'X-CSRF-TOKEN': csrfToken
-                                    },
-                                    body: JSON.stringify({
-                                        indices: [idx],
-                                        currency_symbol: currentCurrency,
-                                        currency_chain_id: parseInt(currentChainId),
-                                        wallet_id: walletId,
-                                        force: false
-                                    })
-                                });
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': csrfToken
+                                },
+                                body: JSON.stringify({
+                                    indices: [idx],
+                                    currency_symbol: currentCurrency,
+                                    currency_chain_id: parseInt(currentChainId),
+                                    wallet_id: walletId,
+                                    force: false
+                                })
+                            });
 
                             const result = await response.json();
 
@@ -1451,14 +1449,14 @@ $chainIcon = $isNativeCoin
                     // Build aggregated data and render final results
                     const finalData = {
                         results: allResults,
-                        errors:  allErrors,
+                        errors: allErrors,
                         summary: {
                             totalRequested: total,
-                            successful:     allResults.length,
-                            failed:         allErrors.length,
-                            network:        lastSummary.network  || '',
-                            walletId:       walletId,
-                            coinType:       lastSummary.coinType || currentCurrency,
+                            successful: allResults.length,
+                            failed: allErrors.length,
+                            network: lastSummary.network || '',
+                            walletId: walletId,
+                            coinType: lastSummary.coinType || currentCurrency,
                         }
                     };
 
@@ -1498,20 +1496,20 @@ $chainIcon = $isNativeCoin
             // Status label map for sweep results
             const sweepStatusLabels = {
                 'admin_approval': { text: 'در انتظار تایید مدیر', class: 'bg-warning' },
-                'broadcasted':    { text: 'ارسال شده',            class: 'bg-info'    },
-                'confirmed':      { text: 'تایید شده',            class: 'bg-success' },
-                'failed':         { text: 'ناموفق',               class: 'bg-danger'  },
-                'pending':        { text: 'در انتظار',            class: 'bg-secondary'},
+                'broadcasted': { text: 'ارسال شده', class: 'bg-info' },
+                'confirmed': { text: 'تایید شده', class: 'bg-success' },
+                'failed': { text: 'ناموفق', class: 'bg-danger' },
+                'pending': { text: 'در انتظار', class: 'bg-secondary' },
             };
 
             // Render sweep results on completion
             function updateSweepProgressComplete(data) {
-                const summary   = data?.summary  || {};
-                const results   = data?.results  || [];
-                const errors    = data?.errors   || [];
-                const total     = summary.totalRequested || (results.length + errors.length);
+                const summary = data?.summary || {};
+                const results = data?.results || [];
+                const errors = data?.errors || [];
+                const total = summary.totalRequested || (results.length + errors.length);
                 const successful = summary.successful ?? results.length;
-                const failed    = summary.failed    ?? errors.length;
+                const failed = summary.failed ?? errors.length;
                 const approvalCount = results.filter(r => r.status === 'admin_approval').length;
 
                 // Progress bar → 100%
@@ -1540,10 +1538,10 @@ $chainIcon = $isNativeCoin
 
                 // Stats cards
                 document.getElementById('sweepStatsCards').style.display = 'flex';
-                document.getElementById('sweepTotalCount').textContent    = total;
+                document.getElementById('sweepTotalCount').textContent = total;
                 document.getElementById('sweepApprovalCount').textContent = approvalCount;
-                document.getElementById('sweepSuccessCount').textContent  = successful;
-                document.getElementById('sweepFailCount').textContent     = failed;
+                document.getElementById('sweepSuccessCount').textContent = successful;
+                document.getElementById('sweepFailCount').textContent = failed;
 
                 // Results table — merge successful results + error rows, sorted by addressIndex
                 const allRows = [
@@ -1553,27 +1551,27 @@ $chainIcon = $isNativeCoin
 
                 if (allRows.length > 0) {
                     document.getElementById('sweepResultsList').style.display = '';
-                    const explorerTxBase   = chainExplorerTx[currentChainEnum]   || null;
+                    const explorerTxBase = chainExplorerTx[currentChainEnum] || null;
                     const explorerAddrBase = chainExplorerAddr[currentChainEnum] || null;
 
                     document.getElementById('sweepResultsTableBody').innerHTML = allRows.map((r, idx) => {
                         if (r._isError) {
                             const errText = escapeHtml(r._errorMsg);
                             return `
-                                <tr class="table-danger">
-                                    <td>${idx + 1}</td>
-                                    <td><strong>${r.addressIndex}</strong></td>
-                                    <td><span class="text-danger">-</span></td>
-                                    <td>-</td>
-                                    <td>-</td>
-                                    <td><span class="badge bg-danger">خطا</span></td>
-                                    <td>
-                                        <span class="d-flex align-items-center gap-1">
-                                            <i class="fa-regular fa-exclamation-circle text-danger flex-shrink-0"></i>
-                                            <small class="text-danger">${errText}</small>
-                                        </span>
-                                    </td>
-                                </tr>`;
+                                    <tr class="table-danger">
+                                        <td>${idx + 1}</td>
+                                        <td><strong>${r.addressIndex}</strong></td>
+                                        <td><span class="text-danger">-</span></td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td><span class="badge bg-danger">خطا</span></td>
+                                        <td>
+                                            <span class="d-flex align-items-center gap-1">
+                                                <i class="fa-regular fa-exclamation-circle text-danger flex-shrink-0"></i>
+                                                <small class="text-danger">${errText}</small>
+                                            </span>
+                                        </td>
+                                    </tr>`;
                         }
 
                         const statusInfo = sweepStatusLabels[r.status] || { text: r.status, class: 'bg-secondary' };
@@ -1588,54 +1586,54 @@ $chainIcon = $isNativeCoin
 
                         const addrCell = r.fromAddress
                             ? `<div class="d-flex align-items-center gap-1">
-                                <button class="btn btn-sm btn-icon btn-text-secondary p-0 sweep-copy-btn"
-                                    data-copy-text="${r.fromAddress}" title="کپی آدرس">
-                                    <i class="fa-regular fa-clone fa-sm"></i>
-                                </button>
-                                ${explorerAddrBase
-                                    ? `<a href="${explorerAddrBase}${r.fromAddress}" target="_blank" class="font-number"><small>${shortAddr}</small></a>`
-                                    : `<small class="font-number">${shortAddr}</small>`}
-                               </div>`
+                                    <button class="btn btn-sm btn-icon btn-text-secondary p-0 sweep-copy-btn"
+                                        data-copy-text="${r.fromAddress}" title="کپی آدرس">
+                                        <i class="fa-regular fa-clone fa-sm"></i>
+                                    </button>
+                                    ${explorerAddrBase
+                                ? `<a href="${explorerAddrBase}${r.fromAddress}" target="_blank" class="font-number"><small>${shortAddr}</small></a>`
+                                : `<small class="font-number">${shortAddr}</small>`}
+                                   </div>`
                             : '-';
 
                         const txCell = r.transactionId
                             ? `<div class="d-flex align-items-center gap-1">
-                                <button class="btn btn-sm btn-icon btn-text-secondary p-0 sweep-copy-btn"
-                                    data-copy-text="${r.transactionId}" title="کپی شناسه">
-                                    <i class="fa-regular fa-clone fa-sm"></i>
-                                </button>
-                                ${explorerTxBase
-                                    ? `<a href="${explorerTxBase}${r.transactionId}" target="_blank" class="font-number text-primary"><small>${shortTxId}</small></a>`
-                                    : `<small class="font-number text-primary">${shortTxId}</small>`}
-                               </div>`
+                                    <button class="btn btn-sm btn-icon btn-text-secondary p-0 sweep-copy-btn"
+                                        data-copy-text="${r.transactionId}" title="کپی شناسه">
+                                        <i class="fa-regular fa-clone fa-sm"></i>
+                                    </button>
+                                    ${explorerTxBase
+                                ? `<a href="${explorerTxBase}${r.transactionId}" target="_blank" class="font-number text-primary"><small>${shortTxId}</small></a>`
+                                : `<small class="font-number text-primary">${shortTxId}</small>`}
+                                   </div>`
                             : '-';
 
                         return `
-                            <tr class="${isApproval ? 'table-warning' : ''}">
-                                <td>${idx + 1}</td>
-                                <td><strong>${r.addressIndex}</strong></td>
-                                <td>${addrCell}</td>
-                                <td><span class="fw-semibold text-primary">${r.amount || '-'}</span></td>
-                                <td><span class="badge bg-label-secondary">${r.assetSymbol || r.coinType || '-'}</span></td>
-                                <td><span class="badge ${statusInfo.class}">${statusInfo.text}</span></td>
-                                <td>${txCell}</td>
-                            </tr>`;
+                                <tr class="${isApproval ? 'table-warning' : ''}">
+                                    <td>${idx + 1}</td>
+                                    <td><strong>${r.addressIndex}</strong></td>
+                                    <td>${addrCell}</td>
+                                    <td><span class="fw-semibold text-primary">${r.amount || '-'}</span></td>
+                                    <td><span class="badge bg-label-secondary">${r.assetSymbol || r.coinType || '-'}</span></td>
+                                    <td><span class="badge ${statusInfo.class}">${statusInfo.text}</span></td>
+                                    <td>${txCell}</td>
+                                </tr>`;
                     }).join('');
                 }
 
                 // Separate errors summary (kept for quick reference)
                 if (errors.length > 0) {
                     document.getElementById('sweepErrorsList').style.display = '';
-                    document.getElementById('sweepErrorsCount').textContent  = errors.length;
+                    document.getElementById('sweepErrorsCount').textContent = errors.length;
                     document.getElementById('sweepErrorsListBody').innerHTML = errors.map(e => `
-                        <div class="list-group-item list-group-item-danger">
-                            <div class="d-flex justify-content-between">
-                                <strong>ایندکس ${e.addressIndex}</strong>
-                                <span class="badge bg-danger">خطا</span>
+                            <div class="list-group-item list-group-item-danger">
+                                <div class="d-flex justify-content-between">
+                                    <strong>ایندکس ${e.addressIndex}</strong>
+                                    <span class="badge bg-danger">خطا</span>
+                                </div>
+                                <small>${escapeHtml(e.error || '')}</small>
                             </div>
-                            <small>${escapeHtml(e.error || '')}</small>
-                        </div>
-                    `).join('');
+                        `).join('');
                 }
 
                 // Show action buttons
@@ -1664,7 +1662,7 @@ $chainIcon = $isNativeCoin
             }
 
             // Sweep refresh button
-            document.getElementById('sweepRefreshDataBtn')?.addEventListener('click', function() {
+            document.getElementById('sweepRefreshDataBtn')?.addEventListener('click', function () {
                 sweepProgressModal.hide();
                 loadData();
                 showToast('داده‌ها بروزرسانی شد', 'success');
@@ -1703,7 +1701,7 @@ $chainIcon = $isNativeCoin
 
             // Fund Selected Button Click → Open fund wallet selection modal
             if (fundSelectedBtn) {
-                fundSelectedBtn.addEventListener('click', function() {
+                fundSelectedBtn.addEventListener('click', function () {
                     if (selectedIndices.size === 0) {
                         showToast('لطفاً حداقل یک ایندکس انتخاب کنید', 'warning');
                         return;
@@ -1759,7 +1757,7 @@ $chainIcon = $isNativeCoin
 
             // Update total required when amount changes
             if (fundAmountInput) {
-                fundAmountInput.addEventListener('input', function() {
+                fundAmountInput.addEventListener('input', function () {
                     const amount = parseFloat(this.value) || 0;
                     const total = amount * selectedIndices.size;
                     document.getElementById('fundTotalRequired').textContent = total.toFixed(6);
@@ -1787,17 +1785,17 @@ $chainIcon = $isNativeCoin
                 try {
                     const response = await fetch(
                         '{{ route('admin.hd-wallet.estimate-gas-funding') }}', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                            },
-                            body: JSON.stringify({
-                                currency_chain_id: parseInt(currentChainId),
-                                indices_count: selectedIndices.size
-                            })
-                        });
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({
+                            currency_chain_id: parseInt(currentChainId),
+                            indices_count: selectedIndices.size
+                        })
+                    });
 
                     const result = await response.json();
 
@@ -1830,7 +1828,7 @@ $chainIcon = $isNativeCoin
                         // Update price info
                         document.getElementById('fundNativeCoinPriceUSD').textContent =
                             data.nativeCoinPriceUSD ? '$' + Number(data.nativeCoinPriceUSD).toFixed(2) :
-                            'نامشخص';
+                                'نامشخص';
                         document.getElementById('fundGasLimit').textContent =
                             data.gasLimit ? Number(data.gasLimit).toLocaleString() : '-';
 
@@ -1857,11 +1855,11 @@ $chainIcon = $isNativeCoin
                                 const row = document.createElement('tr');
 
                                 row.innerHTML = `
-                                    <td><small><strong>${levelNames[level] || level}</strong></small></td>
-                                    <td><small class="badge bg-label-secondary">${levelData.gwei}</small></td>
-                                    <td style="text-align: right;"><small><strong>${levelData.costPerAddress} </strong>${data.nativeSymbol}</small></td>
-                                    <td style="text-align: right;"><small class="text-success">${usdText}</small></td>
-                                `;
+                                        <td><small><strong>${levelNames[level] || level}</strong></small></td>
+                                        <td><small class="badge bg-label-secondary">${levelData.gwei}</small></td>
+                                        <td style="text-align: right;"><small><strong>${levelData.costPerAddress} </strong>${data.nativeSymbol}</small></td>
+                                        <td style="text-align: right;"><small class="text-success">${usdText}</small></td>
+                                    `;
                                 levelsBody.appendChild(row);
                             });
 
@@ -1913,12 +1911,12 @@ $chainIcon = $isNativeCoin
                 try {
                     const response = await fetch(
                         '{{ route('admin.hd-wallet.sweeper-wallets') }}', {
-                            method: 'GET',
-                            headers: {
-                                'Accept': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                            }
-                        });
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        }
+                    });
 
                     const result = await response.json();
 
@@ -1966,6 +1964,7 @@ $chainIcon = $isNativeCoin
                     'TRC20': 'tron',
                     'BSC': 'bnb',
                     'DOGE': 'dogecoin',
+                    'OPTIMISM': 'optimism',
                     'ARBITRUM': 'arbitrum'
                 };
 
@@ -1991,32 +1990,32 @@ $chainIcon = $isNativeCoin
                         'fa-IR') : '-';
 
                     return `
-                        <a href="#" class="list-group-item list-group-item-action fund-wallet-select-item ${wallet.status !== 'active' ? 'opacity-50' : ''}"
-                           data-wallet-id="${wallet.walletId}"
-                           data-wallet-name="${wallet.name}"
-                           data-wallet-status="${wallet.status}"
-                           data-wallet-index="${index}">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-1">
-                                        <i class="fa-regular fa-wallet me-2 text-success"></i>
-                                        ${wallet.name}
-                                        <small class="text-secondary ms-1">(${wallet.walletId})</small>
-                                    </h6>
-                                    <small class="text-secondary d-block">
-                                        <i class="fa-regular fa-clock me-1"></i>
-                                        آخرین استفاده: ${lastUsed}
-                                    </small>
+                            <a href="#" class="list-group-item list-group-item-action fund-wallet-select-item ${wallet.status !== 'active' ? 'opacity-50' : ''}"
+                               data-wallet-id="${wallet.walletId}"
+                               data-wallet-name="${wallet.name}"
+                               data-wallet-status="${wallet.status}"
+                               data-wallet-index="${index}">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <i class="fa-regular fa-wallet me-2 text-success"></i>
+                                            ${wallet.name}
+                                            <small class="text-secondary ms-1">(${wallet.walletId})</small>
+                                        </h6>
+                                        <small class="text-secondary d-block">
+                                            <i class="fa-regular fa-clock me-1"></i>
+                                            آخرین استفاده: ${lastUsed}
+                                        </small>
+                                    </div>
+                                    <span class="badge ${statusInfo.class}">${statusInfo.text}</span>
                                 </div>
-                                <span class="badge ${statusInfo.class}">${statusInfo.text}</span>
-                            </div>
-                        </a>
-                    `;
+                            </a>
+                        `;
                 }).join('');
             }
 
             // Handle fund wallet selection click → select wallet
-            document.addEventListener('click', function(e) {
+            document.addEventListener('click', function (e) {
                 const walletItem = e.target.closest('.fund-wallet-select-item');
                 if (!walletItem) return;
 
@@ -2057,7 +2056,7 @@ $chainIcon = $isNativeCoin
             // Handle fund confirm button click
             if (fundConfirmBtn) {
                 console.log('Fund confirm button found, attaching event listener');
-                fundConfirmBtn.addEventListener('click', async function(e) {
+                fundConfirmBtn.addEventListener('click', async function (e) {
                     console.log('Fund confirm button clicked!');
                     e.preventDefault(); // Prevent any default behavior
 
@@ -2140,18 +2139,18 @@ $chainIcon = $isNativeCoin
                             try {
                                 const response = await fetch(
                                     '{{ route('admin.hd-wallet.fund-selected') }}', {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            'X-CSRF-TOKEN': csrfToken
-                                        },
-                                        body: JSON.stringify({
-                                            indices: [idx],
-                                            currency_chain_id: parseInt(currentChainId),
-                                            wallet_id: selectedFundWallet.walletId,
-                                            amount: amountStr
-                                        })
-                                    });
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': csrfToken
+                                    },
+                                    body: JSON.stringify({
+                                        indices: [idx],
+                                        currency_chain_id: parseInt(currentChainId),
+                                        wallet_id: selectedFundWallet.walletId,
+                                        amount: amountStr
+                                    })
+                                });
 
                                 const result = await response.json();
 
@@ -2288,47 +2287,47 @@ $chainIcon = $isNativeCoin
 
                         const addrCell = r.toAddress ?
                             `<div class="d-flex align-items-center gap-1">
-                                <button class="btn btn-sm btn-icon btn-text-secondary p-0 fund-copy-btn" data-copy-text="${r.toAddress}" title="کپی آدرس">
-                                    <i class="fa-regular fa-clone fa-sm"></i>
-                                </button>
-                                ${explorerAddrBase
-                                    ? `<a href="${explorerAddrBase}${r.toAddress}" target="_blank" class="font-number"><small>${shortAddr}</small></a>`
-                                    : `<small class="font-number">${shortAddr}</small>`
-                                }
-                               </div>` :
+                                    <button class="btn btn-sm btn-icon btn-text-secondary p-0 fund-copy-btn" data-copy-text="${r.toAddress}" title="کپی آدرس">
+                                        <i class="fa-regular fa-clone fa-sm"></i>
+                                    </button>
+                                    ${explorerAddrBase
+                                ? `<a href="${explorerAddrBase}${r.toAddress}" target="_blank" class="font-number"><small>${shortAddr}</small></a>`
+                                : `<small class="font-number">${shortAddr}</small>`
+                            }
+                                   </div>` :
                             '-';
 
                         const txCell = r.txHash ?
                             `<div class="d-flex align-items-center gap-1">
-                                <button class="btn btn-sm btn-icon btn-text-secondary p-0 fund-copy-btn" data-copy-text="${r.txHash}" title="کپی هش">
-                                    <i class="fa-regular fa-clone fa-sm"></i>
-                                </button>
-                                ${explorerTxBase
-                                    ? `<a href="${explorerTxBase}${r.txHash}" target="_blank" class="font-number text-primary"><small>${shortHash}</small></a>`
-                                    : `<small class="font-number text-primary">${shortHash}</small>`
-                                }
-                               </div>` :
+                                    <button class="btn btn-sm btn-icon btn-text-secondary p-0 fund-copy-btn" data-copy-text="${r.txHash}" title="کپی هش">
+                                        <i class="fa-regular fa-clone fa-sm"></i>
+                                    </button>
+                                    ${explorerTxBase
+                                ? `<a href="${explorerTxBase}${r.txHash}" target="_blank" class="font-number text-primary"><small>${shortHash}</small></a>`
+                                : `<small class="font-number text-primary">${shortHash}</small>`
+                            }
+                                   </div>` :
                             '-';
 
                         return `
-                            <tr>
-                                <td>${idx + 1}</td>
-                                <td><strong>${r.addressIndex}</strong></td>
-                                <td>${addrCell}</td>
-                                <td><span class="text-success">${r.amount}</span></td>
-                                <td>
-                                    <span class="d-inline-flex align-items-center gap-1">
-                                        <i class="fa-regular fa-exclamation-triangle text-warning"
-                                            data-bs-toggle="tooltip" data-bs-placement="top"
-                                            data-bs-custom-class="tooltip-dark"
-                                            title="ممکن است این fee اشتباه باشد؛ برای مشاهده fee واقعی باید status تراکنش گرفته شود"></i>
-                                        <small class="text-secondary">${r.fee || '0'}</small>
-                                    </span>
-                                </td>
-                                <td><span class="badge bg-success">موفق</span></td>
-                                <td>${txCell}</td>
-                            </tr>
-                        `;
+                                <tr>
+                                    <td>${idx + 1}</td>
+                                    <td><strong>${r.addressIndex}</strong></td>
+                                    <td>${addrCell}</td>
+                                    <td><span class="text-success">${r.amount}</span></td>
+                                    <td>
+                                        <span class="d-inline-flex align-items-center gap-1">
+                                            <i class="fa-regular fa-exclamation-triangle text-warning"
+                                                data-bs-toggle="tooltip" data-bs-placement="top"
+                                                data-bs-custom-class="tooltip-dark"
+                                                title="ممکن است این fee اشتباه باشد؛ برای مشاهده fee واقعی باید status تراکنش گرفته شود"></i>
+                                            <small class="text-secondary">${r.fee || '0'}</small>
+                                        </span>
+                                    </td>
+                                    <td><span class="badge bg-success">موفق</span></td>
+                                    <td>${txCell}</td>
+                                </tr>
+                            `;
                     }).join('');
                     $('[data-bs-toggle="tooltip"]').tooltip();
                 }
@@ -2338,14 +2337,14 @@ $chainIcon = $isNativeCoin
                     document.getElementById('fundErrorsList').style.display = '';
                     document.getElementById('fundErrorsCount').textContent = errors.length;
                     document.getElementById('fundErrorsListBody').innerHTML = errors.map(e => `
-                        <div class="list-group-item list-group-item-danger">
-                            <div class="d-flex justify-content-between">
-                                <strong>ایندکس ${e.addressIndex}</strong>
-                                <span class="badge bg-danger">خطا</span>
+                            <div class="list-group-item list-group-item-danger">
+                                <div class="d-flex justify-content-between">
+                                    <strong>ایندکس ${e.addressIndex}</strong>
+                                    <span class="badge bg-danger">خطا</span>
+                                </div>
+                                <small>${escapeHtml(e.error || '')}</small>
                             </div>
-                            <small>${escapeHtml(e.error || '')}</small>
-                        </div>
-                    `).join('');
+                        `).join('');
                 }
 
                 // Show buttons
@@ -2382,20 +2381,20 @@ $chainIcon = $isNativeCoin
                     document.getElementById('fundErrorsList').style.display = '';
                     document.getElementById('fundErrorsCount').textContent = '1';
                     document.getElementById('fundErrorsListBody').innerHTML = `
-                        <div class="list-group-item list-group-item-danger">
-                            <strong>موجودی ناکافی در ایندکس ۱</strong><br>
-                            <small>آدرس: ${escapeHtml(data.sourceAddress || '')}</small><br>
-                            <small>موجودی فعلی: ${escapeHtml(data.currentBalance || '')}</small><br>
-                            <small>مقدار مورد نیاز: ${escapeHtml(data.totalRequired || '')}</small>
-                        </div>
-                    `;
+                            <div class="list-group-item list-group-item-danger">
+                                <strong>موجودی ناکافی در ایندکس ۱</strong><br>
+                                <small>آدرس: ${escapeHtml(data.sourceAddress || '')}</small><br>
+                                <small>موجودی فعلی: ${escapeHtml(data.currentBalance || '')}</small><br>
+                                <small>مقدار مورد نیاز: ${escapeHtml(data.totalRequired || '')}</small>
+                            </div>
+                        `;
                 }
 
                 document.getElementById('fundCloseBtn').style.display = '';
             }
 
             // Fund Refresh Data Button
-            document.getElementById('fundRefreshDataBtn')?.addEventListener('click', function() {
+            document.getElementById('fundRefreshDataBtn')?.addEventListener('click', function () {
                 fundProgressModal.hide();
                 loadData();
                 showToast('داده‌ها بروزرسانی شد', 'success');
@@ -2444,7 +2443,7 @@ $chainIcon = $isNativeCoin
             }
 
             // Select currency button click - using event delegation
-            document.addEventListener('click', function(e) {
+            document.addEventListener('click', function (e) {
                 if (e.target.closest('.select-currency-btn')) {
                     e.preventDefault();
                     const btn = e.target.closest('.select-currency-btn');
@@ -2467,7 +2466,7 @@ $chainIcon = $isNativeCoin
 
             // Apply Filter Button Click
             if (applyFilterBtn) {
-                applyFilterBtn.addEventListener('click', function() {
+                applyFilterBtn.addEventListener('click', function () {
                     currentPage = 1;
                     loadData();
                 });
@@ -2475,14 +2474,14 @@ $chainIcon = $isNativeCoin
 
             // Refresh Data Button Click
             if (refreshDataBtn) {
-                refreshDataBtn.addEventListener('click', function() {
+                refreshDataBtn.addEventListener('click', function () {
                     loadData();
                 });
             }
 
             // Export Excel Button Click
             if (exportExcelBtn) {
-                exportExcelBtn.addEventListener('click', function() {
+                exportExcelBtn.addEventListener('click', function () {
                     if (!currentCurrency) return;
 
                     const form = document.createElement('form');
@@ -2637,79 +2636,79 @@ $chainIcon = $isNativeCoin
                         'text-primary';
 
                     return `
-                <tr>
-                    <td>
-                        <input class="form-check-input row-select-checkbox" type="checkbox"
-                            data-index="${item.hd_wallet_index}" data-balance="${item.total_balance_raw}">
-                    </td>
-                    <td>${rowNumber}</td>
-                    <td>
-                        <span class="badge bg-label-primary">${item.hd_wallet_index}</span>
-                    </td>
-                    <td>
-                        <a href="/admin/users/${item.hd_wallet_index}/inquiry" target="_blank" class="text-primary">
-                            ${item.hd_wallet_index}
-                            <i class="fa-regular fa-external-link fa-xs ms-1"></i>
-                        </a>
-                    </td>
-                    <td>
-                        ${depositsCol}
-                        <small class="text-secondary d-block">${item.deposit_count} تراکنش</small>
-                    </td>
-                    <td>
-                        ${outgoingCol}
-                        <small class="text-secondary d-block">${item.outgoing_count || 0} تراکنش</small>
-                    </td>
-                    <td>
-                        <strong class="font-number ${balanceClass}">${item.total_balance}</strong>
-                        <small class="text-secondary ms-1">${item.currency_symbol}</small>
-                    </td>
-                    <td>
-                        <div class="d-flex align-items-center gap-2">
-                            <span id="blockchainBalance_${item.hd_wallet_index}" class="text-secondary">-</span>
-                            <button type="button"
-                                class="btn btn-sm btn-outline-info query-blockchain-btn"
-                                data-user-id="${item.hd_wallet_index}"
-                                data-currency="${item.currency_symbol}"
-                                title="استعلام از شبکه">
-                                <i class="fa-regular fa-globe"></i>
-                            </button>
-                        </div>
-                    </td>
-                    <td>
-                        <small class="text-secondary">${item.deposit_count} واریز</small><br>
-                        <small class="text-secondary">${item.outgoing_count || 0} برداشت</small>
-                    </td>
-                    <td><small class="font-number">${item.last_deposit_at}</small></td>
-                    <td>
-                        <div class="dropdown">
-                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                <i class="fa-regular fa-ellipsis-v"></i>
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li>
-                                    <a class="dropdown-item" href="/admin/users/${item.hd_wallet_index}/edit" target="_blank">
-                                        <i class="fa-regular fa-user me-2"></i>
-                                        مشاهده کاربر
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="/admin/users/${item.hd_wallet_index}/wallets" target="_blank">
-                                        <i class="fa-regular fa-wallet me-2"></i>
-                                        کیف پول کاربر
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="/admin/deposits?user=${item.hd_wallet_index}&currency=${item.currency_symbol}" target="_blank">
-                                        <i class="fa-regular fa-arrow-down-left me-2"></i>
-                                        واریزهای کاربر
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                    </td>
-                </tr>
-            `;
+                    <tr>
+                        <td>
+                            <input class="form-check-input row-select-checkbox" type="checkbox"
+                                data-index="${item.hd_wallet_index}" data-balance="${item.total_balance_raw}">
+                        </td>
+                        <td>${rowNumber}</td>
+                        <td>
+                            <span class="badge bg-label-primary">${item.hd_wallet_index}</span>
+                        </td>
+                        <td>
+                            <a href="/admin/users/${item.hd_wallet_index}/inquiry" target="_blank" class="text-primary">
+                                ${item.hd_wallet_index}
+                                <i class="fa-regular fa-external-link fa-xs ms-1"></i>
+                            </a>
+                        </td>
+                        <td>
+                            ${depositsCol}
+                            <small class="text-secondary d-block">${item.deposit_count} تراکنش</small>
+                        </td>
+                        <td>
+                            ${outgoingCol}
+                            <small class="text-secondary d-block">${item.outgoing_count || 0} تراکنش</small>
+                        </td>
+                        <td>
+                            <strong class="font-number ${balanceClass}">${item.total_balance}</strong>
+                            <small class="text-secondary ms-1">${item.currency_symbol}</small>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <span id="blockchainBalance_${item.hd_wallet_index}" class="text-secondary">-</span>
+                                <button type="button"
+                                    class="btn btn-sm btn-outline-info query-blockchain-btn"
+                                    data-user-id="${item.hd_wallet_index}"
+                                    data-currency="${item.currency_symbol}"
+                                    title="استعلام از شبکه">
+                                    <i class="fa-regular fa-globe"></i>
+                                </button>
+                            </div>
+                        </td>
+                        <td>
+                            <small class="text-secondary">${item.deposit_count} واریز</small><br>
+                            <small class="text-secondary">${item.outgoing_count || 0} برداشت</small>
+                        </td>
+                        <td><small class="font-number">${item.last_deposit_at}</small></td>
+                        <td>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fa-regular fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="/admin/users/${item.hd_wallet_index}/edit" target="_blank">
+                                            <i class="fa-regular fa-user me-2"></i>
+                                            مشاهده کاربر
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="/admin/users/${item.hd_wallet_index}/wallets" target="_blank">
+                                            <i class="fa-regular fa-wallet me-2"></i>
+                                            کیف پول کاربر
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="/admin/deposits?user=${item.hd_wallet_index}&currency=${item.currency_symbol}" target="_blank">
+                                            <i class="fa-regular fa-arrow-down-left me-2"></i>
+                                            واریزهای کاربر
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                `;
                 }).join('');
             }
 
@@ -2727,12 +2726,12 @@ $chainIcon = $isNativeCoin
 
                 // Previous button
                 html += `
-            <li class="page-item ${pagination.current_page === 1 ? 'disabled' : ''}">
-                <a class="page-link" href="#" data-page="${pagination.current_page - 1}">
-                    <i class="fa-regular fa-chevron-right"></i>
-                </a>
-            </li>
-        `;
+                <li class="page-item ${pagination.current_page === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" data-page="${pagination.current_page - 1}">
+                        <i class="fa-regular fa-chevron-right"></i>
+                    </a>
+                </li>
+            `;
 
                 // Page numbers
                 const startPage = Math.max(1, pagination.current_page - 2);
@@ -2747,10 +2746,10 @@ $chainIcon = $isNativeCoin
 
                 for (let i = startPage; i <= endPage; i++) {
                     html += `
-                <li class="page-item ${i === pagination.current_page ? 'active' : ''}">
-                    <a class="page-link" href="#" data-page="${i}">${i}</a>
-                </li>
-            `;
+                    <li class="page-item ${i === pagination.current_page ? 'active' : ''}">
+                        <a class="page-link" href="#" data-page="${i}">${i}</a>
+                    </li>
+                `;
                 }
 
                 if (endPage < pagination.last_page) {
@@ -2763,18 +2762,18 @@ $chainIcon = $isNativeCoin
 
                 // Next button
                 html += `
-            <li class="page-item ${pagination.current_page === pagination.last_page ? 'disabled' : ''}">
-                <a class="page-link" href="#" data-page="${pagination.current_page + 1}">
-                    <i class="fa-regular fa-chevron-left"></i>
-                </a>
-            </li>
-        `;
+                <li class="page-item ${pagination.current_page === pagination.last_page ? 'disabled' : ''}">
+                    <a class="page-link" href="#" data-page="${pagination.current_page + 1}">
+                        <i class="fa-regular fa-chevron-left"></i>
+                    </a>
+                </li>
+            `;
 
                 paginationEl.innerHTML = html;
 
                 // Add click handlers
                 paginationEl.querySelectorAll('a[data-page]').forEach(link => {
-                    link.addEventListener('click', function(e) {
+                    link.addEventListener('click', function (e) {
                         e.preventDefault();
                         const page = parseInt(this.dataset.page);
                         if (page >= 1 && page <= pagination.last_page && page !== currentPage) {
@@ -2818,7 +2817,7 @@ $chainIcon = $isNativeCoin
                         style: {
                             background: bgMap[normalizedType] || bgMap.error
                         },
-                        onClick: function() {}
+                        onClick: function () { }
                     }).showToast();
 
                     return;
@@ -2837,7 +2836,7 @@ $chainIcon = $isNativeCoin
             }
 
             // Query Blockchain Balance - Event Delegation
-            document.addEventListener('click', async function(e) {
+            document.addEventListener('click', async function (e) {
                 if (e.target.closest('.query-blockchain-btn')) {
 
                     e.preventDefault();
@@ -2861,39 +2860,39 @@ $chainIcon = $isNativeCoin
                     try {
                         const response = await fetch(
                             '{{ route('admin.hd-wallet.query-blockchain') }}', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector(
-                                        'meta[name="csrf-token"]').content
-                                },
-                                body: JSON.stringify({
-                                    user_id: userId,
-                                    currency_symbol: currency,
-                                    currency_chain_id: currentChainId
-                                })
-                            });
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector(
+                                    'meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify({
+                                user_id: userId,
+                                currency_symbol: currency,
+                                currency_chain_id: currentChainId
+                            })
+                        });
 
                         const result = await response.json();
 
                         if (result.success) {
                             const explorerLink = result.data.explorer_url ?
                                 `<a href="${result.data.explorer_url}" target="_blank" class="text-decoration-none" title="مشاهده در Explorer">
-                             <i class="fa-regular fa-external-link fa-xs"></i>
-                           </a>` :
+                                 <i class="fa-regular fa-external-link fa-xs"></i>
+                               </a>` :
                                 '';
                             balanceEl.innerHTML = `
-                        <strong class="text-info font-number">${result.data.balance}</strong>
-                        <small class="text-secondary ms-1">${result.data.currency_symbol}</small>
-                        ${explorerLink}
-                    `;
+                            <strong class="text-info font-number">${result.data.balance}</strong>
+                            <small class="text-secondary ms-1">${result.data.currency_symbol}</small>
+                            ${explorerLink}
+                        `;
                             showToast(
                                 `موجودی آدرس ${result.data.address} دریافت شد`,
                                 'success');
                         } else {
                             balanceEl.innerHTML = `<span class="text-danger">
-                        <i class="fa-regular fa-exclamation-circle"></i> خطا
-                    </span>`;
+                            <i class="fa-regular fa-exclamation-circle"></i> خطا
+                        </span>`;
                             showToast(`خطا در استعلام کاربر ${userId}: ${result.error}`, 'error');
                         }
                     } catch (error) {
@@ -2912,7 +2911,7 @@ $chainIcon = $isNativeCoin
 
             // Sync Transactions Button Click
             if (syncTransactionsBtn) {
-                syncTransactionsBtn.addEventListener('click', async function() {
+                syncTransactionsBtn.addEventListener('click', async function () {
                     if (!currentCurrency || !currentChainId) {
                         showToast('لطفاً ابتدا یک کوین و شبکه انتخاب کنید', 'warning');
                         return;
@@ -3029,10 +3028,10 @@ $chainIcon = $isNativeCoin
                 try {
                     const response = await fetch(
                         `{{ url('admin/hd-wallet/sync-progress') }}/${currentSyncId}`, {
-                            headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                            }
-                        });
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        }
+                    });
 
                     const result = await response.json();
 
@@ -3141,14 +3140,14 @@ $chainIcon = $isNativeCoin
                         '-';
 
                     return `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td><span class="badge bg-label-primary">${addr.index}</span></td>
-                        <td><small class="font-number">${addr.address}</small></td>
-                        <td class="text-center">${newTxCount}</td>
-                        <td class="text-center">${statusText}</td>
-                    </tr>
-                `;
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td><span class="badge bg-label-primary">${addr.index}</span></td>
+                            <td><small class="font-number">${addr.address}</small></td>
+                            <td class="text-center">${newTxCount}</td>
+                            <td class="text-center">${statusText}</td>
+                        </tr>
+                    `;
                 }).join('');
             }
 
@@ -3158,19 +3157,19 @@ $chainIcon = $isNativeCoin
 
                 listBody.innerHTML = errors.map(err => {
                     return `
-                    <div class="list-group-item">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <strong>ایندکس ${err.index}:</strong>
-                                <small class="d-block text-secondary font-number">${err.address}</small>
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>ایندکس ${err.index}:</strong>
+                                    <small class="d-block text-secondary font-number">${err.address}</small>
+                                </div>
                             </div>
+                            <p class="mb-0 mt-2 text-danger small">
+                                <i class="fa-regular fa-exclamation-triangle me-1"></i>
+                                ${err.error}
+                            </p>
                         </div>
-                        <p class="mb-0 mt-2 text-danger small">
-                            <i class="fa-regular fa-exclamation-triangle me-1"></i>
-                            ${err.error}
-                        </p>
-                    </div>
-                `;
+                    `;
                 }).join('');
             }
 
@@ -3183,14 +3182,14 @@ $chainIcon = $isNativeCoin
             }
 
             // Sync Refresh Data Button
-            document.getElementById('syncRefreshDataBtn')?.addEventListener('click', function() {
+            document.getElementById('syncRefreshDataBtn')?.addEventListener('click', function () {
                 syncProgressModal.hide();
                 loadData(); // Reload main data
                 showToast('داده‌ها بروزرسانی شد', 'success');
             });
 
             // Clean up polling when modal is closed
-            syncProgressModalEl?.addEventListener('hidden.bs.modal', function() {
+            syncProgressModalEl?.addEventListener('hidden.bs.modal', function () {
                 stopSyncPolling();
             });
 

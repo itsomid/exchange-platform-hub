@@ -11,4 +11,5 @@ enum CurrencyBlockChainNameEnum: string
     case DOGE = 'DOGE';
     case POLYGON = 'POLYGON';
     case ARBITRUM = 'ARBITRUM';
+    case OPTIMISM = 'OPTIMISM';
 }

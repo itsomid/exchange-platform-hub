@@ -11,4 +11,5 @@ enum CurrencyMapEnum: string
     case ERC20 = 'ETHEREUM';
     case POLYGON = 'POLYGON';
     case ARBITRUM = 'ARBITRUM';
+    case OPTIMISM = 'OPTIMISM';
 }

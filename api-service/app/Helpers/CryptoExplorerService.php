@@ -12,6 +12,7 @@ class CryptoExplorerService
         'BSC' => 'https://bscscan.com/address/',
         'POLYGON' => 'https://polygonscan.com/address/',
         'ARBITRUM' => 'https://arbiscan.io/address/',
+        'OPTIMISM' => 'https://optimistic.etherscan.io/address/',
     ];
 
     public static function getExplorerUrl(string $network, string $address): ?string

@@ -34,6 +34,10 @@ return [
         'ARB' => [
             'type' => 'evm',
             'chain' => 'arbitrum'
+        ],
+        'OP' => [
+            'type' => 'evm',
+            'chain' => 'optimism'
         ]
     ]
 ];

@@ -17,12 +17,6 @@ enum CurrencyChainEnum: string
     case POLYGON = 'POLYGON'; // Polygon blockchain
     case LTC = 'LTC';         // Litecoin blockchain
     case AVAX = 'AVAX';       // Avalanche blockchain
-    case FTM = 'FTM';         // Fantom blockchain
-    case XLM = 'XLM';         // Stellar blockchain
-    case ADA = 'ADA';         // Cardano blockchain
-    case DOT = 'DOT';         // Polkadot blockchain
-    case MITH = 'MITH';       // MITH (Mithril) blockchain
-    case COSMOS = 'COSMOS';   // Cosmos blockchain
-    case TEZOS = 'TEZOS';     // Tezos blockchain
     case ARBITRUM = 'ARBITRUM'; // Arbitrum One (L2)
+    case OPTIMISM = 'OPTIMISM'; // Optimism (L2)
 }

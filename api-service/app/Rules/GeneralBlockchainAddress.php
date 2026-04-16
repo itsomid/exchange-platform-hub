@@ -40,7 +40,7 @@ class GeneralBlockchainAddress implements ValidationRule
 
         return match (strtoupper($chain)) {
             'BTC' => $this->isValidBitcoinAddress($address),
-            'ETH', 'ERC20', 'BSC', 'BEP20', 'POLYGON','ARBITRUM' => $this->isValidEthereumAddress($address),
+            'ETH', 'ERC20', 'BSC', 'BEP20', 'POLYGON', 'ARBITRUM', 'OPTIMISM' => $this->isValidEthereumAddress($address),
             'TRX', 'TRC20' => $this->isValidTronAddress($address),
             'DOGE' => $this->isValidDogecoinAddress($address),
             'LTC' => $this->isValidLitecoinAddress($address),
@@ -69,7 +69,7 @@ class GeneralBlockchainAddress implements ValidationRule
     }
 
     /**
-     * Validate Ethereum address (also valid for BSC, Polygon)
+    * Validate Ethereum address (also valid for BSC, Polygon, Arbitrum, Optimism)
      */
     private function isValidEthereumAddress(string $address): bool
     {

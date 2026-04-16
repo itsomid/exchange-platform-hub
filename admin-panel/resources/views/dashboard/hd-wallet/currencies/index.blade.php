@@ -72,6 +72,7 @@
                         <option value="BSC">BSC (BEP20)</option>
                         <option value="BTC">BTC</option>
                         <option value="DOGE">DOGE</option>
+                        <option value="OPTIMISM">Optimism</option>
                         <option value="LTC">LTC</option>
                         <option value="ARBITRUM">Arbitrum One</option>
                     </select>
@@ -89,315 +90,304 @@
                         </tr>
                     </thead>
                     @php
-                            // Build network -> assignedWalletId map from native coins
-                            $nativeWalletMap = [];
-                            foreach ($items as $_nativeItem) {
-                                if (($_nativeItem['service_payload']['isNative'] ?? false) && $_nativeItem['network']) {
-                                    $nativeWalletMap[$_nativeItem['network']] = $_nativeItem['service_payload']['assignedWalletId'] ?? null;
-                                }
+                        // Build network -> assignedWalletId map from native coins
+                        $nativeWalletMap = [];
+                        foreach ($items as $_nativeItem) {
+                            if (($_nativeItem['service_payload']['isNative'] ?? false) && $_nativeItem['network']) {
+                                $nativeWalletMap[$_nativeItem['network']] = $_nativeItem['service_payload']['assignedWalletId'] ?? null;
                             }
-                            // Build walletId -> wallet name map
-                            $walletNameMap = [];
-                            foreach ($wallets as $_w) {
-                                $walletNameMap[$_w['walletId']] = $_w['name'];
-                            }
+                        }
+                        // Build walletId -> wallet name map
+                        $walletNameMap = [];
+                        foreach ($wallets as $_w) {
+                            $walletNameMap[$_w['walletId']] = $_w['name'];
+                        }
 
-                            $nativeSymbolsByChain = [
-                                'TRC20' => 'TRX',
-                                'ERC20' => 'ETH',
-                                'BSC' => 'BNB',
-                                'BTC' => 'BTC',
-                                'DOGE' => 'DOGE',
-                                'LTC' => 'LTC',
-                                'POLYGON' => 'POL',
-                                'ARBITRUM' => 'ETH',
-                            ];
+                        $nativeSymbolsByChain = [
+                            'TRC20' => 'TRX',
+                            'ERC20' => 'ETH',
+                            'BSC' => 'BNB',
+                            'BTC' => 'BTC',
+                            'DOGE' => 'DOGE',
+                            'LTC' => 'LTC',
+                            'POLYGON' => 'POL',
+                            'OPTIMISM' => 'ETH',
+                            'ARBITRUM' => 'ETH',
+                        ];
 
-                            $groupedItems = collect($items)
-                                ->groupBy(fn($item) => $item['chain'] ?? 'other')
-                                ->map(function ($group, $chain) use ($nativeSymbolsByChain) {
-                                    $nativeSymbol = $nativeSymbolsByChain[$chain] ?? null;
-                                    $sortedGroup = collect($group)
-                                        ->sortBy(function ($item) use ($nativeSymbol) {
-                                            $symbol = strtoupper($item['symbol'] ?? '');
-                                            $isNative = ($item['service_payload']['isNative'] ?? false)
-                                                || ($nativeSymbol && $symbol === $nativeSymbol);
-
-                                            return sprintf(
-                                                '%d-%s-%s',
-                                                $isNative ? 0 : 1,
-                                                $symbol,
-                                                strtolower($item['display_name'] ?? '')
-                                            );
-                                        })
-                                        ->values();
-
-                                    $parentItem = $sortedGroup->first(function ($item) use ($nativeSymbol) {
+                        $groupedItems = collect($items)
+                            ->groupBy(fn($item) => $item['chain'] ?? 'other')
+                            ->map(function ($group, $chain) use ($nativeSymbolsByChain) {
+                                $nativeSymbol = $nativeSymbolsByChain[$chain] ?? null;
+                                $sortedGroup = collect($group)
+                                    ->sortBy(function ($item) use ($nativeSymbol) {
                                         $symbol = strtoupper($item['symbol'] ?? '');
-
-                                        return ($item['service_payload']['isNative'] ?? false)
+                                        $isNative = ($item['service_payload']['isNative'] ?? false)
                                             || ($nativeSymbol && $symbol === $nativeSymbol);
-                                    });
 
-                                    $rows = collect();
+                                        return sprintf(
+                                            '%d-%s-%s',
+                                            $isNative ? 0 : 1,
+                                            $symbol,
+                                            strtolower($item['display_name'] ?? '')
+                                        );
+                                    })
+                                    ->values();
 
-                                    if ($parentItem) {
-                                        $rows->push([
-                                            'item' => $parentItem,
-                                            'is_child' => false,
-                                            'is_parent' => true,
-                                        ]);
+                                $parentItem = $sortedGroup->first(function ($item) use ($nativeSymbol) {
+                                    $symbol = strtoupper($item['symbol'] ?? '');
 
-                                        foreach ($sortedGroup as $groupItem) {
-                                            if (($groupItem['id'] ?? null) === ($parentItem['id'] ?? null)) {
-                                                continue;
-                                            }
-
-                                            $rows->push([
-                                                'item' => $groupItem,
-                                                'is_child' => true,
-                                                'is_parent' => false,
-                                            ]);
-                                        }
-                                    } else {
-                                        foreach ($sortedGroup as $groupItem) {
-                                            $rows->push([
-                                                'item' => $groupItem,
-                                                'is_child' => false,
-                                                'is_parent' => false,
-                                            ]);
-                                        }
-                                    }
-
-                                    return [
-                                        'chain' => $chain,
-                                        'label' => $sortedGroup->first()['network_label'] ?? $chain,
-                                        'rows' => $rows,
-                                    ];
-                                })
-                                ->sortBy(function ($group) {
-                                    return strtolower(($group['label'] ?? '') . '-' . ($group['chain'] ?? ''));
+                                    return ($item['service_payload']['isNative'] ?? false)
+                                        || ($nativeSymbol && $symbol === $nativeSymbol);
                                 });
+
+                                $rows = collect();
+
+                                if ($parentItem) {
+                                    $rows->push([
+                                        'item' => $parentItem,
+                                        'is_child' => false,
+                                        'is_parent' => true,
+                                    ]);
+
+                                    foreach ($sortedGroup as $groupItem) {
+                                        if (($groupItem['id'] ?? null) === ($parentItem['id'] ?? null)) {
+                                            continue;
+                                        }
+
+                                        $rows->push([
+                                            'item' => $groupItem,
+                                            'is_child' => true,
+                                            'is_parent' => false,
+                                        ]);
+                                    }
+                                } else {
+                                    foreach ($sortedGroup as $groupItem) {
+                                        $rows->push([
+                                            'item' => $groupItem,
+                                            'is_child' => false,
+                                            'is_parent' => false,
+                                        ]);
+                                    }
+                                }
+
+                                return [
+                                    'chain' => $chain,
+                                    'label' => $sortedGroup->first()['network_label'] ?? $chain,
+                                    'rows' => $rows,
+                                ];
+                            })
+                            ->sortBy(function ($group) {
+                                return strtolower(($group['label'] ?? '') . '-' . ($group['chain'] ?? ''));
+                            });
                     @endphp
                     @foreach ($groupedItems as $group)
-                            <tbody class="table-border-bottom-0 currency-group" data-group-chain="{{ $group['chain'] }}">
-                                <tr class="table-light">
-                                    <td colspan="5" class="fw-semibold text-dark">
-                                        <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
-                                            <span>
-                                                <i class="fa-regular fa-layer-group me-1"></i>
-                                                {{ $group['label'] }}
-                                            </span>
-                                            <span class="badge bg-label-secondary">
-                                                {{ $group['rows']->count() }} ارز
-                                            </span>
+                        <tbody class="table-border-bottom-0 currency-group" data-group-chain="{{ $group['chain'] }}">
+                            <tr class="table-light">
+                                <td colspan="5" class="fw-semibold text-dark">
+                                    <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+                                        <span>
+                                            <i class="fa-regular fa-layer-group me-1"></i>
+                                            {{ $group['label'] }}
+                                        </span>
+                                        <span class="badge bg-label-secondary">
+                                            {{ $group['rows']->count() }} ارز
+                                        </span>
+                                    </div>
+                                </td>
+                            </tr>
+                            @foreach ($group['rows'] as $groupRow)
+                                @php
+                                    $item = $groupRow['item'];
+                                    $symbol = strtoupper($item['symbol'] ?? '');
+                                    $chainValue = $item['chain'] ?? null;
+                                    $isNativeCoin = $groupRow['is_parent'];
+                                    $chainIcon = $isNativeCoin
+                                        ? null
+                                        : match ($chainValue) {
+                                            'TRC20' => asset('images/coins/trx.svg'),
+                                            'ERC20' => asset('images/coins/eth.svg'),
+                                            'BSC' => asset('images/coins/bnb.svg'),
+                                            'BTC' => asset('images/coins/btc.svg'),
+                                            'DOGE' => asset('images/coins/doge.svg'),
+                                            'LTC' => asset('images/coins/ltc.svg'),
+                                            'POLYGON' => asset('images/coins/pol.svg'),
+                                            'OPTIMISM' => asset('images/coins/eth.svg'),
+                                            'ARBITRUM' => asset('images/coins/eth.svg'),
+                                            default => null,
+                                        };
+                                @endphp
+                                <tr class="{{ $groupRow['is_child'] ? 'table-row-child' : '' }}" data-chain="{{ $item['chain'] }}"
+                                    data-group-row="1" data-group-parent="{{ $groupRow['is_parent'] ? '1' : '0' }}"
+                                    data-search="{{ strtolower($item['symbol'] . ' ' . ($item['persian_name'] ?? '') . ' ' . ($item['display_name'] ?? '') . ' ' . ($item['network_label'] ?? '') . ' ' . ($item['chain'] ?? '')) }}">
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2 {{ $groupRow['is_child'] ? 'ps-4' : '' }}">
+                                            <div class="position-relative flex-shrink-0">
+                                                <img src="{{ $item['logo_url'] }}" class="rounded-circle" width="36" height="36">
+                                                @if ($chainIcon)
+                                                    <img src="{{ $chainIcon }}"
+                                                        class="position-absolute rounded-circle border border-white" width="18"
+                                                        height="18" style="bottom: -2px; right: -2px; background: #fff;"
+                                                        title="{{ $item['network_label'] }}">
+                                                @endif
+                                            </div>
+                                            <div class="text-start">
+                                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                    <span class="fw-semibold">{{ $item['symbol'] }}</span>
+                                                    @if ($groupRow['is_parent'])
+                                                        <span class="badge bg-label-success">ارز مادر</span>
+                                                    @elseif ($groupRow['is_child'])
+                                                        <span class="badge bg-label-warning">زیرمجموعه</span>
+                                                    @endif
+                                                </div>
+                                                <small class="text-secondary d-block">
+                                                    {{ $item['persian_name'] ?? $item['display_name'] }}
+                                                </small>
+                                            </div>
                                         </div>
                                     </td>
-                                </tr>
-                                @foreach ($group['rows'] as $groupRow)
-                                    @php
-                                        $item = $groupRow['item'];
-                                        $symbol = strtoupper($item['symbol'] ?? '');
-                                        $chainValue = $item['chain'] ?? null;
-                                        $isNativeCoin = $groupRow['is_parent'];
-                                        $chainIcon = $isNativeCoin
-                                            ? null
-                                            : match ($chainValue) {
-                                                'TRC20' => asset('images/coins/trx.svg'),
-                                                'ERC20' => asset('images/coins/eth.svg'),
-                                                'BSC' => asset('images/coins/bnb.svg'),
-                                                'BTC' => asset('images/coins/btc.svg'),
-                                                'DOGE' => asset('images/coins/doge.svg'),
-                                                'LTC' => asset('images/coins/ltc.svg'),
-                                                'POLYGON' => asset('images/coins/pol.svg'),
-                                                'ARBITRUM' => asset('images/coins/eth.svg'),
-                                                default => null,
-                                            };
-                                    @endphp
-                                    <tr class="{{ $groupRow['is_child'] ? 'table-row-child' : '' }}"
-                                        data-chain="{{ $item['chain'] }}"
-                                        data-group-row="1"
-                                        data-group-parent="{{ $groupRow['is_parent'] ? '1' : '0' }}"
-                                        data-search="{{ strtolower($item['symbol'] . ' ' . ($item['persian_name'] ?? '') . ' ' . ($item['display_name'] ?? '') . ' ' . ($item['network_label'] ?? '') . ' ' . ($item['chain'] ?? '')) }}">
-                                        <td>
-                                            <div class="d-flex align-items-center gap-2 {{ $groupRow['is_child'] ? 'ps-4' : '' }}">
-                                                <div class="position-relative flex-shrink-0">
-                                                    <img src="{{ $item['logo_url'] }}" class="rounded-circle" width="36"
-                                                        height="36">
-                                                    @if ($chainIcon)
-                                                        <img src="{{ $chainIcon }}"
-                                                            class="position-absolute rounded-circle border border-white"
-                                                            width="18" height="18"
-                                                            style="bottom: -2px; right: -2px; background: #fff;"
-                                                            title="{{ $item['network_label'] }}">
-                                                    @endif
-                                                </div>
-                                                <div class="text-start">
-                                                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                                                        <span class="fw-semibold">{{ $item['symbol'] }}</span>
-                                                        @if ($groupRow['is_parent'])
-                                                            <span class="badge bg-label-success">ارز مادر</span>
-                                                        @elseif ($groupRow['is_child'])
-                                                            <span class="badge bg-label-warning">زیرمجموعه</span>
-                                                        @endif
-                                                    </div>
-                                                    <small class="text-secondary d-block">
-                                                        {{ $item['persian_name'] ?? $item['display_name'] }}
-                                                    </small>
-                                                </div>
-                                            </div>
-                                        </td>
 
-                                        <td>{{ $item['network_label'] }}</td>
-                                        <td>
-                                            <div class="d-flex align-items-center gap-2 flex-wrap">
-                                                @if ($item['exists_sweeper'])
-                                                    <span
-                                                        class="badge bg-label-{{ $item['sweeper_payload']['isActive'] ?? true ? 'success' : 'danger' }}">
-                                                        <i class="fa-regular fa-check me-1"></i>
-                                                        {{ $item['sweeper_payload']['isActive'] ?? true ? 'فعال' : 'غیرفعال' }}
-                                                    </span>
-                                                    <button type="button" class="btn btn-sm btn-outline-warning" data-edit-currency
-                                                        data-target="sweeper"
-                                                        data-identifier="{{ $item['sweeper_identifier'] ?? '' }}"
-                                                        data-display-name="{{ $item['sweeper_payload']['displayName'] ?? $item['display_name'] }}"
-                                                        data-symbol="{{ $item['sweeper_payload']['symbol'] ?? $item['symbol'] }}"
-                                                        data-contract-address="{{ $item['sweeper_payload']['contractAddress'] ?? $item['contract_address'] }}"
-                                                        data-decimals="{{ $item['sweeper_payload']['decimals'] ?? $item['decimals'] }}"
-                                                        data-required-confirmations="{{ $item['sweeper_payload']['networkConfig']['confirmations'] ?? '' }}"
-                                                        data-description="{{ $item['sweeper_payload']['description'] ?? $item['description'] }}"
-                                                        data-is-active="{{ $item['sweeper_payload']['isActive'] ?? true ? '1' : '0' }}">
-                                                        <i class="fa-regular fa-edit"></i>
-                                                    </button>
-                                                    @if ($item['sweeper_payload']['isActive'] ?? true)
-                                                        <form method="POST"
-                                                            action="{{ route('admin.hd-wallet.currencies.delete') }}"
-                                                            style="display: inline;">
-                                                            @csrf
-                                                            <input type="hidden" name="target" value="sweeper">
-                                                            <input type="hidden" name="identifier"
-                                                                value="{{ $item['sweeper_identifier'] ?? '' }}">
-                                                            <button type="submit" class="btn btn-sm btn-outline-warning"
-                                                                title="غیرفعال‌سازی در Sweeper"
-                                                                onclick="return confirm('غیرفعال‌سازی این ارز در sweeper انجام شود؟');">
-                                                                <i class="fa-solid fa-toggle-off"></i>
-                                                            </button>
-                                                        </form>
-                                                    @endif
-                                                @else
-                                                    @if ($item['create_allowed'])
-                                                        <button type="button" class="btn btn-sm btn-outline-primary"
-                                                            data-create-currency data-target="sweeper"
-                                                            data-currency-name="{{ $item['currency_name'] }}"
-                                                            data-display-name="{{ $item['display_name'] }}"
-                                                            data-symbol="{{ $item['symbol'] }}"
-                                                            data-network="{{ $item['network'] }}"
-                                                            data-contract-address="{{ $item['contract_address'] }}"
-                                                            data-decimals="{{ $item['decimals'] }}"
-                                                            data-description="{{ $item['description'] }}">
-                                                            ایجاد
+                                    <td>{{ $item['network_label'] }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            @if ($item['exists_sweeper'])
+                                                <span
+                                                    class="badge bg-label-{{ $item['sweeper_payload']['isActive'] ?? true ? 'success' : 'danger' }}">
+                                                    <i class="fa-regular fa-check me-1"></i>
+                                                    {{ $item['sweeper_payload']['isActive'] ?? true ? 'فعال' : 'غیرفعال' }}
+                                                </span>
+                                                <button type="button" class="btn btn-sm btn-outline-warning" data-edit-currency
+                                                    data-target="sweeper" data-identifier="{{ $item['sweeper_identifier'] ?? '' }}"
+                                                    data-display-name="{{ $item['sweeper_payload']['displayName'] ?? $item['display_name'] }}"
+                                                    data-symbol="{{ $item['sweeper_payload']['symbol'] ?? $item['symbol'] }}"
+                                                    data-contract-address="{{ $item['sweeper_payload']['contractAddress'] ?? $item['contract_address'] }}"
+                                                    data-decimals="{{ $item['sweeper_payload']['decimals'] ?? $item['decimals'] }}"
+                                                    data-required-confirmations="{{ $item['sweeper_payload']['networkConfig']['confirmations'] ?? '' }}"
+                                                    data-description="{{ $item['sweeper_payload']['description'] ?? $item['description'] }}"
+                                                    data-is-active="{{ $item['sweeper_payload']['isActive'] ?? true ? '1' : '0' }}">
+                                                    <i class="fa-regular fa-edit"></i>
+                                                </button>
+                                                @if ($item['sweeper_payload']['isActive'] ?? true)
+                                                    <form method="POST" action="{{ route('admin.hd-wallet.currencies.delete') }}"
+                                                        style="display: inline;">
+                                                        @csrf
+                                                        <input type="hidden" name="target" value="sweeper">
+                                                        <input type="hidden" name="identifier"
+                                                            value="{{ $item['sweeper_identifier'] ?? '' }}">
+                                                        <button type="submit" class="btn btn-sm btn-outline-warning"
+                                                            title="غیرفعال‌سازی در Sweeper"
+                                                            onclick="return confirm('غیرفعال‌سازی این ارز در sweeper انجام شود؟');">
+                                                            <i class="fa-solid fa-toggle-off"></i>
                                                         </button>
-                                                    @else
-                                                        <span class="badge bg-label-secondary">پشتیبانی نمی‌شود</span>
-                                                    @endif
+                                                    </form>
                                                 @endif
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center gap-2 flex-wrap">
-                                                @if ($item['exists_service'] && $item['service_identifier'])
-                                                    <span
-                                                        class="badge bg-label-{{ $item['service_payload']['isActive'] ?? true ? 'success' : 'danger' }}">
-                                                        <i class="fa-regular fa-check me-1"></i>
-                                                        {{ $item['service_payload']['isActive'] ?? true ? 'فعال' : 'غیرفعال' }}
-                                                    </span>
-                                                    <button type="button" class="btn btn-sm btn-outline-primary"
-                                                        data-edit-currency data-target="service_new"
-                                                        data-identifier="{{ $item['service_identifier'] }}"
-                                                        data-display-name="{{ $item['service_payload']['displayName'] ?? $item['display_name'] }}"
-                                                        data-symbol="{{ $item['service_payload']['symbol'] ?? $item['symbol'] }}"
-                                                        data-contract-address="{{ $item['service_payload']['contractAddress'] ?? $item['contract_address'] }}"
-                                                        data-decimals="{{ $item['service_payload']['decimals'] ?? $item['decimals'] }}"
-                                                        data-required-confirmations="{{ $item['service_payload']['networkConfig']['confirmations'] ?? '' }}"
-                                                        data-description="{{ $item['service_payload']['description'] ?? $item['description'] }}"
-                                                        data-is-active="{{ $item['service_payload']['isActive'] ?? true ? '1' : '0' }}"
-                                                        data-assigned-wallet-id="{{ $item['service_payload']['assignedWalletId'] ?? '' }}"
+                                            @else
+                                                @if ($item['create_allowed'])
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" data-create-currency
+                                                        data-target="sweeper" data-currency-name="{{ $item['currency_name'] }}"
+                                                        data-display-name="{{ $item['display_name'] }}" data-symbol="{{ $item['symbol'] }}"
                                                         data-network="{{ $item['network'] }}"
-                                                        data-is-native="{{ ($item['service_payload']['isNative'] ?? false) ? '1' : '0' }}">
-                                                        <i class="fa-regular fa-edit"></i>
+                                                        data-contract-address="{{ $item['contract_address'] }}"
+                                                        data-decimals="{{ $item['decimals'] }}"
+                                                        data-description="{{ $item['description'] }}">
+                                                        ایجاد
                                                     </button>
-                                                    @if ($item['service_payload']['isActive'] ?? true)
-                                                        <form method="POST"
-                                                            action="{{ route('admin.hd-wallet.currencies.delete') }}"
-                                                            style="display: inline;">
-                                                            @csrf
-                                                            <input type="hidden" name="target" value="service_new">
-                                                            <input type="hidden" name="identifier"
-                                                                value="{{ $item['service_identifier'] }}">
-                                                            <button type="submit" class="btn btn-sm btn-outline-warning"
-                                                                title="غیرفعال‌سازی در Service"
-                                                                onclick="return confirm('غیرفعال‌سازی این ارز در service_new انجام شود؟');">
-                                                                <i class="fa-solid fa-toggle-off"></i>
-                                                            </button>
-                                                        </form>
-                                                    @endif
                                                 @else
-                                                    @if ($item['create_allowed'])
-                                                        <button type="button" class="btn btn-sm btn-outline-primary"
-                                                            data-create-currency data-target="service_new"
-                                                            data-currency-name="{{ $item['currency_name'] }}"
-                                                            data-display-name="{{ $item['display_name'] }}"
-                                                            data-symbol="{{ $item['symbol'] }}"
-                                                            data-network="{{ $item['network'] }}"
-                                                            data-contract-address="{{ $item['contract_address'] }}"
-                                                            data-decimals="{{ $item['decimals'] }}"
-                                                            data-description="{{ $item['description'] }}">
-                                                            ایجاد
-                                                        </button>
-                                                    @else
-                                                        <span class="badge bg-label-secondary">پشتیبانی نمی‌شود</span>
-                                                    @endif
+                                                    <span class="badge bg-label-secondary">پشتیبانی نمی‌شود</span>
                                                 @endif
-                                            </div>
-                                        </td>
-                                        <td>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
                                             @if ($item['exists_service'] && $item['service_identifier'])
-                                                @php
-                                                    $isNative = $item['service_payload']['isNative'] ?? false;
-                                                    $assignedWallet = $item['service_payload']['assignedWalletId'] ?? null;
-                                                @endphp
-                                                @if ($isNative)
-                                                    @if ($assignedWallet)
-                                                        <span class="badge bg-label-info">
-                                                            <i class="fa-regular fa-wallet me-1"></i>
-                                                            {{ $assignedWallet }}
-                                                        </span>
-                                                    @else
-                                                        <span class="badge bg-label-secondary">
-                                                            <i class="fa-regular fa-random me-1"></i>
-                                                            پیش‌فرض شبکه
-                                                        </span>
-                                                    @endif
+                                                <span
+                                                    class="badge bg-label-{{ $item['service_payload']['isActive'] ?? true ? 'success' : 'danger' }}">
+                                                    <i class="fa-regular fa-check me-1"></i>
+                                                    {{ $item['service_payload']['isActive'] ?? true ? 'فعال' : 'غیرفعال' }}
+                                                </span>
+                                                <button type="button" class="btn btn-sm btn-outline-primary" data-edit-currency
+                                                    data-target="service_new" data-identifier="{{ $item['service_identifier'] }}"
+                                                    data-display-name="{{ $item['service_payload']['displayName'] ?? $item['display_name'] }}"
+                                                    data-symbol="{{ $item['service_payload']['symbol'] ?? $item['symbol'] }}"
+                                                    data-contract-address="{{ $item['service_payload']['contractAddress'] ?? $item['contract_address'] }}"
+                                                    data-decimals="{{ $item['service_payload']['decimals'] ?? $item['decimals'] }}"
+                                                    data-required-confirmations="{{ $item['service_payload']['networkConfig']['confirmations'] ?? '' }}"
+                                                    data-description="{{ $item['service_payload']['description'] ?? $item['description'] }}"
+                                                    data-is-active="{{ $item['service_payload']['isActive'] ?? true ? '1' : '0' }}"
+                                                    data-assigned-wallet-id="{{ $item['service_payload']['assignedWalletId'] ?? '' }}"
+                                                    data-network="{{ $item['network'] }}"
+                                                    data-is-native="{{ ($item['service_payload']['isNative'] ?? false) ? '1' : '0' }}">
+                                                    <i class="fa-regular fa-edit"></i>
+                                                </button>
+                                                @if ($item['service_payload']['isActive'] ?? true)
+                                                    <form method="POST" action="{{ route('admin.hd-wallet.currencies.delete') }}"
+                                                        style="display: inline;">
+                                                        @csrf
+                                                        <input type="hidden" name="target" value="service_new">
+                                                        <input type="hidden" name="identifier" value="{{ $item['service_identifier'] }}">
+                                                        <button type="submit" class="btn btn-sm btn-outline-warning"
+                                                            title="غیرفعال‌سازی در Service"
+                                                            onclick="return confirm('غیرفعال‌سازی این ارز در service_new انجام شود؟');">
+                                                            <i class="fa-solid fa-toggle-off"></i>
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            @else
+                                                @if ($item['create_allowed'])
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" data-create-currency
+                                                        data-target="service_new" data-currency-name="{{ $item['currency_name'] }}"
+                                                        data-display-name="{{ $item['display_name'] }}" data-symbol="{{ $item['symbol'] }}"
+                                                        data-network="{{ $item['network'] }}"
+                                                        data-contract-address="{{ $item['contract_address'] }}"
+                                                        data-decimals="{{ $item['decimals'] }}"
+                                                        data-description="{{ $item['description'] }}">
+                                                        ایجاد
+                                                    </button>
                                                 @else
-                                                    @php
-                                                        $parentWalletId = $nativeWalletMap[$item['network']] ?? null;
-                                                        $parentWalletName = $parentWalletId
-                                                            ? ($walletNameMap[$parentWalletId] ?? $parentWalletId)
-                                                            : null;
-                                                    @endphp
-                                                    <span class="badge bg-label-warning"
-                                                        title="{{ $parentWalletName ? 'ارث‌بری از ' . $parentWalletName : 'ارث‌بری از کوین مادر' }}">
-                                                        <i class="fa-regular fa-link me-1"></i>
-                                                        {{ $parentWalletName ?? $parentWalletId ?? 'پیش‌فرض شبکه' }}
+                                                    <span class="badge bg-label-secondary">پشتیبانی نمی‌شود</span>
+                                                @endif
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if ($item['exists_service'] && $item['service_identifier'])
+                                            @php
+                                                $isNative = $item['service_payload']['isNative'] ?? false;
+                                                $assignedWallet = $item['service_payload']['assignedWalletId'] ?? null;
+                                            @endphp
+                                            @if ($isNative)
+                                                @if ($assignedWallet)
+                                                    <span class="badge bg-label-info">
+                                                        <i class="fa-regular fa-wallet me-1"></i>
+                                                        {{ $assignedWallet }}
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-label-secondary">
+                                                        <i class="fa-regular fa-random me-1"></i>
+                                                        پیش‌فرض شبکه
                                                     </span>
                                                 @endif
                                             @else
-                                                <span class="text-secondary">-</span>
+                                                @php
+                                                    $parentWalletId = $nativeWalletMap[$item['network']] ?? null;
+                                                    $parentWalletName = $parentWalletId
+                                                        ? ($walletNameMap[$parentWalletId] ?? $parentWalletId)
+                                                        : null;
+                                                @endphp
+                                                <span class="badge bg-label-warning"
+                                                    title="{{ $parentWalletName ? 'ارث‌بری از ' . $parentWalletName : 'ارث‌بری از کوین مادر' }}">
+                                                    <i class="fa-regular fa-link me-1"></i>
+                                                    {{ $parentWalletName ?? $parentWalletId ?? 'پیش‌فرض شبکه' }}
+                                                </span>
                                             @endif
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
+                                        @else
+                                            <span class="text-secondary">-</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
                     @endforeach
                 </table>
             </div>
@@ -419,28 +409,23 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">نام داخلی</label>
-                                <input type="text" class="form-control" name="currency_name" id="currencyName"
-                                    required>
+                                <input type="text" class="form-control" name="currency_name" id="currencyName" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">نام نمایشی</label>
-                                <input type="text" class="form-control" name="display_name" id="displayName"
-                                    required>
+                                <input type="text" class="form-control" name="display_name" id="displayName" required>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">نماد</label>
-                                <input type="text" class="form-control" name="symbol" id="symbol" required
-                                    readonly>
+                                <input type="text" class="form-control" name="symbol" id="symbol" required readonly>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">شبکه</label>
-                                <input type="text" class="form-control" name="network" id="network" required
-                                    readonly>
+                                <input type="text" class="form-control" name="network" id="network" required readonly>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">تعداد اعشار</label>
-                                <input type="number" class="form-control" name="decimals" id="decimals"
-                                    min="0" max="30">
+                                <input type="number" class="form-control" name="decimals" id="decimals" min="0" max="30">
                             </div>
                             <div class="col-md-12">
                                 <label class="form-label">آدرس قرارداد (Contract Address)</label>
@@ -478,8 +463,7 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">نام نمایشی</label>
-                                <input type="text" class="form-control" name="display_name" id="editDisplayName"
-                                    required>
+                                <input type="text" class="form-control" name="display_name" id="editDisplayName" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">نماد</label>
@@ -488,8 +472,8 @@
 
                             <div class="col-md-3">
                                 <label class="form-label">تعداد اعشار</label>
-                                <input type="number" class="form-control" name="decimals" id="editDecimals"
-                                    min="0" max="30">
+                                <input type="number" class="form-control" name="decimals" id="editDecimals" min="0"
+                                    max="30">
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">تعداد تاییدیه لازم</label>
@@ -516,14 +500,14 @@
                                 </select>
                                 <div class="form-text d-none" id="walletTokenHint">
                                     <i class="fa-regular fa-info-circle me-1"></i>
-                                    تغییر کیف پول فقط برای کوین‌های مادر امکان‌پذیر است. توکن‌ها به صورت خودکار از HDWallet ای که به کوین مادر منصوب شد استفاده می‌کنند.
+                                    تغییر کیف پول فقط برای کوین‌های مادر امکان‌پذیر است. توکن‌ها به صورت خودکار از HDWallet
+                                    ای که به کوین مادر منصوب شد استفاده می‌کنند.
                                 </div>
                             </div>
 
                             <div class="col-md-12">
                                 <label class="form-label">آدرس قرارداد (Contract Address)</label>
-                                <input type="text" class="form-control" name="contract_address"
-                                    id="editContractAddress">
+                                <input type="text" class="form-control" name="contract_address" id="editContractAddress">
                             </div>
                             <div class="col-md-12">
                                 <label class="form-label">توضیحات</label>
@@ -544,7 +528,7 @@
 
 @push('scripts')
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const modalElement = document.getElementById('createCurrencyModal');
             const modal = new bootstrap.Modal(modalElement);
             const title = document.getElementById('createCurrencyModalLabel');
@@ -578,7 +562,7 @@
                 service_new: 'HD Wallet Service New'
             };
 
-            document.addEventListener('click', function(e) {
+            document.addEventListener('click', function (e) {
                 const button = e.target.closest('[data-create-currency]');
                 if (!button) {
                     return;
@@ -598,7 +582,7 @@
                 modal.show();
             });
 
-            document.addEventListener('click', function(e) {
+            document.addEventListener('click', function (e) {
                 const button = e.target.closest('[data-edit-currency]');
                 if (!button) {
                     return;
@@ -625,7 +609,7 @@
                     const isNative = button.dataset.isNative === '1';
 
                     // Filter wallet options by network
-                    Array.from(editAssignedWalletId.options).forEach(function(opt) {
+                    Array.from(editAssignedWalletId.options).forEach(function (opt) {
                         if (!opt.value) {
                             // Always show the default option
                             return;

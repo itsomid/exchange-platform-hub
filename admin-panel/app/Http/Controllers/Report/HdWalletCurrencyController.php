@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 
 class HdWalletCurrencyController extends Controller
 {
-    private const TOKEN_NETWORKS = ['ethereum', 'bnb', 'tron', 'polygon', 'arbitrum'];
+    private const TOKEN_NETWORKS = ['ethereum', 'bnb', 'tron', 'polygon', 'arbitrum', 'optimism'];
 
     public function index()
     {
@@ -318,6 +318,7 @@ class HdWalletCurrencyController extends Controller
             'DOGE' => 'dogecoin',
             'POLYGON' => 'polygon',
             'ARBITRUM' => 'arbitrum',
+            'OPTIMISM' => 'optimism',
             default => null,
         };
     }
