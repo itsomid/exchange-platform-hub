@@ -1,5 +1,42 @@
 @extends('dashboard.layout.master')
 @section('title', 'مدیریت برداشت ها')
+
+@section('vendor-style')
+    <style>
+        .table-responsive {
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .sticky-column {
+            position: sticky;
+            left: 0;
+            background-color: #fff !important;
+            z-index: 1;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .table thead .sticky-column {
+            background-color: #fff !important;
+            z-index: 2;
+        }
+
+        body.modal-open .sticky-column {
+            z-index: auto !important;
+            box-shadow: none !important;
+        }
+
+        .table tbody tr:hover .sticky-column {
+            background-color: #f8f9fa !important;
+        }
+    </style>
+@endsection
+
 @section('content')
     <div class="row g-4 mb-4">
         <div class="col-sm-12 col-xl-3">
@@ -384,7 +421,7 @@
                             </a>
                         </th>
                         <th>وضعیت</th>
-                        <th>عملیات</th>
+                        <th class="sticky-column">عملیات</th>
                     </tr>
                 </thead>
                 <tbody class="table-border-bottom-0">
@@ -485,7 +522,7 @@
                                     <span
                                         class="badge bg-label-{{ $withdraw->status->color() }}">{{ $withdraw->status->label() }}</span>
                                 </td>
-                                <td>
+                                <td class="sticky-column">
 
                                     <a href="#" class="btn btn-icon btn-text-secondary" data-bs-toggle="modal"
                                         data-bs-target="#withdraw-modal-{{ $withdraw->id }}">
@@ -556,15 +593,15 @@
                                     @endif
                                     @if ($withdraw->status === \App\Enums\WithdrawalStatusEnum::AWAITING_APPROVAL)
                                         {{-- Confirm Withdrawal Button --}}
-                                        <button type="button" class="btn btn-icon btn-success me-2" 
+                                        <button type="button" class="btn btn-icon btn-success me-2 btn-sm" 
                                             data-bs-toggle="modal" data-bs-target="#confirmWithdrawModal-{{ $withdraw->id }}">
-                                            <i class="fa-regular fa-badge-check fa-lg"></i>
+                                            <i class="fa-regular fa-badge-check fa-xl"></i>
                                         </button>
 
                                         {{-- Reject Withdrawal Button --}}
-                                        <button type="button" class="btn btn-icon btn-danger" 
+                                        <button type="button" class="btn btn-icon btn-danger btn-sm" 
                                             data-bs-toggle="modal" data-bs-target="#rejectWithdrawModal-{{ $withdraw->id }}">
-                                            <i class="fa-regular fa-xmark fa-lg"></i>
+                                            <i class="fa-regular fa-xmark fa-xl"></i>
                                         </button>
 
                                         {{-- Confirm Withdrawal Modal --}}
@@ -698,7 +735,6 @@
                 {{ $withdraws->appends(request()->all())->links() }}
             </div>
         </div>
-
     </div>
 
 @endsection
@@ -706,6 +742,10 @@
     <script>
         $(document).ready(function() {
             $('[data-bs-toggle="tooltip"]').tooltip();
+
+            $('.table-responsive .modal').each(function() {
+                $(this).appendTo('body');
+            });
 
             // Handle copy functionality
             $('.clipboard-btn').on('click', function(e) {
