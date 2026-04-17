@@ -89,9 +89,29 @@ class CurrencyController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Currency $currency)
     {
-        //
+        $currency->load(['chains', 'baseMarket.activeExchangePrice']);
+
+        $priceData = null;
+        if ($currency->baseMarket && $currency->baseMarket->activeExchangePrice) {
+            $ep = $currency->baseMarket->activeExchangePrice;
+            $priceData = [
+                'market'                   => $currency->baseMarket->name,
+                'price'                    => $ep->price,
+                'open_price'               => $ep->open_price,
+                'price_change_percentage'  => $ep->price_change_percentage,
+                'exchange_sell_price'      => $ep->exchange_sell_price,
+                'exchange_buy_price'       => $ep->exchange_buy_price,
+            ];
+        }
+
+        return response()->json([
+            'currency'  => $currency,
+            'logo_url'  => $currency->coinLogo(),
+            'edit_url'  => route('admin.currency.edit', $currency),
+            'price'     => $priceData,
+        ]);
     }
 
     /**

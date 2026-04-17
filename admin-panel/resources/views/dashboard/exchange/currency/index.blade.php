@@ -249,10 +249,12 @@
                                         href="{{ route('admin.currency.edit', ['currency' => $currency->id]) }}" title="ویرایش">
                                         <i class="fa-light fa-pen-to-square"></i>
                                     </a>
-                                    <a class="btn btn-icon btn-sm btn-outline-secondary"
-                                        href="{{ route('admin.currency.show', ['currency' => $currency->id]) }}" title="مشاهده">
+                                    <button type="button" class="btn btn-icon btn-sm btn-outline-secondary btn-currency-preview"
+                                        data-currency-id="{{ $currency->id }}"
+                                        data-currency-url="{{ route('admin.currency.show', ['currency' => $currency->id]) }}"
+                                        title="مشاهده">
                                         <i class="fa-light fa-eye"></i>
-                                    </a>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -271,4 +273,289 @@
         </div>
     </div>
 
+    {{-- Currency Preview Modal --}}
+    <div class="modal fade" id="currencyPreviewModal" tabindex="-1" aria-labelledby="currencyPreviewModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title d-flex align-items-center gap-2" id="currencyPreviewModalLabel">
+                        <span id="modal-coin-logo-wrap"></span>
+                        <span id="modal-coin-title">اطلاعات کوین</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    {{-- Loading State --}}
+                    <div id="modal-loading" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">در حال بارگذاری...</span>
+                        </div>
+                        <p class="text-muted mt-3 mb-0">در حال دریافت اطلاعات...</p>
+                    </div>
+
+                    {{-- Error State --}}
+                    <div id="modal-error" class="d-none text-center py-5">
+                        <i class="fa-light fa-triangle-exclamation fa-3x text-danger mb-3 d-block"></i>
+                        <p class="text-danger mb-0">خطا در دریافت اطلاعات. لطفاً دوباره تلاش کنید.</p>
+                    </div>
+
+                    {{-- Content --}}
+                    <div id="modal-content" class="d-none">
+
+                        {{-- Price Section --}}
+                        <div id="price-section" class="mb-4">
+                            <h6 class="fw-bold text-primary mb-3 d-flex align-items-center gap-2">
+                                <i class="fa-light fa-chart-line"></i>
+                                اطلاعات قیمت
+                            </h6>
+                            <div id="price-content"></div>
+                        </div>
+
+                        <hr class="my-3">
+
+                        {{-- Currency Info Section --}}
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-primary mb-3 d-flex align-items-center gap-2">
+                                <i class="fa-light fa-coins"></i>
+                                اطلاعات کوین
+                            </h6>
+                            <div id="currency-info-content"></div>
+                        </div>
+
+                        <hr class="my-3" id="chains-divider">
+
+                        {{-- Chains Section --}}
+                        <div id="chains-section">
+                            <h6 class="fw-bold text-primary mb-3 d-flex align-items-center gap-2">
+                                <i class="fa-light fa-link"></i>
+                                شبکه‌ها
+                            </h6>
+                            <div id="chains-content"></div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <a id="modal-edit-link" href="#" class="btn btn-primary btn-sm">
+                        <i class="fa-light fa-pen-to-square me-1"></i>
+                        ویرایش
+                    </a>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">بستن</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
+
+@push('scripts')
+    <script>
+        (function () {
+            'use strict';
+
+            let bsModal = null;
+            function getModal() {
+                if (!bsModal) {
+                    bsModal = new bootstrap.Modal(document.getElementById('currencyPreviewModal'));
+                }
+                return bsModal;
+            }
+
+            function fmt(value, precision) {
+                if (value === null || value === undefined) return '—';
+                const num = parseFloat(value);
+                if (isNaN(num)) return value;
+                return num.toFixed(precision ?? 8).replace(/\.?0+$/, '');
+            }
+
+            function badge(condition, trueLabel, falseLabel) {
+                return condition
+                    ? `<span class="badge bg-label-success">${trueLabel}</span>`
+                    : `<span class="badge bg-label-danger">${falseLabel}</span>`;
+            }
+
+            function infoRow(label, value) {
+                return `
+                        <div class="col-sm-6 col-lg-4">
+                            <div class="d-flex flex-column p-2 rounded border h-100" style="border-color: rgba(var(--bs-border-color-rgb), 0.5) !important;">
+                                <small class="text-muted mb-1" style="font-size:0.72rem;">${label}</small>
+                                <span class="fw-semibold">${value}</span>
+                            </div>
+                        </div>`;
+            }
+
+            function renderPrice(price, symbol) {
+                if (!price) {
+                    return `<div class="alert alert-secondary py-2 mb-0">
+                                    <i class="fa-light fa-circle-info me-2"></i>
+                                    اطلاعات قیمتی برای این کوین موجود نیست.
+                                </div>`;
+                }
+                const changeClass = price.price_change_percentage >= 0 ? 'text-success' : 'text-danger';
+                const changeIcon = price.price_change_percentage >= 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down';
+                const changePct = price.price_change_percentage !== null
+                    ? `<span class="${changeClass} fw-semibold"><i class="fa-light ${changeIcon} me-1"></i>${parseFloat(price.price_change_percentage).toFixed(2)}%</span>`
+                    : '—';
+
+                return `
+                        <div class="row g-3">
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="card border-0 bg-label-primary h-100">
+                                    <div class="card-body py-3 px-3">
+                                        <small class="text-muted d-block mb-1">قیمت فعلی (${price.market})</small>
+                                        <div class="fw-bold font-number fs-6">${fmt(price.price, 2)} USDT</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="card border-0 bg-label-secondary h-100">
+                                    <div class="card-body py-3 px-3">
+                                        <small class="text-muted d-block mb-1">قیمت باز (24h)</small>
+                                        <div class="fw-bold font-number fs-6">${fmt(price.open_price, 2)} USDT</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-lg-2">
+                                <div class="card border-0 bg-label-secondary h-100">
+                                    <div class="card-body py-3 px-3">
+                                        <small class="text-muted d-block mb-1">تغییر (24h)</small>
+                                        <div class="fw-bold font-number fs-6">${changePct}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-lg-2">
+                                <div class="card border-0 bg-label-success h-100">
+                                    <div class="card-body py-3 px-3">
+                                        <small class="text-muted d-block mb-1">قیمت فروش صرافی</small>
+                                        <div class="fw-bold font-number fs-6">${fmt(price.exchange_sell_price, 2)}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-lg-2">
+                                <div class="card border-0 bg-label-info h-100">
+                                    <div class="card-body py-3 px-3">
+                                        <small class="text-muted d-block mb-1">قیمت خرید صرافی</small>
+                                        <div class="fw-bold font-number fs-6">${fmt(price.exchange_buy_price, 2)}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+            }
+
+            function renderCurrencyInfo(c) {
+                return `
+                        <div class="row g-2">
+                            ${infoRow('نام', c.name)}
+                            ${infoRow('نام فارسی', c.persian_name ?? '—')}
+                            ${infoRow('سیمبول', `<span class="badge bg-label-primary fs-6">${c.symbol}</span>`)}
+                            ${infoRow('دقت قیمت', c.price_precision ?? '—')}
+                            ${infoRow('دقت مقدار', c.amount_precision ?? '—')}
+                            ${infoRow('حداکثر برداشت خودکار', `<span class="font-number">${fmt(c.max_auto_withdraw_amount, 8)}</span>`)}
+                            ${infoRow('انتقال داخلی', badge(c.inter_transfer_enabled, 'فعال', 'غیرفعال'))}
+                            ${infoRow('برداشت از صرافی مرجع', badge(c.ref_exchange_withdrawal_enabled, 'فعال', 'غیرفعال'))}
+                            ${infoRow('فاصله زمانی برداشت (دقیقه)', c.ref_exchange_withdrawal_interval_minutes !== null ? c.ref_exchange_withdrawal_interval_minutes : '<span class="text-muted fst-italic">تنظیم سراسری</span>')}
+                            ${infoRow('حداقل تعداد خرید برای برداشت', c.ref_exchange_withdrawal_min_count !== null ? c.ref_exchange_withdrawal_min_count : '<span class="text-muted fst-italic">تنظیم سراسری</span>')}
+                            ${infoRow('ایجاد در', new Date(c.created_at).toLocaleString('fa-IR'))}
+                            ${infoRow('آخرین بروزرسانی', new Date(c.updated_at).toLocaleString('fa-IR'))}
+                        </div>`;
+            }
+
+            function renderChains(chains, currency) {
+                if (!chains || chains.length === 0) {
+                    return `<div class="alert alert-warning py-2 mb-0">
+                                    <i class="fa-light fa-triangle-exclamation me-2"></i>
+                                    هیچ شبکه‌ای برای این کوین تعریف نشده است.
+                                </div>`;
+                }
+
+                return chains.map(chain => {
+                    const chainLabel = typeof chain.chain === 'object' ? chain.chain.value ?? chain.chain : chain.chain;
+                    const blockchainLabel = typeof chain.blockchain_name === 'object' ? chain.blockchain_name.value ?? chain.blockchain_name : chain.blockchain_name;
+                    return `
+                        <div class="card border mb-3">
+                            <div class="card-header py-2 px-3 d-flex align-items-center justify-content-between">
+                                <span class="fw-bold d-flex align-items-center gap-2">
+                                    <span class="badge bg-label-primary">${chainLabel}</span>
+                                    <small class="text-muted">${blockchainLabel ?? ''}</small>
+                                </span>
+                                <div class="d-flex gap-2">
+                                    <span class="badge ${chain.deposit_enabled ? 'bg-label-success' : 'bg-label-danger'}">
+                                        <i class="fa-solid fa-circle-arrow-down me-1"></i>واریز
+                                    </span>
+                                    <span class="badge ${chain.withdraw_enabled ? 'bg-label-success' : 'bg-label-danger'}">
+                                        <i class="fa-solid fa-circle-arrow-up me-1"></i>برداشت
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card-body p-3">
+                                <div class="row g-2">
+                                    ${infoRow('کارمزد برداشت صرافی', `<span class="font-number">${fmt(chain.exchange_withdrawal_fee, 8)} ${currency.symbol}</span>`)}
+                                    ${infoRow('کارمزد شبکه', `<span class="font-number">${fmt(chain.network_fee, 8)} ${currency.symbol}</span>`)}
+                                    ${infoRow('مجموع کارمزد', `<span class="font-number text-warning fw-bold">${fmt(chain.total_withdrawal_fee, 8)} ${currency.symbol}</span>`)}
+                                    ${infoRow('حداقل واریز', `<span class="font-number">${fmt(chain.min_deposit_amount, 8)} ${currency.symbol}</span>`)}
+                                    ${infoRow('حداقل برداشت', `<span class="font-number">${fmt(chain.min_withdraw_amount, 8)} ${currency.symbol}</span>`)}
+                                    ${infoRow('تأخیر واریز (دقیقه)', chain.deposit_delay_minutes)}
+                                    ${infoRow('تأییدیه‌های امن', chain.safe_confirmations)}
+                                    ${infoRow('کوین پایه', badge(chain.is_base_coin, 'بله', 'خیر'))}
+                                    ${infoRow('نیاز به ممو', badge(chain.is_memo_required_for_deposit, 'بله', 'خیر'))}
+                                    ${chain.contract_address ? infoRow('آدرس قرارداد', `<span class="font-number text-truncate d-block" style="max-width:200px;" title="${chain.contract_address}">${chain.contract_address}</span>`) : ''}
+                                </div>
+                            </div>
+                        </div>`;
+                }).join('');
+            }
+
+            document.addEventListener('click', function (e) {
+                const btn = e.target.closest('.btn-currency-preview');
+                if (!btn) return;
+
+                const url = btn.dataset.currencyUrl;
+
+                // Reset modal state
+                document.getElementById('modal-loading').classList.remove('d-none');
+                document.getElementById('modal-error').classList.add('d-none');
+                document.getElementById('modal-content').classList.add('d-none');
+                document.getElementById('modal-coin-logo-wrap').innerHTML = '';
+                document.getElementById('modal-coin-title').textContent = 'اطلاعات کوین';
+
+                bsModal = getModal();
+                bsModal.show();
+
+                fetch(url, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? ''
+                    }
+                })
+                    .then(res => {
+                        if (!res.ok) throw new Error('HTTP ' + res.status);
+                        return res.json();
+                    })
+                    .then(data => {
+                        const c = data.currency;
+
+                        // Header
+                        document.getElementById('modal-coin-logo-wrap').innerHTML =
+                            `<img src="${data.logo_url}" class="rounded-circle" width="30" height="30" alt="${c.symbol}" onerror="this.onerror=null;this.src='/images/coins/default.png'">`;
+                        document.getElementById('modal-coin-title').textContent = `${c.name} (${c.symbol})`;
+
+                        // Edit link
+                        document.getElementById('modal-edit-link').href = data.edit_url;
+
+                        // Sections
+                        document.getElementById('price-content').innerHTML = renderPrice(data.price, c.symbol);
+                        document.getElementById('currency-info-content').innerHTML = renderCurrencyInfo(c);
+                        document.getElementById('chains-content').innerHTML = renderChains(c.chains, c);
+
+                        document.getElementById('modal-loading').classList.add('d-none');
+                        document.getElementById('modal-content').classList.remove('d-none');
+                    })
+                    .catch(() => {
+                        document.getElementById('modal-loading').classList.add('d-none');
+                        document.getElementById('modal-error').classList.remove('d-none');
+                    });
+            });
+        })();
+    </script>
+@endpush
