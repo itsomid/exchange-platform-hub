@@ -165,12 +165,13 @@
                                         @if ($wallet->currency && $wallet->currency->chains->isNotEmpty())
                                             @foreach ($wallet->currency->chains as $currencyChain)
                                                 @php
-                                                    $chainValue = is_string($currencyChain->chain) 
-                                                        ? $currencyChain->chain 
+                                                    $chainValue = is_string($currencyChain->chain)
+                                                        ? $currencyChain->chain
                                                         : $currencyChain->chain->value;
                                                     $walletChain = $wallet->walletChains
                                                         ->where('currency_chain', $chainValue)
                                                         ->first();
+
                                                 @endphp
 
                                                 @if ($walletChain && $walletChain->address)

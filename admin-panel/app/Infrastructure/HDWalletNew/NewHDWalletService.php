@@ -275,6 +275,8 @@ class NewHDWalletService
             $userId = $data['userId'];
 
             return array_map(function (array $item) use ($network, $currency, $userId) {
+                $createdAt = $item['createdAt'] ?? $item['detectedAt'] ?? $item['txDate'] ?? now()->toISOString();
+
                 return resolve(GetDepositListsResponseDTO::class)
                     ->setDepositId($item['depositId'])
                     ->setTxHash($item['txHash'])
@@ -292,7 +294,7 @@ class NewHDWalletService
                     ->setIsCredited($item['isCredited'] ?? false)
                     ->setCreditedAt($item['creditedAt'] ?? null)
                     ->setDetectedAt($item['detectedAt'] ?? null)
-                    ->setCreatedAt($item['detectedAt'] ?? null);
+                    ->setCreatedAt($createdAt);
             }, $deposits);
         } catch (ConnectionException $exception) {
             Log::channel('hd-wallet')->error('HD Wallet New - Get Deposit Lists Connection Failed:', [
