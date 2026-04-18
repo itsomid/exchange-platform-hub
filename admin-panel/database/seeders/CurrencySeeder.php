@@ -147,6 +147,15 @@ class CurrencySeeder extends Seeder
                 'price_precision' => 4,
                 'amount_precision' => 2,
                 'max_auto_withdraw_amount' => 100000,
+            ],
+            [
+                'name' => 'Avalanche',
+                'persian_name' => 'آوالانچ',
+                'symbol' => 'AVAX',
+                'logo' => 'default.png',
+                'price_precision' => 4,
+                'amount_precision' => 4,
+                'max_auto_withdraw_amount' => 10000,
             ]
         ];
 

@@ -23,6 +23,7 @@ class CurrencyChainSeeder extends Seeder
         $doge = Currency::where('symbol', 'DOGE')->first();
         $pol = Currency::where('symbol', 'POL')->first();
         $arb = Currency::where('symbol', 'ARB')->first();
+        $avax = Currency::where('symbol', 'AVAX')->first();
 
         // Seed Currency Chains Data
         $currencyChains = [
@@ -260,7 +261,29 @@ class CurrencyChainSeeder extends Seeder
                 'is_base_coin' => true,
                 'explorer_address_url' => 'https://arbiscan.io/address/{address}',
                 'explorer_tx_url' => 'https://arbiscan.io/tx/{hash}',
-            ]
+            ],
+            // AVAX (Avalanche C-Chain)
+            [
+                'currency_id' => $avax->id,
+                'chain' => CurrencyChainEnum::AVALANCHE,
+                'chain_name' => 'Avalanche',
+                'blockchain_name' => CurrencyBlockChainNameEnum::AVALANCHE,
+                'min_deposit_amount' => 0.1,
+                'min_withdraw_amount' => 0.1,
+                'deposit_enabled' => true,
+                'withdraw_enabled' => true,
+                'deposit_delay_minutes' => 0,
+                'safe_confirmations' => 12,
+                'exchange_withdrawal_fee' => 0.01,
+                'network_fee' => 0.001,
+                'withdrawal_precision' => 18,
+                'memo' => null,
+                'is_memo_required_for_deposit' => false,
+                'is_base_coin' => true,
+                'explorer_address_url' => 'https://snowtrace.io/address/{address}',
+                'explorer_tx_url' => 'https://snowtrace.io/tx/{hash}',
+            ],
+            
         ];
 
         foreach ($currencyChains as $chainData) {
