@@ -150,6 +150,8 @@ class HdWalletCurrencyController extends Controller
             'description' => 'nullable|string|max:255',
             'is_active' => 'nullable|boolean',
             'assigned_wallet_id' => 'nullable|string|max:50',
+            'is_native' => 'nullable|boolean',
+            'parent_assigned_wallet_id' => 'nullable|string|max:50',
         ]);
 
         $baseUrl = $validated['target'] === 'sweeper'
@@ -178,8 +180,8 @@ class HdWalletCurrencyController extends Controller
             'isActive' => $request->boolean('is_active'),
         ];
 
-        if ($validated['target'] === 'service_new') {
-            $payload['assignedWalletId'] = $validated['assigned_wallet_id'] ?: null;
+        if ($validated['target'] === 'service_new' && $request->boolean('is_native')) {
+            $payload['assignedWalletId'] = ($validated['assigned_wallet_id'] ?? '') ?: null;
         }
 
         try {

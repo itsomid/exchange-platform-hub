@@ -320,7 +320,8 @@
                                                     data-is-active="{{ $item['service_payload']['isActive'] ?? true ? '1' : '0' }}"
                                                     data-assigned-wallet-id="{{ $item['service_payload']['assignedWalletId'] ?? '' }}"
                                                     data-network="{{ $item['network'] }}"
-                                                    data-is-native="{{ ($item['service_payload']['isNative'] ?? false) ? '1' : '0' }}">
+                                                    data-is-native="{{ ($item['service_payload']['isNative'] ?? false) ? '1' : '0' }}"
+                                                    data-parent-assigned-wallet-id="{{ $nativeWalletMap[$item['network']] ?? '' }}">
                                                     <i class="fa-regular fa-edit"></i>
                                                 </button>
                                                 @if ($item['service_payload']['isActive'] ?? true)
@@ -458,6 +459,9 @@
                     @csrf
                     <input type="hidden" name="target" id="editTarget">
                     <input type="hidden" name="identifier" id="editIdentifier">
+                    <input type="hidden" name="is_native" id="editIsNative">
+                    <input type="hidden" name="parent_assigned_wallet_id" id="editParentAssignedWalletId">
+                    <input type="hidden" name="network" id="editNetwork">
                     <div class="modal-header">
                         <h5 class="modal-title" id="editCurrencyModalLabel">ویرایش ارز</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -548,6 +552,9 @@
             const editModal = new bootstrap.Modal(editModalElement);
             const editTarget = document.getElementById('editTarget');
             const editIdentifier = document.getElementById('editIdentifier');
+            const editIsNative = document.getElementById('editIsNative');
+            const editParentAssignedWalletId = document.getElementById('editParentAssignedWalletId');
+            const editNetwork = document.getElementById('editNetwork');
             const editDisplayName = document.getElementById('editDisplayName');
             const editSymbol = document.getElementById('editSymbol');
             const editContractAddress = document.getElementById('editContractAddress');
@@ -601,6 +608,9 @@
                 editRequiredConfirmations.value = button.dataset.requiredConfirmations || '';
                 editIsActive.value = button.dataset.isActive === '0' ? '0' : '1';
                 editDescription.value = button.dataset.description || '';
+                editIsNative.value = button.dataset.isNative || '0';
+                editParentAssignedWalletId.value = button.dataset.parentAssignedWalletId || '';
+                editNetwork.value = button.dataset.network || '';
 
                 const walletTokenHint = document.getElementById('walletTokenHint');
 
