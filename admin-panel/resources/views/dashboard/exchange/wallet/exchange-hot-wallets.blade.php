@@ -97,7 +97,7 @@
                                             </div>
                                         </td>
                                         <td class="w-25">
-                                            <span class="font-number fw-bold">{{ formatNumberTrimZeros($balance) }}</span>
+                                            <span class="font-number fw-bold h5">{{ formatNumberTrimZeros($balance) }}</span>
                                             <small class="text-muted me-1">{{ $symbol }}</small>
                                         </td>
                                         <td class="w-50">
