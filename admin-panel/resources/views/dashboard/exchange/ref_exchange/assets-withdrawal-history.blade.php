@@ -88,10 +88,13 @@
                             <td>
                                 <h6 class="mb-0">
                                     @if($withdraw->explore_address_url)
-                                        <a href="{{ $withdraw->explore_address_url }}" target="_blank" class="me-1">
+                                        <button type="button" class="btn btn-sm btn-icon btn-text-secondary p-0 copy-btn me-1"
+                                            data-copy-text="{{ $withdraw->hd_wallet_address }}" title="کپی آدرس">
                                             <i class="fa-regular fa-clone"></i>
+                                        </button>
+                                        <a href="{{ $withdraw->explore_address_url }}" target="_blank" class="me-1">
+                                            <small class="font-number">{{ shorten_hash($withdraw->hd_wallet_address) }}</small>
                                         </a>
-                                        <small class="font-number">{{ shorten_hash($withdraw->hd_wallet_address) }}</small>
                                     @elseif($withdraw->hd_wallet_address)   
                                         <span>{{$withdraw->hd_wallet_address}}</span>
                                     @else
@@ -116,6 +119,33 @@
 
 @endsection
 @section('vendor-script')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('click', function (event) {
+                const button = event.target.closest('.copy-btn');
+                if (!button) {
+                    return;
+                }
+
+                const textToCopy = button.getAttribute('data-copy-text');
+                if (!textToCopy) {
+                    return;
+                }
+
+                navigator.clipboard.writeText(textToCopy).then(function () {
+                    const icon = button.querySelector('i');
+                    if (!icon) {
+                        return;
+                    }
+
+                    icon.classList.replace('fa-clone', 'fa-check');
+                    setTimeout(function () {
+                        icon.classList.replace('fa-check', 'fa-clone');
+                    }, 1500);
+                }).catch(function () {});
+            });
+        });
+    </script>
     @vite([
             'resources/assets/vendor/libs/apex-charts/apexcharts.js',
              'resources/assets/js/config.js',
