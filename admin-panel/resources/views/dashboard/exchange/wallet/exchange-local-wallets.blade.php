@@ -2,70 +2,135 @@
 @section('title', 'مدیریت کیف پول های صرافی')
 @section('content')
 
-    {{-- EXCHANGE LOCAL WALLET--}}
     <div class="card mt-6">
-        <div class="card-body">
-            <h4 class="mb-0">دارایی کیف پول های صرافی</h4>
+        <div class="card-header pb-3">
+            <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+                <div>
+                    <h4 class="mb-1">دارایی کیف پول های صرافی</h4>
+                    <small class="text-muted">نمایش نرمال و مرتب‌شده بر اساس موجودی</small>
+                </div>
+                <span class="badge bg-label-primary">{{ collect($exchangeWallets)->count() }} کیف پول</span>
+            </div>
         </div>
-    </div>
-    <div class="row g-6 mt-3">
-        @foreach($exchangeWallets as $wallet)
-            <div class="col-xl-4 col-lg-6 col-sm-6">
-                <div class="card card-border-shadow-success">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center ">
-                            <div class="avatar me-4">
-                                <div class="avatar flex-shrink-0 me-4">
-                                    <img src="{{$wallet->currency->coinLogo()}}" class="img-fluid" width="50px">
-                                </div>
-                            </div>
-                            <h5 class="mb-0">کیف پول {{$wallet->currency->name}}</h5>
-                        </div>
-                        <h4 class="mt-4 mb-1 font-number">{{formatNumberTrimZeros($wallet->balance)}}
-                            <span class="text-muted h6">{{$wallet->currency_symbol}}</span>
-                        </h4>
-                        <p class="mb-2">
-                            <small class="text-muted fw-light">USDT</small>
-                            <span class="text-primary me-2 font-number">{{formatNumber($wallet->assetValue,2)}}</span>
-                        </p>
-                        @if($wallet->locked_balance !=0)
-                            <p class="mb-0">
-                                <small class="text-danger">موجودی مسدود شده:</small>
-                                <small
-                                    class="text-danger fw-bold ms-2 font-number">{{formatNumberTrimZeros($wallet->locked_balance)}}
-                                    <span class="text-danger ">{{$wallet->currency_symbol}}</span>
-                                </small>
-                            </p>
-                        @endif
-
-                    </div>
-                    <div class="card-body border-top">
-                        <a href="{{route('admin.wallet.detail',['user'=> config('bitexroom.user_id'),'wallet'=>$wallet->id,'type'=>'deposit'])}}"
-                           class="btn btn-label-primary me-2">مشاهده جزئیات</a>
-                        <a class="btn btn-icon btn-primary"
-                           href="{{route('admin.wallet.increase-credit.form',['currency'=>$wallet->currency_symbol , 'user'=>config('bitexroom.user_id')])}}">
-                            <i class="fa-regular fa-plus fa-xl"></i>
-                        </a>
+        <div class="card-body pt-2">
+            <div class="row g-3 mb-4">
+                <div class="col-md-12">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fa-regular fa-search"></i></span>
+                        <input type="text" class="form-control" id="walletSearch"
+                            placeholder="جستجو بر اساس نماد، شبکه یا نام ارز...">
                     </div>
                 </div>
             </div>
-        @endforeach
 
+            <div class="table-responsive text-nowrap">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>کوین</th>
+                            <th>موجودی</th>
+                            <th>ارزش تقریبی (USDT)</th>
+                            <th class="text-center">عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($walletRows as $row)
+                            @php
+                                $wallet = $row['wallet'];
+                                $symbol = $row['symbol'];
+
+                                $currencyName = $wallet->currency->name ?? $symbol;
+                                $searchText = strtolower($symbol . '  ' . $currencyName);
+                            @endphp
+                            <tr data-search="{{ $searchText }}">
+                                <td class="w-20">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="position-relative flex-shrink-0">
+                                            <img src="{{ $wallet->currency->coinLogo() }}" class="rounded-circle" width="38"
+                                                height="38" alt="{{ $symbol }}">
+
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold">{{ $symbol }}</div>
+                                            <small class="text-muted">{{ $currencyName }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="w-20">
+                                    <span class="font-number fw-semibold">{{ formatNumberTrimZeros($wallet->balance) }}</span>
+                                    <small class="text-muted me-1">{{ $symbol }}</small>
+                                </td>
+                                <td>
+                                    <span class="text-primary font-number">{{ formatNumber($wallet->assetValue, 2) }}</span>
+                                    <small class="text-muted me-1">USDT</small>
+                                </td>
+
+                                <td>
+                                    <div class="d-flex align-items-center justify-content-center gap-2 flex-wrap">
+                                        <a href="{{ route('admin.wallet.detail', ['user' => config('bitexroom.user_id'), 'wallet' => $wallet->id, 'type' => 'deposit']) }}"
+                                            class="btn btn-sm btn-label-primary">جزئیات</a>
+                                        <a class="btn btn-sm btn-primary"
+                                            href="{{ route('admin.wallet.increase-credit.form', ['currency' => $wallet->currency_symbol, 'user' => config('bitexroom.user_id')]) }}">
+                                            <i class="fa-regular fa-plus"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="walletEmptyState" class="text-center py-5 d-none">
+                <div class="mb-2 text-muted">
+                    <i class="fa-regular fa-folder-open fa-2x"></i>
+                </div>
+                <h6 class="mb-1">نتیجه‌ای یافت نشد</h6>
+                <small class="text-muted">فیلتر یا عبارت جستجو را تغییر دهید.</small>
+            </div>
+        </div>
     </div>
-
-
-    {{-- END OF EXCHANGE LOCAL WALLET--}}
 @endsection
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const walletSearch = document.getElementById('walletSearch');
+            const walletEmptyState = document.getElementById('walletEmptyState');
+
+            function applyWalletFilters() {
+                const query = (walletSearch?.value || '').toLowerCase().trim();
+                const rows = Array.from(document.querySelectorAll('tbody tr[data-search]'));
+                let hasVisibleRow = false;
+
+                rows.forEach(function (row) {
+                    const haystack = row.dataset.search || '';
+                    const isVisible = !query || haystack.includes(query);
+                    row.style.display = isVisible ? '' : 'none';
+
+                    if (isVisible) {
+                        hasVisibleRow = true;
+                    }
+                });
+
+                walletEmptyState.classList.toggle('d-none', hasVisibleRow);
+            }
+
+            walletSearch?.addEventListener('input', applyWalletFilters);
+        });
+    </script>
+@endpush
+
 @section('vendor-script')
     @vite([
-            'resources/assets/vendor/libs/apex-charts/apexcharts.js',
-             'resources/assets/js/config.js',
-            'resources/assets/js/wallet.js'
-         ])
+        'resources/assets/vendor/libs/apex-charts/apexcharts.js',
+        'resources/assets/js/config.js',
+        'resources/assets/js/wallet.js'
+    ])
 @endsection
 
 @section('vendor-style')
     @vite([
-    'resources/assets/vendor/libs/apex-charts/apex-charts.scss',
-])
+        'resources/assets/vendor/libs/apex-charts/apex-charts.scss',
+    ])
 @endsection

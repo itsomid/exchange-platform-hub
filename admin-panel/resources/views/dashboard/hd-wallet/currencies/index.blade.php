@@ -104,43 +104,31 @@
                             $walletNameMap[$_w['walletId']] = $_w['name'];
                         }
 
-                        $nativeSymbolsByChain = [
-                            'TRC20' => 'TRX',
-                            'ERC20' => 'ETH',
-                            'BSC' => 'BNB',
-                            'BTC' => 'BTC',
-                            'DOGE' => 'DOGE',
-                            'LTC' => 'LTC',
-                            'POLYGON' => 'POL',
-                            'OPTIMISM' => 'ETH',
-                            'AVALANCHE' => 'AVAX',
-                            'ARBITRUM' => 'ETH',
-                        ];
+                        $chainIconMap = collect($items)
+                            ->filter(fn($item) => !empty($item['is_base_coin']) && !empty($item['chain']) && !empty($item['logo_url']))
+                            ->mapWithKeys(fn($item) => [strtoupper($item['chain']) => $item['logo_url']])
+                            ->all();
 
                         $groupedItems = collect($items)
                             ->groupBy(fn($item) => $item['chain'] ?? 'other')
-                            ->map(function ($group, $chain) use ($nativeSymbolsByChain) {
-                                $nativeSymbol = $nativeSymbolsByChain[$chain] ?? null;
+                            ->map(function ($group, $chain) {
                                 $sortedGroup = collect($group)
-                                    ->sortBy(function ($item) use ($nativeSymbol) {
-                                        $symbol = strtoupper($item['symbol'] ?? '');
-                                        $isNative = ($item['service_payload']['isNative'] ?? false)
-                                            || ($nativeSymbol && $symbol === $nativeSymbol);
+                                    ->sortBy(function ($item) {
+                                        $isNative = !empty($item['is_base_coin'])
+                                            || ($item['service_payload']['isNative'] ?? false);
 
                                         return sprintf(
                                             '%d-%s-%s',
                                             $isNative ? 0 : 1,
-                                            $symbol,
+                                            strtoupper($item['symbol'] ?? ''),
                                             strtolower($item['display_name'] ?? '')
                                         );
                                     })
                                     ->values();
 
-                                $parentItem = $sortedGroup->first(function ($item) use ($nativeSymbol) {
-                                    $symbol = strtoupper($item['symbol'] ?? '');
-
-                                    return ($item['service_payload']['isNative'] ?? false)
-                                        || ($nativeSymbol && $symbol === $nativeSymbol);
+                                $parentItem = $sortedGroup->first(function ($item) {
+                                    return !empty($item['is_base_coin'])
+                                        || ($item['service_payload']['isNative'] ?? false);
                                 });
 
                                 $rows = collect();
@@ -201,24 +189,11 @@
                             @foreach ($group['rows'] as $groupRow)
                                 @php
                                     $item = $groupRow['item'];
-                                    $symbol = strtoupper($item['symbol'] ?? '');
                                     $chainValue = $item['chain'] ?? null;
                                     $isNativeCoin = $groupRow['is_parent'];
-                                    $chainIcon = $isNativeCoin
-                                        ? null
-                                        : match ($chainValue) {
-                                            'TRC20' => asset('images/coins/trx.svg'),
-                                            'ERC20' => asset('images/coins/eth.svg'),
-                                            'BSC' => asset('images/coins/bnb.svg'),
-                                            'BTC' => asset('images/coins/btc.svg'),
-                                            'DOGE' => asset('images/coins/doge.svg'),
-                                            'LTC' => asset('images/coins/ltc.svg'),
-                                            'POLYGON' => asset('images/coins/pol.svg'),
-                                            'OPTIMISM' => asset('images/coins/eth.svg'),
-                                            'AVALANCHE' => asset('images/coins/default.png'),
-                                            'ARBITRUM' => asset('images/coins/eth.svg'),
-                                            default => null,
-                                        };
+                                    $chainIcon = !$isNativeCoin && $chainValue
+                                        ? ($chainIconMap[strtoupper($chainValue)] ?? null)
+                                        : null;
                                 @endphp
                                 <tr class="{{ $groupRow['is_child'] ? 'table-row-child' : '' }}" data-chain="{{ $item['chain'] }}"
                                     data-group-row="1" data-group-parent="{{ $groupRow['is_parent'] ? '1' : '0' }}"

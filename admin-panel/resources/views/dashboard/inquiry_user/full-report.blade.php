@@ -176,9 +176,13 @@
 
                                                 @if ($walletChain && $walletChain->address)
                                                     <div class="d-flex align-items-center gap-2 mb-1">
+                                                        <a href="javascript:void(0);"
+                                                            class="copy-btn"
+                                                            data-copy-text="{{ $walletChain->address }}" title="کپی آدرس">
+                                                            <i class="fa-regular fa-clone"></i>
+                                                        </a>
                                                         <a href="{{ $walletChain->explorer_address_url }}" target="_blank"
                                                             class="text-decoration-none">
-                                                            <i class="fa-regular fa-clone me-1"></i>
                                                             <span class="font-number">{{ shorten_hash($walletChain->address) }}</span>
                                                         </a>
                                                         <span class="badge bg-label-secondary">{{ $chainValue }}</span>
@@ -443,11 +447,15 @@
                                                 <td class="font-number">
                                                     <h6 class="mb-0">
                                                         @if ($withdraw->explorer_address_url)
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-icon btn-text-secondary p-0 copy-btn me-1"
+                                                                data-copy-text="{{ $withdraw->address }}" title="کپی آدرس">
+                                                                <i class="fa-regular fa-clone"></i>
+                                                            </button>
                                                             <a href="{{ $withdraw->explorer_address_url }}"
                                                                 target="_blank" class="me-1">
-                                                                <i class="fa-regular fa-clone"></i>
+                                                                <small>{{ shorten_hash($withdraw->address) }}</small>
                                                             </a>
-                                                            <small>{{ shorten_hash($withdraw->address) }}</small>
                                                         @else
                                                             <span>N/A Address</span>
                                                         @endif
@@ -457,11 +465,16 @@
                                                 <td class="font-number">
                                                     <h6 class="mb-0">
                                                         @if ($withdraw->explorer_tx_url && $withdraw->transaction_hash)
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-icon btn-text-secondary p-0 copy-btn me-1"
+                                                                data-copy-text="{{ $withdraw->transaction_hash }}"
+                                                                title="کپی شناسه تراکنش">
+                                                                <i class="fa-regular fa-clone"></i>
+                                                            </button>
                                                             <a href="{{ $withdraw->explorer_tx_url }}" target="_blank"
                                                                 class="me-1">
-                                                                <i class="fa-regular fa-clone"></i>
+                                                                <small>{{ shorten_hash($withdraw->transaction_hash) }}</small>
                                                             </a>
-                                                            <small>{{ shorten_hash($withdraw->transaction_hash) }}</small>
                                                         @else
                                                             <span>N/A TxID</span>
                                                         @endif
@@ -600,11 +613,15 @@
                                                 <td class="font-number">
                                                     <h6 class="mb-0">
                                                         @if ($deposit->explorer_address_url)
-                                                            <a href="{{ $deposit->explorer_address_url }}"
-                                                                target="_blank" class="me-1">
+                                                            <a href="javascript:void(0);"
+                                                                class="copy-btn me-1"
+                                                                data-copy-text="{{ $deposit->address }}" title="کپی آدرس">
                                                                 <i class="fa-regular fa-clone"></i>
                                                             </a>
-                                                            <small>{{ shorten_hash($deposit->address) }}</small>
+                                                            <a href="{{ $deposit->explorer_address_url }}"
+                                                                target="_blank" class="me-1">
+                                                                <small>{{ shorten_hash($deposit->address) }}</small>
+                                                            </a>
                                                         @else
                                                             <span>N/A Address</span>
                                                         @endif
@@ -615,11 +632,16 @@
 
                                                     <h6 class="mb-0">
                                                         @if ($deposit->explorer_tx_url && $deposit->transaction_hash)
-                                                            <a href="{{ $deposit->explorer_tx_url }}" target="_blank"
-                                                                class="me-1">
+                                                            <a href="javascript:void(0);"
+                                                                class="copy-btn me-1"
+                                                                data-copy-text="{{ $deposit->transaction_hash }}"
+                                                                title="کپی شناسه تراکنش">
                                                                 <i class="fa-regular fa-clone"></i>
                                                             </a>
-                                                            <small>{{ shorten_hash($deposit->transaction_hash) }}</small>
+                                                            <a href="{{ $deposit->explorer_tx_url }}" target="_blank"
+                                                                class="me-1">
+                                                                <small>{{ shorten_hash($deposit->transaction_hash) }}</small>
+                                                            </a>
                                                         @else
                                                             <span>N/A TxID</span>
                                                         @endif
@@ -1048,6 +1070,30 @@
                             button.innerHTML = originalText;
                         });
                 }
+            });
+
+            document.addEventListener('click', function (event) {
+                const button = event.target.closest('.copy-btn');
+                if (!button) {
+                    return;
+                }
+
+                const textToCopy = button.getAttribute('data-copy-text');
+                if (!textToCopy) {
+                    return;
+                }
+
+                navigator.clipboard.writeText(textToCopy).then(function () {
+                    const icon = button.querySelector('i');
+                    if (!icon) {
+                        return;
+                    }
+
+                    icon.classList.replace('fa-clone', 'fa-check');
+                    setTimeout(function () {
+                        icon.classList.replace('fa-check', 'fa-clone');
+                    }, 1500);
+                }).catch(function () {});
             });
         });
     </script>
