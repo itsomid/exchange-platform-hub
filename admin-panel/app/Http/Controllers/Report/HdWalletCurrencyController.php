@@ -54,6 +54,7 @@ class HdWalletCurrencyController extends Controller
                 'network' => $network,
                 'network_label' => $chain->chain_name ?: $chainValue,
                 'chain' => $chainValue,
+                'is_base_coin' => (bool) $chain->is_base_coin,
                 'contract_address' => $contractAddress,
                 'decimals' => $decimals,
                 'description' => $displayName,

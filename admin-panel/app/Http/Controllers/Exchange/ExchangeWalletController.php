@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Exchange;
 
 use App\Http\Controllers\Controller;
 use App\Models\Currency;
+use App\Models\CurrencyChain;
+use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WalletChain;
 use App\Services\NodeProviders\BlockchairService;
@@ -106,9 +108,62 @@ class ExchangeWalletController extends Controller
 
     public function localWallets()
     {
-        $exchangeWallets = $this->walletService->getExchangeAllWallet();
+        $exchangeWallets = $this->walletService->getExchangeAllWallet()->load('currency');
+
+        $exchangeUser = User::find($this->bitexroomUserId);
+
+        // Match user wallets behavior: compute and attach per-wallet asset value.
+        $exchangeWallets = $exchangeWallets->map(function ($wallet) use ($exchangeUser) {
+            $wallet->assetValue = $exchangeUser
+                ? $this->walletService->specificAssetValue($exchangeUser, $wallet->currency_symbol)
+                : 0;
+
+            return $wallet;
+        })->values();
+
+        $symbols = $exchangeWallets
+            ->pluck('currency_symbol')
+            ->filter()
+            ->map(fn($symbol) => strtoupper((string) $symbol))
+            ->unique()
+            ->values();
+
+        $currenciesBySymbol = Currency::whereIn('symbol', $symbols)
+            ->get()
+            ->keyBy(fn($currency) => strtoupper((string) $currency->symbol));
+
+        $currencyIds = $currenciesBySymbol->pluck('id')->values();
+
+        $baseChainsByCurrencyId = CurrencyChain::with('currency')
+            ->whereIn('currency_id', $currencyIds)
+            ->where('is_base_coin', true)
+            ->get()
+            ->groupBy('currency_id')
+            ->map(fn($group) => $group->first());
+
+
+
+        $walletRows = $exchangeWallets
+            ->map(function ($wallet) use ($currenciesBySymbol, $baseChainsByCurrencyId) {
+                $symbol = strtoupper((string) ($wallet->currency_symbol ?? ''));
+                $currency = $currenciesBySymbol->get($symbol);
+                $baseChain = $currency ? $baseChainsByCurrencyId->get($currency->id) : null;
+                $chainKey = strtoupper((string) ($baseChain?->chain?->value ?? $baseChain?->chain ?? 'OTHER'));
+
+                return [
+                    'wallet' => $wallet,
+                    'symbol' => $symbol,
+                    'chain' => $chainKey,
+                ];
+            })
+            ->sortByDesc(function ($row) {
+                return (float) ($row['wallet']->balance ?? 0);
+            })
+            ->values();
+
         return view('dashboard.exchange.wallet.exchange-local-wallets', [
             'exchangeWallets' => $exchangeWallets,
+            'walletRows' => $walletRows,
         ]);
     }
 
@@ -117,6 +172,24 @@ class ExchangeWalletController extends Controller
     {
 
         $exchangeWalletChains = $this->walletService->getExchangeAllWalletChain();
+        $chains = $exchangeWalletChains
+            ->pluck('currency_chain')
+            ->filter()
+            ->map(fn($chain) => strtoupper((string) $chain))
+            ->unique()
+            ->values();
+
+        $chainLogoMap = CurrencyChain::with('currency')
+            ->whereIn('chain', $chains)
+            ->where('is_base_coin', true)
+            ->get()
+            ->mapWithKeys(function ($currencyChain) {
+                $chainKey = strtoupper($currencyChain->chain?->value ?? (string) $currencyChain->chain);
+
+                return [$chainKey => $currencyChain->currency?->coinLogo()];
+            })
+            ->filter()
+            ->all();
 
         $balances = Cache::get('wallet_balances', []);
         $formattedBalances = [];
@@ -137,6 +210,7 @@ class ExchangeWalletController extends Controller
         return view('dashboard.exchange.wallet.exchange-hot-wallets', [
             'exchangeWalletChains' => $exchangeWalletChains,
             'balances' => $formattedBalances,
+            'chainLogoMap' => $chainLogoMap,
         ]);
     }
 
