@@ -39,9 +39,9 @@
     <script>
         window.__reverbConfig = {
             key: '{{ config("broadcasting.connections.reverb.key") }}',
-            host: '{{ env("REVERB_PUBLIC_HOST", request()->getHost()) }}',
-            port: {{ (int) env('REVERB_PUBLIC_PORT', 8080) }},
-            scheme: '{{ env("REVERB_PUBLIC_SCHEME", "http") }}',
+            host: '{{ config("broadcasting.connections.reverb.public.host") }}',
+            port: {{ config('broadcasting.connections.reverb.public.port') }},
+            scheme: '{{ config("broadcasting.connections.reverb.public.scheme") }}',
         };
     </script>
 
