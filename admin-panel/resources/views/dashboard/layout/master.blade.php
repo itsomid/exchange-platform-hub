@@ -38,6 +38,15 @@
     @vite(['resources/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.scss'])
     @yield('vendor-style')
 
+    <script>
+        window.__reverbConfig = {
+            key: '{{ config("broadcasting.connections.reverb.key") }}',
+            host: '{{ request()->getHost() }}',
+            port: {{ config('broadcasting.connections.reverb.options.port', 8080) }},
+            scheme: '{{ config("broadcasting.connections.reverb.options.scheme", "http") }}',
+        };
+    </script>
+
 </head>
 
 <body>

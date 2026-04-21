@@ -3,22 +3,31 @@ import Pusher from "pusher-js";
 
 window.Pusher = Pusher;
 
+// Prefer PHP-rendered runtime config (window.__reverbConfig) over Vite-baked build-time env vars.
+// This ensures production works correctly without rebuilding assets on every env change.
+const runtimeConfig = window.__reverbConfig ?? {};
+
 const key =
-    import.meta.env.VITE_REVERB_APP_KEY ?? import.meta.env.VITE_PUSHER_APP_KEY;
+    runtimeConfig.key ||
+    import.meta.env.VITE_REVERB_APP_KEY ||
+    import.meta.env.VITE_PUSHER_APP_KEY;
 
 if (key) {
     const scheme =
-        import.meta.env.VITE_REVERB_SCHEME ??
-        import.meta.env.VITE_PUSHER_SCHEME ??
+        runtimeConfig.scheme ||
+        import.meta.env.VITE_REVERB_SCHEME ||
+        import.meta.env.VITE_PUSHER_SCHEME ||
         "http";
     const wsHost =
-        import.meta.env.VITE_REVERB_HOST ??
-        import.meta.env.VITE_PUSHER_HOST ??
+        runtimeConfig.host ||
+        import.meta.env.VITE_REVERB_HOST ||
+        import.meta.env.VITE_PUSHER_HOST ||
         window.location.hostname;
     const wsPort = Number(
+        runtimeConfig.port ??
         import.meta.env.VITE_REVERB_PORT ??
-            import.meta.env.VITE_PUSHER_PORT ??
-            80,
+        import.meta.env.VITE_PUSHER_PORT ??
+        8080,
     );
     const isTls = scheme === "https";
 
