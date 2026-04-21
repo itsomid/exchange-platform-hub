@@ -42,8 +42,9 @@
         window.__reverbConfig = {
             key: '{{ config("broadcasting.connections.reverb.key") }}',
             host: '{{ request()->getHost() }}',
-            port: {{ config('broadcasting.connections.reverb.options.port', 8080) }},
-            scheme: '{{ config("broadcasting.connections.reverb.options.scheme", "http") }}',
+            port: {{ request()->isSecure() ? 443 : 80 }},
+            scheme: '{{ request()->isSecure() ? "https" : "http" }}',
+            wsPath: '/reverb',
         };
     </script>
 

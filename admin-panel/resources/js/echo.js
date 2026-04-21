@@ -25,10 +25,11 @@ if (key) {
         window.location.hostname;
     const wsPort = Number(
         runtimeConfig.port ??
-        import.meta.env.VITE_REVERB_PORT ??
-        import.meta.env.VITE_PUSHER_PORT ??
-        8080,
+            import.meta.env.VITE_REVERB_PORT ??
+            import.meta.env.VITE_PUSHER_PORT ??
+            8080,
     );
+    const wsPath = runtimeConfig.wsPath ?? "";
     const isTls = scheme === "https";
 
     window.Echo = new Echo({
@@ -37,7 +38,9 @@ if (key) {
         wsHost,
         wsPort,
         wssPort: wsPort,
+        wsPath,
         forceTLS: isTls,
         enabledTransports: ["ws", "wss"],
     });
 }
+
