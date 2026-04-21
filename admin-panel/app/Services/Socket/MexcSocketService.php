@@ -189,7 +189,7 @@ class MexcSocketService
                         $this->reconnect($loop);
                     });
                 },
-                function (Exception $e) {
+                function (Exception $e) use ($loop) {
                     echo "Could not connect to WebSocket: {$e->getMessage()}\n";
                     echo "Please check your network connection and firewall settings.\n";
 
@@ -408,8 +408,11 @@ class MexcSocketService
             ]));
 
             MarketUpdated::dispatch($marketId, [
-                
                 'last' => $lastPrice,
+                'exchange_sell_price' => $sellPrice,
+                'exchange_buy_price' => $buyPrice,
+                'exchange_profit_sell' => $profitSell,
+                'exchange_profit_buy' => $profitBuy,
             ]);
         }
     }

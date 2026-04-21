@@ -178,6 +178,10 @@ class CoinExSocketService
             'high' => $data['high'] ?? null,
             'last' => $lastPrice,
             'open' => $openPrice,
+            'exchange_sell_price' => $prices['sell_price'],
+            'exchange_buy_price' => $prices['buy_price'],
+            'exchange_profit_sell' => $profits['sell'],
+            'exchange_profit_buy' => $profits['buy'],
             'price_change_percentage' => $priceChangePercentage,
         ]);
     }

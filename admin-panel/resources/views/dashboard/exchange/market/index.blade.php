@@ -108,7 +108,7 @@
                     </thead>
                     <tbody class="table-border-bottom-0">
                         @foreach ($markets as $market)
-                            <tr>
+                            <tr data-market-id="{{ $market->id }}">
                                 <td class="">{{ $market->id }}</td>
                                 <td class="text-heading fw-medium">
                                     <div class="d-flex justify-content-start align-items-center">
@@ -129,10 +129,9 @@
                                 </td>
 
                                 <td class="">
-                                    <h4 class="font-number text-heading h5">
-
-                                        <span
-                                            class="ms-1">{{ formatNumberTrimZeros($market->activeExchangePrice->price) }}</span>
+                                    <h4 class="font-number text-heading h5 mb-0">
+                                        <span class="ms-1"
+                                            data-role="last-price">{{ formatNumberTrimZeros($market->activeExchangePrice->price) }}</span>
 
                                         <small class="text-muted">USDT</small>
                                     </h4>
@@ -140,30 +139,33 @@
                                 </td>
                                 <td class="font-number">
                                     <div class="badge rounded bg-label-{{ $market->activeExchangePrice->price_change_percentage < 0 ? 'danger' : 'success' }}"
-                                        dir="ltr">
+                                        data-role="price-change" dir="ltr"
+                                        data-value="{{ $market->activeExchangePrice->price_change_percentage }}">
                                         {{ $market->activeExchangePrice->price_change_percentage > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->price_change_percentage) }}
                                         %
                                     </div>
                                 </td>
                                 <td class="font-number text-heading">
                                     <div class="badge rounded bg-label-{{ $market->activeExchangePrice->exchange_profit_sell < 0 ? 'danger' : 'success' }} me-3"
-                                        dir="ltr">
+                                        data-role="profit-sell" dir="ltr"
+                                        data-value="{{ $market->activeExchangePrice->exchange_profit_sell }}">
                                         {{ $market->activeExchangePrice->exchange_profit_sell > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->exchange_profit_sell) }}
                                         %
                                     </div>
-                                    <span
-                                        class="ms-1 h5">{{ formatNumberTrimZeros($market->activeExchangePrice->exchange_sell_price) }}</span>
+                                    <span class="ms-1 h5"
+                                        data-role="sell-price">{{ formatNumberTrimZeros($market->activeExchangePrice->exchange_sell_price) }}</span>
                                     <small class="text-muted">USDT</small>
 
                                 </td>
                                 <td class="font-number text-heading ">
                                     <div class="badge rounded bg-label-{{ $market->activeExchangePrice->exchange_profit_buy < 0 ? 'danger' : 'success' }} me-3"
-                                        dir="ltr">
+                                        data-role="profit-buy" dir="ltr"
+                                        data-value="{{ $market->activeExchangePrice->exchange_profit_buy }}">
                                         {{ $market->activeExchangePrice->exchange_profit_buy > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->exchange_profit_buy) }}
                                         %
                                     </div>
-                                    <span
-                                        class="ms-1 h5">{{ formatNumberTrimZeros($market->activeExchangePrice->exchange_buy_price) }}</span>
+                                    <span class="ms-1 h5"
+                                        data-role="buy-price">{{ formatNumberTrimZeros($market->activeExchangePrice->exchange_buy_price) }}</span>
                                     <small class="text-muted">USDT</small>
                                 </td>
                                 <td class="fw-bold">
@@ -193,7 +195,7 @@
                                             href="{{ route('admin.market.edit', ['market' => $market->id]) }}">
                                             <i class="fa-light fa-pen-to-square fa-lg"></i>
                                         </a>
-                                    
+
                                     </div>
                                 </td>
                             </tr>
@@ -205,18 +207,224 @@
     </div>
 
 @endsection
+
+@section('vendor-script')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof window.Echo === 'undefined') {
+                console.warn('Echo is not initialized. Check VITE_REVERB/VITE_PUSHER env vars and frontend build.');
+                return;
+            }
+
+            const marketRows = document.querySelectorAll('tr[data-market-id]');
+            const marketState = new Map();
+
+            const toNumber = (value) => {
+                if (value === null || typeof value === 'undefined') {
+                    return null;
+                }
+
+                const normalized = String(value).replace(/,/g, '').trim();
+                if (normalized === '') {
+                    return null;
+                }
+
+                const numeric = Number(normalized);
+                return Number.isFinite(numeric) ? numeric : null;
+            };
+
+            const formatPrice = (value) => {
+                const numeric = Number(value);
+                if (!Number.isFinite(numeric)) {
+                    return '-';
+                }
+
+                return numeric.toLocaleString('en-US', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 8,
+                });
+            };
+
+            const formatPercent = (value) => {
+                const numeric = Number(value);
+                if (!Number.isFinite(numeric)) {
+                    return null;
+                }
+
+                return `${numeric > 0 ? '+' : ''}${numeric.toFixed(2)} %`;
+            };
+
+            const applyBadgeState = (badgeElement, value) => {
+                if (!badgeElement) {
+                    return;
+                }
+
+                const numeric = Number(value);
+                if (!Number.isFinite(numeric)) {
+                    return;
+                }
+
+                badgeElement.classList.remove('bg-label-danger', 'bg-label-success');
+                badgeElement.classList.add(numeric < 0 ? 'bg-label-danger' : 'bg-label-success');
+                badgeElement.setAttribute('data-value', String(numeric));
+            };
+
+            const applyValueAnimation = (element, direction) => {
+                if (!element || direction === 0) {
+                    return;
+                }
+
+                const classToAdd = direction > 0 ? 'price-flash-up' : 'price-flash-down';
+
+                element.classList.remove('price-flash-up', 'price-flash-down');
+                void element.offsetWidth;
+                element.classList.add(classToAdd);
+
+                window.setTimeout(() => {
+                    element.classList.remove('price-flash-up', 'price-flash-down');
+                }, 2000);
+            };
+
+            const updateValue = ({
+                row,
+                key,
+                incomingValue,
+                element,
+                formatFn,
+                afterUpdate,
+            }) => {
+                const numericValue = toNumber(incomingValue);
+                if (numericValue === null) {
+                    return;
+                }
+
+                const previousState = marketState.get(row) ?? {};
+                const previousValue = typeof previousState[key] === 'number' ? previousState[key] : null;
+
+                if (element) {
+                    element.textContent = formatFn(numericValue);
+                }
+
+                if (typeof afterUpdate === 'function') {
+                    afterUpdate(numericValue);
+                }
+
+                if (previousValue !== null && previousValue !== numericValue) {
+                    applyValueAnimation(element, numericValue > previousValue ? 1 : -1);
+                }
+
+                previousState[key] = numericValue;
+                marketState.set(row, previousState);
+            };
+
+            marketRows.forEach((row) => {
+                const marketId = row.getAttribute('data-market-id');
+                if (!marketId) {
+                    return;
+                }
+
+                const initialChangeBadge = row.querySelector('[data-role="price-change"]');
+                const initialProfitSellBadge = row.querySelector('[data-role="profit-sell"]');
+                const initialProfitBuyBadge = row.querySelector('[data-role="profit-buy"]');
+
+                marketState.set(row, {
+                    last: toNumber(row.querySelector('[data-role="last-price"]')?.textContent),
+                    sell: toNumber(row.querySelector('[data-role="sell-price"]')?.textContent),
+                    buy: toNumber(row.querySelector('[data-role="buy-price"]')?.textContent),
+                    change: toNumber(initialChangeBadge?.getAttribute('data-value')),
+                    profitSell: toNumber(initialProfitSellBadge?.getAttribute('data-value')),
+                    profitBuy: toNumber(initialProfitBuyBadge?.getAttribute('data-value')),
+                });
+
+                window.Echo.channel(`market.${marketId}`).listen('MarketUpdated', (event) => {
+                    const lastPriceElement = row.querySelector('[data-role="last-price"]');
+                    const sellPriceElement = row.querySelector('[data-role="sell-price"]');
+                    const buyPriceElement = row.querySelector('[data-role="buy-price"]');
+
+                    const changeBadge = row.querySelector('[data-role="price-change"]');
+                    const profitSellBadge = row.querySelector('[data-role="profit-sell"]');
+                    const profitBuyBadge = row.querySelector('[data-role="profit-buy"]');
+
+                    if (typeof event.last !== 'undefined' && lastPriceElement) {
+                        updateValue({
+                            row,
+                            key: 'last',
+                            incomingValue: event.last,
+                            element: lastPriceElement,
+                            formatFn: formatPrice,
+                        });
+                    }
+
+                    if (typeof event.exchange_sell_price !== 'undefined' && sellPriceElement) {
+                        updateValue({
+                            row,
+                            key: 'sell',
+                            incomingValue: event.exchange_sell_price,
+                            element: sellPriceElement,
+                            formatFn: formatPrice,
+                        });
+                    }
+
+                    if (typeof event.exchange_buy_price !== 'undefined' && buyPriceElement) {
+                        updateValue({
+                            row,
+                            key: 'buy',
+                            incomingValue: event.exchange_buy_price,
+                            element: buyPriceElement,
+                            formatFn: formatPrice,
+                        });
+                    }
+
+                    if (typeof event.price_change_percentage !== 'undefined' && changeBadge) {
+                        updateValue({
+                            row,
+                            key: 'change',
+                            incomingValue: event.price_change_percentage,
+                            element: changeBadge,
+                            formatFn: formatPercent,
+                            afterUpdate: (value) => applyBadgeState(changeBadge, value),
+                        });
+                    }
+
+                    if (typeof event.exchange_profit_sell !== 'undefined' && profitSellBadge) {
+                        updateValue({
+                            row,
+                            key: 'profitSell',
+                            incomingValue: event.exchange_profit_sell,
+                            element: profitSellBadge,
+                            formatFn: formatPercent,
+                            afterUpdate: (value) => applyBadgeState(profitSellBadge, value),
+                        });
+                    }
+
+                    if (typeof event.exchange_profit_buy !== 'undefined' && profitBuyBadge) {
+                        updateValue({
+                            row,
+                            key: 'profitBuy',
+                            incomingValue: event.exchange_profit_buy,
+                            element: profitBuyBadge,
+                            formatFn: formatPercent,
+                            afterUpdate: (value) => applyBadgeState(profitBuyBadge, value),
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+@endsection
+
 @section('vendor-style')
-   <style>
+    <style>
         .table-responsive {
             overflow-x: auto;
             position: relative;
         }
-        
+
         .table {
             border-collapse: separate;
             border-spacing: 0;
         }
-        
+
         .sticky-column {
             position: sticky;
             left: 0;
@@ -224,14 +432,72 @@
             z-index: 2 !important;
             box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1) !important;
         }
-        
+
         .table thead .sticky-column {
             z-index: 3 !important;
             background-color: #fff !important;
         }
-        
+
         .table tbody tr:hover .sticky-column {
             background-color: #f8f9fa !important;
+        }
+
+        [data-role="last-price"],
+        [data-role="sell-price"],
+        [data-role="buy-price"],
+        [data-role="price-change"],
+        [data-role="profit-sell"],
+        [data-role="profit-buy"] {
+            transition: transform 0.25s ease, filter 0.25s ease;
+            will-change: transform, filter;
+        }
+
+        @keyframes priceFlashUp {
+            0% {
+                color: #16c784;
+                filter: drop-shadow(0 0 0 rgba(25, 135, 84, 0));
+                transform: scale(1);
+            }
+
+            35% {
+                color: #16c784;
+                filter: drop-shadow(0 0 0.15rem rgba(25, 135, 84, 0.35));
+                transform: scale(1.08);
+            }
+
+            100% {
+                color: inherit;
+                filter: drop-shadow(0 0 0 rgba(25, 135, 84, 0));
+                transform: scale(1);
+            }
+        }
+
+        @keyframes priceFlashDown {
+            0% {
+                color: #dc3545;
+                filter: drop-shadow(0 0 0 rgba(220, 53, 69, 0));
+                transform: scale(1);
+            }
+
+            35% {
+                color: #dc3545;
+                filter: drop-shadow(0 0 0.15rem rgba(220, 53, 69, 0.35));
+                transform: scale(1.08);
+            }
+
+            100% {
+                color: inherit;
+                filter: drop-shadow(0 0 0 rgba(220, 53, 69, 0));
+                transform: scale(1);
+            }
+        }
+
+        .price-flash-up {
+            animation: priceFlashUp 20s ease;
+        }
+
+        .price-flash-down {
+            animation: priceFlashDown 20s ease;
         }
     </style>
 @endsection
