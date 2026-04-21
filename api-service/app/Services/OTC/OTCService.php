@@ -73,6 +73,7 @@ class OTCService
                 ->setCurrencyName($market->currency->name)
                 ->setCurrencyPersianName($market->currency->persian_name)
                 ->setCurrencyLogo($market->currency->logo)
+                ->setQuoteCurrencyLogo($usdtCurrency?->logo ?? null)
                 ->setQuoteCurrency($market->quote_currency)
                 ->setIsActive($market->is_active)
                 ->setMinTradeAmount($market->min_trade_amount)
