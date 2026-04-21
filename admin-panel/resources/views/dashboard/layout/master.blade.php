@@ -35,13 +35,13 @@
     @vite(['resources/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.scss'])
     @yield('vendor-style')
 
+    {{-- Reverb: production → WS proxied through nginx (port 443); local → direct to Reverb port --}}
     <script>
         window.__reverbConfig = {
             key: '{{ config("broadcasting.connections.reverb.key") }}',
             host: '{{ request()->getHost() }}',
-            port: {{ request()->isSecure() ? 443 : 80 }},
+            port: {{ request()->isSecure() ? 443 : config('broadcasting.connections.reverb.options.port', 8080) }},
             scheme: '{{ request()->isSecure() ? "https" : "http" }}',
-            wsPath: '/reverb',
         };
     </script>
 

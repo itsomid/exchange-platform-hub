@@ -18,33 +18,26 @@ if (key) {
         import.meta.env.VITE_REVERB_SCHEME ||
         import.meta.env.VITE_PUSHER_SCHEME ||
         "http";
-    const pageIsHttps = window.location.protocol === "https:";
-    const isTls = pageIsHttps || scheme === "https";
     const wsHost =
         runtimeConfig.host ||
         import.meta.env.VITE_REVERB_HOST ||
         import.meta.env.VITE_PUSHER_HOST ||
         window.location.hostname;
-    const configuredPort = Number(
+    const wsPort = Number(
         runtimeConfig.port ??
             import.meta.env.VITE_REVERB_PORT ??
             import.meta.env.VITE_PUSHER_PORT ??
-            (isTls ? 443 : 80),
+            8080,
     );
-    const wsPort = configuredPort || (isTls ? 443 : 80);
-    const wssPort =
-        Number(runtimeConfig.wssPort) ||
-        (isTls ? (wsPort === 80 ? 443 : wsPort) : 443);
-    const wsPath = runtimeConfig.wsPath ?? "";
+    const isTls = scheme === "https";
 
     window.Echo = new Echo({
         broadcaster: "reverb",
         key,
         wsHost,
         wsPort,
-        wssPort,
-        wsPath,
+        wssPort: wsPort,
         forceTLS: isTls,
-        enabledTransports: isTls ? ["wss"] : ["ws", "wss"],
+        enabledTransports: ["ws", "wss"],
     });
 }
