@@ -40,7 +40,7 @@
         window.__reverbConfig = {
             key: '{{ config("broadcasting.connections.reverb.key") }}',
             host: '{{ config("broadcasting.connections.reverb.public.host") }}',
-            port: {{ config('broadcasting.connections.reverb.public.port') }},
+            port: '{{ config("broadcasting.connections.reverb.public.port") }}',
             scheme: '{{ config("broadcasting.connections.reverb.public.scheme") }}',
         };
     </script>
