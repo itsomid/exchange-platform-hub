@@ -146,7 +146,7 @@
                                     </div>
                                 </td>
                                 <td class="font-number text-heading">
-                                    <div class="badge rounded bg-label-{{ $market->activeExchangePrice->exchange_profit_sell < 0 ? 'danger' : 'success' }} me-3"
+                                    <div class="badge rounded bg-label-info me-3"
                                         data-role="profit-sell" dir="ltr"
                                         data-value="{{ $market->activeExchangePrice->exchange_profit_sell }}">
                                         {{ $market->activeExchangePrice->exchange_profit_sell > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->exchange_profit_sell) }}
@@ -158,7 +158,7 @@
 
                                 </td>
                                 <td class="font-number text-heading ">
-                                    <div class="badge rounded bg-label-{{ $market->activeExchangePrice->exchange_profit_buy < 0 ? 'danger' : 'success' }} me-3"
+                                    <div class="badge rounded bg-label-info me-3"
                                         data-role="profit-buy" dir="ltr"
                                         data-value="{{ $market->activeExchangePrice->exchange_profit_buy }}">
                                         {{ $market->activeExchangePrice->exchange_profit_buy > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->exchange_profit_buy) }}
@@ -342,8 +342,7 @@
                     const buyPriceElement = row.querySelector('[data-role="buy-price"]');
 
                     const changeBadge = row.querySelector('[data-role="price-change"]');
-                    const profitSellBadge = row.querySelector('[data-role="profit-sell"]');
-                    const profitBuyBadge = row.querySelector('[data-role="profit-buy"]');
+
 
                     if (typeof event.last !== 'undefined' && lastPriceElement) {
                         updateValue({
@@ -386,27 +385,6 @@
                         });
                     }
 
-                    if (typeof event.exchange_profit_sell !== 'undefined' && profitSellBadge) {
-                        updateValue({
-                            row,
-                            key: 'profitSell',
-                            incomingValue: event.exchange_profit_sell,
-                            element: profitSellBadge,
-                            formatFn: formatPercent,
-                            afterUpdate: (value) => applyBadgeState(profitSellBadge, value),
-                        });
-                    }
-
-                    if (typeof event.exchange_profit_buy !== 'undefined' && profitBuyBadge) {
-                        updateValue({
-                            row,
-                            key: 'profitBuy',
-                            incomingValue: event.exchange_profit_buy,
-                            element: profitBuyBadge,
-                            formatFn: formatPercent,
-                            afterUpdate: (value) => applyBadgeState(profitBuyBadge, value),
-                        });
-                    }
                 });
             });
         });
@@ -462,7 +440,7 @@
             35% {
                 color: #16c784;
                 filter: drop-shadow(0 0 0.15rem rgba(25, 135, 84, 0.35));
-                transform: scale(1.08);
+                transform: scale(1.18);
             }
 
             100% {
@@ -482,7 +460,7 @@
             35% {
                 color: #dc3545;
                 filter: drop-shadow(0 0 0.15rem rgba(220, 53, 69, 0.35));
-                transform: scale(1.08);
+                transform: scale(1.18);
             }
 
             100% {
