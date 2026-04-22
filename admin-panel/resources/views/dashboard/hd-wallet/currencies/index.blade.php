@@ -74,6 +74,7 @@
                         <option value="DOGE">DOGE</option>
                         <option value="OPTIMISM">Optimism</option>
                         <option value="AVALANCHE">Avalanche</option>
+                        <option value="SONIC">Sonic</option>
                         <option value="LTC">LTC</option>
                         <option value="ARBITRUM">Arbitrum One</option>
                     </select>

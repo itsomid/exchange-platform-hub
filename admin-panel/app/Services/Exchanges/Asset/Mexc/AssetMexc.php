@@ -379,6 +379,7 @@ class AssetMexc implements AssetInterface
             'OP' => 'OP',        // Optimism
             'BASE' => 'BASE',    // Base
             'LINEA' => 'LINEA',  // Linea
+            'SONIC' => 'SONIC',  // Sonic
         ];
 
         return $chainMapping[$chain] ?? $chain;

@@ -24,6 +24,7 @@ class CurrencyChainSeeder extends Seeder
         $pol = Currency::where('symbol', 'POL')->first();
         $arb = Currency::where('symbol', 'ARB')->first();
         $avax = Currency::where('symbol', 'AVAX')->first();
+        $sonic = Currency::where('symbol', 'S')->first();
 
         // Seed Currency Chains Data
         $currencyChains = [
@@ -282,6 +283,27 @@ class CurrencyChainSeeder extends Seeder
                 'is_base_coin' => true,
                 'explorer_address_url' => 'https://snowtrace.io/address/{address}',
                 'explorer_tx_url' => 'https://snowtrace.io/tx/{hash}',
+            ],
+            // Sonic (S) chain
+            [
+                'currency_id' => $sonic->id,
+                'chain' => CurrencyChainEnum::SONIC,
+                'chain_name' => 'Sonic',
+                'blockchain_name' => CurrencyBlockChainNameEnum::SONIC,
+                'min_deposit_amount' => 1,
+                'min_withdraw_amount' => 1,
+                'deposit_enabled' => true,
+                'withdraw_enabled' => true,
+                'deposit_delay_minutes' => 0,
+                'safe_confirmations' => 12,
+                'exchange_withdrawal_fee' => 0.01,
+                'network_fee' => 0.001,
+                'withdrawal_precision' => 18,
+                'memo' => null,
+                'is_memo_required_for_deposit' => false,
+                'is_base_coin' => true,
+                'explorer_address_url' => 'https://sonicscan.org/address/{address}',
+                'explorer_tx_url' => 'https://sonicscan.org/tx/{hash}',
             ],
             
         ];

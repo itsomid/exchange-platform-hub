@@ -15,4 +15,5 @@ enum CurrencyChainEnum: string
     case ARBITRUM = 'ARBITRUM'; // Arbitrum One (L2)
     case OPTIMISM = 'OPTIMISM'; // Optimism (L2)
     case AVALANCHE = 'AVALANCHE';       // Avalanche blockchain
+    case SONIC = 'SONIC';     // Sonic blockchain
 }

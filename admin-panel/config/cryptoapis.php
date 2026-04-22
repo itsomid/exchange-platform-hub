@@ -42,6 +42,10 @@ return [
         'AVAX' => [
             'type' => 'evm',
             'chain' => 'avalanche'
+        ],
+        'S' => [
+            'type' => 'evm',
+            'chain' => 'sonic'
         ]
     ]
 ];

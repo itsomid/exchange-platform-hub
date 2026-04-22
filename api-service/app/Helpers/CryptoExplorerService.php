@@ -15,6 +15,7 @@ class CryptoExplorerService
         'OPTIMISM' => 'https://optimistic.etherscan.io/address/',
         'AVAX' => 'https://snowtrace.io/address/',
         'AVALANCHE' => 'https://snowtrace.io/address/',
+        'SONIC' => 'https://sonicscan.org/address/',
     ];
 
     public static function getExplorerUrl(string $network, string $address): ?string

@@ -24,7 +24,8 @@ class BlockchainNetworkMapper
         'POLYGON' => 'polygon',
         'ARBITRUM' => 'arbitrum',
         'OPTIMISM' => 'optimism',
-        'AVALANCHE' => 'avalanche'
+        'AVALANCHE' => 'avalanche',
+        'SONIC' => 'sonic'
     ];
 
     /**
@@ -39,7 +40,8 @@ class BlockchainNetworkMapper
         'polygon' => 'POLYGON',
         'arbitrum' => 'ARBITRUM',
         'optimism' => 'OPTIMISM',
-        'avalanche' => 'AVALANCHE'
+        'avalanche' => 'AVALANCHE',
+        'sonic' => 'SONIC'
     ];
 
     /**

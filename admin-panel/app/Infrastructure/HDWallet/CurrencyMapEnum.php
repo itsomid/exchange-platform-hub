@@ -13,4 +13,5 @@ enum CurrencyMapEnum: string
     case ARBITRUM = 'ARBITRUM';
     case OPTIMISM = 'OPTIMISM';
     case AVALANCHE = 'AVALANCHE';
+    case SONIC = 'SONIC';
 }

@@ -156,6 +156,15 @@ class CurrencySeeder extends Seeder
                 'price_precision' => 4,
                 'amount_precision' => 4,
                 'max_auto_withdraw_amount' => 10000,
+            ],
+            [
+                'name' => 'Sonic',
+                'persian_name' => 'سانیک',
+                'symbol' => 'S',
+                'logo' => 'sonic.svg',
+                'price_precision' => 4,
+                'amount_precision' => 4,
+                'max_auto_withdraw_amount' => 10000,
             ]
         ];
 

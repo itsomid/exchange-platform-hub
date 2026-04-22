@@ -82,6 +82,7 @@ class ExchangeWalletController extends Controller
             'ARBITRUM' => 'arbitrum',
             'POLYGON' => 'polygon',
             'AVALANCHE' => 'avalanche',
+            'SONIC' => 'sonic',
             default => null,
         };
 
