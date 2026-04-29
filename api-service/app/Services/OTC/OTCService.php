@@ -485,7 +485,18 @@ class OTCService
                     'ref_exchange_description' => $description,
                 ]);
                 DB::commit();
-                throw new SellTradeWasFiledException(message: $description, marketName: $market->base_currency . $market->quote_currency);
+
+                AdminNotification::sendSellFailed(
+                    otcOrderId: $otc_order->id,
+                    userId: $requestDTO->getSellerUserId(),
+                    marketName: $market->base_currency . $market->quote_currency,
+                    sellAmount: $sellAmount,
+                    receivedAmount: $receivedAmount,
+                    buyerQuoteWalletBalance: $buyerQuoteWallet->available_balance,
+                    reason: $description,
+                );
+
+                throw new SellTradeWasFiledException(marketName: $market->base_currency . $market->quote_currency);
             }
         } catch (Throwable $exception) {
             DB::rollBack();
