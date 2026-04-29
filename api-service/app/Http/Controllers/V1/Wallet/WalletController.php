@@ -49,11 +49,23 @@ class WalletController extends Controller
     }
 
 
-    public function lists()
+    public function lists(Request $request)
     {
+        $request->validate([
+            'page' => 'nullable|integer|min:1',
+            'per_page' => ['nullable', \Illuminate\Validation\Rule::in([20, 30, 50, 100, 'all'])],
+            'hide_zero_balance' => 'nullable|boolean',
+        ]);
+
+        $fetchAll = $request->input('per_page') === 'all';
+        $perPage = $fetchAll ? PHP_INT_MAX : $request->integer('per_page', 20);
+
         $responseDTO = $this->walletService->getLists(
             resolve(WalletListsRequestDTO::class)
                 ->setUserId(Auth::id())
+                ->setPage(1)
+                ->setPerPage($perPage)
+                ->setHideZeroBalance($request->boolean('hide_zero_balance', false))
         );
 
         return new WalletListsCollection($responseDTO);

@@ -4,6 +4,7 @@ namespace App\Repositories\Interfaces;
 
 use App\Models\Wallet;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 interface WalletRepositoryInterface
 {
@@ -13,6 +14,8 @@ interface WalletRepositoryInterface
     public function updateBalance(string $symbol, int $userId, string $amount): void;
 
     public function getLists(int $getUserId): ?Collection;
+
+    public function getListsPaginated(int $userId, bool $hideZeroBalance, int $page, int $perPage): LengthAwarePaginator;
 
     public function getListsWithMarket(int $getUserId): ?Collection;
 
