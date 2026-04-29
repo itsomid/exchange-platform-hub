@@ -165,6 +165,24 @@ class CurrencySeeder extends Seeder
                 'price_precision' => 4,
                 'amount_precision' => 4,
                 'max_auto_withdraw_amount' => 10000,
+            ],
+            [
+                'name' => 'Litecoin',
+                'persian_name' => 'لایتکوین',
+                'symbol' => 'LTC',
+                'logo' => 'ltc.svg',
+                'price_precision' => 2,
+                'amount_precision' => 6,
+                'max_auto_withdraw_amount' => 100,
+            ],
+            [
+                'name' => 'Dash',
+                'persian_name' => 'دش',
+                'symbol' => 'DASH',
+                'logo' => 'dash.svg',
+                'price_precision' => 2,
+                'amount_precision' => 6,
+                'max_auto_withdraw_amount' => 50,
             ]
         ];
 

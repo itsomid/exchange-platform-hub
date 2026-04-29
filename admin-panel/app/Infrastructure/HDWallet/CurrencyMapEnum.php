@@ -14,4 +14,6 @@ enum CurrencyMapEnum: string
     case OPTIMISM = 'OPTIMISM';
     case AVALANCHE = 'AVALANCHE';
     case SONIC = 'SONIC';
+    case LTC = 'LITECOIN';
+    case DASH = 'DASH';
 }

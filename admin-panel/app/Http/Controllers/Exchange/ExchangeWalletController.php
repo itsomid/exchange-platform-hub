@@ -73,7 +73,7 @@ class ExchangeWalletController extends Controller
             return $this->tronScan->getBalance($currency, $address);
         } elseif ($normalizedChain === 'BSC') {
             return $this->bscScan->getBalance($currency, $address);
-        } elseif ($normalizedChain === 'DOGE' || $normalizedChain === 'BTC') {
+        } elseif ($normalizedChain === 'DOGE' || $normalizedChain === 'BTC' || $normalizedChain === 'LTC') {
             return $this->blockchair->getBalance($currency, $address);
         }
 

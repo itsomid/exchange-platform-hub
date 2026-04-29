@@ -297,6 +297,7 @@ class SyncHdWalletOutgoingTransactions extends Command
             CurrencyChainEnum::BTC => $this->blockchairService->getOutgoingTransactions('BTC', $address, $afterBlock),
             CurrencyChainEnum::DOGE => $this->blockchairService->getOutgoingTransactions('DOGE', $address, $afterBlock),
             CurrencyChainEnum::LTC => $this->blockchairService->getOutgoingTransactions('LTC', $address, $afterBlock),
+            CurrencyChainEnum::DASH => $this->blockchairService->getOutgoingTransactions('DASH', $address, $afterBlock),
             default => ['error' => 'Unsupported chain', 'transactions' => []],
         };
     }
@@ -313,6 +314,7 @@ class SyncHdWalletOutgoingTransactions extends Command
             CurrencyChainEnum::BTC => 'BTC',
             CurrencyChainEnum::DOGE => 'DOGE',
             CurrencyChainEnum::LTC => 'LTC',
+            CurrencyChainEnum::DASH => 'DASH',
             default => null,
         };
 

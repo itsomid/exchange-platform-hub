@@ -44,6 +44,7 @@ class GeneralBlockchainAddress implements ValidationRule
             'TRX', 'TRC20' => $this->isValidTronAddress($address),
             'DOGE' => $this->isValidDogecoinAddress($address),
             'LTC' => $this->isValidLitecoinAddress($address),
+            'DASH' => $this->isValidDashAddress($address),
             'SOL' => $this->isValidSolanaAddress($address),
             'XLM' => $this->isValidStellarAddress($address),
             'ADA' => $this->isValidCardanoAddress($address),
@@ -104,6 +105,15 @@ class GeneralBlockchainAddress implements ValidationRule
         // Litecoin Bech32: start with ltc1
         return preg_match('/^[LM][a-km-zA-HJ-NP-Z1-9]{25,34}$/', $address) ||
                preg_match('/^ltc1[a-z0-9]{39,59}$/', $address);
+    }
+
+    /**
+     * Validate Dash address
+     */
+    private function isValidDashAddress(string $address): bool
+    {
+        // Dash addresses: start with X, 34 characters, base58 encoded
+        return (bool) preg_match('/^X[1-9A-HJ-NP-Za-km-z]{33}$/', $address);
     }
 
     /**

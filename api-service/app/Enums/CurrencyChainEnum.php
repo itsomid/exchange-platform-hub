@@ -16,4 +16,6 @@ enum CurrencyChainEnum: string
     case OPTIMISM = 'OPTIMISM'; // Optimism (L2)
     case AVALANCHE = 'AVALANCHE';       // Avalanche blockchain
     case SONIC = 'SONIC';     // Sonic blockchain
+    case LTC = 'LTC';         // Litecoin blockchain
+    case DASH = 'DASH';       // Dash blockchain
 }

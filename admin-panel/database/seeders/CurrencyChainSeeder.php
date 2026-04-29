@@ -25,6 +25,8 @@ class CurrencyChainSeeder extends Seeder
         $arb = Currency::where('symbol', 'ARB')->first();
         $avax = Currency::where('symbol', 'AVAX')->first();
         $sonic = Currency::where('symbol', 'S')->first();
+        $ltc = Currency::where('symbol', 'LTC')->first();
+        $dash = Currency::where('symbol', 'DASH')->first();
 
         // Seed Currency Chains Data
         $currencyChains = [
@@ -290,8 +292,8 @@ class CurrencyChainSeeder extends Seeder
                 'chain' => CurrencyChainEnum::SONIC,
                 'chain_name' => 'Sonic',
                 'blockchain_name' => CurrencyBlockChainNameEnum::SONIC,
-                'min_deposit_amount' => 1,
-                'min_withdraw_amount' => 1,
+                'min_deposit_amount' => 3,
+                'min_withdraw_amount' => 20,
                 'deposit_enabled' => true,
                 'withdraw_enabled' => true,
                 'deposit_delay_minutes' => 0,
@@ -305,7 +307,49 @@ class CurrencyChainSeeder extends Seeder
                 'explorer_address_url' => 'https://sonicscan.org/address/{address}',
                 'explorer_tx_url' => 'https://sonicscan.org/tx/{hash}',
             ],
-            
+            // LTC (Litecoin) chain
+            [
+                'currency_id' => $ltc->id,
+                'chain' => CurrencyChainEnum::LTC,
+                'chain_name' => 'Litecoin',
+                'blockchain_name' => CurrencyBlockChainNameEnum::LITECOIN,
+                'min_deposit_amount' => 0.01,
+                'min_withdraw_amount' => 0.01,
+                'deposit_enabled' => true,
+                'withdraw_enabled' => true,
+                'deposit_delay_minutes' => 5,
+                'safe_confirmations' => 6,
+                'exchange_withdrawal_fee' => 0.001,
+                'network_fee' => 0.001,
+                'withdrawal_precision' => 8,
+                'memo' => null,
+                'is_memo_required_for_deposit' => false,
+                'is_base_coin' => true,
+                'explorer_address_url' => 'https://blockchair.com/litecoin/address/{address}',
+                'explorer_tx_url' => 'https://blockchair.com/litecoin/transaction/{hash}',
+            ],
+            // DASH (Dash) chain
+            [
+                'currency_id' => $dash->id,
+                'chain' => CurrencyChainEnum::DASH,
+                'chain_name' => 'Dash',
+                'blockchain_name' => CurrencyBlockChainNameEnum::DASH,
+                'min_deposit_amount' => 0.01,
+                'min_withdraw_amount' => 0.01,
+                'deposit_enabled' => true,
+                'withdraw_enabled' => true,
+                'deposit_delay_minutes' => 5,
+                'safe_confirmations' => 6,
+                'exchange_withdrawal_fee' => 0.001,
+                'network_fee' => 0.001,
+                'withdrawal_precision' => 8,
+                'memo' => null,
+                'is_memo_required_for_deposit' => false,
+                'is_base_coin' => true,
+                'explorer_address_url' => 'https://blockchair.com/dash/address/{address}',
+                'explorer_tx_url' => 'https://blockchair.com/dash/transaction/{hash}',
+            ],
+
         ];
 
         foreach ($currencyChains as $chainData) {

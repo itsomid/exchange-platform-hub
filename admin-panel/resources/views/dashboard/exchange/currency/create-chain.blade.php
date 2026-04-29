@@ -16,7 +16,7 @@
                                     <label class="form-label" for="chain">انتخاب شبکه :</label>
                                     <select id="chain" name="chain" class="form-select text-capitalize mb-md-0 ">
                                         @foreach (\App\Enums\CurrencyChainEnum::cases() as $chain)
-                                            <option value="{{ $chain->value }}">{{ $chain->value }}</option>
+                                            <option value="{{ $chain->value }}">{{ $chain->chain_name() }}</option>
                                         @endforeach
                                     </select>
                                 </div>

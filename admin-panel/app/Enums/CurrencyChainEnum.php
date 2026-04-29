@@ -14,6 +14,7 @@ enum CurrencyChainEnum: string
     case OPTIMISM = 'OPTIMISM'; // Optimism (L2)
     case AVALANCHE = 'AVALANCHE';       // Avalanche blockchain
     case LTC = 'LTC';         // Litecoin blockchain
+    case DASH = 'DASH';       // Dash blockchain
     case SONIC = 'SONIC';     // Sonic blockchain
     public function chain_name(): string
     {
@@ -27,6 +28,7 @@ enum CurrencyChainEnum: string
             self::ARBITRUM => 'Arbitrum One',
             self::OPTIMISM => 'Optimism',
             self::LTC => 'Litecoin',
+            self::DASH => 'Dash',
             self::AVALANCHE => 'Avalanche',
             self::SONIC => 'Sonic',
          
@@ -43,6 +45,7 @@ enum CurrencyChainEnum: string
             self::DOGE => 'DOGECOIN',
             self::POLYGON => 'POLYGON',
             self::LTC => 'LITECOIN',
+            self::DASH => 'DASH',
             self::AVALANCHE => 'AVALANCHE',
             self::ARBITRUM => 'ARBITRUM',
             self::OPTIMISM => 'OPTIMISM',

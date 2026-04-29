@@ -14,4 +14,6 @@ enum CurrencyBlockChainNameEnum: string
     case OPTIMISM = 'OPTIMISM';
     case AVALANCHE = 'AVALANCHE';
     case SONIC = 'SONIC';
+    case LITECOIN = 'LITECOIN';
+    case DASH = 'DASH';
 }

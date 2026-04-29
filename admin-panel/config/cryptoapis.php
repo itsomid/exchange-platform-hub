@@ -46,6 +46,14 @@ return [
         'S' => [
             'type' => 'evm',
             'chain' => 'sonic'
+        ],
+        'LTC' => [
+            'type' => 'utxo',
+            'chain' => 'litecoin'
+        ],
+        'DASH' => [
+            'type' => 'utxo',
+            'chain' => 'dash'
         ]
     ]
 ];

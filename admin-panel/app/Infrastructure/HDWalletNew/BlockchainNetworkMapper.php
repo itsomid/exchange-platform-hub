@@ -25,7 +25,9 @@ class BlockchainNetworkMapper
         'ARBITRUM' => 'arbitrum',
         'OPTIMISM' => 'optimism',
         'AVALANCHE' => 'avalanche',
-        'SONIC' => 'sonic'
+        'SONIC' => 'sonic',
+        'LITECOIN' => 'litecoin',
+        'DASH' => 'dash',
     ];
 
     /**
@@ -41,7 +43,9 @@ class BlockchainNetworkMapper
         'arbitrum' => 'ARBITRUM',
         'optimism' => 'OPTIMISM',
         'avalanche' => 'AVALANCHE',
-        'sonic' => 'SONIC'
+        'sonic' => 'SONIC',
+        'litecoin' => 'LITECOIN',
+        'dash' => 'DASH',
     ];
 
     /**

@@ -89,7 +89,6 @@
                             <thead>
                                 <tr>
                                     <th>کوین</th>
-                                    <th>شبکه</th>
                                     <th>موجودی آزاد</th>
                                     <th>موجودی مسدود</th>
                                     <th class="text-center">عملیات</th>
@@ -100,7 +99,7 @@
                                     @php
                                         $asset = $row['asset'];
                                         $symbol = $row['symbol'];
-                                        $chain = $row['chain'];
+
                                         $chainLogo = $row['chain_logo'];
                                         $searchText = strtolower($symbol . ' supported');
                                         $canWithdraw = $currencyHasChainsMap[$symbol] ?? false;
@@ -115,24 +114,22 @@
                                                         <img src="{{ $chainLogo }}"
                                                             class="position-absolute rounded-circle border border-white" width="18"
                                                             height="18" style="bottom: -2px; right: -2px; background: #fff;"
-                                                            alt="{{ $chain }}" title="{{ $chain }}">
+                                                            >
                                                     @endif
                                                 </div>
                                                 <div class="fw-semibold">{{ $symbol }}</div>
                                             </div>
                                         </td>
-                                        <td>
-                                            <small class="text-muted">{{ $chain }}</small>
-                                        </td>
+
                                         <td>
                                             <span
                                                 class="font-number fw-semibold">{{ formatNumberTrimZeros($asset->available) }}</span>
-                                            <small class="text-muted ms-1">{{ $symbol }}</small>
+                                            <small class="text-muted me-1">{{ $symbol }}</small>
                                         </td>
                                         <td>
                                             <span
                                                 class="text-danger fw-semibold font-number">{{ formatNumberTrimZeros($asset->frozen) }}</span>
-                                            <small class="text-danger ms-1">{{ $symbol }}</small>
+                                            <small class="text-danger me-1">{{ $symbol }}</small>
                                         </td>
                                         <td class="text-center">
                                             @if ($canWithdraw)

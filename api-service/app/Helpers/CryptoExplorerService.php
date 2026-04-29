@@ -16,6 +16,7 @@ class CryptoExplorerService
         'AVAX' => 'https://snowtrace.io/address/',
         'AVALANCHE' => 'https://snowtrace.io/address/',
         'SONIC' => 'https://sonicscan.org/address/',
+        'LTC' => 'https://blockchair.com/litecoin/address/',
     ];
 
     public static function getExplorerUrl(string $network, string $address): ?string
