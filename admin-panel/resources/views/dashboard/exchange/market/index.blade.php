@@ -112,13 +112,13 @@
                                 <td class="">{{ $market->id }}</td>
                                 <td class="text-heading fw-medium">
                                     <div class="d-flex justify-content-start align-items-center">
-                                        <div class="avatar-group d-flex align-items-center assigned-avatar">
+                                        <div class="avatar-group d-flex align-items-center">
 
-                                            <div class="avatar avatar-md">
+                                            <div class="avatar avatar-sm">
                                                 <img src="{{ asset($market->quoteCurrency->coinLogo()) }}"
                                                     class="rounded-circle">
                                             </div>
-                                            <div class="avatar avatar-md">
+                                            <div class="avatar avatar-sm">
                                                 <img src="{{ asset($market->baseCurrency->coinLogo()) }}"
                                                     class="rounded-circle  ">
                                             </div>
@@ -135,7 +135,6 @@
 
                                         <small class="text-muted">USDT</small>
                                     </h4>
-
                                 </td>
                                 <td class="font-number">
                                     <div class="badge rounded bg-label-{{ $market->activeExchangePrice->price_change_percentage < 0 ? 'danger' : 'success' }}"
@@ -146,8 +145,7 @@
                                     </div>
                                 </td>
                                 <td class="font-number text-heading">
-                                    <div class="badge rounded bg-label-info me-3"
-                                        data-role="profit-sell" dir="ltr"
+                                    <div class="badge rounded bg-label-info me-3" data-role="profit-sell" dir="ltr"
                                         data-value="{{ $market->activeExchangePrice->exchange_profit_sell }}">
                                         {{ $market->activeExchangePrice->exchange_profit_sell > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->exchange_profit_sell) }}
                                         %
@@ -158,8 +156,7 @@
 
                                 </td>
                                 <td class="font-number text-heading ">
-                                    <div class="badge rounded bg-label-info me-3"
-                                        data-role="profit-buy" dir="ltr"
+                                    <div class="badge rounded bg-label-info me-3" data-role="profit-buy" dir="ltr"
                                         data-value="{{ $market->activeExchangePrice->exchange_profit_buy }}">
                                         {{ $market->activeExchangePrice->exchange_profit_buy > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->exchange_profit_buy) }}
                                         %
@@ -190,12 +187,18 @@
                                     </div>
                                 </td>
                                 <td class="sticky-column">
-                                    <div class="d-flex align-items-center flex-column gap-1">
-                                        <a class="text-secondary me-3"
+                                    <div class="">
+                                        <a class="text-secondary me-2"
                                             href="{{ route('admin.market.edit', ['market' => $market->id]) }}">
                                             <i class="fa-light fa-pen-to-square fa-lg"></i>
                                         </a>
-
+                                        <a class="p-0 toggle-home-btn" style="cursor: pointer;" data-market-id="{{ $market->id }}"
+                                            data-bs-toggle="tooltip"
+                                            data-url="{{ route('admin.market.toggle-home', ['market' => $market->id]) }}"
+                                            title="{{ $market->show_in_home ? 'حذف از صفحه اصلی' : 'نمایش در صفحه اصلی' }}">
+                                            <i
+                                                class="{{ $market->show_in_home ? 'fa-solid text-warning' : 'fa-light text-secondary' }} fa-star fa-lg"></i>
+                                        </a>
                                     </div>
                                 </td>
                             </tr>
@@ -210,6 +213,12 @@
 
 @section('vendor-script')
     <script>
+        $(document).ready(function () {
+            $('[data-bs-toggle="tooltip"]').tooltip();
+        });
+    </script>
+    <script>
+
         document.addEventListener('DOMContentLoaded', function () {
             if (typeof window.Echo === 'undefined') {
                 console.warn('Echo is not initialized. Check VITE_REVERB/VITE_PUSHER env vars and frontend build.');
@@ -385,6 +394,33 @@
                         });
                     }
 
+                });
+            });
+            // Star toggle
+            document.querySelectorAll('.toggle-home-btn').forEach((btn) => {
+                btn.addEventListener('click', function () {
+                    const url = this.dataset.url;
+                    const icon = this.querySelector('i');
+
+                    fetch(url, {
+                        method: 'PATCH',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json',
+                        },
+                    })
+                        .then((res) => res.json())
+                        .then((data) => {
+                            if (data.show_in_home) {
+                                icon.classList.remove('fa-light', 'text-secondary');
+                                icon.classList.add('fa-solid', 'text-warning');
+                                this.title = 'حذف از صفحه اصلی';
+                            } else {
+                                icon.classList.remove('fa-solid', 'text-warning');
+                                icon.classList.add('fa-light', 'text-secondary');
+                                this.title = 'نمایش در صفحه اصلی';
+                            }
+                        });
                 });
             });
         });

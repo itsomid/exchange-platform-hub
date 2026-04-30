@@ -9,6 +9,8 @@ interface MarketRepositoryInterface
 {
     public function getOTCMarkets(): Collection;
 
+    public function getHomeMarkets(): Collection;
+
     public function getAll(): Collection;
 
     public function getActiveMarket(): Collection;

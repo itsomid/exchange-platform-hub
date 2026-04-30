@@ -18,7 +18,8 @@ class Market extends Model
         'max_otc_amount',
         'is_active',
         'price_update_enabled',
-        'ref_exchange_sell_enabled'
+        'ref_exchange_sell_enabled',
+        'show_in_home',
     ];
 
     protected $appends = [
@@ -31,6 +32,7 @@ class Market extends Model
             'is_active' => 'boolean',
             'price_update_enabled' => 'boolean',
             'ref_exchange_sell_enabled' => 'boolean',
+            'show_in_home' => 'boolean',
         ];
     }
 
