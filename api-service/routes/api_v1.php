@@ -110,6 +110,8 @@ Route::prefix('/spot')->group(function () {
     // get-markets
     Route::get('/markets', [\App\Http\Controllers\V1\Spot\MarketController::class, 'lists'])->name('spot.markets')->withoutMiddleware(['auth:sanctum', 'verified']);
 
+    Route::get('/fee', [\App\Http\Controllers\V1\Spot\FeeController::class, '__invoke'])->name('spot.fee')->withoutMiddleware(['auth:sanctum', 'verified']);
+
     Route::get('/markets/state/{marketId}', [\App\Http\Controllers\V1\Spot\MarketController::class, 'getState']);
     Route::prefix('/orders')->group(function () {
         Route::post('/', [\App\Http\Controllers\V1\Spot\OrderController::class, 'store'])->middleware([FinancialTradeBlockMiddleware::class]);

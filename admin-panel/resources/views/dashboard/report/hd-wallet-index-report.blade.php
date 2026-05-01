@@ -20,7 +20,7 @@
     </div>
 
     {{-- Summary Cards --}}
-    <div class="row g-6 mt-3" id="summaryCards" style="display: none;">
+    <div class="row g-2 mt-3" id="summaryCards" style="display: none;">
         <div class="col-sm-12 col-xl-4">
             <div class="card">
                 <div class="card-body">
@@ -78,7 +78,7 @@
     </div>
 
     {{-- Second Row Summary Cards --}}
-    <div class="row g-6 mt-3" id="summaryCardsRow2" style="display: none;">
+    <div class="row g-2 mt-3" id="summaryCardsRow2" style="display: none;">
         <div class="col-sm-12 col-xl-4">
             <div class="card">
                 <div class="card-body">
@@ -1293,33 +1293,33 @@
                         'fa-IR') : '-';
 
                     return `
-                                        <a href="#" class="list-group-item list-group-item-action wallet-select-item ${wallet.status !== 'active' ? 'opacity-50' : ''}"
-                                           data-wallet-id="${wallet.walletId}"
-                                           data-wallet-name="${wallet.name}"
-                                           data-wallet-status="${wallet.status}">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <h6 class="mb-1">
-                                                        <i class="fa-regular fa-wallet me-2 text-primary"></i>
-                                                        ${wallet.name}
-                                                        <small class="text-secondary ms-1">(${wallet.walletId})</small>
-                                                    </h6>
-                                                    <small class="text-secondary d-block">
-                                                        <i class="fa-regular fa-network-wired me-1"></i>
-                                                        شبکه‌ها: ${networks}
-                                                    </small>
-                                                    ${wallet.description ? `<small class="text-secondary d-block"><i class="fa-regular fa-info-circle me-1"></i>${wallet.description}</small>` : ''}
-                                                    <small class="text-secondary d-block">
-                                                        <i class="fa-regular fa-clock me-1"></i>
-                                                        آخرین استفاده: ${lastUsed}
-                                                    </small>
-                                                </div>
-                                                <div class="text-end">
-                                                    <span class="badge ${statusInfo.class}">${statusInfo.text}</span>
-                                                </div>
-                                            </div>
-                                        </a>
-                                    `;
+                                                <a href="#" class="list-group-item list-group-item-action wallet-select-item ${wallet.status !== 'active' ? 'opacity-50' : ''}"
+                                                   data-wallet-id="${wallet.walletId}"
+                                                   data-wallet-name="${wallet.name}"
+                                                   data-wallet-status="${wallet.status}">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <h6 class="mb-1">
+                                                                <i class="fa-regular fa-wallet me-2 text-primary"></i>
+                                                                ${wallet.name}
+                                                                <small class="text-secondary ms-1">(${wallet.walletId})</small>
+                                                            </h6>
+                                                            <small class="text-secondary d-block">
+                                                                <i class="fa-regular fa-network-wired me-1"></i>
+                                                                شبکه‌ها: ${networks}
+                                                            </small>
+                                                            ${wallet.description ? `<small class="text-secondary d-block"><i class="fa-regular fa-info-circle me-1"></i>${wallet.description}</small>` : ''}
+                                                            <small class="text-secondary d-block">
+                                                                <i class="fa-regular fa-clock me-1"></i>
+                                                                آخرین استفاده: ${lastUsed}
+                                                            </small>
+                                                        </div>
+                                                        <div class="text-end">
+                                                            <span class="badge ${statusInfo.class}">${statusInfo.text}</span>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                            `;
                 }).join('');
             }
 
@@ -1548,20 +1548,20 @@
                         if (r._isError) {
                             const errText = escapeHtml(r._errorMsg);
                             return `
-                                                <tr class="table-danger">
-                                                    <td>${idx + 1}</td>
-                                                    <td><strong>${r.addressIndex}</strong></td>
-                                                    <td><span class="text-danger">-</span></td>
-                                                    <td>-</td>
-                                                    <td>-</td>
-                                                    <td><span class="badge bg-danger">خطا</span></td>
-                                                    <td>
-                                                        <span class="d-flex align-items-center gap-1">
-                                                            <i class="fa-regular fa-exclamation-circle text-danger flex-shrink-0"></i>
-                                                            <small class="text-danger">${errText}</small>
-                                                        </span>
-                                                    </td>
-                                                </tr>`;
+                                                        <tr class="table-danger">
+                                                            <td>${idx + 1}</td>
+                                                            <td><strong>${r.addressIndex}</strong></td>
+                                                            <td><span class="text-danger">-</span></td>
+                                                            <td>-</td>
+                                                            <td>-</td>
+                                                            <td><span class="badge bg-danger">خطا</span></td>
+                                                            <td>
+                                                                <span class="d-flex align-items-center gap-1">
+                                                                    <i class="fa-regular fa-exclamation-circle text-danger flex-shrink-0"></i>
+                                                                    <small class="text-danger">${errText}</small>
+                                                                </span>
+                                                            </td>
+                                                        </tr>`;
                         }
 
                         const statusInfo = sweepStatusLabels[r.status] || { text: r.status, class: 'bg-secondary' };
@@ -1576,38 +1576,38 @@
 
                         const addrCell = r.fromAddress
                             ? `<div class="d-flex align-items-center gap-1">
-                                                <button class="btn btn-sm btn-icon btn-text-secondary p-0 sweep-copy-btn"
-                                                    data-copy-text="${r.fromAddress}" title="کپی آدرس">
-                                                    <i class="fa-regular fa-clone fa-sm"></i>
-                                                </button>
-                                                ${explorerAddrBase
+                                                        <button class="btn btn-sm btn-icon btn-text-secondary p-0 sweep-copy-btn"
+                                                            data-copy-text="${r.fromAddress}" title="کپی آدرس">
+                                                            <i class="fa-regular fa-clone fa-sm"></i>
+                                                        </button>
+                                                        ${explorerAddrBase
                                 ? `<a href="${explorerAddrBase}${r.fromAddress}" target="_blank" class="font-number"><small>${shortAddr}</small></a>`
                                 : `<small class="font-number">${shortAddr}</small>`}
-                                               </div>`
+                                                       </div>`
                             : '-';
 
                         const txCell = r.transactionId
                             ? `<div class="d-flex align-items-center gap-1">
-                                                <button class="btn btn-sm btn-icon btn-text-secondary p-0 sweep-copy-btn"
-                                                    data-copy-text="${r.transactionId}" title="کپی شناسه">
-                                                    <i class="fa-regular fa-clone fa-sm"></i>
-                                                </button>
-                                                ${explorerTxBase
+                                                        <button class="btn btn-sm btn-icon btn-text-secondary p-0 sweep-copy-btn"
+                                                            data-copy-text="${r.transactionId}" title="کپی شناسه">
+                                                            <i class="fa-regular fa-clone fa-sm"></i>
+                                                        </button>
+                                                        ${explorerTxBase
                                 ? `<a href="${explorerTxBase}${r.transactionId}" target="_blank" class="font-number text-primary"><small>${shortTxId}</small></a>`
                                 : `<small class="font-number text-primary">${shortTxId}</small>`}
-                                               </div>`
+                                                       </div>`
                             : '-';
 
                         return `
-                                            <tr class="${isApproval ? 'table-warning' : ''}">
-                                                <td>${idx + 1}</td>
-                                                <td><strong>${r.addressIndex}</strong></td>
-                                                <td>${addrCell}</td>
-                                                <td><span class="fw-semibold text-primary">${r.amount || '-'}</span></td>
-                                                <td><span class="badge bg-label-secondary">${r.assetSymbol || r.coinType || '-'}</span></td>
-                                                <td><span class="badge ${statusInfo.class}">${statusInfo.text}</span></td>
-                                                <td>${txCell}</td>
-                                            </tr>`;
+                                                    <tr class="${isApproval ? 'table-warning' : ''}">
+                                                        <td>${idx + 1}</td>
+                                                        <td><strong>${r.addressIndex}</strong></td>
+                                                        <td>${addrCell}</td>
+                                                        <td><span class="fw-semibold text-primary">${r.amount || '-'}</span></td>
+                                                        <td><span class="badge bg-label-secondary">${r.assetSymbol || r.coinType || '-'}</span></td>
+                                                        <td><span class="badge ${statusInfo.class}">${statusInfo.text}</span></td>
+                                                        <td>${txCell}</td>
+                                                    </tr>`;
                     }).join('');
                 }
 
@@ -1616,14 +1616,14 @@
                     document.getElementById('sweepErrorsList').style.display = '';
                     document.getElementById('sweepErrorsCount').textContent = errors.length;
                     document.getElementById('sweepErrorsListBody').innerHTML = errors.map(e => `
-                                        <div class="list-group-item list-group-item-danger">
-                                            <div class="d-flex justify-content-between">
-                                                <strong>ایندکس ${e.addressIndex}</strong>
-                                                <span class="badge bg-danger">خطا</span>
-                                            </div>
-                                            <small>${escapeHtml(e.error || '')}</small>
-                                        </div>
-                                    `).join('');
+                                                <div class="list-group-item list-group-item-danger">
+                                                    <div class="d-flex justify-content-between">
+                                                        <strong>ایندکس ${e.addressIndex}</strong>
+                                                        <span class="badge bg-danger">خطا</span>
+                                                    </div>
+                                                    <small>${escapeHtml(e.error || '')}</small>
+                                                </div>
+                                            `).join('');
                 }
 
                 // Show action buttons
@@ -1845,11 +1845,11 @@
                                 const row = document.createElement('tr');
 
                                 row.innerHTML = `
-                                                    <td><small><strong>${levelNames[level] || level}</strong></small></td>
-                                                    <td><small class="badge bg-label-secondary">${levelData.gwei}</small></td>
-                                                    <td style="text-align: right;"><small><strong>${levelData.costPerAddress} </strong>${data.nativeSymbol}</small></td>
-                                                    <td style="text-align: right;"><small class="text-success">${usdText}</small></td>
-                                                `;
+                                                            <td><small><strong>${levelNames[level] || level}</strong></small></td>
+                                                            <td><small class="badge bg-label-secondary">${levelData.gwei}</small></td>
+                                                            <td style="text-align: right;"><small><strong>${levelData.costPerAddress} </strong>${data.nativeSymbol}</small></td>
+                                                            <td style="text-align: right;"><small class="text-success">${usdText}</small></td>
+                                                        `;
                                 levelsBody.appendChild(row);
                             });
 
@@ -1983,27 +1983,27 @@
                         'fa-IR') : '-';
 
                     return `
-                                        <a href="#" class="list-group-item list-group-item-action fund-wallet-select-item ${wallet.status !== 'active' ? 'opacity-50' : ''}"
-                                           data-wallet-id="${wallet.walletId}"
-                                           data-wallet-name="${wallet.name}"
-                                           data-wallet-status="${wallet.status}"
-                                           data-wallet-index="${index}">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <h6 class="mb-1">
-                                                        <i class="fa-regular fa-wallet me-2 text-success"></i>
-                                                        ${wallet.name}
-                                                        <small class="text-secondary ms-1">(${wallet.walletId})</small>
-                                                    </h6>
-                                                    <small class="text-secondary d-block">
-                                                        <i class="fa-regular fa-clock me-1"></i>
-                                                        آخرین استفاده: ${lastUsed}
-                                                    </small>
-                                                </div>
-                                                <span class="badge ${statusInfo.class}">${statusInfo.text}</span>
-                                            </div>
-                                        </a>
-                                    `;
+                                                <a href="#" class="list-group-item list-group-item-action fund-wallet-select-item ${wallet.status !== 'active' ? 'opacity-50' : ''}"
+                                                   data-wallet-id="${wallet.walletId}"
+                                                   data-wallet-name="${wallet.name}"
+                                                   data-wallet-status="${wallet.status}"
+                                                   data-wallet-index="${index}">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <h6 class="mb-1">
+                                                                <i class="fa-regular fa-wallet me-2 text-success"></i>
+                                                                ${wallet.name}
+                                                                <small class="text-secondary ms-1">(${wallet.walletId})</small>
+                                                            </h6>
+                                                            <small class="text-secondary d-block">
+                                                                <i class="fa-regular fa-clock me-1"></i>
+                                                                آخرین استفاده: ${lastUsed}
+                                                            </small>
+                                                        </div>
+                                                        <span class="badge ${statusInfo.class}">${statusInfo.text}</span>
+                                                    </div>
+                                                </a>
+                                            `;
                 }).join('');
             }
 
@@ -2280,47 +2280,47 @@
 
                         const addrCell = r.toAddress ?
                             `<div class="d-flex align-items-center gap-1">
-                                                <button class="btn btn-sm btn-icon btn-text-secondary p-0 fund-copy-btn" data-copy-text="${r.toAddress}" title="کپی آدرس">
-                                                    <i class="fa-regular fa-clone fa-sm"></i>
-                                                </button>
-                                                ${explorerAddrBase
+                                                        <button class="btn btn-sm btn-icon btn-text-secondary p-0 fund-copy-btn" data-copy-text="${r.toAddress}" title="کپی آدرس">
+                                                            <i class="fa-regular fa-clone fa-sm"></i>
+                                                        </button>
+                                                        ${explorerAddrBase
                                 ? `<a href="${explorerAddrBase}${r.toAddress}" target="_blank" class="font-number"><small>${shortAddr}</small></a>`
                                 : `<small class="font-number">${shortAddr}</small>`
                             }
-                                               </div>` :
+                                                       </div>` :
                             '-';
 
                         const txCell = r.txHash ?
                             `<div class="d-flex align-items-center gap-1">
-                                                <button class="btn btn-sm btn-icon btn-text-secondary p-0 fund-copy-btn" data-copy-text="${r.txHash}" title="کپی هش">
-                                                    <i class="fa-regular fa-clone fa-sm"></i>
-                                                </button>
-                                                ${explorerTxBase
+                                                        <button class="btn btn-sm btn-icon btn-text-secondary p-0 fund-copy-btn" data-copy-text="${r.txHash}" title="کپی هش">
+                                                            <i class="fa-regular fa-clone fa-sm"></i>
+                                                        </button>
+                                                        ${explorerTxBase
                                 ? `<a href="${explorerTxBase}${r.txHash}" target="_blank" class="font-number text-primary"><small>${shortHash}</small></a>`
                                 : `<small class="font-number text-primary">${shortHash}</small>`
                             }
-                                               </div>` :
+                                                       </div>` :
                             '-';
 
                         return `
-                                            <tr>
-                                                <td>${idx + 1}</td>
-                                                <td><strong>${r.addressIndex}</strong></td>
-                                                <td>${addrCell}</td>
-                                                <td><span class="text-success">${r.amount}</span></td>
-                                                <td>
-                                                    <span class="d-inline-flex align-items-center gap-1">
-                                                        <i class="fa-regular fa-exclamation-triangle text-warning"
-                                                            data-bs-toggle="tooltip" data-bs-placement="top"
-                                                            data-bs-custom-class="tooltip-dark"
-                                                            title="ممکن است این fee اشتباه باشد؛ برای مشاهده fee واقعی باید status تراکنش گرفته شود"></i>
-                                                        <small class="text-secondary">${r.fee || '0'}</small>
-                                                    </span>
-                                                </td>
-                                                <td><span class="badge bg-success">موفق</span></td>
-                                                <td>${txCell}</td>
-                                            </tr>
-                                        `;
+                                                    <tr>
+                                                        <td>${idx + 1}</td>
+                                                        <td><strong>${r.addressIndex}</strong></td>
+                                                        <td>${addrCell}</td>
+                                                        <td><span class="text-success">${r.amount}</span></td>
+                                                        <td>
+                                                            <span class="d-inline-flex align-items-center gap-1">
+                                                                <i class="fa-regular fa-exclamation-triangle text-warning"
+                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                    data-bs-custom-class="tooltip-dark"
+                                                                    title="ممکن است این fee اشتباه باشد؛ برای مشاهده fee واقعی باید status تراکنش گرفته شود"></i>
+                                                                <small class="text-secondary">${r.fee || '0'}</small>
+                                                            </span>
+                                                        </td>
+                                                        <td><span class="badge bg-success">موفق</span></td>
+                                                        <td>${txCell}</td>
+                                                    </tr>
+                                                `;
                     }).join('');
                     $('[data-bs-toggle="tooltip"]').tooltip();
                 }
@@ -2330,14 +2330,14 @@
                     document.getElementById('fundErrorsList').style.display = '';
                     document.getElementById('fundErrorsCount').textContent = errors.length;
                     document.getElementById('fundErrorsListBody').innerHTML = errors.map(e => `
-                                        <div class="list-group-item list-group-item-danger">
-                                            <div class="d-flex justify-content-between">
-                                                <strong>ایندکس ${e.addressIndex}</strong>
-                                                <span class="badge bg-danger">خطا</span>
-                                            </div>
-                                            <small>${escapeHtml(e.error || '')}</small>
-                                        </div>
-                                    `).join('');
+                                                <div class="list-group-item list-group-item-danger">
+                                                    <div class="d-flex justify-content-between">
+                                                        <strong>ایندکس ${e.addressIndex}</strong>
+                                                        <span class="badge bg-danger">خطا</span>
+                                                    </div>
+                                                    <small>${escapeHtml(e.error || '')}</small>
+                                                </div>
+                                            `).join('');
                 }
 
                 // Show buttons
@@ -2374,13 +2374,13 @@
                     document.getElementById('fundErrorsList').style.display = '';
                     document.getElementById('fundErrorsCount').textContent = '1';
                     document.getElementById('fundErrorsListBody').innerHTML = `
-                                        <div class="list-group-item list-group-item-danger">
-                                            <strong>موجودی ناکافی در ایندکس ۱</strong><br>
-                                            <small>آدرس: ${escapeHtml(data.sourceAddress || '')}</small><br>
-                                            <small>موجودی فعلی: ${escapeHtml(data.currentBalance || '')}</small><br>
-                                            <small>مقدار مورد نیاز: ${escapeHtml(data.totalRequired || '')}</small>
-                                        </div>
-                                    `;
+                                                <div class="list-group-item list-group-item-danger">
+                                                    <strong>موجودی ناکافی در ایندکس ۱</strong><br>
+                                                    <small>آدرس: ${escapeHtml(data.sourceAddress || '')}</small><br>
+                                                    <small>موجودی فعلی: ${escapeHtml(data.currentBalance || '')}</small><br>
+                                                    <small>مقدار مورد نیاز: ${escapeHtml(data.totalRequired || '')}</small>
+                                                </div>
+                                            `;
                 }
 
                 document.getElementById('fundCloseBtn').style.display = '';
@@ -2629,79 +2629,79 @@
                         'text-primary';
 
                     return `
-                                <tr>
-                                    <td>
-                                        <input class="form-check-input row-select-checkbox" type="checkbox"
-                                            data-index="${item.hd_wallet_index}" data-balance="${item.total_balance_raw}">
-                                    </td>
-                                    <td>${rowNumber}</td>
-                                    <td>
-                                        <span class="badge bg-label-primary">${item.hd_wallet_index}</span>
-                                    </td>
-                                    <td>
-                                        <a href="/admin/users/${item.hd_wallet_index}/inquiry" target="_blank" class="text-primary">
-                                            ${item.hd_wallet_index}
-                                            <i class="fa-regular fa-external-link fa-xs ms-1"></i>
-                                        </a>
-                                    </td>
-                                    <td>
-                                        ${depositsCol}
-                                        <small class="text-secondary d-block">${item.deposit_count} تراکنش</small>
-                                    </td>
-                                    <td>
-                                        ${outgoingCol}
-                                        <small class="text-secondary d-block">${item.outgoing_count || 0} تراکنش</small>
-                                    </td>
-                                    <td>
-                                        <strong class="font-number ${balanceClass}">${item.total_balance}</strong>
-                                        <small class="text-secondary ms-1">${item.currency_symbol}</small>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <span id="blockchainBalance_${item.hd_wallet_index}" class="text-secondary">-</span>
-                                            <button type="button"
-                                                class="btn btn-sm btn-outline-info query-blockchain-btn"
-                                                data-user-id="${item.hd_wallet_index}"
-                                                data-currency="${item.currency_symbol}"
-                                                title="استعلام از شبکه">
-                                                <i class="fa-regular fa-globe"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <small class="text-secondary">${item.deposit_count} واریز</small><br>
-                                        <small class="text-secondary">${item.outgoing_count || 0} برداشت</small>
-                                    </td>
-                                    <td><small class="font-number">${item.last_deposit_at}</small></td>
-                                    <td>
-                                        <div class="dropdown">
-                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                                <i class="fa-regular fa-ellipsis-v"></i>
-                                            </button>
-                                            <ul class="dropdown-menu">
-                                                <li>
-                                                    <a class="dropdown-item" href="/admin/users/${item.hd_wallet_index}/edit" target="_blank">
-                                                        <i class="fa-regular fa-user me-2"></i>
-                                                        مشاهده کاربر
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a class="dropdown-item" href="/admin/users/${item.hd_wallet_index}/wallets" target="_blank">
-                                                        <i class="fa-regular fa-wallet me-2"></i>
-                                                        کیف پول کاربر
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a class="dropdown-item" href="/admin/deposits?user=${item.hd_wallet_index}&currency=${item.currency_symbol}" target="_blank">
-                                                        <i class="fa-regular fa-arrow-down-left me-2"></i>
-                                                        واریزهای کاربر
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </td>
-                                </tr>
-                            `;
+                                        <tr>
+                                            <td>
+                                                <input class="form-check-input row-select-checkbox" type="checkbox"
+                                                    data-index="${item.hd_wallet_index}" data-balance="${item.total_balance_raw}">
+                                            </td>
+                                            <td>${rowNumber}</td>
+                                            <td>
+                                                <span class="badge bg-label-primary">${item.hd_wallet_index}</span>
+                                            </td>
+                                            <td>
+                                                <a href="/admin/users/${item.hd_wallet_index}/inquiry" target="_blank" class="text-primary">
+                                                    ${item.hd_wallet_index}
+                                                    <i class="fa-regular fa-external-link fa-xs ms-1"></i>
+                                                </a>
+                                            </td>
+                                            <td>
+                                                ${depositsCol}
+                                                <small class="text-secondary d-block">${item.deposit_count} تراکنش</small>
+                                            </td>
+                                            <td>
+                                                ${outgoingCol}
+                                                <small class="text-secondary d-block">${item.outgoing_count || 0} تراکنش</small>
+                                            </td>
+                                            <td>
+                                                <strong class="font-number ${balanceClass}">${item.total_balance}</strong>
+                                                <small class="text-secondary ms-1">${item.currency_symbol}</small>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span id="blockchainBalance_${item.hd_wallet_index}" class="text-secondary">-</span>
+                                                    <button type="button"
+                                                        class="btn btn-sm btn-outline-info query-blockchain-btn"
+                                                        data-user-id="${item.hd_wallet_index}"
+                                                        data-currency="${item.currency_symbol}"
+                                                        title="استعلام از شبکه">
+                                                        <i class="fa-regular fa-globe"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <small class="text-secondary">${item.deposit_count} واریز</small><br>
+                                                <small class="text-secondary">${item.outgoing_count || 0} برداشت</small>
+                                            </td>
+                                            <td><small class="font-number">${item.last_deposit_at}</small></td>
+                                            <td>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                        <i class="fa-regular fa-ellipsis-v"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li>
+                                                            <a class="dropdown-item" href="/admin/users/${item.hd_wallet_index}/edit" target="_blank">
+                                                                <i class="fa-regular fa-user me-2"></i>
+                                                                مشاهده کاربر
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item" href="/admin/users/${item.hd_wallet_index}/wallets" target="_blank">
+                                                                <i class="fa-regular fa-wallet me-2"></i>
+                                                                کیف پول کاربر
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item" href="/admin/deposits?user=${item.hd_wallet_index}&currency=${item.currency_symbol}" target="_blank">
+                                                                <i class="fa-regular fa-arrow-down-left me-2"></i>
+                                                                واریزهای کاربر
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    `;
                 }).join('');
             }
 
@@ -2719,12 +2719,12 @@
 
                 // Previous button
                 html += `
-                            <li class="page-item ${pagination.current_page === 1 ? 'disabled' : ''}">
-                                <a class="page-link" href="#" data-page="${pagination.current_page - 1}">
-                                    <i class="fa-regular fa-chevron-right"></i>
-                                </a>
-                            </li>
-                        `;
+                                    <li class="page-item ${pagination.current_page === 1 ? 'disabled' : ''}">
+                                        <a class="page-link" href="#" data-page="${pagination.current_page - 1}">
+                                            <i class="fa-regular fa-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                `;
 
                 // Page numbers
                 const startPage = Math.max(1, pagination.current_page - 2);
@@ -2739,10 +2739,10 @@
 
                 for (let i = startPage; i <= endPage; i++) {
                     html += `
-                                <li class="page-item ${i === pagination.current_page ? 'active' : ''}">
-                                    <a class="page-link" href="#" data-page="${i}">${i}</a>
-                                </li>
-                            `;
+                                        <li class="page-item ${i === pagination.current_page ? 'active' : ''}">
+                                            <a class="page-link" href="#" data-page="${i}">${i}</a>
+                                        </li>
+                                    `;
                 }
 
                 if (endPage < pagination.last_page) {
@@ -2755,12 +2755,12 @@
 
                 // Next button
                 html += `
-                            <li class="page-item ${pagination.current_page === pagination.last_page ? 'disabled' : ''}">
-                                <a class="page-link" href="#" data-page="${pagination.current_page + 1}">
-                                    <i class="fa-regular fa-chevron-left"></i>
-                                </a>
-                            </li>
-                        `;
+                                    <li class="page-item ${pagination.current_page === pagination.last_page ? 'disabled' : ''}">
+                                        <a class="page-link" href="#" data-page="${pagination.current_page + 1}">
+                                            <i class="fa-regular fa-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                `;
 
                 paginationEl.innerHTML = html;
 
@@ -2871,21 +2871,21 @@
                         if (result.success) {
                             const explorerLink = result.data.explorer_url ?
                                 `<a href="${result.data.explorer_url}" target="_blank" class="text-decoration-none" title="مشاهده در Explorer">
-                                             <i class="fa-regular fa-external-link fa-xs"></i>
-                                           </a>` :
+                                                     <i class="fa-regular fa-external-link fa-xs"></i>
+                                                   </a>` :
                                 '';
                             balanceEl.innerHTML = `
-                                        <strong class="text-info font-number">${result.data.balance}</strong>
-                                        <small class="text-secondary ms-1">${result.data.currency_symbol}</small>
-                                        ${explorerLink}
-                                    `;
+                                                <strong class="text-info font-number">${result.data.balance}</strong>
+                                                <small class="text-secondary ms-1">${result.data.currency_symbol}</small>
+                                                ${explorerLink}
+                                            `;
                             showToast(
                                 `موجودی آدرس ${result.data.address} دریافت شد`,
                                 'success');
                         } else {
                             balanceEl.innerHTML = `<span class="text-danger">
-                                        <i class="fa-regular fa-exclamation-circle"></i> خطا
-                                    </span>`;
+                                                <i class="fa-regular fa-exclamation-circle"></i> خطا
+                                            </span>`;
                             showToast(`خطا در استعلام کاربر ${userId}: ${result.error}`, 'error');
                         }
                     } catch (error) {
@@ -3133,14 +3133,14 @@
                         '-';
 
                     return `
-                                    <tr>
-                                        <td>${index + 1}</td>
-                                        <td><span class="badge bg-label-primary">${addr.index}</span></td>
-                                        <td><small class="font-number">${addr.address}</small></td>
-                                        <td class="text-center">${newTxCount}</td>
-                                        <td class="text-center">${statusText}</td>
-                                    </tr>
-                                `;
+                                            <tr>
+                                                <td>${index + 1}</td>
+                                                <td><span class="badge bg-label-primary">${addr.index}</span></td>
+                                                <td><small class="font-number">${addr.address}</small></td>
+                                                <td class="text-center">${newTxCount}</td>
+                                                <td class="text-center">${statusText}</td>
+                                            </tr>
+                                        `;
                 }).join('');
             }
 
@@ -3150,19 +3150,19 @@
 
                 listBody.innerHTML = errors.map(err => {
                     return `
-                                    <div class="list-group-item">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div>
-                                                <strong>ایندکس ${err.index}:</strong>
-                                                <small class="d-block text-secondary font-number">${err.address}</small>
+                                            <div class="list-group-item">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <strong>ایندکس ${err.index}:</strong>
+                                                        <small class="d-block text-secondary font-number">${err.address}</small>
+                                                    </div>
+                                                </div>
+                                                <p class="mb-0 mt-2 text-danger small">
+                                                    <i class="fa-regular fa-exclamation-triangle me-1"></i>
+                                                    ${err.error}
+                                                </p>
                                             </div>
-                                        </div>
-                                        <p class="mb-0 mt-2 text-danger small">
-                                            <i class="fa-regular fa-exclamation-triangle me-1"></i>
-                                            ${err.error}
-                                        </p>
-                                    </div>
-                                `;
+                                        `;
                 }).join('');
             }
 
