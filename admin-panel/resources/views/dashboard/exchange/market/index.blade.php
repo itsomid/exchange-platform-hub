@@ -145,7 +145,7 @@
                                     </div>
                                 </td>
                                 <td class="font-number text-heading">
-                                    <div class="badge rounded bg-label-info me-3" data-role="profit-sell" dir="ltr"
+                                    <div class="badge rounded bg-label-secondary me-3" data-role="profit-sell" dir="ltr"
                                         data-value="{{ $market->activeExchangePrice->exchange_profit_sell }}">
                                         {{ $market->activeExchangePrice->exchange_profit_sell > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->exchange_profit_sell) }}
                                         %
@@ -156,7 +156,7 @@
 
                                 </td>
                                 <td class="font-number text-heading ">
-                                    <div class="badge rounded bg-label-info me-3" data-role="profit-buy" dir="ltr"
+                                    <div class="badge rounded bg-label-secondary me-3" data-role="profit-buy" dir="ltr"
                                         data-value="{{ $market->activeExchangePrice->exchange_profit_buy }}">
                                         {{ $market->activeExchangePrice->exchange_profit_buy > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->exchange_profit_buy) }}
                                         %

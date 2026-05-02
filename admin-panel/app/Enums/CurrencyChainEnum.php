@@ -25,7 +25,7 @@ enum CurrencyChainEnum: string
             self::BSC => 'BSC (BEP20)',
             self::DOGE => 'Dogecoin',
             self::POLYGON => 'Polygon',
-            self::ARBITRUM => 'Arbitrum One',
+            self::ARBITRUM => 'Arbitrum',
             self::OPTIMISM => 'Optimism',
             self::LTC => 'Litecoin',
             self::DASH => 'Dash',

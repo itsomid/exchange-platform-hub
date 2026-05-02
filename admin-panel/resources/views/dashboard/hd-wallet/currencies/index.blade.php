@@ -76,7 +76,7 @@
                         <option value="AVALANCHE">Avalanche</option>
                         <option value="SONIC">Sonic</option>
                         <option value="LTC">LTC</option>
-                        <option value="ARBITRUM">Arbitrum One</option>
+                        <option value="ARBITRUM">Arbitrum</option>
                     </select>
                 </div>
             </div>
