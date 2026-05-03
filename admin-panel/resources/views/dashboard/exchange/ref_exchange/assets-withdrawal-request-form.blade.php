@@ -2,6 +2,18 @@
 @section('title', 'مدیریت کیف پول ها')
 @section('content')
 
+    @if(session('operation_errors'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <div class="fw-semibold mb-2">جزئیات خطای عملیات</div>
+            <ul class="mb-0 ps-3">
+                @foreach(session('operation_errors', []) as $operationError)
+                    <li>{{ $operationError }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <div class="card">
         <div class="card-header d-flex justify-content-between">
             <div class="col-md-7 mb-md-0 mb-6 ps-0 d-flex align-items-center">

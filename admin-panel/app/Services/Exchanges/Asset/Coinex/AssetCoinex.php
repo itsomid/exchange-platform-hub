@@ -139,7 +139,7 @@ class AssetCoinex implements AssetInterface
             $response = CoinexRequest::send(MethodEnum::POST, '/v2/assets/withdraw', $requestBody);
         } catch (ConnectionException | Throwable $exception) {
             report($exception);
-            throw new CantResolveCoinexException("Can't Resolve https://api.coinex.com");
+            throw new CantResolveCoinexException($exception->getMessage(), (int) $exception->getCode(), $exception);
         }
 
         if ($response->json('code') !== 0) {
