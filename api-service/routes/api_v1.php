@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\V1\Stock\StockContractController;
 use App\Http\Controllers\V1\Stock\StockTradeController;
 use App\Http\Controllers\V1\Stock\StockController;
+use App\Http\Controllers\V1\Market\MarketController;
+use App\Http\Controllers\V1\Market\MarketOverviewController;
 use App\Http\Middleware\FinancialWithdrawalBlockMiddleware;
 use App\Http\Middleware\FinancialTradeBlockMiddleware;
 
@@ -67,16 +69,16 @@ Route::prefix('/portfolio')->group(function () {
 });
 
 Route::prefix('/markets')->group(function () {
+    Route::get('/', [MarketController::class, 'lists'])->name('markets.list')->withoutMiddleware(['auth:sanctum', 'verified']);
+    Route::get('/prices/{marketId}', [MarketController::class, 'prices'])->withoutMiddleware(['auth:sanctum', 'verified']);
+    Route::get('/top-traded', [MarketController::class, 'topTraded'])->withoutMiddleware(['auth:sanctum', 'verified']);
+    Route::get('/state/{marketId}', [MarketController::class, 'getState']);
     Route::get('/home', [\App\Http\Controllers\V1\Market\HomeMarketController::class, 'index'])->withoutMiddleware(['auth:sanctum', 'verified']);
+    Route::get('/overview', MarketOverviewController::class)->withoutMiddleware(['auth:sanctum', 'verified']);
 });
 
 // OTC
 Route::prefix('/otc')->group(function () {
-    // get-markets
-    Route::get('/markets', [\App\Http\Controllers\V1\OTC\MarketController::class, 'lists'])->name('otc.markets')->withoutMiddleware(['auth:sanctum', 'verified']);
-    Route::get('/markets/prices/{marketId}', [\App\Http\Controllers\V1\OTC\MarketController::class, 'prices'])->withoutMiddleware(['auth:sanctum', 'verified']);
-    Route::get('/markets/top-traded', [\App\Http\Controllers\V1\OTC\MarketController::class, 'topTraded'])->withoutMiddleware(['auth:sanctum', 'verified']);
-
     Route::post('/buy', [\App\Http\Controllers\V1\OTC\BuyController::class, 'create'])->name('otc.buy')->middleware(['throttle:' . config('bitexroom.otc.buy_attempts.max_attempts') . ',' . config('bitexroom.otc.buy_attempts.minutes'), FinancialTradeBlockMiddleware::class]);
     Route::post('/sell', [\App\Http\Controllers\V1\OTC\SellController::class, 'create'])->name('otc.sell')->middleware(['throttle:' . config('bitexroom.otc.sell_attempts.max_attempts') . ',' . config('bitexroom.otc.sell_attempts.minutes'), FinancialTradeBlockMiddleware::class]);
 
@@ -108,12 +110,9 @@ Route::prefix('/tickets')->group(function () {
 
 // Spot
 Route::prefix('/spot')->group(function () {
-    // get-markets
-    Route::get('/markets', [\App\Http\Controllers\V1\Spot\MarketController::class, 'lists'])->name('spot.markets')->withoutMiddleware(['auth:sanctum', 'verified']);
-
     Route::get('/fee', [\App\Http\Controllers\V1\Spot\FeeController::class, '__invoke'])->name('spot.fee')->withoutMiddleware(['auth:sanctum', 'verified']);
 
-    Route::get('/markets/state/{marketId}', [\App\Http\Controllers\V1\Spot\MarketController::class, 'getState']);
+
     Route::prefix('/orders')->group(function () {
         Route::post('/', [\App\Http\Controllers\V1\Spot\OrderController::class, 'store'])->middleware([FinancialTradeBlockMiddleware::class]);
         Route::get('/', [\App\Http\Controllers\V1\Spot\OrderController::class, 'lists']);
