@@ -41,7 +41,7 @@ class MarketController
     public function topTraded()
     {
         $topPairs = \App\Models\OTCOrder::query()
-            ->with(['market.baseCurrency', 'market.quoteCurrency'])
+            ->with(['market.currency', 'market.quoteCurrency'])
             ->where('status', \App\Enums\OTCOrderStatusEnum::SUCCESS)
             ->whereBetween('created_at', [now()->subDays(30), now()])
             ->whereNotNull('market_id')
@@ -58,7 +58,11 @@ class MarketController
                 $buyPrice = (isset($prices['status']) && $prices['status'] === 404) ? null : $prices['buy_price'];
                 $sellPrice = (isset($prices['status']) && $prices['status'] === 404) ? null : $prices['sell_price'];
                 return [
+                    'market_id' => $order->market->id,
                     'pair' => $order->market->base_currency . '/' . $order->market->quote_currency,
+                    'currency_logo' => $order->market->currency?->logo
+                        ? config('bitexroom.currency_logo_base_url') . '/' . $order->market->currency->logo
+                        : null,
                     'volume' => formatNumberTrimZeros($order->volume),
                     'buy_price' => $buyPrice !== null ? formatNumberTrimZeros($buyPrice) : null,
                     'sell_price' => $sellPrice !== null ? formatNumberTrimZeros($sellPrice) : null,
