@@ -34,6 +34,7 @@ Route::prefix('/referral-codes')->group(function () {
 Route::prefix('/currencies')->group(function () {
     Route::get('/deposit-withdraw-config', [ConfigController::class, 'depositWithdrawConfig'])->name('currencies.deposit-withdraw-config');
     Route::get('/all-deposit-withdraw-config', [ConfigController::class, 'allDepositWithdrawConfig'])->name('currencies.all-deposit-withdraw-config');
+    Route::get('/list', [\App\Http\Controllers\V1\Currency\CurrencyListController::class, '__invoke'])->name('currencies.list')->withoutMiddleware(['auth:sanctum', 'verified']);
 });
 
 // Wallet
