@@ -8,6 +8,7 @@ use App\Enums\RefExchangeSellStatusEnum;
 use App\Exports\OTCOrderExport;
 use App\Helpers\DateFormatter;
 use App\Http\Controllers\Controller;
+use App\Models\Market;
 use App\Models\OTCOrder;
 use App\Services\Exchanges\ExchangeService;
 use Illuminate\Http\Request;
@@ -17,10 +18,21 @@ class OTCOrderController extends Controller
 {
     public function index()
     {
-        $today = now()->toDateString(); // Get today's date
-        $otcOrders = OTCOrder::filterBy(request()->all())->with(['market', 'transactions'])
-            ->orderBy('id', request()->input('sortById', 'desc'))
-            ->paginate(50);
+        $today = now()->toDateString();
+
+        $query = OTCOrder::filterBy(request()->all())->with(['market', 'transactions', 'user']);
+
+        if (request()->filled('sortByCreatedAt')) {
+            $query->reorder('created_at', request()->input('sortByCreatedAt'));
+        } elseif (request()->filled('sortByQuantity')) {
+            $query->reorder('quantity', request()->input('sortByQuantity'));
+        } elseif (request()->filled('sortByTotalValue')) {
+            $query->reorder(\Illuminate\Support\Facades\DB::raw('price * quantity'), request()->input('sortByTotalValue'));
+        } else {
+            $query->orderBy('id', request()->input('sortById', 'desc'));
+        }
+
+        $otcOrders = $query->paginate(50);
 
         $todayOrderCount =  OTCOrder::whereDate('created_at', $today)
             ->whereStatus(OTCOrderStatusEnum::SUCCESS)->count();
@@ -58,8 +70,11 @@ class OTCOrderController extends Controller
             ->take(5);
 
 
+        $markets = Market::where('is_active', true)->get(['id', 'base_currency', 'quote_currency']);
+
         return view('dashboard.otc_order.index', [
             'otcOrders' => $otcOrders,
+            'markets' => $markets,
             'todayOrderCount' => $todayOrderCount,
             'topUsers' => $topUsers,
             'totalTodayOrdersValue' => $totalTodayOrdersValue,
@@ -71,16 +86,9 @@ class OTCOrderController extends Controller
 
     public function excelExport(Request $request)
     {
-        $from = $request->get('from_id');
-        $to = $request->get('to_id');
-        $filename = 'otc_orders_' . $from . '_' . $to;
+        $filename = 'otc_orders_' . now()->format('Y-m-d_H-i-s');
 
-        $OTCOrderQuery = OTCOrder::orderBy('id')->filterBy(request()->all());
-        if ($request->get('from_id') && $request->get('to_id')) {
-            $OTCOrderQuery->where('id', '>=', $request->from_id)
-                ->where('id', '<=', $request->to_id);
-        }
-        $otcOrders = $OTCOrderQuery->get();
+        $otcOrders = OTCOrder::orderBy('id')->filterBy($request->all())->get();
 
         $otcOrders = $otcOrders->map(function (OTCOrder $order) {
             if ($order->type === \App\Enums\OTCOrderTypeEnum::BUY){

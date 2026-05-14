@@ -2,6 +2,7 @@
 @section('title', 'مدیریت برداشت ها')
 
 @section('vendor-style')
+    @vite(['resources/assets/vendor/libs/select2/select2.scss'])
     <style>
         .table-responsive {
             overflow-x: auto;

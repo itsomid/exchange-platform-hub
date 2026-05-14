@@ -48,6 +48,9 @@ use App\Http\Controllers\ApiSystem\ApiSystemController;
 use App\Http\Controllers\ApiSystem\ApiSystemTokenController;
 use App\Http\Controllers\Report\HdWalletIndexReportController;
 use App\Http\Controllers\Report\HdWalletCurrencyController;
+use App\Http\Controllers\Admin\Bot\BotSettingsController;
+use App\Http\Controllers\Admin\Bot\BotSignalController;
+use App\Http\Controllers\Admin\Bot\BotOrderController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -240,12 +243,12 @@ Route::middleware(['admin.2fa'])->group(function () {
 
     Route::prefix('transactions')->group(function () {
         Route::get('/', [TransactionController::class, 'index'])->name('transaction.index')->can('transaction');
-        Route::post('/excel-export', [TransactionController::class, 'excelExport'])->name('transaction.excel-export')->can('transaction');
+        Route::get('/excel-export', [TransactionController::class, 'excelExport'])->name('transaction.excel-export')->can('transaction');
     });
 
     Route::prefix('otc_orders')->group(function () {
         Route::get('/', [OTCOrderController::class, 'index'])->name('otc_orders.index')->can('otc_order');
-        Route::post('/excel-export', [OTCOrderController::class, 'excelExport'])->name('otc_orders.excel-export')->can('otc_order');
+        Route::get('/excel-export', [OTCOrderController::class, 'excelExport'])->name('otc_orders.excel-export')->can('otc_order');
         Route::post('/{otcOrderId}/trigger-ref-exchange-sell', [OTCOrderController::class, 'triggerRefExchangeSell'])->name('otc_orders.trigger-ref-exchange-sell')->can('otc_order');
         Route::post('/{otcOrderId}/reset-ref-exchange-sell', [OTCOrderController::class, 'resetRefExchangeSellStatus'])->name('otc_orders.reset-ref-exchange-sell')->can('otc_order');
     });
@@ -380,8 +383,7 @@ Route::middleware(['admin.2fa'])->group(function () {
     });
 
     //     *********API SYSTEMS*********//
-    Route::prefix('api-systems')->group(function () {
-        Route::get('/', [ApiSystemController::class, 'index'])->name('api-system.index')->can('api-system');
+    Route::prefix('api-systems')->group(function () {        Route::get('/', [ApiSystemController::class, 'index'])->name('api-system.index')->can('api-system');
         Route::get('/create', [ApiSystemController::class, 'create'])->name('api-system.create')->can('api-system');
         Route::post('/', [ApiSystemController::class, 'store'])->name('api-system.store')->can('api-system');
         Route::get('/{system}', [ApiSystemController::class, 'show'])->name('api-system.show')->can('api-system');

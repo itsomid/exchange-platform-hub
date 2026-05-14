@@ -58,22 +58,7 @@ class TransactionController extends Controller
 
     public function excelExport(Request $request)
     {
-        // Validate request
-        $request->validate([
-            'from_id' => 'nullable|integer|min:1',
-            'to_id' => 'nullable|integer|min:1|gte:from_id',
-        ]);
-
-        $from = $request->get('from_id');
-        $to = $request->get('to_id');
-        
-        // Build filename
-        $filename = 'transactions';
-        if ($from && $to) {
-            $filename .= '_' . $from . '_to_' . $to;
-        } else {
-            $filename .= '_' . date('Y-m-d_His');
-        }
+        $filename = 'transactions_' . now()->format('Y-m-d_H-i-s');
 
         // Build query with filters
         $transactionQuery = Transaction::query()
@@ -81,24 +66,12 @@ class TransactionController extends Controller
             ->orderBy('id')
             ->filterBy($request->all());
 
-        // Apply ID range if provided
-        if ($request->filled('from_id') && $request->filled('to_id')) {
-            $transactionQuery->whereBetween('id', [$request->from_id, $request->to_id]);
-        } elseif ($request->filled('from_id')) {
-            $transactionQuery->where('id', '>=', $request->from_id);
-        } elseif ($request->filled('to_id')) {
-            $transactionQuery->where('id', '<=', $request->to_id);
-        }
-
         // Check total records to prevent memory issues
         $totalRecords = $transactionQuery->count();
         
         // Set a reasonable limit (100,000 records max)
         if ($totalRecords > 100000) {
-            return response()->json([
-                'success' => false,
-                'message' => 'تعداد رکوردها بیش از حد مجاز است (' . number_format($totalRecords) . ' رکورد). لطفاً بازه کوچکتری انتخاب کنید یا فیلترهای بیشتری اعمال کنید. (حداکثر: 100,000 رکورد)'
-            ], 422);
+            return redirect()->back()->with('error', 'تعداد رکوردها بیش از حد مجاز است (' . number_format($totalRecords) . ' رکورد). لطفاً فیلترهای بیشتری اعمال کنید. (حداکثر: 100,000 رکورد)');
         }
 
         // Use chunk to process data efficiently and prevent memory overflow
