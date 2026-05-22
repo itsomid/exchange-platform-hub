@@ -326,6 +326,7 @@ class HdWalletCurrencyController extends Controller
             'AVAX' => 'avalanche',
             'SONIC' => 'sonic',
             'LTC' => 'litecoin',
+            'DASH' => 'dash',
             default => null,
         };
     }
