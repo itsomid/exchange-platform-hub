@@ -20,6 +20,53 @@ Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-s
 
 ---
 
+## UI & Design Conventions
+
+### Tables
+
+When building any new data table in the admin panel, follow the design pattern used in:
+
+- `admin-panel/resources/views/dashboard/spot_order/index.blade.php` (user orders list)
+- `admin-panel/resources/views/dashboard/transaction/index.blade.php` (transaction list)
+
+### AJAX Notifications
+
+When making AJAX requests, use **Toastify** for success/error feedback. Follow the pattern used in `admin-panel/resources/views/dashboard/bot/signals/index.blade.php`:
+
+- Green background (`#28C76F`) for success
+- Red background (`#EA5455`) for errors
+- `gravity: 'top'`, `position: 'right'`, `duration: 3000` (errors: 5000)
+
+### Currency Dropdown
+
+Whenever a dropdown for selecting a coin/currency is needed, always use the `<x-currency-select>` Blade component:
+
+```blade
+<x-currency-select
+    name="currency_id"
+    :currencies="$currencies"
+    :selected="old('currency_id', $model->currency_id ?? '')"
+    :required="true"
+    error="currency_id"
+/>
+```
+
+- Component file: `admin-panel/resources/views/components/currency-select.blade.php`
+- Renders a searchable Select2 dropdown with each currency's coin logo
+- The consuming controller must pass a `$currencies` collection (Collection of `Currency` models)
+- The component handles Select2 CSS/JS injection and error display automatically
+
+### Filters
+
+When building filters for any listing page, follow the filter pattern used in those same two files:
+
+- Basic filters row at the top, always visible
+- Advanced filters row hidden by default with a toggle button
+- Active filter summary shown when any filter is applied
+- A clear filters button and (where applicable) an export button
+
+---
+
 ## 1. Think Before Coding
 
 **Don't assume. Don't hide confusion. Surface tradeoffs.**

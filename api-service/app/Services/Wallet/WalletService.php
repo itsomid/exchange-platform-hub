@@ -139,7 +139,7 @@ class WalletService
             $requestDTO->getPage(),
             $requestDTO->getPerPage(),
         );
-
+        
         return $paginator->through(function ($item) {
             $balance = $item->balance ?? '0';
             $lockedBalance = $item->locked_balance ?? '0';

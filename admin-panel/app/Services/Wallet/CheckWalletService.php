@@ -6,6 +6,7 @@ use App\Enums\DepositStatusEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
+use App\Events\DepositDetected;
 use App\Exceptions\V1\Wallet\InternalWalletHasProblemException;
 use App\Functions\FlashMessages\Toast;
 use App\Helpers\Math;
@@ -116,8 +117,12 @@ class CheckWalletService
 
                     if ($depositStatus === DepositStatusEnum::CONFIRMED) {
                         $wallet->increment('balance', $transaction->getAmount());
-                        // TODO: Add notification when DepositSuccessful class is created
-                        // $user->notify(new DepositSuccessful($transaction->getCryptocurrency(), $transaction->getAmount(), $user->name));
+                        DepositDetected::dispatch($requestDTO->getUserId(), [
+                            'currency' => $transaction->getCryptocurrency(),
+                            'amount' => $transaction->getAmount(),
+                            'tx_hash' => $transaction->getTransactionHash(),
+                            'status' => 'confirmed',
+                        ]);
                     }
                     DB::commit();
                     $hasNewTransaction = true;
@@ -150,26 +155,26 @@ class CheckWalletService
         $hasNewTransaction = false;
         $transactionCount = 0;
         $totalDepositAmount = 0;
-        
+
         $user = User::find($userId);
         $walletChain = \App\Models\WalletChain::with(['wallet.currency.chains'])->find($walletChainId);
-        
+
         if (!$walletChain || !$walletChain->address) {
             Toast::message('آدرس شبکه یافت نشد.')->warning()->notify();
             return false;
         }
-        
+
         $wallet = $walletChain->wallet;
         $currencyChain = $wallet->currency->chains->where('chain', $walletChain->currency_chain)->first();
-        
+
         if (!$currencyChain) {
             Toast::message('شبکه ارز یافت نشد.')->warning()->notify();
             return false;
         }
-        
+
         try {
             $hdDeposit = resolve(HDWalletFacade::class);
-            
+
             $transactions = $hdDeposit->getDepositLists(
                 resolve(GetDepositListsRequestDTO::class)
                     ->setCurrencySymbol($wallet->currency_symbol)
@@ -181,7 +186,7 @@ class CheckWalletService
             report($e);
             throw new InternalWalletHasProblemException('سرویس HD Wallet در دسترس نیست. لطفاً بعداً تلاش کنید.');
         }
-        
+
         foreach ($transactions as $transaction) {
             if (Deposit::where('transaction_hash', $transaction->getTransactionHash())->exists()) {
                 continue;
@@ -189,15 +194,15 @@ class CheckWalletService
             $transactionHash = $transaction->getTransactionHash();
             try {
                 DB::beginTransaction();
-                
+
                 $depositStatus = DepositStatusEnum::CONFIRMED;
                 if (Math::comp($transaction->getAmount(), $currencyChain->min_deposit_amount) === -1) {
                     $depositStatus = DepositStatusEnum::TOO_SMALL;
                 }
-                
+
                 $currency = Currency::whereSymbol($transaction->getCryptocurrency())->first();
                 $usdtValue = Math::mul($currency->exchangePrice, $transaction->getAmount());
-                
+
                 $deposit = Deposit::create([
                     'user_id' => $userId,
                     'currency_symbol' => $transaction->getCryptocurrency(),
@@ -209,7 +214,7 @@ class CheckWalletService
                     'status' => $depositStatus,
                     'usdt_value' => $usdtValue,
                 ]);
-                
+
                 Transaction::create([
                     'user_id' => $userId,
                     'deposit_id' => $deposit->id,
@@ -222,9 +227,15 @@ class CheckWalletService
                     'status' => TransactionStatusEnum::SUCCESS,
                     'description' => 'واریز به آدرس: ' . $deposit->address . ' هش تراکنش: ' . $transactionHash
                 ]);
-                
+
                 if ($depositStatus === DepositStatusEnum::CONFIRMED) {
                     $wallet->increment('balance', $transaction->getAmount());
+                    DepositDetected::dispatch($userId, [
+                        'currency' => $transaction->getCryptocurrency(),
+                        'amount' => $transaction->getAmount(),
+                        'tx_hash' => $transaction->getTransactionHash(),
+                        'status' => 'confirmed',
+                    ]);
                 }
                 DB::commit();
                 $hasNewTransaction = true;
@@ -236,7 +247,7 @@ class CheckWalletService
                 throw $exception;
             }
         }
-        
+
         // ذخیره اطلاعات در سشن
         session([
             'deposit_transaction_count' => $transactionCount,
@@ -244,7 +255,7 @@ class CheckWalletService
             'currency_symbol' => $wallet->currency_symbol,
             'chain_name' => $walletChain->currency_chain
         ]);
-        
+
         return $hasNewTransaction;
     }
 

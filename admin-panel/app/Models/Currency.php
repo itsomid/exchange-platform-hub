@@ -104,6 +104,10 @@ class Currency extends Model
 
     public function coinLogo(): string
     {
+        if (!$this->logo) {
+            return asset('images/coins/default.png');
+        }
+
         $logoPath = storage_path("app/public/coins/{$this->logo}");
         if (file_exists($logoPath)) {
             return asset("storage/coins/{$this->logo}");
