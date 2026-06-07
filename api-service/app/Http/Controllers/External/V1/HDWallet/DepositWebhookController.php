@@ -62,28 +62,27 @@ class DepositWebhookController extends Controller
         $txHash = $data['txHash'];
         $currencySymbol = $data['currency'];
 
-        Log::channel('hd-wallet')->info('Deposit webhook received', [
-            'userId' => $userId,
-            'txHash' => $txHash,
-            'currency' => $currencySymbol,
-            'amount' => $data['amount'],
-        ]);
 
         // Check if deposit already exists
         if ($this->depositRepository->isDepositExists($txHash)) {
+            $existingDeposit = $this->depositRepository->findByTransactionHash($txHash);
+            $existingDepositId = $existingDeposit?->id;
+            $existingCreditedAt = $existingDeposit?->created_at?->copy()->timezone(config('app.timezone'))?->toIso8601String(); 
             
-            // Still broadcast the event so frontend gets notified
-         
-            DepositDetected::dispatch($userId, [
-                'currency' => $currencySymbol,
-                'amount' => $data['amount'],
-                'tx_hash' => $txHash,
-                'status' => 'already_exists',
-            ]);
-
+            // Log::channel('hd-wallet')->info('already exists Deposit webhook processed successfully', [
+            //     'userId' => $userId,
+            //     'txHash' => $txHash,
+            //     'amount' => $data['amount'],
+            //     'status' => 'already_exists',
+            //     'existingDepositId' => $existingDepositId,
+            //     'existingCreditedAt' => $existingCreditedAt,
+            // ]);
             return response()->json([
                 'success' => true,
                 'message' => 'Deposit already processed',
+                'alreadyExists' => true,
+                'depositId' => $existingDepositId,
+                'creditedAt' => $existingCreditedAt,
             ]);
         }
 
@@ -202,16 +201,17 @@ class DepositWebhookController extends Controller
                 'status' => $depositStatus->value ?? 'confirmed',
             ]);
 
-            Log::channel('hd-wallet')->info('Deposit webhook processed successfully', [
-                'userId' => $userId,
-                'txHash' => $txHash,
-                'amount' => $data['amount'],
-                'status' => $depositStatus,
-            ]);
+            // Log::channel('hd-wallet')->info('Deposit webhook processed successfully', [
+            //     'userId' => $userId,
+            //     'txHash' => $txHash,
+            //     'amount' => $data['amount'],
+            //     'status' => $depositStatus,
+            // ]);
 
             return response()->json([
                 'success' => true,
-                'transactionId' => $deposit->id,
+                'depositId' => $deposit->id,
+                'creditedAt' => $deposit->created_at?->copy()->timezone(config('app.timezone'))?->toIso8601String(),
             ]);
         } catch (Throwable $exception) {
             DB::rollBack();

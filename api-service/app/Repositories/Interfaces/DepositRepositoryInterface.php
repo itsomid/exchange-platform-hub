@@ -14,6 +14,8 @@ interface DepositRepositoryInterface
 
     public function create(CreateDepositRequestDTO $requestDTO): Deposit;
 
+    public function findByTransactionHash(string $transactionHash): ?Deposit;
+
     public function getPendingDeposits(): Collection;
 
     public function isDepositExists(string $transactionHash): bool;
