@@ -254,10 +254,11 @@
 
                 const absolute = Math.abs(numeric);
                 if (absolute < 0.00000001) {
-                    return numeric.toLocaleString('en-US', {
-                        useGrouping: false,
-                        maximumSignificantDigits: 12,
-                    });
+                    const decimals = Math.min(20, Math.max(8, Math.ceil(-Math.log10(absolute)) + 4));
+                    return numeric
+                        .toFixed(decimals)
+                        .replace(/\.0+$/, '')
+                        .replace(/(\.\d*?)0+$/, '$1');
                 }
 
                 return numeric.toLocaleString('en-US', {
