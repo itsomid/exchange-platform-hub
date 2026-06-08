@@ -248,6 +248,18 @@
                     return '-';
                 }
 
+                if (numeric === 0) {
+                    return '0';
+                }
+
+                const absolute = Math.abs(numeric);
+                if (absolute < 0.00000001) {
+                    return numeric.toLocaleString('en-US', {
+                        useGrouping: false,
+                        maximumSignificantDigits: 12,
+                    });
+                }
+
                 return numeric.toLocaleString('en-US', {
                     minimumFractionDigits: 0,
                     maximumFractionDigits: 8,
