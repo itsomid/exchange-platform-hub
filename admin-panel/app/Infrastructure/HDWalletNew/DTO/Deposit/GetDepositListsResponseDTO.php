@@ -19,7 +19,6 @@ class GetDepositListsResponseDTO
     private ?string $contractAddress = null;
     private bool $isCredited;
     private ?string $creditedAt = null;
-    private ?string $detectedAt = null;
     private string $createdAt;
 
     public function getDepositId(): string { return $this->depositId; }
@@ -66,9 +65,6 @@ class GetDepositListsResponseDTO
 
     public function getCreditedAt(): ?string { return $this->creditedAt; }
     public function setCreditedAt(?string $creditedAt): self { $this->creditedAt = $creditedAt; return $this; }
-
-    public function getDetectedAt(): ?string { return $this->detectedAt; }
-    public function setDetectedAt(?string $detectedAt): self { $this->detectedAt = $detectedAt; return $this; }
 
     public function getCreatedAt(): string { return $this->createdAt; }
     public function setCreatedAt(string $createdAt): self { $this->createdAt = $createdAt; return $this; }

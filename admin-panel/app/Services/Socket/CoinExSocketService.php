@@ -8,6 +8,7 @@ use App\Models\Exchange;
 use App\Models\ExchangePrice;
 use App\Models\Market;
 use Exception;
+use Illuminate\Support\Facades\Cache;
 use Ratchet\Client\WebSocket;
 use Ratchet\RFC6455\Messaging\MessageInterface;
 use Throwable;
@@ -157,6 +158,10 @@ class CoinExSocketService
         }
 
         $this->updateExchangePriceForMarket($marketId, $lastPrice, $openPrice);
+
+        if ($lastPrice !== null) {
+            Cache::put("market:price:{$baseCurrency}USDT", $lastPrice, now()->addMinutes(5));
+        }
 
         $prices = $this->calculatePrices($lastPrice, $openPrice, $profits['sell'], $profits['buy']);
 

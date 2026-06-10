@@ -7,6 +7,7 @@ use App\Models\Exchange;
 use App\Models\ExchangePrice;
 use App\Models\Market;
 use Exception;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Redis;
 use Ratchet\Client\WebSocket;
 use Ratchet\RFC6455\Messaging\MessageInterface;
@@ -395,6 +396,10 @@ class MexcSocketService
                 ->update([
                     'price' => $lastPrice,
                 ]);
+
+            if ($lastPrice !== null) {
+                Cache::put("market:price:{$baseCurrency}USDT", $lastPrice, now()->addMinutes(5));
+            }
 
             $sellPrice = bcmul($lastPrice, ($profitSell / 100) + 1, 8);
             $buyPrice = bcmul($lastPrice, ($profitBuy / 100) + 1, 8);
