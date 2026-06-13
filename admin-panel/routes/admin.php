@@ -49,8 +49,9 @@ use App\Http\Controllers\ApiSystem\ApiSystemTokenController;
 use App\Http\Controllers\Report\HdWalletIndexReportController;
 use App\Http\Controllers\Report\HdWalletCurrencyController;
 use App\Http\Controllers\Admin\Bot\BotSettingsController;
-use App\Http\Controllers\Admin\Bot\BotSignalController;
-use App\Http\Controllers\Admin\Bot\BotOrderController;
+use App\Http\Controllers\Admin\Bot\BotSignalController;use App\Http\Controllers\Admin\Bot\BotOrderController;
+use App\Http\Controllers\Admin\Bot\BotReportController;
+use App\Http\Controllers\Admin\Bot\BotTestLabController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -274,7 +275,7 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::get('/check-withdrawal/{withdrawal}', [WithdrawalController::class, 'checkWithdrawal'])->name('withdrawal.check-withdrawal')->can('withdrawal');
         Route::get('/{withdraw}/confirm', [WithdrawalController::class, 'confirmWithdrawal'])->name('withdrawal.confirm-withdrawal')->can('withdrawal');
         Route::get('/{withdraw}/cancel', [WithdrawalController::class, 'cancelWithdrawal'])->name('withdrawal.cancel-withdrawal')->can('withdrawal');
-        Route::post('/excel-export', [WithdrawalController::class, 'excelExport'])->name('withdrawal.excel-export')->can('withdrawal');
+        Route::get('/excel-export', [WithdrawalController::class, 'excelExport'])->name('withdrawal.excel-export')->can('withdrawal');
         Route::post('/{withdrawal}/redispatch-job', [WithdrawalController::class, 'redispatchWithdrawalJob'])->name('withdrawal.redispatch-job')->can('withdrawal');
         Route::post('/{withdrawal}/cancel-queued', [WithdrawalController::class, 'cancelQueuedWithdrawal'])->name('withdrawal.cancel-queued')->can('withdrawal');
     });
@@ -288,6 +289,7 @@ Route::middleware(['admin.2fa'])->group(function () {
     Route::post('/internal-settings/update-exchange-withdrawal-setting', [InternalSettingController::class, 'updateExchangeWithdrawalSetting'])->name('setting.int.update-exchange-withdrawal-setting')->can('setting.int.index');
     Route::post('/internal-settings/update-spot-settings', [InternalSettingController::class, 'updateSpotSettings'])->name('setting.int.update-spot-settings')->can('setting.int.index');
     Route::post('/internal-settings/update-otc-settings', [InternalSettingController::class, 'updateOtcSettings'])->name('setting.int.update-otc-settings')->can('setting.int.index');
+    Route::post('/internal-settings/update-withdrawal-settings', [InternalSettingController::class, 'updateWithdrawalSettings'])->name('setting.int.update-withdrawal-settings')->can('setting.int.index');
 
     Route::get('/external-settings', [ExternalSettingController::class, 'index'])->name('external-setting.index')->can('setting.ext.index');
     Route::post('/external-settings/update-ref-address', [ExternalSettingController::class, 'updateRefAddress'])->name('setting.ext.update-ref-address')->can('setting.ext.index');
@@ -405,6 +407,44 @@ Route::middleware(['admin.2fa'])->group(function () {
             Route::post('/{token}/regenerate', [ApiSystemTokenController::class, 'regenerate'])->name('api-system.tokens.regenerate')->can('api-system');
             Route::delete('/{token}', [ApiSystemTokenController::class, 'destroy'])->name('api-system.tokens.destroy')->can('api-system');
             Route::get('/{token}/usage-stats', [ApiSystemTokenController::class, 'getUsageStats'])->name('api-system.tokens.usage-stats')->can('api-system');
+        });
+    });
+
+    // *********AUTO-TRADE BOT*********//
+    Route::prefix('auto-trade')->name('bot.')->can('bot-management')->group(function () {
+        // Settings (singleton)
+        Route::get('/settings', [BotSettingsController::class, 'index'])->name('settings.index');
+        Route::patch('/settings', [BotSettingsController::class, 'update'])->name('settings.update');
+
+        // Signals CRUD
+        Route::get('/signals', [BotSignalController::class, 'index'])->name('signal.index');
+        Route::post('/signals/reorder', [BotSignalController::class, 'reorder'])->name('signal.reorder');
+        Route::get('/signals/create', [BotSignalController::class, 'create'])->name('signal.create');
+        Route::post('/signals', [BotSignalController::class, 'store'])->name('signal.store');
+        Route::get('/signals/{botSignal}/edit', [BotSignalController::class, 'edit'])->name('signal.edit');
+        Route::patch('/signals/{botSignal}', [BotSignalController::class, 'update'])->name('signal.update');
+        Route::delete('/signals/{botSignal}', [BotSignalController::class, 'destroy'])->name('signal.destroy');
+        Route::patch('/signals/{botSignal}/toggle-status', [BotSignalController::class, 'toggleStatus'])->name('signal.toggle-status');
+
+        // Orders (read-only)
+        Route::get('/orders', [BotOrderController::class, 'index'])->name('order.index');
+        Route::get('/orders/{botOrder}', [BotOrderController::class, 'show'])->name('order.show');
+
+        // Reports
+        Route::get('/reports', [BotReportController::class, 'index'])->name('report.index');
+        Route::get('/reports/export/orders', [BotReportController::class, 'exportOrders'])->name('report.export.orders');
+        Route::get('/reports/export/executions', [BotReportController::class, 'exportExecutions'])->name('report.export.executions');
+        Route::get('/reports/export/settlements', [BotReportController::class, 'exportSettlements'])->name('report.export.settlements');
+
+        // Test Lab (admin-only dev/QA harness)
+        Route::prefix('test-lab')->name('test-lab.')->group(function () {
+            Route::get('/',              [BotTestLabController::class, 'index'])->name('index');
+            Route::get('/status',        [BotTestLabController::class, 'status'])->name('status');
+            Route::post('/start',        [BotTestLabController::class, 'start'])->name('start');
+            Route::post('/bump-price',   [BotTestLabController::class, 'bumpPrice'])->name('bump-price');
+            Route::post('/set-price',    [BotTestLabController::class, 'setPrice'])->name('set-price');
+            Route::post('/sync',         [BotTestLabController::class, 'sync'])->name('sync');
+            Route::post('/reset',        [BotTestLabController::class, 'reset'])->name('reset');
         });
     });
 });
