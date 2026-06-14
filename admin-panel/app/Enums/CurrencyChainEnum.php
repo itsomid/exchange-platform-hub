@@ -9,18 +9,13 @@ enum CurrencyChainEnum: string
     case TRC20 = 'TRC20';     // TRON TRC-20 token standard
     case BSC = 'BSC';         // Binance Smart Chain (Native chain)
     case DOGE = 'DOGE';       // Dogecoin blockchain
-    case SOL = 'SOL';         // Solana blockchain
-    case POLYGON = 'MATIC';   // Polygon (previously Matic Network)
+    case POLYGON = 'POLYGON';   // Polygon
+    case ARBITRUM = 'ARBITRUM'; // Arbitrum One (L2) 
+    case OPTIMISM = 'OPTIMISM'; // Optimism (L2)
+    case AVALANCHE = 'AVALANCHE';       // Avalanche blockchain
     case LTC = 'LTC';         // Litecoin blockchain
-    case AVAX = 'AVAX';       // Avalanche blockchain
-    case FTM = 'FTM';         // Fantom blockchain
-    case XLM = 'XLM';         // Stellar blockchain
-    case ADA = 'ADA';         // Cardano blockchain
-    case DOT = 'DOT';         // Polkadot blockchain
-    case MITH = 'MITH';       // MITH (Mithril) blockchain
-    case COSMOS = 'COSMOS';   // Cosmos blockchain
-    case TEZOS = 'TEZOS';     // Tezos blockchain
-
+    case DASH = 'DASH';       // Dash blockchain
+    case SONIC = 'SONIC';     // Sonic blockchain
     public function chain_name(): string
     {
         return match ($this) {
@@ -29,17 +24,14 @@ enum CurrencyChainEnum: string
             self::TRC20 => 'TRON (TRC20)',
             self::BSC => 'BSC (BEP20)',
             self::DOGE => 'Dogecoin',
-            self::SOL => 'Solana',
             self::POLYGON => 'Polygon',
+            self::ARBITRUM => 'Arbitrum',
+            self::OPTIMISM => 'Optimism',
             self::LTC => 'Litecoin',
-            self::AVAX => 'Avalanche',
-            self::FTM => 'Fantom',
-            self::XLM => 'Stellar',
-            self::ADA => 'Cardano',
-            self::DOT => 'Polkadot',
-            self::MITH => 'MITH (Mithril)',
-            self::COSMOS => 'Cosmos',
-            self::TEZOS => 'Tezos',
+            self::DASH => 'Dash',
+            self::AVALANCHE => 'Avalanche',
+            self::SONIC => 'Sonic',
+         
         };
     }
 
@@ -51,12 +43,13 @@ enum CurrencyChainEnum: string
             self::BSC => 'BINANCE',
             self::TRC20 => 'TRON',
             self::DOGE => 'DOGECOIN',
-            self::SOL => 'SOLANA',
             self::POLYGON => 'POLYGON',
             self::LTC => 'LITECOIN',
-            self::AVAX => 'AVALANCHE',
-            self::FTM => 'FANTOM',
-            self::XLM => 'STELLAR',
+            self::DASH => 'DASH',
+            self::AVALANCHE => 'AVALANCHE',
+            self::ARBITRUM => 'ARBITRUM',
+            self::OPTIMISM => 'OPTIMISM',
+            self::SONIC => 'SONIC',
         };
     }
 }

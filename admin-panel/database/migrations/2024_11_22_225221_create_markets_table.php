@@ -20,11 +20,11 @@ return new class extends Migration
             $table->string('quote_currency'); // e.g., USD
             $table->foreign('quote_currency')->references('symbol')->on('currencies')->onDelete('cascade');
 
-            $table->decimal('min_trade_amount', 18, 8)->default(0);
-            $table->decimal('max_trade_amount', 18, 8)->default(0);
+            $table->decimal('min_trade_amount', 20, 8)->default(0);
+            $table->decimal('max_trade_amount', 20, 8)->default(0);
 
-            $table->decimal('min_otc_amount', 18, 8)->default(0);
-            $table->decimal('max_otc_amount', 18, 8)->default(0);
+            $table->decimal('min_otc_amount', 20, 8)->default(0);
+            $table->decimal('max_otc_amount', 20, 8)->default(0);
 
             $table->boolean('is_active')->default(true);
             $table->timestamps();

@@ -48,3 +48,7 @@ env/mysql.env
 env/admin_panel.env
 env/api_service.env
 env/phpmyadmin.env
+
+docs
+
+docs

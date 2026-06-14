@@ -32,24 +32,15 @@
 
                                 <div class="form-group">
                                     <label class="form-label" for="symbol">کوین پایه:</label>
-                                    <select id="symbol" class="form-select" name="symbol"
-                                            data-placeholder="لطفا کوین پایه بازار را انتخاب کنید.">
-                                        @foreach($currencies as $currency)
-                                            <option value="{{$currency->id}}">
-                                                <x title='' class='tagify__tag__removeBtn' role='button'
-                                                   aria-label='remove tag'></x>
-                                                <span class='tagify__tag-text'>{{$currency->name}}</span>
-                                                <div>
-                                                    <div class='tagify__tag__avatar-wrap'>
-                                                        <img src="{{$currency->coinLogo()}}">
-                                                    </div>
-
-                                                </div>
-
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('currency')<small class="text-danger">{{$message}}</small>@enderror
+                                    <x-currency-select
+                                        name="symbol"
+                                        id="symbol"
+                                        :currencies="$currencies"
+                                        :selected="old('symbol', '')"
+                                        :required="true"
+                                        error="symbol"
+                                        placeholder="لطفا کوین پایه بازار را انتخاب کنید."
+                                    />
                                 </div>
                             </div>
 
@@ -195,13 +186,4 @@
     </div>
 
 @endsection
-@section('vendor-script')
-    @vite([
-    'resources/assets/vendor/libs/select2/select2.js',
-])
-@endsection
-@section('vendor-style')
-    @vite([
-        'resources/assets/vendor/libs/select2/select2.scss',
-    ])
-@endsection
+

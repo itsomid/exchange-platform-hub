@@ -14,6 +14,7 @@ use App\Enums\CurrencyChainEnum;
 use App\Models\Transaction;
 use App\Models\Currency;
 use App\Models\CurrencyChain;
+use App\Events\DepositDetected;
 use App\Services\Wallet\WalletService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -176,6 +177,13 @@ class DepositController extends Controller
             ]);
 
             DB::commit();
+
+            DepositDetected::dispatch($deposit->user_id, [
+                'currency' => $deposit->currency_symbol,
+                'amount' => $deposit->amount,
+                'tx_hash' => $deposit->transaction_hash,
+                'status' => 'confirmed',
+            ]);
 
             return redirect()->back()->with('success', 'واریزی با موفقیت تایید و به حساب کاربر اضافه شد.');
         } catch (\Exception $e) {

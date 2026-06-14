@@ -9,4 +9,6 @@ enum CurrencyMapEnum: string
     case BTC = 'BITCOIN';
     case TRC20 = 'TRON';
     case ERC20 = 'ETHEREUM';
+    case LTC = 'LITECOIN';
+    case DASH = 'DASH';
 }

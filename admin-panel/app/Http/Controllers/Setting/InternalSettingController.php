@@ -37,6 +37,7 @@ class InternalSettingController extends Controller
         $orderMatchingEnabled = Setting::where('key', 'order_matching_enabled')->first();
         $spotTradingEnabled = Setting::where('key', 'spot_trading_enabled')->first();
         $otcTradingEnabled = Setting::where('key', 'otc_trading_enabled')->first();
+        $withdrawalEnabled = Setting::where('key', 'withdrawal_enabled')->first();
 
         $exchangeWalletChains = $this->walletService->getExchangeAllWalletChain();
 
@@ -57,6 +58,7 @@ class InternalSettingController extends Controller
             'orderMatchingEnabled' => $orderMatchingEnabled,
             'spotTradingEnabled' => $spotTradingEnabled,
             'otcTradingEnabled' => $otcTradingEnabled,
+            'withdrawalEnabled' => $withdrawalEnabled,
             'exchangeWalletChains' => $exchangeWalletChains,
 
         ]);
@@ -246,6 +248,21 @@ class InternalSettingController extends Controller
 
         Toast::message('تنظیمات اسپات با موفقیت ذخیره شد')->success()->notify();
         // Redirect with success message
+        return redirect()->back();
+    }
+
+    public function updateWithdrawalSettings(Request $request)
+    {
+        Setting::updateOrCreate(
+            ['key' => 'withdrawal_enabled'],
+            [
+                'value' => $request->has('withdrawal_enabled') ? $request->input('withdrawal_enabled') : false,
+                'name' => 'وضعیت فعال‌سازی برداشت',
+                'type' => 'boolean'
+            ]
+        );
+
+        Toast::message('تنظیمات برداشت با موفقیت ذخیره شد')->success()->notify();
         return redirect()->back();
     }
 

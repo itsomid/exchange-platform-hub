@@ -8,6 +8,7 @@ use App\Notifications\CoinexPriceDifferenceTooLarge;
 use App\Notifications\CoinexHasError;
 use App\Notifications\CoinexSpotTradingIsTooSmall;
 use App\Notifications\HotWalletNotEnoughBalance;
+use App\Notifications\OTCSellFailed;
 
 class AdminNotification
 {
@@ -43,5 +44,29 @@ class AdminNotification
         Admin::query()->role(['tech_developers'])->get()->unique('id')->each(function ($admin) use ($exchangeName, $marketName, $amount, $orderType) {
             $admin->notify(new \App\Notifications\RefExchangeNotEnoughBalance($exchangeName, $marketName, $amount, $orderType));
         });
+    }
+
+    public static function sendSellFailed(
+        int    $otcOrderId,
+        int    $userId,
+        string $marketName,
+        string $sellAmount,
+        string $receivedAmount,
+        string $buyerQuoteWalletBalance,
+        string $reason,
+    ): void {
+        Admin::query()->role(['super_admin', 'admin'])->get()->unique('id')->each(
+            function ($admin) use ($otcOrderId, $userId, $marketName, $sellAmount, $receivedAmount, $buyerQuoteWalletBalance, $reason) {
+                $admin->notify(new OTCSellFailed(
+                    $otcOrderId,
+                    $userId,
+                    $marketName,
+                    $sellAmount,
+                    $receivedAmount,
+                    $buyerQuoteWalletBalance,
+                    $reason,
+                ));
+            }
+        );
     }
 }

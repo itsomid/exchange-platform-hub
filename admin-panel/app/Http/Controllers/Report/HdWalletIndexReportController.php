@@ -98,6 +98,7 @@ class HdWalletIndexReportController extends Controller
                     WHERE status = ?
                         AND transaction_hash IS NOT NULL
                         AND currency_symbol = ?
+                        AND user_id != 1
                         {$chainCondition}
                     GROUP BY user_id, currency_symbol, currency_chain_id
                 ) as d
@@ -110,6 +111,7 @@ class HdWalletIndexReportController extends Controller
                         COUNT(*) as outgoing_count
                     FROM hd_wallet_outgoing_transactions
                     WHERE currency_symbol = ?
+                        AND user_id != 1
                         {$chainCondition}
                     GROUP BY user_id, currency_symbol, currency_chain_id
                 ) as o ON d.user_id = o.user_id
@@ -159,6 +161,7 @@ class HdWalletIndexReportController extends Controller
                 ->where('status', DepositStatusEnum::CONFIRMED)
                 ->whereNotNull('transaction_hash')
                 ->where('currency_symbol', $currencySymbol)
+                ->where('user_id', '!=', 1)
                 ->when($currencyChainId, function ($query) use ($currencyChainId) {
                     $query->where('currency_chain_id', $currencyChainId);
                 })
@@ -184,14 +187,16 @@ class HdWalletIndexReportController extends Controller
             $balances = $balancesQuery->paginate($perPage);
         }
 
-        // Calculate summary totals
+        // Calculate summary totals (excluding index 1)
         $totalDeposits = Deposit::where('status', DepositStatusEnum::CONFIRMED)
             ->whereNotNull('transaction_hash')
             ->where('currency_symbol', $currencySymbol)
+            ->where('user_id', '!=', 1)
             ->when($currencyChainId, fn($q) => $q->where('currency_chain_id', $currencyChainId))
             ->sum('amount');
 
         $totalOutgoing = HdWalletOutgoingTransaction::where('currency_symbol', $currencySymbol)
+            ->where('user_id', '!=', 1)
             ->when($currencyChainId, fn($q) => $q->where('currency_chain_id', $currencyChainId))
             ->sum('amount');
 
@@ -200,6 +205,7 @@ class HdWalletIndexReportController extends Controller
         $totalIndexCount = Deposit::where('status', DepositStatusEnum::CONFIRMED)
             ->whereNotNull('transaction_hash')
             ->where('currency_symbol', $currencySymbol)
+            ->where('user_id', '!=', 1)
             ->when($currencyChainId, fn($q) => $q->where('currency_chain_id', $currencyChainId))
             ->distinct('user_id')
             ->count('user_id');
@@ -207,10 +213,12 @@ class HdWalletIndexReportController extends Controller
         $totalDepositCount = Deposit::where('status', DepositStatusEnum::CONFIRMED)
             ->whereNotNull('transaction_hash')
             ->where('currency_symbol', $currencySymbol)
+            ->where('user_id', '!=', 1)
             ->when($currencyChainId, fn($q) => $q->where('currency_chain_id', $currencyChainId))
             ->count();
 
         $totalOutgoingCount = HdWalletOutgoingTransaction::where('currency_symbol', $currencySymbol)
+            ->where('user_id', '!=', 1)
             ->when($currencyChainId, fn($q) => $q->where('currency_chain_id', $currencyChainId))
             ->count();
 

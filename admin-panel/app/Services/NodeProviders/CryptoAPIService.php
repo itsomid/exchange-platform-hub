@@ -14,9 +14,13 @@ class CryptoAPIService
     /**
      * @throws Exception
      */
-    public function getBalance(string $currency_symbol, string $address, string $network = 'mainnet')
+    public function getBalance(string $currency_symbol, string $address, string $network = 'mainnet', ?string $chainOverride = null)
     {
         $coinConfig = $this->getCoinConfig($currency_symbol);
+
+        if ($chainOverride) {
+            $coinConfig['chain'] = $chainOverride;
+        }
 
         $url = $this->buildUrl($coinConfig, $currency_symbol, $network, $address);
 

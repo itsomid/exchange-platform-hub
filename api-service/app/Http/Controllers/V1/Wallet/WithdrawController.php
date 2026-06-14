@@ -9,6 +9,7 @@ use App\Http\Resources\V1\Withdrawal\WithdrawalListCollection;
 use App\Repositories\Interfaces\WithdrawalRepositoryInterface;
 use App\Services\Wallet\DTO\Withdrawal\CreateWithdrawalRequestDTO;
 use App\Services\Wallet\WithdrawalService;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -47,6 +48,12 @@ class WithdrawController extends Controller
 
     public function __invoke(WithdrawRequest $request)
     {
+        $withdrawalEnabledSetting = Setting::where('key', 'withdrawal_enabled')->first();
+        $isGloballyDisabled = !($withdrawalEnabledSetting ? (bool) $withdrawalEnabledSetting->value : true);
+        if ($isGloballyDisabled) {
+            return response()->json(['message' => 'برداشت موقتاً غیرفعال است.'], 403);
+        }
+
         $validatedData = $request->validated();
         $withdrawResponse = $this->withdrawalService->createWithdrawal(
             resolve(CreateWithdrawalRequestDTO::class)
@@ -67,9 +74,13 @@ class WithdrawController extends Controller
         $service = resolve(\App\Services\User\FinancialBlockService::class);
         $blockState = $service->getUserBlockedState(Auth::id(), \App\Enums\FinancialBlockActionEnum::WITHDRAW);
 
+        $withdrawalEnabledSetting = Setting::where('key', 'withdrawal_enabled')->first();
+        $isGloballyDisabled = !($withdrawalEnabledSetting ? (bool) $withdrawalEnabledSetting->value : true);
+
         return response()->json([
             'is_blocked' => $blockState->isBlock(),
             'restrict_until' => $blockState->isBlock() ? $blockState->getRestrictUntil()->toDateTimeString() : null,
+            'is_globally_disabled' => $isGloballyDisabled,
         ]);
     }
 }

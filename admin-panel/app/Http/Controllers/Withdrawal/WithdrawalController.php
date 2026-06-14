@@ -227,15 +227,9 @@ class WithdrawalController extends Controller
 
     public function excelExport(Request $request)
     {
-        $from = $request->get('from_id');
-        $to = $request->get('to_id');
-        $filename = 'withdrawal_' . $from . '_' . $to;
+        $filename = 'withdrawals_' . now()->format('Y-m-d_H-i-s');
 
         $withdrawalQuery = Withdrawal::orderBy('id')->filterBy(request()->all());
-        if ($request->get('from_id') && $request->get('to_id')) {
-            $withdrawalQuery->where('id', '>=', $request->from_id)
-                ->where('id', '<=', $request->to_id);
-        }
         $withdrawals = $withdrawalQuery->get();
 
         $withdrawals = $withdrawals->map(function (Withdrawal $withdrawal) {

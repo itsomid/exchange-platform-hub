@@ -398,7 +398,7 @@
 
                                 <td>
                                     <div class="d-flex flex-column">
-                                        <a href="" class="text-heading text-truncate">
+                                        <a href="{{ route('admin.inquiry.user-details', ['user' => $deposit->user]) }}" class="text-heading text-truncate">
                                             <span class="fw-medium">{{ $deposit->user->email }}</span>
                                         </a>
                                         <small>{{ $deposit->user->username }}</small>

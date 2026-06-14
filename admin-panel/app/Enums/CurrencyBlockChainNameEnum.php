@@ -9,4 +9,11 @@ enum CurrencyBlockChainNameEnum: string
     case BINANCE = 'BINANCE';
     case ETHEREUM = 'ETHEREUM';
     case DOGE = 'DOGE';
+    case POLYGON = 'POLYGON';
+    case ARBITRUM = 'ARBITRUM';
+    case OPTIMISM = 'OPTIMISM';
+    case AVALANCHE = 'AVALANCHE';
+    case SONIC = 'SONIC';
+    case LITECOIN = 'LITECOIN';
+    case DASH = 'DASH';
 }

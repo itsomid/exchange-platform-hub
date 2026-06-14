@@ -2,12 +2,13 @@
 
 namespace App\Services\Socket;
 
+use App\Events\MarketPriceUpdated;
 use App\Events\MarketUpdated;
 use App\Models\Exchange;
 use App\Models\ExchangePrice;
 use App\Models\Market;
 use Exception;
-use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Cache;
 use Ratchet\Client\WebSocket;
 use Ratchet\RFC6455\Messaging\MessageInterface;
 use Throwable;
@@ -158,33 +159,43 @@ class CoinExSocketService
 
         $this->updateExchangePriceForMarket($marketId, $lastPrice, $openPrice);
 
+        if ($lastPrice !== null) {
+            Cache::put("market:price:{$baseCurrency}USDT", $lastPrice, now()->addMinutes(5));
+        }
+
         $prices = $this->calculatePrices($lastPrice, $openPrice, $profits['sell'], $profits['buy']);
 
         $priceChangePercentage = $this->calculateChangePercentage($lastPrice, $openPrice);
 
-        Redis::publish('market_prices', json_encode([
-            'base_currency' => $baseCurrency,
-            'sell_price' => $prices['sell_price'],
-            'sell_open_price' => $prices['sell_open_price'],
-            'buy_price' => $prices['buy_price'],
-            'buy_open_price' => $prices['buy_open_price'],
-            'last_price' => $lastPrice,
-            'price_change_percentage' => $priceChangePercentage,
-            'timestamp' => now()->timestamp,
-        ]));
+        if ($this->marketIds[$baseCurrency]['show_in_home'] ?? false) {
+            MarketPriceUpdated::dispatch([
+                'base_currency' => $baseCurrency,
+                'sell_price' => $prices['sell_price'],
+                'sell_open_price' => $prices['sell_open_price'],
+                'buy_price' => $prices['buy_price'],
+                'buy_open_price' => $prices['buy_open_price'],
+                'last_price' => $lastPrice,
+                'price_change_percentage' => $priceChangePercentage,
+                'timestamp' => now()->timestamp,
+            ]);
+        }
 
         MarketUpdated::dispatch($marketId, [
             'low' => $data['low'] ?? null,
             'high' => $data['high'] ?? null,
             'last' => $lastPrice,
             'open' => $openPrice,
+            'exchange_sell_price' => $prices['sell_price'],
+            'exchange_buy_price' => $prices['buy_price'],
+            'exchange_profit_sell' => $profits['sell'],
+            'exchange_profit_buy' => $profits['buy'],
             'price_change_percentage' => $priceChangePercentage,
         ]);
     }
 
     private function getMarketIdForBaseCurrency(string $baseCurrency): ?int
     {
-        if (isset($this->marketIds[$baseCurrency]['id'])) {
+        if (isset($this->marketIds[$baseCurrency]['id']) && time() - $this->marketIds[$baseCurrency]['last_update'] <= 60) {
             return $this->marketIds[$baseCurrency]['id'];
         }
 
@@ -199,6 +210,7 @@ class CoinExSocketService
 
         $this->marketIds[$baseCurrency] = [
             'id' => $market->id,
+            'show_in_home' => (bool) $market->show_in_home,
             'last_update' => time()
         ];
 

@@ -10,6 +10,7 @@ use App\Models\Currency;
 use App\Models\CurrencyChain;
 use App\Models\Wallet;
 use App\Models\Withdrawal;
+use App\Models\LockedBalanceDetail;
 use App\Models\Transaction;
 use App\Services\Wallet\WalletService;
 use Carbon\Carbon;
@@ -18,6 +19,7 @@ use App\Infrastructure\HDWalletNew\HDWalletFacade;
 use App\Infrastructure\HDWallet\Exceptions\NotFoundException;
 use App\Services\Wallet\DTO\Withdrawal\CheckWithdrawalResponseDTO;
 use Illuminate\Database\Eloquent\Collection;
+use App\Enums\LockedBalanceTypeEnum;
 use App\Jobs\SendAdminWithdrawalToHDWallet;
 use Throwable;
 use Illuminate\Support\Facades\DB;
@@ -79,18 +81,15 @@ class WithdrawalService
 
             $amountReceivedByUser = $totalAmount - $total_fee;
 
-            // Validate sufficient balance
-            if ($wallet->balance < $totalAmount) {
+            // Validate sufficient available balance (balance - locked_balance)
+            if (($wallet->balance - $wallet->locked_balance) < $totalAmount) {
                 throw new \Exception('Insufficient balance in the wallet.');
             }
-
-            // Lock funds (balance is deducted upon confirmation, matching api-service approach)
-            $wallet->increment('locked_balance', $totalAmount);
 
             // Set timestamps
             $timestamp = $date ?? now();
 
-            // Create the withdrawal record
+            // Create the withdrawal record first (needed for locked_balance_details FK)
             $withdrawal = Withdrawal::create([
                 'user_id' => $userId,
                 'currency_chain' => $currencyChain,
@@ -105,6 +104,17 @@ class WithdrawalService
                 'created_at' => $timestamp,
                 'updated_at' => $timestamp,
             ]);
+
+            // Lock funds (deduct-at-completion model: balance is unchanged until withdrawal completes)
+            $wallet->increment('locked_balance', $totalAmount);
+            LockedBalanceDetail::create([
+                'wallet_id' => $wallet->id,
+                'amount' => $totalAmount,
+                'type' => LockedBalanceTypeEnum::WITHDRAWAL,
+                'withdrawal_id' => $withdrawal->id,
+                'description' => 'مسدود سازی دارایی بابت برداشت #' . $withdrawal->id,
+            ]);
+
             if ($totalAmount >= $currency->max_auto_withdraw_amount) {
                 $withdrawal->update([
                     'description' => 'Admin approval required',
@@ -152,11 +162,18 @@ class WithdrawalService
                 throw new \Exception('Withdrawal is already processed.');
             }
 
-            $wasFailed = $withdrawal->status === WithdrawalStatusEnum::FAILED;
-
-            // Deduct balance (balance was only locked during creation, not deducted)
             if ($wallet->balance < $withdrawal->amount) {
-                throw new \Exception('Insufficient balance to finalize withdrawal.');
+                throw new \Exception('Insufficient balance to complete withdrawal.');
+            }
+
+            // Deduct balance now (deduct-at-completion model)
+            $wallet->decrement('balance', $withdrawal->amount);
+
+            // Release lock if it still exists (not present when withdrawal was previously FAILED)
+            $hasLockedDetail = LockedBalanceDetail::where('withdrawal_id', $withdrawal->id)->exists();
+            if ($hasLockedDetail) {
+                $wallet->decrement('locked_balance', $withdrawal->amount);
+                LockedBalanceDetail::where('withdrawal_id', $withdrawal->id)->delete();
             }
             $wallet->decrement('balance', $withdrawal->amount);
 
@@ -167,12 +184,6 @@ class WithdrawalService
                 'confirmed_at' => now(),
                 'description' => 'Withdraw Completed',
             ]);
-
-            // Unlock funds for pending/processing records. For previously failed withdrawals,
-            // locked balance was already released and should not be decremented again.
-            if (! $wasFailed) {
-                $wallet->decrement('locked_balance', $withdrawal->amount);
-            }
 
             // Create the transaction record
             Transaction::create([
@@ -262,8 +273,11 @@ class WithdrawalService
                 ->first();
 
             if ($wallet) {
-                // Release locked funds (balance was never deducted, only locked)
-                $wallet->decrement('locked_balance', $withdrawal->amount);
+                $amountToUnlock = min($wallet->locked_balance, $withdrawal->amount);
+                if ($amountToUnlock > 0) {
+                    $wallet->decrement('locked_balance', $amountToUnlock);
+                }
+                LockedBalanceDetail::where('withdrawal_id', $withdrawal->id)->delete();
             }
 
             DB::commit();
@@ -307,6 +321,7 @@ class WithdrawalService
                 if ($amountToUnlock > 0) {
                     $wallet->decrement('locked_balance', $amountToUnlock);
                 }
+                LockedBalanceDetail::where('withdrawal_id', $withdrawal->id)->delete();
             }
 
             DB::commit();
@@ -407,6 +422,7 @@ class WithdrawalService
                                 if ($amountToUnlock > 0) {
                                     $failedWallet->decrement('locked_balance', $amountToUnlock);
                                 }
+                                LockedBalanceDetail::where('withdrawal_id', $lockedWithdrawal->id)->delete();
                             }
                         }
                         DB::commit();

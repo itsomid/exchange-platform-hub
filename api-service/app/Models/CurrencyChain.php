@@ -56,6 +56,7 @@ class CurrencyChain extends Model
             'ARBITRUM' => 'https://arbiscan.io/token/',
             'OPTIMISM' => 'https://optimistic.etherscan.io/token/',
             'AVALANCHE' => 'https://snowtrace.io/token/',
+            'SONIC' => 'https://sonicscan.org/token/',
         ];
 
         $blockchainName = $this->blockchain_name?->value;

@@ -44,8 +44,6 @@ class CurrencyChainController extends Controller
      */
     public function storeChain(Request $request, Currency $currency)
     {
-        // Check if this is a base coin to determine contract_address requirement
-        $isBaseCoin = $request->has('is_base_coin') && $request->is_base_coin == '1';
         
         // Validate the incoming data
         $validationRules = [
@@ -60,15 +58,10 @@ class CurrencyChainController extends Controller
             'network_fee' => 'required|numeric',
             'deposit_enabled' => 'nullable|boolean',
             'withdraw_enabled' => 'nullable|boolean',
+            'contract_address' => 'nullable|string',  // Default to nullable, will adjust based on base coin status
         ];
         
-        // Make contract_address optional for base coins
-        if ($isBaseCoin) {
-            $validationRules['contract_address'] = 'nullable|string';
-        } else {
-            $validationRules['contract_address'] = 'required|string';
-        }
-        
+  
         $validated = $request->validate($validationRules);
 
         // Check if the chain already exists for the given currency

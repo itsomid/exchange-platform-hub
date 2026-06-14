@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\External\V1\HDWallet;
 
 use App\Enums\DepositStatusEnum;
+use App\Enums\CurrencyBlockChainNameEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
@@ -17,6 +18,7 @@ use App\Repositories\Interfaces\DepositRepositoryInterface;
 use App\Repositories\Interfaces\TransactionRepositoryInterface;
 use App\Repositories\Interfaces\UserRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
+use App\Infrastructure\HDWalletNew\BlockchainNetworkMapper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -60,28 +62,27 @@ class DepositWebhookController extends Controller
         $txHash = $data['txHash'];
         $currencySymbol = $data['currency'];
 
-        Log::channel('hd-wallet')->info('Deposit webhook received', [
-            'userId' => $userId,
-            'txHash' => $txHash,
-            'currency' => $currencySymbol,
-            'amount' => $data['amount'],
-        ]);
 
         // Check if deposit already exists
         if ($this->depositRepository->isDepositExists($txHash)) {
+            $existingDeposit = $this->depositRepository->findByTransactionHash($txHash);
+            $existingDepositId = $existingDeposit?->id;
+            $existingCreditedAt = $existingDeposit?->created_at?->copy()->timezone(config('app.timezone'))?->toIso8601String(); 
             
-            // Still broadcast the event so frontend gets notified
-         
-            DepositDetected::dispatch($userId, [
-                'currency' => $currencySymbol,
-                'amount' => $data['amount'],
-                'tx_hash' => $txHash,
-                'status' => 'already_exists',
-            ]);
-
+            // Log::channel('hd-wallet')->info('already exists Deposit webhook processed successfully', [
+            //     'userId' => $userId,
+            //     'txHash' => $txHash,
+            //     'amount' => $data['amount'],
+            //     'status' => 'already_exists',
+            //     'existingDepositId' => $existingDepositId,
+            //     'existingCreditedAt' => $existingCreditedAt,
+            // ]);
             return response()->json([
                 'success' => true,
                 'message' => 'Deposit already processed',
+                'alreadyExists' => true,
+                'depositId' => $existingDepositId,
+                'creditedAt' => $existingCreditedAt,
             ]);
         }
 
@@ -102,13 +103,35 @@ class DepositWebhookController extends Controller
 
             $wallet->load('chains.wallet.currency.chains');
 
-            // Find the matching currency chain
+            // Convert hd-wallet network name to old blockchain name for matching
+            $expectedBlockchainName = BlockchainNetworkMapper::toOldBlockchain($data['network']);
+            $blockchainEnum = CurrencyBlockChainNameEnum::tryFrom($expectedBlockchainName);
+
+            // Find the matching currency chain by address AND network
             $currencyChain = null;
             foreach ($wallet->chains as $walletChain) {
                 if (strtolower($walletChain->address) === strtolower($data['toAddress'])) {
-                    $currencyChain = $walletChain->wallet->currency->chains
-                        ->where('chain', $walletChain->currency_chain)->first();
-                    break;
+                    // Match the currency chain that belongs to the correct blockchain
+                    $matchedChain = $walletChain->wallet->currency->chains
+                        ->where('chain', $walletChain->currency_chain)
+                        ->where('blockchain_name', $blockchainEnum)
+                        ->first();
+
+                    if ($matchedChain) {
+                        $currencyChain = $matchedChain;
+                        break;
+                    }
+                }
+            }
+
+            // Fallback: try address-only match if network match didn't work
+            if (!$currencyChain) {
+                foreach ($wallet->chains as $walletChain) {
+                    if (strtolower($walletChain->address) === strtolower($data['toAddress'])) {
+                        $currencyChain = $walletChain->wallet->currency->chains
+                            ->where('chain', $walletChain->currency_chain)->first();
+                        break;
+                    }
                 }
             }
 
@@ -138,7 +161,11 @@ class DepositWebhookController extends Controller
                     ->setAmount($data['amount'])
                     ->setAddress($data['toAddress'])
                     ->setTransactionHash($txHash)
-                    ->setConfirmedAt(isset($data['detectedAt']) ? \Carbon\Carbon::parse($data['detectedAt']) : now())
+                    ->setConfirmedAt(
+                        isset($data['creditedAt'])
+                            ? \Carbon\Carbon::parse($data['creditedAt'])
+                            : (isset($data['detectedAt']) ? \Carbon\Carbon::parse($data['detectedAt']) : now())
+                    )
                     ->setStatus($depositStatus)
                     ->setUsdtValue($usdtValue)
             );
@@ -174,16 +201,17 @@ class DepositWebhookController extends Controller
                 'status' => $depositStatus->value ?? 'confirmed',
             ]);
 
-            Log::channel('hd-wallet')->info('Deposit webhook processed successfully', [
-                'userId' => $userId,
-                'txHash' => $txHash,
-                'amount' => $data['amount'],
-                'status' => $depositStatus,
-            ]);
+            // Log::channel('hd-wallet')->info('Deposit webhook processed successfully', [
+            //     'userId' => $userId,
+            //     'txHash' => $txHash,
+            //     'amount' => $data['amount'],
+            //     'status' => $depositStatus,
+            // ]);
 
             return response()->json([
                 'success' => true,
-                'transactionId' => $deposit->id,
+                'depositId' => $deposit->id,
+                'creditedAt' => $deposit->created_at?->copy()->timezone(config('app.timezone'))?->toIso8601String(),
             ]);
         } catch (Throwable $exception) {
             DB::rollBack();

@@ -11,6 +11,13 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class DepositRepository implements DepositRepositoryInterface
 {
+    public function findByTransactionHash(string $transactionHash): ?Deposit
+    {
+        return Deposit::query()
+            ->where('transaction_hash', $transactionHash)
+            ->first();
+    }
+
     public function createOrUpdateDeposit(CreateOrUpdatePendingDepositRequestDTO $requestDTO): void
     {
         Deposit::query()

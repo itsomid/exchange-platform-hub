@@ -126,6 +126,14 @@ class MarketController extends Controller
             ->with('success', 'اطلاعات بازار با موفقیت به‌روز شد.');
     }
 
+    public function toggleHome(Market $market): JsonResponse
+    {
+        $market->show_in_home = !$market->show_in_home;
+        $market->save();
+
+        return response()->json(['show_in_home' => $market->show_in_home]);
+    }
+
     /**
      * Get CoinEx min OTC amount for a specific market
      */

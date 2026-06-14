@@ -12,6 +12,7 @@ class TransactionController
 {
     public function saveJournalNumber(SaveJournalEntryNumberRequest $request)
     {
+        
         $ids = $request->input('transaction_ids');
 
         $transactions = Transaction::query()->whereIn('id', $ids)->get();

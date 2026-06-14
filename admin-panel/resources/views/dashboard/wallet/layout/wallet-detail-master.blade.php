@@ -51,13 +51,18 @@
 
                 @foreach ($wallet->walletChains as $walletChain)
                     @if ($wallet->user_id !== 1)
-                        <a href="{{ $walletChain->explorer_address_url }}" target="_blank" class="my-1">
+                        <div class="d-flex align-items-center my-1">
+                            <a href="javascript:void(0);" class="mx-1 copy-btn" data-copy-text="{{ $walletChain->address }}"
+                                title="کپی آدرس">
+                                <i class="fa-regular fa-clone ms-1"></i>
+                            </a>
+                            <a href="{{ $walletChain->explorer_address_url }}" target="_blank">
 
-                            <span>{{ $walletChain->address }}</span>
+                                <span>{{ $walletChain->address }}</span>
 
-                            <span class="me-2">({{ $walletChain->currency_chain }})</span>
-                            <i class="fa-regular fa-clone ms-1"></i>
-                        </a>
+                                <span class="me-2">({{ $walletChain->currency_chain }})</span>
+                            </a>
+                        </div>
                     @else
                     @endif
                 @endforeach
@@ -114,15 +119,14 @@
         <div class="card mb-3">
             <div class="card-body">
                 @foreach ($wallet->currency->chains as $chain)
-                    {{--                    {{$wallet->walletChains}} --}}
+                    {{-- {{$wallet->walletChains}} --}}
                     @php
                         $walletChain = $wallet->walletChains
                             ? $wallet->walletChains->where('currency_chain', $chain->chain)->first()
                             : null;
                     @endphp
                     @if ($walletChain)
-                        <form action="{{ route('admin.wallet.update-chain-address', ['wallet_chain' => $walletChain]) }}"
-                            method="post">
+                        <form action="{{ route('admin.wallet.update-chain-address', ['wallet_chain' => $walletChain]) }}" method="post">
                             @csrf
                             <div class="row mb-3">
                                 <div class="col-md-5">
@@ -146,8 +150,7 @@
                                 <div class="col-md-5">
                                     <div class="input-group col-5">
                                         <button type="submit" class="btn btn-outline-primary">ایجاد آدرس</button>
-                                        <input type="text" class="form-control font-number" name="address"
-                                            value="">
+                                        <input type="text" class="form-control font-number" name="address" value="">
                                         <span class="input-group-text">{{ $chain->chain_name }} </span>
                                     </div>
                                 </div>
@@ -326,6 +329,33 @@
 
 @endsection
 @section('vendor-script')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('click', function (event) {
+                const button = event.target.closest('.copy-btn');
+                if (!button) {
+                    return;
+                }
+
+                const textToCopy = button.getAttribute('data-copy-text');
+                if (!textToCopy) {
+                    return;
+                }
+
+                navigator.clipboard.writeText(textToCopy).then(function () {
+                    const icon = button.querySelector('i');
+                    if (!icon) {
+                        return;
+                    }
+
+                    icon.classList.replace('fa-clone', 'fa-check');
+                    setTimeout(function () {
+                        icon.classList.replace('fa-check', 'fa-clone');
+                    }, 1500);
+                }).catch(function () { });
+            });
+        });
+    </script>
     @vite(['resources/assets/vendor/libs/apex-charts/apexcharts.js', 'resources/assets/js/config.js', 'resources/assets/js/wallet.js'])
 @endsection
 

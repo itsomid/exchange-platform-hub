@@ -6,6 +6,7 @@ use App\Enums\WithdrawalStatusEnum;
 use App\Infrastructure\HDWallet\DTO\Withdrawal\GetWithdrawalStatusRequestDTO;
 use App\Infrastructure\HDWalletNew\HDWalletFacade;
 use App\Models\Withdrawal;
+use App\Models\LockedBalanceDetail;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -186,11 +187,11 @@ class CheckWithdrawalStatus implements ShouldQueue
             ->first();
 
         if ($wallet) {
-            // Release locked funds (balance was never deducted, only locked)
             $amountToUnlock = min($wallet->locked_balance, $withdrawal->amount);
             if ($amountToUnlock > 0) {
                 $wallet->decrement('locked_balance', $amountToUnlock);
             }
+            LockedBalanceDetail::where('withdrawal_id', $withdrawal->id)->delete();
         }
     }
 
