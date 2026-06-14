@@ -49,8 +49,26 @@ class Math
         );
     }
 
-    private static function toDecimalString(string|float|int $number, int $precision = 8): string
+    private static function toDecimalString(string|float|int $number): string
     {
-        return sprintf('%.'.$precision.'f', (float) $number);
+        if (is_int($number)) {
+            return (string) $number;
+        }
+
+        if (is_string($number)) {
+            $trimmed = trim($number);
+            if (! is_numeric($trimmed)) {
+                return '0';
+            }
+            // Convert scientific notation (e.g., "3.31E-10") to plain decimal string
+            if (stripos($trimmed, 'e') !== false) {
+                return number_format((float) $trimmed, 20, '.', '');
+            }
+            return $trimmed;
+        }
+
+        // float: high-precision sprintf to avoid truncating significant digits.
+        // Note: prefer passing string for amounts with >15 significant digits.
+        return sprintf('%.20f', $number);
     }
 }
