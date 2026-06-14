@@ -124,6 +124,29 @@ Route::prefix('/spot')->group(function () {
     Route::get('/trades/{marketId}/latest', [\App\Http\Controllers\V1\Spot\TradeController::class, 'getLatestMatched']);
 });
 
+// Auto-Trade Bot
+Route::prefix('/bot')->name('bot.')->group(function () {
+    Route::get('/onboarding', [\App\Http\Controllers\Bot\V1\OnboardingController::class, 'show'])->name('onboarding.show');
+    Route::post('/accept-terms', [\App\Http\Controllers\Bot\V1\OnboardingController::class, 'accept'])->name('onboarding.accept');
+
+    Route::get('/wallet', [\App\Http\Controllers\Bot\V1\WalletController::class, 'show'])->name('wallet.show');
+    Route::post('/transfer-in', [\App\Http\Controllers\Bot\V1\WalletController::class, 'transferIn'])->name('wallet.transfer-in');
+    Route::post('/transfer-out', [\App\Http\Controllers\Bot\V1\WalletController::class, 'transferOut'])->name('wallet.transfer-out');
+    Route::get('/wallet/fee', [\App\Http\Controllers\Bot\V1\WalletController::class, 'fee'])->name('wallet.fee');
+
+    Route::get('/settings', [\App\Http\Controllers\Bot\V1\SettingsController::class, 'show'])->name('settings.show');
+    Route::patch('/settings', [\App\Http\Controllers\Bot\V1\SettingsController::class, 'update'])->name('settings.update');
+
+    Route::get('/reports/summary',  [\App\Http\Controllers\Bot\V1\ReportController::class, 'summary'])->name('reports.summary');
+    Route::get('/reports/per-coin', [\App\Http\Controllers\Bot\V1\ReportController::class, 'perCoin'])->name('reports.per-coin');
+
+    Route::get('/orders',                       [\App\Http\Controllers\Bot\V1\BotOrderController::class, 'index'])->name('orders.index');
+    Route::get('/allocations',                  [\App\Http\Controllers\Bot\V1\BotOrderController::class, 'allocations'])->name('allocations.index');
+    Route::get('/orders/{id}',                  [\App\Http\Controllers\Bot\V1\BotOrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{id}/cancel-preview', [\App\Http\Controllers\Bot\V1\BotOrderController::class, 'cancelPreview'])->name('orders.cancel-preview');
+    Route::post('/orders/{id}/cancel',         [\App\Http\Controllers\Bot\V1\BotOrderController::class, 'cancel'])->name('orders.cancel');
+});
+
 // Stock Trading
 Route::prefix('/stocks')->group(function () {
     // Get user's active contracts
