@@ -135,8 +135,8 @@ class CurrencySeeder extends Seeder
                 'persian_name' => 'پالیگان',
                 'symbol' => 'POL',
                 'logo' => 'pol.webp',
-                'price_precision' => 4,
-                'amount_precision' => 2,
+                'price_precision' => 6,
+                'amount_precision' => 8,
                 'max_auto_withdraw_amount' => 100000,
             ],
             [
@@ -144,8 +144,8 @@ class CurrencySeeder extends Seeder
                 'persian_name' => 'آربیتروم',
                 'symbol' => 'ARB',
                 'logo' => 'arb.webp',
-                'price_precision' => 4,
-                'amount_precision' => 2,
+                'price_precision' => 6,
+                'amount_precision' => 8,
                 'max_auto_withdraw_amount' => 100000,
             ],
             [
@@ -154,7 +154,7 @@ class CurrencySeeder extends Seeder
                 'symbol' => 'AVAX',
                 'logo' => 'default.png',
                 'price_precision' => 4,
-                'amount_precision' => 4,
+                'amount_precision' => 8,
                 'max_auto_withdraw_amount' => 10000,
             ],
             [
@@ -162,8 +162,8 @@ class CurrencySeeder extends Seeder
                 'persian_name' => 'سانیک',
                 'symbol' => 'S',
                 'logo' => 'sonic.svg',
-                'price_precision' => 4,
-                'amount_precision' => 4,
+                'price_precision' => 6,
+                'amount_precision' => 8,
                 'max_auto_withdraw_amount' => 10000,
             ],
             [
@@ -181,6 +181,15 @@ class CurrencySeeder extends Seeder
                 'symbol' => 'DASH',
                 'logo' => 'dash.svg',
                 'price_precision' => 2,
+                'amount_precision' => 6,
+                'max_auto_withdraw_amount' => 50,
+            ],
+            [
+                'name' => 'OP',
+                'persian_name' => 'اوپی',
+                'symbol' => 'OP',
+                'logo' => 'op.svg',
+                'price_precision' => 6,
                 'amount_precision' => 6,
                 'max_auto_withdraw_amount' => 50,
             ]
