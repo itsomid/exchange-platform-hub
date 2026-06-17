@@ -29,14 +29,40 @@ class WithdrawalController extends Controller
 
     public function index()
     {
+        if (request()->filled('currency') && ctype_digit((string) request('currency'))) {
+            $selectedCurrency = Currency::query()->find((int) request('currency'));
+            if ($selectedCurrency) {
+                request()->merge(['currency' => $selectedCurrency->symbol]);
+            }
+        }
+
+        $bitexroomUserId = (int) config('bitexroom.user_id', 1);
+        $showExchangeUserWithdrawals = request()->boolean('show_exchange_user_withdrawals');
+        $onlyRealNetworkWithdrawals = request()->boolean('only_real_network_withdrawals');
+
+        $applyVisibilityFilters = function ($query) use ($bitexroomUserId, $showExchangeUserWithdrawals, $onlyRealNetworkWithdrawals) {
+            if (! $showExchangeUserWithdrawals) {
+                $query->where('user_id', '!=', $bitexroomUserId);
+            }
+
+            if ($onlyRealNetworkWithdrawals) {
+                $query->whereNotNull('transaction_hash')
+                    ->where('transaction_hash', '!=', '');
+            }
+
+            return $query;
+        };
 
         $today = now()->toDateString(); // Get today's date
 
         // Count of today's deposits
-        $todayWithdrawalsCount = Withdrawal::whereDate('created_at', $today)->count();
+        $todayWithdrawalsCount = $applyVisibilityFilters(
+            Withdrawal::query()->whereDate('created_at', $today)
+        )->count();
 
-        $totalWithdrawalsValue = Withdrawal::with('currency')
-            ->whereDate('created_at', $today) // Assuming `currency` has the price
+        $totalWithdrawalsValue = $applyVisibilityFilters(
+            Withdrawal::query()->with('currency')->whereDate('created_at', $today)
+        )
             ->get()
             ->sum(function ($withdraw) {
                 return $withdraw->amount * $withdraw->currency->exchange_price; // Multiply amount by coin price
@@ -44,9 +70,12 @@ class WithdrawalController extends Controller
 
         // First 5 users with the most deposits (considering currency prices)
 
-        $topUsers = Withdrawal::with(['currency', 'user'])
-            ->where('status', WithdrawalStatusEnum::COMPLETED)
-            ->whereDate('created_at', $today)
+        $topUsers = $applyVisibilityFilters(
+            Withdrawal::query()
+                ->with(['currency', 'user'])
+                ->where('status', WithdrawalStatusEnum::COMPLETED)
+                ->whereDate('created_at', $today)
+        )
             ->get()
             ->groupBy('user_id')
             ->map(function ($withdraws, $userId) {
@@ -63,11 +92,13 @@ class WithdrawalController extends Controller
             ->take(5);
         $totalTopUsersWithdrawals = $topUsers->sum('totalWithdraw');
 
-        $withdraws = Withdrawal::filterBy(request()->all())->with(['user', 'currency', 'currencyChain', 'transaction'])
+        $withdraws = $applyVisibilityFilters(Withdrawal::query())
+            ->filterBy(request()->all())
+            ->with(['user', 'currency', 'currencyChain', 'transaction'])
             ->orderBy('id', request()->input('sortById', 'desc'))
             ->paginate(20);
 
-        $currencies = Currency::all();
+        $currencies = Currency::query()->where('is_active', true)->get();
         $chains = CurrencyChainEnum::cases();
 
         return view('dashboard.withdraw.index', [

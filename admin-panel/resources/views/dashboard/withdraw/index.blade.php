@@ -179,15 +179,15 @@
                     </div>
                     <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
                         <label class="form-label" for="currency">کوین:</label>
-                        <select name="currency" class="form-select" id="currency">
-                            <option value="">همه کوین‌ها</option>
-                            @foreach ($currencies as $currency)
-                                <option value="{{ $currency->symbol }}"
-                                    {{ request()->input('currency') == $currency->symbol ? 'selected' : '' }}>
-                                    {{ $currency->symbol }} - {{ $currency->name }}
-                                </option>
-                            @endforeach
-                        </select>
+                        <x-currency-select
+                            name="currency"
+                            id="currency"
+                            :currencies="$currencies"
+                            :selected="$currencies->firstWhere('symbol', request()->input('currency'))?->id ?? ''"
+                            :required="false"
+                            error="currency"
+                            placeholder="همه کوین‌ها"
+                        />
                     </div>
                     <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
                         <label class="form-label" for="currencyChain">شبکه:</label>
@@ -200,6 +200,22 @@
                                 </option>
                             @endforeach
                         </select>
+                    </div>
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-2 d-flex align-items-end">
+                        <div class="d-flex flex-column gap-2">
+                            <label class="switch switch-sm mb-0">
+                                <input type="checkbox" class="switch-input" name="show_exchange_user_withdrawals" value="1"
+                                    {{ request()->boolean('show_exchange_user_withdrawals') ? 'checked' : '' }} />
+                                <span class="switch-toggle-slider"></span>
+                                <span class="switch-label">نمایش برداشت‌های یوزر صرافی</span>
+                            </label>
+                            <label class="switch switch-sm mb-0">
+                                <input type="checkbox" class="switch-input" name="only_real_network_withdrawals" value="1"
+                                    {{ request()->boolean('only_real_network_withdrawals') ? 'checked' : '' }} />
+                                <span class="switch-toggle-slider"></span>
+                                <span class="switch-label">فقط برداشت‌های واقعی شبکه (دارای TxID)</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
                 <!-- User and Buttons Row -->
@@ -241,7 +257,7 @@
                     </div>
                 </div>
                 <!-- Active filter summary -->
-                @if (request()->hasAny(['status', 'currency', 'currencyChain', 'user', 'address', 'transactionHash']))
+                @if (request()->hasAny(['status', 'currency', 'currencyChain', 'user', 'address', 'transactionHash', 'show_exchange_user_withdrawals', 'only_real_network_withdrawals']))
                     <div class="alert alert-info d-flex align-items-center flex-wrap">
                         <i class="fas fa-info-circle me-2"></i>
                         <span class="me-2">فیلترهای فعال:</span>
@@ -275,6 +291,12 @@
                             @endif
                             @if (request()->filled('transactionHash'))
                                 <span class="badge bg-primary">TxID: {{ Str::limit(request()->input('transactionHash'), 20) }}</span>
+                            @endif
+                            @if (request()->boolean('show_exchange_user_withdrawals'))
+                                <span class="badge bg-warning">نمایش برداشت‌های یوزر صرافی: فعال</span>
+                            @endif
+                            @if (request()->boolean('only_real_network_withdrawals'))
+                                <span class="badge bg-success">فقط برداشت‌های واقعی شبکه: فعال</span>
                             @endif
                         </div>
                     </div>
