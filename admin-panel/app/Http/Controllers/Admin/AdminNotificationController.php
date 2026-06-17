@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
+use App\Models\Admin;
 use App\Models\NotificationRecord;
 use Illuminate\Http\Request;
 
@@ -15,9 +16,23 @@ class AdminNotificationController extends Controller
         $admin = auth()->user(); // Get authenticated admin
 
         if ($admin->hasPermissionTo('all_notifications')) {
-            $notifications = NotificationRecord::where('notifiable_type','App\Models\Admin')->filterBy(request()->all())->latest()->paginate(100);
+            $baseQuery = NotificationRecord::where('notifiable_type', Admin::class)
+                ->filterBy(request()->all());
+
+            // Keep one row per broadcast-like notification to avoid showing duplicates across admins.
+            $uniqueNotificationIds = (clone $baseQuery)
+                ->selectRaw('MIN(id) as id')
+                ->groupBy('type', 'data', 'created_at');
+
+            $notifications = NotificationRecord::whereIn('id', $uniqueNotificationIds)
+                ->latest()
+                ->paginate(100);
         } else {
-            $notifications = NotificationRecord::where('notifiable_id',$admin->id)->where('notifiable_type','App\Models\Admin')->filterBy(request()->all())->latest()->paginate(100);
+            $notifications = NotificationRecord::where('notifiable_id', $admin->id)
+                ->where('notifiable_type', Admin::class)
+                ->filterBy(request()->all())
+                ->latest()
+                ->paginate(100);
         }
 
         return view('dashboard.admin.notification.index', [
@@ -48,7 +63,7 @@ class AdminNotificationController extends Controller
         $admin = auth()->user();
 
         if ($admin->hasRole(['super_admin', 'admin'])) {
-            $query = NotificationRecord::where('notifiable_type', 'App\Models\Admin');
+            $query = NotificationRecord::where('notifiable_type', Admin::class);
             if ($request->filled('type')) {
                 $query->where('type', $request->input('type'));
             }
