@@ -27,6 +27,7 @@ class CurrencyChainSeeder extends Seeder
         $sonic = Currency::where('symbol', 'S')->first();
         $ltc = Currency::where('symbol', 'LTC')->first();
         $dash = Currency::where('symbol', 'DASH')->first();
+        $op = Currency::where('symbol', 'OP')->first();
 
         // Seed Currency Chains Data
         $currencyChains = [
@@ -92,6 +93,27 @@ class CurrencyChainSeeder extends Seeder
                 'is_base_coin' => true,
                 'explorer_address_url' => 'https://arbiscan.io/address/{address}',
                 'explorer_tx_url' => 'https://arbiscan.io/tx/{hash}',
+            ],
+            // OP (Optimism) chain
+            [
+                'currency_id' => $eth->id,
+                'chain' => CurrencyChainEnum::OP,
+                'chain_name' => 'Optimism',
+                'blockchain_name' => CurrencyBlockChainNameEnum::OPTIMISM,
+                'min_deposit_amount' => 0.01,
+                'min_withdraw_amount' => 0.01,
+                'deposit_enabled' => true,
+                'withdraw_enabled' => true,
+                'deposit_delay_minutes' => 5,
+                'safe_confirmations' => 12,
+                'exchange_withdrawal_fee' => 0.001,
+                'network_fee' => 0.01,
+                'withdrawal_precision' => 18,
+                'memo' => null,
+                'is_memo_required_for_deposit' => false,
+                'is_base_coin' => true,
+                'explorer_address_url' => 'https://optimistic.etherscan.io/address/{address}',
+                'explorer_tx_url' => 'https://optimistic.etherscan.io/tx/{hash}',
             ],
             // TRC20 chain for USDT
             [
@@ -261,7 +283,7 @@ class CurrencyChainSeeder extends Seeder
                 'withdrawal_precision' => 6,
                 'memo' => null,
                 'is_memo_required_for_deposit' => false,
-                'is_base_coin' => true,
+                'is_base_coin' => false,
                 'explorer_address_url' => 'https://arbiscan.io/address/{address}',
                 'explorer_tx_url' => 'https://arbiscan.io/tx/{hash}',
             ],
@@ -349,6 +371,28 @@ class CurrencyChainSeeder extends Seeder
                 'explorer_address_url' => 'https://blockchair.com/dash/address/{address}',
                 'explorer_tx_url' => 'https://blockchair.com/dash/transaction/{hash}',
             ],
+            // OP (Optimism) chain
+            [
+                'currency_id' => $op->id,
+                'chain' => CurrencyChainEnum::OP,
+                'chain_name' => 'OP',
+                'blockchain_name' => CurrencyBlockChainNameEnum::OP,
+                'min_deposit_amount' => 0.01,
+                'min_withdraw_amount' => 0.01,
+                'deposit_enabled' => true,
+                'withdraw_enabled' => true,
+                'deposit_delay_minutes' => 5,
+                'safe_confirmations' => 12,
+                'exchange_withdrawal_fee' => 0.001,
+                'network_fee' => 0.01,
+                'withdrawal_precision' => 18,
+                'contract_address' => '0x4200000000000000000000000000000000000042',
+                'memo' => null,
+                'is_memo_required_for_deposit' => false,
+                'is_base_coin' => false,
+                'explorer_address_url' => 'https://optimistic.etherscan.io/address/{address}',
+                'explorer_tx_url' => 'https://optimistic.etherscan.io/tx/{hash}',
+            ]
 
         ];
 

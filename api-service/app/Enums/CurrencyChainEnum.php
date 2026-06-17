@@ -18,4 +18,5 @@ enum CurrencyChainEnum: string
     case SONIC = 'SONIC';     // Sonic blockchain
     case LTC = 'LTC';         // Litecoin blockchain
     case DASH = 'DASH';       // Dash blockchain
+    case OP = 'OP';           // Optimism (L2)
 }
