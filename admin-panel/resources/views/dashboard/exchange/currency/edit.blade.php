@@ -100,6 +100,14 @@
                                     <span class="switch-label">وضعیت انتقال داخلی کوین</span>
                                 </label>
                             </div>
+                            <div class="col-md-6 mt-5">
+                                <label class="switch  switch-lg">
+                                    <input type="checkbox" class="switch-input" name="is_active"
+                                        value="1" {{ $currency->is_active ? 'checked' : '' }} />
+                                    <span class="switch-toggle-slider"></span>
+                                    <span class="switch-label">وضعیت کوین (فعال/غیرفعال)</span>
+                                </label>
+                            </div>
 
                             <div class=" d-flex justify-content-start mt-5">
 

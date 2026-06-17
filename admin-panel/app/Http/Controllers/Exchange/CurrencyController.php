@@ -152,6 +152,7 @@ class CurrencyController extends Controller
             'amount_precision' => $request->amount_precision,
             'inter_transfer_enabled' => isset($request->inter_transfer_enabled) && $request->inter_transfer_enabled == '1',
             'max_auto_withdraw_amount' => $request->max_auto_withdraw_amount,
+            'is_active' => isset($request->is_active) && $request->is_active == '1',
         ]);
         // Check if the old image exists and delete it
         if ($request->hasFile('logo')) {

@@ -22,6 +22,7 @@ class Currency extends Model
         'name',
         'persian_name',
         'symbol',
+        'is_active',
         'logo',
         'price_precision',
         'amount_precision',
@@ -34,6 +35,7 @@ class Currency extends Model
     ];
 
     protected $casts = [
+        'is_active' => 'boolean',
         'ref_exchange_withdrawal_enabled' => 'boolean',
         'ref_exchange_withdrawal_interval_minutes' => 'integer',
         'ref_exchange_withdrawal_min_count' => 'integer',

@@ -30,6 +30,7 @@ class UpdateCurrencyRequest extends FormRequest
             'price_precision' => 'required|integer',
             'amount_precision' => 'required|integer',
             'logo' => 'image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+            'is_active' => 'boolean',
         ];
     }
 

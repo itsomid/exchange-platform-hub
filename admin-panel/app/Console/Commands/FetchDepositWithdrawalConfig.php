@@ -21,7 +21,7 @@ class FetchDepositWithdrawalConfig extends Command
         try {
             $service = ExchangeFactory::make($exchange);
 
-            $currencies = Currency::query()->with('chains')->has('chains')->get();
+            $currencies = Currency::query()->with('chains')->has('chains')->where('is_active', true)->get();
             
             foreach ($currencies as $currency) {
 
