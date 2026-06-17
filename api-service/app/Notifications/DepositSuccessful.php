@@ -35,7 +35,11 @@ class DepositSuccessful extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'mail']; // Send via database and email
+        $channels = ['database'];
+        if (!empty($notifiable->email)) {
+            $channels[] = 'mail';
+        }
+        return $channels;
     }
 
     public function toDatabase($notifiable): array
