@@ -150,7 +150,12 @@
                                     <img src="{{ asset($currency->coinLogo()) }}" class="rounded-circle" width="40" height="40"
                                         alt="{{ $currency->symbol }}">
                                     <div>
-                                        <div class="fw-semibold">{{ $currency->name }}</div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="fw-semibold">{{ $currency->name }}</div>
+                                            @if(!$currency->is_active)
+                                                <span class="badge bg-label-warning">غیرفعال</span>
+                                            @endif
+                                        </div>
                                         <small class="text-muted">{{ $currency->symbol }}</small>
                                     </div>
                                 </div>
@@ -213,7 +218,9 @@
 
                             {{-- Status --}}
                             <td class="text-center">
-                                @if($currency->chains->count())
+                                @if(!$currency->is_active)
+                                    <span class="badge bg-label-warning">کوین غیرفعال</span>
+                                @elseif($currency->chains->count())
                                     <div class="d-flex flex-column gap-2 align-items-center">
                                         @foreach($currency->chains as $chain)
                                             <div class="d-flex rounded border px-2 py-1" style="min-width: 130px; font-size: 0.75rem;">
