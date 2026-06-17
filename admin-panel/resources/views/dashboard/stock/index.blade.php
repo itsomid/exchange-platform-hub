@@ -253,7 +253,7 @@
                                                 <div
                                                     class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
                                                     <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات سهام</h6>
-                                                    <div class="text-wrap w-60 text-end">
+                                                    <div class="text-wrap w-80 text-end">
                                                         {{$stock->description}}
                                                     </div>
                                                 </div>

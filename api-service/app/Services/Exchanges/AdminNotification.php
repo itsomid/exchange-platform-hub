@@ -7,15 +7,15 @@ use App\Models\User;
 use App\Notifications\CoinexPriceDifferenceTooLarge;
 use App\Notifications\CoinexHasError;
 use App\Notifications\CoinexSpotTradingIsTooSmall;
-use App\Notifications\HotWalletNotEnoughBalance;
 use App\Notifications\OTCSellFailed;
+use App\Notifications\WithdrawalFailed;
 
 class AdminNotification
 {
-    public static function sendHotWalletNotEnoughBalance(string $currencyName, string $amount, User $user): void
+    public static function sendWithdrawalFailed(string $currencyName, string $amount, User $user, string $description): void
     {
-        Admin::query()->role('super_admin')->get()->unique('id')->each(function ($admin) use ($currencyName, $amount, $user) {
-            $admin->notify(new HotWalletNotEnoughBalance($currencyName, $amount, $user));
+        Admin::query()->role('super_admin')->get()->unique('id')->each(function ($admin) use ($currencyName, $amount, $user, $description) {
+            $admin->notify(new WithdrawalFailed($currencyName, $amount, $user, $description));
         });
     }
 

@@ -138,11 +138,12 @@ class CheckWithdrawalStatus implements ShouldQueue
 
             DB::commit();
 
-            // Send admin notification
-            AdminNotification::sendHotWalletNotEnoughBalance(
+            // Send admin notification with actual failure reason
+            AdminNotification::sendWithdrawalFailed(
                 $responseDTO->getCurrencySymbol(),
                 $responseDTO->getAmount(),
-                $withdrawal->user
+                $withdrawal->user,
+                $responseDTO->getDescription() ?? 'Withdrawal failed'
             );
         } catch (Throwable $e) {
             DB::rollBack();
