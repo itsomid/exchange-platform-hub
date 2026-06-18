@@ -18,9 +18,11 @@ use App\Services\Wallet\DTO\Wallet\GetOneWalletResponseDTO;
 use App\Services\Wallet\DTO\Wallet\UpdateBalanceRequestDTO;
 use App\Services\Wallet\DTO\Wallet\WalletListsResponseDTO;
 use App\Services\Wallet\DTO\Wallet\WalletValueUSDTRequestDTO;
+use App\Services\Exchanges\AdminNotification;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Services\Wallet\DTO\Wallet\WalletValueUSDTResponseDTO;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class WalletService
@@ -64,9 +66,33 @@ class WalletService
             // stays populated. The new service's getUserAddress() is idempotent:
             // it returns the existing address if found, otherwise generates a new one.
             if (is_null($address) || $hdWallet->isNewSystem()) {
-                $blockchainName = $chain->wallet->currency->chains
-                    ->where('chain', $chain->currency_chain)->first()->blockchain_name->value;
-                $currencySymbol = $chain->wallet->currency->symbol;
+                $currency = $chain->wallet->currency;
+                $matchedChain = $currency->chains->where('chain', $chain->currency_chain)->first();
+
+                if (is_null($matchedChain)) {
+                    $availableChains = $currency->chains->pluck('chain')->implode(', ');
+
+                    Log::error('WalletService: blockchain_name not found for chain', [
+                        'user_id'          => $requestDTO->getUserId(),
+                        'currency_symbol'  => $currency->symbol,
+                        'requested_chain'  => $chain->currency_chain,
+                        'wallet_chain_id'  => $chain->id,
+                        'available_chains' => $availableChains ?: 'none',
+                    ]);
+
+                    AdminNotification::sendWalletChainNotFound(
+                        $requestDTO->getUserId(),
+                        $currency->symbol,
+                        $chain->currency_chain,
+                        $availableChains ?: 'none',
+                        $chain->id,
+                    );
+
+                    throw new InternalWalletHasProblemException;
+                }
+
+                $blockchainName = $matchedChain->blockchain_name->value;
+                $currencySymbol = $currency->symbol;
 
                 try {
                     $newAddress = $hdWallet->generateAddress(

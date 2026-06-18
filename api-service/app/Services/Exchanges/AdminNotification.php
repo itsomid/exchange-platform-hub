@@ -8,6 +8,7 @@ use App\Notifications\CoinexPriceDifferenceTooLarge;
 use App\Notifications\CoinexHasError;
 use App\Notifications\CoinexSpotTradingIsTooSmall;
 use App\Notifications\OTCSellFailed;
+use App\Notifications\WalletChainNotFound;
 use App\Notifications\WithdrawalFailed;
 
 class AdminNotification
@@ -44,6 +45,20 @@ class AdminNotification
         Admin::query()->role(['tech_developers'])->get()->unique('id')->each(function ($admin) use ($exchangeName, $marketName, $amount, $orderType) {
             $admin->notify(new \App\Notifications\RefExchangeNotEnoughBalance($exchangeName, $marketName, $amount, $orderType));
         });
+    }
+
+    public static function sendWalletChainNotFound(
+        int $userId,
+        string $currencySymbol,
+        string $chainSymbol,
+        string $availableChains,
+        int $walletChainId,
+    ): void {
+        Admin::query()->role(['super_admin', 'tech_developers'])->get()->unique('id')->each(
+            function ($admin) use ($userId, $currencySymbol, $chainSymbol, $availableChains, $walletChainId) {
+                $admin->notify(new WalletChainNotFound($userId, $currencySymbol, $chainSymbol, $availableChains, $walletChainId));
+            }
+        );
     }
 
     public static function sendSellFailed(
