@@ -380,9 +380,9 @@ class FinancialDashboardController extends Controller
         );
 
         // Query all fee transactions grouped by wallet's currency
-        $feeTransactions = Transaction::where('type', TransactionTypeEnum::FEE)
-            ->whereIn('subtype', $allFeeSubtypes)
-            ->whereBetween('created_at', [$dateStart, $dateEnd])
+        $feeTransactions = Transaction::where('transactions.type', TransactionTypeEnum::FEE)
+            ->whereIn('transactions.subtype', $allFeeSubtypes)
+            ->whereBetween('transactions.created_at', [$dateStart, $dateEnd])
             ->join('wallets', 'transactions.wallet_id', '=', 'wallets.id')
             ->selectRaw('wallets.currency_symbol, transactions.subtype, SUM(ABS(transactions.amount) * transactions.coin_price) as total_usdt, COUNT(*) as count')
             ->groupBy('wallets.currency_symbol', 'transactions.subtype')
