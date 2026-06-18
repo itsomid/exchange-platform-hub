@@ -52,6 +52,7 @@ class PermissionList
             ['withdrawal', 'مشاهده لیست برداشت ها'],
             ['stock', 'مدیریت معجزه قرن'],
             ['api-system', 'مدیریت سیستم API'],
+            ['bot-management', 'مدیریت ربات معاملاتی'],
 
             ['report', 'لیست گزارش ها'],
             ['view-logs', 'لیست ارورها'],

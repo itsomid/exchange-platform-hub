@@ -44,6 +44,7 @@ class DatabaseSeeder extends Seeder
 //            WalletSeeder::class,
 //            TransactionSeeder::class,
             NodeProviderSeeder::class,
+            BotGlobalSettingsSeeder::class,
 //            ExternalApiConfigSeeder::class,
 //            OTCBuySeeder::class,
 //            DepositSeeder::class,

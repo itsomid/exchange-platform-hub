@@ -32,8 +32,12 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->group(base_path('routes/external_v1.php'));
 
             // Internal webhook routes (wallet service → api service)
-            Route::middleware(['api'])->prefix('/api/hdwallet/v1') 
+            Route::middleware(['api'])->prefix('/api/hdwallet/v1')
                 ->group(base_path('routes/hdwallet_v1.php'));
+
+            // Internal admin test-lab routes (admin-panel → api service)
+            Route::middleware(['api'])->prefix('/api/internal')
+                ->group(base_path('routes/internal_v1.php'));
         }
     )
     ->withBroadcasting(
@@ -50,6 +54,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 'verified' => \App\Http\Middleware\CustomEnsureEmailIsVerified::class,
                 'basic.auth' => \App\Http\Middleware\BasicAuthMiddleware::class,
                 'api.system.auth' => \App\Http\Middleware\ApiSystemAuthMiddleware::class,
+                'bot-test-auth' => \App\Http\Middleware\InternalBotTestAuth::class,
             ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

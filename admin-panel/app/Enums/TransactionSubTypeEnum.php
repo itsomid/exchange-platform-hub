@@ -24,6 +24,16 @@ enum TransactionSubTypeEnum: string
     case REF_EXCHANGE_WITHDRAWAL = 'ref_exchange_withdrawal';
     case REF_EXCHANGE_WITHDRAWAL_FEE = 'ref_exchange_withdrawal_fee';
     case API_SYSTEM = 'api_system';
+    case BOT_TRANSFER_IN = 'bot_transfer_in';
+    case BOT_TRANSFER_OUT = 'bot_transfer_out';
+    case BOT_TRANSFER_FEE = 'bot_transfer_fee';
+    case BOT_BUY = 'bot_buy';
+    case BOT_SELL = 'bot_sell';
+    case BOT_EXCHANGE_FEE = 'bot_exchange_fee';
+    case BOT_SPREAD_FEE = 'bot_spread_fee';
+    case BOT_PERFORMANCE_FEE = 'bot_performance_fee';
+    case BOT_CANCEL_FEE = 'bot_cancel_fee';
+    case BOT_NETWORK_FEE = 'bot_network_fee';
 
 
     const array TYPE_LABEL = [
@@ -47,6 +57,16 @@ enum TransactionSubTypeEnum: string
         self::REF_EXCHANGE_WITHDRAWAL_FEE->value => 'فی برداشت از صرافی مرجع',
         self::STOCK->value => 'سهام',
         self::API_SYSTEM->value => 'سیستم API',
+        self::BOT_TRANSFER_IN->value => 'واریز به ربات',
+        self::BOT_TRANSFER_OUT->value => 'برداشت از ربات',
+        self::BOT_TRANSFER_FEE->value => 'کارمزد انتقال ربات',
+        self::BOT_BUY->value => 'خرید ربات',
+        self::BOT_SELL->value => 'فروش ربات',
+        self::BOT_EXCHANGE_FEE->value => 'کارمزد صرافی ربات',
+        self::BOT_SPREAD_FEE->value => 'اسپرد ربات',
+        self::BOT_PERFORMANCE_FEE->value => 'کارمزد عملکرد ربات',
+        self::BOT_CANCEL_FEE->value => 'کارمزد لغو ربات',
+        self::BOT_NETWORK_FEE->value => 'کارمزد شبکه ربات',
     ];
 
     const array TYPE_COLOR = [
@@ -70,6 +90,16 @@ enum TransactionSubTypeEnum: string
         self::REF_EXCHANGE_WITHDRAWAL_FEE->value => 'info',
         self::STOCK->value => 'warning',
         self::API_SYSTEM->value => 'info',
+        self::BOT_TRANSFER_IN->value => 'success',
+        self::BOT_TRANSFER_OUT->value => 'danger',
+        self::BOT_TRANSFER_FEE->value => 'warning',
+        self::BOT_BUY->value => 'success',
+        self::BOT_SELL->value => 'danger',
+        self::BOT_EXCHANGE_FEE->value => 'warning',
+        self::BOT_SPREAD_FEE->value => 'warning',
+        self::BOT_PERFORMANCE_FEE->value => 'warning',
+        self::BOT_CANCEL_FEE->value => 'danger',
+        self::BOT_NETWORK_FEE->value => 'warning',
     ];
 
     public function label(): string

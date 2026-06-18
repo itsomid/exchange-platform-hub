@@ -22,4 +22,14 @@ enum TransactionSubTypeEnum: string
     case REF_EXCHANGE_WITHDRAWAL_FEE = 'ref_exchange_withdrawal_fee';
     case STOCK = 'stock';
     case API_SYSTEM = 'api_system';
+    case BOT_TRANSFER_IN = 'bot_transfer_in';
+    case BOT_TRANSFER_OUT = 'bot_transfer_out';
+    case BOT_TRANSFER_FEE = 'bot_transfer_fee';
+    case BOT_BUY = 'bot_buy';
+    case BOT_SELL = 'bot_sell';
+    case BOT_EXCHANGE_FEE = 'bot_exchange_fee';
+    case BOT_SPREAD_FEE = 'bot_spread_fee';
+    case BOT_PERFORMANCE_FEE = 'bot_performance_fee';
+    case BOT_CANCEL_FEE = 'bot_cancel_fee';
+    case BOT_NETWORK_FEE = 'bot_network_fee';
 }

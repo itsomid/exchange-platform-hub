@@ -11,4 +11,5 @@ enum TransactionTypeEnum: string
     case REFERRAL = 'referral';
     case FEE = 'fee';
     case REF_EXCHANGE = 'ref_exchange';
+    case BOT = 'bot';
 }

@@ -26,6 +26,8 @@ class Transaction extends Model
         'otc_order_id',
         'spot_trade_id',
         'stock_contract_id',
+        'bot_order_id',
+        'bot_buy_execution_id',
         'amount',
         'balance',
         'coin_price',
