@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * @property Collection $chains
@@ -15,6 +16,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Currency extends Model
 {
     use filterable, HasFactory;
+
+    private const WALLET_LIST_CURRENCIES_CACHE_KEY = 'App\Repositories\WalletRepository.getListsPaginated.currencies';
 
     public $filterNameSpace = 'App\Filters\CurrencyFilter';
 
@@ -41,6 +44,13 @@ class Currency extends Model
         'ref_exchange_withdrawal_min_count' => 'integer',
         'ref_exchange_withdrawal_aggregation_percent' => 'integer',
     ];
+
+    protected static function booted(): void
+    {
+        static::created(fn () => self::clearWalletListCurrenciesCache());
+        static::updated(fn () => self::clearWalletListCurrenciesCache());
+        static::deleted(fn () => self::clearWalletListCurrenciesCache());
+    }
 
     /**
      * Get the effective withdrawal interval for this currency.
@@ -121,5 +131,10 @@ class Currency extends Model
     public function interTransferStatus()
     {
         return (bool) $this->inter_transfer_enabled;
+    }
+
+    private static function clearWalletListCurrenciesCache(): void
+    {
+        Cache::forget(self::WALLET_LIST_CURRENCIES_CACHE_KEY);
     }
 }

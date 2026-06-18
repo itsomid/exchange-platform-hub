@@ -63,7 +63,7 @@ class CurrencyController extends Controller
             'name' => $request->name,
             'persian_name' => $request->persian_name,
             'symbol' => $request->symbol,
-            'is_active' => $request->is_active
+            'is_active' => isset($request->is_active) && $request->is_active == '1',
         ]);
 
         if ($request->hasFile('logo')) {
