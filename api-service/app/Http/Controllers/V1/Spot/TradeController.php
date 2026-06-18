@@ -11,10 +11,10 @@ class TradeController extends Controller
     public function __construct(private readonly TradeService $tradeService) {}
 
 
-    public function getLatestMatched(int $marketId)
+    public function getLatestMatched(string $marketId)
     {
         return TradeResource::collection(
-            $this->tradeService->getLatestMatched($marketId)
+            $this->tradeService->getLatestMatched((int) $marketId)
         );
     }
 }
