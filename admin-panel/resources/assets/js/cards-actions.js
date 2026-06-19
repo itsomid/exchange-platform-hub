@@ -37,26 +37,14 @@ $(function () {
                     _token: $('meta[name="csrf-token"]').attr("content"), // CSRF token for Laravel
                 },
                 success: function (data) {
-                    // Update the balance display
-
-                    var balanceElement = card.find(".hot-balance");
-                    balanceElement.html(data.amount);
                     card.unblock();
-                    var $alert = $this
-                        .closest(".card")
-                        .find(".card-alert")
-                        .html(
-                            '<div class="alert alert-success alert-dismissible fade show" role="alert">' +
-                                '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
-                                '<span class="fw-medium">اطلاعات با موفقیت به روز رسانی شد</div>',
-                        );
-
-                    // Auto-hide the alert after 5 seconds
-                    setTimeout(function () {
-                        $alert.find(".alert").fadeOut("slow", function () {
-                            $(this).remove();
-                        });
-                    }, 5000);
+                    Toastify({
+                        text: "موجودی با موفقیت به‌روزرسانی شد.",
+                        duration: 3000,
+                        gravity: "top",
+                        position: "right",
+                        style: { background: "#28C76F" },
+                    }).showToast();
                 },
                 error: function (xhr) {
                     var errorMessage = "خطا در دریافت اطلاعات.";
@@ -74,22 +62,13 @@ $(function () {
                     }
 
                     card.unblock();
-                    var $alert = $this
-                        .closest(".card")
-                        .find(".card-alert")
-                        .html(
-                            '<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
-                                '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
-                                '<span class="fw-medium">' +
-                                errorMessage +
-                                "</span></div>",
-                        );
-
-                    setTimeout(function () {
-                        $alert.find(".alert").fadeOut("slow", function () {
-                            $(this).remove();
-                        });
-                    }, 5000);
+                    Toastify({
+                        text: errorMessage,
+                        duration: 5000,
+                        gravity: "top",
+                        position: "right",
+                        style: { background: "#EA5455" },
+                    }).showToast();
                 },
             });
         });
