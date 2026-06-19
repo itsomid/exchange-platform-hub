@@ -89,6 +89,29 @@ readonly class OrderMatchingEngine
             // Price is determined by the matched limit order (maker)
             // No need to set $order->price here, completeOrder uses $makerOrder->price
 
+            // Safety guard: for market BUY orders, verify the buyer has sufficient available
+            // balance at the maker's actual price before executing the trade. The pre-order
+            // validation uses the best ask, but fills can span multiple price levels, so
+            // each fill must be checked individually to prevent negative balances.
+            if ($order->side === SpotOrderSideEnum::BUY && $oppositeOrder->price !== null) {
+                $proposedTradeQty = min($order->getRemindedQuantity(), $oppositeOrder->getRemindedQuantity());
+                $requiredCost = Math::mul($proposedTradeQty, $oppositeOrder->price);
+                $buyerWallet = $this->walletRepository->getOneOrCreateByCurrencyWithLock(
+                    $order->market->quote_currency,
+                    $order->user_id
+                );
+                if (Math::comp($buyerWallet->available_balance, $requiredCost) === -1) {
+                    Log::channel('spot-order-matching')->warning(
+                        "Market BUY order {$order->id}: insufficient balance "
+                        . "({$buyerWallet->available_balance} {$order->market->quote_currency}) "
+                        . "for required trade cost {$requiredCost} at price {$oppositeOrder->price}. "
+                        . 'Cancelling remaining order.'
+                    );
+                    $this->cancelRemainingMarketOrder($order);
+                    break;
+                }
+            }
+
             $this->completeOrder($order, $oppositeOrder);
             $this->broadcastOrderBook($order->market_id);
         }
@@ -132,8 +155,8 @@ readonly class OrderMatchingEngine
         //   - For SELL: if order.price < bestBid * (1 - deviation%) skip matching
         // -------------------------------------------------------------
 
-    // Read from config with default 10%
-    $maxDeviationPercent = (float) config('spot.spot_limit_max_deviation_percent', 10);
+        // Read from config with default 10%
+        $maxDeviationPercent = (float) config('spot.spot_limit_max_deviation_percent', 10);
 
         if ($maxDeviationPercent > 0 && $order->price !== null) {
             // Fetch best opposite price from DB (existing open orders)
