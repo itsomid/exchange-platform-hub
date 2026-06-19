@@ -355,7 +355,7 @@
                                 <td>
                                     <a href="" class="btn btn-sm btn-icon" data-bs-toggle="modal"
                                         data-bs-target="#trade-{{ $spotTrade->id }}">
-                                        <i class="fa-light fa-eye"></i>
+                                        <i class="fa-light fa-eye fa-lg"></i>
                                     </a>
                                     <div class="modal fade " id="trade-{{ $spotTrade->id }}" tabindex="-1"
                                         aria-modal="true" role="dialog">
