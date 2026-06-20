@@ -105,9 +105,8 @@ class EtherScanService
             ];
         }
 
-        // Prefer per-chain override first, then DB, then global symbol map, then 18
+        // Blockchain decimals: per-chain override map first, then global symbol map, default 18
         $decimals = self::CHAIN_TOKEN_DECIMALS[$chainId][$currency]
-            ?? $this->getTokenDecimalsForChain($currency, $chainEnum)
             ?? $this->tokenDecimals[$currency]
             ?? 18;
 
@@ -194,27 +193,6 @@ class EtherScanService
                 'details' => $e->getMessage()
             ];
         }
-    }
-
-    private function getTokenDecimalsForChain(string $currency, CurrencyChainEnum $chainEnum): ?int
-    {
-        try {
-            $currencyModel = Currency::where('symbol', $currency)->first();
-            if ($currencyModel) {
-                $currencyChain = CurrencyChain::where('currency_id', $currencyModel->id)
-                    ->where('chain', $chainEnum)
-                    ->whereNotNull('withdrawal_precision')
-                    ->first();
-
-                if ($currencyChain) {
-                    return (int) $currencyChain->withdrawal_precision;
-                }
-            }
-        } catch (\Exception $e) {
-            // fall through to hardcoded map
-        }
-
-        return null;
     }
 
     public static function chainIdFromEnum(CurrencyChainEnum $chainEnum): int
