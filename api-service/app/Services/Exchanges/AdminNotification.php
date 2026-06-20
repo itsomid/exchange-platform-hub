@@ -42,7 +42,7 @@ class AdminNotification
 
     public static function sendRefExchangeNotEnoughBalance(string $exchangeName, string $marketName, string $amount, string $orderType = 'sell'): void
     {
-        Admin::query()->role(['tech_developers'])->get()->unique('id')->each(function ($admin) use ($exchangeName, $marketName, $amount, $orderType) {
+        Admin::query()->role(['super_admin','tech_developers'])->get()->unique('id')->each(function ($admin) use ($exchangeName, $marketName, $amount, $orderType) {
             $admin->notify(new \App\Notifications\RefExchangeNotEnoughBalance($exchangeName, $marketName, $amount, $orderType));
         });
     }

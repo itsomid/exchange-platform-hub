@@ -40,8 +40,12 @@ return new class extends Migration
             $table->foreign('maker_order_id')->references('id')->on('spot_orders')->onDelete('cascade');
             $table->foreign('taker_order_id')->references('id')->on('spot_orders')->onDelete('cascade');
 
+            $table->text('notes')->nullable();
+            $table->softDeletes();
+
             $table->unique(['maker_order_id', 'taker_order_id']);
             $table->timestamps();
+                     $table->softDeletes();
         });
     }
 

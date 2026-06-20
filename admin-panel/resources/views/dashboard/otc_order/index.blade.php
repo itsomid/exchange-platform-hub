@@ -551,6 +551,14 @@
                                                                 <i class="fa-solid fa-rotate-right fa-lg"></i>
                                                             </button>
                                                         @endif
+
+                                                        @if(auth()->user()->hasRole('tech_developers'))
+                                                        <button type="button" class="btn btn-icon btn-text-warning"
+                                                            data-bs-toggle="modal" data-bs-target="#note-otc-{{ $order->id }}"
+                                                            title="ثبت نوت">
+                                                            <i class="{{ $order->notes ? 'fa-solid' : 'fa-regular' }} fa-note-sticky fa-lg {{ $order->notes ? 'text-warning' : '' }}"></i>
+                                                        </button>
+                                                        @endif
                                                     </td>
                                                 </tr>
                                             @endforeach
@@ -574,6 +582,33 @@
                                     :route-param-value="$order->id"
                                     :ref-exchange-description="$order->ref_exchange_description" />
                             @endforeach
+
+                            {{-- Developer Notes Modals --}}
+                            @if(auth()->user()->hasRole('tech_developers'))
+                            @foreach ($otcOrders as $order)
+                            <div class="modal fade" id="note-otc-{{ $order->id }}" tabindex="-1" aria-modal="true" role="dialog">
+                                <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">نوت معامله OTC #{{ $order->id }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <textarea class="form-control otc-notes-input" rows="5"
+                                                placeholder="نوت خود را اینجا بنویسید..."
+                                                data-id="{{ $order->id }}"
+                                                data-url="{{ route('admin.otc_orders.notes.update', $order->id) }}">{{ $order->notes }}</textarea>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">انصراف</button>
+                                            <button type="button" class="btn btn-primary save-otc-note"
+                                                data-id="{{ $order->id }}">ذخیره</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                            @endif
                             <div class="row mt-4">
                                 <div class="col-md-12">
                                     {{ $otcOrders->appends(request()->all())->links() }}
@@ -645,6 +680,47 @@
                 $('#advancedFilters').show();
                 $('#toggleAdvancedFilter').html('<i class="fas fa-chevron-up me-1"></i> مخفی کردن فیلترهای پیشرفته');
             }
+
+            // Save OTC order note
+            $(document).on('click', '.save-otc-note', function () {
+                const id = $(this).data('id');
+                const textarea = $('.otc-notes-input[data-id="' + id + '"]');
+                const url = textarea.data('url');
+                const notes = textarea.val();
+                const btn = $(this);
+
+                btn.prop('disabled', true);
+                $.ajax({
+                    url: url,
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    data: { notes: notes },
+                    success: function (res) {
+                        Toastify({
+                            text: res.message,
+                            duration: 3000,
+                            gravity: 'top', position: 'right',
+                            style: { background: '#28C76F' }
+                        }).showToast();
+                        $('#note-otc-' + id).modal('hide');
+                        const noteBtn = $('[data-bs-target="#note-otc-' + id + '"] i');
+                        if (notes.trim()) {
+                            noteBtn.addClass('text-warning fa-solid').removeClass('fa-regular');
+                        } else {
+                            noteBtn.removeClass('text-warning fa-solid').addClass('fa-regular');
+                        }
+                    },
+                    error: function () {
+                        Toastify({
+                            text: 'خطا در ذخیره نوت',
+                            duration: 5000,
+                            gravity: 'top', position: 'right',
+                            style: { background: '#EA5455' }
+                        }).showToast();
+                    },
+                    complete: function () { btn.prop('disabled', false); }
+                });
+            });
 
             // Trigger Reference Exchange Sell
             $('.trigger-ref-exchange-sell').on('click', function() {

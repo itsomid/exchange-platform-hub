@@ -384,7 +384,14 @@
                                     <a href="" class="btn btn-icon btn-text-secondary" data-bs-toggle="modal"
                                         data-bs-target="#transaction-{{ $transaction->id }}">
                                         <i class="fa-regular fa-eye fa-xl"></i>
-                                    </a>  
+                                    </a>
+                                    @if(auth()->user()->hasRole('tech_developers'))
+                                    <button type="button" class="btn btn-icon btn-text-warning"
+                                        data-bs-toggle="modal" data-bs-target="#note-transaction-{{ $transaction->id }}"
+                                        title="ثبت نوت">
+                                        <i class="{{ $transaction->notes ? 'fa-solid' : 'fa-regular' }} fa-note-sticky fa-xl {{ $transaction->notes ? 'text-warning' : '' }}"></i>
+                                    </button>
+                                    @endif
                                 </td>
                             </tr>
                          
@@ -396,6 +403,31 @@
         @foreach ($transactions as $transaction)
              <x-transaction-details-modal :transaction="$transaction" />
         @endforeach
+        @if(auth()->user()->hasRole('tech_developers'))
+        @foreach ($transactions as $transaction)
+        <div class="modal fade" id="note-transaction-{{ $transaction->id }}" tabindex="-1" aria-modal="true" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">نوت تراکنش #{{ $transaction->id }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <textarea class="form-control transaction-notes-input" rows="5"
+                            placeholder="نوت خود را اینجا بنویسید..."
+                            data-id="{{ $transaction->id }}"
+                            data-url="{{ route('admin.transaction.notes.update', $transaction->id) }}">{{ $transaction->notes }}</textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">انصراف</button>
+                        <button type="button" class="btn btn-primary save-transaction-note"
+                            data-id="{{ $transaction->id }}">ذخیره</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endforeach
+        @endif
         <div class="row mt-4">
             <div class="col-md-12">
                 {{ $transactions->appends(request()->all())->links() }}
@@ -443,6 +475,47 @@
                 $('#advancedFilters').show();
                 $('#toggleAdvancedFilter').html('<i class="fas fa-chevron-up me-1"></i> پنهان کردن فیلترهای پیشرفته');
             }
+
+            // Save transaction note
+            $(document).on('click', '.save-transaction-note', function () {
+                const id = $(this).data('id');
+                const textarea = $('.transaction-notes-input[data-id="' + id + '"]');
+                const url = textarea.data('url');
+                const notes = textarea.val();
+                const btn = $(this);
+
+                btn.prop('disabled', true);
+                $.ajax({
+                    url: url,
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    data: { notes: notes },
+                    success: function (res) {
+                        Toastify({
+                            text: res.message,
+                            duration: 3000,
+                            gravity: 'top', position: 'right',
+                            style: { background: '#28C76F' }
+                        }).showToast();
+                        $('#note-transaction-' + id).modal('hide');
+                        const noteBtn = $('[data-bs-target="#note-transaction-' + id + '"] i');
+                        if (notes.trim()) {
+                            noteBtn.addClass('text-warning fa-solid').removeClass('fa-regular');
+                        } else {
+                            noteBtn.removeClass('text-warning fa-solid').addClass('fa-regular');
+                        }
+                    },
+                    error: function () {
+                        Toastify({
+                            text: 'خطا در ذخیره نوت',
+                            duration: 5000,
+                            gravity: 'top', position: 'right',
+                            style: { background: '#EA5455' }
+                        }).showToast();
+                    },
+                    complete: function () { btn.prop('disabled', false); }
+                });
+            });
         });
     </script>
 @endsection

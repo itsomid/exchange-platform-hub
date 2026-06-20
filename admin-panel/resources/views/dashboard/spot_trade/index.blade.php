@@ -357,6 +357,13 @@
                                         data-bs-target="#trade-{{ $spotTrade->id }}">
                                         <i class="fa-light fa-eye fa-lg"></i>
                                     </a>
+                                    @if(auth()->user()->hasRole('tech_developers'))
+                                    <button type="button" class="btn btn-sm btn-icon btn-text-warning"
+                                        data-bs-toggle="modal" data-bs-target="#note-trade-{{ $spotTrade->id }}"
+                                        title="ثبت نوت">
+                                        <i class="{{ $spotTrade->notes ? 'fa-solid' : 'fa-regular' }} fa-note-sticky fa-lg {{ $spotTrade->notes ? 'text-warning' : '' }}"></i>
+                                    </button>
+                                    @endif
                                     <div class="modal fade " id="trade-{{ $spotTrade->id }}" tabindex="-1"
                                         aria-modal="true" role="dialog">
                                         <div class="modal-dialog modal-xl" role="document">
@@ -478,6 +485,30 @@
                                             </div>
                                         </div>
                                     </div>
+                                    @if(auth()->user()->hasRole('tech_developers'))
+                                    {{-- Notes Modal --}}
+                                    <div class="modal fade" id="note-trade-{{ $spotTrade->id }}" tabindex="-1" aria-modal="true" role="dialog">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">نوت معامله #{{ $spotTrade->id }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <textarea class="form-control spot-trade-notes-input" rows="5"
+                                                        placeholder="نوت خود را اینجا بنویسید..."
+                                                        data-id="{{ $spotTrade->id }}"
+                                                        data-url="{{ route('admin.spot_trades.notes.update', $spotTrade->id) }}">{{ $spotTrade->notes }}</textarea>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">انصراف</button>
+                                                    <button type="button" class="btn btn-primary save-spot-trade-note"
+                                                        data-id="{{ $spotTrade->id }}">ذخیره</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
@@ -565,6 +596,48 @@
             @if (request()->hasAny(['price_min', 'price_max', 'quantity_min', 'quantity_max', 'trade_value_min', 'trade_value_max']))
                 $('#toggleAdvancedFilter').click();
             @endif
+
+            // Save spot trade note
+            $(document).on('click', '.save-spot-trade-note', function () {
+                const id = $(this).data('id');
+                const textarea = $('.spot-trade-notes-input[data-id="' + id + '"]');
+                const url = textarea.data('url');
+                const notes = textarea.val();
+                const btn = $(this);
+
+                btn.prop('disabled', true);
+                $.ajax({
+                    url: url,
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    data: { notes: notes },
+                    success: function (res) {
+                        Toastify({
+                            text: res.message,
+                            duration: 3000,
+                            gravity: 'top', position: 'right',
+                            style: { background: '#28C76F' }
+                        }).showToast();
+                        $('#note-trade-' + id).modal('hide');
+                        // Update icon color
+                        const noteBtn = $('[data-bs-target="#note-trade-' + id + '"] i');
+                        if (notes.trim()) {
+                            noteBtn.addClass('text-warning fa-solid').removeClass('fa-regular');
+                        } else {
+                            noteBtn.removeClass('text-warning fa-solid').addClass('fa-regular');
+                        }
+                    },
+                    error: function () {
+                        Toastify({
+                            text: 'خطا در ذخیره نوت',
+                            duration: 5000,
+                            gravity: 'top', position: 'right',
+                            style: { background: '#EA5455' }
+                        }).showToast();
+                    },
+                    complete: function () { btn.prop('disabled', false); }
+                });
+            });
         });
     </script>
 

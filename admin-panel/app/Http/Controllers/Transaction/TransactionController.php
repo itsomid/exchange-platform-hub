@@ -97,4 +97,12 @@ class TransactionController extends Controller
 
         return Excel::download(new TransactionExport($transactions), $filename . '.xlsx');
     }
+
+    public function updateNote(Request $request, Transaction $transaction)
+    {
+        $request->validate(['notes' => 'nullable|string|max:5000']);
+        $transaction->update(['notes' => $request->input('notes')]);
+
+        return response()->json(['success' => true, 'message' => 'نوت با موفقیت ذخیره شد.']);
+    }
 }

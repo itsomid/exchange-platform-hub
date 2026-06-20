@@ -10,12 +10,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Sanctum\HasApiTokens;
 
 class SpotTrade extends Model
 {
-    use Filterable, HasApiTokens, HasFactory;
+    use Filterable, HasApiTokens, HasFactory, SoftDeletes;
     public $filterNameSpace = 'App\Filters\SpotTradeFilter';
+
+    protected $fillable = ['notes'];
 
     protected $appends = ['maker_side', 'taker_side'];
 
