@@ -73,11 +73,13 @@
                                     @php
                                         $symbol = $walletChain->wallet->currency_symbol;
                                         $chain = strtoupper($walletChain->currency_chain ?? 'OTHER');
-                                        $balance = $balances[$symbol][$walletChain->currency_chain] ?? 0;
                                         $address = $walletChain->address;
                                         $searchText = strtolower($symbol . ' ' . $chain . ' ' . ($address ?? ''));
                                     @endphp
-                                    <tr data-search="{{ $searchText }}" data-chain="{{ $chain }}">
+                                    <tr data-search="{{ $searchText }}" data-chain="{{ $chain }}"
+                                        data-wallet-chain-id="{{ $walletChain->id }}"
+                                        data-balance-url="{{ route('admin.exchange.hot-wallet.balance', $walletChain) }}"
+                                        data-symbol="{{ $symbol }}">
                                         <td class="w-25">
                                             <div class="d-flex align-items-center gap-3">
                                                 <div class="position-relative flex-shrink-0">
@@ -97,8 +99,17 @@
                                             </div>
                                         </td>
                                         <td class="w-25">
-                                            <span class="font-number fw-bold h5">{{ formatNumberTrimZeros($balance) }}</span>
-                                            <small class="text-muted me-1">{{ $symbol }}</small>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="spinner-border spinner-border-sm text-primary wallet-balance-spinner"
+                                                    role="status" aria-hidden="true"></span>
+                                                <span class="font-number fw-bold h5 wallet-balance-value mb-2 d-none" dir="ltr"></span>
+                                                <small class="text-muted me-1">{{ $symbol }}</small>
+                                            </div>
+                                        
+                                       
+                                              <small class="text-muted d-block wallet-balance-status" style="font-size: 11px; line-height: 1.2;">
+                                                در حال دریافت...
+                                            </small>
                                         </td>
                                         <td class="w-50">
                                             @if ($address)
@@ -117,7 +128,7 @@
                                             @endif
                                         </td>
                                         <td class="text-center">
-                                            <a href="javascript:void(0);" class="card-reload d-inline-flex"
+                                            <a href="javascript:void(0);" class="d-inline-flex wallet-row-refresh"
                                                 data-wallet-chain-id="{{ $walletChain->id }}" title="بروزرسانی">
                                                 <i class="fa fa-refresh"></i>
                                             </a>
@@ -148,6 +159,157 @@
             const walletSearch = document.getElementById('walletSearch');
             const chainFilter = document.getElementById('chainFilter');
             const walletEmptyState = document.getElementById('walletEmptyState');
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            const MAX_CONCURRENT_REQUESTS = 4;
+            const rowElements = Array.from(document.querySelectorAll('tr[data-wallet-chain-id][data-balance-url]'));
+            const fetchQueue = [];
+            let activeRequests = 0;
+
+            function showRowLoading(row, isLoading) {
+                const spinner = row.querySelector('.wallet-balance-spinner');
+                const refreshBtn = row.querySelector('.wallet-row-refresh');
+                const valueElement = row.querySelector('.wallet-balance-value');
+
+                row.dataset.loading = isLoading ? '1' : '0';
+
+                if (spinner) {
+                    spinner.classList.toggle('d-none', !isLoading);
+                }
+
+                if (valueElement) {
+                    valueElement.classList.toggle('d-none', isLoading);
+                }
+
+                if (refreshBtn) {
+                    refreshBtn.classList.toggle('disabled', isLoading);
+                    refreshBtn.style.pointerEvents = isLoading ? 'none' : '';
+                    refreshBtn.style.opacity = isLoading ? '0.5' : '';
+                }
+            }
+
+            function setRowBalance(row, amount) {
+                const valueElement = row.querySelector('.wallet-balance-value');
+                if (valueElement) {
+                    valueElement.textContent = amount;
+                }
+            }
+
+            function setRowStatus(row, status) {
+                const statusElement = row.querySelector('.wallet-balance-status');
+                if (!statusElement) {
+                    return;
+                }
+
+                if (status === 'cached') {
+                    statusElement.textContent = 'موجودی کش شده هست';
+                    return;
+                }
+
+                if (status === 'updated') {
+                    statusElement.textContent = 'موجودی به روز';
+                    return;
+                }
+
+                statusElement.textContent = status || 'در حال دریافت...';
+            }
+
+            function setRowErrorState(row) {
+                setRowBalance(row, '--');
+                setRowStatus(row, 'خطا در دریافت');
+            }
+
+            function showErrorToast(message) {
+                if (typeof Toastify !== 'function') {
+                    return;
+                }
+
+                Toastify({
+                    text: message || 'خطا در دریافت موجودی',
+                    duration: 5000,
+                    gravity: 'top',
+                    position: 'right',
+                    style: {
+                        background: '#EA5455'
+                    }
+                }).showToast();
+            }
+
+            function fetchRowBalance(row, options = {}) {
+                const balanceUrl = row.dataset.balanceUrl;
+                const forceRefresh = !!options.forceRefresh;
+
+                if (!balanceUrl) {
+                    return Promise.resolve();
+                }
+
+                if (row.dataset.loading === '1') {
+                    return Promise.resolve();
+                }
+
+                showRowLoading(row, true);
+                setRowStatus(row, 'در حال دریافت...');
+
+                const requestUrl = forceRefresh ? `${balanceUrl}?force_refresh=1` : balanceUrl;
+
+                return fetch(requestUrl, {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                }).then(function (response) {
+                    if (!response.ok) {
+                        return response.json().then(function (errorPayload) {
+                            throw new Error(errorPayload?.error || 'خطا در دریافت موجودی');
+                        }).catch(function () {
+                            throw new Error('خطا در دریافت موجودی');
+                        });
+                    }
+
+                    return response.json();
+                }).then(function (data) {
+                    const amount = data?.amount ?? '0';
+                    const status = data?.status || '';
+                    setRowBalance(row, amount);
+                    setRowStatus(row, status);
+                }).catch(function (error) {
+                    setRowErrorState(row);
+                    console.error('Error fetching balance for wallet chain ID ' + row.dataset.walletChainId, error);
+                    if (forceRefresh) {
+                        showErrorToast(error?.message || 'خطا در بروزرسانی موجودی');
+                    }
+                }).finally(function () {
+                    showRowLoading(row, false);
+                });
+            }
+
+            function runBalanceQueue() {
+                while (activeRequests < MAX_CONCURRENT_REQUESTS && fetchQueue.length > 0) {
+                    const row = fetchQueue.shift();
+                    activeRequests++;
+
+                    fetchRowBalance(row).finally(function () {
+                        activeRequests--;
+                        runBalanceQueue();
+                    });
+                }
+            }
+
+            function enqueueBalanceFetch(row, options = {}) {
+                if (!row) {
+                    return;
+                }
+
+                if (options.forceRefresh) {
+                    fetchRowBalance(row, { forceRefresh: true });
+                    return;
+                }
+
+                fetchQueue.push(row);
+                runBalanceQueue();
+            }
 
             function applyWalletFilters() {
                 const query = (walletSearch?.value || '').toLowerCase().trim();
@@ -184,7 +346,19 @@
             walletSearch?.addEventListener('input', applyWalletFilters);
             chainFilter?.addEventListener('change', applyWalletFilters);
 
+            rowElements.forEach(function (row) {
+                enqueueBalanceFetch(row);
+            });
+
             document.addEventListener('click', function (event) {
+                const refreshButton = event.target.closest('.wallet-row-refresh');
+                if (refreshButton) {
+                    event.preventDefault();
+                    const row = refreshButton.closest('tr[data-wallet-chain-id]');
+                    enqueueBalanceFetch(row, { forceRefresh: true });
+                    return;
+                }
+
                 const button = event.target.closest('.copy-btn');
                 if (!button) {
                     return;

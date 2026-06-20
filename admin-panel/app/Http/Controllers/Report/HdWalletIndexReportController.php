@@ -14,7 +14,6 @@ use App\Models\HdWalletOutgoingTransaction;
 use App\Models\Wallet;
 use App\Models\WalletChain;
 use App\Services\NodeProviders\BlockchairService;
-use App\Services\NodeProviders\BscScanService;
 use App\Services\NodeProviders\EtherScanService;
 use App\Services\NodeProviders\TronScanService;
 use Illuminate\Http\Request;
@@ -754,8 +753,8 @@ class HdWalletIndexReportController extends Controller
                 return $service->getBalance($currencySymbol, $address);
 
             case CurrencyChainEnum::BSC->value:
-                $service = new BscScanService();
-                return $service->getBalance($currencySymbol, $address);
+                $service = new EtherScanService();
+                return $service->getBalance($currencySymbol, $address, 56);
 
             case CurrencyChainEnum::BTC->value:
             case CurrencyChainEnum::DOGE->value:
@@ -881,7 +880,7 @@ class HdWalletIndexReportController extends Controller
                 $service = new EtherScanService();
                 $gasEstimate = $service->estimateTokenTransferGasCost($currencyChain->currency->symbol, 'SafeGasPrice');
             } elseif ($chainValue === 'BSC') {
-                $service = new BscScanService();
+                $service = new EtherScanService();
                 $gasEstimate = $service->estimateTokenTransferGasCost($currencyChain->currency->symbol, 'SafeGasPrice');
             } elseif ($chainValue === 'TRC20') {
                 // For TRC20, use approximate values (TronGrid doesn't have simple gas oracle)

@@ -9,7 +9,6 @@ use App\Models\CurrencyChain;
 use App\Models\Deposit;
 use App\Models\HdWalletOutgoingTransaction;
 use App\Services\NodeProviders\BlockchairService;
-use App\Services\NodeProviders\BscScanService;
 use App\Services\NodeProviders\EtherScanService;
 use App\Services\NodeProviders\TronScanService;
 use Illuminate\Bus\Queueable;
@@ -50,7 +49,6 @@ class SyncHdWalletOutgoingTransactionsJob implements ShouldQueue
     public function handle(
         TronScanService $tronScanService,
         EtherScanService $etherScanService,
-        BscScanService $bscScanService,
         BlockchairService $blockchairService
     ): void {
         try {
@@ -114,7 +112,6 @@ class SyncHdWalletOutgoingTransactionsJob implements ShouldQueue
                         $currency,
                         $tronScanService,
                         $etherScanService,
-                        $bscScanService,
                         $blockchairService
                     );
 
@@ -214,7 +211,6 @@ class SyncHdWalletOutgoingTransactionsJob implements ShouldQueue
         $currency,
         TronScanService $tronScanService,
         EtherScanService $etherScanService,
-        BscScanService $bscScanService,
         BlockchairService $blockchairService
     ): int {
         $chainEnum = $chain->chain;
@@ -236,7 +232,6 @@ class SyncHdWalletOutgoingTransactionsJob implements ShouldQueue
             $latestBlockNumber,
             $tronScanService,
             $etherScanService,
-            $bscScanService,
             $blockchairService
         );
 
@@ -301,16 +296,16 @@ class SyncHdWalletOutgoingTransactionsJob implements ShouldQueue
         ?int $afterBlock,
         TronScanService $tronScanService,
         EtherScanService $etherScanService,
-        BscScanService $bscScanService,
         BlockchairService $blockchairService
     ): array {
         return match ($chain) {
             CurrencyChainEnum::TRC20 => $tronScanService->getOutgoingTransactions($currencySymbol, $address, $afterBlock),
             CurrencyChainEnum::ERC20 => $etherScanService->getOutgoingTransactions($currencySymbol, $address, $afterBlock),
-            CurrencyChainEnum::BSC => $bscScanService->getOutgoingTransactions($currencySymbol, $address, $afterBlock),
-            CurrencyChainEnum::BTC => $blockchairService->getOutgoingTransactions('BTC', $address, $afterBlock),
-            CurrencyChainEnum::DOGE => $blockchairService->getOutgoingTransactions('DOGE', $address, $afterBlock),
-            CurrencyChainEnum::LTC => $blockchairService->getOutgoingTransactions('LTC', $address, $afterBlock),
+            CurrencyChainEnum::BSC   => $etherScanService->getOutgoingTransactions($currencySymbol, $address, $afterBlock, 56),
+            CurrencyChainEnum::BTC   => $blockchairService->getOutgoingTransactions('BTC', $address, $afterBlock),
+            CurrencyChainEnum::DOGE  => $blockchairService->getOutgoingTransactions('DOGE', $address, $afterBlock),
+            CurrencyChainEnum::LTC   => $blockchairService->getOutgoingTransactions('LTC', $address, $afterBlock),
+            CurrencyChainEnum::DASH  => $blockchairService->getOutgoingTransactions('DASH', $address, $afterBlock),
             default => ['error' => 'Unsupported chain', 'transactions' => []],
         };
     }
@@ -327,6 +322,7 @@ class SyncHdWalletOutgoingTransactionsJob implements ShouldQueue
             CurrencyChainEnum::BTC => 'BTC',
             CurrencyChainEnum::DOGE => 'DOGE',
             CurrencyChainEnum::LTC => 'LTC',
+            CurrencyChainEnum::DASH => 'DASH',
             default => null,
         };
 

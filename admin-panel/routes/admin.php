@@ -221,6 +221,7 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::get('/wallets/localWallets', [ExchangeWalletController::class, 'localWallets'])->name('exchange.local-wallet');
 
         Route::get('/wallets/hotWallets', [ExchangeWalletController::class, 'hotWallets'])->name('exchange.hot-wallet');
+        Route::get('/wallets/hotWallets/{walletChain}/balance', [ExchangeWalletController::class, 'hotWalletBalance'])->name('exchange.hot-wallet.balance');
         Route::post('/wallets/refresh-hot-wallet-balance', [ExchangeWalletController::class, 'refreshHotWalletBalance'])->name('refresh.balance');
         Route::get('/wallets/hotWallets/assets-gathering-to-cold-wallet', [ExchangeWalletController::class, 'assetsGatheringToColdWallet'])->name('wallet.assets-gathering-to-cold-wallet');
     });
