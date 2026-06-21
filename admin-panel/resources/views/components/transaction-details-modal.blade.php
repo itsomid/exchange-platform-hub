@@ -79,7 +79,7 @@
                 <div
                     class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
                     <h6 class="m-0 mb-2 mb-md-0 me-6">توضیحات تراکنش</h6>
-                    <div class="text-wrap font-number w-60 text-end">
+                    <div class="text-wrap font-number w-60 text-start">
                         {{ $transaction->description }}
                     </div>
                 </div>

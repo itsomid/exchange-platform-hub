@@ -16,8 +16,6 @@ use Illuminate\Support\Facades\DB;
 class CurrencyChain extends Model
 {
     protected $casts = [
-        'network_fee' => 'float',
-        'exchange_withdrawal_fee' => 'float',
         'chain' => CurrencyChainEnum::class,
         'deposit_enabled' => 'boolean',
         'withdraw_enabled' => 'boolean',

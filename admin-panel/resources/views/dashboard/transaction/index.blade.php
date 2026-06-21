@@ -338,11 +338,11 @@
                                             <span class="badge bg-label-{{ $transaction->type->color() }} ms-2">
                                                 {{ $transaction->type->label() }}
                                             </span>
-                                            @if ($transaction->subtype->value != 'user_initiated')
+                                            
                                                 <span class="badge bg-label-secondary ms-2 mt-2">
                                                     {{ $transaction->subtype->label() }}
                                                 </span>
-                                            @endif
+                                          
                                         </div>
                                     </div>
                                 </td>
