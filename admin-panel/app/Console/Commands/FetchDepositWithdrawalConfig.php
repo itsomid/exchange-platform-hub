@@ -34,7 +34,6 @@ class FetchDepositWithdrawalConfig extends Command
             foreach ($currencies as $currency) {
 
                 $feeData = $service->fetchWithdrawalFee($currency->symbol);
-                \Log::info("Updated withdrawal fee #{$currency->symbol} | data: " . json_encode($feeData));
 
                 foreach ($currency->chains as $chain) {
 
