@@ -18,6 +18,9 @@ Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-s
   - Do NOT create or run migrations inside `api-service`.
   - Any schema change must be implemented via `admin-panel`.
 
+- **For cache separation/handling between `admin-panel` and `api-service`, use the `APP_NAME` prefix in each project's `.env`.**
+  - Set a distinct `APP_NAME` per project so cache keys are namespaced and do not collide.
+
 ---
 
 ## UI & Design Conventions

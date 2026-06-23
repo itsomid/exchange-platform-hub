@@ -408,7 +408,7 @@ class FinancialDashboardController extends Controller
             }
 
             $usdt = (float) $row->total_usdt;
-            $subtype = TransactionSubTypeEnum::from($row->subtype);
+            $subtype = $row->subtype instanceof TransactionSubTypeEnum ? $row->subtype : TransactionSubTypeEnum::from($row->subtype);
 
             if (in_array($subtype, $transferFeeSubtypes)) {
                 $currencyData[$symbol]['transferFeesUsdt'] += $usdt;
