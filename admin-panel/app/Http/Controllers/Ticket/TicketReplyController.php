@@ -8,6 +8,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Ticket\StoreTicketReplyRequest;
 use App\Models\Ticket;
 use App\Models\TicketReply;
+use HTMLPurifier;
+use HTMLPurifier_Config;
 use Illuminate\Http\Request;
 
 class TicketReplyController extends Controller
@@ -28,10 +30,21 @@ class TicketReplyController extends Controller
     {
 
 //        return $request;
+        $purifierConfig = HTMLPurifier_Config::createDefault();
+        $purifierConfig->set('HTML.Allowed', 'p,br,strong,em,u,s,ul,ol,li,a[href|target],blockquote,h1,h2,h3,h4,h5,h6,pre,code,span[style],img[src|alt|width|height]');
+        $purifierConfig->set('HTML.TargetBlank', true);
+        $purifierConfig->set('URI.AllowedSchemes', ['http' => true, 'https' => true]);
+        $purifierConfig->set('CSS.AllowedProperties', 'color,background-color,text-align,font-weight,font-style');
+        $purifierConfig->set('AutoFormat.AutoParagraph', false);
+        $purifierConfig->set('AutoFormat.RemoveEmpty', true);
+        $purifier = new HTMLPurifier($purifierConfig);
+
+        $cleanMessage = $purifier->purify($request->message);
+
         $reply = $ticket->replies()->create([
             'repliable_id' => \Auth::id(),
             'repliable_type' => \Auth::user()::class,
-            'message' => $request->message,
+            'message' => $cleanMessage,
             'image' => $request->file('image') ? $request->file('image')->store('ticket_replies') : null,
         ]);
 
