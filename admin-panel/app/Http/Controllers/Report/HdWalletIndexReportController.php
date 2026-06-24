@@ -778,17 +778,20 @@ class HdWalletIndexReportController extends Controller
             'currency_symbol' => 'required|string|exists:currencies,symbol',
             'currency_chain_id' => 'required|integer|exists:currency_chains,id',
             'delay' => 'nullable|integer|min:100|max:5000',
+            'indices' => 'nullable|array',
+            'indices.*' => 'integer|min:1',
         ]);
 
         $currencySymbol = $request->currency_symbol;
         $currencyChainId = $request->currency_chain_id;
         $delay = $request->delay ?? 500;
+        $indices = $request->input('indices', []);
 
         // Generate unique sync ID
         $syncId = 'sync_' . Str::uuid();
 
         // Dispatch job
-        SyncHdWalletOutgoingTransactionsJob::dispatch($syncId, $currencySymbol, $currencyChainId, $delay);
+        SyncHdWalletOutgoingTransactionsJob::dispatch($syncId, $currencySymbol, $currencyChainId, $delay, $indices);
 
         // Store initial progress
         Cache::put("sync_progress:{$syncId}", [

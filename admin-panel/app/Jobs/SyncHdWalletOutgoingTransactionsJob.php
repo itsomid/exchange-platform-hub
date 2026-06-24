@@ -31,16 +31,18 @@ class SyncHdWalletOutgoingTransactionsJob implements ShouldQueue
     protected string $currencySymbol;
     protected int $currencyChainId;
     protected int $apiDelay;
+    protected array $indices;
 
     /**
      * Create a new job instance.
      */
-    public function __construct(string $syncId, string $currencySymbol, int $currencyChainId, int $apiDelay = 500)
+    public function __construct(string $syncId, string $currencySymbol, int $currencyChainId, int $apiDelay = 500, array $indices = [])
     {
         $this->syncId = $syncId;
         $this->currencySymbol = $currencySymbol;
         $this->currencyChainId = $currencyChainId;
         $this->apiDelay = $apiDelay;
+        $this->indices = $indices;
         $this->onQueue('hd-wallet-sync');
     }
     /**
@@ -193,6 +195,11 @@ class SyncHdWalletOutgoingTransactionsJob implements ShouldQueue
 
         if ($currency) {
             $query->where('currency_symbol', $currency->symbol);
+        }
+
+        // Filter to selected indices only when provided
+        if (!empty($this->indices)) {
+            $query->whereIn('user_id', $this->indices);
         }
 
         return $query->select([

@@ -217,7 +217,7 @@
                                 <input class="form-check-input" type="checkbox" id="selectAllCheckbox" title="انتخاب همه">
                             </th>
                             <th>#</th>
-                            <th>ایندکس HD Wallet</th>
+                            <th>ایندکس</th>
                             <th>شناسه کاربر</th>
                             <th>واریزها</th>
                             <th>برداشت‌ها</th>
@@ -2910,9 +2910,12 @@
                         return;
                     }
 
-                    const syncConfirmText =
-                        `آیا از شروع همگام‌سازی تراکنش‌های خروجی برای ${currentCurrency} (${currentChainName}) اطمینان دارید؟\n\n` +
-                        `این پروسه ممکن است چند دقیقه طول بکشد.`;
+                    const syncingAll = selectedIndices.size === 0;
+                    const syncConfirmText = syncingAll
+                        ? `آیا از شروع همگام‌سازی تراکنش‌های خروجی برای ${currentCurrency} (${currentChainName}) اطمینان دارید؟\n\n` +
+                          `این پروسه ممکن است چند دقیقه طول بکشد.`
+                        : `آیا از شروع همگام‌سازی تراکنش‌های خروجی برای ${selectedIndices.size} ایندکس انتخاب‌شده از ${currentCurrency} (${currentChainName}) اطمینان دارید؟\n\n` +
+                          `ایندکس‌های انتخاب‌شده: ${Array.from(selectedIndices).sort((a,b)=>a-b).join('، ')}`;
 
                     const syncConfirmResult = await Swal.fire({
                         title: 'شروع همگام‌سازی',
@@ -2933,13 +2936,13 @@
 
                     if (!syncConfirmResult.isConfirmed) return;
 
-                    // Start sync
-                    await startSync();
+                    // Start sync (pass selected indices if any, otherwise empty = all)
+                    await startSync(syncingAll ? [] : Array.from(selectedIndices));
                 });
             }
 
             // Start Sync Process
-            async function startSync() {
+            async function startSync(indices = []) {
                 try {
                     const response = await fetch('{{ route('admin.hd-wallet.start-sync') }}', {
                         method: 'POST',
@@ -2950,7 +2953,8 @@
                         body: JSON.stringify({
                             currency_symbol: currentCurrency,
                             currency_chain_id: currentChainId,
-                            delay: 500 // milliseconds between API calls
+                            delay: 500, // milliseconds between API calls
+                            indices: indices  // empty = all, non-empty = selected only
                         })
                     });
 
