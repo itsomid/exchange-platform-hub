@@ -250,6 +250,11 @@ class SyncHdWalletOutgoingTransactionsJob implements ShouldQueue
         $newCount = 0;
 
         foreach ($transactions as $tx) {
+            // Skip zero-amount transactions (common phishing/dust transactions)
+            if (!isset($tx['amount']) || bccomp((string) $tx['amount'], '0', 18) <= 0) {
+                continue;
+            }
+
             // Skip if already exists
             if (HdWalletOutgoingTransaction::where('transaction_hash', $tx['transaction_hash'])->exists()) {
                 continue;
