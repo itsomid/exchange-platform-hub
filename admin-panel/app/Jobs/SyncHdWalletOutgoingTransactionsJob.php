@@ -311,9 +311,14 @@ class SyncHdWalletOutgoingTransactionsJob implements ShouldQueue
         BlockchairService $blockchairService
     ): array {
         return match ($chain) {
-            CurrencyChainEnum::TRC20 => $tronScanService->getOutgoingTransactions($currencySymbol, $address, $afterBlock),
-            CurrencyChainEnum::ERC20 => $etherScanService->getOutgoingTransactions($currencySymbol, $address, $afterBlock),
-            CurrencyChainEnum::BSC   => $etherScanService->getOutgoingTransactions($currencySymbol, $address, $afterBlock, 56),
+            // EtherScan and TronScan use sort=desc + limit=200 internally, so always fetch
+            // the most recent transactions without a startblock filter. New transactions are
+            // at the top of the result; the duplicate hash check handles skipping old ones.
+            CurrencyChainEnum::TRC20 => $tronScanService->getOutgoingTransactions($currencySymbol, $address, null),
+            CurrencyChainEnum::ERC20 => $etherScanService->getOutgoingTransactions($currencySymbol, $address, null),
+            CurrencyChainEnum::BSC   => $etherScanService->getOutgoingTransactions($currencySymbol, $address, null, 56),
+            // Blockchair fetches all tx hashes then calls detail endpoints per batch, so
+            // passing afterBlock avoids redundant API calls for already-synced transactions.
             CurrencyChainEnum::BTC   => $blockchairService->getOutgoingTransactions('BTC', $address, $afterBlock),
             CurrencyChainEnum::DOGE  => $blockchairService->getOutgoingTransactions('DOGE', $address, $afterBlock),
             CurrencyChainEnum::LTC   => $blockchairService->getOutgoingTransactions('LTC', $address, $afterBlock),
