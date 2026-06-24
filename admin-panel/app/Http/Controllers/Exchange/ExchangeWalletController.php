@@ -284,24 +284,4 @@ class ExchangeWalletController extends Controller
         ]);
     }
 
-    public function assetsGatheringToColdWallet(Request $request)
-    {
-        if ($request->has('currency_symbol')) {
-            $currency_symbol = $request->currency_symbol;
-        } else {
-            $currency_symbol = 'USDT';
-        }
-        $currency = Currency::whereSymbol($currency_symbol)->first();
-
-        $currencyChains = $currency->chains;
-        $wallet = Wallet::where('user_id',$this->bitexroomUserId)->where('currency_symbol', $currency->symbol)->first();
-
-        $walletChains = $wallet->walletChains;
-
-        return view('dashboard.exchange.wallet.assets-gathering-to-cold-wallet-form', [
-            'currency' => $currency,
-            'currencyChains' => $currencyChains,
-            'walletChains' => $walletChains,
-        ]);
-    }
 }
