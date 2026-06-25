@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\External\V1\HDWallet;
 
 use App\Enums\DepositStatusEnum;
-use App\Enums\CurrencyBlockChainNameEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
@@ -105,7 +104,6 @@ class DepositWebhookController extends Controller
 
             // Convert hd-wallet network name to old blockchain name for matching
             $expectedBlockchainName = BlockchainNetworkMapper::toOldBlockchain($data['network']);
-            $blockchainEnum = CurrencyBlockChainNameEnum::tryFrom($expectedBlockchainName);
 
             // Find the matching currency chain by address AND network
             $currencyChain = null;
@@ -114,7 +112,7 @@ class DepositWebhookController extends Controller
                     // Match the currency chain that belongs to the correct blockchain
                     $matchedChain = $walletChain->wallet->currency->chains
                         ->where('chain', $walletChain->currency_chain)
-                        ->where('blockchain_name', $blockchainEnum)
+                        ->where('blockchain_name', $expectedBlockchainName)
                         ->first();
 
                     if ($matchedChain) {

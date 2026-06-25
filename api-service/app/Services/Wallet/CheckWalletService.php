@@ -80,7 +80,7 @@ class CheckWalletService
                 resolve(GetDepositListsRequestDTO::class)
                     ->setCurrencySymbol($wallet->currency_symbol)
                     ->setWalletAddress($walletChain->address)
-                    ->setBlockchain($currencyChain->blockchain_name->value)
+                    ->setBlockchain($currencyChain->blockchain_name)
                     ->setContractAddress($currencyChain->contract_address ?? null)
             );
             

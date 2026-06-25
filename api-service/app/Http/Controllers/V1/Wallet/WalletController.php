@@ -170,7 +170,7 @@ class WalletController extends Controller
                 $result = $hdWalletFacade->watchDeposit(
                     $userId,
                     $walletChain->address,
-                    $currencyChain->blockchain_name->value,
+                    $currencyChain->blockchain_name,
                     $currencySymbol,
                     $ttlMinutes,
                 );
@@ -235,7 +235,7 @@ class WalletController extends Controller
             try {
                 $hdWalletFacade->unwatchDeposit(
                     $userId,
-                    $currencyChain->blockchain_name->value,
+                    $currencyChain->blockchain_name,
                     $currencySymbol,
                 );
             } catch (\Throwable $e) {

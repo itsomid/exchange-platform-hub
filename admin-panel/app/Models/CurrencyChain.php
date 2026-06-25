@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\CurrencyBlockChainNameEnum;
 use App\Enums\CurrencyChainEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -42,7 +41,7 @@ class CurrencyChain extends Model
         'is_memo_required_for_deposit' => 'boolean',
         'is_base_coin' => 'boolean',
         'chain' => CurrencyChainEnum::class,
-        'blockchain_name' => CurrencyBlockChainNameEnum::class,
+        'blockchain_name' => 'string',
     ];
 
     protected $appends = ['total_withdrawal_fee'];
