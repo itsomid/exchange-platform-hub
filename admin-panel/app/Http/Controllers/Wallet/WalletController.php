@@ -32,6 +32,11 @@ class WalletController extends Controller
         $this->bitexroomUserId = config('bitexroom.user_id', 1);
     }
 
+    private function isBotUser(int $userId): bool
+    {
+        return \App\Models\SpotBotSetting::where('fake_user_id', $userId)->exists();
+    }
+
     public function increaseCreditForm(Request $request)
     {
         $data = $this->getCreditFormData($request);
@@ -86,6 +91,10 @@ class WalletController extends Controller
             $isChainless = empty($validChains);
 
             if ($isChainless) {
+                if ($request->user != $this->bitexroomUserId && !$this->isBotUser((int) $request->user)) {
+                    return redirect()->back()->withErrors(['currency_id' => 'واریز دستی برای این ارز فقط برای کاربر صرافی و کاربران بات مجاز است.']);
+                }
+
                 $transactionService->directWalletCredit(
                     userId: $request->user,
                     amount: $request->amount,
@@ -152,6 +161,10 @@ class WalletController extends Controller
             $isChainless = empty($validChains);
 
             if ($isChainless) {
+                if ($request->user != $this->bitexroomUserId && !$this->isBotUser((int) $request->user)) {
+                    return redirect()->back()->withErrors(['currency_id' => 'برداشت دستی برای این ارز فقط برای کاربر صرافی و کاربران بات مجاز است.']);
+                }
+
                 $transactionService->directWalletCredit(
                     userId: $request->user,
                     amount: $request->amount,
