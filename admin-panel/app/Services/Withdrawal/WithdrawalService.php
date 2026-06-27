@@ -175,7 +175,6 @@ class WithdrawalService
                 $wallet->decrement('locked_balance', $withdrawal->amount);
                 LockedBalanceDetail::where('withdrawal_id', $withdrawal->id)->delete();
             }
-            $wallet->decrement('balance', $withdrawal->amount);
 
             // Update withdrawal record
             $withdrawal->update([
