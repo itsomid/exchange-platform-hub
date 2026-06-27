@@ -146,11 +146,18 @@ class ReportController extends Controller
                 : '0';
 
             $currentValue = null;
+            $unrealized   = null;
             try {
                 $livePrice    = $this->priceFeed->getLive((int) $row->currency_id);
-                $currentValue = bcmul($totalAmount, (string) $livePrice, 8);
+                $currentValue = bcmul($totalAmount, (string) $livePrice, 16);
+                $unrealized   = bcsub($currentValue, $costTotal, 16);
+
+                if (bccomp($unrealized, '0', 8) === 0) {
+                    $unrealized = '0';
+                }
             } catch (Throwable $e) {
                 $currentValue = null;
+                $unrealized   = null;
             }
 
             return [
@@ -163,6 +170,7 @@ class ReportController extends Controller
                 'avg_buy_price' => $avgBuyPrice,
                 'cost_basis'    => $costTotal,
                 'current_value' => $currentValue,
+                'unrealized'    => $unrealized,
                 'realized_pnl'  => (string) ($realizedPnl[$row->currency_id] ?? '0'),
             ];
         })->values();
