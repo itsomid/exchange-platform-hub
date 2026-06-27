@@ -190,6 +190,11 @@ class WalletRepository implements WalletRepositoryInterface
 
     public function decreaseLockedBalance(int $user_id, string $quoteCurrency, string $totalTradeValue): void
     {
+        // Truncate to the currency's actual precision to eliminate floating-point noise
+        // from intermediate BCMath calculations (e.g. 11.14500000890 → 11.14500000).
+        $precision = Currency::where('symbol', $quoteCurrency)->value('amount_precision') ?? 8;
+        $totalTradeValue = bcadd($totalTradeValue, '0', $precision);
+
         // Use pessimistic lock to avoid race conditions on concurrent decrements
         $wallet = $this->getWalletWithLock($quoteCurrency, $user_id);
         $newLockedBalance = Math::sub($wallet->locked_balance, $totalTradeValue);

@@ -91,7 +91,7 @@ class WalletService
                     throw new InternalWalletHasProblemException;
                 }
 
-                $blockchainName = $matchedChain->blockchain_name->value;
+                $blockchainName = $matchedChain->blockchain_name;
                 $currencySymbol = $currency->symbol;
 
                 try {

@@ -182,7 +182,7 @@
                                             <div class="input-group">
                                                 <input name="chains[{{ $chain->id }}][network_fee]"
                                                     id="network_fee_{{ $chain->id }}" class="form-control font-number"
-                                                    value="{{ formatNumberTrimZeros($chain->network_fee, $currency->amount_precision) }}"
+                                                    value="{{ formatNumberTrimZeros($chain->network_fee) }}"
                                                     disabled required>
                                                 <span class="input-group-text">{{ $currency->symbol }}</span>
                                             </div>

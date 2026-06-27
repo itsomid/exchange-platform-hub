@@ -135,4 +135,12 @@ class SpotTradeController extends Controller
             'total_commission_value' => $totalCommissionValue
         ];
     }
+
+    public function updateNote(Request $request, SpotTrade $spotTrade)
+    {
+        $request->validate(['notes' => 'nullable|string|max:5000']);
+        $spotTrade->update(['notes' => $request->input('notes')]);
+
+        return response()->json(['success' => true, 'message' => 'نوت با موفقیت ذخیره شد.']);
+    }
 }

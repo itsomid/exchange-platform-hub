@@ -178,4 +178,12 @@ class OTCOrderController extends Controller
             'message' => 'وضعیت سفارش به "در انتظار" تغییر یافت. می‌توانید مجدداً تلاش کنید.',
         ]);
     }
+
+    public function updateNote(Request $request, OTCOrder $otcOrder)
+    {
+        $request->validate(['notes' => 'nullable|string|max:5000']);
+        $otcOrder->update(['notes' => $request->input('notes')]);
+
+        return response()->json(['success' => true, 'message' => 'نوت با موفقیت ذخیره شد.']);
+    }
 }

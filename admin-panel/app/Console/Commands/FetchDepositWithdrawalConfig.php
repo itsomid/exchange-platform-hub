@@ -21,16 +21,25 @@ class FetchDepositWithdrawalConfig extends Command
         try {
             $service = ExchangeFactory::make($exchange);
 
-            $currencies = Currency::query()->with('chains')->has('chains')->where('is_active', true)->get();
-            
+            $currencies = Currency::query()
+                ->with(['chains' => function ($query) {
+                    $query->where('withdraw_enabled', true);
+                }])
+                ->whereHas('chains', function ($query) {
+                    $query->where('withdraw_enabled', true);
+                })
+                ->where('is_active', true)
+                ->get();
+
             foreach ($currencies as $currency) {
 
                 $feeData = $service->fetchWithdrawalFee($currency->symbol);
 
                 foreach ($currency->chains as $chain) {
 
-                    $this->saveWithdrawalFee($feeData, $chain);
-                    $this->info("Updated withdrawal fee #{$currency->symbol} On {$chain->chain->value} network | network_fee: {$chain->network_fee}");
+                    if ($this->saveWithdrawalFee($feeData, $chain)) {
+                        $this->info("Updated withdrawal fee #{$currency->symbol} On {$chain->chain->value} network | network_fee: {$chain->network_fee}");
+                    }
                 }
             }
         } catch (Exception $e) {
@@ -39,20 +48,35 @@ class FetchDepositWithdrawalConfig extends Command
         }
     }
 
-    private function saveWithdrawalFee(array $feeData, CurrencyChain $chain): void
+    private function saveWithdrawalFee(array $feeData, CurrencyChain $chain): bool
     {
         $chainSymbol = $chain->chain->value;
 
-        $foundNetwork = array_values(array_filter($feeData['networks'], function (array $value) use ($chainSymbol) {
+        $matchedNetwork = array_values(array_filter($feeData['networks'], function (array $value) use ($chainSymbol) {
             return $value['network'] === $chainSymbol;
         }));
-        if (count($foundNetwork)) {
-            $chain->update([
-                'network_fee' => $foundNetwork[0]['withdrawal_fee'],
-                'safe_confirmations' => $foundNetwork[0]['safe_confirmations'],
-            ]);
-        } else {
-            report("Can not fetch withdrawal fee with network $chainSymbol");
+        if (!count($matchedNetwork)) {
+            report("Can not fetch withdrawal fee for currency {$feeData['currency']} with network {$chainSymbol}: network not returned by exchange");
+            return false;
         }
+
+        if (!$matchedNetwork[0]['withdraw_enabled']) {
+            report("Can not fetch withdrawal fee for currency {$feeData['currency']} with network {$chainSymbol}: withdraw is disabled on exchange");
+            return false;
+        }
+
+        $foundNetwork = $matchedNetwork[0];
+
+        if ($foundNetwork) {
+            $chain->update([
+                'network_fee' => $foundNetwork['withdrawal_fee'],
+                'safe_confirmations' => $foundNetwork['safe_confirmations'],
+                'deposit_enabled' => $foundNetwork['deposit_enabled'],
+                'withdraw_enabled' => $foundNetwork['withdraw_enabled'],
+            ]);
+            return true;
+        }
+
+        return false;
     }
 }

@@ -42,7 +42,7 @@ class WithdrawalController extends Controller
 
         $applyVisibilityFilters = function ($query) use ($bitexroomUserId, $showExchangeUserWithdrawals, $onlyRealNetworkWithdrawals) {
             if (! $showExchangeUserWithdrawals) {
-                $query->where('user_id', '!=', $bitexroomUserId);
+                $query->where('user_id', '!=', $bitexroomUserId)->where('user_id', '!=', 2);
             }
 
             if ($onlyRealNetworkWithdrawals) {

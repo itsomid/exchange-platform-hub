@@ -444,7 +444,7 @@
                                         <span class="fw-medium">{{ $spotOrder->user->email }}</span>
                                     </a>
                                 </td>
-                                <td>
+                                <td class="font-number">
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="position-relative">
                                             <svg class="" width="40" height="40" viewBox="0 0 36 36">

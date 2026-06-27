@@ -36,4 +36,11 @@ class ReplyTicketRequest extends FormRequest
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
         ];
     }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('message')) {
+            $this->merge(['message' => strip_tags($this->message)]);
+        }
+    }
 }

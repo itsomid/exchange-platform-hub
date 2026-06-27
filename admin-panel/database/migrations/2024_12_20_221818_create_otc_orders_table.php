@@ -22,6 +22,8 @@ return new class extends Migration
             $table->string('status')->default('pending');
             $table->foreignIdFor(\App\Models\Exchange::class)->nullable()->constrained();
             $table->text('ref_exchange_description')->nullable();
+            $table->text('notes')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

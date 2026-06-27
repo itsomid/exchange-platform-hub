@@ -113,7 +113,7 @@
                         </ul>
                     </div>
                     <p class="card-text fw-medium mt-3">
-                        {{$ticketReplies[count($ticketReplies)-1]->message}}
+                        {{ $ticketReplies[count($ticketReplies)-1]->message }}
                     </p>
                 </div>
             </div>
@@ -176,7 +176,7 @@
                                 </small>
 
 
-                                <p class="mt-5">{!! $reply->message !!} </p>
+                                <p class="mt-5">{!! \App\Helpers\HtmlSanitizer::purify($reply->message) !!}</p>
                             </div>
                         </div>
 

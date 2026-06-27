@@ -33,21 +33,21 @@
                 <div
                     class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
                     <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات واریز</h6>
-                    <div class="text-wrap font-number w-80 text-end">
+                    <div class="text-wrap font-number w-60 text-end">
                         {{ $deposit->description }}
                     </div>
                 </div>
                 <div
                     class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
                     <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات تراکنش</h6>
-                    <div class="text-wrap font-number w-80 text-end">
+                    <div class="text-wrap font-number w-60 text-end">
                         {{ $deposit->transaction->description }}
                     </div>
                 </div>
                 <div
                     class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between border-bottom pb-4 mb-4">
                     <h6 class="m-0 mb-2 mb-md-0 me-12">توضیحات ادمین</h6>
-                    <div class="text-wrap font-number">
+                    <div class="text-wrap font-number w-60 text-end">
                         {{ $deposit->transaction->admin_description }}
                     </div>
                 </div>

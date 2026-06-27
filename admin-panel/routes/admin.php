@@ -221,8 +221,8 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::get('/wallets/localWallets', [ExchangeWalletController::class, 'localWallets'])->name('exchange.local-wallet');
 
         Route::get('/wallets/hotWallets', [ExchangeWalletController::class, 'hotWallets'])->name('exchange.hot-wallet');
+        Route::get('/wallets/hotWallets/{walletChain}/balance', [ExchangeWalletController::class, 'hotWalletBalance'])->name('exchange.hot-wallet.balance');
         Route::post('/wallets/refresh-hot-wallet-balance', [ExchangeWalletController::class, 'refreshHotWalletBalance'])->name('refresh.balance');
-        Route::get('/wallets/hotWallets/assets-gathering-to-cold-wallet', [ExchangeWalletController::class, 'assetsGatheringToColdWallet'])->name('wallet.assets-gathering-to-cold-wallet');
     });
 
     Route::prefix('ref-exchanges')->group(function () {
@@ -245,6 +245,7 @@ Route::middleware(['admin.2fa'])->group(function () {
     Route::prefix('transactions')->group(function () {
         Route::get('/', [TransactionController::class, 'index'])->name('transaction.index')->can('transaction');
         Route::get('/excel-export', [TransactionController::class, 'excelExport'])->name('transaction.excel-export')->can('transaction');
+        Route::post('/{transaction}/notes', [TransactionController::class, 'updateNote'])->name('transaction.notes.update');
     });
 
     Route::prefix('otc_orders')->group(function () {
@@ -252,11 +253,13 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::get('/excel-export', [OTCOrderController::class, 'excelExport'])->name('otc_orders.excel-export')->can('otc_order');
         Route::post('/{otcOrderId}/trigger-ref-exchange-sell', [OTCOrderController::class, 'triggerRefExchangeSell'])->name('otc_orders.trigger-ref-exchange-sell')->can('otc_order');
         Route::post('/{otcOrderId}/reset-ref-exchange-sell', [OTCOrderController::class, 'resetRefExchangeSellStatus'])->name('otc_orders.reset-ref-exchange-sell')->can('otc_order');
+        Route::post('/{otcOrder}/notes', [OTCOrderController::class, 'updateNote'])->name('otc_orders.notes.update');
     });
 
     Route::prefix('spot')->group(function () {
         Route::get('/trades', [SpotTradeController::class, 'index'])->name('spot_trades.index')->can('spot');
         Route::post('/trades/excel-export', [SpotTradeController::class, 'excelExport'])->name('spot_trade.excel-export')->can('spot');
+        Route::post('/trades/{spotTrade}/notes', [SpotTradeController::class, 'updateNote'])->name('spot_trades.notes.update');
 
         Route::get('/orders', [SpotOrderController::class, 'index'])->name('spot_orders.index')->can('spot');
         Route::post('/orders/excel-export', [SpotOrderController::class, 'excelExport'])->name('spot_orders.excel-export')->can('spot');

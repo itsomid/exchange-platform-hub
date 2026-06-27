@@ -89,6 +89,31 @@ readonly class OrderMatchingEngine
             // Price is determined by the matched limit order (maker)
             // No need to set $order->price here, completeOrder uses $makerOrder->price
 
+            // Safety guard: for market BUY orders, verify the buyer has sufficient available
+            // balance at the maker's actual price before executing the trade. The pre-order
+            // validation uses the best ask, but fills can span multiple price levels, so
+            // each fill must be checked individually to prevent negative balances.
+            if ($order->side === SpotOrderSideEnum::BUY && $oppositeOrder->price !== null) {
+                $proposedTradeQty = Math::comp($order->getRemindedQuantity(), $oppositeOrder->getRemindedQuantity()) <= 0
+                    ? $order->getRemindedQuantity()
+                    : $oppositeOrder->getRemindedQuantity();
+                $requiredCost = Math::mul($proposedTradeQty, $oppositeOrder->price);
+                $buyerWallet = $this->walletRepository->getOneOrCreateByCurrencyWithLock(
+                    $order->market->quote_currency,
+                    $order->user_id
+                );
+                if (Math::comp($buyerWallet->available_balance, $requiredCost) === -1) {
+                    Log::channel('spot-order-matching')->warning(
+                        "Market BUY order {$order->id}: insufficient balance "
+                        . "({$buyerWallet->available_balance} {$order->market->quote_currency}) "
+                        . "for required trade cost {$requiredCost} at price {$oppositeOrder->price}. "
+                        . 'Cancelling remaining order.'
+                    );
+                    $this->cancelRemainingMarketOrder($order);
+                    break;
+                }
+            }
+
             $this->completeOrder($order, $oppositeOrder);
             $this->broadcastOrderBook($order->market_id);
         }
@@ -132,8 +157,8 @@ readonly class OrderMatchingEngine
         //   - For SELL: if order.price < bestBid * (1 - deviation%) skip matching
         // -------------------------------------------------------------
 
-    // Read from config with default 10%
-    $maxDeviationPercent = (float) config('spot.spot_limit_max_deviation_percent', 10);
+        // Read from config with default 10%
+        $maxDeviationPercent = (float) config('spot.spot_limit_max_deviation_percent', 10);
 
         if ($maxDeviationPercent > 0 && $order->price !== null) {
             // Fetch best opposite price from DB (existing open orders)
@@ -246,10 +271,12 @@ readonly class OrderMatchingEngine
     {
         $spotMakerFee = Setting::getSetting('spot_maker_fee');
         $spotTakerFee = Setting::getSetting('spot_taker_fee');
-        $tradeQuantity = min($order->getRemindedQuantity(), $oppositeOrder->getRemindedQuantity());
+        $tradeQuantity = Math::comp($order->getRemindedQuantity(), $oppositeOrder->getRemindedQuantity()) <= 0
+            ? $order->getRemindedQuantity()
+            : $oppositeOrder->getRemindedQuantity();
 
-        $order->increment('filled_quantity', $tradeQuantity);
-        $oppositeOrder->increment('filled_quantity', $tradeQuantity);
+        $order->update(['filled_quantity' => Math::add($order->filled_quantity, $tradeQuantity)]);
+        $oppositeOrder->update(['filled_quantity' => Math::add($oppositeOrder->filled_quantity, $tradeQuantity)]);
 
         // **Detect Maker & Taker**
         $takerOrder = $order; // Incoming order is the taker
@@ -426,7 +453,7 @@ readonly class OrderMatchingEngine
                 ->setSpotTradeId($spotTrade->id)
                 ->setUserId($spotOrder->user_id)
                 ->setType(TransactionTypeEnum::SELL)
-                ->setAmount($payAmount * -1)
+                ->setAmount(Math::mul($payAmount, '-1'))
                 ->setCoinPrice($spotOrder->side === SpotOrderSideEnum::BUY ? "1" : $spotTrade->price)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
                 ->setBalance($initialPayBalance)
@@ -461,7 +488,7 @@ readonly class OrderMatchingEngine
                 ->setSpotTradeId($spotTrade->id)
                 ->setUserId($spotOrder->user_id)
                 ->setType(TransactionTypeEnum::FEE)
-                ->setAmount($commissionAmount * -1)
+                ->setAmount(Math::mul($commissionAmount, '-1'))
                 ->setCoinPrice($spotOrder->side === SpotOrderSideEnum::BUY ? $spotTrade->price : "1")
                 ->setStatus(TransactionStatusEnum::SUCCESS)
                 ->setBalance($commissionBalanceBeforeFee)
@@ -954,19 +981,44 @@ readonly class OrderMatchingEngine
             return;
         }
 
+        // Truncate to the base currency's actual precision to eliminate floating-point noise
+        $precision = $market->baseCurrency?->amount_precision ?? 8;
+        $quantity = bcadd($tradeQuantity, '0', $precision);
+
+        // Skip if quantity is below the market's minimum trade amount
+        $minSellQuantity = $market->min_trade_amount ?? '0';
+        if (Math::comp($quantity, '0') <= 0) {
+            Log::channel('spot-ref-exchange')->warning('Ref exchange sell skipped: quantity is zero after truncation', [
+                'spot_trade_id' => $spotTrade->id,
+                'market_id' => $spotTrade->market_id,
+                'original_quantity' => $tradeQuantity,
+            ]);
+            return;
+        }
+
+        if (Math::comp($minSellQuantity, '0') > 0 && Math::comp($quantity, $minSellQuantity) < 0) {
+            Log::channel('spot-ref-exchange')->warning('Ref exchange sell skipped: quantity below minimum', [
+                'spot_trade_id' => $spotTrade->id,
+                'market_id' => $spotTrade->market_id,
+                'quantity' => $quantity,
+                'min_sell_quantity' => $minSellQuantity,
+            ]);
+            return;
+        }
+
+        // Dispatch the job to sell on reference exchange
         Log::channel('spot-ref-exchange')->info('User selling to bot in spot trade, dispatching ref exchange sell job', [
             'spot_trade_id' => $spotTrade->id,
             'market_id' => $spotTrade->market_id,
-            'quantity' => $tradeQuantity,
+            'quantity' => $quantity,
             'bot_order_id' => $botOrder->id,
             'bot_side' => $botOrder->side->value,
         ]);
 
-        // Dispatch the job to sell on reference exchange
         SellOnRefExchangeForSpotTrade::dispatch(
             $spotTrade->id,
             $spotTrade->market_id,
-            $tradeQuantity
+            $quantity
         );
     }
 }

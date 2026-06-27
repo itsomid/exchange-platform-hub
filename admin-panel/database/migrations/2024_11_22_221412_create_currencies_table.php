@@ -20,6 +20,7 @@ return new class extends Migration
             $table->unsignedTinyInteger('precision')->default(8);
             $table->boolean('inter_transfer_enabled')->default(true); // Is internal transfer enabled
             $table->decimal('max_auto_withdraw_amount', 18, 8)->default(0); // Maximum withdrawal amount without admin approval
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

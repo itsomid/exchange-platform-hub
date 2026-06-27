@@ -37,4 +37,14 @@ class StoreTicketRequest extends FormRequest
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
         ];
     }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('subject')) {
+            $this->merge(['subject' => strip_tags($this->subject)]);
+        }
+        if ($this->has('message')) {
+            $this->merge(['message' => strip_tags($this->message)]);
+        }
+    }
 }

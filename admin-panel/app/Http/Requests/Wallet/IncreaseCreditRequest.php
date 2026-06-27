@@ -25,8 +25,8 @@ class IncreaseCreditRequest extends FormRequest
         return [
             'amount' => ['required', 'numeric'],
             'user' => ['required', 'exists:users,id'],
-            'currency' => ['required','string','max:10'],
-            'chain' => ['required','string','max:10'],
+            'currency_id' => ['required','integer','exists:currencies,id'],
+            'chain' => ['nullable','string','max:10'],
             'transaction_hash' => ['nullable', 'unique:withdrawals,transaction_hash'],
             'description' => ['nullable'],
             'admin_description' => ['nullable'],
@@ -38,7 +38,8 @@ class IncreaseCreditRequest extends FormRequest
         return [
             'user.required' => 'انتخاب کاربر الزامی است',
             'user.exists' => 'کاربر انتخاب شده موجود نیست',
-            'currency.required' => 'انتخاب کوین الزامی است',
+            'currency_id.required' => 'انتخاب کوین الزامی است',
+            'currency_id.exists' => 'کوین انتخاب شده معتبر نیست',
             'chain.required' => 'انتخاب شبکه الزامی است',
             'amount.required' => 'مقدار الزامی است',
             'amount.numeric' => 'مقدار باید به صورت عددی باشد',

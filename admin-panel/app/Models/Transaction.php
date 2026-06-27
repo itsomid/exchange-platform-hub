@@ -10,11 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Sanctum\HasApiTokens;
 
 class Transaction extends Model
 {
-    use Filterable, HasApiTokens, HasFactory;
+    use Filterable, HasApiTokens, HasFactory, SoftDeletes;
 
     public $filterNameSpace = 'App\Filters\TransactionFilter';
 
@@ -34,7 +35,8 @@ class Transaction extends Model
         'subtype',
         'description',
         'admin_description',
-        'status'
+        'status',
+        'notes',
     ];
 
     protected function casts(): array

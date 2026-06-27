@@ -580,7 +580,7 @@ class WalletService
             // Find the user
             $user = User::find($userId);
             $blockchainName = CurrencyChain::where('chain', $chain)
-                ->first()->blockchain_name->value;
+                ->first()->blockchain_name;
             if (!$user) {
                 throw new InternalWalletHasProblemException('User not found');
             }

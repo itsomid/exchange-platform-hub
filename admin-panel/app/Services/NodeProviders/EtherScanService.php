@@ -12,6 +12,30 @@ class EtherScanService
 {
     protected $baseUrl = 'https://api.etherscan.io/v2/api';
 
+    private const CHAIN_IDS = [
+        'ERC20'     => 1,
+        'BSC'       => 56,
+        'POLYGON'   => 137,
+        'ARBITRUM'  => 42161,
+        'OPTIMISM'  => 10,
+        'AVALANCHE' => 43114,
+        'SONIC'     => 146,
+    ];
+
+    /**
+     * Native token symbol per chain ID.
+     * Used to determine whether to call the native-balance endpoint.
+     */
+    private const NATIVE_TOKENS = [
+        1     => 'ETH',
+        56    => 'BNB',
+        137   => 'POL',
+        42161 => 'ETH',
+        10    => 'ETH',
+        43114 => 'AVAX',
+        146   => 'S',
+    ];
+
     /**
      * Token decimal places mapping for common ERC20 tokens
      */
@@ -34,7 +58,22 @@ class EtherScanService
         'POL' => 18,
         'ARB' => 18,
         'ETH' => 18, // Native ETH
+        'BNB' => 18, // Native BNB
         'TLM' => 4
+    ];
+
+    /**
+     * Token decimals that differ per chain.
+     * On BSC, USDT/USDC use 18 decimals (unlike Ethereum where they use 6).
+     * chainId => [ symbol => decimals ]
+     */
+    private const CHAIN_TOKEN_DECIMALS = [
+        56 => [ // BSC — most BEP20 tokens use 18 decimals
+            'USDT' => 18,
+            'USDC' => 18,
+            'BUSD' => 18,
+            'DAI'  => 18,
+        ],
     ];
 
     /**
@@ -44,18 +83,21 @@ class EtherScanService
      * @param string $address The wallet address to query
      * @return array ['amount' => string] or ['error' => string]
      */
-    public function getBalance(string $currency, string $address)
+    /**
+     * @param  int $chainId  Etherscan chain ID (1 = Ethereum, 137 = Polygon, 42161 = Arbitrum, 10 = Optimism, 43114 = Avalanche, 146 = Sonic)
+     */
+    public function getBalance(string $currency, string $address, int $chainId = 1): array
     {
         $apiKey = Config::get('etherscan.api_key');
         $currency = strtoupper($currency);
 
-        // Check if it's native ETH
-        if ($currency === 'ETH') {
-            return $this->getEthBalance($address, $apiKey);
+        $nativeToken = self::NATIVE_TOKENS[$chainId] ?? 'ETH';
+        if ($currency === $nativeToken) {
+            return $this->getNativeBalance($address, $apiKey, $chainId);
         }
 
-        // Get contract address for the token
-        $contractAddress = $this->getContractAddress($currency);
+        $chainEnum = $this->chainEnumFromChainId($chainId);
+        $contractAddress = $this->getContractAddress($currency, $chainEnum);
 
         if (!$contractAddress) {
             return [
@@ -63,11 +105,13 @@ class EtherScanService
             ];
         }
 
-        // Get token decimals
-        $decimals = $this->tokenDecimals[$currency] ?? 18;
+        // Blockchain decimals: per-chain override map first, then global symbol map, default 18
+        $decimals = self::CHAIN_TOKEN_DECIMALS[$chainId][$currency]
+            ?? $this->tokenDecimals[$currency]
+            ?? 18;
 
         $params = [
-            'chainid' => 1,
+            'chainid' => $chainId,
             'module' => 'account',
             'action' => 'tokenbalance',
             'address' => $address,
@@ -107,12 +151,12 @@ class EtherScanService
     }
 
     /**
-     * Get native ETH balance
+     * Get native token balance for any Etherscan-compatible chain.
      */
-    protected function getEthBalance(string $address, string $apiKey)
+    protected function getNativeBalance(string $address, string $apiKey, int $chainId = 1): array
     {
         $params = [
-            'chainid' => 1,
+            'chainid' => $chainId,
             'module' => 'account',
             'action' => 'balance',
             'address' => $address,
@@ -127,8 +171,8 @@ class EtherScanService
                 $data = $response->json();
 
                 if ($data['status'] === '1') {
-                    $balanceWei = $data['result']; // Balance in wei
-                    $balance = bcdiv($balanceWei, bcpow('10', 18), 18); // Convert to ETH (18 decimal places)
+                    $balanceWei = $data['result'];
+                    $balance = bcdiv($balanceWei, bcpow('10', 18), 18);
                     return [
                         'amount' => $balance
                     ];
@@ -151,17 +195,34 @@ class EtherScanService
         }
     }
 
-    /**
-     * Get contract address for a given currency
-     */
-    protected function getContractAddress(string $currency): ?string
+    public static function chainIdFromEnum(CurrencyChainEnum $chainEnum): int
     {
-        // First try to get from database
+        return self::CHAIN_IDS[$chainEnum->value] ?? 1;
+    }
+
+    private function chainEnumFromChainId(int $chainId): CurrencyChainEnum
+    {
+        return match ($chainId) {
+            56    => CurrencyChainEnum::BSC,
+            137   => CurrencyChainEnum::POLYGON,
+            42161 => CurrencyChainEnum::ARBITRUM,
+            10    => CurrencyChainEnum::OPTIMISM,
+            43114 => CurrencyChainEnum::AVALANCHE,
+            146   => CurrencyChainEnum::SONIC,
+            default => CurrencyChainEnum::ERC20,
+        };
+    }
+
+    /**
+     * Get contract address for a given currency on a specific chain.
+     */
+    protected function getContractAddress(string $currency, CurrencyChainEnum $chainEnum = CurrencyChainEnum::ERC20): ?string
+    {
         try {
             $currency = Currency::where('symbol', $currency)->first();
             if ($currency) {
                 $currencyChain = CurrencyChain::where('currency_id', $currency->id)
-                    ->where('chain', CurrencyChainEnum::ERC20)
+                    ->where('chain', $chainEnum)
                     ->first();
 
                 if ($currencyChain && $currencyChain->contract_address) {
@@ -169,9 +230,8 @@ class EtherScanService
                 }
             }
         } catch (\Exception $e) {
-            // Log error but continue with fallback
+            // Log error but continue
         }
-
 
         return null;
     }
@@ -185,25 +245,26 @@ class EtherScanService
      * @param int|null $startBlock Only get transactions after this block number
      * @return array ['transactions' => array] or ['error' => string]
      */
-    public function getOutgoingTransactions(string $currency, string $address, ?int $startBlock = null): array
+    public function getOutgoingTransactions(string $currency, string $address, ?int $startBlock = null, int $chainId = 1): array
     {
         $apiKey = Config::get('etherscan.api_key');
         $currency = strtoupper($currency);
 
-        if ($currency === 'ETH') {
-            return $this->getEthOutgoingTransactions($address, $apiKey, $startBlock);
+        $nativeToken = self::NATIVE_TOKENS[$chainId] ?? 'ETH';
+        if ($currency === $nativeToken) {
+            return $this->getNativeOutgoingTransactions($address, $apiKey, $startBlock, $chainId);
         }
 
-        return $this->getErc20OutgoingTransactions($currency, $address, $apiKey, $startBlock);
+        return $this->getTokenOutgoingTransactions($currency, $address, $apiKey, $startBlock, $chainId);
     }
 
     /**
-     * Get native ETH outgoing transactions
+     * Get native coin outgoing transactions for any EtherScan-compatible chain.
      */
-    protected function getEthOutgoingTransactions(string $address, string $apiKey, ?int $startBlock = null): array
+    protected function getNativeOutgoingTransactions(string $address, string $apiKey, ?int $startBlock, int $chainId): array
     {
         $params = [
-            'chainid' => 1,
+            'chainid' => $chainId,
             'module' => 'account',
             'action' => 'txlist',
             'address' => $address,
@@ -224,12 +285,9 @@ class EtherScanService
 
                 if ($data['status'] === '1' && isset($data['result']) && is_array($data['result'])) {
                     foreach ($data['result'] as $tx) {
-                        // Only include outgoing transactions (where this address is the sender)
-                        // and successful transactions (isError = 0)
                         if (isset($tx['from']) && strtolower($tx['from']) === strtolower($address) && ($tx['isError'] ?? '1') === '0') {
                             $amount = isset($tx['value']) ? bcdiv($tx['value'], bcpow('10', '18'), 18) : '0';
 
-                            // Skip zero-value transactions (contract interactions)
                             if (bccomp($amount, '0', 18) === 0) {
                                 continue;
                             }
@@ -249,15 +307,9 @@ class EtherScanService
                 return ['transactions' => $transactions];
             }
 
-            return [
-                'error' => 'API request failed',
-                'details' => $response->body()
-            ];
+            return ['error' => 'API request failed', 'details' => $response->body()];
         } catch (\Exception $e) {
-            return [
-                'error' => 'API request error',
-                'details' => $e->getMessage()
-            ];
+            return ['error' => 'API request error', 'details' => $e->getMessage()];
         }
     }
 
@@ -366,14 +418,15 @@ class EtherScanService
     }
 
     /**
-     * Get ERC20 token outgoing transactions
+     * Get ERC20/BEP20 token outgoing transactions for any Etherscan-compatible chain.
      */
-    protected function getErc20OutgoingTransactions(string $currency, string $address, string $apiKey, ?int $startBlock = null): array
+    protected function getTokenOutgoingTransactions(string $currency, string $address, string $apiKey, ?int $startBlock, int $chainId): array
     {
-        $contractAddress = $this->getContractAddress($currency);
+        $chainEnum = $this->chainEnumFromChainId($chainId);
+        $contractAddress = $this->getContractAddress($currency, $chainEnum);
 
         $params = [
-            'chainid' => 1,
+            'chainid' => $chainId,
             'module' => 'account',
             'action' => 'tokentx',
             'address' => $address,

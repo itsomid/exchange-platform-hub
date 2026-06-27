@@ -59,7 +59,7 @@ class CheckWithdrawalStatus implements ShouldQueue
             $responseDTO = $hdWalletService->getStatus(
                 resolve(GetWithdrawalStatusRequestDTO::class)
                     ->setWithdrawalId($withdrawal->id)
-                    ->setBlockchain($withdrawal->currencyChain->blockchain_name->value)
+                    ->setBlockchain($withdrawal->currencyChain->blockchain_name)
                     ->setCurrencySymbol($withdrawal->currency_symbol)
             );
 

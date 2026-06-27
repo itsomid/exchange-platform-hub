@@ -31,30 +31,43 @@
                     <div class="w-100"></div>
 
                     <div class="col-md-4 mb-4">
-                        <div class="form-group">
-                            <label class="form-label" for="currency">کوین مورد نظر را انتخاب کنید:</label>
-                            <select id="currency" class="form-select" name="currency"
-                                    data-placeholder="لطفا کوین  مورد نظر را انتخاب کنید.">
-                                @foreach($currencies as $currency)
-                                    <option
-                                        {{$selectedCurrency?->symbol === $currency->symbol ? 'selected' : ''}} value="{{$currency->symbol}}">{{$currency->name}}</option>
-                                @endforeach
-                            </select>
-                            @error('currency')<small class="text-danger">{{$message}}</small>@enderror
+                        <label class="form-label">کوین مورد نظر را انتخاب کنید:</label>
+                        <x-currency-select
+                            name="currency_id"
+                            id="currency_select"
+                            :currencies="$currencies"
+                            :selected="$selectedCurrency?->id ?? ''"
+                            :required="true"
+                            error="currency_id"
+                            placeholder="لطفا کوین مورد نظر را انتخاب کنید..."
+                        />
+                    </div>
+                    @if($selectedCurrency === null)
+                    <div class="col-md-4 mb-4 d-flex align-items-end">
+                        <div class="alert alert-secondary mb-0 w-100 py-2">
+                            <small><span class="fa-solid fa-hand-pointer me-1"></span>ابتدا یک کوین انتخاب کنید تا شبکه‌های آن نمایش داده شود.</small>
                         </div>
                     </div>
+                    @elseif($hasChains)
                     <div class="col-md-4 mb-4">
                         <div class="form-group">
                             <label class="form-label" for="chain">شبکه مورد نظر را انتخاب کنید:</label>
                             <select id="chain" class="form-select" name="chain"
-                                    data-placeholder="لطفا شبکه  مورد نظر را انتخاب کنید.">
+                                    data-placeholder="لطفا شبکه مورد نظر را انتخاب کنید.">
                                 @foreach($currencyChains as $chain)
                                     <option value="{{$chain->chain}}">{{$chain->chain}}</option>
                                 @endforeach
                             </select>
-                            @error('currency')<small class="text-danger">{{$message}}</small>@enderror
+                            @error('chain')<small class="text-danger">{{$message}}</small>@enderror
                         </div>
                     </div>
+                    @else
+                    <div class="col-md-4 mb-4 d-flex align-items-end">
+                        <div class="alert alert-info mb-0 w-100 py-2">
+                            <small><span class="fa-solid fa-circle-info me-1"></span>این کوین شبکه‌ای ندارد — کسر مستقیم اعمال می‌شود.</small>
+                        </div>
+                    </div>
+                    @endif
                     <div class="w-100"></div>
                     <div class="col-md-4 mb-3">
                         <label for="numeral-mask" class="form-label ">میزان اعتبار مورد نظر:</label>
@@ -100,10 +113,25 @@
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('chargeForm').addEventListener('submit', function () {
-
                 var submitButton = document.getElementById('submitButton');
                 submitButton.disabled = true;
                 submitButton.classList.add('disabled');
+            });
+
+            // Reload page with selected currency to show its chains
+            $(document).on('change', '#currency_select', function () {
+                var currencyId = $(this).val();
+                var userId = $('#selectUser').val() || '';
+                var url = new URL(window.location.href);
+                if (currencyId) {
+                    url.searchParams.set('currency_id', currencyId);
+                } else {
+                    url.searchParams.delete('currency_id');
+                }
+                if (userId) {
+                    url.searchParams.set('user', userId);
+                }
+                window.location.href = url.toString();
             });
         });
     </script>

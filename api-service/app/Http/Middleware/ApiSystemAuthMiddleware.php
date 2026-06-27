@@ -112,20 +112,20 @@ class ApiSystemAuthMiddleware
         ];
 
         // Log debug information
-        \Log::debug('Permission check', [
-            'endpoint' => $endpoint,
-            'method' => $method,
-            'system_permissions' => $system->permissions,
-            'token_scopes' => $systemToken->scopes,
-        ]);
+        // \Log::debug('Permission check', [
+        //     'endpoint' => $endpoint,
+        //     'method' => $method,
+        //     'system_permissions' => $system->permissions,
+        //     'token_scopes' => $systemToken->scopes,
+        // ]);
 
         // Check if endpoint requires specific permissions
         foreach ($endpointPermissions as $pattern => $requiredPermissions) {
             if (str_contains($endpoint, $pattern)) {
-                \Log::debug('Endpoint matched pattern', [
-                    'pattern' => $pattern,
-                    'required_permissions' => $requiredPermissions,
-                ]);
+                // \Log::debug('Endpoint matched pattern', [
+                //     'pattern' => $pattern,
+                //     'required_permissions' => $requiredPermissions,
+                // ]);
 
                 // Check token scopes only (simplified authentication)
                 foreach ($requiredPermissions as $permission) {
@@ -138,7 +138,7 @@ class ApiSystemAuthMiddleware
                     }
                 }
 
-                \Log::debug('Permission check passed');
+          
                 return true;
             }
         }

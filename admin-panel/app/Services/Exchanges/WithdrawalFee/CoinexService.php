@@ -9,6 +9,11 @@ class CoinexService implements ExchangeInterface
 {
     private string $baseUrl = 'https://api.coinex.com/v2';
 
+    private const NETWORK_ALIASES = [
+        'AVA_C' => 'AVALANCHE',
+        'MATIC' => 'POLYGON',
+    ];
+
     public function fetchWithdrawalFee(string $currency): array
     {
         $response = Http::get("{$this->baseUrl}/assets/deposit-withdraw-config", [
@@ -31,7 +36,7 @@ class CoinexService implements ExchangeInterface
         // Map chains to extract relevant information
         $withdrawalFeesByNetwork = array_map(function ($chain) {
             return [
-                'network' => $chain['chain'],
+            'network' => $this->normalizeNetwork($chain['chain']),
                 'withdrawal_fee' => $chain['withdrawal_fee'],
                 'deposit_enabled' => $chain['deposit_enabled'],
                 'withdraw_enabled' => $chain['withdraw_enabled'],
@@ -63,5 +68,10 @@ class CoinexService implements ExchangeInterface
                 'quote_ccy' => $item['quote_ccy']
             ];
         }, $response->json('data'));
+    }
+
+    private function normalizeNetwork(string $network): string
+    {
+        return self::NETWORK_ALIASES[$network] ?? $network;
     }
 }

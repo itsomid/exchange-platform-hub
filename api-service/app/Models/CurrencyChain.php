@@ -2,26 +2,21 @@
 
 namespace App\Models;
 
-use App\Enums\CurrencyBlockChainNameEnum;
 use App\Enums\CurrencyChainEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\DB;
 
 /**
- * @property CurrencyBlockChainNameEnum $blockchain_name
- *
  * @method string totalWithdrawalFee(string $getCurrencyChain)
  */
 class CurrencyChain extends Model
 {
     protected $casts = [
-        'network_fee' => 'float',
-        'exchange_withdrawal_fee' => 'float',
         'chain' => CurrencyChainEnum::class,
         'deposit_enabled' => 'boolean',
         'withdraw_enabled' => 'boolean',
-        'blockchain_name' => CurrencyBlockChainNameEnum::class,
+        'blockchain_name' => 'string',
         'is_base_coin' => 'boolean',
     ];
 
@@ -59,7 +54,7 @@ class CurrencyChain extends Model
             'SONIC' => 'https://sonicscan.org/token/',
         ];
 
-        $blockchainName = $this->blockchain_name?->value;
+        $blockchainName = $this->blockchain_name;
 
         if (!$blockchainName || !isset($explorerUrls[$blockchainName])) {
             return "null";

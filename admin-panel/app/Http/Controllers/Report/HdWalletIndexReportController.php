@@ -14,7 +14,6 @@ use App\Models\HdWalletOutgoingTransaction;
 use App\Models\Wallet;
 use App\Models\WalletChain;
 use App\Services\NodeProviders\BlockchairService;
-use App\Services\NodeProviders\BscScanService;
 use App\Services\NodeProviders\EtherScanService;
 use App\Services\NodeProviders\TronScanService;
 use Illuminate\Http\Request;
@@ -754,8 +753,8 @@ class HdWalletIndexReportController extends Controller
                 return $service->getBalance($currencySymbol, $address);
 
             case CurrencyChainEnum::BSC->value:
-                $service = new BscScanService();
-                return $service->getBalance($currencySymbol, $address);
+                $service = new EtherScanService();
+                return $service->getBalance($currencySymbol, $address, 56);
 
             case CurrencyChainEnum::BTC->value:
             case CurrencyChainEnum::DOGE->value:
@@ -779,17 +778,20 @@ class HdWalletIndexReportController extends Controller
             'currency_symbol' => 'required|string|exists:currencies,symbol',
             'currency_chain_id' => 'required|integer|exists:currency_chains,id',
             'delay' => 'nullable|integer|min:100|max:5000',
+            'indices' => 'nullable|array',
+            'indices.*' => 'integer|min:1',
         ]);
 
         $currencySymbol = $request->currency_symbol;
         $currencyChainId = $request->currency_chain_id;
         $delay = $request->delay ?? 500;
+        $indices = $request->input('indices', []);
 
         // Generate unique sync ID
         $syncId = 'sync_' . Str::uuid();
 
         // Dispatch job
-        SyncHdWalletOutgoingTransactionsJob::dispatch($syncId, $currencySymbol, $currencyChainId, $delay);
+        SyncHdWalletOutgoingTransactionsJob::dispatch($syncId, $currencySymbol, $currencyChainId, $delay, $indices);
 
         // Store initial progress
         Cache::put("sync_progress:{$syncId}", [
@@ -881,7 +883,7 @@ class HdWalletIndexReportController extends Controller
                 $service = new EtherScanService();
                 $gasEstimate = $service->estimateTokenTransferGasCost($currencyChain->currency->symbol, 'SafeGasPrice');
             } elseif ($chainValue === 'BSC') {
-                $service = new BscScanService();
+                $service = new EtherScanService();
                 $gasEstimate = $service->estimateTokenTransferGasCost($currencyChain->currency->symbol, 'SafeGasPrice');
             } elseif ($chainValue === 'TRC20') {
                 // For TRC20, use approximate values (TronGrid doesn't have simple gas oracle)
