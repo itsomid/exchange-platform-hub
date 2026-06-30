@@ -161,6 +161,7 @@ services:
         - GID=${GID:-1000}
         - USER=${USER:-laraveluser}
     container_name: admin-queue
+    restart: unless-stopped
     volumes:
       - "./admin-panel:/var/www/html:delegated"
       - "./env/admin_panel.env:/var/www/html/.env"
@@ -173,7 +174,7 @@ services:
         "/var/www/html/artisan",
         "queue:work",
         "--tries=20",
-        "--timeout=60",
+        "--timeout=3700",
         "--queue=default,admin-email,hd-wallet-sync,admin-withdrawal,admin-withdrawal-check",
       ]
     networks:
