@@ -238,7 +238,7 @@ class BotTestController extends Controller
 
     private function forceTestMode(): void
     {
-        config(['bot.exchange_driver' => 'fake']);
+        config(['smart-bot.exchange_driver' => 'fake']);
         config(['queue.default'       => 'sync']);
         app()->bind(ExchangeContract::class, FakeBotExchange::class);
     }

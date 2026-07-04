@@ -19,7 +19,7 @@ use Illuminate\Support\Str;
  *     called on it.
  *
  * All fake orders are stored under the `bot:fake_ex:` cache prefix so the
- * Test Lab reset can purge them. Selected by `config('bot.exchange_driver')`
+ * Test Lab reset can purge them. Selected by `config('smart-bot.exchange_driver')`
  * = `fake`.
  */
 class FakeBotExchange implements ExchangeContract

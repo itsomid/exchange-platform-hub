@@ -21,13 +21,14 @@ class BotTestLabController extends Controller
 
     public function index(): View
     {
-        $userId = (int) config('services.bot_api.test_user_id', 2);
+        $userId = (int) config('smart-bot.test_user_id', 2);
         return view('dashboard.bot.test-lab.index', ['userId' => $userId]);
     }
 
     public function status(Request $request): JsonResponse
     {
-        $userId = (int) $request->input('user_id', config('services.bot_api.test_user_id', 2));
+        $userId = (int) $request->input('user_id', config('smart-bot.test_user_id', 2));
+
         return $this->forward($this->api->status($userId));
     }
 

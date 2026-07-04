@@ -35,10 +35,4 @@ return [
     ],
 
     'expiration_per_minutes' => env('EXPIRATION_PER_MINUTES', 10),
-
-    'bot_api' => [
-        'url'           => env('BOT_API_BASE_URL', 'http://127.0.0.1:8001'),
-        'token'         => env('BOT_INTERNAL_TEST_TOKEN', 'a1b2c3d4e5f6g7h'),
-        'test_user_id'  => env('BOT_TEST_USER_ID', 2),
-    ],
 ];

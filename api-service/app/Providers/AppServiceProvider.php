@@ -20,7 +20,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(ExchangeContract::class, function () {
-            return config('bot.exchange_driver') === 'fake'
+            return config('smart-bot.exchange_driver') === 'fake'
                 ? new FakeBotExchange()
                 : new CoinExBotAdapter();
         });

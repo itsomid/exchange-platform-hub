@@ -9,16 +9,17 @@ use Illuminate\Support\Facades\Http;
 /**
  * Thin HTTP wrapper around api-service's /api/internal/bot-test endpoints.
  *
- * Configured via config/services.php['bot_api']:
- *   - url   : api-service base URL (e.g. http://api-service)
- *   - token : matches BOT_INTERNAL_TEST_TOKEN on api-service
+ * Configured via config/smart-bot.php:
+ *   - api_url             : api-service base URL (e.g. http://api-service)
+ *   - internal_test_token : matches BOT_INTERNAL_TEST_TOKEN on api-service
  */
 class BotTestApiClient
 {
     private function http(): PendingRequest
     {
-        $base  = (string) config('services.bot_api.url');
-        $token = (string) config('services.bot_api.token');
+        $base  = (string) config('smart-bot.api_url');
+        $token = (string) config('smart-bot.internal_test_token');
+
 
         return Http::baseUrl(rtrim($base, '/').'/api/internal/bot-test')
             ->acceptJson()
