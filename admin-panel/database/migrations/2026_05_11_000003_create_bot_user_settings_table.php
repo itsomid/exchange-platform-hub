@@ -11,8 +11,8 @@ return new class extends Migration
         Schema::create('bot_user_settings', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->boolean('auto_trade_enabled')->default(true);
-            $table->boolean('reinvest_enabled')->default(true); // stored only — no logic in Phase 1 (D1)
+            $table->boolean('auto_trade_enabled')->default(false);
+            $table->boolean('reinvest_enabled')->default(false); // stored only — no logic in Phase 1 (D1)
             $table->timestamp('terms_accepted_at')->nullable();
             $table->timestamps();
 

@@ -203,3 +203,20 @@ it('handles B_max == B_min by treating p_i as 0', function () {
         expect((float) $alloc['snapshot']['p'])->toBe(0.0);
     }
 });
+
+it('reconciles truncation dust back into allocations when cap room remains', function () {
+    $result = makeAllocator()->allocate(
+        candidates: [
+            baseSignal(['signal_id' => 1, 'priority' => 1]),
+            baseSignal(['signal_id' => 2, 'currency_id' => 2, 'priority' => 1]),
+            baseSignal(['signal_id' => 3, 'currency_id' => 3, 'priority' => 1]),
+        ],
+        balance: '200',
+        alpha: '0.15',
+    );
+
+    expect($result->skipped)->toBeEmpty();
+    expect($result->allocations)->toHaveCount(3);
+    expect($result->totalAllocated())->toBe('200.00000000');
+    expect($result->unallocatedRemainder)->toBe('0.00000000');
+});

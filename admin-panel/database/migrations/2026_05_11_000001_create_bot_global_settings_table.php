@@ -16,6 +16,7 @@ return new class extends Migration
             $table->unsignedTinyInteger('default_sell_orders_count')->default(3);
             $table->decimal('performance_fee_percent', 5, 2)->default(22);
             $table->decimal('p2p_min_order_value', 18, 8)->default(5)->comment('Minimum value (USDT-equivalent) for each P2P sell order');
+            $table->string('precheck_floor_mode', 10)->default('multi');
             $table->json('transfer_fee_tiers');
             $table->boolean('is_enabled')->default(true);
             $table->boolean('cancel_sell_on_exchange_enabled')->default(true)

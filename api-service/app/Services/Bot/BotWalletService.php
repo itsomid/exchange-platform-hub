@@ -7,8 +7,10 @@ use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Events\Bot\BotWalletDeposited;
 use App\Events\Bot\BotWalletWithdrawn;
+use App\Exceptions\Bot\BotAutoTradeActiveException;
 use App\Exceptions\Bot\InsufficientBotWalletException;
 use App\Helpers\Math;
+use App\Models\Bot\BotUserSettings;
 use App\Models\Bot\BotWallet;
 use App\Models\Transaction;
 use App\Models\User;
@@ -30,17 +32,19 @@ class BotWalletService
     {
         $fee = $this->feeCalculator->transferFee($grossAmount);
 
-        DB::transaction(function () use ($user, $grossAmount, $fee) {
+        $netAmount = Math::sub($grossAmount, $fee);
+
+        DB::transaction(function () use ($user, $grossAmount, $fee, $netAmount) {
             $userWallet = $this->getUserUsdtWallet($user);
             $this->assertSufficientMainBalance($userWallet, $grossAmount);
 
             // Debit main wallet
             $userWallet->decrement('balance', $grossAmount);
 
-            // Credit bot wallet (principal_balance/profit_balance are D1 placeholders for future reinvest)
+            // Credit bot wallet net of transfer fee (principal_balance/profit_balance are D1 placeholders)
             $botWallet = $this->getOrCreateBotWallet($user);
             $botWallet->update([
-                'balance' => Math::add((string) $botWallet->balance, $grossAmount),
+                'balance' => Math::add((string) $botWallet->balance, $netAmount),
             ]);
 
             // Transaction: transfer out of main wallet
@@ -76,6 +80,8 @@ class BotWalletService
      */
     public function transferOut(User $user, string $amount): void
     {
+        $this->assertAutoTradeDisabled($user);
+
         $fee = $this->feeCalculator->withdrawFee($amount);
         $totalRequired = Math::add($amount, $fee);
 
@@ -163,6 +169,21 @@ class BotWalletService
     {
         if (Math::comp($botWallet->free_balance, $required) === -1) {
             throw new InsufficientBotWalletException();
+        }
+    }
+
+    /**
+     * Withdrawals from the bot wallet are only allowed while auto-trade is off.
+     * When it is on, freed funds are continuously reinvested, so the balance
+     * must not be drained out from under an active buy/sell cycle.
+     */
+    private function assertAutoTradeDisabled(User $user): void
+    {
+        $autoTradeEnabled = BotUserSettings::where('user_id', $user->id)
+            ->value('auto_trade_enabled');
+
+        if ($autoTradeEnabled) {
+            throw new BotAutoTradeActiveException();
         }
     }
 }

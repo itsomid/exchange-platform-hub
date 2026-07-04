@@ -16,6 +16,7 @@ return new class extends Migration
             $table->decimal('target_value', 18, 8);
             $table->decimal('share_percent', 5, 2);
             $table->decimal('amount_to_sell', 20, 8);
+            $table->decimal('sell_ref_exchange_fee', 20, 8)->default(0);
             $table->string('status')->default('OPEN'); // OPEN|FILLED|CANCELED
             $table->timestamp('filled_at')->nullable();
             $table->timestamps();

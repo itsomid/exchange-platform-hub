@@ -2,6 +2,7 @@
 
 namespace App\Listeners\Bot;
 
+use App\Actions\Bot\BotBuyOrchestrator;
 use App\Events\Bot\BotSellOrderFilled;
 use App\Models\Bot\BotSellOrder;
 use App\Services\Bot\SettlementService;
@@ -12,7 +13,10 @@ class HandleBotSellOrderFilled implements ShouldQueue
 {
     public string $queue = 'bot-settlement';
 
-    public function __construct(private readonly SettlementService $settlement) {}
+    public function __construct(
+        private readonly SettlementService $settlement,
+        private readonly BotBuyOrchestrator $orchestrator,
+    ) {}
 
     public function handle(BotSellOrderFilled $event): void
     {
@@ -21,7 +25,7 @@ class HandleBotSellOrderFilled implements ShouldQueue
         }
 
         try {
-            $this->settlement->settleFill(
+            $settlement = $this->settlement->settleFill(
                 $event->sellOrder,
                 $event->filledAmount,
                 $event->fillPrice,
@@ -29,6 +33,13 @@ class HandleBotSellOrderFilled implements ShouldQueue
                 $event->exchangeFee,
                 $event->spreadFee,
             );
+
+            // Reinvest the freed principal + realized profit back into a new buy
+            // cycle. The orchestrator self-gates on auto_trade_enabled and only
+            // opens a new order once free_balance reaches min_deposit_usdt, so
+            // when auto-trade is off this is a no-op and freed funds simply stay
+            // available for withdrawal.
+            ($this->orchestrator)($settlement->user_id, BotBuyOrchestrator::TRIGGER_REINVEST);
         } catch (\Throwable $e) {
             Log::error('bot.settlement.failed', [
                 'sell_order_id' => $event->sellOrder->id,
