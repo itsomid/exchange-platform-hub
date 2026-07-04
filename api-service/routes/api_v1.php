@@ -141,6 +141,7 @@ Route::prefix('/bot')->name('bot.')->group(function () {
     Route::get('/reports/per-coin', [\App\Http\Controllers\Bot\V1\ReportController::class, 'perCoin'])->name('reports.per-coin');
 
     Route::get('/orders',                       [\App\Http\Controllers\Bot\V1\BotOrderController::class, 'index'])->name('orders.index');
+    Route::get('/activation-status',            [\App\Http\Controllers\Bot\V1\BotOrderController::class, 'activationStatus'])->name('activation-status');
     Route::get('/allocations',                  [\App\Http\Controllers\Bot\V1\BotOrderController::class, 'allocations'])->name('allocations.index');
     Route::get('/orders/{id}',                  [\App\Http\Controllers\Bot\V1\BotOrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{id}/cancel-preview', [\App\Http\Controllers\Bot\V1\BotOrderController::class, 'cancelPreview'])->name('orders.cancel-preview');

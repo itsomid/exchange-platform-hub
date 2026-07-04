@@ -85,7 +85,14 @@ class AssetCoinex implements AssetInterface
         }
         if (! $response->ok() || $response->json('code') !== 0) {
             Log::channel('ref-exchange')->info($response->body());
-            AdminNotification::logError($request->getMarket(), $request->getQuantity(), $response->body());
+            AdminNotification::logError(
+                $request->getMarket(),
+                $request->getQuantity(),
+                $response->body(),
+                $request->getTradeType(),
+                $request->getUserId(),
+                $request->getOrderId(),
+            );
 
             return resolve(BuyDTOResponse::class)
                 ->setSpotStatus(SpotStatusEnum::BuyOrderFailed)

@@ -33,11 +33,19 @@ class AdminNotification
             $admin->notify(new CoinexPriceDifferenceTooLarge($marketName, $amount,$message));
         });
     }
-    public static function logError(string $marketName, string $amount, string $errorMessage): void
-    {
-        Admin::query()->where('is_active', true)->role(['super_admin', 'admin'])->get()->unique('id')->each(function ($admin) use ($marketName, $amount, $errorMessage) {
-            $admin->notify(new CoinexHasError($marketName, $amount, $errorMessage));
-        });
+    public static function logError(
+        string $marketName,
+        string $amount,
+        string $errorMessage,
+        ?string $tradeType = null,
+        ?int $userId = null,
+        ?int $orderId = null,
+    ): void {
+        Admin::query()->where('is_active', true)->role(['super_admin', 'admin'])->get()->unique('id')->each(
+            function ($admin) use ($marketName, $amount, $errorMessage, $tradeType, $userId, $orderId) {
+                $admin->notify(new CoinexHasError($marketName, $amount, $errorMessage, $tradeType, $userId, $orderId));
+            }
+        );
     }
 
     public static function sendRefExchangeNotEnoughBalance(string $exchangeName, string $marketName, string $amount, string $orderType = 'sell'): void

@@ -368,7 +368,7 @@
                 return bsModal;
             }
 
-            function fmt(value, precision) {
+            function formatNumberTrimZeros(value, precision) {
                 if (value === null || value === undefined) return '—';
                 const num = parseFloat(value);
                 if (isNaN(num)) return value;
@@ -410,7 +410,7 @@
                                         <div class="card border-0 bg-label-primary h-100">
                                             <div class="card-body py-3 px-3">
                                                 <small class="text-muted d-block mb-1">قیمت فعلی (${price.market})</small>
-                                                <div class="fw-bold font-number fs-6">${fmt(price.price, 2)} USDT</div>
+                                                <div class="fw-bold font-number fs-6">${formatNumberTrimZeros(price.price, 2)} USDT</div>
                                             </div>
                                         </div>
                                     </div>
@@ -418,7 +418,7 @@
                                         <div class="card border-0 bg-label-secondary h-100">
                                             <div class="card-body py-3 px-3">
                                                 <small class="text-muted d-block mb-1">قیمت باز (24h)</small>
-                                                <div class="fw-bold font-number fs-6">${fmt(price.open_price, 2)} USDT</div>
+                                                <div class="fw-bold font-number fs-6">${formatNumberTrimZeros(price.open_price, 2)} USDT</div>
                                             </div>
                                         </div>
                                     </div>
@@ -434,7 +434,7 @@
                                         <div class="card border-0 bg-label-success h-100">
                                             <div class="card-body py-3 px-3">
                                                 <small class="text-muted d-block mb-1">قیمت فروش صرافی</small>
-                                                <div class="fw-bold font-number fs-6">${fmt(price.exchange_sell_price, 2)}</div>
+                                                <div class="fw-bold font-number fs-6">${formatNumberTrimZeros(price.exchange_sell_price, 2)}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -442,7 +442,7 @@
                                         <div class="card border-0 bg-label-info h-100">
                                             <div class="card-body py-3 px-3">
                                                 <small class="text-muted d-block mb-1">قیمت خرید صرافی</small>
-                                                <div class="fw-bold font-number fs-6">${fmt(price.exchange_buy_price, 2)}</div>
+                                                <div class="fw-bold font-number fs-6">${formatNumberTrimZeros(price.exchange_buy_price, 2)}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -457,7 +457,7 @@
                                     ${infoRow('سیمبول', `<span class="badge bg-label-primary fs-6">${c.symbol}</span>`)}
                                     ${infoRow('دقت قیمت', c.price_precision ?? '—')}
                                     ${infoRow('دقت مقدار', c.amount_precision ?? '—')}
-                                    ${infoRow('حداکثر برداشت خودکار', `<span class="font-number">${fmt(c.max_auto_withdraw_amount, 8)}</span>`)}
+                                    ${infoRow('حداکثر برداشت خودکار', `<span class="font-number">${formatNumberTrimZeros(c.max_auto_withdraw_amount, 8)}</span>`)}
                                     ${infoRow('انتقال داخلی', badge(c.inter_transfer_enabled, 'فعال', 'غیرفعال'))}
                                     ${infoRow('برداشت از صرافی مرجع', badge(c.ref_exchange_withdrawal_enabled, 'فعال', 'غیرفعال'))}
                                     ${infoRow('فاصله زمانی برداشت (دقیقه)', c.ref_exchange_withdrawal_interval_minutes !== null ? c.ref_exchange_withdrawal_interval_minutes : '<span class="text-muted fst-italic">تنظیم سراسری</span>')}
@@ -496,11 +496,11 @@
                                     </div>
                                     <div class="card-body p-3">
                                         <div class="row g-2">
-                                            ${infoRow('کارمزد برداشت صرافی', `<span class="font-number">${fmt(chain.exchange_withdrawal_fee, 8)} ${currency.symbol}</span>`)}
-                                            ${infoRow('کارمزد شبکه', `<span class="font-number">${fmt(chain.network_fee, 8)} ${currency.symbol}</span>`)}
-                                            ${infoRow('مجموع کارمزد', `<span class="font-number text-warning fw-bold">${fmt(chain.total_withdrawal_fee, 8)} ${currency.symbol}</span>`)}
-                                            ${infoRow('حداقل واریز', `<span class="font-number">${fmt(chain.min_deposit_amount, 8)} ${currency.symbol}</span>`)}
-                                            ${infoRow('حداقل برداشت', `<span class="font-number">${fmt(chain.min_withdraw_amount, 8)} ${currency.symbol}</span>`)}
+                                            ${infoRow('کارمزد برداشت صرافی', `<span class="font-number">${formatNumberTrimZeros(chain.exchange_withdrawal_fee, 8)} ${currency.symbol}</span>`)}
+                                            ${infoRow('کارمزد شبکه', `<span class="font-number">${formatNumberTrimZeros(chain.network_fee, 8)} ${currency.symbol}</span>`)}
+                                            ${infoRow('مجموع کارمزد', `<span class="font-number text-warning fw-bold">${formatNumberTrimZeros(chain.total_withdrawal_fee, 8)} ${currency.symbol}</span>`)}
+                                            ${infoRow('حداقل واریز', `<span class="font-number">${formatNumberTrimZeros(chain.min_deposit_amount, 8)} ${currency.symbol}</span>`)}
+                                            ${infoRow('حداقل برداشت', `<span class="font-number">${formatNumberTrimZeros(chain.min_withdraw_amount, 8)} ${currency.symbol}</span>`)}
                                             ${infoRow('تأخیر واریز (دقیقه)', chain.deposit_delay_minutes)}
                                             ${infoRow('تأییدیه‌های امن', chain.safe_confirmations)}
                                             ${infoRow('کوین پایه', badge(chain.is_base_coin, 'بله', 'خیر'))}
