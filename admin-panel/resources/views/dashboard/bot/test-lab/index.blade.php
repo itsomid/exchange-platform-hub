@@ -110,11 +110,13 @@
                         آزمایشگاه تست ربات — کاربر #<span id="lab-user-id">{{ $userId }}</span>
                     </h5>
                     <div class="lab-actions">
-                        <button type="button" class="btn btn-sm btn-label-secondary" id="btn-refresh"><i
-                                class="fa fa-sync-alt"></i> به‌روزرسانی</button>
-                        <button type="button" class="btn btn-sm btn-label-info" id="btn-sync"><i class="fa fa-bolt"></i>
+                        <button type="button" class="btn btn-sm btn-label-secondary" id="btn-refresh">
+                        <i class="fa fa-sync-alt me-1"></i> به‌روزرسانی</button>
+                        <button type="button" class="btn btn-sm btn-label-info" id="btn-sync">
+                            <i class="fa fa-bolt me-1"></i>
                             Sync فروش‌ها</button>
-                        <button type="button" class="btn btn-sm btn-label-danger" id="btn-reset"><i class="fa fa-trash"></i>
+                        <button type="button" class="btn btn-sm btn-label-danger" id="btn-reset">
+                        <i class="fa fa-trash me-1"></i>
                             ریست کامل</button>
                     </div>
                 </div>
@@ -136,7 +138,7 @@
                                 class="form-control form-control-sm">
                         </div>
                         <div>
-                            <button type="button" class="btn btn-success btn-sm" id="btn-start"><i class="fa fa-play"></i>
+                            <button type="button" class="btn btn-success btn-sm" id="btn-start"><i class="fa fa-play me-1"></i>
                                 شروع چرخه (Reset + Buy)</button>
                         </div>
                         <div class="text-muted small flex-grow-1 align-self-center" id="start-hint">
@@ -300,7 +302,7 @@
                     return j;
                 });
             }
-            function fmt(v, dp = 8) {
+            function formatNumberTrimZeros(v, dp = 8) {
                 if (v === null || v === undefined || v === '') return '—';
                 const n = Number(v); if (isNaN(n)) return v;
                 if (n === 0) return '0';
@@ -315,10 +317,10 @@
             function renderWallets(snap) {
                 const mw = snap.main_wallet, bw = snap.bot_wallet;
                 document.getElementById('wallets-panel').innerHTML = `
-                                            <div class="lab-stat"><span class="k">کیف USDT اصلی</span><span class="v">${mw ? fmt(mw.balance, 4) : '—'}</span></div>
-                                            <div class="lab-stat"><span class="k">کیف ربات — موجودی</span><span class="v">${bw ? fmt(bw.balance, 4) : '—'}</span></div>
-                                            <div class="lab-stat"><span class="k">کیف ربات — قفل‌شده</span><span class="v">${bw ? fmt(bw.locked_balance, 4) : '—'}</span></div>
-                                            <div class="lab-stat"><span class="k">کیف ربات — سود</span><span class="v">${bw ? fmt(bw.profit_balance, 4) : '—'}</span></div>
+                                            <div class="lab-stat"><span class="k">کیف USDT اصلی</span><span class="v">${mw ? formatNumberTrimZeros(mw.balance) : '—'}</span></div>
+                                            <div class="lab-stat"><span class="k">کیف ربات — موجودی</span><span class="v">${bw ? formatNumberTrimZeros(bw.balance) : '—'}</span></div>
+                                            <div class="lab-stat"><span class="k">کیف ربات — قفل‌شده</span><span class="v">${bw ? formatNumberTrimZeros(bw.locked_balance) : '—'}</span></div>
+                                            <div class="lab-stat"><span class="k">کیف ربات — سود</span><span class="v">${bw ? formatNumberTrimZeros(bw.profit_balance) : '—'}</span></div>
                                             <div class="lab-stat"><span class="k">auto_trade</span>
                                               <span class="v">${snap.settings?.auto_trade_enabled ? '<span class="text-success">ON</span>' : '<span class="text-danger">OFF</span>'}</span></div>
                                         `;
@@ -355,8 +357,8 @@
                     rows.push(`
                                               <tr>
                                                 <td><strong>${esc(sym)}</strong></td>
-                                                <td class="price-cell">${fmt(cur, 6)}</td>
-                                                <td class="price-cell">${fmt(avg, 6)}</td>
+                                                <td class="price-cell">${formatNumberTrimZeros(cur, 6)}</td>
+                                                <td class="price-cell">${formatNumberTrimZeros(avg, 6)}</td>
                                                 <td>${diff}</td>
                                                 <td class="lab-bump">
                                                   <div class="input-group input-group-sm">
@@ -382,19 +384,19 @@
                                                 <tr class="tier-row">
                                                   <td></td>
                                                   <td colspan="2">Tier #${so.id} ${badge(so.status)}</td>
-                                                  <td>${esc(so.target_type)}: ${fmt(so.target_value, 4)}</td>
-                                                  <td>limit≈ <span class="price-cell">${fmt(so.limit_price, 6)}</span></td>
-                                                  <td>سهم: ${fmt(so.share_percent, 2)}%</td>
-                                                  <td>مقدار: ${fmt(so.amount_to_sell, 8)}</td>
+                                                  <td>${esc(so.target_type)}: ${formatNumberTrimZeros(so.target_value, 4)}</td>
+                                                  <td>limit≈ <span class="price-cell">${formatNumberTrimZeros(so.limit_price, 6)}</span></td>
+                                                  <td>سهم: ${formatNumberTrimZeros(so.share_percent, 2)}%</td>
+                                                  <td>مقدار: ${formatNumberTrimZeros(so.amount_to_sell, 8)}</td>
                                                 </tr>`).join('');
                     return `
                                               <tr>
                                                 <td>#${e.id}</td>
                                                 <td><strong>${esc(e.currency)}</strong></td>
                                                 <td>${badge(e.status)}</td>
-                                                <td>${fmt(e.allocated_usdt, 4)}</td>
-                                                <td>${fmt(e.filled_amount, 8)}</td>
-                                                <td class="price-cell">${fmt(e.avg_buy_price, 6)}</td>
+                                                <td>${formatNumberTrimZeros(e.allocated_usdt, 4)}</td>
+                                                <td>${formatNumberTrimZeros(e.filled_amount, 8)}</td>
+                                                <td class="price-cell">${formatNumberTrimZeros(e.avg_buy_price, 6)}</td>
                                                 <td class="text-danger small">${esc(e.failure_reason || '')}</td>
                                               </tr>${tiers}`;
                 }).join('');
@@ -404,9 +406,9 @@
                 const tb = document.getElementById('settle-tbody');
                 if (!snap.settlements?.length) { tb.innerHTML = '<tr><td colspan="5" class="lab-empty">—</td></tr>'; return; }
                 tb.innerHTML = snap.settlements.map(s => `
-                                            <tr><td>${s.id}</td><td>${fmt(s.gross_revenue, 4)}</td><td>${fmt(s.cost_basis, 4)}</td>
-                                                <td>${fmt(s.performance_fee, 4)}</td>
-                                                <td class="${Number(s.net_pnl) >= 0 ? 'text-success' : 'text-danger'}">${fmt(s.net_pnl, 4)}</td></tr>
+                                            <tr><td>${s.id}</td><td>${formatNumberTrimZeros(s.gross_revenue, 4)}</td><td>${formatNumberTrimZeros(s.cost_basis, 4)}</td>
+                                                <td>${formatNumberTrimZeros(s.performance_fee, 4)}</td>
+                                                <td class="${Number(s.net_pnl) >= 0 ? 'text-success' : 'text-danger'}">${formatNumberTrimZeros(s.net_pnl, 4)}</td></tr>
                                         `).join('');
             }
 
@@ -416,8 +418,8 @@
                 tb.innerHTML = snap.transactions.map(t => `
                                             <tr><td>${t.id}</td>
                                                 <td><span class="lab-pill">${esc(t.subtype)}</span></td>
-                                                <td class="${Number(t.amount) >= 0 ? 'text-success' : 'text-danger'}">${fmt(t.amount, 4)}</td>
-                                                <td>${fmt(t.balance, 4)}</td>
+                                                <td class="${Number(t.amount) >= 0 ? 'text-success' : 'text-danger'}">${formatNumberTrimZeros(t.amount, 4)}</td>
+                                                <td>${formatNumberTrimZeros(t.balance, 4)}</td>
                                                 <td class="small">${esc(t.description)}</td></tr>
                                         `).join('');
             }
@@ -481,7 +483,7 @@
                     const sym = t.dataset.sym, dir = t.dataset.dir;
                     const step = parseFloat(document.querySelector(`.bump-step[data-sym="${sym}"]`)?.value || '5');
                     api('POST', URL.bump, { symbol: sym, direction: dir, step, mode: 'percent' })
-                        .then(j => { toast(`${sym} → ${fmt(j.new_price, 6)}`); refresh(); })
+                        .then(j => { toast(`${sym} → ${formatNumberTrimZeros(j.new_price, 6)}`); refresh(); })
                         .catch(e => toast(e.message, false));
                     return;
                 }

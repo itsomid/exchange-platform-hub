@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Log;
  * Per-item fees:
  *   - network_fee_usdt    = (chain.network_fee + chain.exchange_withdrawal_fee) * fill_price
  *                           chosen chain = withdraw-enabled chain with min total_withdrawal_fee.
- *   - performance_fee_usdt = max(0, current_value - cost_basis) * performance_fee_percent / 100
+ *   - performance_fee_usdt = max(0, current_value - cost_basis - network_fee) * performance_fee_percent / 100
  *   - exchange_fee_usdt    = realised on the market-sell (0 if disabled).
  *
  * total_fee   = network + exchange + performance
@@ -104,10 +104,11 @@ class BotOrderCancelService
                 : '0';
             $networkFeeUsdt = bcmul($feeCoin, $currentPrice, self::SCALE);
 
-            $grossPnl = bcsub($currentValue, $cost, self::SCALE);
-            $perfFee  = '0';
-            if (bccomp($grossPnl, '0', self::SCALE) > 0) {
-                $perfFee = bcdiv(bcmul($grossPnl, $perfPct, self::SCALE), '100', self::SCALE);
+            $grossPnl     = bcsub($currentValue, $cost, self::SCALE);
+            $pnlAfterFees = bcsub($grossPnl, $networkFeeUsdt, self::SCALE);
+            $perfFee      = '0';
+            if (bccomp($pnlAfterFees, '0', self::SCALE) > 0) {
+                $perfFee = bcdiv(bcmul($pnlAfterFees, $perfPct, self::SCALE), '100', self::SCALE);
             }
 
             $itemFee = bcadd($networkFeeUsdt, $perfFee, self::SCALE);
@@ -127,7 +128,7 @@ class BotOrderCancelService
                 'cost_basis'      => $cost,
                 'current_value'   => $currentValue,
                 'gross_pnl'       => $grossPnl,
-                'is_profitable'   => bccomp($grossPnl, '0', self::SCALE) > 0,
+                'is_profitable'   => bccomp($pnlAfterFees, '0', self::SCALE) > 0,
                 'network_fee'     => $networkFeeUsdt,
                 'performance_fee' => $perfFee,
                 'total_fee'       => $itemFee,
@@ -200,13 +201,17 @@ class BotOrderCancelService
                     : '0';
                 $networkFeeUsdt = bcmul($feeCoin, $fillPrice, self::SCALE);
 
+                if (bccomp($exchFee, '0', 8) > 0) {
+                    $sellOrder->update(['sell_ref_exchange_fee' => $exchFee]);
+                }
+
                 $settlement = $this->settlement->settleCancelMarketSell(
-                    sellOrder:      $sellOrder,
-                    filledAmount:   $amount,
-                    fillPrice:      $fillPrice,
-                    networkFee:     $networkFeeUsdt,
-                    exchangeFee:    $exchFee,
-                    perfFeePercent: $perfPct,
+                    sellOrder:          $sellOrder,
+                    filledAmount:       $amount,
+                    fillPrice:          $fillPrice,
+                    networkFee:         $networkFeeUsdt,
+                    sellRefExchangeFee: $exchFee,
+                    perfFeePercent:     $perfPct,
                 );
 
                 $itemFee = bcadd(

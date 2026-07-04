@@ -454,11 +454,7 @@ class HdWalletIndexReportController extends Controller
 
             $responseData = $response->json();
 
-            \Illuminate\Support\Facades\Log::channel('hd-wallet')->info('Sweep indices result:', [
-                'request' => $requestBody,
-                'summary' => $responseData['data']['summary'] ?? null,
-            ]);
-
+          
             return response()->json([
                 'success' => true,
                 'data' => $responseData['data'] ?? [],
@@ -578,11 +574,7 @@ class HdWalletIndexReportController extends Controller
 
             $responseData = $response->json();
 
-            \Illuminate\Support\Facades\Log::channel('hd-wallet')->info('Fund indices result:', [
-                'request' => $requestBody,
-                'summary' => $responseData['data']['summary'] ?? null,
-            ]);
-
+    
             return response()->json([
                 'success' => true,
                 'data' => $responseData['data'] ?? [],

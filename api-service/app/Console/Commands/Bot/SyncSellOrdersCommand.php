@@ -68,9 +68,15 @@ class SyncSellOrdersCommand extends Command
 
             if ($result->status === ExchangeOrderStatus::FILLED) {
                 // Re-verify with row lock that we're still OPEN to keep this idempotent.
-                $stillOpen = DB::transaction(function () use ($sellOrder) {
+                // Also persist the sell-leg exchange fee so it's available for audit and settlement.
+                $stillOpen = DB::transaction(function () use ($sellOrder, $result) {
                     $fresh = BotSellOrder::where('id', $sellOrder->id)->lockForUpdate()->first();
-                    return $fresh && $fresh->status === BotSellOrder::STATUS_OPEN;
+                    if (! $fresh || $fresh->status !== BotSellOrder::STATUS_OPEN) {
+                        return false;
+                    }
+                    $fresh->update(['sell_ref_exchange_fee' => $result->exchangeFee ?? '0']);
+                    $sellOrder->sell_ref_exchange_fee = $result->exchangeFee ?? '0';
+                    return true;
                 });
                 if (! $stillOpen) {
                     continue;

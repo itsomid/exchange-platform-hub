@@ -451,11 +451,12 @@ class BotTradingScenariosSeeder extends Seeder
         array $sellCfg,
         array &$totals,
     ): void {
-        $gross     = round($amountToSell * $sellPrice, 8);
-        $exFee     = round($gross * 0.001, 8);
-        $grossPnl  = $gross - $costBasis - $exFee;
-        $perfFee   = $grossPnl > 0 ? round($grossPnl * 0.22, 8) : 0.0;
-        $netPnl    = round($grossPnl - $perfFee, 8);
+        $gross        = round($amountToSell * $sellPrice, 8);
+        $exFee        = round($gross * 0.001, 8);
+        $grossPnl     = $gross - $costBasis;
+        $pnlAfterFees = $grossPnl - $exFee;
+        $perfFee      = $pnlAfterFees > 0 ? round($pnlAfterFees * 0.22, 8) : 0.0;
+        $netPnl       = round($pnlAfterFees - $perfFee, 8);
 
         BotTradeSettlement::create([
             'user_id'              => $userId,

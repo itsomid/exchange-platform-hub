@@ -19,6 +19,7 @@ class BotSellOrder extends Model
         'target_value',
         'share_percent',
         'amount_to_sell',
+        'sell_ref_exchange_fee',
         'status',
         'filled_at',
     ];
@@ -26,10 +27,11 @@ class BotSellOrder extends Model
     protected function casts(): array
     {
         return [
-            'target_value'  => 'decimal:8',
-            'share_percent' => 'decimal:2',
-            'amount_to_sell' => 'decimal:8',
-            'filled_at'     => 'datetime',
+            'target_value'          => 'decimal:8',
+            'share_percent'         => 'decimal:2',
+            'amount_to_sell'        => 'decimal:8',
+            'sell_ref_exchange_fee' => 'decimal:8',
+            'filled_at'             => 'datetime',
         ];
     }
 

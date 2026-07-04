@@ -16,7 +16,7 @@ class SettingsController extends Controller
     {
         $settings = BotUserSettings::firstOrCreate(
             ['user_id' => Auth::id()],
-            ['auto_trade_enabled' => true, 'reinvest_enabled' => true]
+            ['auto_trade_enabled' => false, 'reinvest_enabled' => false]
         );
 
         return response()->json(['data' => new BotUserSettingsResource($settings)]);
@@ -26,7 +26,7 @@ class SettingsController extends Controller
     {
         $settings = BotUserSettings::firstOrCreate(
             ['user_id' => Auth::id()],
-            ['auto_trade_enabled' => true, 'reinvest_enabled' => true]
+            ['auto_trade_enabled' => false, 'reinvest_enabled' => false]
         );
 
         $previousState = $settings->auto_trade_enabled;

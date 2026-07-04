@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Bot\BotBuyExecution;
 use App\Models\Bot\BotOrder;
 use App\Models\Bot\BotSellOrder;
+use App\Models\Bot\BotUserSettings;
 use App\Services\Bot\BotOrderCancelService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -96,6 +97,87 @@ class BotOrderController extends Controller
             'meta' => [
                 'total_usdt'       => $total,
                 'currencies_count' => $data->count(),
+            ],
+        ]);
+    }
+
+    /**
+     * Lightweight activation/progress status for the user's most recent bot
+     * order. Polled by the dashboard "progressive activation" overlay after the
+     * user turns the bot on, so the UI can show buy/sell job progress and reveal
+     * the populated dashboard only once every execution reaches a terminal state.
+     *
+     * Response:
+     *   data: {
+     *     auto_trade_enabled, has_order, order_id, order_status, triggered_by,
+     *     created_at, total, in_flight, bought, skipped, failed, sells_open,
+     *     completed
+     *   }
+     */
+    public function activationStatus(): JsonResponse
+    {
+        $userId = Auth::id();
+
+        $settings = BotUserSettings::where('user_id', $userId)->first();
+        $autoTradeEnabled = (bool) ($settings?->auto_trade_enabled);
+
+        $order = BotOrder::where('user_id', $userId)->orderByDesc('id')->first();
+
+        if (! $order) {
+            return response()->json([
+                'data' => [
+                    'auto_trade_enabled' => $autoTradeEnabled,
+                    'has_order'          => false,
+                    'order_id'           => null,
+                    'order_status'       => null,
+                    'triggered_by'       => null,
+                    'created_at'         => null,
+                    'total'              => 0,
+                    'in_flight'          => 0,
+                    'bought'             => 0,
+                    'skipped'            => 0,
+                    'failed'             => 0,
+                    'sells_open'         => 0,
+                    'completed'          => false,
+                ],
+            ]);
+        }
+
+        $counts = BotBuyExecution::query()
+            ->where('bot_order_id', $order->id)
+            ->selectRaw('status, COUNT(*) as c')
+            ->groupBy('status')
+            ->pluck('c', 'status');
+
+        $pending  = (int) ($counts[BotBuyExecution::STATUS_PENDING] ?? 0);
+        $buying   = (int) ($counts[BotBuyExecution::STATUS_BUYING] ?? 0);
+        $bought   = (int) ($counts[BotBuyExecution::STATUS_BOUGHT] ?? 0);
+        $skipped  = (int) ($counts[BotBuyExecution::STATUS_SKIPPED] ?? 0);
+        $failed   = (int) ($counts[BotBuyExecution::STATUS_FAILED] ?? 0);
+        $total    = $pending + $buying + $bought + $skipped + $failed;
+        $inFlight = $pending + $buying;
+
+        $sellsOpen = BotSellOrder::query()
+            ->join('bot_buy_executions', 'bot_buy_executions.id', '=', 'bot_sell_orders.bot_buy_execution_id')
+            ->where('bot_buy_executions.bot_order_id', $order->id)
+            ->where('bot_sell_orders.status', BotSellOrder::STATUS_OPEN)
+            ->count();
+
+        return response()->json([
+            'data' => [
+                'auto_trade_enabled' => $autoTradeEnabled,
+                'has_order'          => true,
+                'order_id'           => (int) $order->id,
+                'order_status'       => $order->status,
+                'triggered_by'       => $order->triggered_by,
+                'created_at'         => $order->created_at?->toIso8601String(),
+                'total'              => $total,
+                'in_flight'          => $inFlight,
+                'bought'             => $bought,
+                'skipped'            => $skipped,
+                'failed'             => $failed,
+                'sells_open'         => $sellsOpen,
+                'completed'          => $total > 0 && $inFlight === 0,
             ],
         ]);
     }

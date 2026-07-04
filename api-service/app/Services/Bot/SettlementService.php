@@ -28,6 +28,30 @@ class SettlementService
     private const SCALE = 8;
 
     /**
+     * Allocate this execution's buy-side exchange fee to the settled amount
+     * proportionally, so final PnL reflects both buy and sell exchange fees.
+     */
+    private function allocatedBuyExchangeFee(BotBuyExecution $execution, string $settledAmount): string
+    {
+        $totalBuyFee = (string) ($execution->buy_ref_exchange_fee ?? '0');
+        $totalFilled = (string) ($execution->filled_amount ?? '0');
+
+        if (
+            bccomp($totalBuyFee, '0', self::SCALE) <= 0 ||
+            bccomp($totalFilled, '0', self::SCALE) <= 0 ||
+            bccomp($settledAmount, '0', self::SCALE) <= 0
+        ) {
+            return '0';
+        }
+
+        return bcdiv(
+            bcmul($totalBuyFee, $settledAmount, self::SCALE),
+            $totalFilled,
+            self::SCALE,
+        );
+    }
+
+    /**
      * Settle a filled sell order.
      */
     public function settleFill(
@@ -35,25 +59,29 @@ class SettlementService
         string $filledAmount,
         string $fillPrice,
         string $networkFee = '0',
-        string $exchangeFee = '0',
+        string $sellRefExchangeFee = '0',
         string $spreadFee = '0',
     ): BotTradeSettlement {
-        return DB::transaction(function () use ($sellOrder, $filledAmount, $fillPrice, $networkFee, $exchangeFee, $spreadFee) {
+        return DB::transaction(function () use ($sellOrder, $filledAmount, $fillPrice, $networkFee, $sellRefExchangeFee, $spreadFee) {
             $sellOrder->refresh();
             $execution = $sellOrder->botBuyExecution()->lockForUpdate()->firstOrFail();
             $userId    = $execution->botOrder->user_id;
 
-            $grossRevenue = bcmul($filledAmount, $fillPrice, self::SCALE);
-            $costBasis    = bcmul($filledAmount, (string) $execution->avg_buy_price, self::SCALE);
-            $totalFees    = bcadd(bcadd($networkFee, $exchangeFee, self::SCALE), $spreadFee, self::SCALE);
-            $grossPnl     = bcsub(bcsub($grossRevenue, $costBasis, self::SCALE), $totalFees, self::SCALE);
+            $buyExchangeFeeShare = $this->allocatedBuyExchangeFee($execution, $filledAmount);
+            $effectiveExchangeFee = bcadd($sellRefExchangeFee, $buyExchangeFeeShare, self::SCALE);
+
+            $grossRevenue  = bcmul($filledAmount, $fillPrice, self::SCALE);
+            $costBasis     = bcmul($filledAmount, (string) $execution->avg_buy_price, self::SCALE);
+            $totalFees     = bcadd(bcadd($networkFee, $effectiveExchangeFee, self::SCALE), $spreadFee, self::SCALE);
+            $grossPnl      = bcsub($grossRevenue, $costBasis, self::SCALE);
+            $pnlAfterFees  = bcsub($grossPnl, $totalFees, self::SCALE);
 
             $performanceFee = '0';
-            if (bccomp($grossPnl, '0', self::SCALE) > 0) {
+            if (bccomp($pnlAfterFees, '0', self::SCALE) > 0) {
                 $pct = (string) BotGlobalSettings::current()->performance_fee_percent;
-                $performanceFee = bcdiv(bcmul($grossPnl, $pct, self::SCALE), '100', self::SCALE);
+                $performanceFee = bcdiv(bcmul($pnlAfterFees, $pct, self::SCALE), '100', self::SCALE);
             }
-            $netPnl = bcsub($grossPnl, $performanceFee, self::SCALE);
+            $netPnl = bcsub($pnlAfterFees, $performanceFee, self::SCALE);
 
             $settlement = BotTradeSettlement::create([
                 'user_id'              => $userId,
@@ -62,7 +90,7 @@ class SettlementService
                 'gross_revenue'        => $grossRevenue,
                 'cost_basis'           => $costBasis,
                 'network_fee'          => $networkFee,
-                'exchange_fee'         => $exchangeFee,
+                'exchange_fee'         => $effectiveExchangeFee,
                 'spread_fee'           => $spreadFee,
                 'performance_fee'      => $performanceFee,
                 'cancel_fee'           => '0',
@@ -76,7 +104,7 @@ class SettlementService
             ]);
 
             $this->updateWallet($userId, $execution, $costBasis, $netPnl);
-            $this->writeTxns($userId, $execution, $grossRevenue, $networkFee, $exchangeFee, $spreadFee, $performanceFee, null);
+            $this->writeTxns($userId, $execution, $grossRevenue, $networkFee, $effectiveExchangeFee, $spreadFee, $performanceFee, null);
 
             return $settlement;
         });
@@ -132,7 +160,7 @@ class SettlementService
      *
      * Differences from settleCancel():
      *   - gross_revenue  = filled_amount * fill_price (real or live-price)
-     *   - exchange_fee   = realised fee from the market-sell (0 when disabled)
+    *   - exchange_fee   = market-sell fee + proportional buy-side fee share
      *   - network_fee    = withdrawal fee for the cheapest chain, in USDT
      *   - performance_fee = max(0, gross_revenue - cost_basis) * perfPct / 100
      *   - net_pnl        = gross_revenue - cost_basis - network - exchange - performance
@@ -144,25 +172,28 @@ class SettlementService
         string $filledAmount,
         string $fillPrice,
         string $networkFee,
-        string $exchangeFee,
+        string $sellRefExchangeFee,
         string $perfFeePercent,
     ): BotTradeSettlement {
-        return DB::transaction(function () use ($sellOrder, $filledAmount, $fillPrice, $networkFee, $exchangeFee, $perfFeePercent) {
+        return DB::transaction(function () use ($sellOrder, $filledAmount, $fillPrice, $networkFee, $sellRefExchangeFee, $perfFeePercent) {
             $sellOrder->refresh();
             $execution = $sellOrder->botBuyExecution()->lockForUpdate()->firstOrFail();
             $userId    = $execution->botOrder->user_id;
 
+            $buyExchangeFeeShare = $this->allocatedBuyExchangeFee($execution, $filledAmount);
+            $effectiveExchangeFee = bcadd($sellRefExchangeFee, $buyExchangeFeeShare, self::SCALE);
+
             $grossRevenue = bcmul($filledAmount, $fillPrice, self::SCALE);
             $costBasis    = bcmul($filledAmount, (string) $execution->avg_buy_price, self::SCALE);
 
-            $grossPnl = bcsub($grossRevenue, $costBasis, self::SCALE);
-            $perfFee  = '0';
-            if (bccomp($grossPnl, '0', self::SCALE) > 0) {
-                $perfFee = bcdiv(bcmul($grossPnl, $perfFeePercent, self::SCALE), '100', self::SCALE);
+            $grossPnl     = bcsub($grossRevenue, $costBasis, self::SCALE);
+            $pnlAfterFees = bcsub(bcsub($grossPnl, $networkFee, self::SCALE), $effectiveExchangeFee, self::SCALE);
+            $perfFee      = '0';
+            if (bccomp($pnlAfterFees, '0', self::SCALE) > 0) {
+                $perfFee = bcdiv(bcmul($pnlAfterFees, $perfFeePercent, self::SCALE), '100', self::SCALE);
             }
 
-            $totalFees = bcadd(bcadd($networkFee, $exchangeFee, self::SCALE), $perfFee, self::SCALE);
-            $netPnl    = bcsub($grossPnl, $totalFees, self::SCALE);
+            $netPnl = bcsub($pnlAfterFees, $perfFee, self::SCALE);
 
             $settlement = BotTradeSettlement::create([
                 'user_id'              => $userId,
@@ -171,7 +202,7 @@ class SettlementService
                 'gross_revenue'        => $grossRevenue,
                 'cost_basis'           => $costBasis,
                 'network_fee'          => $networkFee,
-                'exchange_fee'         => $exchangeFee,
+                'exchange_fee'         => $effectiveExchangeFee,
                 'spread_fee'           => '0',
                 'performance_fee'      => $perfFee,
                 'cancel_fee'           => '0',
@@ -185,7 +216,7 @@ class SettlementService
             ]);
 
             $this->updateWallet($userId, $execution, $costBasis, $netPnl);
-            $this->writeTxns($userId, $execution, $grossRevenue, $networkFee, $exchangeFee, '0', $perfFee, null);
+            $this->writeTxns($userId, $execution, $grossRevenue, $networkFee, $effectiveExchangeFee, '0', $perfFee, null);
 
             return $settlement;
         });
@@ -207,39 +238,42 @@ class SettlementService
         BotBuyExecution $execution,
         string $filledAmount,
         string $fillPrice,
-        string $exchangeFee,
+        string $sellRefExchangeFee,
         ?string $exchangeOrderId = null,
     ): BotTradeSettlement {
-        return DB::transaction(function () use ($execution, $filledAmount, $fillPrice, $exchangeFee, $exchangeOrderId) {
+        return DB::transaction(function () use ($execution, $filledAmount, $fillPrice, $sellRefExchangeFee, $exchangeOrderId) {
             $execution->refresh();
 
             $sellOrder = BotSellOrder::create([
-                'bot_buy_execution_id' => $execution->id,
-                'exchange_order_id'    => $exchangeOrderId,
-                'target_type'          => 'fallback_liquidation',
-                'target_value'         => $fillPrice,
-                'share_percent'        => '100.00',
-                'amount_to_sell'       => $filledAmount,
-                'status'               => BotSellOrder::STATUS_FILLED,
-                'filled_at'            => now(),
+                'bot_buy_execution_id'  => $execution->id,
+                'exchange_order_id'     => $exchangeOrderId,
+                'target_type'           => 'fallback_liquidation',
+                'target_value'          => $fillPrice,
+                'share_percent'         => '100.00',
+                'amount_to_sell'        => $filledAmount,
+                'sell_ref_exchange_fee' => $sellRefExchangeFee,
+                'status'                => BotSellOrder::STATUS_FILLED,
+                'filled_at'             => now(),
             ]);
 
             return $this->settleFill(
-                sellOrder:    $sellOrder,
-                filledAmount: $filledAmount,
-                fillPrice:    $fillPrice,
-                networkFee:   '0',
-                exchangeFee:  $exchangeFee,
-                spreadFee:    '0',
+                sellOrder:          $sellOrder,
+                filledAmount:       $filledAmount,
+                fillPrice:          $fillPrice,
+                networkFee:         '0',
+                sellRefExchangeFee: $sellRefExchangeFee,
+                spreadFee:          '0',
             );
         });
     }
 
     /**
-     * Wallet update rules (D9):
+     * Wallet update rules:
      *   - Release the locked cost from `locked_balance` (it was reserved at buy time).
-     *   - If net_pnl > 0: balance += cost_basis + net_pnl; profit_balance += net_pnl.
-     *   - If net_pnl ≤ 0: balance += cost_basis + net_pnl  (i.e. cost_basis − loss).
+     *   - balance += net_pnl only.  The cost_basis was never subtracted from `balance`
+     *     when buying (only `locked_balance` was incremented), so adding it here would
+     *     double-count it and inflate the available balance.
+     *   - profit_balance += net_pnl when profitable.
      */
     private function updateWallet(int $userId, BotBuyExecution $execution, string $costBasis, string $netPnl): void
     {
@@ -251,8 +285,9 @@ class SettlementService
             $newLocked = '0';
         }
 
-        $delta      = bcadd($costBasis, $netPnl, self::SCALE);
-        $newBalance = bcadd((string) $wallet->balance, $delta, self::SCALE);
+        // Only the profit/loss adjusts the total balance; the principal (cost_basis) was
+        // already counted in balance since it was never deducted at buy time.
+        $newBalance = bcadd((string) $wallet->balance, $netPnl, self::SCALE);
 
         $newProfit = (string) $wallet->profit_balance;
         if (bccomp($netPnl, '0', self::SCALE) > 0) {

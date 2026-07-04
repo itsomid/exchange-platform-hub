@@ -108,7 +108,7 @@ class BotReportController extends Controller
 
         $headings = [
             'ID', 'Order ID', 'کاربر', 'ارز', 'تخصیص (USDT)', 'مقدار خریداری‌شده',
-            'میانگین قیمت خرید', 'کارمزد صرافی', 'کارمزد شبکه', 'وضعیت',
+            'میانگین قیمت خرید', 'کارمزد صرافی (خرید)', 'کارمزد شبکه', 'وضعیت',
             'تعداد فروش اولیه', 'تعداد فروش مؤثر', 'Collapsed', 'علت شکست/توضیح', 'تاریخ',
         ];
 
@@ -126,7 +126,7 @@ class BotReportController extends Controller
                         $e->allocated_usdt,
                         $e->filled_amount,
                         $e->avg_buy_price,
-                        $e->exchange_fee,
+                        $e->buy_ref_exchange_fee,
                         $e->network_fee,
                         $e->status,
                         $orig,
@@ -149,8 +149,8 @@ class BotReportController extends Controller
             ->orderBy('id');
 
         $headings = [
-            'ID', 'کاربر', 'ارز', 'درآمد ناخالص', 'بهای تمام‌شده', 'کارمزد شبکه',
-            'کارمزد صرافی', 'اسپرد', 'کارمزد عملکرد', 'کارمزد لغو', 'سود/زیان خالص', 'تاریخ تسویه',
+            'ID', 'کاربر', 'ارز', 'درآمد ناخالص', ' (Cost Basis)بهای تمام‌شده', 'کارمزد شبکه',
+            'کارمزد صرافی (خرید+فروش)', 'اسپرد', 'کارمزد عملکرد', 'کارمزد لغو', 'سود/زیان خالص', 'تاریخ تسویه',
         ];
 
         return $this->streamCsv('bot_settlements', $headings, function ($write) use ($query) {

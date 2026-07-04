@@ -74,8 +74,8 @@ class BuyExecutionJob implements ShouldQueue
             'status'            => BotBuyExecution::STATUS_BOUGHT,
             'filled_amount'     => $result->filledAmount,
             'avg_buy_price'     => $result->avgPrice,
-            'exchange_fee'      => $result->exchangeFee,
-            'exchange_order_id' => $result->exchangeOrderId,
+            'buy_ref_exchange_fee' => $result->exchangeFee,
+            'exchange_order_id'    => $result->exchangeOrderId,
         ]);
 
         Log::info('bot.buy.execution.filled', [

@@ -260,11 +260,11 @@ class OpenSellOrdersJob implements ShouldQueue
         }
 
         $settlement->settleFallbackLiquidation(
-            execution:       $execution,
-            filledAmount:    (string) $disposeRes->filledAmount,
-            fillPrice:       (string) ($disposeRes->avgPrice ?? '0'),
-            exchangeFee:     (string) ($disposeRes->exchangeFee ?? '0'),
-            exchangeOrderId: $disposeRes->exchangeOrderId,
+            execution:          $execution,
+            filledAmount:       (string) $disposeRes->filledAmount,
+            fillPrice:          (string) ($disposeRes->avgPrice ?? '0'),
+            sellRefExchangeFee: (string) ($disposeRes->exchangeFee ?? '0'),
+            exchangeOrderId:    $disposeRes->exchangeOrderId,
         );
 
         $execution->update([

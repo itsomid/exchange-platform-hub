@@ -182,6 +182,8 @@ class AllocationService
             unset($s);
         }
 
+        $this->reconcileRoundingRemainder($selected, $B);
+
         // --- Build outputs
         $allocations = [];
         $skipped     = [];
@@ -249,5 +251,44 @@ class AllocationService
         }
 
         return number_format((float) $v, self::SCALE, '.', '');
+    }
+
+    /**
+     * Fold any truncation dust back into surviving allocations that still have cap room
+     * so persisted wallet locks match the intended allocatable balance.
+     *
+     * @param array<int, array<string, mixed>> $selected
+     */
+    private function reconcileRoundingRemainder(array &$selected, string $balance): void
+    {
+        $allocated = '0';
+        foreach ($selected as $s) {
+            if (! ($s['_skipped'] ?? false)) {
+                $allocated = bcadd($allocated, $s['amount'], self::SCALE);
+            }
+        }
+
+        $remainder = bcsub($balance, $allocated, self::SCALE);
+        if (bccomp($remainder, '0', self::SCALE) <= 0) {
+            return;
+        }
+
+        for ($index = count($selected) - 1; $index >= 0 && bccomp($remainder, '0', self::SCALE) > 0; $index--) {
+            if ($selected[$index]['_skipped'] ?? false) {
+                continue;
+            }
+
+            $capacity = bcsub($selected[$index]['cap'], $selected[$index]['amount'], self::SCALE);
+            if (bccomp($capacity, '0', self::SCALE) <= 0) {
+                continue;
+            }
+
+            $topUp = bccomp($remainder, $capacity, self::SCALE) === 1
+                ? $capacity
+                : $remainder;
+
+            $selected[$index]['amount'] = bcadd($selected[$index]['amount'], $topUp, self::SCALE);
+            $remainder = bcsub($remainder, $topUp, self::SCALE);
+        }
     }
 }

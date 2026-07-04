@@ -3,7 +3,6 @@
 @section('title', 'گزارش‌های ربات معاملاتی')
 
 @php
-    $fmt = fn($v, $d = 2) => number_format((float) $v, $d);
     $exportQuery = http_build_query(array_filter([
         'from' => $from,
         'to' => $to,
@@ -72,14 +71,14 @@
     <div class="row g-3 mb-2">
         @php
             $cards = [
-                ['حجم خرید (USDT)', $fmt($kpi['bought_volume']), 'primary', 'fa-cart-shopping'],
-                ['درآمد فروش (USDT)', $fmt($kpi['gross_revenue']), 'info', 'fa-sack-dollar'],
-                ['سود خالص مجموعه (USDT)', $fmt($kpi['net_pnl']), $kpi['net_pnl'] >= 0 ? 'success' : 'danger', 'fa-chart-line'],
-                ['کارمزد عملکرد (USDT)', $fmt($kpi['performance_fee']), 'warning', 'fa-percent'],
-                ['کارمزد لغو (USDT)', $fmt($kpi['cancel_fee']), 'warning', 'fa-ban'],
-                ['کارمزد صرافی (USDT)', $fmt($kpi['exchange_fee']), 'secondary', 'fa-building-columns'],
-                ['کارمزد شبکه (USDT)', $fmt($kpi['network_fee']), 'secondary', 'fa-network-wired'],
-                ['کارمزد انتقال (USDT)', $fmt($kpi['transfer_fee']), 'secondary', 'fa-right-left'],
+                ['حجم خرید (USDT)', formatNumberTrimZeros($kpi['bought_volume'], 2), 'primary', 'fa-cart-shopping'],
+                ['درآمد فروش (USDT)', formatNumberTrimZeros($kpi['gross_revenue'], 2), 'info', 'fa-sack-dollar'],
+                ['سود خالص مجموعه (USDT)', formatNumberTrimZeros($kpi['net_pnl'], 2), $kpi['net_pnl'] >= 0 ? 'success' : 'danger', 'fa-chart-line'],
+                ['کارمزد عملکرد (USDT)', formatNumberTrimZeros($kpi['performance_fee'], 2), 'warning', 'fa-percent'],
+                ['کارمزد لغو (USDT)', formatNumberTrimZeros($kpi['cancel_fee'], 2), 'warning', 'fa-ban'],
+                ['کارمزد صرافی (USDT)', formatNumberTrimZeros($kpi['exchange_fee'], 2), 'secondary', 'fa-building-columns'],
+                ['کارمزد شبکه (USDT)', formatNumberTrimZeros($kpi['network_fee'], 2), 'secondary', 'fa-network-wired'],
+                ['کارمزد انتقال (USDT)', formatNumberTrimZeros($kpi['transfer_fee'], 2), 'secondary', 'fa-right-left'],
                 ['کاربران فعال', number_format($kpi['active_users']), 'dark', 'fa-users'],
                 ['تعداد Skipped', number_format($kpi['skipped_count']), 'dark', 'fa-forward'],
                 ['تعداد Collapsed', number_format($kpi['collapsed_count']), 'dark', 'fa-compress'],
@@ -136,13 +135,13 @@
                                             <strong>{{ $row['symbol'] ?? '—' }}</strong>
 
                                         </td>
-                                        <td>{{ $fmt($row['bought_volume']) }}</td>
-                                        <td>{{ $fmt($row['bought_amount'], 8) }}</td>
+                                        <td>{{ formatNumberTrimZeros($row['bought_volume']) }}</td>
+                                        <td>{{ formatNumberTrimZeros($row['bought_amount']) }}</td>
                                         <td class="{{ (float) $row['net_pnl'] >= 0 ? 'text-success' : 'text-danger' }}">
-                                            {{ $fmt($row['net_pnl']) }}
+                                            {{ formatNumberTrimZeros($row['net_pnl']) }}
                                         </td>
-                                        <td>{{ $fmt($row['performance_fee']) }}</td>
-                                        <td>{{ $fmt($row['cancel_fee']) }}</td>
+                                        <td>{{ formatNumberTrimZeros($row['performance_fee']) }}</td>
+                                        <td>{{ formatNumberTrimZeros($row['cancel_fee']) }}</td>
                                         <td><span class="badge bg-label-dark">{{ number_format($row['skipped_count']) }}</span>
                                         </td>
                                         <td><span
@@ -178,7 +177,7 @@
                                     <th>کاربر</th>
                                     <th>ارز</th>
                                     <th>درآمد ناخالص</th>
-                                    <th>بهای تمام‌شده</th>
+                                    <th>بهای تمام‌شده (Cost_basis)</th>
                                     <th>کارمزد عملکرد</th>
                                     <th>کارمزد لغو</th>
                                     <th>سود/زیان خالص</th>
@@ -191,12 +190,12 @@
                                         <td>{{ $s->id }}</td>
                                         <td>{{ $s->user?->email ?? $s->user?->mobile ?? 'N/A' }}</td>
                                         <td>{{ $s->buyExecution?->currency?->symbol ?? '—' }}</td>
-                                        <td>{{ $fmt($s->gross_revenue) }}</td>
-                                        <td>{{ $fmt($s->cost_basis) }}</td>
-                                        <td>{{ $fmt($s->performance_fee) }}</td>
-                                        <td>{{ $fmt($s->cancel_fee) }}</td>
+                                        <td>{{ formatNumberTrimZeros($s->gross_revenue) }}</td>
+                                        <td>{{ formatNumberTrimZeros($s->cost_basis) }}</td>
+                                        <td>{{ formatNumberTrimZeros($s->performance_fee) }}</td>
+                                        <td>{{ formatNumberTrimZeros($s->cancel_fee) }}</td>
                                         <td class="{{ (float) $s->net_pnl >= 0 ? 'text-success' : 'text-danger' }}">
-                                            {{ $fmt($s->net_pnl) }}
+                                            {{ formatNumberTrimZeros($s->net_pnl) }}
                                         </td>
                                         <td>{{ optional($s->settled_at)->format('Y-m-d H:i') }}</td>
                                     </tr>

@@ -26,7 +26,7 @@ class BotBuyExecution extends Model
         'allocated_usdt',
         'filled_amount',
         'avg_buy_price',
-        'exchange_fee',
+        'buy_ref_exchange_fee',
         'network_fee',
         'exchange_transaction_id',
         'exchange_order_id',
@@ -40,9 +40,9 @@ class BotBuyExecution extends Model
             'signal_snapshot' => 'array',
             'allocated_usdt'  => 'decimal:8',
             'filled_amount'   => 'decimal:8',
-            'avg_buy_price'   => 'decimal:8',
-            'exchange_fee'    => 'decimal:8',
-            'network_fee'     => 'decimal:8',
+            'avg_buy_price'        => 'decimal:8',
+            'buy_ref_exchange_fee' => 'decimal:8',
+            'network_fee'          => 'decimal:8',
             'exchange_order_id' => 'string',
         ];
     }

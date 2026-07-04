@@ -15,7 +15,7 @@ class OnboardingController extends Controller
     {
         $settings = BotUserSettings::firstOrNew(
             ['user_id' => Auth::id()],
-            ['auto_trade_enabled' => true, 'reinvest_enabled' => true]
+            ['auto_trade_enabled' => false, 'reinvest_enabled' => false]
         );
 
         $global = BotGlobalSettings::current();
@@ -44,7 +44,7 @@ class OnboardingController extends Controller
     {
         $settings = BotUserSettings::firstOrCreate(
             ['user_id' => Auth::id()],
-            ['auto_trade_enabled' => true, 'reinvest_enabled' => true]
+            ['auto_trade_enabled' => false, 'reinvest_enabled' => false]
         );
 
         if (! $settings->hasAcceptedTerms()) {
