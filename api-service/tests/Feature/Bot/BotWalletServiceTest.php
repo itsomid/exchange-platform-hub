@@ -54,7 +54,7 @@ it('creates bot wallet and deducts from main wallet on transfer in', function ()
 
     $botWallet = BotWallet::where('user_id', $user->id)->first();
     expect($botWallet)->not->toBeNull();
-    expect($botWallet->balance)->toBe('100.00000000');
+    expect($botWallet->balance)->toBe('99.00000000');
     // principal_balance is a D1 placeholder, not touched by transfer flows
     expect($botWallet->principal_balance)->toBe('0.00000000');
 });
@@ -64,6 +64,9 @@ it('records two transactions on transfer in (transfer + fee)', function () {
     $service = app(BotWalletService::class);
 
     $service->transferIn($user, '200');
+
+    $botWallet = BotWallet::where('user_id', $user->id)->first();
+    expect($botWallet->balance)->toBe('198.00000000');
 
     $txns = Transaction::where('user_id', $user->id)->get();
     expect($txns)->toHaveCount(2);

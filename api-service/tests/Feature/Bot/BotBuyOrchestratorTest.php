@@ -197,6 +197,51 @@ it('locks the full non-skipped allocation sum across multiple coins', function (
     Queue::assertPushed(\App\Jobs\Bot\BuyExecutionJob::class, 2);
 });
 
+it('persists the full balance in locked_balance when only rounding dust remains', function () {
+    $user = makeBotUser('200.00000000');
+
+    $c1 = makeCurrency('EEE');
+    $c2 = makeCurrency('FFF');
+    $c3 = makeCurrency('GGG');
+    makeSignal($c1->id, ['priority' => 1, 'sell_orders_count' => 0]);
+    makeSignal($c2->id, ['priority' => 1, 'sell_orders_count' => 0]);
+    makeSignal($c3->id, ['priority' => 1, 'sell_orders_count' => 0]);
+
+    $this->app->bind(PriceFeed::class, function () use ($c1, $c2, $c3) {
+        $stub = new class extends PriceFeed {
+            public array $map = [];
+            public function __construct() {}
+            public function getLive(int $currencyId): float
+            {
+                return $this->map[$currencyId] ?? 0.0;
+            }
+        };
+        $stub->map = [$c1->id => 100.0, $c2->id => 100.0, $c3->id => 100.0];
+        return $stub;
+    });
+
+    $orchestrator = app(BotBuyOrchestrator::class);
+    $botOrder     = $orchestrator($user->id);
+
+    expect($botOrder)->not->toBeNull();
+
+    $execs = BotBuyExecution::where('bot_order_id', $botOrder->id)
+        ->where('status', BotBuyExecution::STATUS_PENDING)
+        ->get();
+    expect($execs)->toHaveCount(3);
+
+    $sum = '0';
+    foreach ($execs as $execution) {
+        $sum = bcadd($sum, (string) $execution->allocated_usdt, 8);
+    }
+
+    $wallet = BotWallet::where('user_id', $user->id)->first();
+    expect($sum)->toBe('200.00000000');
+    expect((string) $wallet->locked_balance)->toBe('200.00000000');
+
+    Queue::assertPushed(\App\Jobs\Bot\BuyExecutionJob::class, 3);
+});
+
 /**
  * (3) Auto-trade OFF → no order is created and no jobs are dispatched.
  */
