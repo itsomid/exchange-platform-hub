@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\SpotTrade;
 
+use App\Enums\RefExchangeSellStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Models\SpotTrade;
 use App\Models\Market;
+use App\Services\Exchanges\ExchangeService;
 use Illuminate\Http\Request;
 use App\Models\TradingCommission;
 
@@ -134,6 +136,44 @@ class SpotTradeController extends Controller
             'taker_commission_value' => $takerCommissionValue,
             'total_commission_value' => $totalCommissionValue
         ];
+    }
+
+    public function triggerRefExchangeSell(int $spotTradeId, ExchangeService $exchangeService)
+    {
+        $spotTrade = SpotTrade::findOrFail($spotTradeId);
+
+        if ($spotTrade->ref_exchange_sell_status !== RefExchangeSellStatusEnum::PENDING) {
+            return response()->json([
+                'success' => false,
+                'message' => 'این معامله در وضعیت مناسب برای فروش در صرافی مرجع نیست.',
+            ], 400);
+        }
+
+        $result = $exchangeService->triggerRefExchangeSellForSpotTrade($spotTradeId);
+
+        return response()->json([
+            'success' => $result->isSuccess(),
+            'message' => $result->getMessage(),
+        ], $result->isSuccess() ? 200 : 400);
+    }
+
+    public function resetRefExchangeSellStatus(int $spotTradeId)
+    {
+        $spotTrade = SpotTrade::findOrFail($spotTradeId);
+
+        if ($spotTrade->ref_exchange_sell_status !== RefExchangeSellStatusEnum::FAILED) {
+            return response()->json([
+                'success' => false,
+                'message' => 'فقط معاملات ناموفق قابل ریست هستند.',
+            ], 400);
+        }
+
+        $spotTrade->update(['ref_exchange_sell_status' => RefExchangeSellStatusEnum::PENDING]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'وضعیت معامله به "در انتظار" تغییر یافت. می‌توانید مجدداً تلاش کنید.',
+        ]);
     }
 
     public function updateNote(Request $request, SpotTrade $spotTrade)

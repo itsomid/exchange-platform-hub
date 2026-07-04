@@ -351,18 +351,48 @@
                                     <span class="badge bg-label-{{ $spotTrade->makerOrder->status->color() }}">
                                         {{ $spotTrade->makerOrder->status->label() }}
                                     </span>
+                                    @if (
+                                        $spotTrade->ref_exchange_sell_status &&
+                                            $spotTrade->ref_exchange_sell_status !== \App\Enums\RefExchangeSellStatusEnum::NOT_REQUIRED)
+                                        <br>
+                                        <small
+                                            class="badge bg-label-{{ $spotTrade->ref_exchange_sell_status->color() }} mt-1">
+                                            صرافی مرجع: {{ $spotTrade->ref_exchange_sell_status->label() }}
+                                        </small>
+                                    @endif
                                 </td>
                                 <td>
                                     <a href="" class="btn btn-sm btn-icon" data-bs-toggle="modal"
                                         data-bs-target="#trade-{{ $spotTrade->id }}">
                                         <i class="fa-light fa-eye fa-lg"></i>
                                     </a>
-                                    @if(auth()->user()->hasRole('tech_developers'))
-                                    <button type="button" class="btn btn-sm btn-icon btn-text-warning"
-                                        data-bs-toggle="modal" data-bs-target="#note-trade-{{ $spotTrade->id }}"
-                                        title="ثبت نوت">
-                                        <i class="{{ $spotTrade->notes ? 'fa-solid' : 'fa-regular' }} fa-note-sticky fa-lg {{ $spotTrade->notes ? 'text-warning' : '' }}"></i>
-                                    </button>
+                                    @if (auth()->user()->hasRole('tech_developers'))
+                                        <button type="button" class="btn btn-sm btn-icon btn-text-warning"
+                                            data-bs-toggle="modal" data-bs-target="#note-trade-{{ $spotTrade->id }}"
+                                            title="ثبت نوت">
+                                            <i
+                                                class="{{ $spotTrade->notes ? 'fa-solid' : 'fa-regular' }} fa-note-sticky fa-lg {{ $spotTrade->notes ? 'text-warning' : '' }}"></i>
+                                        </button>
+                                    @endif
+
+                                    {{-- Trigger Reference Exchange Sell Button --}}
+                                    @if ($spotTrade->ref_exchange_sell_status === \App\Enums\RefExchangeSellStatusEnum::PENDING)
+                                        <button type="button"
+                                            class="btn btn-icon btn-text-warning trigger-ref-exchange-sell"
+                                            data-trade-id="{{ $spotTrade->id }}" data-bs-toggle="tooltip"
+                                            title="تکمیل فروش در صرافی مرجع">
+                                            <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                                        </button>
+                                    @endif
+
+                                    {{-- Reset Failed Status Button --}}
+                                    @if ($spotTrade->ref_exchange_sell_status === \App\Enums\RefExchangeSellStatusEnum::FAILED)
+                                        <button type="button"
+                                            class="btn btn-icon btn-text-danger reset-ref-exchange-sell"
+                                            data-trade-id="{{ $spotTrade->id }}" data-bs-toggle="tooltip"
+                                            title="ریست و تلاش مجدد">
+                                            <i class="fa-solid fa-rotate-right fa-lg"></i>
+                                        </button>
                                     @endif
                                     <div class="modal fade " id="trade-{{ $spotTrade->id }}" tabindex="-1"
                                         aria-modal="true" role="dialog">
@@ -485,29 +515,31 @@
                                             </div>
                                         </div>
                                     </div>
-                                    @if(auth()->user()->hasRole('tech_developers'))
-                                    {{-- Notes Modal --}}
-                                    <div class="modal fade" id="note-trade-{{ $spotTrade->id }}" tabindex="-1" aria-modal="true" role="dialog">
-                                        <div class="modal-dialog" role="document">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">نوت معامله #{{ $spotTrade->id }}</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <textarea class="form-control spot-trade-notes-input" rows="5"
-                                                        placeholder="نوت خود را اینجا بنویسید..."
-                                                        data-id="{{ $spotTrade->id }}"
-                                                        data-url="{{ route('admin.spot_trades.notes.update', $spotTrade->id) }}">{{ $spotTrade->notes }}</textarea>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">انصراف</button>
-                                                    <button type="button" class="btn btn-primary save-spot-trade-note"
-                                                        data-id="{{ $spotTrade->id }}">ذخیره</button>
+                                    @if (auth()->user()->hasRole('tech_developers'))
+                                        {{-- Notes Modal --}}
+                                        <div class="modal fade" id="note-trade-{{ $spotTrade->id }}" tabindex="-1"
+                                            aria-modal="true" role="dialog">
+                                            <div class="modal-dialog" role="document">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">نوت معامله #{{ $spotTrade->id }}</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                            aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <textarea class="form-control spot-trade-notes-input" rows="5" placeholder="نوت خود را اینجا بنویسید..."
+                                                            data-id="{{ $spotTrade->id }}" data-url="{{ route('admin.spot_trades.notes.update', $spotTrade->id) }}">{{ $spotTrade->notes }}</textarea>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-label-secondary"
+                                                            data-bs-dismiss="modal">انصراف</button>
+                                                        <button type="button"
+                                                            class="btn btn-primary save-spot-trade-note"
+                                                            data-id="{{ $spotTrade->id }}">ذخیره</button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
                                     @endif
                                 </td>
                             </tr>
@@ -527,6 +559,7 @@
 
 @section('vendor-script')
     @vite(['resources/assets/js/jalalidatepicker.js', 'resources/assets/js/forms-extras.js'])
+    @vite(['resources/assets/vendor/libs/sweetalert2/sweetalert2.js'])
     <script>
         $(document).ready(function() {
             $('[data-bs-toggle="tooltip"]').tooltip();
@@ -597,8 +630,152 @@
                 $('#toggleAdvancedFilter').click();
             @endif
 
+            // Trigger Reference Exchange Sell
+            $(document).on('click', '.trigger-ref-exchange-sell', function() {
+                const button = $(this);
+                const tradeId = button.data('trade-id');
+
+                Swal.fire({
+                    title: 'تکمیل فروش در صرافی مرجع',
+                    text: 'آیا از تکمیل فروش در صرافی مرجع اطمینان دارید؟',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#696cff',
+                    cancelButtonColor: '#8592a3',
+                    confirmButtonText: 'بله، انجام بده',
+                    cancelButtonText: 'انصراف',
+                    customClass: {
+                        confirmButton: 'btn btn-primary me-2',
+                        cancelButton: 'btn btn-label-secondary'
+                    },
+                    buttonsStyling: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        button.prop('disabled', true);
+                        button.find('i').removeClass('fa-arrow-right-arrow-left').addClass(
+                            'fa-spinner fa-spin');
+
+                        $.ajax({
+                            url: '{{ route('admin.spot_trades.index') }}/' + tradeId +
+                                '/trigger-ref-exchange-sell',
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        title: 'موفق!',
+                                        text: response.message,
+                                        icon: 'success',
+                                        confirmButtonText: 'باشه',
+                                        confirmButtonColor: '#696cff',
+                                        customClass: {
+                                            confirmButton: 'btn btn-primary'
+                                        },
+                                        buttonsStyling: false
+                                    }).then(() => {
+                                        location.reload();
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        title: 'خطا!',
+                                        text: response.message ||
+                                            'خطا در تکمیل فروش',
+                                        icon: 'error',
+                                        confirmButtonText: 'باشه',
+                                        confirmButtonColor: '#696cff',
+                                        customClass: {
+                                            confirmButton: 'btn btn-primary'
+                                        },
+                                        buttonsStyling: false
+                                    }).then(() => {
+                                        location.reload();
+                                    });
+                                }
+                            },
+                            error: function(xhr) {
+                                const msg = xhr.responseJSON?.message ||
+                                    'خطا در ارتباط با سرور';
+                                Swal.fire({
+                                    title: 'خطا!',
+                                    text: msg,
+                                    icon: 'error',
+                                    confirmButtonText: 'باشه',
+                                    confirmButtonColor: '#696cff',
+                                    customClass: {
+                                        confirmButton: 'btn btn-primary'
+                                    },
+                                    buttonsStyling: false
+                                });
+                                button.prop('disabled', false);
+                                button.find('i').removeClass('fa-spinner fa-spin')
+                                    .addClass('fa-arrow-right-arrow-left');
+                            }
+                        });
+                    }
+                });
+            });
+
+            // Reset Failed Ref Exchange Sell Status
+            $(document).on('click', '.reset-ref-exchange-sell', function() {
+                const button = $(this);
+                const tradeId = button.data('trade-id');
+
+                Swal.fire({
+                    title: 'ریست وضعیت فروش',
+                    text: 'وضعیت به "در انتظار" تغییر می‌یابد و می‌توانید مجدداً تلاش کنید.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#696cff',
+                    cancelButtonColor: '#8592a3',
+                    confirmButtonText: 'بله، ریست کن',
+                    cancelButtonText: 'انصراف',
+                    customClass: {
+                        confirmButton: 'btn btn-primary me-2',
+                        cancelButton: 'btn btn-label-secondary'
+                    },
+                    buttonsStyling: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '{{ route('admin.spot_trades.index') }}/' + tradeId +
+                                '/reset-ref-exchange-sell',
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            success: function(response) {
+                                Toastify({
+                                    text: response.message,
+                                    duration: 3000,
+                                    gravity: 'top',
+                                    position: 'right',
+                                    style: {
+                                        background: '#28C76F'
+                                    }
+                                }).showToast();
+                                location.reload();
+                            },
+                            error: function(xhr) {
+                                Toastify({
+                                    text: xhr.responseJSON?.message ||
+                                        'خطا در ریست وضعیت',
+                                    duration: 5000,
+                                    gravity: 'top',
+                                    position: 'right',
+                                    style: {
+                                        background: '#EA5455'
+                                    }
+                                }).showToast();
+                            }
+                        });
+                    }
+                });
+            });
+
             // Save spot trade note
-            $(document).on('click', '.save-spot-trade-note', function () {
+            $(document).on('click', '.save-spot-trade-note', function() {
                 const id = $(this).data('id');
                 const textarea = $('.spot-trade-notes-input[data-id="' + id + '"]');
                 const url = textarea.data('url');
@@ -609,14 +786,21 @@
                 $.ajax({
                     url: url,
                     method: 'POST',
-                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                    data: { notes: notes },
-                    success: function (res) {
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    data: {
+                        notes: notes
+                    },
+                    success: function(res) {
                         Toastify({
                             text: res.message,
                             duration: 3000,
-                            gravity: 'top', position: 'right',
-                            style: { background: '#28C76F' }
+                            gravity: 'top',
+                            position: 'right',
+                            style: {
+                                background: '#28C76F'
+                            }
                         }).showToast();
                         $('#note-trade-' + id).modal('hide');
                         // Update icon color
@@ -627,15 +811,20 @@
                             noteBtn.removeClass('text-warning fa-solid').addClass('fa-regular');
                         }
                     },
-                    error: function () {
+                    error: function() {
                         Toastify({
                             text: 'خطا در ذخیره نوت',
                             duration: 5000,
-                            gravity: 'top', position: 'right',
-                            style: { background: '#EA5455' }
+                            gravity: 'top',
+                            position: 'right',
+                            style: {
+                                background: '#EA5455'
+                            }
                         }).showToast();
                     },
-                    complete: function () { btn.prop('disabled', false); }
+                    complete: function() {
+                        btn.prop('disabled', false);
+                    }
                 });
             });
         });

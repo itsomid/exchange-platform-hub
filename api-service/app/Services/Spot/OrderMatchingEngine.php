@@ -2,6 +2,7 @@
 
 namespace App\Services\Spot;
 
+use App\Enums\RefExchangeSellStatusEnum;
 use App\Enums\SpotOrderRoleEnum;
 use App\Enums\SpotOrderSideEnum;
 use App\Enums\SpotOrderStatusEnum;
@@ -1014,6 +1015,8 @@ readonly class OrderMatchingEngine
             'bot_order_id' => $botOrder->id,
             'bot_side' => $botOrder->side->value,
         ]);
+
+        $spotTrade->update(['ref_exchange_sell_status' => RefExchangeSellStatusEnum::PENDING]);
 
         SellOnRefExchangeForSpotTrade::dispatch(
             $spotTrade->id,

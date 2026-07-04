@@ -260,6 +260,8 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::get('/trades', [SpotTradeController::class, 'index'])->name('spot_trades.index')->can('spot');
         Route::post('/trades/excel-export', [SpotTradeController::class, 'excelExport'])->name('spot_trade.excel-export')->can('spot');
         Route::post('/trades/{spotTrade}/notes', [SpotTradeController::class, 'updateNote'])->name('spot_trades.notes.update');
+        Route::post('/trades/{spotTradeId}/trigger-ref-exchange-sell', [SpotTradeController::class, 'triggerRefExchangeSell'])->name('spot_trades.trigger-ref-exchange-sell');
+        Route::post('/trades/{spotTradeId}/reset-ref-exchange-sell', [SpotTradeController::class, 'resetRefExchangeSellStatus'])->name('spot_trades.reset-ref-exchange-sell');
 
         Route::get('/orders', [SpotOrderController::class, 'index'])->name('spot_orders.index')->can('spot');
         Route::post('/orders/excel-export', [SpotOrderController::class, 'excelExport'])->name('spot_orders.excel-export')->can('spot');
@@ -431,6 +433,8 @@ Route::middleware(['admin.2fa'])->group(function () {
 
         // Orders (read-only)
         Route::get('/orders', [BotOrderController::class, 'index'])->name('order.index');
+        Route::get('/orders/user/{user}', [BotOrderController::class, 'userShow'])->name('order.user');
+        Route::post('/orders/user/{user}/toggle-auto-trade', [BotOrderController::class, 'toggleAutoTrade'])->name('order.user.toggle');
         Route::get('/orders/{botOrder}', [BotOrderController::class, 'show'])->name('order.show');
 
         // Reports

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\RefExchangeSellStatusEnum;
 use App\Enums\SpotOrderSideEnum;
 use App\Enums\SpotOrderStatusEnum;
 use App\Enums\SpotOrderTypeEnum;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Sanctum\HasApiTokens;
 
@@ -18,9 +20,16 @@ class SpotTrade extends Model
     use Filterable, HasApiTokens, HasFactory, SoftDeletes;
     public $filterNameSpace = 'App\Filters\SpotTradeFilter';
 
-    protected $fillable = ['notes'];
+    protected $fillable = ['notes', 'ref_exchange_sell_status'];
 
     protected $appends = ['maker_side', 'taker_side'];
+
+    protected function casts(): array
+    {
+        return [
+            'ref_exchange_sell_status' => RefExchangeSellStatusEnum::class,
+        ];
+    }
 
 
     public function market()
@@ -40,6 +49,11 @@ class SpotTrade extends Model
     public function commission(): HasOne
     {
         return $this->hasOne(TradingCommission::class);
+    }
+
+    public function refExchangeTransaction(): MorphOne
+    {
+        return $this->morphOne(ExchangeTransaction::class, 'orderable');
     }
 
     public function getMakerSideAttribute()

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\RefExchangeSellStatusEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -14,8 +15,15 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 class SpotTrade extends Model
 {
     protected $fillable = [
-        'maker_order_id', 'taker_order_id', 'quantity', 'price', 'market_id',
+        'maker_order_id', 'taker_order_id', 'quantity', 'price', 'market_id', 'ref_exchange_sell_status',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'ref_exchange_sell_status' => RefExchangeSellStatusEnum::class,
+        ];
+    }
 
     public function makerOrder(): BelongsTo
     {
