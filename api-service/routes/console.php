@@ -9,4 +9,5 @@ use Illuminate\Support\Facades\Schedule;
 //    $this->comment('asdasd');
 //})->purpose('Display an inspiring quote')->everyTenSeconds();
 
-//Schedule::command('spot:spot-ticker')->everyFiveSeconds();
+
+Schedule::command('bot:sync-sell-orders')->everyMinute()->withoutOverlapping();
