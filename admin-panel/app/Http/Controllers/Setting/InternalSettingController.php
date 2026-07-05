@@ -33,7 +33,7 @@ class InternalSettingController extends Controller
         $exchangeWithdrawalPeriodBuy = Setting::where('key', 'exchange_withdrawal_period_buy')->first();
         $exchangeWithdrawalType = Setting::where('key', 'exchange_withdrawal_type')->first();
         $exchangeWithdrawalStatus = Setting::where('key', 'exchange_withdrawal_status')->first();
-        $spotTickerEnabled = Setting::where('key', 'spot_ticker_enabled')->first();
+
         $orderMatchingEnabled = Setting::where('key', 'order_matching_enabled')->first();
         $spotTradingEnabled = Setting::where('key', 'spot_trading_enabled')->first();
         $otcTradingEnabled = Setting::where('key', 'otc_trading_enabled')->first();
@@ -226,15 +226,7 @@ class InternalSettingController extends Controller
             ]
         );
 
-        // Update spot ticker enabled status
-        Setting::updateOrCreate(
-            ['key' => 'spot_ticker_enabled'],
-            [
-                'value' => $request->has('spot_ticker_enabled') ? $request->input('spot_ticker_enabled') : false,
-                'name' => 'وضعیت فعال‌سازی Spot Ticker',
-                'type' => 'boolean'
-            ]
-        );
+    
 
         // Update order matching enabled status
         Setting::updateOrCreate(

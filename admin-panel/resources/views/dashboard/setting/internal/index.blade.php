@@ -86,7 +86,8 @@
                                     <span class="switch-toggle-slider"></span>
                                     <span class="switch-label">فعال‌سازی برداشت</span>
                                 </label>
-                                <small class="text-muted d-block mt-2">در صورت غیرفعال بودن، کاربران قادر به انجام برداشت نخواهند بود و پیغام «برداشت موقتاً غیرفعال است» نمایش داده می‌شود.</small>
+                                <small class="text-muted d-block mt-2">در صورت غیرفعال بودن، کاربران قادر به انجام برداشت
+                                    نخواهند بود و پیغام «برداشت موقتاً غیرفعال است» نمایش داده می‌شود.</small>
                             </div>
                         </div>
                         <div class="d-flex justify-content-start mt-4">
@@ -120,16 +121,7 @@
                                     صورت غیرفعال بودن، هیچ معامله یا سفارشی توسط کاربران جز بات امکان‌پذیر نخواهد
                                     بود</small>
                             </div>
-                            <div class="col-xl-6 mt-3">
-                                <label class="switch switch-lg">
-                                    <input type="checkbox" class="switch-input" name="spot_ticker_enabled" value="1"
-                                        {{ $spotTickerEnabled && $spotTickerEnabled->value ? 'checked' : '' }} />
-                                    <span class="switch-toggle-slider"></span>
-                                    <span class="switch-label">فعال‌سازی Spot Ticker</span>
-                                </label>
-                                <small class="text-muted d-block mt-2">این گزینه نمایش قیمت‌های لحظه‌ای را کنترل
-                                    می‌کند</small>
-                            </div>
+
                             <div class="col-xl-6 mt-3">
                                 <label class="switch switch-lg">
                                     <input type="checkbox" class="switch-input" name="order_matching_enabled" value="1"
