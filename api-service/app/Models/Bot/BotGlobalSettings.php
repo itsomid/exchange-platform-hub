@@ -46,4 +46,22 @@ class BotGlobalSettings extends Model
             'cancel_sell_on_exchange_enabled' => true,
         ]);
     }
+
+    /** @return list<array{from: float|int, to: float|int|null, fee_type: string, fee_value: float|int}> */
+    public static function defaultTransferFeeTiers(): array
+    {
+        return [
+            ['from' => 20,   'to' => 100,  'fee_type' => 'flat',    'fee_value' => 1],
+            ['from' => 100,  'to' => 1000, 'fee_type' => 'percent', 'fee_value' => 1],
+            ['from' => 1000, 'to' => null, 'fee_type' => 'flat',    'fee_value' => 12],
+        ];
+    }
+
+    /** @return list<array{from: mixed, to: mixed, fee_type: string, fee_value: mixed}> */
+    public function resolvedTransferFeeTiers(): array
+    {
+        $tiers = $this->transfer_fee_tiers;
+
+        return empty($tiers) ? self::defaultTransferFeeTiers() : $tiers;
+    }
 }

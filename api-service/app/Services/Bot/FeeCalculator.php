@@ -3,15 +3,12 @@
 namespace App\Services\Bot;
 
 use App\Exceptions\Bot\BotTransferAmountTooLowException;
+use App\Models\Bot\BotGlobalSettings;
 
 /**
- * Transfer fee model (per RFP D6):
- *   amount < 20            → exception (rejected)
- *   20 ≤ amount ≤ 100     → 1 USDT flat
- *   100 < amount ≤ 1000   → 1% of amount
- *   amount > 1000          → 12 USDT flat
- *
- * The same schedule applies to both transferIn and transferOut.
+ * Transfer fee is resolved from bot_global_settings.transfer_fee_tiers.
+ * The same schedule applies to transferIn, transferOut, and cancelFee
+ * (cancelFee skips the minimum-deposit check).
  */
 class FeeCalculator
 {
@@ -19,49 +16,77 @@ class FeeCalculator
 
     public function transferFee(string $amount): string
     {
-        return $this->calculate($amount);
+        return $this->calculate($amount, enforceMinimum: true);
     }
 
     public function withdrawFee(string $amount): string
     {
-        return $this->calculate($amount);
+        return $this->calculate($amount, enforceMinimum: true);
     }
 
     /**
      * Cancel fee charged when a user cancels a bot order before all sell legs fill.
-     * Same schedule as transfer fee but without the 20-USDT minimum (cancels of
-     * tiny remaining amounts are still allowed).
+     * Same tier schedule as transfer fee but without the minimum-deposit check.
      */
     public function cancelFee(string $remainingCostBasis): string
     {
         if (bccomp($remainingCostBasis, '0', self::SCALE) <= 0) {
             return '0.00000000';
         }
-        if (bccomp($remainingCostBasis, '1000', self::SCALE) === 1) {
-            return '12.00000000';
-        }
-        if (bccomp($remainingCostBasis, '100', self::SCALE) === 1) {
-            return bcdiv($remainingCostBasis, '100', self::SCALE);
-        }
-        return '1.00000000';
+
+        return $this->calculate($remainingCostBasis, enforceMinimum: false);
     }
 
-    private function calculate(string $amount): string
+    private function calculate(string $amount, bool $enforceMinimum): string
     {
-        if (bccomp($amount, '20', self::SCALE) === -1) {
+        $settings = BotGlobalSettings::current();
+        $minDeposit = (string) $settings->min_deposit_usdt;
+
+        if ($enforceMinimum && bccomp($amount, $minDeposit, self::SCALE) === -1) {
             throw new BotTransferAmountTooLowException();
         }
 
-        if (bccomp($amount, '1000', self::SCALE) === 1) {
-            return '12.00000000';
+        $tier = $this->findTier($amount, $settings->resolvedTransferFeeTiers());
+
+        if ($tier === null) {
+            throw new BotTransferAmountTooLowException();
         }
 
-        if (bccomp($amount, '100', self::SCALE) === 1) {
-            // 1% of amount
-            return bcmul(bcdiv($amount, '100', self::SCALE), '1', self::SCALE);
+        return $this->feeForTier($amount, $tier);
+    }
+
+    /** @param list<array{from: mixed, to: mixed, fee_type: string, fee_value: mixed}> $tiers */
+    private function findTier(string $amount, array $tiers): ?array
+    {
+        foreach ($tiers as $tier) {
+            $from = (string) $tier['from'];
+            $to = isset($tier['to']) && $tier['to'] !== null && $tier['to'] !== ''
+                ? (string) $tier['to']
+                : null;
+
+            if (bccomp($amount, $from, self::SCALE) === -1) {
+                continue;
+            }
+
+            if ($to !== null && bccomp($amount, $to, self::SCALE) === 1) {
+                continue;
+            }
+
+            return $tier;
         }
 
-        // 20 ≤ amount ≤ 100
-        return '1.00000000';
+        return null;
+    }
+
+    /** @param array{from: mixed, to: mixed, fee_type: string, fee_value: mixed} $tier */
+    private function feeForTier(string $amount, array $tier): string
+    {
+        $feeValue = (string) $tier['fee_value'];
+
+        if ($tier['fee_type'] === 'percent') {
+            return bcmul(bcdiv($amount, '100', self::SCALE), $feeValue, self::SCALE);
+        }
+
+        return bcadd($feeValue, '0', self::SCALE);
     }
 }

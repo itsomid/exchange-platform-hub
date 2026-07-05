@@ -19,15 +19,6 @@ class OnboardingController extends Controller
         );
 
         $global = BotGlobalSettings::current();
-        $tiers = $global->transfer_fee_tiers;
-        if (empty($tiers)) {
-            // Default tiers per RFP (Phase 6 fallback).
-            $tiers = [
-                ['from' => 20,   'to' => 100,  'fee_type' => 'flat',    'fee_value' => 1],
-                ['from' => 100,  'to' => 1000, 'fee_type' => 'percent', 'fee_value' => 1],
-                ['from' => 1000, 'to' => null, 'fee_type' => 'flat',    'fee_value' => 12],
-            ];
-        }
 
         return response()->json([
             'data' => [
@@ -35,7 +26,7 @@ class OnboardingController extends Controller
                 'terms_accepted_at'       => $settings->terms_accepted_at?->toIso8601String(),
                 'min_deposit_usdt'        => (float) $global->min_deposit_usdt,
                 'performance_fee_percent' => (float) $global->performance_fee_percent,
-                'transfer_fee_tiers'      => $tiers,
+                'transfer_fee_tiers'      => $global->resolvedTransferFeeTiers(),
             ],
         ]);
     }
