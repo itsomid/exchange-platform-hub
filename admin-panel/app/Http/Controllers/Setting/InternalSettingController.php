@@ -54,7 +54,6 @@ class InternalSettingController extends Controller
             'exchangeWithdrawalPeriodBuy' => $exchangeWithdrawalPeriodBuy,
             'exchangeWithdrawalType' => $exchangeWithdrawalType,
             'exchangeWithdrawalStatus' => $exchangeWithdrawalStatus,
-            'spotTickerEnabled' => $spotTickerEnabled,
             'orderMatchingEnabled' => $orderMatchingEnabled,
             'spotTradingEnabled' => $spotTradingEnabled,
             'otcTradingEnabled' => $otcTradingEnabled,
