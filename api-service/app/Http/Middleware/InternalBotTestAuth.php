@@ -16,6 +16,12 @@ class InternalBotTestAuth
 {
     public function handle(Request $request, Closure $next): Response
     {
+        if (app()->environment('production')) {
+            return response()->json([
+                'error' => 'این ویژگی فقط در محیط تست قابل استفاده است.',
+            ], 403);
+        }
+
         $configured = (string) config('smart-bot.internal_test_token');
         if ($configured === '') {
             return response()->json([

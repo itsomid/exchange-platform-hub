@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Bot;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Services\Bot\BotTestApiClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,14 +20,28 @@ class BotTestLabController extends Controller
     {
     }
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $userId = (int) config('smart-bot.test_user_id', 2);
-        return view('dashboard.bot.test-lab.index', ['userId' => $userId]);
+        $defaultUserId = (int) config('smart-bot.test_user_id', 2);
+        $userId = (int) $request->input('user_id', $defaultUserId);
+        $selectedUser = User::find($userId);
+        $selectedLabel = $selectedUser
+            ? '(' . $selectedUser->id . '#) ' . $selectedUser->fullname() . ' | ' . $selectedUser->email
+            : '';
+
+        return view('dashboard.bot.test-lab.index', [
+            'userId'         => $userId,
+            'selectedLabel'  => $selectedLabel,
+            'labEnabled'     => ! app()->environment('production'),
+        ]);
     }
 
     public function status(Request $request): JsonResponse
     {
+        if ($denied = $this->denyIfProduction()) {
+            return $denied;
+        }
+
         $userId = (int) $request->input('user_id', config('smart-bot.test_user_id', 2));
 
         return $this->forward($this->api->status($userId));
@@ -34,6 +49,10 @@ class BotTestLabController extends Controller
 
     public function start(Request $request): JsonResponse
     {
+        if ($denied = $this->denyIfProduction()) {
+            return $denied;
+        }
+
         $data = $request->validate([
             'user_id'      => 'required|integer',
             'capital_usdt' => 'required|numeric|min:1',
@@ -48,6 +67,10 @@ class BotTestLabController extends Controller
 
     public function bumpPrice(Request $request): JsonResponse
     {
+        if ($denied = $this->denyIfProduction()) {
+            return $denied;
+        }
+
         $data = $request->validate([
             'symbol'    => 'required|string',
             'direction' => 'required|in:up,down',
@@ -64,17 +87,29 @@ class BotTestLabController extends Controller
 
     public function setPrice(Request $request): JsonResponse
     {
+        if ($denied = $this->denyIfProduction()) {
+            return $denied;
+        }
+
         $data = $request->validate(['symbol' => 'required|string', 'price' => 'required|numeric|min:0.00000001']);
         return $this->forward($this->api->setPrice($data['symbol'], (float) $data['price']));
     }
 
     public function sync(): JsonResponse
     {
+        if ($denied = $this->denyIfProduction()) {
+            return $denied;
+        }
+
         return $this->forward($this->api->sync());
     }
 
     public function reset(Request $request): JsonResponse
     {
+        if ($denied = $this->denyIfProduction()) {
+            return $denied;
+        }
+
         $data = $request->validate([
             'user_id'      => 'required|integer',
             'main_balance' => 'nullable|numeric|min:0',
@@ -83,6 +118,17 @@ class BotTestLabController extends Controller
             (int) $data['user_id'],
             isset($data['main_balance']) ? (float) $data['main_balance'] : null,
         ));
+    }
+
+    private function denyIfProduction(): ?JsonResponse
+    {
+        if (! app()->environment('production')) {
+            return null;
+        }
+
+        return response()->json([
+            'error' => 'این ویژگی فقط در محیط تست قابل استفاده است.',
+        ], 403);
     }
 
     private function forward(\Illuminate\Http\Client\Response $response): JsonResponse
