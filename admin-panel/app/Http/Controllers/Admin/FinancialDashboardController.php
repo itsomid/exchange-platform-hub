@@ -25,11 +25,11 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class FinancialDashboardController extends Controller
 {
-    protected $bitexroomUserId;
+    protected $exchangeUserId;
 
     public function __construct()
     {
-        $this->bitexroomUserId = config('bitexroom.user_id', 1);
+        $this->exchangeUserId = config('bitexroom.user_id', 1);
     }
     public function index()
     {
@@ -161,7 +161,7 @@ class FinancialDashboardController extends Controller
             $currencies = Currency::all()->keyBy('symbol');
 
             // --- Total Exchange Wallet Balance (local balances in DB) ---
-            $exchangeWallets = Wallet::where('user_id', $this->bitexroomUserId)
+            $exchangeWallets = Wallet::where('user_id', $this->exchangeUserId)
                 ->get();
 
             $totalExchangeBalance = $exchangeWallets->sum(function ($wallet) use ($currencies) {
@@ -183,7 +183,7 @@ class FinancialDashboardController extends Controller
             }
 
             // --- User Liabilities (sum of all user wallet balances) ---
-            $totalUserLiabilities = Wallet::where('user_id', '!=', $this->bitexroomUserId)
+            $totalUserLiabilities = Wallet::where('user_id', '!=', $this->exchangeUserId)
                 ->get()
                 ->sum(function ($wallet) use ($currencies) {
                     $currency = $currencies->get($wallet->currency_symbol);
@@ -216,12 +216,12 @@ class FinancialDashboardController extends Controller
             $currencies = Currency::all()->keyBy('symbol');
 
             // Exchange wallet balances per currency
-            $exchangeWallets = Wallet::where('user_id', $this->bitexroomUserId)
+            $exchangeWallets = Wallet::where('user_id', $this->exchangeUserId)
                 ->get()
                 ->keyBy('currency_symbol');
 
             // User wallet balances aggregated per currency
-            $userBalances = Wallet::where('user_id', '!=', $this->bitexroomUserId)
+            $userBalances = Wallet::where('user_id', '!=', $this->exchangeUserId)
                 ->selectRaw('currency_symbol, SUM(balance + locked_balance) as total_balance')
                 ->groupBy('currency_symbol')
                 ->pluck('total_balance', 'currency_symbol');

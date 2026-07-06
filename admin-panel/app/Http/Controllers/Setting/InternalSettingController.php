@@ -13,11 +13,11 @@ use Spatie\Permission\Models\Permission;
 class InternalSettingController extends Controller
 {
     protected WalletRepositoryInterface $walletRepository;
-    protected $bitexroomUserId;
+    protected $exchangeUserId;
 
     public function __construct(WalletRepositoryInterface $walletRepository)
     {
-        $this->bitexroomUserId = config('bitexroom.user_id', 1);
+        $this->exchangeUserId = config('bitexroom.user_id', 1);
         $this->walletRepository = $walletRepository;
     }
     public function index()
@@ -40,7 +40,7 @@ class InternalSettingController extends Controller
         $otcTradingEnabled = Setting::where('key', 'otc_trading_enabled')->first();
         $withdrawalEnabled = Setting::where('key', 'withdrawal_enabled')->first();
 
-        $exchangeWalletChains = $this->walletRepository->getBitexroomAllWalletChains();
+        $exchangeWalletChains = $this->walletRepository->getExchangeAllWalletChains();
 
         return view('dashboard.setting.internal.index', [
             'last3permissions' => $last3permissions,

@@ -22,14 +22,14 @@ use App\Repositories\WalletChainRepository;
 
 class WalletService
 {
-    protected $bitexroomUserId;
+    protected $exchangeUserId;
 
     public function __construct(
         private readonly WalletRepository $walletRepository,
         private readonly WalletChainRepository $walletChainRepository
     ) {
         // Load exchange user ID from config
-        $this->bitexroomUserId = config('bitexroom.user_id', 1);
+        $this->exchangeUserId = config('bitexroom.user_id', 1);
     }
 
 
@@ -386,14 +386,14 @@ class WalletService
         try {
             return DB::transaction(function () use ($currencySymbol) {
                 // Check if exchange wallet already exists
-                $existingWallet = $this->walletRepository->getBitexroomWallet($currencySymbol);
+                $existingWallet = $this->walletRepository->getExchangeWallet($currencySymbol);
                 if ($existingWallet) {
                     return $existingWallet;
                 }
 
                 // Create new exchange wallet
                 $wallet = Wallet::create([
-                    'user_id' => $this->bitexroomUserId,
+                    'user_id' => $this->exchangeUserId,
                     'currency_symbol' => $currencySymbol,
                     'balance' => 0,
                     'locked_balance' => 0,
@@ -421,7 +421,7 @@ class WalletService
             $currencies = \App\Models\Currency::all();
 
             foreach ($currencies as $currency) {
-                $existingWallet = $this->walletRepository->getBitexroomWallet($currency->symbol);
+                $existingWallet = $this->walletRepository->getExchangeWallet($currency->symbol);
 
                 if (!$existingWallet) {
                     $wallet = $this->createExchangeWallet($currency->symbol);
@@ -446,7 +446,7 @@ class WalletService
     {
         $createdChains = [];
         try {
-            $exchangeWallets = $this->walletRepository->getBitexroomAllWallets()
+            $exchangeWallets = $this->walletRepository->getExchangeAllWallets()
                 ->load(['currency.chains', 'walletChains']);
 
             foreach ($exchangeWallets as $wallet) {

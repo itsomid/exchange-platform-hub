@@ -19,12 +19,12 @@ class ReferralCommissionService
 {
 
     protected WalletRepositoryInterface $walletRepository;
-    protected int $bitexroomUserId;
+    protected int $exchangeUserId;
 
     public function __construct(WalletRepositoryInterface $walletRepository)
     {
         $this->walletRepository = $walletRepository;
-        $this->bitexroomUserId = config('bitexroom.user_id');
+        $this->exchangeUserId = config('bitexroom.user_id');
     }
     public function processReferralCommission(OTCOrder $otcOrder, float $exchangeFee)
     {
@@ -114,12 +114,12 @@ class ReferralCommissionService
             'used_at' => now(),
         ]);
 
-        $exchangeWallet = $this->walletRepository->getBitexroomWallet('USDT');
+        $exchangeWallet = $this->walletRepository->getExchangeWallet('USDT');
         if ($exchangeWallet) {
             $exchangeWallet->decrement('balance', $amount);
 
             Transaction::create([
-                'user_id' =>  $this->bitexroomUserId, // Admin or exchange user ID
+                'user_id' =>  $this->exchangeUserId, // Admin or exchange user ID
                 'wallet_id' => $exchangeWallet->id,
                 'otc_order_id' => $otcOrder->id,
                 'balance' => $exchangeWallet->balance,

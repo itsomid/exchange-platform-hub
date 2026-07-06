@@ -21,13 +21,13 @@ use Illuminate\Support\Facades\DB;
 class BotWalletService
 {
     private const USDT = 'USDT';
-    protected $bitexroomUserId;
+    protected $exchangeUserId;
 
     public function __construct(
         private readonly FeeCalculator $feeCalculator,
         private readonly WalletRepositoryInterface $walletRepository,
     ) {
-            $this->bitexroomUserId = config('bitexroom.user_id', 1);
+            $this->exchangeUserId = config('bitexroom.user_id', 1);
     }
 
     /**
@@ -46,7 +46,7 @@ class BotWalletService
             // Debit main wallet
             $userWallet->decrement('balance', $grossAmount);
 
-            $ExchangeWallet = $this->walletRepository->getBitexroomWallet('USDT');
+            $ExchangeWallet = $this->walletRepository->getExchangeWallet('USDT');
             $ExchangeWallet->increment('balance', $fee);
 
             // Credit bot wallet net of transfer fee (principal_balance/profit_balance are D1 placeholders)
@@ -69,7 +69,7 @@ class BotWalletService
 
             // Transaction: fee charged
             Transaction::create([
-                'user_id'    => $this->bitexroomUserId,
+                'user_id'    => $this->exchangeUserId,
                 'wallet_id'  => $ExchangeWallet->id,
                 'amount'     => $fee,
                 'balance'    => $ExchangeWallet->balance,
@@ -99,7 +99,7 @@ class BotWalletService
             $this->assertSufficientBotBalance($botWallet, $grossAmount);
 
             $userWallet = $this->getUserUsdtWallet($user);
-            $ExchangeWallet = $this->walletRepository->getBitexroomWallet('USDT');
+            $ExchangeWallet = $this->walletRepository->getExchangeWallet('USDT');
 
             // Debit bot wallet (principal_balance/profit_balance are D1 placeholders for future reinvest)
             $botWallet->update([
@@ -123,7 +123,7 @@ class BotWalletService
 
             // Transaction: fee
             Transaction::create([
-                'user_id'    => $this->bitexroomUserId,
+                'user_id'    => $this->exchangeUserId,
                 'wallet_id'  => $ExchangeWallet->id,
                 'amount'     => $fee,
                 'balance'    => $ExchangeWallet->balance,

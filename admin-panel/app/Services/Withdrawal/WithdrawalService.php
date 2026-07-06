@@ -27,14 +27,14 @@ use Illuminate\Support\Facades\DB;
 class WithdrawalService
 {
     protected WalletRepositoryInterface $walletRepository;
-    protected $bitexroomUserId;
+    protected $exchangeUserId;
     private HDWalletFacade $hdWalletWithdrawalService;
 
     public function __construct(WalletRepositoryInterface $walletRepository, HDWalletFacade $hdWalletWithdrawalService)
     {
         $this->walletRepository = $walletRepository;
         $this->hdWalletWithdrawalService = $hdWalletWithdrawalService;
-        $this->bitexroomUserId = config('bitexroom.user_id', 1);
+        $this->exchangeUserId = config('bitexroom.user_id', 1);
     }
 
     /**
@@ -335,12 +335,12 @@ class WithdrawalService
     private function createExchangeWithdrawalFee($currency_symbol, $currency_chain, $withdrawal): void
     {
         try {
-            $exchangeWallet = $this->walletRepository->getBitexroomWallet($currency_symbol);
+            $exchangeWallet = $this->walletRepository->getExchangeWallet($currency_symbol);
 
             $exchangeWithdrawalFee = CurrencyChain::whereChain($currency_chain)->value('exchange_withdrawal_fee');
             if ($exchangeWithdrawalFee > 0) {
                 Transaction::query()->create([
-                    'user_id' => $this->bitexroomUserId,
+                    'user_id' => $this->exchangeUserId,
                     'wallet_id' => $exchangeWallet->id,
                     'withdrawal_id' => $withdrawal->id,
                     'balance' => $exchangeWallet->balance,

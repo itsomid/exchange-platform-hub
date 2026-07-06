@@ -28,7 +28,7 @@ class ExchangeWalletController extends Controller
     protected $blockchair;
     protected $tronScan;
     protected $etherScan;
-    protected $bitexroomUserId;
+    protected $exchangeUserId;
 
     public function __construct(
         WalletService $walletService,
@@ -44,7 +44,7 @@ class ExchangeWalletController extends Controller
         $this->blockchair = $blockchair;
         $this->tronScan = $tronScan;
         $this->etherScan = $etherScan;
-        $this->bitexroomUserId = config('bitexroom.user_id', 1);
+        $this->exchangeUserId = config('bitexroom.user_id', 1);
     }
 
     /**
@@ -141,9 +141,9 @@ class ExchangeWalletController extends Controller
 
     public function localWallets()
     {
-        $exchangeWallets = $this->walletRepository->getBitexroomAllWallets()->load('currency');
+        $exchangeWallets = $this->walletRepository->getExchangeAllWallets()->load('currency');
 
-        $exchangeUser = User::find($this->bitexroomUserId);
+        $exchangeUser = User::find($this->exchangeUserId);
 
         // Match user wallets behavior: compute and attach per-wallet asset value.
         $exchangeWallets = $exchangeWallets->map(function ($wallet) use ($exchangeUser) {
@@ -204,7 +204,7 @@ class ExchangeWalletController extends Controller
     public function hotWallets()
     {
 
-        $exchangeWalletChains = $this->walletRepository->getBitexroomAllWalletChains();
+        $exchangeWalletChains = $this->walletRepository->getExchangeAllWalletChains();
         $chains = $exchangeWalletChains
             ->pluck('currency_chain')
             ->filter()

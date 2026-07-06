@@ -461,22 +461,22 @@ class ExchangeService
         try {
             $asset = AssetFactory::make('coinex');
 
-            $bitexroomWallet = $this->walletRepository->getBitexroomWallet('USDT');
-            $chain = $this->chainRepository->createOrGetChain($bitexroomWallet->id, $requestDTO->getCurrencyChain());
+            $exchangeWallet = $this->walletRepository->getExchangeWallet('USDT');
+            $chain = $this->chainRepository->createOrGetChain($exchangeWallet->id, $requestDTO->getCurrencyChain());
             $response = $asset->withdraw(
                 resolve(WithdrawRequestDTO::class)
                     ->setAddress($chain->address)
                     ->setChain($requestDTO->getCurrencyChain())
                     ->setAmount($requestDTO->getQuantity())
                     ->setWithdrawMethod(WithdrawMethodEnum::ON_CHAIN)
-                    ->setCurrency($bitexroomWallet->currency_symbol)
+                    ->setCurrency($exchangeWallet->currency_symbol)
             );
 
             ExchangeAssetsWithdrawal::query()
                 ->create([
                     'withdrawal_id' => $response->getWithdrawId(),
                     'exchange' => $cetMarket->exchangePrice->exchange->slug,
-                    'currency_symbol' => $bitexroomWallet->currency_symbol,
+                    'currency_symbol' => $exchangeWallet->currency_symbol,
                     'currency_chain' => $requestDTO->getCurrencyChain(),
                     'fee_currency' => $response->getCurrencyFee(),
                     'fee' => $response->getFee(),

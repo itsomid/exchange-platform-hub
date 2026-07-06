@@ -47,12 +47,12 @@ class ExchangeService
 
             $asset = AssetFactory::make($exchange->slug);
 
-            $bitexroomWallet = $this->walletRepository->getBitexroomWallet($requestDTO->getCurrency());
+            $exchangeWallet = $this->walletRepository->getExchangeWallet($requestDTO->getCurrency());
 
             $chain = WalletChain::query()
                 ->firstOrCreate(
                     [
-                        'wallet_id' => $bitexroomWallet->id,
+                        'wallet_id' => $exchangeWallet->id,
                         'currency_chain' => $requestDTO->getCurrencyChain(),
                     ]
                 );
@@ -63,7 +63,7 @@ class ExchangeService
                     ->setChain($requestDTO->getCurrencyChain())
                     ->setAmount($requestDTO->getQuantity())
                     ->setWithdrawMethod(WithdrawMethodEnum::ON_CHAIN)
-                    ->setCurrency($bitexroomWallet->currency_symbol)
+                    ->setCurrency($exchangeWallet->currency_symbol)
             );
 
             // Continue with successful withdrawal processing
@@ -71,7 +71,7 @@ class ExchangeService
                 ->create([
                     'withdrawal_id' => $response->getWithdrawId(),
                     'exchange' => $exchange->slug,
-                    'currency_symbol' => $bitexroomWallet->currency_symbol,
+                    'currency_symbol' => $exchangeWallet->currency_symbol,
                     'currency_chain' => $requestDTO->getCurrencyChain(),
                     'fee_currency' => $response->getCurrencyFee(),
                     'fee' => $response->getFee(),
@@ -84,9 +84,9 @@ class ExchangeService
 
 
             $feeCurrency = $response->getCurrencyFee();
-            $baseCurrency = $bitexroomWallet->currency_symbol;
+            $baseCurrency = $exchangeWallet->currency_symbol;
 
-            $feeCurrencyWallet = $this->walletRepository->getBitexroomWallet($feeCurrency);
+            $feeCurrencyWallet = $this->walletRepository->getExchangeWallet($feeCurrency);
 
             $baseMarket = $this->marketRepository->getMarketBySymbol($baseCurrency, 'USDT');
             $feeMarket = $this->marketRepository->getMarketBySymbol($feeCurrency, 'USDT');
@@ -96,7 +96,7 @@ class ExchangeService
             //Base Currency
             Transaction::query()->create([
                 'user_id' => config('bitexroom.user_id'),
-                'wallet_id' => $bitexroomWallet->id,
+                'wallet_id' => $exchangeWallet->id,
                 'amount' => $response->getAmount(),
                 'coin_price' =>  $baseMarket ? $baseMarket->activeExchangePrice->price : 1,
                 'exchange_id' => $exchange->id,

@@ -24,12 +24,12 @@ use Log;
 
 class WalletController extends Controller
 {
-    protected $bitexroomUserId;
+    protected $exchangeUserId;
 
     public function __construct()
     {
 
-        $this->bitexroomUserId = config('bitexroom.user_id', 1);
+        $this->exchangeUserId = config('bitexroom.user_id', 1);
     }
 
     private function isBotUser(int $userId): bool
@@ -91,7 +91,7 @@ class WalletController extends Controller
             $isChainless = empty($validChains);
 
             if ($isChainless) {
-                if ($request->user != $this->bitexroomUserId && !$this->isBotUser((int) $request->user)) {
+                if ($request->user != $this->exchangeUserId && !$this->isBotUser((int) $request->user)) {
                     return redirect()->back()->withErrors(['currency_id' => 'واریز دستی برای این ارز فقط برای کاربر صرافی و کاربران بات مجاز است.']);
                 }
 
@@ -110,9 +110,9 @@ class WalletController extends Controller
                     return redirect()->back()->withErrors(['chain' => 'شبکه انتخاب شده با ارز مطابقت ندارد.']);
                 }
 
-                if ($request->user == $this->bitexroomUserId) {
+                if ($request->user == $this->exchangeUserId) {
                     $transactionService->increaseDecreaseAdminWalletCredit(
-                        userId: $this->bitexroomUserId,
+                        userId: $this->exchangeUserId,
                         amount: $request->amount,
                         currency: $currency,
                         currencyChain: $currencyChain,
@@ -124,7 +124,7 @@ class WalletController extends Controller
                     );
                 } else {
                     $transactionService->transferBetweenWallets(
-                        fromUserId: $this->bitexroomUserId,
+                        fromUserId: $this->exchangeUserId,
                         toUserId: $request->user,
                         amount: $request->amount,
                         transactionHash: $request->transaction_hash,
@@ -161,7 +161,7 @@ class WalletController extends Controller
             $isChainless = empty($validChains);
 
             if ($isChainless) {
-                if ($request->user != $this->bitexroomUserId && !$this->isBotUser((int) $request->user)) {
+                if ($request->user != $this->exchangeUserId && !$this->isBotUser((int) $request->user)) {
                     return redirect()->back()->withErrors(['currency_id' => 'برداشت دستی برای این ارز فقط برای کاربر صرافی و کاربران بات مجاز است.']);
                 }
 
@@ -180,9 +180,9 @@ class WalletController extends Controller
                     return redirect()->back()->withErrors(['chain' => 'شبکه انتخاب شده با ارز مطابقت ندارد.']);
                 }
 
-                if ($request->user == $this->bitexroomUserId) {
+                if ($request->user == $this->exchangeUserId) {
                     $transactionService->increaseDecreaseAdminWalletCredit(
-                        userId: $this->bitexroomUserId,
+                        userId: $this->exchangeUserId,
                         amount: $request->amount,
                         currency: $currency,
                         currencyChain: $currencyChain,
@@ -195,7 +195,7 @@ class WalletController extends Controller
                 } else {
                     $transactionService->transferBetweenWallets(
                         fromUserId: $request->user,
-                        toUserId: $this->bitexroomUserId,
+                        toUserId: $this->exchangeUserId,
                         amount: $request->amount,
                         transactionHash: $request->transaction_hash,
                         currency: $currency,

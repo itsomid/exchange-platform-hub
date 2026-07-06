@@ -27,7 +27,7 @@ class UserWalletController extends Controller
     protected $withdrawalService;
     protected $otcService;
     protected $transactionService;
-    protected $bitexroomUserId;
+    protected $exchangeUserId;
 
     public function __construct(WalletService $walletService, DepositService $depositService, WithdrawalService $withdrawalService, OTCService $otcService, TransactionService $transactionService)
     {
@@ -36,13 +36,13 @@ class UserWalletController extends Controller
         $this->withdrawalService = $withdrawalService;
         $this->otcService = $otcService;
         $this->transactionService = $transactionService;
-        $this->bitexroomUserId = config('bitexroom.user_id', 1);
+        $this->exchangeUserId = config('bitexroom.user_id', 1);
     }
 
     public function userWallets(User $user)
     {
         // If this is the exchange user (user ID 1), ensure all currencies have exchange wallets
-        if ($user->id === $this->bitexroomUserId) {
+        if ($user->id === $this->exchangeUserId) {
             $this->ensureExchangeWalletsExist();
         }
 
@@ -173,7 +173,7 @@ class UserWalletController extends Controller
 
         $lastWithdrawDate = $lastWithdraw ? \App\Helpers\DateFormatter::convertToPersianDate($lastWithdraw->created_at, '%d %B %Y') : 'بدون برداشت';
 
-        if ($user->id !== $this->bitexroomUserId) {
+        if ($user->id !== $this->exchangeUserId) {
             $totalOtcSell = $this->otcService->totalOTCOrder($user->id, $wallet->currency_symbol, OTCOrderTypeEnum::SELL);
             $totalOtcSellValue = $this->otcService->totalOTCOrderValue($user->id, $wallet->currency_symbol, OTCOrderTypeEnum::SELL);
 

@@ -100,7 +100,7 @@ class OTCService
         ];
     }
 
-    public function bitexroomAvailableBalance(int $marketId): string
+    public function exchangeAvailableBalance(int $marketId): string
     {
         $market = $this->marketRepository->getMarketById($marketId);
 

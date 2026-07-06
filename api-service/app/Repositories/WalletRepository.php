@@ -158,21 +158,26 @@ class WalletRepository implements WalletRepositoryInterface
             );
     }
 
-    public function getBitexroomWallet(string $currency): Wallet
+    public function getExchangeWallet(string $currency): Wallet
     {
         return Wallet::query()
             ->where('currency_symbol', $currency)
-            ->where('user_id', 1)
+            ->where('user_id', $this->exchangeUserId())
             ->first();
     }
 
-    public function getBitexroomWalletWithLock(string $currency): Wallet
+    public function getExchangeWalletWithLock(string $currency): Wallet
     {
         return Wallet::query()
             ->where('currency_symbol', $currency)
-            ->where('user_id', 1)
+            ->where('user_id', $this->exchangeUserId())
             ->lockForUpdate()
             ->first();
+    }
+
+    private function exchangeUserId(): int
+    {
+        return (int) config('bitexroom.user_id', 1);
     }
 
     public function increaseBalance(int $user_id, string $baseCurrency, string $tradeQuantity): void

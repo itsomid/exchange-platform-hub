@@ -24,17 +24,17 @@ interface WalletRepositoryInterface
 
     public function getOneOrCreateByCurrencyWithLock(string $base_currency, int $userId): Wallet;
 
-    public function getBitexroomWallet(string $currency): ?Wallet;
+    public function getExchangeWallet(string $currency): ?Wallet;
 
-    public function getBitexroomWalletWithLock(string $currency): ?Wallet;
+    public function getExchangeWalletWithLock(string $currency): ?Wallet;
 
-    public function getBitexroomAllWallets(): Collection;
+    public function getExchangeAllWallets(): Collection;
 
-    public function getBitexroomAllWalletsExceptUsdt(): Collection;
+    public function getExchangeAllWalletsExceptUsdt(): Collection;
 
-    public function getBitexroomAllWalletChains(): Collection;
+    public function getExchangeAllWalletChains(): Collection;
 
-    public function getBitexroomAllWalletChainsExceptUsdt(): Collection;
+    public function getExchangeAllWalletChainsExceptUsdt(): Collection;
 
     public function increaseBalance(int $user_id, string $baseCurrency, string $tradeQuantity);
     public function decreaseBalance(int $user_id, string $baseCurrency, string $tradeQuantity);

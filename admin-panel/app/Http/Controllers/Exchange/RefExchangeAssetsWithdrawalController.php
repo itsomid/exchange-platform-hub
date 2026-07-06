@@ -61,7 +61,7 @@ class RefExchangeAssetsWithdrawalController extends Controller
         $currencyChains = $currency->chains;
 
 
-        $wallet = $this->walletRepository->getBitexroomWallet($currency->symbol);
+        $wallet = $this->walletRepository->getExchangeWallet($currency->symbol);
 
         $walletChains = $wallet?->walletChains;
 

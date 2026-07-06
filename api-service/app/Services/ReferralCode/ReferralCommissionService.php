@@ -107,7 +107,7 @@ class ReferralCommissionService
             'used_at' => now(),
         ]);
 
-        $exchangeWallet = $this->walletRepository->getBitexroomWallet('USDT');
+        $exchangeWallet = $this->walletRepository->getExchangeWallet('USDT');
         if ($exchangeWallet) {
             $exchangeWallet->decrement('balance', $commissionAmount);
 

@@ -22,11 +22,11 @@ use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
-    protected $bitexroomUserId;
+    protected $exchangeUserId;
 
     public function __construct()
     {
-        $this->bitexroomUserId = config('bitexroom.user_id', 1);
+        $this->exchangeUserId = config('bitexroom.user_id', 1);
     }
 
     public function index()
@@ -105,7 +105,7 @@ class HomeController extends Controller
             case 'withdrawals':
                 $data = Withdrawal::selectRaw('currency_symbol, SUM(amount) as total_amount')
                     ->where('status', WithdrawalStatusEnum::COMPLETED)
-                    ->where('user_id', '!=', $this->bitexroomUserId)
+                    ->where('user_id', '!=', $this->exchangeUserId)
                     ->groupBy('currency_symbol')
                     ->get()
                     ->map(function ($item) {

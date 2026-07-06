@@ -36,13 +36,13 @@ class WithdrawalController extends Controller
             }
         }
 
-        $bitexroomUserId = (int) config('bitexroom.user_id', 1);
+        $exchangeUserId = (int) config('bitexroom.user_id', 1);
         $showExchangeUserWithdrawals = request()->boolean('show_exchange_user_withdrawals');
         $onlyRealNetworkWithdrawals = request()->boolean('only_real_network_withdrawals');
 
-        $applyVisibilityFilters = function ($query) use ($bitexroomUserId, $showExchangeUserWithdrawals, $onlyRealNetworkWithdrawals) {
+        $applyVisibilityFilters = function ($query) use ($exchangeUserId, $showExchangeUserWithdrawals, $onlyRealNetworkWithdrawals) {
             if (! $showExchangeUserWithdrawals) {
-                $query->where('user_id', '!=', $bitexroomUserId)->where('user_id', '!=', 2);
+                $query->where('user_id', '!=', $exchangeUserId)->where('user_id', '!=', 2);
             }
 
             if ($onlyRealNetworkWithdrawals) {

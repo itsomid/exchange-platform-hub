@@ -108,53 +108,53 @@ class WalletRepository implements WalletRepositoryInterface
             );
     }
 
-    public function getBitexroomWallet(string $currency): ?Wallet
+    public function getExchangeWallet(string $currency): ?Wallet
     {
         return Wallet::query()
             ->where('currency_symbol', $currency)
-            ->where('user_id', $this->bitexroomUserId())
+            ->where('user_id', $this->exchangeUserId())
             ->first();
     }
 
-    public function getBitexroomWalletWithLock(string $currency): ?Wallet
+    public function getExchangeWalletWithLock(string $currency): ?Wallet
     {
         return Wallet::query()
             ->where('currency_symbol', $currency)
-            ->where('user_id', $this->bitexroomUserId())
+            ->where('user_id', $this->exchangeUserId())
             ->lockForUpdate()
             ->first();
     }
 
-    public function getBitexroomAllWallets(): Collection
+    public function getExchangeAllWallets(): Collection
     {
         return Wallet::query()
-            ->where('user_id', $this->bitexroomUserId())
+            ->where('user_id', $this->exchangeUserId())
             ->get();
     }
 
-    public function getBitexroomAllWalletsExceptUsdt(): Collection
+    public function getExchangeAllWalletsExceptUsdt(): Collection
     {
         return Wallet::query()
-            ->where('user_id', $this->bitexroomUserId())
+            ->where('user_id', $this->exchangeUserId())
             ->where('currency_symbol', '!=', 'USDT')
             ->get();
     }
 
-    public function getBitexroomAllWalletChains(): Collection
+    public function getExchangeAllWalletChains(): Collection
     {
-        $walletIds = $this->getBitexroomAllWallets()->pluck('id')->toArray();
+        $walletIds = $this->getExchangeAllWallets()->pluck('id')->toArray();
 
         return WalletChain::with('wallet')->whereIn('wallet_id', $walletIds)->get();
     }
 
-    public function getBitexroomAllWalletChainsExceptUsdt(): Collection
+    public function getExchangeAllWalletChainsExceptUsdt(): Collection
     {
-        $walletIds = $this->getBitexroomAllWalletsExceptUsdt()->pluck('id')->toArray();
+        $walletIds = $this->getExchangeAllWalletsExceptUsdt()->pluck('id')->toArray();
 
         return WalletChain::with(['wallet', 'wallet.currency'])->whereIn('wallet_id', $walletIds)->get();
     }
 
-    private function bitexroomUserId(): int
+    private function exchangeUserId(): int
     {
         return (int) config('bitexroom.user_id', 1);
     }

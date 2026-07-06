@@ -39,7 +39,7 @@ class TransactionService
     ) {
         \DB::transaction(function () use ($userId, $amount, $transactionHash, $currency, $currencyChain, $type, $adminId, $description, $admin_description) {
             // Fetch the wallet
-            $exchangeWallet = $this->walletRepository->getBitexroomWallet($currency->symbol);
+            $exchangeWallet = $this->walletRepository->getExchangeWallet($currency->symbol);
             if (!$exchangeWallet) {
                 return redirect()->back()->withErrors(['wallet' => 'کیف پول مورد نظر یافت نشد.']);
             }
