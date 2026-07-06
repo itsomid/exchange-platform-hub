@@ -15,15 +15,20 @@ use App\Models\Bot\BotWallet;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Repositories\Interfaces\WalletRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 
 class BotWalletService
 {
     private const USDT = 'USDT';
+    protected $bitexroomUserId;
 
     public function __construct(
         private readonly FeeCalculator $feeCalculator,
-    ) {}
+        private readonly WalletRepositoryInterface $walletRepository,
+    ) {
+            $this->bitexroomUserId = config('bitexroom.user_id', 1);
+    }
 
     /**
      * Transfer USDT from the user's main wallet into their bot wallet.
@@ -41,6 +46,9 @@ class BotWalletService
             // Debit main wallet
             $userWallet->decrement('balance', $grossAmount);
 
+            $ExchangeWallet = $this->walletRepository->getBitexroomWallet('USDT');
+            $ExchangeWallet->increment('balance', $fee);
+
             // Credit bot wallet net of transfer fee (principal_balance/profit_balance are D1 placeholders)
             $botWallet = $this->getOrCreateBotWallet($user);
             $botWallet->update([
@@ -52,23 +60,24 @@ class BotWalletService
                 'user_id'    => $user->id,
                 'wallet_id'  => $userWallet->id,
                 'amount'     => -$grossAmount,
-                'balance'    => $userWallet->fresh()->balance,
+                'balance'    => $userWallet->balance,
                 'type'       => TransactionTypeEnum::BOT,
-                'subtype'    => TransactionSubTypeEnum::BOT_TRANSFER_OUT,
+                'subtype'    => TransactionSubTypeEnum::BOT_TRANSFER_IN,
                 'status'     => TransactionStatusEnum::SUCCESS,
-                'description' => 'انتقال به ربات',
+                'description' => 'واریز از کیف پول اصلی به ربات',
             ]);
 
             // Transaction: fee charged
             Transaction::create([
-                'user_id'    => $user->id,
-                'wallet_id'  => $userWallet->id,
-                'amount'     => -$fee,
-                'balance'    => $userWallet->fresh()->balance,
+                'user_id'    => $this->bitexroomUserId,
+                'wallet_id'  => $ExchangeWallet->id,
+                'amount'     => $fee,
+                'balance'    => $ExchangeWallet->balance,
                 'type'       => TransactionTypeEnum::BOT,
                 'subtype'    => TransactionSubTypeEnum::BOT_TRANSFER_FEE,
                 'status'     => TransactionStatusEnum::SUCCESS,
-                'description' => 'کارمزد انتقال به ربات',
+                'description' => 'کارمزد پرداختی کاربر (user_id: ' . $user->id . '). برای واریز از کیف پول اصلی به ربات',
+           
             ]);
 
             event(new BotWalletDeposited($user->id, $grossAmount, $fee));
@@ -78,52 +87,53 @@ class BotWalletService
     /**
      * Transfer USDT from the bot wallet back to the user's main wallet.
      */
-    public function transferOut(User $user, string $amount): void
+    public function transferOut(User $user, string $grossAmount): void
     {
         $this->assertAutoTradeDisabled($user);
 
-        $fee = $this->feeCalculator->withdrawFee($amount);
-        $totalRequired = Math::add($amount, $fee);
+        $fee = $this->feeCalculator->withdrawFee($grossAmount);
+        $netAmount = Math::sub($grossAmount, $fee);
 
-        DB::transaction(function () use ($user, $amount, $fee, $totalRequired) {
+        DB::transaction(function () use ($user, $grossAmount, $fee, $netAmount) {
             $botWallet = $this->getBotWalletWithLock($user);
-            $this->assertSufficientBotBalance($botWallet, $totalRequired);
+            $this->assertSufficientBotBalance($botWallet, $grossAmount);
 
             $userWallet = $this->getUserUsdtWallet($user);
+            $ExchangeWallet = $this->walletRepository->getBitexroomWallet('USDT');
 
             // Debit bot wallet (principal_balance/profit_balance are D1 placeholders for future reinvest)
             $botWallet->update([
-                'balance' => Math::sub((string) $botWallet->balance, $totalRequired),
+                'balance' => Math::sub((string) $botWallet->balance, $grossAmount),
             ]);
 
             // Credit main wallet
-            $userWallet->increment('balance', $amount);
+            $userWallet->increment('balance', $netAmount);
 
             // Transaction: transfer into main wallet
             Transaction::create([
                 'user_id'    => $user->id,
                 'wallet_id'  => $userWallet->id,
-                'amount'     => $amount,
-                'balance'    => $userWallet->fresh()->balance,
+                'amount'     => $netAmount,
+                'balance'    => $userWallet->balance,
                 'type'       => TransactionTypeEnum::BOT,
-                'subtype'    => TransactionSubTypeEnum::BOT_TRANSFER_IN,
+                'subtype'    => TransactionSubTypeEnum::BOT_TRANSFER_OUT,
                 'status'     => TransactionStatusEnum::SUCCESS,
-                'description' => 'برداشت از ربات',
+                'description' => 'برداشت از کیف پول ربات به کیف پول اصلی',
             ]);
 
             // Transaction: fee
             Transaction::create([
-                'user_id'    => $user->id,
-                'wallet_id'  => $userWallet->id,
-                'amount'     => -$fee,
-                'balance'    => $userWallet->fresh()->balance,
+                'user_id'    => $this->bitexroomUserId,
+                'wallet_id'  => $ExchangeWallet->id,
+                'amount'     => $fee,
+                'balance'    => $ExchangeWallet->balance,
                 'type'       => TransactionTypeEnum::BOT,
                 'subtype'    => TransactionSubTypeEnum::BOT_TRANSFER_FEE,
                 'status'     => TransactionStatusEnum::SUCCESS,
-                'description' => 'کارمزد برداشت از ربات',
+                'description' => 'کارمزد پرداختی کاربر (user_id: ' . $user->id . '). برای برداشت از کیف پول ربات',
             ]);
 
-            event(new BotWalletWithdrawn($user->id, $amount, $fee));
+            event(new BotWalletWithdrawn($user->id, $grossAmount, $fee));
         });
     }
 
