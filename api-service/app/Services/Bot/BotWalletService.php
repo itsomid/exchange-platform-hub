@@ -43,11 +43,15 @@ class BotWalletService
             $userWallet = $this->getUserUsdtWallet($user);
             $this->assertSufficientMainBalance($userWallet, $grossAmount);
 
+            $exchangeWallet = $this->walletRepository->getExchangeWallet('USDT');
+
+            $userBalanceBefore = $userWallet->balance;
+            $exchangeBalanceBefore = $exchangeWallet->balance;
+
             // Debit main wallet
             $userWallet->decrement('balance', $grossAmount);
 
-            $ExchangeWallet = $this->walletRepository->getExchangeWallet('USDT');
-            $ExchangeWallet->increment('balance', $fee);
+            $exchangeWallet->increment('balance', $fee);
 
             // Credit bot wallet net of transfer fee (principal_balance/profit_balance are D1 placeholders)
             $botWallet = $this->getOrCreateBotWallet($user);
@@ -60,7 +64,7 @@ class BotWalletService
                 'user_id'    => $user->id,
                 'wallet_id'  => $userWallet->id,
                 'amount'     => -$grossAmount,
-                'balance'    => $userWallet->balance,
+                'balance'    => $userBalanceBefore,
                 'type'       => TransactionTypeEnum::BOT,
                 'subtype'    => TransactionSubTypeEnum::BOT_TRANSFER_IN,
                 'status'     => TransactionStatusEnum::SUCCESS,
@@ -70,9 +74,9 @@ class BotWalletService
             // Transaction: fee charged
             Transaction::create([
                 'user_id'    => $this->exchangeUserId,
-                'wallet_id'  => $ExchangeWallet->id,
+                'wallet_id'  => $exchangeWallet->id,
                 'amount'     => $fee,
-                'balance'    => $ExchangeWallet->balance,
+                'balance'    => $exchangeBalanceBefore,
                 'type'       => TransactionTypeEnum::BOT,
                 'subtype'    => TransactionSubTypeEnum::BOT_TRANSFER_FEE,
                 'status'     => TransactionStatusEnum::SUCCESS,
@@ -99,7 +103,10 @@ class BotWalletService
             $this->assertSufficientBotBalance($botWallet, $grossAmount);
 
             $userWallet = $this->getUserUsdtWallet($user);
-            $ExchangeWallet = $this->walletRepository->getExchangeWallet('USDT');
+            $exchangeWallet = $this->walletRepository->getExchangeWallet('USDT');
+
+            $userBalanceBefore = $userWallet->balance;
+            $exchangeBalanceBefore = $exchangeWallet->balance;
 
             // Debit bot wallet (principal_balance/profit_balance are D1 placeholders for future reinvest)
             $botWallet->update([
@@ -109,12 +116,14 @@ class BotWalletService
             // Credit main wallet
             $userWallet->increment('balance', $netAmount);
 
+            $exchangeWallet->increment('balance', $fee);
+
             // Transaction: transfer into main wallet
             Transaction::create([
                 'user_id'    => $user->id,
                 'wallet_id'  => $userWallet->id,
                 'amount'     => $netAmount,
-                'balance'    => $userWallet->balance,
+                'balance'    => $userBalanceBefore,
                 'type'       => TransactionTypeEnum::BOT,
                 'subtype'    => TransactionSubTypeEnum::BOT_TRANSFER_OUT,
                 'status'     => TransactionStatusEnum::SUCCESS,
@@ -124,9 +133,9 @@ class BotWalletService
             // Transaction: fee
             Transaction::create([
                 'user_id'    => $this->exchangeUserId,
-                'wallet_id'  => $ExchangeWallet->id,
+                'wallet_id'  => $exchangeWallet->id,
                 'amount'     => $fee,
-                'balance'    => $ExchangeWallet->balance,
+                'balance'    => $exchangeBalanceBefore,
                 'type'       => TransactionTypeEnum::BOT,
                 'subtype'    => TransactionSubTypeEnum::BOT_TRANSFER_FEE,
                 'status'     => TransactionStatusEnum::SUCCESS,
