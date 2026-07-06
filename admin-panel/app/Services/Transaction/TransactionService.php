@@ -15,15 +15,15 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\Withdrawal;
-use App\Services\Wallet\WalletService;
+use App\Repositories\Interfaces\WalletRepositoryInterface;
 
 class TransactionService
 {
-    protected $walletService;
+    protected WalletRepositoryInterface $walletRepository;
 
-    public function __construct(WalletService $walletService)
+    public function __construct(WalletRepositoryInterface $walletRepository)
     {
-        $this->walletService = $walletService;
+        $this->walletRepository = $walletRepository;
     }
 
     public function increaseDecreaseAdminWalletCredit(
@@ -39,7 +39,7 @@ class TransactionService
     ) {
         \DB::transaction(function () use ($userId, $amount, $transactionHash, $currency, $currencyChain, $type, $adminId, $description, $admin_description) {
             // Fetch the wallet
-            $exchangeWallet = $this->walletService->getExchangeWallet($currency->symbol);
+            $exchangeWallet = $this->walletRepository->getBitexroomWallet($currency->symbol);
             if (!$exchangeWallet) {
                 return redirect()->back()->withErrors(['wallet' => 'کیف پول مورد نظر یافت نشد.']);
             }

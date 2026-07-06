@@ -108,21 +108,55 @@ class WalletRepository implements WalletRepositoryInterface
             );
     }
 
-    public function getBitexroomWallet(string $currency): Wallet
+    public function getBitexroomWallet(string $currency): ?Wallet
     {
         return Wallet::query()
             ->where('currency_symbol', $currency)
-            ->where('user_id', 1)
+            ->where('user_id', $this->bitexroomUserId())
             ->first();
     }
 
-    public function getBitexroomWalletWithLock(string $currency): Wallet
+    public function getBitexroomWalletWithLock(string $currency): ?Wallet
     {
         return Wallet::query()
             ->where('currency_symbol', $currency)
-            ->where('user_id', 1)
+            ->where('user_id', $this->bitexroomUserId())
             ->lockForUpdate()
             ->first();
+    }
+
+    public function getBitexroomAllWallets(): Collection
+    {
+        return Wallet::query()
+            ->where('user_id', $this->bitexroomUserId())
+            ->get();
+    }
+
+    public function getBitexroomAllWalletsExceptUsdt(): Collection
+    {
+        return Wallet::query()
+            ->where('user_id', $this->bitexroomUserId())
+            ->where('currency_symbol', '!=', 'USDT')
+            ->get();
+    }
+
+    public function getBitexroomAllWalletChains(): Collection
+    {
+        $walletIds = $this->getBitexroomAllWallets()->pluck('id')->toArray();
+
+        return WalletChain::with('wallet')->whereIn('wallet_id', $walletIds)->get();
+    }
+
+    public function getBitexroomAllWalletChainsExceptUsdt(): Collection
+    {
+        $walletIds = $this->getBitexroomAllWalletsExceptUsdt()->pluck('id')->toArray();
+
+        return WalletChain::with(['wallet', 'wallet.currency'])->whereIn('wallet_id', $walletIds)->get();
+    }
+
+    private function bitexroomUserId(): int
+    {
+        return (int) config('bitexroom.user_id', 1);
     }
 
     public function increaseBalance(int $user_id, string $baseCurrency, string $tradeQuantity): void

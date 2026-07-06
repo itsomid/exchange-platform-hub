@@ -35,51 +35,7 @@ class WalletService
 
     /**
      * Calculate the total assets value for a user's wallets.
-     *
-     * @param \App\Models\User $user
-     * @return float
      */
-    /**
-     * Get a user's wallet by currency.
-     */
-    public function getUserWallet(int $userId, string $currency): ?Wallet
-    {
-        return Wallet::where('user_id', $userId)
-            ->where('currency_symbol', $currency)
-            ->first();
-    }
-
-    /**
-     * Get the exchange (system) wallet for a specific currency.
-     */
-    public function getExchangeWallet(string $currency): ?Wallet
-    {
-        return Wallet::where('user_id', $this->bitexroomUserId)
-            ->where('currency_symbol', $currency)
-            ->first();
-    }
-
-    public function getExchangeAllWallet()
-    {
-        return Wallet::where('user_id', $this->bitexroomUserId)->get();
-    }
-    public function getExchangeAllWalletExceptUSDT()
-    {
-        return Wallet::where('user_id', $this->bitexroomUserId)->where('currency_symbol', '!=', 'USDT')->get();
-    }
-
-    public function getExchangeAllWalletChain()
-    {
-        $allExchangeWallet = $this->getExchangeAllWallet();
-        $walletIds = $allExchangeWallet->pluck('id')->toArray();
-        return WalletChain::with('wallet')->whereIn('wallet_id', $walletIds)->get();
-    }
-    public function getExchangeAllWalletChainExceptUSDT()
-    {
-        $allExchangeWallet = $this->getExchangeAllWalletExceptUSDT();
-        $walletIds = $allExchangeWallet->pluck('id')->toArray();
-        return WalletChain::with(['wallet', 'wallet.currency'])->whereIn('wallet_id', $walletIds)->get();
-    }
     public function totalAssetsValue(User $user)
     {
 
@@ -430,7 +386,7 @@ class WalletService
         try {
             return DB::transaction(function () use ($currencySymbol) {
                 // Check if exchange wallet already exists
-                $existingWallet = $this->getExchangeWallet($currencySymbol);
+                $existingWallet = $this->walletRepository->getBitexroomWallet($currencySymbol);
                 if ($existingWallet) {
                     return $existingWallet;
                 }
@@ -465,7 +421,7 @@ class WalletService
             $currencies = \App\Models\Currency::all();
 
             foreach ($currencies as $currency) {
-                $existingWallet = $this->getExchangeWallet($currency->symbol);
+                $existingWallet = $this->walletRepository->getBitexroomWallet($currency->symbol);
 
                 if (!$existingWallet) {
                     $wallet = $this->createExchangeWallet($currency->symbol);
@@ -490,9 +446,8 @@ class WalletService
     {
         $createdChains = [];
         try {
-            $exchangeWallets = Wallet::where('user_id', $this->bitexroomUserId)
-                ->with(['currency.chains', 'walletChains'])
-                ->get();
+            $exchangeWallets = $this->walletRepository->getBitexroomAllWallets()
+                ->load(['currency.chains', 'walletChains']);
 
             foreach ($exchangeWallets as $wallet) {
                 if (!$wallet->currency) {

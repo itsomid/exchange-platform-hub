@@ -16,6 +16,7 @@ use App\Models\Stock;
 use App\Models\StockContract;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Services\Wallet\WalletService;
 use App\Services\Stock\StockService;
 use Illuminate\Support\Facades\Http;
@@ -24,13 +25,18 @@ use Illuminate\Support\Facades\Log;
 class StockContractController extends Controller
 {
     protected $walletService;
+    protected $walletRepository;
     protected $stockService;
     protected $bitexroomUserId;
 
-    public function __construct(WalletService $walletService, StockService $stockService)
-    {
+    public function __construct(
+        WalletService $walletService,
+        WalletRepositoryInterface $walletRepository,
+        StockService $stockService,
+    ) {
         $this->bitexroomUserId = config('bitexroom.user_id', 1);
         $this->walletService = $walletService;
+        $this->walletRepository = $walletRepository;
         $this->stockService = $stockService;
     }
 
@@ -122,8 +128,8 @@ class StockContractController extends Controller
             return redirect()->back()->withErrors(['amount' => 'تعداد سهام موجود کافی نیست. موجودی فعلی: ' . $stock->available_quantity]);
         }
 
-        $wallet = $this->walletService->getUserWallet($request['user_id'], 'USDT');
-        $ExchangeWallet = $this->walletService->getUserWallet($this->bitexroomUserId, 'USDT');
+        $wallet = $this->walletRepository->getOneByCurrency('USDT', $request['user_id']);
+        $ExchangeWallet = $this->walletRepository->getBitexroomWallet('USDT');
 
         $contractData = [
             'user_id' => $request['user_id'],
@@ -264,8 +270,8 @@ class StockContractController extends Controller
             $refundAmount = $deductFee ? ($stockContract->total_value - $stockContract->cancellation_fee) : $stockContract->total_value;
             if ($refundAmount > 0) {
                 $user = $stockContract->user;
-                $wallet = $this->walletService->getUserWallet($user->id, 'USDT');
-                $ExchangeWallet = $this->walletService->getExchangeWallet('USDT');
+                $wallet = $this->walletRepository->getOneByCurrency('USDT', $user->id);
+                $ExchangeWallet = $this->walletRepository->getBitexroomWallet('USDT');
 
                 // Create transaction record for refund
                 Transaction::create([

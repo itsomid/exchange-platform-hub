@@ -12,7 +12,7 @@ use App\Models\Wallet;
 use App\Models\Withdrawal;
 use App\Models\LockedBalanceDetail;
 use App\Models\Transaction;
-use App\Services\Wallet\WalletService;
+use App\Repositories\Interfaces\WalletRepositoryInterface;
 use Carbon\Carbon;
 use App\Infrastructure\HDWallet\DTO\Withdrawal\GetWithdrawalStatusRequestDTO;
 use App\Infrastructure\HDWalletNew\HDWalletFacade;
@@ -26,13 +26,13 @@ use Illuminate\Support\Facades\DB;
 
 class WithdrawalService
 {
-    protected $walletService;
+    protected WalletRepositoryInterface $walletRepository;
     protected $bitexroomUserId;
     private HDWalletFacade $hdWalletWithdrawalService;
 
-    public function __construct(WalletService $walletService, HDWalletFacade $hdWalletWithdrawalService)
+    public function __construct(WalletRepositoryInterface $walletRepository, HDWalletFacade $hdWalletWithdrawalService)
     {
-        $this->walletService = $walletService;
+        $this->walletRepository = $walletRepository;
         $this->hdWalletWithdrawalService = $hdWalletWithdrawalService;
         $this->bitexroomUserId = config('bitexroom.user_id', 1);
     }
@@ -335,7 +335,7 @@ class WithdrawalService
     private function createExchangeWithdrawalFee($currency_symbol, $currency_chain, $withdrawal): void
     {
         try {
-            $exchangeWallet = $this->walletService->getExchangeWallet($currency_symbol);
+            $exchangeWallet = $this->walletRepository->getBitexroomWallet($currency_symbol);
 
             $exchangeWithdrawalFee = CurrencyChain::whereChain($currency_chain)->value('exchange_withdrawal_fee');
             if ($exchangeWithdrawalFee > 0) {

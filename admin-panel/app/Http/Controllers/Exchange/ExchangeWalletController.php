@@ -8,6 +8,7 @@ use App\Models\CurrencyChain;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WalletChain;
+use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Services\NodeProviders\BlockchairService;
 use App\Services\NodeProviders\CryptoAPIService;
 use App\Services\NodeProviders\EtherScanService;
@@ -21,6 +22,7 @@ class ExchangeWalletController extends Controller
     private const HOT_WALLET_BALANCES_CACHE_KEY = 'wallet_balances_v2';
 
     protected $walletService;
+    protected WalletRepositoryInterface $walletRepository;
 
     protected $cryptoApi;
     protected $blockchair;
@@ -29,13 +31,15 @@ class ExchangeWalletController extends Controller
     protected $bitexroomUserId;
 
     public function __construct(
-        WalletService     $walletService,
+        WalletService $walletService,
+        WalletRepositoryInterface $walletRepository,
         CryptoAPIService  $cryptoApi,
         BlockchairService $blockchair,
         TronScanService   $tronScan,
         EtherScanService  $etherScan,
     ) {
         $this->walletService = $walletService;
+        $this->walletRepository = $walletRepository;
         $this->cryptoApi = $cryptoApi;
         $this->blockchair = $blockchair;
         $this->tronScan = $tronScan;
@@ -137,7 +141,7 @@ class ExchangeWalletController extends Controller
 
     public function localWallets()
     {
-        $exchangeWallets = $this->walletService->getExchangeAllWallet()->load('currency');
+        $exchangeWallets = $this->walletRepository->getBitexroomAllWallets()->load('currency');
 
         $exchangeUser = User::find($this->bitexroomUserId);
 
@@ -200,7 +204,7 @@ class ExchangeWalletController extends Controller
     public function hotWallets()
     {
 
-        $exchangeWalletChains = $this->walletService->getExchangeAllWalletChain();
+        $exchangeWalletChains = $this->walletRepository->getBitexroomAllWalletChains();
         $chains = $exchangeWalletChains
             ->pluck('currency_chain')
             ->filter()

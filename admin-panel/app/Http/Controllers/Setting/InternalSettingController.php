@@ -6,18 +6,19 @@ use App\Data\PermissionList;
 use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
-use App\Services\Wallet\WalletService;
+use App\Repositories\Interfaces\WalletRepositoryInterface;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 
 class InternalSettingController extends Controller
 {
-    protected $walletService;
+    protected WalletRepositoryInterface $walletRepository;
     protected $bitexroomUserId;
-    public function __construct(WalletService $walletService)
+
+    public function __construct(WalletRepositoryInterface $walletRepository)
     {
         $this->bitexroomUserId = config('bitexroom.user_id', 1);
-        $this->walletService = $walletService;
+        $this->walletRepository = $walletRepository;
     }
     public function index()
     {
@@ -39,7 +40,7 @@ class InternalSettingController extends Controller
         $otcTradingEnabled = Setting::where('key', 'otc_trading_enabled')->first();
         $withdrawalEnabled = Setting::where('key', 'withdrawal_enabled')->first();
 
-        $exchangeWalletChains = $this->walletService->getExchangeAllWalletChain();
+        $exchangeWalletChains = $this->walletRepository->getBitexroomAllWalletChains();
 
         return view('dashboard.setting.internal.index', [
             'last3permissions' => $last3permissions,

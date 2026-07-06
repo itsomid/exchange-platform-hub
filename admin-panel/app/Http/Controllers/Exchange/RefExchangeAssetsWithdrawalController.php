@@ -13,11 +13,11 @@ use App\Models\ExchangeAssetsWithdrawal;
 use App\Models\OTCRefExchangeWithdrawal;
 use App\Models\Exchange;
 use App\Models\Setting;
+use App\Repositories\ExchangeRepository;
+use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Services\Exchanges\Asset\AssetFactory;
 use App\Services\Exchanges\DTO\ChargeCurrencyRequestDTO;
-use App\Repositories\ExchangeRepository;
 use App\Services\Exchanges\ExchangeService;
-use App\Services\Wallet\WalletService;
 use App\Http\Requests\Exchange\RefExchangeAssetsWithdrawalRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -26,7 +26,7 @@ use Illuminate\Support\Facades\Cache;
 class RefExchangeAssetsWithdrawalController extends Controller
 {
     public function __construct(
-        private readonly WalletService $walletService,
+        private readonly WalletRepositoryInterface $walletRepository,
         private readonly ExchangeRepository $exchangeRepository,
     ) {}
     public function index()
@@ -61,7 +61,7 @@ class RefExchangeAssetsWithdrawalController extends Controller
         $currencyChains = $currency->chains;
 
 
-        $wallet = $this->walletService->getExchangeWallet($currency->symbol);
+        $wallet = $this->walletRepository->getBitexroomWallet($currency->symbol);
 
         $walletChains = $wallet?->walletChains;
 

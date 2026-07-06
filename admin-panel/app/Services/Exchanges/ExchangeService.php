@@ -24,14 +24,12 @@ use App\Services\Exchanges\Asset\Enum\WithdrawMethodEnum;
 use App\Services\Exchanges\DTO\ChargeCurrencyRequestDTO;
 use App\Services\Exchanges\DTO\ChargeCurrencyResponseDTO;
 use App\Services\Exchanges\DTO\TriggerRefExchangeSellResponseDTO;
-use App\Services\Wallet\WalletService;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class ExchangeService
 {
     public function __construct(
-        private readonly WalletService $walletService,
         private readonly MarketRepositoryInterface $marketRepository,
         private readonly ExchangeRepository $exchangeRepository,
         private readonly WalletRepositoryInterface $walletRepository,
@@ -49,7 +47,7 @@ class ExchangeService
 
             $asset = AssetFactory::make($exchange->slug);
 
-            $bitexroomWallet = $this->walletService->getExchangeWallet($requestDTO->getCurrency());
+            $bitexroomWallet = $this->walletRepository->getBitexroomWallet($requestDTO->getCurrency());
 
             $chain = WalletChain::query()
                 ->firstOrCreate(
@@ -88,7 +86,7 @@ class ExchangeService
             $feeCurrency = $response->getCurrencyFee();
             $baseCurrency = $bitexroomWallet->currency_symbol;
 
-            $feeCurrencyWallet = $this->walletService->getExchangeWallet($feeCurrency);
+            $feeCurrencyWallet = $this->walletRepository->getBitexroomWallet($feeCurrency);
 
             $baseMarket = $this->marketRepository->getMarketBySymbol($baseCurrency, 'USDT');
             $feeMarket = $this->marketRepository->getMarketBySymbol($feeCurrency, 'USDT');
