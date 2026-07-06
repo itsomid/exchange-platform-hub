@@ -167,6 +167,7 @@ class WithdrawalService
             }
 
             // Deduct balance now (deduct-at-completion model)
+            $balanceBefore = $wallet->balance;
             $wallet->decrement('balance', $withdrawal->amount);
 
             // Release lock if it still exists (not present when withdrawal was previously FAILED)
@@ -190,7 +191,7 @@ class WithdrawalService
                 'wallet_id' => $wallet->id,
                 'withdrawal_id' => $withdrawal->id,
                 'amount' => -$withdrawal->amount,
-                'balance' => $wallet->balance,
+                'balance' => $balanceBefore,
                 'type' => TransactionTypeEnum::WITHDRAWAL,
                 'subtype' => TransactionSubTypeEnum::USER_INITIATED,
                 'status' => TransactionStatusEnum::SUCCESS,
