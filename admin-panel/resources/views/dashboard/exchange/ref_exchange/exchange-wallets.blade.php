@@ -26,7 +26,9 @@
         $currencyHasChainsMap = \App\Models\Currency::whereIn('symbol', $supportedSymbols)
             ->withCount('chains')
             ->get()
-            ->mapWithKeys(fn($currency) => [strtoupper((string) $currency->symbol) => ($currency->chains_count ?? 0) > 0]);
+            ->mapWithKeys(
+                fn($currency) => [strtoupper((string) $currency->symbol) => ($currency->chains_count ?? 0) > 0],
+            );
 
         $supportedRows = collect($supportedAssets)
             ->map(function ($asset) use ($currenciesBySymbol, $baseChainsByCurrencyId) {
@@ -37,7 +39,7 @@
                 return [
                     'asset' => $asset,
                     'symbol' => $symbol,
-                    'chain' => strtoupper((string) ($baseChain?->chain?->value ?? $baseChain?->chain ?? 'OTHER')),
+                    'chain' => strtoupper((string) ($baseChain?->chain?->value ?? ($baseChain?->chain ?? 'OTHER'))),
                     'chain_logo' => $baseChain && $baseChain->currency ? $baseChain->currency->coinLogo() : null,
                 ];
             })
@@ -54,7 +56,6 @@
             <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
                 <div>
                     <h4 class="mb-1">دارایی در صرافی مرجع ({{ $exchangeName }})</h4>
-                    <small class="text-muted">نسخه بهینه برای مدیریت تعداد زیاد دارایی</small>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                     <span class="badge bg-label-success">{{ collect($supportedAssets)->count() }} پشتیبانی‌شده</span>
@@ -112,9 +113,9 @@
                                                         height="38" alt="{{ $symbol }}">
                                                     @if (!empty($chainLogo))
                                                         <img src="{{ $chainLogo }}"
-                                                            class="position-absolute rounded-circle border border-white" width="18"
-                                                            height="18" style="bottom: -2px; right: -2px; background: #fff;"
-                                                            >
+                                                            class="position-absolute rounded-circle border border-white"
+                                                            width="18" height="18"
+                                                            style="bottom: -2px; right: -2px; background: #fff;">
                                                     @endif
                                                 </div>
                                                 <div class="fw-semibold">{{ $symbol }}</div>
@@ -172,8 +173,8 @@
                                     <tr data-search="{{ $searchText }}" data-group-type="unsupported">
                                         <td>
                                             <div class="d-flex align-items-center gap-3">
-                                                <img src="{{ $asset->coinLogo }}" class="rounded-circle" width="38" height="38"
-                                                    alt="{{ $symbol }}">
+                                                <img src="{{ $asset->coinLogo }}" class="rounded-circle" width="38"
+                                                    height="38" alt="{{ $symbol }}">
                                                 <div class="fw-semibold">{{ $symbol }}</div>
                                             </div>
                                         </td>
@@ -211,7 +212,7 @@
 
 @push('scripts')
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const assetSearch = document.getElementById('assetSearch');
             const assetTypeFilter = document.getElementById('assetTypeFilter');
             const assetEmptyState = document.getElementById('assetEmptyState');
@@ -222,15 +223,15 @@
                 const groups = document.querySelectorAll('.asset-group');
                 let hasVisibleGroup = false;
 
-                groups.forEach(function (group) {
+                groups.forEach(function(group) {
                     const groupType = group.dataset.groupType || '';
-                    const shouldShowGroup = selectedType === 'all'
-                        || selectedType === groupType
-                        || (selectedType === 'UNSUPPORTED' && groupType === 'unsupported');
+                    const shouldShowGroup = selectedType === 'all' ||
+                        selectedType === groupType ||
+                        (selectedType === 'UNSUPPORTED' && groupType === 'unsupported');
                     const rows = Array.from(group.querySelectorAll('tbody tr[data-search]'));
                     let hasVisibleRow = false;
 
-                    rows.forEach(function (row) {
+                    rows.forEach(function(row) {
                         const haystack = row.dataset.search || '';
                         const matchQuery = !query || haystack.includes(query);
                         const isVisible = shouldShowGroup && matchQuery;
