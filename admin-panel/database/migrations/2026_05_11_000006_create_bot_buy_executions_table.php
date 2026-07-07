@@ -23,6 +23,7 @@ return new class extends Migration
             $table->unsignedBigInteger('exchange_transaction_id')->nullable();
             $table->unsignedBigInteger('exchange_order_id')->nullable()->index(); // Market-buy order ID returned by reference exchange (CoinEx)
             $table->string('status')->default('PENDING'); // PENDING|BOUGHT|FAILED
+            $table->string('failure_reason')->nullable();
             $table->timestamp('created_at')->nullable();
 
             $table->foreign('exchange_transaction_id')

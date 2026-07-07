@@ -68,7 +68,7 @@ class BotWalletService
                 'type'       => TransactionTypeEnum::BOT,
                 'subtype'    => TransactionSubTypeEnum::BOT_TRANSFER_IN,
                 'status'     => TransactionStatusEnum::SUCCESS,
-                'description' => 'واریز از کیف پول اصلی به ربات',
+                'description' => 'واریز از کیف پول اصلی به کیف پول ربات',
             ]);
 
             // Transaction: fee charged
@@ -80,7 +80,7 @@ class BotWalletService
                 'type'       => TransactionTypeEnum::BOT,
                 'subtype'    => TransactionSubTypeEnum::BOT_TRANSFER_FEE,
                 'status'     => TransactionStatusEnum::SUCCESS,
-                'description' => 'کارمزد پرداختی کاربر (user_id: ' . $user->id . '). برای واریز از کیف پول اصلی به ربات',
+                'description' => 'کارمزد پرداختی کاربر (#' . $user->id . ') برای واریز از کیف پول اصلی به ربات',
            
             ]);
 
@@ -139,7 +139,7 @@ class BotWalletService
                 'type'       => TransactionTypeEnum::BOT,
                 'subtype'    => TransactionSubTypeEnum::BOT_TRANSFER_FEE,
                 'status'     => TransactionStatusEnum::SUCCESS,
-                'description' => 'کارمزد پرداختی کاربر (user_id: ' . $user->id . '). برای برداشت از کیف پول ربات',
+                'description' => 'کارمزد پرداختی کاربر (#' . $user->id . '). برای برداشت از کیف پول ربات',
             ]);
 
             event(new BotWalletWithdrawn($user->id, $grossAmount, $fee));

@@ -192,7 +192,21 @@
                                     $execMarket = $execSymbol ? $markets[$execSymbol] ?? null : null;
                                     $execCurrentPrice = $execSymbol ? cache("market:price:{$execSymbol}USDT") : null;
                                 @endphp
-                                <span class="badge {{ $execBadge }}">{{ $execution->status }}</span>
+                                <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                                    <div class="rounded px-3 py-1 text-end"
+                                        style="background:rgba(0,0,0,.03); border:1px solid rgba(0,0,0,.07)">
+                                        <small class="text-muted d-block" style="font-size:.65rem; line-height:1.1">قیمت
+                                            لحظه‌ای (USDT)</small>
+                                        <strong class="font-number live-price-display d-block mb-0"
+                                            style="font-size:1.15rem; line-height:1.3"
+                                            data-live-price="{{ $execSymbol }}"
+                                            data-market-id="{{ $execMarket?->id ?? '' }}"
+                                            @if ($execCurrentPrice) data-prev-price="{{ $execCurrentPrice }}" @endif>
+                                            {{ $execCurrentPrice ? formatNumberTrimZeros($execCurrentPrice) : '—' }}
+                                        </strong>
+                                    </div>
+                                    <span class="badge {{ $execBadge }}">{{ $execution->status }}</span>
+                                </div>
                             </div>
 
                             <div class="row text-sm gap-3">
@@ -222,17 +236,11 @@
                                         <strong>—</strong>
                                     @elseif ($orig !== null && $eff !== null && $eff != $orig)
                                         <span class="badge bg-warning text-dark">{{ $eff }}/{{ $orig }}
-                                            (Collapsed)</span>
+                                            (Collapsed)
+                                        </span>
                                     @else
                                         <strong>{{ $eff ?? $orig }}/{{ $orig }}</strong>
                                     @endif
-                                </div>
-                                <div class="col-md-3 col-xxl-2">
-                                    <small class="text-muted d-block mb-1">قیمت لحظه‌ای (USDT)</small>
-                                    <strong class="font-number live-price-display" data-live-price="{{ $execSymbol }}"
-                                        data-market-id="{{ $execMarket?->id ?? '' }}">
-                                        {{ $execCurrentPrice ? number_format((float) $execCurrentPrice, 2) : '—' }}
-                                    </strong>
                                 </div>
                             </div>
 
@@ -273,15 +281,16 @@
                                                             : null;
                                                         $hasSettlement = $sell->settlement !== null;
                                                         $distancePct = null;
+                                                        $distanceAmount = null;
                                                         if (
                                                             $targetPrice &&
                                                             $execCurrentPrice &&
                                                             $sell->status === 'OPEN'
                                                         ) {
+                                                            $distanceAmount =
+                                                                (float) $targetPrice - (float) $execCurrentPrice;
                                                             $distancePct =
-                                                                (($targetPrice - (float) $execCurrentPrice) /
-                                                                    (float) $execCurrentPrice) *
-                                                                100;
+                                                                ($distanceAmount / (float) $execCurrentPrice) * 100;
                                                         }
                                                     @endphp
                                                     <tr class="sell-main-row" data-sell-id="{{ $sell->id }}"
@@ -294,7 +303,7 @@
                                                                 style="font-size:.75rem">{{ $sell->target_type }}</small>
                                                         </td>
                                                         <td class="text-center font-number">
-                                                            {{ $targetPrice ? number_format($targetPrice, 2) : '—' }}
+                                                            {{ $targetPrice ? formatNumberTrimZeros($targetPrice) : '—' }}
                                                         </td>
                                                         <td class="text-center distance-cell"
                                                             @if ($sell->status === 'OPEN') data-target="{{ $targetPrice }}" data-symbol="{{ $execSymbol }}" @endif>
@@ -305,13 +314,37 @@
                                                                 <span class="text-muted">—</span>
                                                             @elseif ($distancePct !== null)
                                                                 @if ($distancePct > 0)
-                                                                    <span
-                                                                        class="badge bg-warning text-dark font-number">{{ number_format($distancePct, 2) }}٪
-                                                                        تا هدف</span>
+                                                                    <div class="d-inline-flex align-items-center gap-2 px-2 py-1 rounded"
+                                                                        style="background:rgba(255,159,67,.08); border:1px solid rgba(255,159,67,.28)">
+                                                                        <span class="font-number fw-bold text-warning"
+                                                                            style="font-size:.88rem; line-height:1.2; white-space:nowrap">
+                                                                            {{ formatNumberTrimZeros($distanceAmount, 8) }}
+                                                                            <small class="fw-normal text-muted"
+                                                                                style="font-size:.7rem">USDT</small>
+                                                                        </span>
+                                                                        <span
+                                                                            class="badge rounded-pill bg-warning text-dark font-number"
+                                                                            style="font-size:.68rem">{{ formatNumberTrimZeros($distancePct, 2) }}٪</span>
+                                                                        <span class="small fw-semibold text-warning"
+                                                                            style="font-size:.72rem; white-space:nowrap">تا
+                                                                            هدف</span>
+                                                                    </div>
                                                                 @else
-                                                                    <span
-                                                                        class="badge bg-success font-number">{{ number_format(abs($distancePct), 2) }}٪
-                                                                        بالاتر</span>
+                                                                    <div class="d-inline-flex align-items-center gap-2 px-2 py-1 rounded"
+                                                                        style="background:rgba(40,199,111,.08); border:1px solid rgba(40,199,111,.28)">
+                                                                        <span class="font-number fw-bold text-success"
+                                                                            style="font-size:.88rem; line-height:1.2; white-space:nowrap">
+                                                                            {{ formatNumberTrimZeros(abs($distanceAmount), 8) }}
+                                                                            <small class="fw-normal text-muted"
+                                                                                style="font-size:.7rem">USDT</small>
+                                                                        </span>
+                                                                        <span
+                                                                            class="badge rounded-pill bg-success font-number"
+                                                                            style="font-size:.68rem">{{ formatNumberTrimZeros(abs($distancePct), 2) }}٪</span>
+                                                                        <span class="small fw-semibold text-success"
+                                                                            style="font-size:.72rem; white-space:nowrap">بالاتر
+                                                                            از هدف</span>
+                                                                    </div>
                                                                 @endif
                                                             @else
                                                                 <span class="text-muted">—</span>
@@ -489,45 +522,48 @@
                         <div class="row mb-3 g-2">
                             <div class="col-md-3">
                                 <div class="p-2 border rounded text-center"><small class="text-muted d-block">مجموع
-                                        gross_revenue</small><strong>{{ number_format($sumGross, 4) }}</strong></div>
+                                        gross_revenue</small><strong>{{ formatNumberTrimZeros($sumGross) }}</strong>
+                                </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="p-2 border rounded text-center"><small class="text-muted d-block">مجموع
-                                        cost_basis</small><strong>{{ number_format($sumCost, 4) }}</strong></div>
+                                        cost_basis</small><strong>{{ formatNumberTrimZeros($sumCost) }}</strong></div>
                             </div>
                             <div class="col-md-3">
                                 <div class="p-2 border rounded text-center"><small class="text-muted d-block">کارمزد
-                                        شبکه</small><strong class="text-warning">{{ number_format($sumNet, 4) }}</strong>
+                                        شبکه</small><strong
+                                        class="text-warning">{{ formatNumberTrimZeros($sumNet) }}</strong>
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="p-2 border rounded text-center"><small class="text-muted d-block">کارمزد
                                         صرافی (خرید+فروش)</small><strong
-                                        class="text-warning">{{ number_format($sumExch, 4) }}</strong>
+                                        class="text-warning">{{ formatNumberTrimZeros($sumExch) }}</strong>
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="p-2 border rounded text-center"><small class="text-muted d-block">کارمزد
                                         عملکرد
                                         (۲۲٪)</small><strong
-                                        class="text-warning">{{ number_format($sumPerf, 4) }}</strong>
+                                        class="text-warning">{{ formatNumberTrimZeros($sumPerf) }}</strong>
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="p-2 border rounded text-center"><small class="text-muted d-block">cancel_fee
-                                        (قدیمی)</small><strong>{{ number_format($sumCancel, 4) }}</strong></div>
+                                        (قدیمی)</small><strong>{{ formatNumberTrimZeros($sumCancel) }}</strong></div>
                             </div>
                             <div class="col-md-3">
                                 <div class="p-2 border rounded text-center"><small class="text-muted d-block">net_pnl
                                         کل</small><strong
-                                        class="{{ $sumPnl >= 0 ? 'text-success' : 'text-danger' }}">{{ number_format($sumPnl, 4) }}</strong>
+                                        class="{{ $sumPnl >= 0 ? 'text-success' : 'text-danger' }}">{{ formatNumberTrimZeros($sumPnl) }}</strong>
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="p-2 border rounded text-center"><small class="text-muted d-block">مبلغ
                                         بازگشتی
                                         برآوردی</small><strong
-                                        class="text-primary">{{ number_format($sumCost + $sumPnl, 4) }}</strong></div>
+                                        class="text-primary">{{ formatNumberTrimZeros($sumCost + $sumPnl) }}</strong>
+                                </div>
                             </div>
                         </div>
 
@@ -568,14 +604,15 @@
                                                 @endphp
                                                 <span class="badge {{ $stBadge }}">{{ $st ?? '—' }}</span>
                                             </td>
-                                            <td>{{ number_format($s->gross_revenue, 8) }}</td>
-                                            <td>{{ number_format($s->cost_basis, 8) }}</td>
-                                            <td class="text-warning">{{ number_format($s->network_fee, 8) }}</td>
-                                            <td class="text-warning">{{ number_format($s->exchange_fee, 8) }}</td>
-                                            <td class="text-warning">{{ number_format($s->performance_fee, 8) }}</td>
-                                            <td>{{ number_format($s->cancel_fee, 8) }}</td>
+                                            <td>{{ formatNumberTrimZeros($s->gross_revenue) }}</td>
+                                            <td>{{ formatNumberTrimZeros($s->cost_basis) }}</td>
+                                            <td class="text-warning">{{ formatNumberTrimZeros($s->network_fee) }}</td>
+                                            <td class="text-warning">{{ formatNumberTrimZeros($s->exchange_fee) }}</td>
+                                            <td class="text-warning">{{ formatNumberTrimZeros($s->performance_fee) }}
+                                            </td>
+                                            <td>{{ formatNumberTrimZeros($s->cancel_fee) }}</td>
                                             <td class="{{ (float) $s->net_pnl >= 0 ? 'text-success' : 'text-danger' }}">
-                                                <strong>{{ number_format($s->net_pnl, 8) }}</strong>
+                                                <strong>{{ formatNumberTrimZeros($s->net_pnl) }}</strong>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -620,6 +657,37 @@
 
             var subscribedMarkets = new Set();
 
+            function formatUsdtAmount(value) {
+                var abs = Math.abs(value);
+                var decimals = abs >= 1 ? 2 : (abs >= 0.01 ? 4 : 8);
+                return abs.toLocaleString('en-US', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: decimals
+                });
+            }
+
+            function renderDistanceCell(amount, pct) {
+                var absAmount = formatUsdtAmount(amount);
+                var absPct = Math.abs(pct).toFixed(2);
+                if (pct > 0) {
+                    return '<div class="d-inline-flex align-items-center gap-2 px-2 py-1 rounded"' +
+                        ' style="background:rgba(255,159,67,.08);border:1px solid rgba(255,159,67,.28)">' +
+                        '<span class="font-number fw-bold text-warning" style="font-size:.88rem;line-height:1.2;white-space:nowrap">' +
+                        absAmount +
+                        ' <small class="fw-normal text-muted" style="font-size:.7rem">USDT</small></span>' +
+                        '<span class="badge rounded-pill bg-warning text-dark font-number" style="font-size:.68rem">' +
+                        absPct + '٪</span>' +
+                        '<span class="small fw-semibold text-warning" style="font-size:.72rem;white-space:nowrap">تا هدف</span></div>';
+                }
+                return '<div class="d-inline-flex align-items-center gap-2 px-2 py-1 rounded"' +
+                    ' style="background:rgba(40,199,111,.08);border:1px solid rgba(40,199,111,.28)">' +
+                    '<span class="font-number fw-bold text-success" style="font-size:.88rem;line-height:1.2;white-space:nowrap">' +
+                    absAmount + ' <small class="fw-normal text-muted" style="font-size:.7rem">USDT</small></span>' +
+                    '<span class="badge rounded-pill bg-success font-number" style="font-size:.68rem">' +
+                    absPct + '٪</span>' +
+                    '<span class="small fw-semibold text-success" style="font-size:.72rem;white-space:nowrap">بالاتر از هدف</span></div>';
+            }
+
             document.querySelectorAll('.live-price-display[data-market-id]').forEach(function(el) {
                 var marketId = el.dataset.marketId;
                 var symbol = el.dataset.livePrice;
@@ -635,9 +703,25 @@
                     // Update header live-price display for this symbol
                     document.querySelectorAll('.live-price-display[data-live-price="' + symbol +
                         '"]').forEach(function(badge) {
+                        var prevPrice = parseFloat(badge.dataset.prevPrice);
+                        if (!isFinite(prevPrice)) {
+                            prevPrice = parseFloat(String(badge.textContent).replace(/,/g,
+                                ''));
+                        }
+
                         badge.textContent = price.toLocaleString('en-US', {
                             maximumFractionDigits: 8
                         });
+
+                        badge.classList.remove('text-success', 'text-danger');
+                        if (isFinite(prevPrice) && prevPrice > 0) {
+                            if (price > prevPrice) {
+                                badge.classList.add('text-success');
+                            } else if (price < prevPrice) {
+                                badge.classList.add('text-danger');
+                            }
+                        }
+                        badge.dataset.prevPrice = price;
                     });
 
                     // Recalculate "distance to target" for OPEN rows of this symbol
@@ -646,15 +730,9 @@
                         var targetPrice = parseFloat(cell.dataset.target);
                         if (!isFinite(targetPrice)) return;
 
-                        var pct = ((targetPrice - price) / price) * 100;
-                        if (pct > 0) {
-                            cell.innerHTML =
-                                '<span class="badge bg-warning text-dark font-number">' +
-                                pct.toFixed(2) + '٪ تا هدف</span>';
-                        } else {
-                            cell.innerHTML = '<span class="badge bg-success font-number">' +
-                                Math.abs(pct).toFixed(2) + '٪ بالاتر</span>';
-                        }
+                        var amount = targetPrice - price;
+                        var pct = (amount / price) * 100;
+                        cell.innerHTML = renderDistanceCell(amount, pct);
                     });
                 });
             });

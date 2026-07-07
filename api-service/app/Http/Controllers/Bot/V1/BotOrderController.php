@@ -110,8 +110,8 @@ class BotOrderController extends Controller
      * Response:
      *   data: {
      *     auto_trade_enabled, has_order, order_id, order_status, triggered_by,
-     *     created_at, total, in_flight, bought, skipped, failed, sells_open,
-     *     completed
+     *     created_at, total, in_flight, retrying, bought, skipped, failed,
+     *     sells_open, sells_pending, completed
      *   }
      */
     public function activationStatus(): JsonResponse
@@ -134,10 +134,12 @@ class BotOrderController extends Controller
                     'created_at'         => null,
                     'total'              => 0,
                     'in_flight'          => 0,
+                    'retrying'           => 0,
                     'bought'             => 0,
                     'skipped'            => 0,
                     'failed'             => 0,
                     'sells_open'         => 0,
+                    'sells_pending'      => 0,
                     'completed'          => false,
                 ],
             ]);
@@ -157,6 +159,26 @@ class BotOrderController extends Controller
         $total    = $pending + $buying + $bought + $skipped + $failed;
         $inFlight = $pending + $buying;
 
+        // BUYING rows that already failed at least one attempt (network
+        // hiccup, fill-confirmation timeout, etc.) but are still being
+        // retried automatically by BuyExecutionJob — no user action needed.
+        $retrying = BotBuyExecution::query()
+            ->where('bot_order_id', $order->id)
+            ->where('status', BotBuyExecution::STATUS_BUYING)
+            ->whereNotNull('failure_reason')
+            ->count();
+
+        // BOUGHT rows whose OpenSellOrdersJob hasn't run yet (it's dispatched
+        // onto a separate queue right after the buy fills, so there's a real
+        // gap between "buy done" and "sell tiers placed"). Once that job runs
+        // the execution either gains sell orders or flips to FAILED, so this
+        // reaches 0 as soon as every bought execution has been through it.
+        $sellsPending = BotBuyExecution::query()
+            ->where('bot_order_id', $order->id)
+            ->where('status', BotBuyExecution::STATUS_BOUGHT)
+            ->whereDoesntHave('sellOrders')
+            ->count();
+
         $sellsOpen = BotSellOrder::query()
             ->join('bot_buy_executions', 'bot_buy_executions.id', '=', 'bot_sell_orders.bot_buy_execution_id')
             ->where('bot_buy_executions.bot_order_id', $order->id)
@@ -173,11 +195,13 @@ class BotOrderController extends Controller
                 'created_at'         => $order->created_at?->toIso8601String(),
                 'total'              => $total,
                 'in_flight'          => $inFlight,
+                'retrying'           => $retrying,
                 'bought'             => $bought,
                 'skipped'            => $skipped,
                 'failed'             => $failed,
                 'sells_open'         => $sellsOpen,
-                'completed'          => $total > 0 && $inFlight === 0,
+                'sells_pending'      => $sellsPending,
+                'completed'          => $total > 0 && $inFlight === 0 && $sellsPending === 0,
             ],
         ]);
     }
