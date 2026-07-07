@@ -4,6 +4,7 @@ namespace App\Jobs\Bot;
 
 use App\Models\Bot\BotBuyExecution;
 use App\Models\Bot\BotWallet;
+use App\Services\Bot\BotOrderStatusService;
 use App\Services\Bot\ReferenceExchange\ExchangeContract;
 use App\Services\Bot\ReferenceExchange\ExchangeOrderResult;
 use App\Services\Bot\ReferenceExchange\ExchangeOrderStatus;
@@ -269,15 +270,15 @@ class BuyExecutionJob implements ShouldQueue
      */
     private function releaseAndFail(int $executionId, string $reason, ?string $exchangeOrderId): void
     {
-        DB::transaction(function () use ($executionId, $reason, $exchangeOrderId) {
+        $botOrderId = DB::transaction(function () use ($executionId, $reason, $exchangeOrderId) {
             $execution = BotBuyExecution::where('id', $executionId)
                 ->lockForUpdate()
                 ->first();
             if (! $execution) {
-                return;
+                return null;
             }
             if (in_array($execution->status, [BotBuyExecution::STATUS_BOUGHT, BotBuyExecution::STATUS_FAILED, BotBuyExecution::STATUS_SKIPPED], true)) {
-                return;
+                return $execution->bot_order_id;
             }
 
             $wallet = BotWallet::where('user_id', $execution->botOrder->user_id)
@@ -296,6 +297,14 @@ class BuyExecutionJob implements ShouldQueue
                 'exchange_order_id' => $exchangeOrderId ?? $execution->exchange_order_id,
                 'failure_reason'    => mb_substr($reason, 0, 250),
             ]);
+
+            return $execution->bot_order_id;
         });
+
+        // If this was the last non-bought signal of the order, settle the
+        // order itself to FAILED instead of leaving it stuck at PENDING.
+        if ($botOrderId) {
+            app(BotOrderStatusService::class)->finalizeIfAllFailed((int) $botOrderId);
+        }
     }
 }

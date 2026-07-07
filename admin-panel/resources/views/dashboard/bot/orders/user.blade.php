@@ -232,7 +232,7 @@
                                 <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
                                     <small class="text-muted">کارمزد لغو</small>
                                     <span class="font-number">{{ formatNumberTrimZeros($cancelFee) }} <small
-                                            style="font-size: .5rem;" class="text-muted">USDT</small></span>
+                                            class="text-muted">USDT</small></span>
                                 </div>
                             @endif
                         </div>
@@ -306,6 +306,7 @@
                                             'FILLED' => 'bg-success',
                                             'PENDING' => 'bg-warning text-dark',
                                             'PARTIALLY_FILLED' => 'bg-info',
+                                            'FAILED' => 'bg-danger',
                                             'CANCELED' => 'bg-danger',
                                             default => 'bg-secondary',
                                         };

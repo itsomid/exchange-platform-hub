@@ -5,12 +5,15 @@ namespace App\Actions\Bot;
 use App\Models\Bot\BotBuyExecution;
 use App\Models\Bot\BotGlobalSettings;
 use App\Models\Bot\BotOrder;
+use App\Models\Bot\BotSignal;
 use App\Models\Bot\BotUserSettings;
 use App\Models\Bot\BotWallet;
 use App\Services\Bot\AllocationResult;
 use App\Services\Bot\AllocationService;
+use App\Services\Bot\BotOrderStatusService;
 use App\Services\Bot\PriceFeed;
 use App\Services\Bot\SignalFilterService;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -38,38 +41,66 @@ class BotBuyOrchestrator
         private readonly SignalFilterService $filter,
         private readonly AllocationService $allocator,
         private readonly PriceFeed $priceFeed,
+        private readonly BotOrderStatusService $orderStatus,
     ) {}
 
     public function __invoke(int $userId, string $triggeredBy = self::TRIGGER_MANUAL): ?BotOrder
     {
         $settings = BotUserSettings::where('user_id', $userId)->first();
         if (! $settings || ! $settings->auto_trade_enabled) {
+            $this->logNoOrder($userId, $triggeredBy, 'auto_trade_disabled');
             return null;
         }
 
         $global = BotGlobalSettings::current();
         if (! $global->is_enabled) {
+            $this->logNoOrder($userId, $triggeredBy, 'bot_globally_disabled');
             return null;
         }
 
         $wallet = BotWallet::where('user_id', $userId)->first();
         if (! $wallet) {
+            $this->logNoOrder($userId, $triggeredBy, 'no_bot_wallet');
             return null;
         }
 
         $free       = bcsub((string) $wallet->balance, (string) $wallet->locked_balance, 8);
         $minDeposit = (string) $global->min_deposit_usdt;
         if (bccomp($free, $minDeposit, 8) < 0) {
+            $this->logNoOrder($userId, $triggeredBy, 'insufficient_free_balance', [
+                'balance'     => (string) $wallet->balance,
+                'locked'      => (string) $wallet->locked_balance,
+                'free'        => $free,
+                'min_deposit' => $minDeposit,
+            ]);
             return null;
         }
 
-        // Build candidate set from eligible signals.
-        $signals = $this->filter->eligibleSignals();
-        if ($signals->isEmpty()) {
+        // Classify active signals: those we can price & trade vs. those whose
+        // live price is missing entirely (a data problem we must surface as a
+        // failure, not as a silent "no opportunity").
+        $classified = $this->filter->classify();
+        $eligible   = $classified['eligible'];
+        $unpriced   = $classified['unpriced'];
+
+        // Nothing eligible and nothing broken → genuinely no opportunity
+        // (prices simply outside their windows, or no active signals).
+        if ($eligible->isEmpty() && $unpriced->isEmpty()) {
+            $this->logNoOrder($userId, $triggeredBy, 'no_eligible_signals', [
+                'active_signals' => BotSignal::active()->count(),
+            ]);
             return null;
         }
 
-        $candidates = $signals->map(function ($signal) {
+        if ($unpriced->isNotEmpty()) {
+            Log::warning('bot.orchestrator.signal_unpriced', [
+                'user_id'               => $userId,
+                'triggered_by'          => $triggeredBy,
+                'unpriced_currency_ids' => $unpriced->pluck('currency_id')->all(),
+            ]);
+        }
+
+        $candidates = $eligible->map(function ($signal) {
             return [
                 'signal_id'                     => (int) $signal->id,
                 'currency_id'                   => (int) $signal->currency_id,
@@ -86,15 +117,38 @@ class BotBuyOrchestrator
 
         $alpha  = (string) $global->alpha_weight;
         $floorMode = (string) ($global->precheck_floor_mode ?? 'multi');
-        $result = $this->allocator->allocate($candidates, $free, $alpha, $floorMode);
+        $result = empty($candidates)
+            ? new AllocationResult([], [], $free, [])
+            : $this->allocator->allocate($candidates, $free, $alpha, $floorMode);
 
-        if (empty($result->allocations) && empty($result->skipped)) {
+        // Only bail out when there's nothing to record at all. If some signals
+        // were unpriced we still create the order so the user sees the failure
+        // (and any partial success) instead of a misleading "no opportunity".
+        if (empty($result->allocations) && empty($result->skipped) && $unpriced->isEmpty()) {
+            $this->logNoOrder($userId, $triggeredBy, 'allocation_empty', [
+                'candidates' => count($candidates),
+                'free'       => $free,
+            ]);
             return null;
         }
 
-        return DB::transaction(function () use ($userId, $free, $alpha, $triggeredBy, $result) {
-            return $this->persistAndDispatch($userId, $free, $alpha, $triggeredBy, $result);
+        return DB::transaction(function () use ($userId, $free, $alpha, $triggeredBy, $result, $unpriced) {
+            return $this->persistAndDispatch($userId, $free, $alpha, $triggeredBy, $result, $unpriced);
         });
+    }
+
+    /**
+     * Record exactly why a trigger produced no bot order. Previously every one
+     * of these early exits returned null silently, so a "bot turned on but
+     * nothing happened" outcome left no trace in the logs at all.
+     */
+    private function logNoOrder(int $userId, string $triggeredBy, string $reason, array $context = []): void
+    {
+        Log::info('bot.orchestrator.no_order', array_merge([
+            'user_id'      => $userId,
+            'triggered_by' => $triggeredBy,
+            'reason'       => $reason,
+        ], $context));
     }
 
     private function persistAndDispatch(
@@ -103,6 +157,7 @@ class BotBuyOrchestrator
         string $alpha,
         string $triggeredBy,
         AllocationResult $result,
+        Collection $unpriced,
     ): BotOrder {
         $botOrder = BotOrder::create([
             'user_id'           => $userId,
@@ -143,12 +198,44 @@ class BotBuyOrchestrator
             ]);
         }
 
+        // Signals we couldn't price at all become FAILED executions (no funds
+        // locked, no exchange call). They surface in the order's failed count
+        // so the activation overlay shows a real failure / partial outcome
+        // instead of a misleading "no opportunity" state.
+        foreach ($unpriced as $signal) {
+            BotBuyExecution::create([
+                'bot_order_id'               => $botOrder->id,
+                'currency_id'                => $signal->currency_id,
+                'signal_snapshot'            => [
+                    'signal_id'         => (int) $signal->id,
+                    'currency_id'       => (int) $signal->currency_id,
+                    'priority'          => (int) $signal->priority,
+                    'floor_price'       => (string) $signal->floor_price,
+                    'ceiling_price'     => (string) $signal->ceiling_price,
+                    'sell_orders_count' => (int) $signal->sell_orders_count,
+                ],
+                'original_sell_orders_count'  => $signal->sell_orders_count,
+                'effective_sell_orders_count' => null,
+                'allocated_usdt'              => '0',
+                'status'                      => BotBuyExecution::STATUS_FAILED,
+                'failure_reason'              => 'bot.buy.no_live_price',
+            ]);
+        }
+
         if (bccomp($totalLock, '0', 8) > 0) {
             // Lock funds on the bot wallet (row lock for atomicity).
             $wallet = BotWallet::where('user_id', $userId)->lockForUpdate()->first();
             $wallet->update([
                 'locked_balance' => bcadd((string) $wallet->locked_balance, $totalLock, 8),
             ]);
+        }
+
+        // No buy jobs will run (e.g. every eligible signal was unpriced and
+        // recorded straight as FAILED). Nothing async will ever revisit this
+        // order, so settle its own status right now instead of leaving it
+        // stuck at PENDING.
+        if (empty($pendingExecs)) {
+            $this->orderStatus->finalizeIfAllFailed($botOrder->id);
         }
 
         // Dispatch jobs after commit so workers don't read uncommitted rows.
@@ -163,6 +250,7 @@ class BotBuyOrchestrator
             'bot_order_id'   => $botOrder->id,
             'allocated'      => count($result->allocations),
             'skipped'        => count($result->skipped),
+            'unpriced'       => $unpriced->count(),
             'total_locked'   => $totalLock,
             'unallocated'    => $result->unallocatedRemainder,
         ]);

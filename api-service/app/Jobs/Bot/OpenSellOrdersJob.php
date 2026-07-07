@@ -7,6 +7,7 @@ use App\Models\Bot\BotSellOrder;
 use App\Models\Bot\BotSignal;
 use App\Models\Bot\BotWallet;
 use App\Models\Currency;
+use App\Services\Bot\BotOrderStatusService;
 use App\Services\Bot\ReferenceExchange\ExchangeContract;
 use App\Services\Bot\SettlementService;
 use App\Services\Bot\TargetCollapseService;
@@ -227,6 +228,7 @@ class OpenSellOrdersJob implements ShouldQueue
                 'reason'       => $reason,
                 'stranded'     => false,
             ]);
+            $this->finalizeParentOrder($execution);
             return;
         }
 
@@ -256,6 +258,7 @@ class OpenSellOrdersJob implements ShouldQueue
                 'reason'        => $reason,
                 'dispose_error' => $disposeRes->errorMessage,
             ]);
+            $this->finalizeParentOrder($execution);
             return;
         }
 
@@ -280,6 +283,17 @@ class OpenSellOrdersJob implements ShouldQueue
             'dispose_price'   => $disposeRes->avgPrice,
             'dispose_orderid' => $disposeRes->exchangeOrderId,
         ]);
+        $this->finalizeParentOrder($execution);
+    }
+
+    /**
+     * A sell-open failure leaves this execution FAILED. If that means the whole
+     * order now has no bought signal left, settle the order to FAILED instead
+     * of leaving it stuck at PENDING.
+     */
+    private function finalizeParentOrder(BotBuyExecution $execution): void
+    {
+        app(BotOrderStatusService::class)->finalizeIfAllFailed((int) $execution->bot_order_id);
     }
 
     /**

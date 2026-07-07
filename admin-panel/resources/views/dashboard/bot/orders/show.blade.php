@@ -13,6 +13,7 @@
                         'FILLED' => 'bg-success',
                         'PENDING' => 'bg-warning text-dark',
                         'PARTIALLY_FILLED' => 'bg-info',
+                        'FAILED' => 'bg-danger',
                         'CANCELED' => 'bg-danger',
                         default => 'bg-secondary',
                     };
