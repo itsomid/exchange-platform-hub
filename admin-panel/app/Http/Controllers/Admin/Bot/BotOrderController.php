@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\Admin\Bot;
 
-use App\Enums\TransactionSubTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Bot\BotBuyExecution;
 use App\Models\Bot\BotOrder;
+use App\Models\Bot\BotSellOrder;
 use App\Models\Bot\BotTradeSettlement;
 use App\Models\Bot\BotUserSettings;
 use App\Models\Bot\BotWallet;
-use App\Models\Transaction;
+use App\Models\Bot\BotWalletTransfer;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -77,7 +77,6 @@ class BotOrderController extends Controller
             ->selectRaw('COALESCE(SUM(CASE WHEN net_pnl > 0 THEN net_pnl ELSE 0 END),0) as positive_pnl')
             ->selectRaw('COALESCE(SUM(CASE WHEN net_pnl < 0 THEN net_pnl ELSE 0 END),0) as negative_pnl')
             ->selectRaw('COALESCE(SUM(network_fee),0) as network_fee')
-            ->selectRaw('COALESCE(SUM(exchange_fee),0) as ref_exchange_fee')
             ->selectRaw('COALESCE(SUM(spread_fee),0) as spread_fee')
             ->selectRaw('COALESCE(SUM(performance_fee),0) as performance_fee')
             ->selectRaw('COALESCE(SUM(cancel_fee),0) as cancel_fee')
@@ -88,34 +87,45 @@ class BotOrderController extends Controller
         $positivePnl = (float) $pnl->positive_pnl;
         $negativePnl = abs((float) $pnl->negative_pnl);
 
-        // exchange_fee already combines the buy-side + sell-side fee charged by the
-        // reference exchange (CoinEx) — see SettlementService::allocatedBuyExchangeFee().
         $networkFee     = (float) $pnl->network_fee;
-        $refExchangeFee = (float) $pnl->ref_exchange_fee;
         $spreadFee      = (float) $pnl->spread_fee;
         $performanceFee = (float) $pnl->performance_fee;
         $cancelFee      = (float) $pnl->cancel_fee;
 
-        // Transfer fees are stored as negative amounts, one row per direction,
-        // distinguished by their fixed description text (see BotWalletService).
-        $depositTransferFee = abs((float) Transaction::query()
-            ->where('user_id', $user->id)
-            ->where('subtype', TransactionSubTypeEnum::BOT_TRANSFER_FEE)
-            ->where('description', 'کارمزد انتقال به ربات')
-            ->sum('amount'));
-        $withdrawTransferFee = abs((float) Transaction::query()
-            ->where('user_id', $user->id)
-            ->where('subtype', TransactionSubTypeEnum::BOT_TRANSFER_FEE)
-            ->where('description', 'کارمزد برداشت از ربات')
-            ->sum('amount'));
+        // Ref-exchange fee is charged the moment a buy/sell fills on the reference
+        // exchange (CoinEx) — it must NOT be read from bot_trade_settlements, since a
+        // settlement row for a buy only exists once its sell side later fills/cancels.
+        // An open (unsold) position would otherwise show 0 fee despite having already
+        // paid a buy-side fee. Sum directly from the source columns instead.
+        $buyRefExchangeFee = (float) BotBuyExecution::query()
+            ->join('bot_orders', 'bot_orders.id', '=', 'bot_buy_executions.bot_order_id')
+            ->where('bot_orders.user_id', $user->id)
+            ->where('bot_buy_executions.status', '!=', 'SKIPPED')
+            ->sum('bot_buy_executions.buy_ref_exchange_fee');
+
+        $sellRefExchangeFee = (float) BotSellOrder::query()
+            ->join('bot_buy_executions', 'bot_buy_executions.id', '=', 'bot_sell_orders.bot_buy_execution_id')
+            ->join('bot_orders', 'bot_orders.id', '=', 'bot_buy_executions.bot_order_id')
+            ->where('bot_orders.user_id', $user->id)
+            ->sum('bot_sell_orders.sell_ref_exchange_fee');
+
+        $refExchangeFee = $buyRefExchangeFee + $sellRefExchangeFee;
+
+        // Transfer fees are read from the dedicated bot_wallet_transfers ledger
+        // (one row per transferIn/transferOut call), keyed by direction.
+        $depositTransferFee = (float) BotWalletTransfer::where('user_id', $user->id)
+            ->where('direction', BotWalletTransfer::DIRECTION_IN)
+            ->sum('fee');
+        $withdrawTransferFee = (float) BotWalletTransfer::where('user_id', $user->id)
+            ->where('direction', BotWalletTransfer::DIRECTION_OUT)
+            ->sum('fee');
 
         $tradeFees    = $networkFee + $refExchangeFee + $spreadFee + $performanceFee + $cancelFee;
         $transferFees = $depositTransferFee + $withdrawTransferFee;
         $totalFees    = $tradeFees + $transferFees;
 
-        // Exchange platform revenue = what the platform keeps (performance fee +
-        // both transfer fees, which never touch the user's bot wallet balance).
-        $platformRevenue = $performanceFee + $transferFees;
+        // Exchange revenue card is explicitly "deposit fee + performance fee".
+        $platformRevenue = $performanceFee + $depositTransferFee;
 
         // Gross allocated across all non-skipped executions. This intentionally
         // double-counts reinvested principal — it is the "how much was ever
@@ -126,17 +136,13 @@ class BotOrderController extends Controller
             ->where('bot_buy_executions.status', '!=', 'SKIPPED')
             ->sum('bot_buy_executions.allocated_usdt');
 
-        // ── Wallet flows (from transactions) ──────────────────────────────────
-        // BOT_TRANSFER_OUT is stored as a negative amount on the main wallet
-        // (funds leaving the user's main wallet into the bot), so negate it.
-        $deposits = abs((float) Transaction::query()
-            ->where('user_id', $user->id)
-            ->where('subtype', TransactionSubTypeEnum::BOT_TRANSFER_OUT)
-            ->sum('amount'));
-        $withdrawals = (float) Transaction::query()
-            ->where('user_id', $user->id)
-            ->where('subtype', TransactionSubTypeEnum::BOT_TRANSFER_IN)
-            ->sum('amount');
+        // ── Wallet flows (from the bot_wallet_transfers ledger) ─────────────────
+        $deposits = (float) BotWalletTransfer::where('user_id', $user->id)
+            ->where('direction', BotWalletTransfer::DIRECTION_IN)
+            ->sum('gross_amount');
+        $withdrawals = (float) BotWalletTransfer::where('user_id', $user->id)
+            ->where('direction', BotWalletTransfer::DIRECTION_OUT)
+            ->sum('gross_amount');
 
         // ── Capital allocation chart percentages ───────────────────────────────
         // withdrawable = actualInvestment - locked by definition, so these always

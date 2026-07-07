@@ -6,6 +6,7 @@ use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Filters\Filterable;
+use App\Models\Bot\BotWalletTransfer;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,6 +28,7 @@ class Transaction extends Model
         'deposit_id',
         'withdrawal_id',
         'otc_order_id',
+        'bot_wallet_transfer_id',
         'amount',
         'balance',
         'coin_price',
@@ -91,5 +93,10 @@ class Transaction extends Model
     public function stockContract()
     {
         return $this->belongsTo(StockContract::class, 'stock_contract_id');
+    }
+
+    public function botWalletTransfer(): BelongsTo
+    {
+        return $this->belongsTo(BotWalletTransfer::class);
     }
 }

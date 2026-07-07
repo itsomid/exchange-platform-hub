@@ -12,6 +12,7 @@ use App\Exceptions\Bot\InsufficientBotWalletException;
 use App\Helpers\Math;
 use App\Models\Bot\BotUserSettings;
 use App\Models\Bot\BotWallet;
+use App\Models\Bot\BotWalletTransfer;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
@@ -59,10 +60,22 @@ class BotWalletService
                 'balance' => Math::add((string) $botWallet->balance, $netAmount),
             ]);
 
+            $transfer = BotWalletTransfer::create([
+                'user_id'       => $user->id,
+                'bot_wallet_id' => $botWallet->id,
+                'wallet_id'     => $userWallet->id,
+                'direction'     => BotWalletTransfer::DIRECTION_IN,
+                'gross_amount'  => $grossAmount,
+                'fee'           => $fee,
+                'net_amount'    => $netAmount,
+                'status'        => TransactionStatusEnum::SUCCESS,
+            ]);
+
             // Transaction: transfer out of main wallet
             Transaction::create([
                 'user_id'    => $user->id,
                 'wallet_id'  => $userWallet->id,
+                'bot_wallet_transfer_id' => $transfer->id,
                 'amount'     => -$grossAmount,
                 'balance'    => $userBalanceBefore,
                 'type'       => TransactionTypeEnum::BOT,
@@ -75,6 +88,7 @@ class BotWalletService
             Transaction::create([
                 'user_id'    => $this->exchangeUserId,
                 'wallet_id'  => $exchangeWallet->id,
+                'bot_wallet_transfer_id' => $transfer->id,
                 'amount'     => $fee,
                 'balance'    => $exchangeBalanceBefore,
                 'type'       => TransactionTypeEnum::BOT,
@@ -118,22 +132,35 @@ class BotWalletService
 
             $exchangeWallet->increment('balance', $fee);
 
+            $transfer = BotWalletTransfer::create([
+                'user_id'       => $user->id,
+                'bot_wallet_id' => $botWallet->id,
+                'wallet_id'     => $userWallet->id,
+                'direction'     => BotWalletTransfer::DIRECTION_OUT,
+                'gross_amount'  => $grossAmount,
+                'fee'           => $fee,
+                'net_amount'    => $netAmount,
+                'status'        => TransactionStatusEnum::SUCCESS,
+            ]);
+
             // Transaction: transfer into main wallet
             Transaction::create([
                 'user_id'    => $user->id,
                 'wallet_id'  => $userWallet->id,
+                'bot_wallet_transfer_id' => $transfer->id,
                 'amount'     => $netAmount,
                 'balance'    => $userBalanceBefore,
                 'type'       => TransactionTypeEnum::BOT,
                 'subtype'    => TransactionSubTypeEnum::BOT_TRANSFER_OUT,
                 'status'     => TransactionStatusEnum::SUCCESS,
-                'description' => 'برداشت از کیف پول ربات به کیف پول اصلی',
+                'description' => 'برداشت از کیف پول ربات به مقدار ' . formatNumberTrimZeros($grossAmount) . ' USDT با کارمزد ' . formatNumberTrimZeros($fee) . ' USDT',
             ]);
 
             // Transaction: fee
             Transaction::create([
-                'user_id'    => $this->exchangeUserId,
+                'user_id'    => $this->exchangeUserId,      
                 'wallet_id'  => $exchangeWallet->id,
+                'bot_wallet_transfer_id' => $transfer->id,
                 'amount'     => $fee,
                 'balance'    => $exchangeBalanceBefore,
                 'type'       => TransactionTypeEnum::BOT,

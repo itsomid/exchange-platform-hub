@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
+use App\Models\Bot\BotWalletTransfer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -28,6 +29,7 @@ class Transaction extends Model
         'stock_contract_id',
         'bot_order_id',
         'bot_buy_execution_id',
+        'bot_wallet_transfer_id',
         'amount',
         'balance',
         'coin_price',
@@ -80,5 +82,10 @@ class Transaction extends Model
     public function exchange(): BelongsTo
     {
         return $this->belongsTo(Exchange::class, 'exchange_id');
+    }
+
+    public function botWalletTransfer(): BelongsTo
+    {
+        return $this->belongsTo(BotWalletTransfer::class);
     }
 }

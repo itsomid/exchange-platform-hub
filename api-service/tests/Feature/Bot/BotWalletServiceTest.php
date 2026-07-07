@@ -3,6 +3,7 @@
 use App\Exceptions\Bot\BotTransferAmountTooLowException;
 use App\Exceptions\Bot\InsufficientBotWalletException;
 use App\Models\Bot\BotWallet;
+use App\Models\Bot\BotWalletTransfer;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
@@ -76,6 +77,23 @@ it('records two transactions on transfer in (transfer + fee)', function () {
     expect($subtypes)->toContain('bot_transfer_fee');
 });
 
+it('creates a bot_wallet_transfers row on transfer in and links it to both transactions', function () {
+    [$user] = createUserWithUsdtWallet('500.00000000');
+    $service = app(BotWalletService::class);
+
+    $service->transferIn($user, '200');
+
+    $transfer = BotWalletTransfer::where('user_id', $user->id)->first();
+    expect($transfer)->not->toBeNull();
+    expect($transfer->direction)->toBe(BotWalletTransfer::DIRECTION_IN);
+    expect($transfer->gross_amount)->toBe('200.00000000');
+    expect($transfer->fee)->toBe('2.00000000');
+    expect($transfer->net_amount)->toBe('198.00000000');
+
+    $allTxns = Transaction::where('bot_wallet_transfer_id', $transfer->id)->get();
+    expect($allTxns)->toHaveCount(2);
+});
+
 // ─── transferOut ────────────────────────────────────────────────────────────
 
 it('rejects transfer out when bot balance is insufficient', function () {
@@ -133,4 +151,31 @@ it('transfers out successfully and credits main wallet', function () {
     $botWallet = BotWallet::where('user_id', $user->id)->first();
     // fee for 100 = 1, total deducted = 101
     expect($botWallet->balance)->toBe('99.00000000');
+});
+
+it('creates a bot_wallet_transfers row on transfer out and links it to both transactions', function () {
+    [$user, $mainWallet] = createUserWithUsdtWallet('100.00000000');
+
+    $botWallet = BotWallet::create([
+        'user_id'           => $user->id,
+        'balance'           => '200.00000000',
+        'principal_balance' => '200.00000000',
+        'profit_balance'    => '0.00000000',
+        'locked_balance'    => '0.00000000',
+    ]);
+
+    $service = app(BotWalletService::class);
+    $service->transferOut($user, '100');
+
+    $transfer = BotWalletTransfer::where('user_id', $user->id)->first();
+    expect($transfer)->not->toBeNull();
+    expect($transfer->direction)->toBe(BotWalletTransfer::DIRECTION_OUT);
+    expect($transfer->bot_wallet_id)->toBe($botWallet->id);
+    expect($transfer->wallet_id)->toBe($mainWallet->id);
+    expect($transfer->gross_amount)->toBe('100.00000000');
+    expect($transfer->fee)->toBe('1.00000000');
+    expect($transfer->net_amount)->toBe('99.00000000');
+
+    $allTxns = Transaction::where('bot_wallet_transfer_id', $transfer->id)->get();
+    expect($allTxns)->toHaveCount(2);
 });
