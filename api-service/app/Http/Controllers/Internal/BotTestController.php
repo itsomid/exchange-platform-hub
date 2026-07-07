@@ -12,6 +12,7 @@ use App\Models\Bot\BotSignal;
 use App\Models\Bot\BotTradeSettlement;
 use App\Models\Bot\BotUserSettings;
 use App\Models\Bot\BotWallet;
+use App\Models\Bot\BotWalletTransfer;
 use App\Models\Currency;
 use App\Models\ExchangePrice;
 use App\Models\Market;
@@ -218,6 +219,11 @@ class BotTestController extends Controller
         $this->wipeUser($userId);
 
         DB::transaction(function () use ($userId, $main) {
+            BotUserSettings::updateOrCreate(
+                ['user_id' => $userId],
+                ['auto_trade_enabled' => false],
+            );
+
             Wallet::updateOrCreate(
                 ['user_id' => $userId, 'currency_symbol' => 'USDT'],
                 ['balance' => $main, 'locked_balance' => 0],
@@ -261,6 +267,12 @@ class BotTestController extends Controller
             }
             BotBuyExecution::whereIn('bot_order_id', $orderIds)->delete();
             BotOrder::where('user_id', $userId)->delete();
+
+            $transferIds = BotWalletTransfer::where('user_id', $userId)->pluck('id')->all();
+            if (! empty($transferIds)) {
+                Transaction::whereIn('bot_wallet_transfer_id', $transferIds)->delete();
+                BotWalletTransfer::where('user_id', $userId)->delete();
+            }
 
             Transaction::where('user_id', $userId)
                 ->where('type', self::FEE_TYPE)
