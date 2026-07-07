@@ -52,6 +52,7 @@ use App\Http\Controllers\Admin\Bot\BotSettingsController;
 use App\Http\Controllers\Admin\Bot\BotSignalController;use App\Http\Controllers\Admin\Bot\BotOrderController;
 use App\Http\Controllers\Admin\Bot\BotReportController;
 use App\Http\Controllers\Admin\Bot\BotTestLabController;
+use App\Http\Controllers\Admin\Bot\BotWalletTransferController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -436,6 +437,9 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::get('/orders/user/{user}', [BotOrderController::class, 'userShow'])->name('order.user');
         Route::post('/orders/user/{user}/toggle-auto-trade', [BotOrderController::class, 'toggleAutoTrade'])->name('order.user.toggle');
         Route::get('/orders/{botOrder}', [BotOrderController::class, 'show'])->name('order.show');
+
+        // Wallet Transfers (deposits/withdrawals between main wallet and bot wallet)
+        Route::get('/wallet-transfers', [BotWalletTransferController::class, 'index'])->name('wallet-transfer.index');
 
         // Reports
         Route::get('/reports', [BotReportController::class, 'index'])->name('report.index');

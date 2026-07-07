@@ -179,59 +179,60 @@
                             <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
                                 <small class="text-muted">کارمزد عملکرد</small>
                                 <span class="font-number">{{ formatNumberTrimZeros($performanceFee) }} <small
-                                        class="text-muted">USDT</small></span>
+                                        style="font-size: .5rem;" class="text-muted">USDT</small>
+                                </span>
                             </div>
                             <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-2">
                                 <small class="text-muted">کارمزد واریز به ربات</small>
                                 <span class="font-number">{{ formatNumberTrimZeros($depositTransferFee) }} <small
-                                        class="text-muted">USDT</small></span>
+                                        style="font-size: .5rem;" class="text-muted">USDT</small></span>
                             </div>
                             <div class="d-flex justify-content-between align-items-center py-1 gap-2">
                                 <small class="text-muted">کارمزد برداشت از ربات</small>
                                 <span class="font-number">{{ formatNumberTrimZeros($withdrawTransferFee) }}
-                                    <small class="text-muted">USDT</small></span>
+                                    <small style="font-size: .5rem;" class="text-muted">USDT</small></span>
                             </div>
                         </div>
                         <div id="pop-total-fees">
                             <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-2">
                                 <small class="text-muted">کارمزد واریز به ربات</small>
                                 <span class="font-number">{{ formatNumberTrimZeros($depositTransferFee) }} <small
-                                        class="text-muted">USDT</small></span>
+                                        style="font-size: .5rem;" class="text-muted">USDT</small></span>
                             </div>
                             <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-2">
                                 <small class="text-muted">کارمزد برداشت از ربات</small>
                                 <span class="font-number">{{ formatNumberTrimZeros($withdrawTransferFee) }}
-                                    <small class="text-muted">USDT</small></span>
+                                    <small style="font-size: .5rem;" class="text-muted">USDT</small></span>
                             </div>
                             <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
                                 <small class="text-muted">کارمزد صرافی مرجع (خرید+فروش)</small>
                                 <span class="font-number">{{ formatNumberTrimZeros($refExchangeFee) }} <small
-                                        class="text-muted">USDT</small></span>
+                                        style="font-size: .5rem;" class="text-muted">USDT</small></span>
                             </div>
                             <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
                                 <small class="text-muted">کارمزد شبکه</small>
                                 <span class="font-number">{{ formatNumberTrimZeros($networkFee) }} <small
-                                        class="text-muted">USDT</small></span>
+                                        style="font-size: .5rem;" class="text-muted">USDT</small></span>
                             </div>
                             @if ($performanceFee > 0)
                                 <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
                                     <small class="text-muted">کارمزد عملکرد</small>
                                     <span class="font-number">{{ formatNumberTrimZeros($performanceFee) }} <small
-                                            class="text-muted">USDT</small></span>
+                                            style="font-size: .5rem;" class="text-muted">USDT</small></span>
                                 </div>
                             @endif
                             @if ($spreadFee > 0)
                                 <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
                                     <small class="text-muted">کارمزد اسپرد</small>
                                     <span class="font-number">{{ formatNumberTrimZeros($spreadFee) }} <small
-                                            class="text-muted">USDT</small></span>
+                                            style="font-size: .5rem;" class="text-muted">USDT</small></span>
                                 </div>
                             @endif
                             @if ($cancelFee > 0)
                                 <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
                                     <small class="text-muted">کارمزد لغو</small>
                                     <span class="font-number">{{ formatNumberTrimZeros($cancelFee) }} <small
-                                            class="text-muted">USDT</small></span>
+                                            style="font-size: .5rem;" class="text-muted">USDT</small></span>
                                 </div>
                             @endif
                         </div>

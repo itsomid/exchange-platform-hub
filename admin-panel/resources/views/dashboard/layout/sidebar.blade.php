@@ -397,6 +397,12 @@
                             <div>سفارش‌ها</div>
                         </a>
                     </li>
+                    <li class="menu-item @if (request()->is('admin/auto-trade/wallet-transfers*')) active @endif">
+                        <a href="{{ route('admin.bot.wallet-transfer.index') }}" class="menu-link">
+                            <i class="menu-icon fa-light fa-right-left fa-sm"></i>
+                            <div>واریز/برداشت‌ها</div>
+                        </a>
+                    </li>
                     <li class="menu-item @if (request()->is('admin/auto-trade/reports*')) active @endif">
                         <a href="{{ route('admin.bot.report.index') }}" class="menu-link">
                             <i class="menu-icon fa-light fa-chart-line fa-sm"></i>
