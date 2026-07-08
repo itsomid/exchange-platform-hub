@@ -4,7 +4,9 @@ namespace App\Services\Bot;
 
 use App\Models\Bot\BotBuyExecution;
 use App\Models\Bot\BotOrder;
+use App\Models\Bot\BotUserSettings;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Finalizes a bot order's own status based on the terminal state of its
@@ -16,6 +18,11 @@ use Illuminate\Support\Facades\DB;
  * FAILED when it has settled (no PENDING/BUYING executions left) and NOT a
  * single execution ended up BOUGHT. Orders with at least one bought signal
  * keep their existing behavior.
+ *
+ * When (and only when) the whole order fails this way, the user's auto-trade
+ * is also switched off so the bot doesn't keep retrying a setup that just
+ * failed end-to-end. A partial failure (some coins bought) never reaches this
+ * branch, so in that case the bot stays on.
  */
 class BotOrderStatusService
 {
@@ -45,6 +52,18 @@ class BotOrderStatusService
             $order->update([
                 'status'       => 'FAILED',
                 'completed_at' => now(),
+            ]);
+
+            // Whole order failed → turn auto-trade off (no event needed: the
+            // toggle listener only acts on OFF→ON). Partial failures never get
+            // here, so a bot with at least one successful buy stays on.
+            BotUserSettings::where('user_id', $order->user_id)
+                ->update(['auto_trade_enabled' => false]);
+
+            Log::warning('bot.order.failed_all', [
+                'bot_order_id' => $order->id,
+                'user_id'      => $order->user_id,
+                'auto_trade'   => 'disabled',
             ]);
         });
     }
