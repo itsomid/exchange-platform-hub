@@ -174,7 +174,8 @@ class AllocationService
             $capExhausted = bccomp($s['cap'], '0', self::SCALE) === 0;
 
             if ($capExhausted || bccomp($s['amount'], $effectiveMin, self::SCALE) < 0) {
-                $s['_skipped']     = true;
+                $s['_skipped']        = true;
+                $s['_cap_exhausted']  = $capExhausted;
                 $s['_skip_reason'] = $capExhausted
                     ? sprintf(
                         'Currency already at max_allocation_percent (%s%%) of wallet; no remaining headroom',
@@ -257,6 +258,10 @@ class AllocationService
                     'currency_id'         => (int) $s['currency_id'],
                     'reason'              => $s['_skip_reason'],
                     'would_have_received' => $s['_would_have'],
+                    // Cap-exhausted skips (coin already at its max_allocation_percent
+                    // share of the wallet) are not persisted as order rows — they'd
+                    // otherwise reappear in every new order as noise.
+                    'cap_exhausted'       => (bool) ($s['_cap_exhausted'] ?? false),
                     'snapshot'            => $snapshot,
                 ];
             } else {

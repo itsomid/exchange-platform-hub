@@ -227,6 +227,9 @@ it('skips a currency already at its max_allocation_percent share of the total wa
     expect($result->skipped)->toHaveCount(1);
     expect($result->skipped[0]['signal_id'])->toBe(1);
     expect($result->skipped[0]['reason'])->toContain('max_allocation_percent');
+    // Flagged so the orchestrator can drop it instead of persisting a noisy
+    // SKIPPED row in every new order.
+    expect($result->skipped[0]['cap_exhausted'])->toBeTrue();
     // Nothing bought → the freed balance stays unallocated.
     expect((float) $result->unallocatedRemainder)->toBe(58.8);
 });

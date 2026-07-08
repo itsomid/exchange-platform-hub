@@ -230,6 +230,14 @@ class BotBuyOrchestrator
         }
 
         foreach ($result->skipped as $skip) {
+            // A coin already at its max_allocation_percent cap has no remaining
+            // headroom; it would be skipped in every future order too, so we
+            // don't clutter the new order with it. Genuine below-min skips are
+            // still recorded (they're informative and can change next cycle).
+            if (! empty($skip['cap_exhausted'])) {
+                continue;
+            }
+
             BotBuyExecution::create([
                 'bot_order_id'               => $botOrder->id,
                 'currency_id'                => $skip['currency_id'],
