@@ -5,6 +5,7 @@ namespace App\Actions\Bot;
 use App\Models\Bot\BotBuyExecution;
 use App\Models\Bot\BotGlobalSettings;
 use App\Models\Bot\BotOrder;
+use App\Models\Bot\BotSellOrder;
 use App\Models\Bot\BotSignal;
 use App\Models\Bot\BotUserSettings;
 use App\Models\Bot\BotWallet;
@@ -117,16 +118,25 @@ class BotBuyOrchestrator
 
         $alpha  = (string) $global->alpha_weight;
         $floorMode = (string) ($global->precheck_floor_mode ?? 'multi');
+        // Enforce max_allocation_percent against the TOTAL wallet balance minus
+        // what each currency already holds, so re-buying from the freed
+        // remainder (e.g. after toggling the bot off/on) can never push a coin
+        // past its cap of the whole wallet.
+        $committed = $this->committedUsdtPerCurrency($userId);
         $result = empty($candidates)
             ? new AllocationResult([], [], $free, [])
-            : $this->allocator->allocate($candidates, $free, $alpha, $floorMode);
+            : $this->allocator->allocate($candidates, $free, $alpha, $floorMode, (string) $wallet->balance, $committed);
 
-        // Only bail out when there's nothing to record at all. If some signals
-        // were unpriced we still create the order so the user sees the failure
-        // (and any partial success) instead of a misleading "no opportunity".
-        if (empty($result->allocations) && empty($result->skipped) && $unpriced->isEmpty()) {
-            $this->logNoOrder($userId, $triggeredBy, 'allocation_empty', [
+        // No buyable allocation → don't create an order at all. Skipped-only
+        // outcomes (every coin already at its max_allocation_percent cap, or
+        // below its tradeable minimum) carry no purchase, so recording an
+        // order full of SKIPPED rows would just be noise. Unpriced signals are
+        // the one exception: we still create the order so the underlying data
+        // failure surfaces to the user instead of a misleading "no opportunity".
+        if (empty($result->allocations) && $unpriced->isEmpty()) {
+            $this->logNoOrder($userId, $triggeredBy, 'no_buyable_allocation', [
                 'candidates' => count($candidates),
+                'skipped'    => count($result->skipped),
                 'free'       => $free,
             ]);
             return null;
@@ -149,6 +159,40 @@ class BotBuyOrchestrator
             'triggered_by' => $triggeredBy,
             'reason'       => $reason,
         ], $context));
+    }
+
+    /**
+     * USDT already committed to each currency across the user's live bot
+     * positions: in-flight buys (PENDING/BUYING) plus BOUGHT executions that
+     * are still holding coin (no sell orders opened yet, or at least one still
+     * OPEN). Fully-exited positions (all sells FILLED/CANCELED) are excluded.
+     *
+     * Used as the per-currency offset when enforcing max_allocation_percent
+     * against the total wallet balance.
+     *
+     * @return array<int, string> currency_id => committed_usdt
+     */
+    private function committedUsdtPerCurrency(int $userId): array
+    {
+        return BotBuyExecution::query()
+            ->whereHas('botOrder', fn ($q) => $q->where('user_id', $userId))
+            ->where(function ($q) {
+                $q->whereIn('status', [
+                    BotBuyExecution::STATUS_PENDING,
+                    BotBuyExecution::STATUS_BUYING,
+                ])->orWhere(function ($q2) {
+                    $q2->where('status', BotBuyExecution::STATUS_BOUGHT)
+                        ->where(function ($q3) {
+                            $q3->whereDoesntHave('sellOrders')
+                                ->orWhereHas('sellOrders', fn ($s) => $s->where('status', BotSellOrder::STATUS_OPEN));
+                        });
+                });
+            })
+            ->groupBy('currency_id')
+            ->selectRaw('currency_id, SUM(allocated_usdt) as committed')
+            ->pluck('committed', 'currency_id')
+            ->map(fn ($v) => (string) $v)
+            ->all();
     }
 
     private function persistAndDispatch(

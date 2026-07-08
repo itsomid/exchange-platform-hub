@@ -204,6 +204,56 @@ it('handles B_max == B_min by treating p_i as 0', function () {
     }
 });
 
+/**
+ * (g) The cap is measured against the total wallet ($capBase), not just the
+ *     balance being distributed, and existing holdings are subtracted. A coin
+ *     already at its full 40% share of the wallet gets no more, even though
+ *     there is freed balance to distribute.
+ *
+ *     Scenario: wallet total = 98, ETH already holds 39.2 (its 40% cap), and
+ *     the user re-enables the bot with 58.8 freed balance to allocate.
+ */
+it('skips a currency already at its max_allocation_percent share of the total wallet', function () {
+    $result = makeAllocator()->allocate(
+        candidates: [baseSignal(['signal_id' => 1, 'currency_id' => 1, 'max_allocation_percent' => '40'])],
+        balance: '58.8',
+        alpha: '0.15',
+        precheckFloorMode: 'multi',
+        capBase: '98',
+        committedPerCurrency: [1 => '39.2'],
+    );
+
+    expect($result->allocations)->toBeEmpty();
+    expect($result->skipped)->toHaveCount(1);
+    expect($result->skipped[0]['signal_id'])->toBe(1);
+    expect($result->skipped[0]['reason'])->toContain('max_allocation_percent');
+    // Nothing bought → the freed balance stays unallocated.
+    expect((float) $result->unallocatedRemainder)->toBe(58.8);
+});
+
+/**
+ * (h) After the wallet grows (deposit), the same coin gains headroom equal to
+ *     the delta up to its new cap and buys only that much.
+ *
+ *     Scenario: wallet total = 148, ETH already holds 39.2, so its remaining
+ *     cap is 148*40% - 39.2 = 20. With 108.8 freed balance it buys exactly 20.
+ */
+it('allocates only the remaining cap headroom after the wallet grows', function () {
+    $result = makeAllocator()->allocate(
+        candidates: [baseSignal(['signal_id' => 1, 'currency_id' => 1, 'max_allocation_percent' => '40'])],
+        balance: '108.8',
+        alpha: '0.15',
+        precheckFloorMode: 'multi',
+        capBase: '148',
+        committedPerCurrency: [1 => '39.2'],
+    );
+
+    expect($result->allocations)->toHaveCount(1);
+    expect($result->allocations[0]['signal_id'])->toBe(1);
+    expect($result->allocations[0]['amount'])->toBe('20.00000000');
+    expect($result->skipped)->toBeEmpty();
+});
+
 it('reconciles truncation dust back into allocations when cap room remains', function () {
     $result = makeAllocator()->allocate(
         candidates: [

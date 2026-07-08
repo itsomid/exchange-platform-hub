@@ -8,10 +8,22 @@ namespace App\Services\Bot;
  * Steps:
  *   1. Use WeightCalculatorService to pick top-K signals and compute weights.
  *   2. Raw allocation: A_i = B * normalized_weight_i.
- *   3. (D4) Iterative cap enforcement: any A_i > B * max_allocation_percent / 100
- *      is clamped to its cap; the overflow is redistributed proportionally to the
- *      raw weights of uncapped signals. Repeats up to K iterations or until
- *      overflow < epsilon (0.01).
+ *   3. (D4) Iterative cap enforcement: any A_i above its remaining cap is clamped
+ *      to that cap; the overflow is redistributed proportionally to the raw
+ *      weights of uncapped signals. Repeats up to K iterations or until overflow
+ *      < epsilon (0.01).
+ *
+ *      The cap is enforced against the TOTAL wallet balance ($capBase, defaults
+ *      to $balance for backward compatibility), not just the balance being
+ *      allocated in this batch, and the USDT already committed to each currency
+ *      ($committedPerCurrency) is subtracted first:
+ *
+ *          remaining_cap_i = max(0, capBase * max_allocation_percent_i / 100
+ *                                     - committed_i)
+ *
+ *      This guarantees a coin can never be pushed past its max_allocation_percent
+ *      of the whole wallet by re-allocating freed balance across repeated buys
+ *      (e.g. toggling the bot off/on and re-buying from the remainder each time).
  *   4. (D14 Pre-check) For each surviving allocation:
  *         effective_min_i = max(min_buy_amount_usdt_i, order_floor_i)
  *         where order_floor_i depends on $precheckFloorMode:
@@ -47,10 +59,22 @@ class AllocationService
 
     /**
      * @param array<int, array<string, mixed>> $candidates
+     * @param string|float|int|null            $capBase              Total wallet balance the max_allocation_percent
+     *                                                                caps are measured against. Defaults to $balance.
+     * @param array<int, string|float|int>     $committedPerCurrency currency_id => USDT already committed to that
+     *                                                                currency (open positions + in-flight buys),
+     *                                                                subtracted from each cap.
      */
-    public function allocate(array $candidates, string|float|int $balance, string|float $alpha, string $precheckFloorMode = 'multi'): AllocationResult
-    {
-        $B = $this->str($balance);
+    public function allocate(
+        array $candidates,
+        string|float|int $balance,
+        string|float $alpha,
+        string $precheckFloorMode = 'multi',
+        string|float|int|null $capBase = null,
+        array $committedPerCurrency = [],
+    ): AllocationResult {
+        $B       = $this->str($balance);
+        $capBase = $capBase === null ? $B : $this->str($capBase);
 
         $weightResult = $this->weights->compute($candidates, $B, $alpha);
         $selected     = $weightResult['selected'];
@@ -74,10 +98,19 @@ class AllocationService
 
         // --- Step 2: raw allocation + caps
         foreach ($selected as &$s) {
-            $s['amount'] = bcmul($B, $s['normalized_weight'], self::SCALE);
-            $maxPct      = $this->str($s['max_allocation_percent'] ?? '100');
-            $s['cap']    = bcmul($B, bcdiv($maxPct, '100', self::SCALE), self::SCALE);
-            $s['capped'] = false;
+            $s['amount']    = bcmul($B, $s['normalized_weight'], self::SCALE);
+            $maxPct         = $this->str($s['max_allocation_percent'] ?? '100');
+            // Cap measured against the TOTAL wallet balance, then reduced by
+            // what this currency already holds so its share of the whole
+            // wallet never exceeds max_allocation_percent across repeated buys.
+            $absoluteCap    = bcmul($capBase, bcdiv($maxPct, '100', self::SCALE), self::SCALE);
+            $committed      = $this->str($committedPerCurrency[(int) $s['currency_id']] ?? '0');
+            $remainingCap   = bcsub($absoluteCap, $committed, self::SCALE);
+            if (bccomp($remainingCap, '0', self::SCALE) < 0) {
+                $remainingCap = '0';
+            }
+            $s['cap']       = $remainingCap;
+            $s['capped']    = false;
         }
         unset($s);
 
@@ -134,23 +167,34 @@ class AllocationService
                 : bcmul((string) $sellCount, $p2pMin, self::SCALE);
             $effectiveMin = bccomp($minBuy, $orderFloor, self::SCALE) >= 0 ? $minBuy : $orderFloor;
 
-            if (bccomp($s['amount'], $effectiveMin, self::SCALE) < 0) {
+            // A currency whose remaining cap is exhausted (already holding its
+            // full max_allocation_percent share of the wallet) can't take any
+            // more, so it is skipped with a distinct reason rather than the
+            // misleading "below effective_min" note.
+            $capExhausted = bccomp($s['cap'], '0', self::SCALE) === 0;
+
+            if ($capExhausted || bccomp($s['amount'], $effectiveMin, self::SCALE) < 0) {
                 $s['_skipped']     = true;
-                $s['_skip_reason'] = $precheckFloorMode === 'single'
+                $s['_skip_reason'] = $capExhausted
                     ? sprintf(
-                        'Allocation %s below effective_min %s (min_buy=%s, p2p_min=%s)',
-                        $s['amount'],
-                        $effectiveMin,
-                        $minBuy,
-                        $p2pMin,
+                        'Currency already at max_allocation_percent (%s%%) of wallet; no remaining headroom',
+                        $this->str($s['max_allocation_percent'] ?? '100'),
                     )
-                    : sprintf(
-                        'Allocation %s below effective_min %s (%d targets × %s min)',
-                        $s['amount'],
-                        $effectiveMin,
-                        $sellCount,
-                        $p2pMin,
-                    );
+                    : ($precheckFloorMode === 'single'
+                        ? sprintf(
+                            'Allocation %s below effective_min %s (min_buy=%s, p2p_min=%s)',
+                            $s['amount'],
+                            $effectiveMin,
+                            $minBuy,
+                            $p2pMin,
+                        )
+                        : sprintf(
+                            'Allocation %s below effective_min %s (%d targets × %s min)',
+                            $s['amount'],
+                            $effectiveMin,
+                            $sellCount,
+                            $p2pMin,
+                        ));
                 $s['_would_have']  = $s['amount'];
                 $freed             = bcadd($freed, $s['amount'], self::SCALE);
                 $s['amount']       = '0';
