@@ -61,15 +61,36 @@ class CoinExBotAdapter implements ExchangeContract
 
     public function getOrder(string $market, string $exchangeOrderId): ExchangeOrderResult
     {
+        $ctx = $this->diagContext([
+            'op'       => 'get_order',
+            'market'   => $market,
+            'order_id' => $exchangeOrderId,
+        ]);
+
         $query = http_build_query([
             'market'   => $market,
             'order_id' => $exchangeOrderId,
         ]);
         $pathWithQuery = '/v2/spot/order-status?'.$query;
 
-        $response = $this->signedGet($pathWithQuery);
+        Log::channel('smart-bot')->info('coinex.bot.get_order.request', $ctx);
 
-        return $this->parseOrderResponse($response);
+        try {
+            $response = $this->signedGet($pathWithQuery);
+        } catch (\Throwable $e) {
+            Log::channel('smart-bot')->error('coinex.bot.get_order.transport_error', $ctx + [
+                'error' => $e->getMessage(),
+            ]);
+
+            return new ExchangeOrderResult(
+                exchangeOrderId: null,
+                status:          ExchangeOrderStatus::FAILED,
+                errorCode:       'TRANSPORT',
+                errorMessage:    $e->getMessage(),
+            );
+        }
+
+        return $this->parseOrderResponse($response, $ctx);
     }
 
     public function cancelOrder(string $market, string $exchangeOrderId): void
@@ -106,8 +127,10 @@ class CoinExBotAdapter implements ExchangeContract
         }
 
         Log::channel('smart-bot')->warning('coinex.bot.cancel.failed', $ctx + [
-            'code'    => $code,
-            'message' => $body['message'] ?? null,
+            'coinex_code'    => $code,
+            'coinex_message' => $body['message'] ?? null,
+            'http_status'    => $response->status(),
+            'raw'            => $body,
         ]);
 
         throw new RuntimeException('coinex.cancel.api_error: '.($body['message'] ?? "code {$code}"));
@@ -144,24 +167,7 @@ class CoinExBotAdapter implements ExchangeContract
             );
         }
 
-        $result = $this->parseOrderResponse($response);
-
-        if ($result->status === ExchangeOrderStatus::FAILED) {
-            Log::channel('smart-bot')->error('coinex.bot.place.failed', $ctx + [
-                'error_code'    => $result->errorCode,
-                'error_message' => $result->errorMessage,
-                'http_status'   => $response->status(),
-            ]);
-        } else {
-            Log::channel('smart-bot')->info('coinex.bot.place.ok', $ctx + [
-                'exchange_order_id' => $result->exchangeOrderId,
-                'status'            => $result->status->value,
-                'filled_amount'     => $result->filledAmount,
-                'avg_price'         => $result->avgPrice,
-            ]);
-        }
-
-        return $result;
+        return $this->parseOrderResponse($response, $ctx);
     }
 
     /**
@@ -179,21 +185,7 @@ class CoinExBotAdapter implements ExchangeContract
             'base_url'       => config('exchanges.coinex.base_url_v2'),
             'host'           => gethostname() ?: null,
             'pid'            => getmypid() ?: null,
-            'queue'          => $this->currentQueueName(),
         ], $extra);
-    }
-
-    private function currentQueueName(): ?string
-    {
-        try {
-            if (! app()->bound(\Illuminate\Contracts\Queue\Job::class)) {
-                return null;
-            }
-
-            return app(\Illuminate\Contracts\Queue\Job::class)->getQueue();
-        } catch (\Throwable) {
-            return null;
-        }
     }
 
     private function signedGet(string $pathWithQuery): Response
@@ -210,12 +202,26 @@ class CoinExBotAdapter implements ExchangeContract
             ->get($pathWithQuery);
     }
 
-    private function parseOrderResponse(Response $response): ExchangeOrderResult
+    /**
+     * Parse a CoinEx order/order-status response into an ExchangeOrderResult
+     * and emit a single authoritative log line for the call. The raw CoinEx
+     * body (code + message + data) is always logged on failure so an
+     * intermittent permission error (code 158) can never disappear silently.
+     */
+    private function parseOrderResponse(Response $response, array $ctx = []): ExchangeOrderResult
     {
+        $op   = $ctx['op'] ?? 'order';
         $body = $response->json() ?: [];
         $code = (int) ($body['code'] ?? -1);
 
         if ($code !== 0) {
+            Log::channel('smart-bot')->error("coinex.bot.{$op}.failed", $ctx + [
+                'coinex_code'    => $code,
+                'coinex_message' => $body['message'] ?? null,
+                'http_status'    => $response->status(),
+                'raw'            => $body,
+            ]);
+
             return new ExchangeOrderResult(
                 exchangeOrderId: null,
                 status:          ExchangeOrderStatus::FAILED,
@@ -226,6 +232,11 @@ class CoinExBotAdapter implements ExchangeContract
 
         $data = $body['data'] ?? [];
         if (! is_array($data) || empty($data)) {
+            Log::channel('smart-bot')->error("coinex.bot.{$op}.empty_data", $ctx + [
+                'http_status' => $response->status(),
+                'raw'         => $body,
+            ]);
+
             return new ExchangeOrderResult(
                 exchangeOrderId: null,
                 status:          ExchangeOrderStatus::FAILED,
@@ -239,6 +250,14 @@ class CoinExBotAdapter implements ExchangeContract
         $filledAmount  = (string) ($data['filled_amount'] ?? '0');
         $avgPrice      = $this->resolveAvgPrice($data);
         $exchangeFee   = $this->resolveFee($data, $avgPrice);
+
+        Log::channel('smart-bot')->info("coinex.bot.{$op}.ok", $ctx + [
+            'exchange_order_id' => $orderId,
+            'status'            => $status->value,
+            'raw_status'        => $data['status'] ?? null,
+            'filled_amount'     => $filledAmount,
+            'avg_price'         => $avgPrice,
+        ]);
 
         return new ExchangeOrderResult(
             exchangeOrderId: $orderId,

@@ -285,6 +285,14 @@ class BuyExecutionJob implements ShouldQueue
 
     public function failed(Throwable $exception): void
     {
+        Log::channel('smart-bot')->error('bot.buy.execution.failed_hook', [
+            'execution_id' => $this->executionId,
+            'error'        => $exception->getMessage(),
+            'access_id'    => config('exchanges.coinex.access_id'),
+            'host'         => gethostname() ?: null,
+            'pid'          => getmypid() ?: null,
+        ]);
+
         $this->releaseAndFail($this->executionId, $exception->getMessage(), null);
     }
 
@@ -322,6 +330,17 @@ class BuyExecutionJob implements ShouldQueue
                 'status'            => BotBuyExecution::STATUS_FAILED,
                 'exchange_order_id' => $exchangeOrderId ?? $execution->exchange_order_id,
                 'failure_reason'    => mb_substr($reason, 0, 250),
+            ]);
+
+            Log::channel('smart-bot')->error('bot.buy.execution.release_and_fail', [
+                'execution_id'      => $execution->id,
+                'bot_order_id'      => $execution->bot_order_id,
+                'reason'            => $reason,
+                'exchange_order_id' => $exchangeOrderId ?? $execution->exchange_order_id,
+                'allocated_usdt'    => $execution->allocated_usdt,
+                'access_id'         => config('exchanges.coinex.access_id'),
+                'host'              => gethostname() ?: null,
+                'pid'               => getmypid() ?: null,
             ]);
 
             return $execution->bot_order_id;
