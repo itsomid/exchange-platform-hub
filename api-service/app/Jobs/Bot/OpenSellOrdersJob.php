@@ -56,6 +56,18 @@ class OpenSellOrdersJob implements ShouldQueue
             return;
         }
 
+        Log::channel('smart-bot')->info('bot.sell.open.start', [
+            'execution_id'  => $execution->id,
+            'currency'      => $execution->currency?->symbol,
+            'filled_amount' => $execution->filled_amount,
+            'avg_buy_price' => $execution->avg_buy_price,
+            'access_id'     => config('exchanges.coinex.access_id'),
+            'host'          => gethostname() ?: null,
+            'pid'           => getmypid() ?: null,
+            'queue'         => $this->job?->getQueue(),
+            'attempt'       => $this->attempts(),
+        ]);
+
         $signal = BotSignal::where('currency_id', $execution->currency_id)->first();
         if (! $signal) {
             $this->markFailed($execution, 'No active BotSignal for currency on sell-open', $exchange, $settlement);
@@ -134,10 +146,13 @@ class OpenSellOrdersJob implements ShouldQueue
                 foreach ($placedIds as $earlierId) {
                     try { $exchange->cancelOrder($market, $earlierId); }
                     catch (\Throwable $e) {
-                        Log::warning('bot.sell.open.rollback_failed', [
+                        Log::channel('smart-bot')->warning('bot.sell.open.rollback_failed', [
                             'execution_id' => $execution->id,
                             'order_id'     => $earlierId,
                             'error'        => $e->getMessage(),
+                            'access_id'    => config('exchanges.coinex.access_id'),
+                            'host'         => gethostname() ?: null,
+                            'pid'          => getmypid() ?: null,
                         ]);
                     }
                 }
@@ -168,13 +183,16 @@ class OpenSellOrdersJob implements ShouldQueue
             ]);
         }
 
-        Log::info('bot.sell.opened', [
+        Log::channel('smart-bot')->info('bot.sell.opened', [
             'execution_id'    => $execution->id,
             'market'          => $market,
             'original_count'  => $result['original_count'],
             'effective_count' => $result['effective_count'],
             'collapsed'       => $result['collapsed'],
             'exchange_orders' => $placedIds,
+            'access_id'       => config('exchanges.coinex.access_id'),
+            'host'            => gethostname() ?: null,
+            'pid'             => getmypid() ?: null,
         ]);
     }
 
@@ -223,10 +241,13 @@ class OpenSellOrdersJob implements ShouldQueue
                 'status'         => BotBuyExecution::STATUS_FAILED,
                 'failure_reason' => mb_substr($reason, 0, 250),
             ]);
-            Log::warning('bot.sell.open.failed', [
+            Log::channel('smart-bot')->warning('bot.sell.open.failed', [
                 'execution_id' => $execution->id,
                 'reason'       => $reason,
                 'stranded'     => false,
+                'access_id'    => config('exchanges.coinex.access_id'),
+                'host'         => gethostname() ?: null,
+                'pid'          => getmypid() ?: null,
             ]);
             $this->finalizeParentOrder($execution);
             return;
@@ -250,13 +271,17 @@ class OpenSellOrdersJob implements ShouldQueue
                     250,
                 ),
             ]);
-            Log::critical('bot.sell.open.stranded', [
+            Log::channel('smart-bot')->critical('bot.sell.open.stranded', [
                 'execution_id'  => $execution->id,
                 'currency_id'   => $execution->currency_id,
                 'market'        => $market,
                 'filled_amount' => $filled,
                 'reason'        => $reason,
                 'dispose_error' => $disposeRes->errorMessage,
+                'dispose_code'  => $disposeRes->errorCode,
+                'access_id'     => config('exchanges.coinex.access_id'),
+                'host'          => gethostname() ?: null,
+                'pid'           => getmypid() ?: null,
             ]);
             $this->finalizeParentOrder($execution);
             return;
@@ -275,13 +300,16 @@ class OpenSellOrdersJob implements ShouldQueue
             'failure_reason' => mb_substr($reason.' | auto-liquidated', 0, 250),
         ]);
 
-        Log::warning('bot.sell.open.failed', [
+        Log::channel('smart-bot')->warning('bot.sell.open.failed', [
             'execution_id'    => $execution->id,
             'reason'          => $reason,
             'stranded'        => true,
             'dispose_amount'  => $disposeRes->filledAmount,
             'dispose_price'   => $disposeRes->avgPrice,
             'dispose_orderid' => $disposeRes->exchangeOrderId,
+            'access_id'       => config('exchanges.coinex.access_id'),
+            'host'            => gethostname() ?: null,
+            'pid'             => getmypid() ?: null,
         ]);
         $this->finalizeParentOrder($execution);
     }

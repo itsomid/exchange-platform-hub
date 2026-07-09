@@ -76,6 +76,18 @@ class BuyExecutionJob implements ShouldQueue
             return;
         }
 
+        Log::channel('smart-bot')->info('bot.buy.execution.start', [
+            'execution_id' => $execution->id,
+            'status'       => $execution->status,
+            'currency'     => $execution->currency?->symbol,
+            'allocated'    => $execution->allocated_usdt,
+            'access_id'    => config('exchanges.coinex.access_id'),
+            'host'         => gethostname() ?: null,
+            'pid'          => getmypid() ?: null,
+            'queue'        => $this->job?->getQueue(),
+            'attempt'      => $this->attempts(),
+        ]);
+
         // Resumed attempt: a previous run already placed a real order on
         // CoinEx but couldn't confirm a terminal fill in time. Only re-check
         // that same order — never place a second market buy.
@@ -175,13 +187,16 @@ class BuyExecutionJob implements ShouldQueue
                 'failure_reason'       => null,
             ]);
 
-            Log::info('bot.buy.execution.filled', [
-                'execution_id'    => $execution->id,
-                'market'          => $market,
-                'filled_amount'   => $result->filledAmount,
-                'avg_buy_price'   => $result->avgPrice,
-                'exchange_fee'    => $result->exchangeFee,
-                'exchange_order'  => $result->exchangeOrderId,
+            Log::channel('smart-bot')->info('bot.buy.execution.filled', [
+                'execution_id'   => $execution->id,
+                'market'         => $market,
+                'filled_amount'  => $result->filledAmount,
+                'avg_buy_price'  => $result->avgPrice,
+                'exchange_fee'   => $result->exchangeFee,
+                'exchange_order' => $result->exchangeOrderId,
+                'access_id'      => config('exchanges.coinex.access_id'),
+                'host'           => gethostname() ?: null,
+                'pid'            => getmypid() ?: null,
             ]);
 
             OpenSellOrdersJob::dispatch($execution->id)->onQueue('bot-sell');
@@ -199,10 +214,13 @@ class BuyExecutionJob implements ShouldQueue
                 'failure_reason'    => mb_substr($reason, 0, 250),
             ]);
 
-            Log::warning('coinex.buy.awaiting_fill', [
+            Log::channel('smart-bot')->warning('coinex.buy.awaiting_fill', [
                 'execution_id'      => $execution->id,
                 'market'            => $market,
                 'exchange_order_id' => $result->exchangeOrderId,
+                'access_id'         => config('exchanges.coinex.access_id'),
+                'host'              => gethostname() ?: null,
+                'pid'               => getmypid() ?: null,
             ]);
 
             throw new RuntimeException($reason);
@@ -224,10 +242,13 @@ class BuyExecutionJob implements ShouldQueue
             // this is an automatic retry after a temporary issue.
             $execution->update(['failure_reason' => mb_substr($reason, 0, 250)]);
 
-            Log::warning('coinex.buy.transport_retry', [
+            Log::channel('smart-bot')->warning('coinex.buy.transport_retry', [
                 'execution_id' => $execution->id,
                 'market'       => $market,
                 'error'        => $result->errorMessage,
+                'access_id'    => config('exchanges.coinex.access_id'),
+                'host'         => gethostname() ?: null,
+                'pid'          => getmypid() ?: null,
             ]);
 
             throw new RuntimeException($reason);
@@ -248,10 +269,15 @@ class BuyExecutionJob implements ShouldQueue
                 $result->errorMessage ?? 'no error message',
             );
 
-        Log::error($reason, [
+        Log::channel('smart-bot')->error($reason, [
             'execution_id'      => $execution->id,
             'exchange_order_id' => $result->exchangeOrderId,
             'status'            => $result->status->value,
+            'error_code'        => $result->errorCode,
+            'error_message'     => $result->errorMessage,
+            'access_id'         => config('exchanges.coinex.access_id'),
+            'host'              => gethostname() ?: null,
+            'pid'               => getmypid() ?: null,
         ]);
 
         $this->releaseAndFail($execution->id, $reason, $result->exchangeOrderId);
