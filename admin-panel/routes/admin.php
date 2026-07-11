@@ -437,6 +437,7 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::get('/orders/user/{user}', [BotOrderController::class, 'userShow'])->name('order.user');
         Route::post('/orders/user/{user}/toggle-auto-trade', [BotOrderController::class, 'toggleAutoTrade'])->name('order.user.toggle');
         Route::get('/orders/{botOrder}', [BotOrderController::class, 'show'])->name('order.show');
+        Route::patch('/orders/{botOrder}/description', [BotOrderController::class, 'updateDescription'])->name('order.update-description');
 
         // Wallet Transfers (deposits/withdrawals between main wallet and bot wallet)
         Route::get('/wallet-transfers', [BotWalletTransferController::class, 'index'])->name('wallet-transfer.index');

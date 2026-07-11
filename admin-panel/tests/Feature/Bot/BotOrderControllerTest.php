@@ -88,6 +88,30 @@ class BotOrderControllerTest extends TestCase
             ->assertViewIs('dashboard.bot.orders.show');
     }
 
+    public function test_admin_can_update_order_description(): void
+    {
+        $user = User::factory()->create();
+        $order = BotOrder::create([
+            'user_id'           => $user->id,
+            'batch_uuid'        => Str::uuid(),
+            'total_amount_usdt' => '100.00000000',
+            'alpha_snapshot'    => '0.15',
+            'status'            => 'PENDING',
+        ]);
+
+        $this->actingAs($this->admin, 'admin')
+            ->patchJson(route('admin.bot.order.update-description', $order), [
+                'description' => 'coinex.sell.place_failed market=BTCUSDT code=3127 msg=amount too small',
+            ])
+            ->assertOk()
+            ->assertJsonPath('ok', true);
+
+        $this->assertSame(
+            'coinex.sell.place_failed market=BTCUSDT code=3127 msg=amount too small',
+            $order->fresh()->description,
+        );
+    }
+
     // ── No write routes ────────────────────────────────────────────────────
 
     public function test_post_to_orders_returns_404(): void

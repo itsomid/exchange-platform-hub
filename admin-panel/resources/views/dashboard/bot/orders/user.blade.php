@@ -295,6 +295,7 @@
                                     <th>مبلغ کل (USDT)</th>
                                     <th>وضعیت</th>
                                     <th>تریگر</th>
+                                    <th>توضیحات</th>
                                     <th>تاریخ ایجاد</th>
                                     <th>عملیات</th>
                                 </tr>
@@ -317,17 +318,34 @@
                                         <td class="font-number">{{ number_format($order->total_amount_usdt, 2) }}</td>
                                         <td><span class="badge {{ $badgeClass }}">{{ $order->status }}</span></td>
                                         <td><small>{{ $order->triggered_by }}</small></td>
+                                        <td style="max-width:220px;">
+                                            <div id="order-description-preview-{{ $order->id }}"
+                                                class="small text-muted text-truncate"
+                                                title="{{ $order->description ?? '' }}">
+                                                {{ $order->description ? Str::limit($order->description, 80) : '—' }}
+                                            </div>
+                                        </td>
                                         <td><small>{{ $order->created_at?->format('Y-m-d H:i') }}</small></td>
                                         <td>
-                                            <a href="{{ route('admin.bot.order.show', $order) }}"
-                                                class="btn btn-sm btn-outline-primary" title="جزئیات">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
+                                            <div class="d-flex gap-1">
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-secondary js-edit-order-description"
+                                                    title="ویرایش توضیحات"
+                                                    data-order-id="{{ $order->id }}"
+                                                    data-update-url="{{ route('admin.bot.order.update-description', $order) }}"
+                                                    data-description="{{ e($order->description ?? '') }}">
+                                                    <i class="fas fa-pen"></i>
+                                                </button>
+                                                <a href="{{ route('admin.bot.order.show', $order) }}"
+                                                    class="btn btn-sm btn-outline-primary" title="جزئیات">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center text-muted py-4">هیچ سفارشی یافت نشد.</td>
+                                        <td colspan="8" class="text-center text-muted py-4">هیچ سفارشی یافت نشد.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -340,6 +358,8 @@
 
         </div>
     </div>
+
+    @include('dashboard.bot.orders.partials.description-modal')
 
 @endsection
 
@@ -382,6 +402,76 @@
     @vite(['resources/assets/vendor/libs/apex-charts/apexcharts.js'])
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // ── Order description modal ─────────────────────────────────────
+            (function() {
+                var modalEl = document.getElementById('botOrderDescriptionModal');
+                if (!modalEl || typeof bootstrap === 'undefined') return;
+
+                var modal = new bootstrap.Modal(modalEl);
+                var input = document.getElementById('botOrderDescriptionInput');
+                var saveBtn = document.getElementById('botOrderDescriptionSaveBtn');
+                var orderIdLabel = document.getElementById('botOrderDescriptionModalOrderId');
+                var activeUrl = null;
+                var activeOrderId = null;
+                var activePreviewEl = null;
+
+                document.querySelectorAll('.js-edit-order-description').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        activeUrl = btn.dataset.updateUrl;
+                        activeOrderId = btn.dataset.orderId;
+                        activePreviewEl = document.getElementById('order-description-preview-' +
+                            activeOrderId);
+                        if (input) input.value = btn.dataset.description || '';
+                        if (orderIdLabel) orderIdLabel.textContent = activeOrderId ? ('#' + activeOrderId) :
+                            '';
+                        modal.show();
+                    });
+                });
+
+                if (!saveBtn) return;
+
+                saveBtn.addEventListener('click', function() {
+                    if (!activeUrl) return;
+                    saveBtn.disabled = true;
+                    fetch(activeUrl, {
+                            method: 'PATCH',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                description: input ? input.value : ''
+                            }),
+                        })
+                        .then(function(res) {
+                            if (!res.ok) throw new Error('save failed');
+                            return res.json();
+                        })
+                        .then(function(data) {
+                            var desc = data.description || '';
+                            document.querySelectorAll('.js-edit-order-description[data-order-id="' +
+                                activeOrderId + '"]').forEach(function(btn) {
+                                btn.dataset.description = desc;
+                            });
+                            if (activePreviewEl) {
+                                activePreviewEl.textContent = desc ?
+                                    (desc.length > 80 ? desc.slice(0, 80) + '…' : desc) :
+                                    '—';
+                                activePreviewEl.title = desc;
+                            }
+                            modal.hide();
+                            toast(data.message || 'ذخیره شد.', true);
+                        })
+                        .catch(function() {
+                            toast('خطا در ذخیره توضیحات.', false);
+                        })
+                        .finally(function() {
+                            saveBtn.disabled = false;
+                        });
+                });
+            })();
+
             // ── Click-to-reveal popovers ─────────────────────────────────────
             [{
                     cardId: 'card-platform-revenue',

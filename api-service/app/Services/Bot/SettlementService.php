@@ -223,51 +223,6 @@ class SettlementService
     }
 
     /**
-     * Settle an emergency fallback liquidation. Used by OpenSellOrdersJob when
-     * the normal tiered sell path cannot be opened after a successful buy
-     * (e.g. resulting tier(s) below the exchange p2p minimum) so the bought
-     * coin would otherwise be stranded on the omnibus account.
-     *
-     * The supplied $filledAmount / $fillPrice / $exchangeFee describe the
-     * realized market-sell on the reference exchange. A placeholder
-     * BotSellOrder with status=FILLED and target_type='fallback_liquidation'
-     * is created so the trade settlement row has a foreign key to point at
-     * and the dispose action shows up in normal reporting.
-     */
-    public function settleFallbackLiquidation(
-        BotBuyExecution $execution,
-        string $filledAmount,
-        string $fillPrice,
-        string $sellRefExchangeFee,
-        ?string $exchangeOrderId = null,
-    ): BotTradeSettlement {
-        return DB::transaction(function () use ($execution, $filledAmount, $fillPrice, $sellRefExchangeFee, $exchangeOrderId) {
-            $execution->refresh();
-
-            $sellOrder = BotSellOrder::create([
-                'bot_buy_execution_id'  => $execution->id,
-                'exchange_order_id'     => $exchangeOrderId,
-                'target_type'           => 'fallback_liquidation',
-                'target_value'          => $fillPrice,
-                'share_percent'         => '100.00',
-                'amount_to_sell'        => $filledAmount,
-                'sell_ref_exchange_fee' => $sellRefExchangeFee,
-                'status'                => BotSellOrder::STATUS_FILLED,
-                'filled_at'             => now(),
-            ]);
-
-            return $this->settleFill(
-                sellOrder:          $sellOrder,
-                filledAmount:       $filledAmount,
-                fillPrice:          $fillPrice,
-                networkFee:         '0',
-                sellRefExchangeFee: $sellRefExchangeFee,
-                spreadFee:          '0',
-            );
-        });
-    }
-
-    /**
      * Wallet update rules:
      *   - Release the locked cost from `locked_balance` (it was reserved at buy time).
      *   - balance += net_pnl only.  The cost_basis was never subtracted from `balance`

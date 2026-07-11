@@ -239,4 +239,23 @@ class BotOrderController extends Controller
             'freedPct', 'lockedPct'
         ));
     }
+
+    public function updateDescription(Request $request, BotOrder $botOrder): JsonResponse
+    {
+        $data = $request->validate([
+            'description' => 'nullable|string|max:10000',
+        ]);
+
+        $botOrder->update([
+            'description' => isset($data['description']) && trim($data['description']) !== ''
+                ? trim($data['description'])
+                : null,
+        ]);
+
+        return response()->json([
+            'ok'          => true,
+            'description' => $botOrder->description,
+            'message'     => 'توضیحات سفارش ذخیره شد.',
+        ]);
+    }
 }

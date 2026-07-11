@@ -368,6 +368,7 @@ class BotTestController extends Controller
             'orders'       => $orders->map(fn ($o) => [
                 'id'                => $o->id,
                 'status'            => $o->status,
+                'description'       => $o->description,
                 'total_amount_usdt' => (string) $o->total_amount_usdt,
                 'triggered_by'      => $o->triggered_by,
                 'created_at'        => $o->created_at,

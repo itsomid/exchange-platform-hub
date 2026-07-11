@@ -3,13 +3,13 @@
 namespace App\Jobs\Bot;
 
 use App\Models\Bot\BotBuyExecution;
+use App\Models\Bot\BotOrder;
 use App\Models\Bot\BotSellOrder;
 use App\Models\Bot\BotSignal;
 use App\Models\Bot\BotWallet;
 use App\Models\Currency;
 use App\Services\Bot\BotOrderStatusService;
 use App\Services\Bot\ReferenceExchange\ExchangeContract;
-use App\Services\Bot\SettlementService;
 use App\Services\Bot\TargetCollapseService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -41,7 +41,6 @@ class OpenSellOrdersJob implements ShouldQueue
     public function handle(
         TargetCollapseService $collapser,
         ExchangeContract $exchange,
-        SettlementService $settlement,
     ): void
     {
         $execution = BotBuyExecution::with('currency')->find($this->executionId);
@@ -70,7 +69,7 @@ class OpenSellOrdersJob implements ShouldQueue
 
         $signal = BotSignal::where('currency_id', $execution->currency_id)->first();
         if (! $signal) {
-            $this->markFailed($execution, 'No active BotSignal for currency on sell-open', $exchange, $settlement);
+            $this->markFailed($execution, 'No active BotSignal for currency on sell-open', $exchange);
             return;
         }
 
@@ -79,7 +78,7 @@ class OpenSellOrdersJob implements ShouldQueue
         $avgBuyPrice = (string) $execution->avg_buy_price;
 
         if (empty($sellTargets) || bccomp((string) $execution->filled_amount, '0', self::SCALE) <= 0) {
-            $this->markFailed($execution, 'Missing sell_targets or filled_amount on sell-open', $exchange, $settlement);
+            $this->markFailed($execution, 'Missing sell_targets or filled_amount on sell-open', $exchange);
             return;
         }
 
@@ -96,7 +95,7 @@ class OpenSellOrdersJob implements ShouldQueue
         );
 
         if (empty($result['final_targets'])) {
-            $this->markFailed($execution, 'Collapse produced no viable targets', $exchange, $settlement);
+            $this->markFailed($execution, 'Collapse produced no viable targets', $exchange);
             return;
         }
 
@@ -113,7 +112,6 @@ class OpenSellOrdersJob implements ShouldQueue
                     $singleUsdt, $singleAmount, $avgBuyPrice, $p2pMinUsdt,
                 ),
                 $exchange,
-                $settlement,
             );
             return;
         }
@@ -134,7 +132,7 @@ class OpenSellOrdersJob implements ShouldQueue
         $defaultMode = $signal->sell_mode ?? 'percent';
         $placedIds   = [];
 
-        foreach ($result['final_targets'] as $target) {
+        foreach ($result['final_targets'] as $index => $target) {
             $type     = $target['type'] ?? $defaultMode;
             $trigger  = (string) $target['trigger'];
             $price    = $this->resolveAbsolutePrice($type, $trigger, (string) $execution->avg_buy_price);
@@ -156,6 +154,15 @@ class OpenSellOrdersJob implements ShouldQueue
                         ]);
                     }
                 }
+                // Record the tiers we never managed to place (this one + any
+                // remaining) as CANCELED rows with their real target values, so
+                // the full sell plan stays visible and untouched — no synthetic
+                // 100% liquidation row is invented.
+                $this->persistCanceledTargets(
+                    $execution,
+                    array_slice($result['final_targets'], $index),
+                    $defaultMode,
+                );
                 $this->markFailed(
                     $execution,
                     sprintf(
@@ -165,7 +172,6 @@ class OpenSellOrdersJob implements ShouldQueue
                         $res->errorMessage ?? 'no error message',
                     ),
                     $exchange,
-                    $settlement,
                 );
                 return;
             }
@@ -209,38 +215,45 @@ class OpenSellOrdersJob implements ShouldQueue
     /**
      * Mark a buy-execution FAILED and unwind side-effects.
      *
-     * Two cases:
+     * The failure here is on the reference-exchange side (a tier sell couldn't
+     * be placed), NOT a decision by the user — so the user must be made whole:
+     * their full locked principal is returned and NO fee or PnL is passed on.
+     * No bot_trade_settlements row is created.
+     *
      *   - filled_amount == 0  → no coin on hand. Just release the locked USDT
-     *     back to wallet.balance (mirror of BuyExecutionJob::failed).
-     *   - filled_amount  > 0  → coin is already sitting on the omnibus
-     *     account. Market-sell it via the exchange driver and route the
-     *     proceeds through SettlementService::settleFallbackLiquidation so
-     *     the user's bot_wallet gets the realized USDT (typically with a
-     *     small negative pnl) and a regular bot_trade_settlements row +
-     *     transactions are produced. The locked principal is released by
-     *     settleFallbackLiquidation's normal settleFill flow (it subtracts
-     *     cost_basis from locked_balance).
+     *     principal (mirror of BuyExecutionJob::releaseAndFail).
+     *   - filled_amount  > 0  → coin is sitting on the omnibus account.
+     *     Market-sell it so it isn't stranded (the platform absorbs the
+     *     realized proceeds/loss) and release the user's full locked principal.
      *
      * If the fallback market-sell itself fails (exchange unreachable / no
-     * price), we still mark the execution FAILED but log a critical alert —
-     * the coin is truly stranded and needs operator attention.
+     * price), we still refund the user and mark the execution FAILED, but log
+     * a critical alert — the coin is stranded and needs operator attention.
      */
     private function markFailed(
         BotBuyExecution $execution,
         string $reason,
         ExchangeContract $exchange,
-        SettlementService $settlement,
     ): void {
         $filled = (string) $execution->filled_amount;
         $hasCoin = bccomp($filled, '0', self::SCALE) > 0;
 
+        // Any tier sells that were already placed on the exchange got rolled
+        // back there, but their DB rows are still OPEN. Since this execution
+        // is failing, those tiers will never fill — mark them CANCELED so the
+        // DB reflects reality.
+        $this->cancelOpenSellOrders($execution);
+
+        // Return the user's full locked principal regardless of the coin
+        // disposal outcome: the failure was not their doing.
+        $this->releaseLockedPrincipal($execution);
+
         if (! $hasCoin) {
-            // Release the locked USDT principal back to the user's balance.
-            $this->releaseLockedPrincipal($execution);
             $execution->update([
                 'status'         => BotBuyExecution::STATUS_FAILED,
                 'failure_reason' => mb_substr($reason, 0, 250),
             ]);
+            $this->recordOrderDescription($execution, $reason);
             Log::channel('smart-bot')->warning('bot.sell.open.failed', [
                 'execution_id' => $execution->id,
                 'reason'       => $reason,
@@ -253,24 +266,24 @@ class OpenSellOrdersJob implements ShouldQueue
             return;
         }
 
-        // Fallback liquidation path.
+        // Dispose the bought coin on the reference exchange so it isn't left
+        // stranded on the omnibus account. This is a platform-side operation:
+        // the proceeds/loss are NOT settled against the user (they were already
+        // refunded their full principal above).
         $currency = $execution->currency ?? Currency::find($execution->currency_id);
         $market   = strtoupper((string) ($currency?->symbol ?? '')).'USDT';
 
         $disposeRes = $exchange->placeMarketSell($market, $filled);
 
         if ($disposeRes->exchangeOrderId === null || $disposeRes->filledAmount === null) {
-            // Disposal failed — coin really stranded. Keep locked_balance as-is
-            // for visibility; operator must reconcile manually.
+            // Disposal failed — coin really stranded; operator must reconcile.
+            $strandedReason = $reason.' | dispose_failed code='.($disposeRes->errorCode ?? 'n/a')
+                          .' msg='.($disposeRes->errorMessage ?? 'n/a');
             $execution->update([
                 'status'         => BotBuyExecution::STATUS_FAILED,
-                'failure_reason' => mb_substr(
-                    $reason.' | dispose_failed code='.($disposeRes->errorCode ?? 'n/a')
-                          .' msg='.($disposeRes->errorMessage ?? 'n/a'),
-                    0,
-                    250,
-                ),
+                'failure_reason' => mb_substr($strandedReason, 0, 250),
             ]);
+            $this->recordOrderDescription($execution, $strandedReason);
             Log::channel('smart-bot')->critical('bot.sell.open.stranded', [
                 'execution_id'  => $execution->id,
                 'currency_id'   => $execution->currency_id,
@@ -287,18 +300,15 @@ class OpenSellOrdersJob implements ShouldQueue
             return;
         }
 
-        $settlement->settleFallbackLiquidation(
-            execution:          $execution,
-            filledAmount:       (string) $disposeRes->filledAmount,
-            fillPrice:          (string) ($disposeRes->avgPrice ?? '0'),
-            sellRefExchangeFee: (string) ($disposeRes->exchangeFee ?? '0'),
-            exchangeOrderId:    $disposeRes->exchangeOrderId,
-        );
-
         $execution->update([
             'status'         => BotBuyExecution::STATUS_FAILED,
             'failure_reason' => mb_substr($reason.' | auto-liquidated', 0, 250),
         ]);
+
+        $this->recordOrderDescription(
+            $execution,
+            $reason.' | auto-liquidated | liquidation_exchange_order_id='.$disposeRes->exchangeOrderId,
+        );
 
         Log::channel('smart-bot')->warning('bot.sell.open.failed', [
             'execution_id'    => $execution->id,
@@ -325,9 +335,74 @@ class OpenSellOrdersJob implements ShouldQueue
     }
 
     /**
-     * Release this execution's allocated USDT from locked_balance back to the
-     * spendable balance. Mirrors {@see BuyExecutionJob::failed()}. Used only
-     * when there is no coin on hand to dispose of.
+     * Mark this execution's still-OPEN tier sells as CANCELED. They were
+     * rolled back on the exchange when placement of a later tier failed, so
+     * leaving them OPEN in the DB is stale.
+     */
+    private function cancelOpenSellOrders(BotBuyExecution $execution): void
+    {
+        BotSellOrder::where('bot_buy_execution_id', $execution->id)
+            ->where('status', BotSellOrder::STATUS_OPEN)
+            ->update([
+                'status'    => BotSellOrder::STATUS_CANCELED,
+                'filled_at' => null,
+            ]);
+    }
+
+    /**
+     * Append a human-readable cancellation/failure note (including the CoinEx
+     * error and any liquidation exchange order id) to the parent order's
+     * `description`. Appended (not overwritten) so a multi-coin order keeps a
+     * note per affected execution.
+     */
+    private function recordOrderDescription(BotBuyExecution $execution, string $note): void
+    {
+        $orderId = (int) $execution->bot_order_id;
+        if ($orderId <= 0) {
+            return;
+        }
+
+        DB::transaction(function () use ($orderId, $note) {
+            $order = BotOrder::where('id', $orderId)->lockForUpdate()->first();
+            if (! $order) {
+                return;
+            }
+            $existing = (string) ($order->description ?? '');
+            $order->update([
+                'description' => trim($existing === '' ? $note : $existing.' || '.$note),
+            ]);
+        });
+    }
+
+    /**
+     * Persist tier targets we never managed to place as CANCELED sell orders,
+     * preserving their real target_type / target_value / share / amount. Used
+     * so a failed sell-open leaves the full, untouched tier plan visible
+     * instead of inventing a synthetic 100% liquidation row.
+     *
+     * @param array<int,array<string,mixed>> $targets
+     */
+    private function persistCanceledTargets(BotBuyExecution $execution, array $targets, string $defaultMode): void
+    {
+        foreach ($targets as $target) {
+            BotSellOrder::create([
+                'bot_buy_execution_id' => $execution->id,
+                'exchange_order_id'    => null,
+                'target_type'          => $target['type'] ?? $defaultMode,
+                'target_value'         => (string) $target['trigger'],
+                'share_percent'        => $target['share'],
+                'amount_to_sell'       => (string) $target['amount'],
+                'status'               => BotSellOrder::STATUS_CANCELED,
+            ]);
+        }
+    }
+
+    /**
+     * Release this execution's allocated USDT from locked_balance. Mirrors
+     * {@see BuyExecutionJob::releaseAndFail()}: the principal was never taken
+     * out of `balance` at buy time (only `locked_balance` was incremented), so
+     * we only unlock it here — adding it back to `balance` would double-count
+     * and inflate the wallet.
      */
     private function releaseLockedPrincipal(BotBuyExecution $execution): void
     {
@@ -348,9 +423,7 @@ class OpenSellOrdersJob implements ShouldQueue
             if (bccomp($newLocked, '0', self::SCALE) < 0) {
                 $newLocked = '0';
             }
-            $newBalance = bcadd((string) $wallet->balance, $allocated, self::SCALE);
             $wallet->update([
-                'balance'        => $newBalance,
                 'locked_balance' => $newLocked,
             ]);
         });

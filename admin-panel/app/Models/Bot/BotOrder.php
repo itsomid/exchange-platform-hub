@@ -21,6 +21,7 @@ class BotOrder extends Model
         'total_amount_usdt',
         'alpha_snapshot',
         'status',
+        'description',
         'triggered_by',
         'completed_at',
     ];
