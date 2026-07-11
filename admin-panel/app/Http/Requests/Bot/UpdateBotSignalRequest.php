@@ -13,6 +13,18 @@ class UpdateBotSignalRequest extends FormRequest
         return $this->user()->can('bot-management');
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'floor_price'                  => str_replace(',', '', $this->floor_price),
+            'ceiling_price'                => str_replace(',', '', $this->ceiling_price),
+            'min_buy_amount_usdt'          => str_replace(',', '', $this->min_buy_amount_usdt),
+            'p2p_min_order_value_override' => $this->filled('p2p_min_order_value_override')
+                ? str_replace(',', '', $this->p2p_min_order_value_override)
+                : $this->p2p_min_order_value_override,
+        ]);
+    }
+
     public function rules(): array
     {
         $signalId = $this->route('botSignal')?->id;
