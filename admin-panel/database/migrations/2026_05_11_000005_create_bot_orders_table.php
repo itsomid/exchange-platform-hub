@@ -15,6 +15,7 @@ return new class extends Migration
             $table->decimal('total_amount_usdt', 20, 8);
             $table->decimal('alpha_snapshot', 4, 2);
             $table->string('status')->default('PENDING'); // PENDING|PARTIALLY_FILLED|FILLED|CANCELED
+            $table->text('description')->nullable();
             $table->string('triggered_by');               // TRANSFER_IN|TOGGLE_ON|MANUAL
             $table->timestamp('completed_at')->nullable();
             $table->timestamp('created_at')->nullable();
