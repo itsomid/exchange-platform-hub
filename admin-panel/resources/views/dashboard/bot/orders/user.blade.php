@@ -295,7 +295,7 @@
                                     <th>مبلغ کل (USDT)</th>
                                     <th>وضعیت</th>
                                     <th>تریگر</th>
-                                    <th>توضیحات</th>
+                                    <th>یادداشت ادمین</th>
                                     <th>تاریخ ایجاد</th>
                                     <th>عملیات</th>
                                 </tr>
@@ -318,22 +318,30 @@
                                         <td class="font-number">{{ number_format($order->total_amount_usdt, 2) }}</td>
                                         <td><span class="badge {{ $badgeClass }}">{{ $order->status }}</span></td>
                                         <td><small>{{ $order->triggered_by }}</small></td>
-                                        <td style="max-width:220px;">
-                                            <div id="order-description-preview-{{ $order->id }}"
+                                        <td style="max-width:180px;">
+                                            <div id="order-admin-description-preview-{{ $order->id }}"
                                                 class="small text-muted text-truncate"
-                                                title="{{ $order->description ?? '' }}">
-                                                {{ $order->description ? Str::limit($order->description, 80) : '—' }}
+                                                title="{{ $order->admin_description ?? '' }}">
+                                                {{ $order->admin_description ? Str::limit($order->admin_description, 60) : '—' }}
                                             </div>
                                         </td>
                                         <td><small>{{ $order->created_at?->format('Y-m-d H:i') }}</small></td>
                                         <td>
                                             <div class="d-flex gap-1">
+                                                @if ($order->description)
+                                                    <button type="button"
+                                                        class="btn btn-sm btn-outline-danger js-view-order-system-description"
+                                                        title="توضیحات سیستمی"
+                                                        data-order-id="{{ $order->id }}">
+                                                        <i class="fas fa-robot"></i>
+                                                    </button>
+                                                @endif
                                                 <button type="button"
-                                                    class="btn btn-sm btn-outline-secondary js-edit-order-description"
-                                                    title="ویرایش توضیحات"
+                                                    class="btn btn-sm btn-outline-secondary js-edit-order-admin-description"
+                                                    title="یادداشت ادمین"
                                                     data-order-id="{{ $order->id }}"
                                                     data-update-url="{{ route('admin.bot.order.update-description', $order) }}"
-                                                    data-description="{{ e($order->description ?? '') }}">
+                                                    data-admin-description="{{ e($order->admin_description ?? '') }}">
                                                     <i class="fas fa-pen"></i>
                                                 </button>
                                                 <a href="{{ route('admin.bot.order.show', $order) }}"
@@ -341,6 +349,13 @@
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                             </div>
+                                            @if ($order->description)
+                                                <div id="system-description-html-{{ $order->id }}" class="d-none">
+                                                    @include('dashboard.bot.orders.partials.system-description-segments', [
+                                                        'description' => $order->description,
+                                                    ])
+                                                </div>
+                                            @endif
                                         </td>
                                     </tr>
                                 @empty
@@ -360,6 +375,7 @@
     </div>
 
     @include('dashboard.bot.orders.partials.description-modal')
+    @include('dashboard.bot.orders.partials.system-description-modal')
 
 @endsection
 
@@ -402,76 +418,6 @@
     @vite(['resources/assets/vendor/libs/apex-charts/apexcharts.js'])
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // ── Order description modal ─────────────────────────────────────
-            (function() {
-                var modalEl = document.getElementById('botOrderDescriptionModal');
-                if (!modalEl || typeof bootstrap === 'undefined') return;
-
-                var modal = new bootstrap.Modal(modalEl);
-                var input = document.getElementById('botOrderDescriptionInput');
-                var saveBtn = document.getElementById('botOrderDescriptionSaveBtn');
-                var orderIdLabel = document.getElementById('botOrderDescriptionModalOrderId');
-                var activeUrl = null;
-                var activeOrderId = null;
-                var activePreviewEl = null;
-
-                document.querySelectorAll('.js-edit-order-description').forEach(function(btn) {
-                    btn.addEventListener('click', function() {
-                        activeUrl = btn.dataset.updateUrl;
-                        activeOrderId = btn.dataset.orderId;
-                        activePreviewEl = document.getElementById('order-description-preview-' +
-                            activeOrderId);
-                        if (input) input.value = btn.dataset.description || '';
-                        if (orderIdLabel) orderIdLabel.textContent = activeOrderId ? ('#' + activeOrderId) :
-                            '';
-                        modal.show();
-                    });
-                });
-
-                if (!saveBtn) return;
-
-                saveBtn.addEventListener('click', function() {
-                    if (!activeUrl) return;
-                    saveBtn.disabled = true;
-                    fetch(activeUrl, {
-                            method: 'PATCH',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                'Accept': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                description: input ? input.value : ''
-                            }),
-                        })
-                        .then(function(res) {
-                            if (!res.ok) throw new Error('save failed');
-                            return res.json();
-                        })
-                        .then(function(data) {
-                            var desc = data.description || '';
-                            document.querySelectorAll('.js-edit-order-description[data-order-id="' +
-                                activeOrderId + '"]').forEach(function(btn) {
-                                btn.dataset.description = desc;
-                            });
-                            if (activePreviewEl) {
-                                activePreviewEl.textContent = desc ?
-                                    (desc.length > 80 ? desc.slice(0, 80) + '…' : desc) :
-                                    '—';
-                                activePreviewEl.title = desc;
-                            }
-                            modal.hide();
-                            toast(data.message || 'ذخیره شد.', true);
-                        })
-                        .catch(function() {
-                            toast('خطا در ذخیره توضیحات.', false);
-                        })
-                        .finally(function() {
-                            saveBtn.disabled = false;
-                        });
-                });
-            })();
-
             // ── Click-to-reveal popovers ─────────────────────────────────────
             [{
                     cardId: 'card-platform-revenue',
@@ -639,4 +585,5 @@
             });
         });
     </script>
+    @include('dashboard.bot.orders.partials.order-description-scripts')
 @endsection

@@ -101,14 +101,14 @@ class BotOrderControllerTest extends TestCase
 
         $this->actingAs($this->admin, 'admin')
             ->patchJson(route('admin.bot.order.update-description', $order), [
-                'description' => 'coinex.sell.place_failed market=BTCUSDT code=3127 msg=amount too small',
+                'admin_description' => 'تماس با کاربر برای پیگیری',
             ])
             ->assertOk()
             ->assertJsonPath('ok', true);
 
         $this->assertSame(
-            'coinex.sell.place_failed market=BTCUSDT code=3127 msg=amount too small',
-            $order->fresh()->description,
+            'تماس با کاربر برای پیگیری',
+            $order->fresh()->admin_description,
         );
     }
 

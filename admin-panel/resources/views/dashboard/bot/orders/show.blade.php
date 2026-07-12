@@ -166,27 +166,49 @@
                         </div>
                     </div>
 
-                    {{-- Order description (admin notes) --}}
+                    {{-- System description (read-only, auto-generated) --}}
+                    @if ($botOrder->description)
+                        <div class="mt-4 pt-3 border-top">
+                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+                                <div>
+                                    <h6 class="mb-1"><i class="fas fa-robot me-1 text-danger"></i>توضیحات سیستمی</h6>
+                                    <small class="text-muted">ثبت خودکار توسط سیستم — قابل ویرایش نیست</small>
+                                </div>
+                                <button type="button"
+                                    class="btn btn-sm btn-outline-danger js-view-order-system-description"
+                                    data-order-id="{{ $botOrder->id }}">
+                                    <i class="fas fa-expand me-1"></i> نمایش در Modal
+                                </button>
+                            </div>
+                            <div id="system-description-html-{{ $botOrder->id }}">
+                                @include('dashboard.bot.orders.partials.system-description-segments', [
+                                    'description' => $botOrder->description,
+                                ])
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Admin notes (editable) --}}
                     <div class="mt-4 pt-3 border-top">
                         <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
                             <div>
-                                <h6 class="mb-1"><i class="fas fa-file-lines me-1 text-primary"></i>توضیحات سفارش</h6>
-                                <small class="text-muted">یادداشت داخلی ادمین درباره وضعیت، خطاها و پیگیری این سفارش</small>
+                                <h6 class="mb-1"><i class="fas fa-pen-to-square me-1 text-primary"></i>یادداشت ادمین</h6>
+                                <small class="text-muted">یادداشت داخلی ادمین برای پیگیری این سفارش</small>
                             </div>
-                            <button type="button" class="btn btn-sm btn-outline-primary js-edit-order-description"
+                            <button type="button" class="btn btn-sm btn-outline-primary js-edit-order-admin-description"
                                 data-order-id="{{ $botOrder->id }}"
                                 data-update-url="{{ route('admin.bot.order.update-description', $botOrder) }}"
-                                data-description="{{ e($botOrder->description ?? '') }}">
+                                data-admin-description="{{ e($botOrder->admin_description ?? '') }}">
                                 <i class="fas fa-pen me-1"></i> ویرایش
                             </button>
                         </div>
-                        <div id="order-description-display"
-                            class="rounded-3 p-3 {{ $botOrder->description ? '' : 'border border-dashed' }}"
-                            style="background:{{ $botOrder->description ? 'rgba(105,108,255,.05)' : 'rgba(0,0,0,.015)' }}; border-color:rgba(105,108,255,.18);">
-                            @if ($botOrder->description)
-                                <div class="small text-break" style="white-space:pre-wrap;">{{ $botOrder->description }}</div>
+                        <div id="order-admin-description-display"
+                            class="rounded-3 p-3 {{ $botOrder->admin_description ? '' : 'border border-dashed' }}"
+                            style="background:{{ $botOrder->admin_description ? 'rgba(105,108,255,.05)' : 'rgba(0,0,0,.015)' }}; border-color:rgba(105,108,255,.18);">
+                            @if ($botOrder->admin_description)
+                                <div class="small text-break" style="white-space:pre-wrap;">{{ $botOrder->admin_description }}</div>
                             @else
-                                <span class="text-muted small">هنوز توضیحی برای این سفارش ثبت نشده است.</span>
+                                <span class="text-muted small">هنوز یادداشت ادمینی ثبت نشده است.</span>
                             @endif
                         </div>
                     </div>
@@ -655,110 +677,13 @@
     </div>
 
     @include('dashboard.bot.orders.partials.description-modal')
+    @include('dashboard.bot.orders.partials.system-description-modal')
 
 @endsection
 
 @section('vendor-script')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-
-            // ── Order description modal ─────────────────────────────────────
-            (function() {
-                var modalEl = document.getElementById('botOrderDescriptionModal');
-                if (!modalEl || typeof bootstrap === 'undefined') return;
-
-                var modal = new bootstrap.Modal(modalEl);
-                var input = document.getElementById('botOrderDescriptionInput');
-                var saveBtn = document.getElementById('botOrderDescriptionSaveBtn');
-                var orderIdLabel = document.getElementById('botOrderDescriptionModalOrderId');
-                var activeUrl = null;
-                var activeOrderId = null;
-                var activeDisplayEl = null;
-                var activePreviewEl = null;
-
-                function toast(text, ok) {
-                    if (typeof Toastify === 'undefined') return;
-                    Toastify({
-                        text: text,
-                        duration: ok ? 3000 : 5000,
-                        gravity: 'top',
-                        position: 'right',
-                        style: {
-                            background: ok ? '#28C76F' : '#EA5455'
-                        },
-                    }).showToast();
-                }
-
-                document.querySelectorAll('.js-edit-order-description').forEach(function(btn) {
-                    btn.addEventListener('click', function() {
-                        activeUrl = btn.dataset.updateUrl;
-                        activeOrderId = btn.dataset.orderId;
-                        activeDisplayEl = document.getElementById('order-description-display');
-                        activePreviewEl = btn.closest('tr') ?
-                            document.getElementById('order-description-preview-' + activeOrderId) :
-                            null;
-                        if (input) input.value = btn.dataset.description || '';
-                        if (orderIdLabel) orderIdLabel.textContent = activeOrderId ? ('#' + activeOrderId) : '';
-                        modal.show();
-                    });
-                });
-
-                if (!saveBtn) return;
-
-                saveBtn.addEventListener('click', function() {
-                    if (!activeUrl) return;
-                    saveBtn.disabled = true;
-                    fetch(activeUrl, {
-                            method: 'PATCH',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                'Accept': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                description: input ? input.value : ''
-                            }),
-                        })
-                        .then(function(res) {
-                            if (!res.ok) throw new Error('save failed');
-                            return res.json();
-                        })
-                        .then(function(data) {
-                            var desc = data.description || '';
-                            document.querySelectorAll('.js-edit-order-description[data-order-id="' +
-                                activeOrderId + '"]').forEach(function(btn) {
-                                btn.dataset.description = desc;
-                            });
-                            if (activeDisplayEl) {
-                                if (desc) {
-                                    activeDisplayEl.classList.remove('border', 'border-dashed');
-                                    activeDisplayEl.style.background = 'rgba(105,108,255,.05)';
-                                    activeDisplayEl.innerHTML =
-                                        '<div class="small text-break" style="white-space:pre-wrap;"></div>';
-                                    activeDisplayEl.querySelector('div').textContent = desc;
-                                } else {
-                                    activeDisplayEl.classList.add('border', 'border-dashed');
-                                    activeDisplayEl.style.background = 'rgba(0,0,0,.015)';
-                                    activeDisplayEl.innerHTML =
-                                        '<span class="text-muted small">هنوز توضیحی برای این سفارش ثبت نشده است.</span>';
-                                }
-                            }
-                            if (activePreviewEl) {
-                                activePreviewEl.textContent = desc ?
-                                    (desc.length > 80 ? desc.slice(0, 80) + '…' : desc) :
-                                    '—';
-                            }
-                            modal.hide();
-                            toast(data.message || 'ذخیره شد.', true);
-                        })
-                        .catch(function() {
-                            toast('خطا در ذخیره توضیحات.', false);
-                        })
-                        .finally(function() {
-                            saveBtn.disabled = false;
-                        });
-                });
-            })();
 
             // ── Expandable settlement rows ────────────────────────────────────────
             document.querySelectorAll('.sell-main-row[data-sell-id]').forEach(function(row) {
@@ -866,4 +791,5 @@
             });
         });
     </script>
+    @include('dashboard.bot.orders.partials.order-description-scripts')
 @endsection

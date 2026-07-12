@@ -11,6 +11,7 @@ use App\Models\Bot\BotUserSettings;
 use App\Models\Bot\BotWallet;
 use App\Services\Bot\AllocationResult;
 use App\Services\Bot\AllocationService;
+use App\Services\Bot\BotOrderDescriptionService;
 use App\Services\Bot\BotOrderStatusService;
 use App\Services\Bot\PriceFeed;
 use App\Services\Bot\SignalFilterService;
@@ -255,7 +256,7 @@ class BotBuyOrchestrator
         // so the activation overlay shows a real failure / partial outcome
         // instead of a misleading "no opportunity" state.
         foreach ($unpriced as $signal) {
-            BotBuyExecution::create([
+            $exec = BotBuyExecution::create([
                 'bot_order_id'               => $botOrder->id,
                 'currency_id'                => $signal->currency_id,
                 'signal_snapshot'            => [
@@ -272,6 +273,8 @@ class BotBuyOrchestrator
                 'status'                      => BotBuyExecution::STATUS_FAILED,
                 'failure_reason'              => 'bot.buy.no_live_price',
             ]);
+
+            app(BotOrderDescriptionService::class)->appendSystemNote($exec, 'bot.buy.no_live_price');
         }
 
         if (bccomp($totalLock, '0', 8) > 0) {

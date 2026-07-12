@@ -22,6 +22,7 @@ class BotOrder extends Model
         'alpha_snapshot',
         'status',
         'description',
+        'admin_description',
         'triggered_by',
         'completed_at',
     ];

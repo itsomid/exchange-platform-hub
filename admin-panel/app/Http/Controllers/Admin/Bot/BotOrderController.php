@@ -243,19 +243,19 @@ class BotOrderController extends Controller
     public function updateDescription(Request $request, BotOrder $botOrder): JsonResponse
     {
         $data = $request->validate([
-            'description' => 'nullable|string|max:10000',
+            'admin_description' => 'nullable|string|max:10000',
         ]);
 
         $botOrder->update([
-            'description' => isset($data['description']) && trim($data['description']) !== ''
-                ? trim($data['description'])
+            'admin_description' => isset($data['admin_description']) && trim($data['admin_description']) !== ''
+                ? trim($data['admin_description'])
                 : null,
         ]);
 
         return response()->json([
-            'ok'          => true,
-            'description' => $botOrder->description,
-            'message'     => 'توضیحات سفارش ذخیره شد.',
+            'ok'                => true,
+            'admin_description' => $botOrder->admin_description,
+            'message'           => 'یادداشت ادمین ذخیره شد.',
         ]);
     }
 }

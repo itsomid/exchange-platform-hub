@@ -3,11 +3,11 @@
 namespace App\Jobs\Bot;
 
 use App\Models\Bot\BotBuyExecution;
-use App\Models\Bot\BotOrder;
 use App\Models\Bot\BotSellOrder;
 use App\Models\Bot\BotSignal;
 use App\Models\Bot\BotWallet;
 use App\Models\Currency;
+use App\Services\Bot\BotOrderDescriptionService;
 use App\Services\Bot\BotOrderStatusService;
 use App\Services\Bot\ReferenceExchange\ExchangeContract;
 use App\Services\Bot\TargetCollapseService;
@@ -357,21 +357,7 @@ class OpenSellOrdersJob implements ShouldQueue
      */
     private function recordOrderDescription(BotBuyExecution $execution, string $note): void
     {
-        $orderId = (int) $execution->bot_order_id;
-        if ($orderId <= 0) {
-            return;
-        }
-
-        DB::transaction(function () use ($orderId, $note) {
-            $order = BotOrder::where('id', $orderId)->lockForUpdate()->first();
-            if (! $order) {
-                return;
-            }
-            $existing = (string) ($order->description ?? '');
-            $order->update([
-                'description' => trim($existing === '' ? $note : $existing.' || '.$note),
-            ]);
-        });
+        app(BotOrderDescriptionService::class)->appendSystemNote($execution, $note);
     }
 
     /**

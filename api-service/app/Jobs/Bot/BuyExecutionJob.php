@@ -4,6 +4,7 @@ namespace App\Jobs\Bot;
 
 use App\Models\Bot\BotBuyExecution;
 use App\Models\Bot\BotWallet;
+use App\Services\Bot\BotOrderDescriptionService;
 use App\Services\Bot\BotOrderStatusService;
 use App\Services\Bot\ReferenceExchange\ExchangeContract;
 use App\Services\Bot\ReferenceExchange\ExchangeOrderResult;
@@ -304,15 +305,15 @@ class BuyExecutionJob implements ShouldQueue
      */
     private function releaseAndFail(int $executionId, string $reason, ?string $exchangeOrderId): void
     {
-        $botOrderId = DB::transaction(function () use ($executionId, $reason, $exchangeOrderId) {
+        $result = DB::transaction(function () use ($executionId, $reason, $exchangeOrderId) {
             $execution = BotBuyExecution::where('id', $executionId)
                 ->lockForUpdate()
                 ->first();
             if (! $execution) {
-                return null;
+                return ['bot_order_id' => null, 'record_note' => false, 'execution' => null];
             }
             if (in_array($execution->status, [BotBuyExecution::STATUS_BOUGHT, BotBuyExecution::STATUS_FAILED, BotBuyExecution::STATUS_SKIPPED], true)) {
-                return $execution->bot_order_id;
+                return ['bot_order_id' => $execution->bot_order_id, 'record_note' => false, 'execution' => null];
             }
 
             $wallet = BotWallet::where('user_id', $execution->botOrder->user_id)
@@ -343,13 +344,19 @@ class BuyExecutionJob implements ShouldQueue
                 'pid'               => getmypid() ?: null,
             ]);
 
-            return $execution->bot_order_id;
+            return [
+                'bot_order_id' => $execution->bot_order_id,
+                'record_note'  => true,
+                'execution'    => $execution->fresh(),
+            ];
         });
 
-        // If this was the last non-bought signal of the order, settle the
-        // order itself to FAILED instead of leaving it stuck at PENDING.
-        if ($botOrderId) {
-            app(BotOrderStatusService::class)->finalizeIfAllFailed((int) $botOrderId);
+        if ($result['bot_order_id']) {
+            app(BotOrderStatusService::class)->finalizeIfAllFailed((int) $result['bot_order_id']);
+        }
+
+        if ($result['record_note'] && $result['execution']) {
+            app(BotOrderDescriptionService::class)->appendSystemNote($result['execution'], $reason);
         }
     }
 }

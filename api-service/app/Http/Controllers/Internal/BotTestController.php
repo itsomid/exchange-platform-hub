@@ -369,6 +369,7 @@ class BotTestController extends Controller
                 'id'                => $o->id,
                 'status'            => $o->status,
                 'description'       => $o->description,
+                'admin_description' => $o->admin_description,
                 'total_amount_usdt' => (string) $o->total_amount_usdt,
                 'triggered_by'      => $o->triggered_by,
                 'created_at'        => $o->created_at,
