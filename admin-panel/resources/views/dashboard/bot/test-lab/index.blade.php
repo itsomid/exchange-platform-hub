@@ -175,7 +175,7 @@
                 <div class="col-lg-8 col-md-7">
                     <div class="card lab-card">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <h6 class="card-title mb-0">کنترل قیمت ارزهای خریداری‌شده کاربر</h6>
+                            <h6 class="card-title mb-0">کنترل قیمت ارزهای سیگنال</h6>
                             <span class="badge bg-label-secondary" id="pcoins-count">0 ارز</span>
                         </div>
                         <div class="card-body p-0">
@@ -191,7 +191,7 @@
                                 </thead>
                                 <tbody id="pcoins-tbody">
                                     <tr>
-                                        <td colspan="5" class="lab-empty">هنوز خریدی برای کاربر انجام نشده است.</td>
+                                        <td colspan="5" class="lab-empty">سیگنال فعالی ثبت نشده است.</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -392,38 +392,35 @@
             }
 
             function renderPriceControls(snap) {
-                const byCoin = new Map();
+                const avgByCoin = new Map();
                 (snap.executions || []).forEach(e => {
                     if (!e.currency) return;
                     if (e.status !== 'BOUGHT' && Number(e.avg_buy_price || 0) <= 0) return;
-                    const prev = byCoin.get(e.currency);
-                    if (!prev || Number(e.id) > Number(prev.id)) byCoin.set(e.currency, e);
-                });
-                const priceMap = {};
-                (snap.signals || []).forEach(s => {
-                    if (s.symbol) priceMap[s.symbol] = s.current_price;
+                    const prev = avgByCoin.get(e.currency);
+                    if (!prev || Number(e.id) > Number(prev.id)) avgByCoin.set(e.currency, e);
                 });
 
+                const signals = (snap.signals || []).filter(s => s.symbol);
                 const tb = document.getElementById('pcoins-tbody');
                 const cnt = document.getElementById('pcoins-count');
-                if (byCoin.size === 0) {
+                if (signals.length === 0) {
                     cnt.textContent = '0 ارز';
                     tb.innerHTML =
-                        '<tr><td colspan="5" class="lab-empty">هنوز خریدی برای کاربر انجام نشده است.</td></tr>';
+                        '<tr><td colspan="5" class="lab-empty">سیگنال فعالی ثبت نشده است.</td></tr>';
                     return;
                 }
-                cnt.textContent = byCoin.size + ' ارز';
-                const rows = [];
-                byCoin.forEach((e, sym) => {
-                    const cur = priceMap[sym];
-                    const avg = e.avg_buy_price;
+                cnt.textContent = signals.length + ' ارز';
+                tb.innerHTML = signals.map(s => {
+                    const sym = s.symbol;
+                    const cur = s.current_price;
+                    const avg = avgByCoin.get(sym)?.avg_buy_price;
                     let diff = '—';
                     if (cur && avg && Number(avg) > 0) {
                         const d = ((Number(cur) - Number(avg)) / Number(avg)) * 100;
                         diff =
                             `<span class="${d >= 0 ? 'text-success' : 'text-danger'}">${d >= 0 ? '+' : ''}${d.toFixed(2)}%</span>`;
                     }
-                    rows.push(`
+                    return `
                                               <tr>
                                                 <td><strong>${esc(sym)}</strong></td>
                                                 <td class="price-cell">${formatNumberTrimZeros(cur, 6)}</td>
@@ -437,9 +434,8 @@
                                                     <button type="button" class="btn btn-danger bump-btn" data-sym="${esc(sym)}" data-dir="down" title="کاهش">▼</button>
                                                   </div>
                                                 </td>
-                                              </tr>`);
-                });
-                tb.innerHTML = rows.join('');
+                                              </tr>`;
+                }).join('');
             }
 
             function renderExecutions(snap) {
