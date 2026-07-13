@@ -38,6 +38,7 @@ class BotBuyOrchestrator
     public const TRIGGER_TOGGLE_ON   = 'TOGGLE_ON';
     public const TRIGGER_MANUAL      = 'MANUAL';
     public const TRIGGER_REINVEST    = 'REINVEST';
+    public const TRIGGER_SIGNAL_SCAN = 'SIGNAL_SCAN';
 
     public function __construct(
         private readonly SignalFilterService $filter,

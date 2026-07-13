@@ -11,3 +11,4 @@ use Illuminate\Support\Facades\Schedule;
 
 
 Schedule::command('bot:sync-sell-orders')->everyMinute()->withoutOverlapping();
+Schedule::command('bot:scan-buy-triggers')->everyMinute()->withoutOverlapping();

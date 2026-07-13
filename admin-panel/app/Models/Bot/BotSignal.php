@@ -26,6 +26,8 @@ class BotSignal extends Model
         'sell_mode',
         'sell_targets',
         'is_active',
+        'activation_pending_at',
+        'price_in_range',
     ];
 
     protected function casts(): array
@@ -38,6 +40,8 @@ class BotSignal extends Model
             'p2p_min_order_value_override' => 'decimal:8',
             'sell_targets'                 => 'array',
             'is_active'                    => 'boolean',
+            'activation_pending_at'        => 'datetime',
+            'price_in_range'               => 'boolean',
         ];
     }
 

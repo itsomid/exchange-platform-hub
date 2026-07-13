@@ -44,7 +44,13 @@ class BotSignalController extends Controller
     {
         $data             = $request->validated();
         $data['priority'] = (BotSignal::max('priority') ?? 0) + 1;
-        BotSignal::create($data);
+        $signal           = BotSignal::create($data);
+
+        // A signal that starts active is a new buy opportunity; flag it so the
+        // api-service scan command runs a buy round for eligible users.
+        if ($signal->is_active) {
+            $signal->update(['activation_pending_at' => now()]);
+        }
 
         return redirect()
             ->route('admin.bot.signal.index')
@@ -61,7 +67,13 @@ class BotSignalController extends Controller
 
     public function update(UpdateBotSignalRequest $request, BotSignal $botSignal): RedirectResponse
     {
+        $wasActive = $botSignal->is_active;
         $botSignal->update($request->validated());
+
+        // Inactive -> active transition is a new buy opportunity.
+        if (! $wasActive && $botSignal->is_active) {
+            $botSignal->update(['activation_pending_at' => now()]);
+        }
 
         return redirect()
             ->route('admin.bot.signal.index')
@@ -79,7 +91,15 @@ class BotSignalController extends Controller
 
     public function toggleStatus(BotSignal $botSignal): RedirectResponse
     {
-        $botSignal->update(['is_active' => ! $botSignal->is_active]);
+        $newActive  = ! $botSignal->is_active;
+        $attributes = ['is_active' => $newActive];
+
+        // Turning a stopped signal back on is a new buy opportunity.
+        if ($newActive) {
+            $attributes['activation_pending_at'] = now();
+        }
+
+        $botSignal->update($attributes);
 
         $label = $botSignal->is_active ? 'فعال' : 'غیرفعال';
 
