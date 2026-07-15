@@ -140,9 +140,7 @@ class ReportController extends Controller
             ->pluck('realized_pnl', 'currency_id');
 
         // Total expected net profit across every (non-canceled) sell step, per currency,
-        // assuming each step fills at its target price. Realized steps are included so the
-        // total reflects the full plan; the remaining expected profit is this total minus
-        // what has already been realized.
+        // assuming each step fills at its target price.
         $expectedByCurrency = $this->expectedProfitByCurrency($userId, $from, $to);
 
         $data = $execRows->map(function (BotBuyExecution $row) use ($realizedPnl, $expectedByCurrency) {
@@ -162,9 +160,7 @@ class ReportController extends Controller
             }
 
             $realized = (string) ($realizedPnl[$row->currency_id] ?? '0');
-
-            // Expected profit still to come = full expected profit at all targets - already realized.
-            $expectedProfit = bcsub($expectedByCurrency[$row->currency_id] ?? '0', $realized, 16);
+            $expectedProfit = $expectedByCurrency[$row->currency_id] ?? '0';
             if (bccomp($expectedProfit, '0', 8) === 0) {
                 $expectedProfit = '0';
             }
