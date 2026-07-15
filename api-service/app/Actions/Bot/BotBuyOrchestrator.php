@@ -164,19 +164,29 @@ class BotBuyOrchestrator
     }
 
     /**
-     * USDT already committed to each currency across the user's live bot
-     * positions: in-flight buys (PENDING/BUYING) plus BOUGHT executions that
-     * are still holding coin (no sell orders opened yet, or at least one still
-     * OPEN). Fully-exited positions (all sells FILLED/CANCELED) are excluded.
+     * USDT still committed to each currency across the user's live bot
+     * positions. Used as the per-currency offset when enforcing
+     * max_allocation_percent against the total wallet balance.
      *
-     * Used as the per-currency offset when enforcing max_allocation_percent
-     * against the total wallet balance.
+     * Two sources, so partially-exited positions release headroom as their
+     * sell tiers fill (rather than staying "fully committed" until the whole
+     * position exits):
+     *
+     *   1. In-flight buys (PENDING/BUYING) and freshly-bought positions with no
+     *      sell tiers opened yet lock their FULL allocated_usdt.
+     *   2. Bought positions still holding coin count only the cost basis of the
+     *      tiers whose sell order is still OPEN (amount_to_sell × avg_buy_price).
+     *      Tiers already sold have returned their principal to the free balance,
+     *      so they no longer count against the currency's cap.
      *
      * @return array<int, string> currency_id => committed_usdt
      */
     private function committedUsdtPerCurrency(int $userId): array
     {
-        return BotBuyExecution::query()
+        $committed = [];
+
+        // (1) Full allocation for in-flight buys and bought-but-not-yet-selling.
+        $fullAlloc = BotBuyExecution::query()
             ->whereHas('botOrder', fn ($q) => $q->where('user_id', $userId))
             ->where(function ($q) {
                 $q->whereIn('status', [
@@ -184,17 +194,40 @@ class BotBuyOrchestrator
                     BotBuyExecution::STATUS_BUYING,
                 ])->orWhere(function ($q2) {
                     $q2->where('status', BotBuyExecution::STATUS_BOUGHT)
-                        ->where(function ($q3) {
-                            $q3->whereDoesntHave('sellOrders')
-                                ->orWhereHas('sellOrders', fn ($s) => $s->where('status', BotSellOrder::STATUS_OPEN));
-                        });
+                        ->whereDoesntHave('sellOrders');
                 });
             })
             ->groupBy('currency_id')
             ->selectRaw('currency_id, SUM(allocated_usdt) as committed')
-            ->pluck('committed', 'currency_id')
-            ->map(fn ($v) => (string) $v)
-            ->all();
+            ->pluck('committed', 'currency_id');
+
+        foreach ($fullAlloc as $currencyId => $amount) {
+            $committed[(int) $currencyId] = bcadd(
+                $committed[(int) $currencyId] ?? '0',
+                (string) $amount,
+                8,
+            );
+        }
+
+        // (2) Remaining held cost basis of still-OPEN sell tiers.
+        $openSellCostBasis = BotSellOrder::query()
+            ->where('bot_sell_orders.status', BotSellOrder::STATUS_OPEN)
+            ->join('bot_buy_executions', 'bot_buy_executions.id', '=', 'bot_sell_orders.bot_buy_execution_id')
+            ->join('bot_orders', 'bot_orders.id', '=', 'bot_buy_executions.bot_order_id')
+            ->where('bot_orders.user_id', $userId)
+            ->groupBy('bot_buy_executions.currency_id')
+            ->selectRaw('bot_buy_executions.currency_id as currency_id, SUM(bot_sell_orders.amount_to_sell * bot_buy_executions.avg_buy_price) as committed')
+            ->pluck('committed', 'currency_id');
+
+        foreach ($openSellCostBasis as $currencyId => $amount) {
+            $committed[(int) $currencyId] = bcadd(
+                $committed[(int) $currencyId] ?? '0',
+                (string) $amount,
+                8,
+            );
+        }
+
+        return array_map(fn ($v) => (string) $v, $committed);
     }
 
     private function persistAndDispatch(
