@@ -16,8 +16,10 @@ class Status implements FilterContract
     public function handle($value = null): void
     {
         if ($value === 'active') {
-            $this->query->whereHas('chains');
+            $this->query->where('is_active', true);
         } elseif ($value === 'inactive') {
+            $this->query->where('is_active', false);
+        } elseif ($value === 'no_chains') {
             $this->query->whereDoesntHave('chains');
         }
     }

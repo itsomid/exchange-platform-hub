@@ -20,24 +20,42 @@ class CurrencyController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
 
         $availableChains = CurrencyChain::query()->distinct()->orderBy('chain')->pluck('chain');
 
-        $currencies = Currency::query()->with('chains')->filterBy(request()->all())->get();
+        // Global stats over the whole dataset (independent of the current filters).
+        $totalCount = Currency::query()->count();
+        $activeCount = Currency::query()->where('is_active', true)->count();
+        $inactiveCount = Currency::query()->where('is_active', false)->count();
+        $noChainsCount = Currency::query()->whereDoesntHave('chains')->count();
 
-        $currenciesWithChainsCount = $currencies->filter(function ($currency) {
-            return $currency->chains->isNotEmpty();
-        })->count();
-        $currenciesWithoutChainsCount = $currencies->filter(function ($currency) {
-            return $currency->chains->isEmpty();
-        })->count();
+        // By default (no explicit status in the request) hide inactive coins.
+        $filters = $request->all();
+        if (! $request->has('status')) {
+            $filters['status'] = 'active';
+        }
+
+        $currencies = Currency::query()
+            ->with('chains')
+            ->filterBy($filters)
+            ->orderBy('id')
+            ->paginate(20)
+            ->withQueryString();
+
+        if ($request->ajax()) {
+            return view('dashboard.exchange.currency._table', [
+                'currencies' => $currencies,
+            ])->render();
+        }
 
         return view('dashboard.exchange.currency.index', [
             'currencies' => $currencies,
-            'currenciesWithChainsCount' => $currenciesWithChainsCount,
-            'currenciesWithoutChainsCount' => $currenciesWithoutChainsCount,
+            'totalCount' => $totalCount,
+            'activeCount' => $activeCount,
+            'inactiveCount' => $inactiveCount,
+            'noChainsCount' => $noChainsCount,
             'availableChains' => $availableChains,
         ]);
     }
