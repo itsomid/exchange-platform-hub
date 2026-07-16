@@ -1,6 +1,11 @@
 @php
     $reason = trim((string) ($execution->failure_reason ?? ''));
-    $showFailure = $reason !== '' || in_array($execution->status, ['FAILED', 'SKIPPED'], true);
+    // A BOUGHT execution succeeded. Any note it carries (e.g. a smart-collapse
+    // note) is informational, not a failure, so it must never surface as an
+    // execution error. Guards legacy rows where the collapse note was stored
+    // in failure_reason.
+    $showFailure = $execution->status !== 'BOUGHT'
+        && ($reason !== '' || in_array($execution->status, ['FAILED', 'SKIPPED'], true));
 @endphp
 
 @if ($showFailure)

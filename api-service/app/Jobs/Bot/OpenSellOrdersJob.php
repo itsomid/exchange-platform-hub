@@ -117,14 +117,14 @@ class OpenSellOrdersJob implements ShouldQueue
         }
 
         // Persist collapse metadata up front (does not depend on exchange placement).
+        // A smart-collapse is NOT a failure: the buy succeeded and the tiers were
+        // merged intentionally because of p2p_min_order_value. The collapse is
+        // already conveyed by the original/effective counts, so we never write it
+        // to failure_reason (which the UI renders as a buy-execution error).
         DB::transaction(function () use ($execution, $result) {
-            $reasonSuffix = $result['collapsed'] ? ($result['note'] ?? null) : null;
             $execution->update([
                 'original_sell_orders_count'  => $result['original_count'],
                 'effective_sell_orders_count' => $result['effective_count'],
-                'failure_reason'              => $reasonSuffix
-                    ? trim(((string) $execution->failure_reason) . ' | ' . $reasonSuffix, ' |')
-                    : $execution->failure_reason,
             ]);
         });
 

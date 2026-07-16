@@ -283,8 +283,24 @@
                                     @if ($orig === null && $eff === null)
                                         <strong>—</strong>
                                     @elseif ($orig !== null && $eff !== null && $eff != $orig)
-                                        <span class="badge bg-warning text-dark">{{ $eff }}/{{ $orig }}
-                                            (Collapsed)
+                                        @php
+                                            $p2pMin = data_get($execution->signal_snapshot, 'effective_p2p_min_order_value');
+                                            $posValue = (float) $execution->filled_amount * (float) $execution->avg_buy_price;
+                                            $avgTierValue = $orig > 0 ? $posValue / $orig : 0;
+                                        @endphp
+                                        <span class="d-inline-flex align-items-center gap-1">
+                                            <span class="badge bg-warning text-dark">{{ $eff }}/{{ $orig }}
+                                                (Collapsed)</span>
+                                            <i class="fa-regular fa-info-circle text-warning" style="cursor:help"
+                                                data-bs-toggle="tooltip" data-bs-html="true" data-bs-placement="top"
+                                                title="<div class='text-end' style='min-width:250px;line-height:1.7'>
+                                                    <div class='fw-bold mb-1'>چرا پله‌های فروش ادغام شد؟</div>
+                                                    <div class='mb-1'>برای این ارز <b>{{ $orig }}</b> پله فروش تعریف شده بود، اما چون مقدار خریداری‌شده کم بود، اگر همان مقدار به <b>{{ $orig }}</b> پله تقسیم می‌شد ارزش هر پله کمتر از حداقل ارزش سفارش مجاز در صرافی مرجع (P2P) می‌شد. به همین دلیل ربات پله‌ها را ادغام کرد تا ارزش هر پله بالای حداقل بماند و در نهایت به <b>{{ $eff }}</b> پله رسید.</div>
+                                                    <hr class='my-1'>
+                                                    <div>کل ارزش موقعیت ≈ <b class='font-monospace'>{{ formatNumberTrimZeros($posValue, 2) }}</b> USDT</div>
+                                                    <div>حداقل ارزش هر سفارش (P2P) = <b class='font-monospace'>{{ $p2pMin !== null ? formatNumberTrimZeros($p2pMin, 2) : '—' }}</b> USDT</div>
+                                                    <div>ارزش تقریبی هر پله در حالت <b>{{ $orig }}</b>‌تایی ≈ <b class='font-monospace'>{{ formatNumberTrimZeros($avgTierValue, 2) }}</b> USDT (کمتر از حداقل)</div>
+                                                </div>"></i>
                                         </span>
                                     @else
                                         <strong>{{ $eff ?? $orig }}/{{ $orig }}</strong>
@@ -701,6 +717,13 @@
                     }
                 });
             });
+
+            // ── Bootstrap tooltips (e.g. sell-target collapse explanation) ────────
+            if (window.bootstrap && bootstrap.Tooltip) {
+                document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+                    new bootstrap.Tooltip(el);
+                });
+            }
 
             // ── Live price via WebSocket ──────────────────────────────────────────
             if (typeof window.Echo === 'undefined') {
