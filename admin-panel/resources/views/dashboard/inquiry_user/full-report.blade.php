@@ -117,13 +117,22 @@
                                     <td>
                                         <div class="d-flex">
                                             <div class="avatar me-2">
-                                                <img src="{{ $wallet->currency->coinLogo() }}" class="img-fluid"
-                                                    width="50px">
+                                                @if ($wallet->currency)
+                                                    <img src="{{ $wallet->currency->coinLogo() }}" class="img-fluid"
+                                                        width="50px">
+                                                @else
+                                                    <span class="avatar-initial rounded-circle bg-label-danger">?</span>
+                                                @endif
                                             </div>
                                             <div class="d-flex flex-column">
-                                                <span
-                                                    class="fw-medium text-black">{{ $wallet->currency->persian_name }}</span>
-                                                <small>{{ $wallet->currency->name }}</small>
+                                                @if ($wallet->currency)
+                                                    <span
+                                                        class="fw-medium text-black">{{ $wallet->currency->persian_name }}</span>
+                                                    <small>{{ $wallet->currency->name }}</small>
+                                                @else
+                                                    <span class="fw-medium text-danger">{{ $wallet->currency_symbol }}</span>
+                                                    <small class="text-danger">ارز در currencies یافت نشد (wallet #{{ $wallet->id }})</small>
+                                                @endif
                                             </div>
                                         </div>
                                     </td>
@@ -605,7 +614,7 @@
                                                         <span class="text-muted">{{ $deposit->currency_symbol }}</span>
                                                     @endif
                                                 </td>
-                                                <td>{{ $deposit->currencyChain->chain_name }}</td>
+                                                <td>{{ $deposit->currencyChain?->chain_name ?? '—' }}</td>
                                                 <td class="font-number" dir="ltr">
                                                     <h6 class="mb-0">{{ formatNumberTrimZeros($deposit->amount) }}</h6>
                                                 </td>

@@ -119,6 +119,7 @@ class ExchangeWalletController extends Controller
             return [
                 'balances' => $balances,
                 'error' => $balanceData['error'],
+                'details' => $balanceData['details'] ?? null,
             ];
         }
 
@@ -240,7 +241,10 @@ class ExchangeWalletController extends Controller
         $cacheResult = $this->cacheBalances($walletChain, $forceRefresh);
 
         if (isset($cacheResult['error'])) {
-            return response()->json(['error' => $cacheResult['error']], 500);
+            return response()->json([
+                'error' => $cacheResult['error'],
+                'details' => $cacheResult['details'] ?? null,
+            ], 500);
         }
 
         $formattedAmount = $cacheResult['amount'] ?? '0';
@@ -278,7 +282,10 @@ class ExchangeWalletController extends Controller
 
         $cacheResult = $this->cacheBalances($walletChain);
         if (isset($cacheResult['error'])) {
-            return response()->json(['error' => $cacheResult['error']], 500);
+            return response()->json([
+                'error' => $cacheResult['error'],
+                'details' => $cacheResult['details'] ?? null,
+            ], 500);
         }
 
         // Return the balance data as JSON

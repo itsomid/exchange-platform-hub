@@ -4,13 +4,13 @@
 
     {{-- Statistics Cards --}}
     <div class="row g-4 mb-4">
-        <div class="col-sm-12 col-xl-4">
+        <div class="col-sm-6 col-xl-3">
             <div class="card ">
                 <div class="card-body py-3">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
                             <div class="text-muted small mb-1">مجموع کوین‌ها</div>
-                            <h3 class="mb-0 fw-bold">{{ $currencies->count() }}</h3>
+                            <h3 class="mb-0 fw-bold">{{ $totalCount }}</h3>
                         </div>
                         <div class="avatar avatar-md">
                             <span class="avatar-initial rounded bg-label-primary">
@@ -21,13 +21,13 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-12 col-xl-4">
+        <div class="col-sm-6 col-xl-3">
             <div class="card ">
                 <div class="card-body py-3">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
                             <div class="text-muted small mb-1">کوین‌های فعال</div>
-                            <h3 class="mb-0 fw-bold text-success">{{ $currenciesWithChainsCount }}</h3>
+                            <h3 class="mb-0 fw-bold text-success">{{ $activeCount }}</h3>
                         </div>
                         <div class="avatar avatar-md">
                             <span class="avatar-initial rounded bg-label-success">
@@ -38,17 +38,34 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-12 col-xl-4">
+        <div class="col-sm-6 col-xl-3">
             <div class="card ">
                 <div class="card-body py-3">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
                             <div class="text-muted small mb-1">کوین‌های غیرفعال</div>
-                            <h3 class="mb-0 fw-bold text-warning">{{ $currenciesWithoutChainsCount }}</h3>
+                            <h3 class="mb-0 fw-bold text-warning">{{ $inactiveCount }}</h3>
                         </div>
                         <div class="avatar avatar-md">
                             <span class="avatar-initial rounded bg-label-warning">
                                 <i class="fa-solid fa-circle-xmark fa-lg"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card ">
+                <div class="card-body py-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small mb-1">بدون شبکه</div>
+                            <h3 class="mb-0 fw-bold text-danger">{{ $noChainsCount }}</h3>
+                        </div>
+                        <div class="avatar avatar-md">
+                            <span class="avatar-initial rounded bg-label-danger">
+                                <i class="fa-solid fa-link-slash fa-lg"></i>
                             </span>
                         </div>
                     </div>
@@ -60,23 +77,23 @@
     {{-- Search & Filter --}}
     <div class="card mb-4">
         <div class="card-body">
-            <form id="filterForm" class="row g-3 align-items-end" action="{{ route('admin.currency.index') }}" method="get">
+            <div id="filterForm" class="row g-3 align-items-end">
 
                 <div class="col-md-4">
                     <label class="form-label" for="search">
                         <i class="fa-light fa-magnifying-glass me-1"></i>
                         جست‌وجو (نام / سیمبول)
                     </label>
-                    <input type="text" id="search" name="search" class="form-control" placeholder="مثال: Bitcoin یا BTC ..."
-                        value="{{ request('search') }}">
+                    <input type="text" id="search" name="search" class="form-control currency-filter"
+                        placeholder="مثال: Bitcoin یا BTC ..." value="{{ request('search') }}" autocomplete="off">
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label" for="chain">
                         <i class="fa-light fa-link me-1"></i>
                         شبکه
                     </label>
-                    <select id="chain" name="chain" class="form-select">
+                    <select id="chain" name="chain" class="form-select currency-filter">
                         <option value="">همه شبکه‌ها</option>
                         @foreach($availableChains as $chainValue)
                             <option value="{{ $chainValue }}" {{ request('chain') == $chainValue ? 'selected' : '' }}>
@@ -86,198 +103,56 @@
                     </select>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label" for="status">
                         <i class="fa-light fa-toggle-on me-1"></i>
                         وضعیت
                     </label>
-                    <select id="status" name="status" class="form-select">
-                        <option value="">همه</option>
-                        <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>فعال (دارای شبکه)
-                        </option>
-                        <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>غیرفعال (بدون شبکه)
-                        </option>
+                    <select id="status" name="status" class="form-select currency-filter">
+                        <option value="" {{ request('status') === '' ? 'selected' : '' }}>همه</option>
+                        <option value="active" {{ request('status', 'active') == 'active' ? 'selected' : '' }}>فعال</option>
+                        <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>غیرفعال</option>
+                        <option value="no_chains" {{ request('status') == 'no_chains' ? 'selected' : '' }}>بدون شبکه</option>
                     </select>
                 </div>
 
-                <div class="col-md-2 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary flex-grow-1">
-                        <i class="fa-light fa-filter me-1"></i>
-                        فیلتر
-                    </button>
-                    <a href="{{ route('admin.currency.index') }}" class="btn btn-outline-secondary" title="پاک کردن فیلتر">
-                        <i class="fa-light fa-xmark"></i>
-                    </a>
+                <div class="col-md-2">
+                    <label class="form-label" for="deposit">
+                        <i class="fa-light fa-circle-arrow-down me-1"></i>
+                        وضعیت واریز
+                    </label>
+                    <select id="deposit" name="deposit" class="form-select currency-filter">
+                        <option value="">همه</option>
+                        <option value="enabled" {{ request('deposit') == 'enabled' ? 'selected' : '' }}>فعال</option>
+                        <option value="disabled" {{ request('deposit') == 'disabled' ? 'selected' : '' }}>غیرفعال</option>
+                    </select>
                 </div>
-            </form>
+
+                <div class="col-md-2">
+                    <label class="form-label" for="withdraw">
+                        <i class="fa-light fa-circle-arrow-up me-1"></i>
+                        وضعیت برداشت
+                    </label>
+                    <select id="withdraw" name="withdraw" class="form-select currency-filter">
+                        <option value="">همه</option>
+                        <option value="enabled" {{ request('withdraw') == 'enabled' ? 'selected' : '' }}>فعال</option>
+                        <option value="disabled" {{ request('withdraw') == 'disabled' ? 'selected' : '' }}>غیرفعال</option>
+                    </select>
+                </div>
+
+                <div class="col-12 d-flex justify-content-end">
+                    <button type="button" id="clearFilters" class="btn btn-outline-secondary btn-sm">
+                        <i class="fa-light fa-xmark me-1"></i>
+                        پاک کردن فیلترها
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
-    {{-- Currency Table --}}
-    <div class="card">
-        <div class="card-header d-flex align-items-center justify-content-between py-3">
-            <h5 class="mb-0">
-                <i class="fa-light fa-list me-2"></i>
-                لیست کوین‌ها
-                <span class="badge bg-label-secondary ms-2">{{ $currencies->count() }}</span>
-            </h5>
-            <a href="{{ route('admin.currency.create') }}" class="btn btn-primary btn-sm">
-                <i class="fa fa-plus me-1"></i>
-                افزودن کوین جدید
-            </a>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr class="text-center">
-                        <th class="fw-semibold" style="width: 50px">#</th>
-                        <th class="fw-semibold text-start" style="min-width: 200px">کوین</th>
-                        <th class="fw-semibold">شبکه‌ها</th>
-                        <th class="fw-semibold">کارمزد برداشت صرافی</th>
-                        <th class="fw-semibold">کارمزد شبکه</th>
-                        <th class="fw-semibold">وضعیت</th>
-                        <th class="fw-semibold" style="width: 100px">عملیات</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($currencies as $currency)
-                        <tr>
-                            <td class="text-center text-muted">{{ $currency->id }}</td>
-
-                            {{-- Coin Info (combined avatar + name + symbol) --}}
-                            <td>
-                                <div class="d-flex align-items-center gap-3">
-                                    <img src="{{ asset($currency->coinLogo()) }}" class="rounded-circle" width="40" height="40"
-                                        alt="{{ $currency->symbol }}">
-                                    <div>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="fw-semibold">{{ $currency->name }}</div>
-                                            @if(!$currency->is_active)
-                                                <span class="badge bg-label-warning">غیرفعال</span>
-                                            @endif
-                                        </div>
-                                        <small class="text-muted">{{ $currency->symbol }}</small>
-                                    </div>
-                                </div>
-                            </td>
-
-                            {{-- Chains --}}
-                            <td class="text-center">
-                                @if($currency->chains->count())
-                                    @foreach($currency->chains as $chain)
-                                        <div class="d-flex flex-wrap justify-content-center gap-1 px-2 py-1 ">
-
-                                            <span class="badge bg-label-primary d-block">{{ $chain->chain }}</span>
-
-                                        </div>
-                                    @endforeach
-                                @else
-                                    <span class="badge bg-label-danger">بدون شبکه</span>
-                                @endif
-                            </td>
-
-                            {{-- Exchange Withdrawal Fee --}}
-                            <td class="text-center">
-                                @if($currency->chains->count())
-                                    <div class="d-flex flex-column gap-1 align-items-center">
-                                        @foreach($currency->chains as $chain)
-                                            <div class="d-flex align-items-center gap-1 rounded px-2 py-1 bg-label-secondary"
-                                                style="font-size: 0.78rem;">
-                                                <span class="text-muted">{{ $currency->symbol }}</span>
-                                                <span
-                                                    class="fw-semibold font-number text-dark mb-1">{{ formatNumberTrimZeros($chain->exchange_withdrawal_fee, $currency->amount_precision) }}</span>
-
-                                                <span class="badge bg-label-primary"
-                                                    style="font-size: 0.68rem;">{{ $chain->chain }}</span>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @else
-                                    <span class="text-muted">—</span>
-                                @endif
-                            </td>
-
-                            {{-- Network Fee --}}
-                            <td class="text-center">
-                                @if($currency->chains->count())
-                                    <div class="d-flex flex-column gap-1 align-items-center">
-                                        @foreach($currency->chains as $chain)
-                                            <div class="d-flex align-items-center gap-1 rounded px-2 py-1 bg-label-secondary"
-                                                style="font-size: 0.78rem;">
-                                                <span class="text-muted">{{ $currency->symbol }}</span>
-                                                <span
-                                                    class="fw-semibold font-number text-dark mb-1">{{ formatNumberTrimZeros($chain->network_fee, $currency->amount_precision) }}</span>
-                                                <span class="badge bg-label-info" style="font-size: 0.68rem;">{{ $chain->chain }}</span>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @else
-                                    <span class="text-muted">—</span>
-                                @endif
-                            </td>
-
-                            {{-- Status --}}
-                            <td class="text-center">
-                                @if(!$currency->is_active)
-                                    <span class="badge bg-label-warning">کوین غیرفعال</span>
-                                @elseif($currency->chains->count())
-                                    <div class="d-flex flex-column gap-2 align-items-center">
-                                        @foreach($currency->chains as $chain)
-                                            <div class="d-flex rounded border px-2 py-1" style="min-width: 130px; font-size: 0.75rem;">
-                                                <div class="fw-semibold text-muted me-1 border-end pe-1" style="font-size: 0.7rem;">
-                                                    {{ $chain->chain }}
-                                                </div>
-                                                <div class="d-flex align-items-center justify-content-between gap-2">
-                                                    <span class="d-flex align-items-center gap-1">
-                                                        <i
-                                                            class="fa-solid fa-circle-arrow-down {{ $chain->deposit_enabled ? 'text-success' : 'text-danger' }}"></i>
-                                                        <span
-                                                            class="{{ $chain->deposit_enabled ? 'text-success' : 'text-danger' }}">واریز</span>
-                                                    </span>
-                                                    <span class="d-flex align-items-center gap-1">
-                                                        <i
-                                                            class="fa-solid fa-circle-arrow-up {{ $chain->withdraw_enabled ? 'text-success' : 'text-danger' }}"></i>
-                                                        <span
-                                                            class="{{ $chain->withdraw_enabled ? 'text-success' : 'text-danger' }}">برداشت</span>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @else
-                                    <span class="badge bg-label-danger">بدون شبکه</span>
-                                @endif
-                            </td>
-
-                            {{-- Actions --}}
-                            <td class="text-center">
-                                <div class="d-flex justify-content-center gap-2">
-                                    <a class="btn btn-icon btn-sm btn-outline-primary"
-                                        href="{{ route('admin.currency.edit', ['currency' => $currency->id]) }}" title="ویرایش">
-                                        <i class="fa-light fa-pen-to-square"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-icon btn-sm btn-outline-secondary btn-currency-preview"
-                                        data-currency-id="{{ $currency->id }}"
-                                        data-currency-url="{{ route('admin.currency.show', ['currency' => $currency->id]) }}"
-                                        title="مشاهده">
-                                        <i class="fa-light fa-eye"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="text-center py-5">
-                                <div class="text-muted">
-                                    <i class="fa-light fa-inbox fa-3x mb-3 d-block"></i>
-                                    کوینی یافت نشد
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+    {{-- Currency Table (AJAX target) --}}
+    <div id="currencyTableContainer" class="position-relative">
+        @include('dashboard.exchange.currency._table')
     </div>
 
     {{-- Currency Preview Modal --}}
@@ -562,6 +437,119 @@
                         document.getElementById('modal-loading').classList.add('d-none');
                         document.getElementById('modal-error').classList.remove('d-none');
                     });
+            });
+        })();
+    </script>
+
+    {{-- Dynamic (AJAX) search / filter / pagination --}}
+    {{--
+        NOTE: A Vue app is mounted on #app (see resources/js/vue.conf.js) which
+        re-renders the whole content on mount and destroys any directly-attached
+        DOM listeners/node references. So everything below uses event delegation
+        on `document` and re-queries the container to survive that re-render.
+    --}}
+    <script>
+        (function () {
+            'use strict';
+
+            const baseUrl = @json(route('admin.currency.index'));
+            let debounceTimer = null;
+            let activeController = null;
+
+            function getFilterEls() {
+                return Array.from(document.querySelectorAll('.currency-filter'));
+            }
+
+            function buildParams() {
+                const params = new URLSearchParams();
+                getFilterEls().forEach(function (el) {
+                    const value = (el.value || '').trim();
+                    if (value !== '' || el.id === 'status') {
+                        // Always send status (even empty = "all") so the server
+                        // does not fall back to the default "active" filter.
+                        params.set(el.name, value);
+                    }
+                });
+                return params;
+            }
+
+            function setLoading(isLoading) {
+                const container = document.getElementById('currencyTableContainer');
+                if (!container) return;
+                container.style.opacity = isLoading ? '0.5' : '';
+                container.style.pointerEvents = isLoading ? 'none' : '';
+            }
+
+            function load(url) {
+                if (activeController) {
+                    activeController.abort();
+                }
+                activeController = new AbortController();
+
+                setLoading(true);
+
+                fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'text/html'
+                    },
+                    credentials: 'same-origin',
+                    signal: activeController.signal
+                })
+                    .then(function (res) {
+                        if (!res.ok) throw new Error('HTTP ' + res.status);
+                        return res.text();
+                    })
+                    .then(function (html) {
+                        const container = document.getElementById('currencyTableContainer');
+                        if (container) container.innerHTML = html;
+                        window.history.replaceState(null, '', url);
+                    })
+                    .catch(function (err) {
+                        if (err.name === 'AbortError') return;
+                        console.error('خطا در بارگذاری لیست کوین‌ها', err);
+                    })
+                    .finally(function () {
+                        setLoading(false);
+                    });
+            }
+
+            function reload() {
+                load(baseUrl + '?' + buildParams().toString());
+            }
+
+            document.addEventListener('input', function (e) {
+                if (e.target && e.target.id === 'search') {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(reload, 300);
+                }
+            });
+
+            document.addEventListener('change', function (e) {
+                const el = e.target;
+                if (el && el.classList && el.classList.contains('currency-filter') && el.id !== 'search') {
+                    reload();
+                }
+            });
+
+            document.addEventListener('click', function (e) {
+                if (e.target.closest('#clearFilters')) {
+                    getFilterEls().forEach(function (el) {
+                        if (el.tagName === 'SELECT') {
+                            el.value = el.id === 'status' ? 'active' : '';
+                        } else {
+                            el.value = '';
+                        }
+                    });
+                    reload();
+                    return;
+                }
+
+                const link = e.target.closest('#currencyTableContainer .pagination a.page-link');
+                if (link && link.getAttribute('href')) {
+                    e.preventDefault();
+                    load(link.getAttribute('href'));
+                }
             });
         })();
     </script>
