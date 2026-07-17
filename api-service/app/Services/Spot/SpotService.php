@@ -303,7 +303,6 @@ class SpotService
 
         // Safety check: if LockedBalanceDetail doesn't exist (data inconsistency), log error and return
         if (!$lockedDetail) {
-            \Illuminate\Support\Facades\Log::channel('spot-order-matching')->error("LockedBalanceDetail not found for order {$order->id} during cancellation. Possible data inconsistency.");
             throw new InvalidArgumentException('خطا در لغو سفارش: اطلاعات قفل موجودی یافت نشد.');
         }
 

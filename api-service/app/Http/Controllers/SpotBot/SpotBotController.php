@@ -866,11 +866,7 @@ class SpotBotController extends Controller
                 try {
                     $this->ensureSufficientBalances($setting, $market, $currentPrice);
                 } catch (InsufficientBalanceException $exception) {
-                    Log::channel('spot-bot')->warning('Skipping orders due to insufficient balance', [
-                        'currency_id' => $setting->currency_id,
-                        'market_id' => $market->id,
-                        'error' => $exception->getMessage()
-                    ]);
+                
                     $orderErrors[] = $exception->getMessage();
                     // Skip to next setting (no orders)
                     continue;
@@ -1068,9 +1064,6 @@ class SpotBotController extends Controller
                 ->get();
 
             if ($userOrders->isEmpty()) {
-                Log::channel('spot-bot')->info('No user orders to match for market', [
-                    'market_id' => $marketId
-                ]);
                 return ['matched_orders' => 0, 'errors' => []];
             }
 
@@ -1101,14 +1094,6 @@ class SpotBotController extends Controller
                     if ($order->status === SpotOrderStatusEnum::COMPLETED || 
                         Math::comp($order->filled_quantity, $initialFilledQuantity) === 1) {
                         $matchedOrders++;
-                        Log::channel('spot-bot')->info('User order matched with bot orders', [
-                            'order_id' => $order->id,
-                            'user_id' => $order->user_id,
-                            'market_id' => $marketId,
-                            'initial_filled' => $initialFilledQuantity,
-                            'final_filled' => $order->filled_quantity,
-                            'status' => $order->status->value
-                        ]);
                     }
                 } catch (Throwable $e) {
                     $errors[] = "Order {$order->id}: " . $e->getMessage();
@@ -1120,12 +1105,7 @@ class SpotBotController extends Controller
                 }
             }
 
-            Log::channel('spot-bot')->info('Completed matching existing user orders with bot orders', [
-                'market_id' => $marketId,
-                'total_user_orders' => $userOrders->count(),
-                'matched_orders' => $matchedOrders,
-                'errors_count' => count($errors)
-            ]);
+          
         } catch (Throwable $e) {
             Log::channel('spot-bot')->error('Failed to trigger matching for existing orders', [
                 'market_id' => $marketId,

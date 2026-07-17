@@ -59,7 +59,7 @@ readonly class OrderMatchingEngine
                 DB::commit();
             } catch (Throwable $e) {
                 DB::rollBack();
-                \Illuminate\Support\Facades\Log::channel('spot-order-matching')->error('Order matching failed: ' . $e->getMessage(), ['exception' => $e]);
+                //Log::channel('spot-order-matching')->error('Order matching failed: ' . $e->getMessage(), ['exception' => $e]);
             }
         }
     }
@@ -104,12 +104,12 @@ readonly class OrderMatchingEngine
                     $order->user_id
                 );
                 if (Math::comp($buyerWallet->available_balance, $requiredCost) === -1) {
-                    Log::channel('spot-order-matching')->warning(
-                        "Market BUY order {$order->id}: insufficient balance "
-                        . "({$buyerWallet->available_balance} {$order->market->quote_currency}) "
-                        . "for required trade cost {$requiredCost} at price {$oppositeOrder->price}. "
-                        . 'Cancelling remaining order.'
-                    );
+                    // Log::channel('spot-order-matching')->warning(
+                    //     "Market BUY order {$order->id}: insufficient balance "
+                    //     . "({$buyerWallet->available_balance} {$order->market->quote_currency}) "
+                    //     . "for required trade cost {$requiredCost} at price {$oppositeOrder->price}. "
+                    //     . 'Cancelling remaining order.'
+                    // );
                     $this->cancelRemainingMarketOrder($order);
                     break;
                 }
@@ -128,11 +128,11 @@ readonly class OrderMatchingEngine
         if ($order->status === SpotOrderStatusEnum::OPEN && Math::comp($finalRemindedQuantity, 0) === 1) {
             if (Math::comp($finalRemindedQuantity, $initialRemindedQuantity) === 0) {
                 // Case 1: No fills occurred at all
-                \Illuminate\Support\Facades\Log::channel('spot-order-matching')->info("Market order {$order->id} could not be filled. Canceling.");
+               // Log::channel('spot-order-matching')->info("Market order {$order->id} could not be filled. Canceling.");
                 $this->cancelRemainingMarketOrder($order);
             } elseif (Math::comp($finalRemindedQuantity, $initialRemindedQuantity) === -1) {
                 // Case 2: Partially filled
-                \Illuminate\Support\Facades\Log::channel('spot-order-matching')->info("Market order {$order->id} was partially filled. Canceling remaining quantity: {$finalRemindedQuantity}.");
+                //Log::channel('spot-order-matching')->info("Market order {$order->id} was partially filled. Canceling remaining quantity: {$finalRemindedQuantity}.");
                 $this->cancelRemainingMarketOrder($order);
             }
             // If $finalRemindedQuantity is somehow greater than initial, it's an error state.
@@ -223,7 +223,7 @@ readonly class OrderMatchingEngine
                     if (Math::comp($priceDiff, 0) === 1) {
                         $deviationPercent = Math::mul(Math::div($priceDiff, $bestOppositePrice), 100);
                         if (Math::comp($deviationPercent, $maxDeviationPercent) === 1) {
-                            Log::channel('spot-order-matching')->info('[LIMIT-PROTECTION] Skipping immediate match for BUY order '.$order->id.' price='.$order->price.' bestAsk='.$bestOppositePrice.' deviation='.$deviationPercent.'% > '.$maxDeviationPercent.'%');
+                           // Log::channel('spot-order-matching')->info('[LIMIT-PROTECTION] Skipping immediate match for BUY order '.$order->id.' price='.$order->price.' bestAsk='.$bestOppositePrice.' deviation='.$deviationPercent.'% > '.$maxDeviationPercent.'%');
                             return; // Post order without matching
                         }
                     }
@@ -233,7 +233,7 @@ readonly class OrderMatchingEngine
                     if (Math::comp($priceDiff, 0) === 1) {
                         $deviationPercent = Math::mul(Math::div($priceDiff, $bestOppositePrice), 100);
                         if (Math::comp($deviationPercent, $maxDeviationPercent) === 1) {
-                            Log::channel('spot-order-matching')->info('[LIMIT-PROTECTION] Skipping immediate match for SELL order '.$order->id.' price='.$order->price.' bestBid='.$bestOppositePrice.' deviation='.$deviationPercent.'% > '.$maxDeviationPercent.'%');
+                           // Log::channel('spot-order-matching')->info('[LIMIT-PROTECTION] Skipping immediate match for SELL order '.$order->id.' price='.$order->price.' bestBid='.$bestOppositePrice.' deviation='.$deviationPercent.'% > '.$maxDeviationPercent.'%');
                             return; // Post order without matching
                         }
                     }
@@ -645,10 +645,10 @@ readonly class OrderMatchingEngine
                 // Check if any part of the order was filled before cancellation
                 if (Math::comp($filledQuantity, 0) === 1 && Math::comp($filledQuantity, $initialQuantity) === -1) {
                     $newStatus = SpotOrderStatusEnum::PARTIALLY_FILLED_CANCELED;
-                    \Illuminate\Support\Facades\Log::channel('spot-order-matching')->info("Market order {$order->id} was partially filled. Setting status to PARTIALLY_FILLED_CANCELED.");
+                    //Log::channel('spot-order-matching')->info("Market order {$order->id} was partially filled. Setting status to PARTIALLY_FILLED_CANCELED.");
                 } else {
-                    \Illuminate\Support\Facades\Log::channel('spot-order-matching')->info("Market order {$order->id} had no fills before cancellation. Setting status to CANCELED.");
-                }
+                    //Log::channel('spot-order-matching')->info("Market order {$order->id} had no fills before cancellation. Setting status to CANCELED.");
+                }   
 
                 $order->status = $newStatus; // Use the determined status
                 $order->save();
@@ -686,7 +686,7 @@ readonly class OrderMatchingEngine
             // Update the order book after cancellation
             $this->broadcastOrderBook($order->market_id);
         } else {
-            \Illuminate\Support\Facades\Log::channel('spot-order-matching')->warning("Attempted to cancel order {$order->id} which is not an open market order. Status: {$order->status->value}, Type: {$order->type->value}");
+            //Log::channel('spot-order-matching')->warning("Attempted to cancel order {$order->id} which is not an open market order. Status: {$order->status->value}, Type: {$order->type->value}");
         }
     }
 
@@ -704,11 +704,11 @@ readonly class OrderMatchingEngine
 
 
         if (Math::comp($remainedQuantity, 0) <= 0) {
-            \Illuminate\Support\Facades\Log::channel('spot-order-matching')->info("No remaining quantity ({$remainedQuantity}) to release balance for order {$order->id}. Initial: {$initialQuantity}, Filled: {$filledQuantity}");
+            //Log::channel('spot-order-matching')->info("No remaining quantity ({$remainedQuantity}) to release balance for order {$order->id}. Initial: {$initialQuantity}, Filled: {$filledQuantity}");
             return; // Nothing to release
         }
 
-        \Illuminate\Support\Facades\Log::channel('spot-order-matching')->info("Attempting to release balance for remaining quantity {$remainedQuantity} of order {$order->id}.");
+        //Log::channel('spot-order-matching')->info("Attempting to release balance for remaining quantity {$remainedQuantity} of order {$order->id}.");
 
 
         try {
@@ -729,10 +729,10 @@ readonly class OrderMatchingEngine
                     $amountToUnlock = $lockedDetail->amount;
                     // Decrease locked balance (which should increase available balance)
                     $this->walletRepository->decreaseLockedBalance($order->user_id, $order->market->quote_currency, $amountToUnlock);
-                    \Illuminate\Support\Facades\Log::channel('spot-order-matching')->info("Released remaining locked quote balance for canceled market buy order {$order->id} based on LockedBalanceDetail. Amount: {$amountToUnlock}");
+                    //Log::channel('spot-order-matching')->info("Released remaining locked quote balance for canceled market buy order {$order->id} based on LockedBalanceDetail. Amount: {$amountToUnlock}");
                 } else {
                     // Fallback/Warning: If LockedBalanceDetail is missing or zero, or holds initial lock.
-                    \Illuminate\Support\Facades\Log::channel('spot-order-matching')->error("Could not find valid/updated LockedBalanceDetail to release funds accurately for canceled market buy order {$order->id}. Remained quantity: {$remainedQuantity}. Manual check required or revise unlock logic.");
+                    //Log::channel('spot-order-matching')->error("Could not find valid/updated LockedBalanceDetail to release funds accurately for canceled market buy order {$order->id}. Remained quantity: {$remainedQuantity}. Manual check required or revise unlock logic.");
                     // !! Consider implementing a more robust unlock calculation based on filled amount/price if possible !!
                 }
             } else {
@@ -743,14 +743,14 @@ readonly class OrderMatchingEngine
                     $currencyToUnlock = $order->market->base_currency;
                     $amountToUnlock = $remainedQuantity; // quantity that was not filled
                     $this->walletRepository->decreaseLockedBalance($order->user_id, $currencyToUnlock, $amountToUnlock);
-                    \Illuminate\Support\Facades\Log::channel('spot-order-matching')->info("Released remaining locked base balance for canceled non-market sell order {$order->id}. Amount: {$amountToUnlock}");
+                   // Log::channel('spot-order-matching')->info("Released remaining locked base balance for canceled non-market sell order {$order->id}. Amount: {$amountToUnlock}");
                 } else {
                     // Nothing to unlock for market sells; balances were taken directly from available.
-                    \Illuminate\Support\Facades\Log::channel('spot-order-matching')->info("No locked balance to release for canceled market sell order {$order->id}. Remaining quantity: {$remainedQuantity}");
+                   // Log::channel('spot-order-matching')->info("No locked balance to release for canceled market sell order {$order->id}. Remaining quantity: {$remainedQuantity}");
                 }
             }
         } catch (Throwable $e) {
-            \Illuminate\Support\Facades\Log::channel('spot-order-matching')->error("Failed to release locked balance for canceled order {$order->id}: " . $e->getMessage(), ['exception' => $e]);
+            //Log::channel('spot-order-matching')->error("Failed to release locked balance for canceled order {$order->id}: " . $e->getMessage(), ['exception' => $e]);
             // Rethrow or handle appropriately - failing to unlock funds is critical.
             throw $e;
         }
@@ -922,14 +922,6 @@ readonly class OrderMatchingEngine
             // Delete from Redis after persisting
             $this->inMemoryOrderBook->deleteOrder($inMemoryOrder->id);
 
-            Log::channel('spot-bot')->info('Bot order persisted for matching', [
-                'in_memory_id' => $inMemoryOrder->id,
-                'database_id' => $spotOrder->id,
-                'market_id' => $spotOrder->market_id,
-                'side' => $spotOrder->side->value,
-                'price' => $spotOrder->price,
-            ]);
-
             return $spotOrder;
         }
 
@@ -989,11 +981,7 @@ readonly class OrderMatchingEngine
         // Skip if quantity is below the market's minimum trade amount
         $minSellQuantity = $market->min_trade_amount ?? '0';
         if (Math::comp($quantity, '0') <= 0) {
-            Log::channel('spot-ref-exchange')->warning('Ref exchange sell skipped: quantity is zero after truncation', [
-                'spot_trade_id' => $spotTrade->id,
-                'market_id' => $spotTrade->market_id,
-                'original_quantity' => $tradeQuantity,
-            ]);
+    
             return;
         }
 
