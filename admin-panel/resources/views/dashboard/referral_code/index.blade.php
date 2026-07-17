@@ -66,11 +66,10 @@
                     <x-user-selection-component
                         input-name="user"
                         multiple="0"
-                        selected="{{ request()->filled('user')?$referralCodes[0]->user : '' }}"
-                        selected-label="{{ request()->filled('user')
-                        ? '('.$referralCodes[0]->user->id.'#) '.$referralCodes[0]->user->fullname().' | '.$referralCodes[0]->user->email
-                        : '' }}"
-
+                        selected="{{ $selectedUser?->id ?? '' }}"
+                        selected-label="{{ $selectedUser
+                            ? '('.$selectedUser->id.'#) '.$selectedUser->fullname().' | '.$selectedUser->email
+                            : '' }}"
                     ></x-user-selection-component>
                 </div>
                 <div class="col-md-12 text-right  mt-4">
@@ -161,13 +160,16 @@
                                 {{$referralCode->code}}
                             </td>
                             <td>
-
-                                <div class="d-flex flex-column">
-                                    <a href="" class="text-heading text-truncate">
-                                        <span class="fw-medium"> {{ $referralCode->user->email}}</span>
-                                    </a>
-                                    <small>(#{{$referralCode->user->id}}) {{ $referralCode->user->fullname()}}</small>
-                                </div>
+                                @if($referralCode->user)
+                                    <div class="d-flex flex-column">
+                                        <a href="" class="text-heading text-truncate">
+                                            <span class="fw-medium"> {{ $referralCode->user->email}}</span>
+                                        </a>
+                                        <small>(#{{$referralCode->user->id}}) {{ $referralCode->user->fullname()}}</small>
+                                    </div>
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
                             </td>
                             <td>
                                 {{$referralCode->introducer_fee}}% / {{$referralCode->friend_fee}}%
