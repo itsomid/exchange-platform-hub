@@ -150,6 +150,11 @@ class BotOrderController extends Controller
         $lockedPct = $actualInvestment > 0 ? min(100, ($locked / $actualInvestment) * 100) : 0;
         $freePct   = $actualInvestment > 0 ? max(0, 100 - $lockedPct) : 0;
 
+        // ── Referral: who introduced this user + how much they've earned from them ──
+        $user->loadMissing('introducerReferral.user');
+        $introducer = $user->introducerReferral?->user;
+        $referralPaid = (float) BotTradeSettlement::where('user_id', $user->id)->sum('referral_fee');
+
         $orders = BotOrder::where('user_id', $user->id)
             ->latest('created_at')
             ->paginate(15);
@@ -162,7 +167,7 @@ class BotOrderController extends Controller
             'tradeFees', 'transferFees', 'totalFees',
             'depositTransferFee', 'withdrawTransferFee', 'refExchangeFee',
             'networkFee', 'spreadFee', 'performanceFee', 'cancelFee',
-            'platformRevenue'
+            'platformRevenue', 'introducer', 'referralPaid'
         ));
     }
 
@@ -191,7 +196,7 @@ class BotOrderController extends Controller
     public function show(BotOrder $botOrder): View
     {
         $botOrder->load([
-            'user',
+            'user.introducerReferral.user',
             'buyExecutions.currency',
             'buyExecutions.sellOrders.settlement',
         ]);
@@ -232,11 +237,15 @@ class BotOrderController extends Controller
         $freedPct  = $totalInvested > 0 ? min(100, ($freedUsdt / $totalInvested) * 100) : 0;
         $lockedPct = $totalInvested > 0 ? min(100 - $freedPct, ($lockedUsdt / $totalInvested) * 100) : 0;
 
+        // ── Referral paid to this user's introducer for this order ──────────────
+        $introducer   = $botOrder->user?->introducerReferral?->user;
+        $referralPaid = $settlements->sum(fn ($s) => (float) $s->referral_fee);
+
         return view('dashboard.bot.orders.show', compact(
             'botOrder', 'settlements', 'markets',
             'totalInvested', 'freedUsdt', 'lockedUsdt',
             'totalPnl', 'positivePnl', 'negativePnl',
-            'freedPct', 'lockedPct'
+            'freedPct', 'lockedPct', 'introducer', 'referralPaid'
         ));
     }
 

@@ -32,4 +32,5 @@ enum TransactionSubTypeEnum: string
     case BOT_PERFORMANCE_FEE = 'bot_performance_fee';
     case BOT_CANCEL_FEE = 'bot_cancel_fee';
     case BOT_NETWORK_FEE = 'bot_network_fee';
+    case BOT_REFERRAL_COMMISSION = 'bot_referral_commission';
 }

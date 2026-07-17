@@ -18,6 +18,7 @@ class BotGlobalSettingsSeeder extends Seeder
             'alpha_weight'              => 0.15,
             'default_sell_orders_count' => 3,
             'performance_fee_percent'   => 22,
+            'referral_fee_percent'      => 4,
             'p2p_min_order_value'       => 5,
             'is_enabled'                => true,
             'transfer_fee_tiers'        => [

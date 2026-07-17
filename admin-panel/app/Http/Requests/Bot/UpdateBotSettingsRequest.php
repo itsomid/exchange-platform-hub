@@ -26,6 +26,7 @@ class UpdateBotSettingsRequest extends FormRequest
             'alpha_weight'              => ['required', 'numeric', 'min:0', 'max:1'],
             'default_sell_orders_count' => ['required', 'integer', 'min:1', 'max:10'],
             'performance_fee_percent'   => ['required', 'numeric', 'min:0', 'max:100'],
+            'referral_fee_percent'      => ['required', 'numeric', 'min:0', 'lte:performance_fee_percent'],
             'p2p_min_order_value'       => ['required', 'numeric', 'min:0.1', 'max:10000'],
             'precheck_floor_mode'       => ['required', 'in:single,multi'],
             'is_enabled'                => ['boolean'],
@@ -46,6 +47,7 @@ class UpdateBotSettingsRequest extends FormRequest
             'alpha_weight'              => 'وزن آلفا',
             'default_sell_orders_count' => 'تعداد پیش‌فرض سفارش فروش',
             'performance_fee_percent'   => 'کارمزد عملکرد (%)',
+            'referral_fee_percent'      => 'سهم معرف از کارمزد عملکرد (%)',
             'is_enabled'                => 'وضعیت ربات',
             'cancel_sell_on_exchange_enabled' => 'فروش کوین‌ها روی صرافی مرجع هنگام لغو',
         ];

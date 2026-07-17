@@ -10,7 +10,10 @@ use App\Models\Bot\BotGlobalSettings;
 use App\Models\Bot\BotSellOrder;
 use App\Models\Bot\BotTradeSettlement;
 use App\Models\Bot\BotWallet;
+use App\Models\ReferralCode;
+use App\Models\ReferralCodeUsage;
 use App\Models\Transaction;
+use App\Models\User;
 use App\Models\Wallet;
 use Illuminate\Support\Facades\DB;
 
@@ -83,6 +86,10 @@ class SettlementService
             }
             $netPnl = bcsub($pnlAfterFees, $performanceFee, self::SCALE);
 
+            // Referral: a slice of the exchange's performance fee is routed to the
+            // settling user's introducer. This does NOT change the user's net_pnl.
+            $referral = $this->resolveReferral($userId, $pnlAfterFees, $performanceFee);
+
             $settlement = BotTradeSettlement::create([
                 'user_id'              => $userId,
                 'bot_buy_execution_id' => $execution->id,
@@ -93,6 +100,8 @@ class SettlementService
                 'exchange_fee'         => $effectiveExchangeFee,
                 'spread_fee'           => $spreadFee,
                 'performance_fee'      => $performanceFee,
+                'referral_fee'         => $referral['fee'] ?? '0',
+                'referral_user_id'     => $referral['introducer']->id ?? null,
                 'cancel_fee'           => '0',
                 'net_pnl'              => $netPnl,
                 'settled_at'           => now(),
@@ -105,6 +114,7 @@ class SettlementService
 
             $this->updateWallet($userId, $execution, $costBasis, $netPnl);
             $this->writeTxns($userId, $execution, $grossRevenue, $networkFee, $effectiveExchangeFee, $spreadFee, $performanceFee, null);
+            $this->payReferral($referral, $execution, $userId);
 
             return $settlement;
         });
@@ -195,6 +205,8 @@ class SettlementService
 
             $netPnl = bcsub($pnlAfterFees, $perfFee, self::SCALE);
 
+            $referral = $this->resolveReferral($userId, $pnlAfterFees, $perfFee);
+
             $settlement = BotTradeSettlement::create([
                 'user_id'              => $userId,
                 'bot_buy_execution_id' => $execution->id,
@@ -205,6 +217,8 @@ class SettlementService
                 'exchange_fee'         => $effectiveExchangeFee,
                 'spread_fee'           => '0',
                 'performance_fee'      => $perfFee,
+                'referral_fee'         => $referral['fee'] ?? '0',
+                'referral_user_id'     => $referral['introducer']->id ?? null,
                 'cancel_fee'           => '0',
                 'net_pnl'              => $netPnl,
                 'settled_at'           => now(),
@@ -217,6 +231,7 @@ class SettlementService
 
             $this->updateWallet($userId, $execution, $costBasis, $netPnl);
             $this->writeTxns($userId, $execution, $grossRevenue, $networkFee, $effectiveExchangeFee, '0', $perfFee, null);
+            $this->payReferral($referral, $execution, $userId);
 
             return $settlement;
         });
@@ -253,6 +268,115 @@ class SettlementService
             'balance'        => $newBalance,
             'profit_balance' => $newProfit,
             'locked_balance' => $newLocked,
+        ]);
+    }
+
+    /**
+     * Determine the referral commission owed to the settling user's introducer.
+     *
+     * The commission is `referral_fee_percent` of the same profit base used for the
+     * performance fee (pnlAfterFees) and is capped at the performance fee itself, so
+     * it is always carved out of the exchange's take and never touches the user's
+     * net_pnl. Returns null (no referral) when the user has no introducer, the rate
+     * is zero, there is no positive profit, or the introducer has no USDT wallet.
+     *
+     * @return array{fee: string, introducer: User, referral_code: ReferralCode, wallet: Wallet}|null
+     */
+    private function resolveReferral(int $userId, string $pnlAfterFees, string $performanceFee): ?array
+    {
+        if (bccomp($pnlAfterFees, '0', self::SCALE) <= 0 || bccomp($performanceFee, '0', self::SCALE) <= 0) {
+            return null;
+        }
+
+        $referralPct = (string) BotGlobalSettings::current()->referral_fee_percent;
+        if (bccomp($referralPct, '0', self::SCALE) <= 0) {
+            return null;
+        }
+
+        $user = User::query()->find($userId);
+        if (! $user || ! $user->introducer_code) {
+            return null;
+        }
+
+        $referralCode = ReferralCode::query()->find($user->introducer_code);
+        if (! $referralCode) {
+            return null;
+        }
+
+        $introducer = User::query()->find($referralCode->user_id);
+        if (! $introducer) {
+            return null;
+        }
+
+        $wallet = Wallet::query()
+            ->where('user_id', $introducer->id)
+            ->where('currency_symbol', 'USDT')
+            ->lockForUpdate()
+            ->first();
+        if (! $wallet) {
+            return null;
+        }
+
+        $referralFee = bcdiv(bcmul($pnlAfterFees, $referralPct, self::SCALE), '100', self::SCALE);
+        // Never route more than the exchange's own performance-fee take on this settlement.
+        if (bccomp($referralFee, $performanceFee, self::SCALE) > 0) {
+            $referralFee = $performanceFee;
+        }
+        if (bccomp($referralFee, '0', self::SCALE) <= 0) {
+            return null;
+        }
+
+        return [
+            'fee'           => $referralFee,
+            'introducer'    => $introducer,
+            'referral_code' => $referralCode,
+            'wallet'        => $wallet,
+        ];
+    }
+
+    /**
+     * Credit the introducer's USDT wallet with the referral commission, record the
+     * payout transaction and log the referral-code usage. No exchange-wallet entry
+     * is written (the commission is funded from the performance-fee share).
+     *
+     * @param  array{fee: string, introducer: User, referral_code: ReferralCode, wallet: Wallet}|null  $referral
+     */
+    private function payReferral(?array $referral, BotBuyExecution $execution, int $fromUserId): void
+    {
+        if ($referral === null) {
+            return;
+        }
+
+        /** @var Wallet $wallet */
+        $wallet = $referral['wallet'];
+        /** @var User $introducer */
+        $introducer = $referral['introducer'];
+        /** @var ReferralCode $referralCode */
+        $referralCode = $referral['referral_code'];
+        $fee = $referral['fee'];
+
+        $wallet->increment('balance', $fee);
+        $wallet->refresh();
+
+        $transaction = Transaction::create([
+            'user_id'              => $introducer->id,
+            'wallet_id'            => $wallet->id,
+            'bot_order_id'         => $execution->bot_order_id,
+            'bot_buy_execution_id' => $execution->id,
+            'balance'              => $wallet->balance,
+            'amount'               => $fee,
+            'type'                 => TransactionTypeEnum::REFERRAL,
+            'subtype'              => TransactionSubTypeEnum::BOT_REFERRAL_COMMISSION,
+            'status'               => TransactionStatusEnum::SUCCESS,
+            'description'          => "Bot referral commission (introducer) from bot order #{$execution->bot_order_id}",
+        ]);
+
+        ReferralCodeUsage::create([
+            'referral_code_id' => $referralCode->id,
+            'used_by'          => $fromUserId,
+            'transaction_id'   => $transaction->id,
+            'type'             => 'introducer',
+            'used_at'          => now(),
         ]);
     }
 

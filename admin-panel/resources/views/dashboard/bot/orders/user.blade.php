@@ -171,7 +171,30 @@
                                 </div>
                             </div>
                         </div>
+                        @if ($introducer)
+                            <div class="col-6 col-md-3">
+                                <div id="card-referral"
+                                    class="card-clickable border border-info rounded p-3 text-center h-100 d-flex flex-column justify-content-between"
+                                    style="background:rgba(3,195,236,.05); cursor:pointer;">
+                                    <small class="text-muted d-block mb-1">
+                                        <i class="fas fa-user-friends fa-xs me-1 text-info"></i>مجموع پرداختی به معرف (کل
+                                        سفارش‌ها)
+                                    </small>
+                                    <div class="fw-bold fs-6 font-number text-info">
+                                        {{ formatNumberTrimZeros($referralPaid) }}
+                                    </div>
+                                    <small class="text-muted">USDT</small>
+                                    <div class="mt-2">
+                                        <span class="badge bg-info bg-opacity-10 text-info" style="font-size:.7rem;">
+                                            <i class="fas fa-chevron-down fa-xs me-1"></i>جزئیات
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
                     </div>
+
+
 
                     {{-- Hidden popover contents (not rendered in DOM flow) --}}
                     <div class="d-none">
@@ -236,6 +259,45 @@
                                 </div>
                             @endif
                         </div>
+                        @if ($introducer)
+                            <div id="pop-referral">
+                                <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
+                                    <small class="text-muted">شناسه</small>
+                                    <span class="font-number">#{{ $introducer->id }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
+                                    <small class="text-muted">نام</small>
+                                    <span>{{ trim($introducer->fullname()) ?: '—' }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
+                                    <small class="text-muted">نام کاربری</small>
+                                    <span>{{ $introducer->username ?: '—' }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
+                                    <small class="text-muted">ایمیل</small>
+                                    <span>{{ $introducer->email ?: '—' }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
+                                    <small class="text-muted">موبایل</small>
+                                    <span class="font-number">{{ $introducer->mobile ?: '—' }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
+                                    <small class="text-muted">کد معرف</small>
+                                    <span class="font-monospace">{{ $user->introducerReferral?->code ?: '—' }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center py-1 gap-3">
+                                    <small class="text-muted">پرداختی کل</small>
+                                    <span class="font-number text-info">{{ formatNumberTrimZeros($referralPaid) }}
+                                        <small style="font-size:.5rem;" class="text-muted">USDT</small></span>
+                                </div>
+                                <div class="pt-2 mt-1 border-top text-center">
+                                    <a href="{{ route('admin.user.edit', $introducer) }}" class="small text-info"
+                                        onclick="event.stopPropagation()">
+                                        <i class="fas fa-external-link-alt fa-xs me-1"></i>مشاهده پروفایل معرف
+                                    </a>
+                                </div>
+                            </div>
+                        @endif
                     </div>
 
                     {{-- Capital allocation chart --}}
@@ -331,15 +393,13 @@
                                                 @if ($order->description)
                                                     <button type="button"
                                                         class="btn btn-sm btn-outline-danger js-view-order-system-description"
-                                                        title="توضیحات سیستمی"
-                                                        data-order-id="{{ $order->id }}">
+                                                        title="توضیحات سیستمی" data-order-id="{{ $order->id }}">
                                                         <i class="fas fa-robot"></i>
                                                     </button>
                                                 @endif
                                                 <button type="button"
                                                     class="btn btn-sm btn-outline-secondary js-edit-order-admin-description"
-                                                    title="یادداشت ادمین"
-                                                    data-order-id="{{ $order->id }}"
+                                                    title="یادداشت ادمین" data-order-id="{{ $order->id }}"
                                                     data-update-url="{{ route('admin.bot.order.update-description', $order) }}"
                                                     data-admin-description="{{ e($order->admin_description ?? '') }}">
                                                     <i class="fas fa-pen"></i>
@@ -351,9 +411,12 @@
                                             </div>
                                             @if ($order->description)
                                                 <div id="system-description-html-{{ $order->id }}" class="d-none">
-                                                    @include('dashboard.bot.orders.partials.system-description-segments', [
-                                                        'description' => $order->description,
-                                                    ])
+                                                    @include(
+                                                        'dashboard.bot.orders.partials.system-description-segments',
+                                                        [
+                                                            'description' => $order->description,
+                                                        ]
+                                                    )
                                                 </div>
                                             @endif
                                         </td>
@@ -428,6 +491,11 @@
                     cardId: 'card-total-fees',
                     contentId: 'pop-total-fees',
                     title: 'تفکیک کارمزدهای پرداختی'
+                },
+                {
+                    cardId: 'card-referral',
+                    contentId: 'pop-referral',
+                    title: 'اطلاعات معرف'
                 },
             ].forEach(function(cfg) {
                 var card = document.getElementById(cfg.cardId);

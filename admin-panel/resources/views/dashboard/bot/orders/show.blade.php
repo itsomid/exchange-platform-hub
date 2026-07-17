@@ -117,6 +117,35 @@
                         </div>
                     </div>
 
+                    {{-- ── Referral paid to the user's introducer for THIS order ── --}}
+                    @if ($introducer)
+                        <div class="border border-info rounded p-3 mb-4" style="background:rgba(3,195,236,.05)">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fas fa-user-friends text-info"></i>
+                                    <span class="fw-semibold">پاداش معرف (رفرال ربات) — این سفارش</span>
+                                </div>
+                                <div class="d-flex flex-wrap align-items-center gap-4">
+                                    <div class="text-center">
+                                        <small class="text-muted d-block mb-1">معرفِ کاربر</small>
+                                        <div class="small">
+                                            <i class="fas fa-user fa-xs me-1 text-info"></i>{{ $introducer->email ?? '—' }}
+                                            (#{{ $introducer->id }})
+
+                                        </div>
+                                    </div>
+                                    <div class="text-center">
+                                        <small class="text-muted d-block mb-1">پرداختی به معرف بابت این سفارش</small>
+                                        <div class="fw-bold fs-6 font-number text-info">
+                                            {{ formatNumberTrimZeros($referralPaid) }} <small
+                                                class="text-muted">USDT</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
                     {{-- Capital allocation progress bar --}}
                     <div>
                         <div class="d-flex justify-content-between small text-muted mb-1">
@@ -192,7 +221,8 @@
                     <div class="mt-4 pt-3 border-top">
                         <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
                             <div>
-                                <h6 class="mb-1"><i class="fas fa-pen-to-square me-1 text-primary"></i>یادداشت ادمین</h6>
+                                <h6 class="mb-1"><i class="fas fa-pen-to-square me-1 text-primary"></i>یادداشت ادمین
+                                </h6>
                                 <small class="text-muted">یادداشت داخلی ادمین برای پیگیری این سفارش</small>
                             </div>
                             <button type="button" class="btn btn-sm btn-outline-primary js-edit-order-admin-description"
@@ -206,7 +236,8 @@
                             class="rounded-3 p-3 {{ $botOrder->admin_description ? '' : 'border border-dashed' }}"
                             style="background:{{ $botOrder->admin_description ? 'rgba(105,108,255,.05)' : 'rgba(0,0,0,.015)' }}; border-color:rgba(105,108,255,.18);">
                             @if ($botOrder->admin_description)
-                                <div class="small text-break" style="white-space:pre-wrap;">{{ $botOrder->admin_description }}</div>
+                                <div class="small text-break" style="white-space:pre-wrap;">
+                                    {{ $botOrder->admin_description }}</div>
                             @else
                                 <span class="text-muted small">هنوز یادداشت ادمینی ثبت نشده است.</span>
                             @endif
@@ -284,13 +315,19 @@
                                         <strong>—</strong>
                                     @elseif ($orig !== null && $eff !== null && $eff != $orig)
                                         @php
-                                            $p2pMin = data_get($execution->signal_snapshot, 'effective_p2p_min_order_value');
-                                            $posValue = (float) $execution->filled_amount * (float) $execution->avg_buy_price;
+                                            $p2pMin = data_get(
+                                                $execution->signal_snapshot,
+                                                'effective_p2p_min_order_value',
+                                            );
+                                            $posValue =
+                                                (float) $execution->filled_amount * (float) $execution->avg_buy_price;
                                             $avgTierValue = $orig > 0 ? $posValue / $orig : 0;
                                         @endphp
                                         <span class="d-inline-flex align-items-center gap-1">
-                                            <span class="badge bg-warning text-dark">{{ $eff }}/{{ $orig }}
-                                                (Collapsed)</span>
+                                            <span
+                                                class="badge bg-warning text-dark">{{ $eff }}/{{ $orig }}
+                                                (Collapsed)
+                                            </span>
                                             <i class="fa-regular fa-info-circle text-warning" style="cursor:help"
                                                 data-bs-toggle="tooltip" data-bs-html="true" data-bs-placement="top"
                                                 title="<div class='text-end' style='min-width:250px;line-height:1.7'>
@@ -308,7 +345,9 @@
                                 </div>
                             </div>
 
-                            @include('dashboard.bot.orders.partials.execution-failure-alert', ['execution' => $execution])
+                            @include('dashboard.bot.orders.partials.execution-failure-alert', [
+                                'execution' => $execution,
+                            ])
 
                             {{-- Sell orders --}}
                             @if ($execution->sellOrders->isNotEmpty())
@@ -516,6 +555,20 @@
                                                                         </div>
                                                                     </div>
                                                                     <div class="col-6 col-md-3">
+                                                                        <div
+                                                                            class="p-2 rounded border {{ (float) $sell->settlement->referral_fee > 0 ? 'border-info bg-white' : 'bg-white' }}">
+                                                                            <small class="text-muted d-block">درآمد معرف
+                                                                                (referral_fee)</small>
+                                                                            <strong
+                                                                                class="font-number text-info">{{ formatNumberTrimZeros($sell->settlement->referral_fee) }}</strong>
+                                                                            @if ($introducer)
+                                                                                <small class="d-block text-muted"
+                                                                                    style="font-size:.68rem">به
+                                                                                    {{ $introducer->email ?? $introducer->mobile }}</small>
+                                                                            @endif
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-6 col-md-3">
                                                                         <div class="p-2 rounded border bg-white">
                                                                             <small class="text-muted d-block">کارمزد لغو
                                                                                 (cancel_fee)</small>
@@ -581,6 +634,7 @@
                             $sumNet = $settlements->sum(fn($s) => (float) $s->network_fee);
                             $sumExch = $settlements->sum(fn($s) => (float) $s->exchange_fee);
                             $sumPerf = $settlements->sum(fn($s) => (float) $s->performance_fee);
+                            $sumReferral = $settlements->sum(fn($s) => (float) $s->referral_fee);
                             $sumCancel = $settlements->sum(fn($s) => (float) $s->cancel_fee);
                             $sumPnl = $settlements->sum(fn($s) => (float) $s->net_pnl);
                         @endphp
@@ -615,6 +669,12 @@
                                 </div>
                             </div>
                             <div class="col-md-3">
+                                <div class="p-2 border rounded text-center"><small class="text-muted d-block">درآمد معرف
+                                        (رفرال)</small><strong
+                                        class="text-info">{{ formatNumberTrimZeros($sumReferral) }}</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
                                 <div class="p-2 border rounded text-center"><small class="text-muted d-block">cancel_fee
                                         (قدیمی)</small><strong>{{ formatNumberTrimZeros($sumCancel) }}</strong></div>
                             </div>
@@ -645,6 +705,7 @@
                                         <th>network_fee</th>
                                         <th>exchange_fee (buy+sell)</th>
                                         <th>performance_fee</th>
+                                        <th>referral_fee</th>
                                         <th>cancel_fee</th>
                                         <th>net_pnl</th>
                                     </tr>
@@ -676,6 +737,7 @@
                                             <td class="text-warning">{{ formatNumberTrimZeros($s->exchange_fee) }}</td>
                                             <td class="text-warning">{{ formatNumberTrimZeros($s->performance_fee) }}
                                             </td>
+                                            <td class="text-info">{{ formatNumberTrimZeros($s->referral_fee) }}</td>
                                             <td>{{ formatNumberTrimZeros($s->cancel_fee) }}</td>
                                             <td class="{{ (float) $s->net_pnl >= 0 ? 'text-success' : 'text-danger' }}">
                                                 <strong>{{ formatNumberTrimZeros($s->net_pnl) }}</strong>

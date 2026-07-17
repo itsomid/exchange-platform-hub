@@ -34,6 +34,7 @@ enum TransactionSubTypeEnum: string
     case BOT_PERFORMANCE_FEE = 'bot_performance_fee';
     case BOT_CANCEL_FEE = 'bot_cancel_fee';
     case BOT_NETWORK_FEE = 'bot_network_fee';
+    case BOT_REFERRAL_COMMISSION = 'bot_referral_commission';
 
 
     const array TYPE_LABEL = [
@@ -67,6 +68,7 @@ enum TransactionSubTypeEnum: string
         self::BOT_PERFORMANCE_FEE->value => 'کارمزد عملکرد ربات',
         self::BOT_CANCEL_FEE->value => 'کارمزد لغو ربات',
         self::BOT_NETWORK_FEE->value => 'کارمزد شبکه ربات',
+        self::BOT_REFERRAL_COMMISSION->value => 'پاداش معرف ربات',
     ];
 
     const array TYPE_COLOR = [
@@ -100,6 +102,7 @@ enum TransactionSubTypeEnum: string
         self::BOT_PERFORMANCE_FEE->value => 'warning',
         self::BOT_CANCEL_FEE->value => 'danger',
         self::BOT_NETWORK_FEE->value => 'warning',
+        self::BOT_REFERRAL_COMMISSION->value => 'info',
     ];
 
     public function label(): string

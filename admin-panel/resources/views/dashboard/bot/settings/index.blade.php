@@ -72,6 +72,18 @@
                                             </div>
 
                                             <div class="mb-3">
+                                                <label for="referral_fee_percent" class="form-label">سهم معرف از کارمزد عملکرد (%) <span
+                                                        class="text-danger">*</span></label>
+                                                <input type="number" step="0.01" min="0"
+                                                    class="form-control @error('referral_fee_percent') is-invalid @enderror"
+                                                    id="referral_fee_percent" name="referral_fee_percent"
+                                                    value="{{ old('referral_fee_percent', $settings?->referral_fee_percent ?? 4) }}">
+                                                <small class="form-text text-muted">درصدی از سود که به معرفِ کاربر پرداخت می‌شود و از سهم صرافی در کارمزد عملکرد کسر می‌گردد. مثلاً اگر کارمزد عملکرد ۲۲٪ و این مقدار ۴٪ باشد، صرافی ۱۸٪ نگه می‌دارد و ۴٪ به معرف می‌رسد. باید کوچک‌تر یا مساوی کارمزد عملکرد باشد.</small>
+                                                @error('referral_fee_percent')<div class="invalid-feedback">{{ $message }}
+                                                </div>@enderror
+                                            </div>
+
+                                            <div class="mb-3">
                                                 <label for="p2p_min_order_value" class="form-label">حداقل ارزش هر اوردر فروش (USDT) <span class="text-danger">*</span></label>
                                                 <input type="number" step="0.01" min="0.1" max="10000"
                                                     class="form-control @error('p2p_min_order_value') is-invalid @enderror"
