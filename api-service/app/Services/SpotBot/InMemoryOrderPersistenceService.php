@@ -35,14 +35,6 @@ class InMemoryOrderPersistenceService
         $spotOrder->updated_at = \Carbon\Carbon::createFromTimestamp($inMemoryOrder->updated_at, config('app.timezone'));
         $spotOrder->save();
 
-        Log::channel('spot-bot')->info('In-memory bot order persisted to database', [
-            'in_memory_order_id' => $inMemoryOrder->id,
-            'database_order_id' => $spotOrder->id,
-            'user_id' => $inMemoryOrder->user_id,
-            'market_id' => $inMemoryOrder->market_id,
-            'filled_quantity' => $inMemoryOrder->filled_quantity,
-        ]);
-
         return $spotOrder;
     }
 
