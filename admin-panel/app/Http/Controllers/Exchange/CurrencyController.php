@@ -41,7 +41,7 @@ class CurrencyController extends Controller
             ->with('chains')
             ->filterBy($filters)
             ->orderBy('id')
-            ->paginate(20)
+            ->paginate(50)
             ->withQueryString();
 
         if ($request->ajax()) {
