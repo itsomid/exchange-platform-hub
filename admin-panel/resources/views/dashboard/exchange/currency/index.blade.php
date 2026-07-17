@@ -84,8 +84,13 @@
                         <i class="fa-light fa-magnifying-glass me-1"></i>
                         جست‌وجو (نام / سیمبول)
                     </label>
-                    <input type="text" id="search" name="search" class="form-control currency-filter"
-                        placeholder="مثال: Bitcoin یا BTC ..." value="{{ request('search') }}" autocomplete="off">
+                    <div class="position-relative">
+                        <input type="text" id="search" name="search" class="form-control currency-filter pe-5"
+                            placeholder="مثال: Bitcoin یا BTC ..." value="{{ request('search') }}" autocomplete="off">
+                        <span id="currencySearchLoading"
+                            class="spinner-border spinner-border-sm text-primary position-absolute top-50 end-0 translate-middle-y me-3 d-none"
+                            role="status" aria-label="در حال جست‌وجو"></span>
+                    </div>
                 </div>
 
                 <div class="col-md-2">
@@ -95,7 +100,7 @@
                     </label>
                     <select id="chain" name="chain" class="form-select currency-filter">
                         <option value="">همه شبکه‌ها</option>
-                        @foreach($availableChains as $chainValue)
+                        @foreach ($availableChains as $chainValue)
                             <option value="{{ $chainValue }}" {{ request('chain') == $chainValue ? 'selected' : '' }}>
                                 {{ $chainValue }}
                             </option>
@@ -112,7 +117,8 @@
                         <option value="" {{ request('status') === '' ? 'selected' : '' }}>همه</option>
                         <option value="active" {{ request('status', 'active') == 'active' ? 'selected' : '' }}>فعال</option>
                         <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>غیرفعال</option>
-                        <option value="no_chains" {{ request('status') == 'no_chains' ? 'selected' : '' }}>بدون شبکه</option>
+                        <option value="no_chains" {{ request('status') == 'no_chains' ? 'selected' : '' }}>بدون شبکه
+                        </option>
                     </select>
                 </div>
 
@@ -152,7 +158,17 @@
 
     {{-- Currency Table (AJAX target) --}}
     <div id="currencyTableContainer" class="position-relative">
-        @include('dashboard.exchange.currency._table')
+        <div id="currencyTableContent">
+            @include('dashboard.exchange.currency._table')
+        </div>
+        <div id="currencyTableLoading"
+            class="position-absolute top-0 start-0 w-100 h-100 d-none align-items-start justify-content-center pt-5"
+            style="z-index: 10; min-height: 180px; background: rgba(var(--bs-body-bg-rgb), 0.72); backdrop-filter: blur(2px);">
+            <div class="d-flex align-items-center gap-3 bg-body rounded-3 shadow-sm border px-4 py-3 mt-4">
+                <span class="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>
+                <span class="fw-semibold text-primary">در حال جست‌وجو و بروزرسانی لیست...</span>
+            </div>
+        </div>
     </div>
 
     {{-- Currency Preview Modal --}}
@@ -232,10 +248,11 @@
 
 @push('scripts')
     <script>
-        (function () {
+        (function() {
             'use strict';
 
             let bsModal = null;
+
             function getModal() {
                 if (!bsModal) {
                     bsModal = new bootstrap.Modal(document.getElementById('currencyPreviewModal'));
@@ -251,9 +268,9 @@
             }
 
             function badge(condition, trueLabel, falseLabel) {
-                return condition
-                    ? `<span class="badge bg-label-success">${trueLabel}</span>`
-                    : `<span class="badge bg-label-danger">${falseLabel}</span>`;
+                return condition ?
+                    `<span class="badge bg-label-success">${trueLabel}</span>` :
+                    `<span class="badge bg-label-danger">${falseLabel}</span>`;
             }
 
             function infoRow(label, value) {
@@ -275,9 +292,9 @@
                 }
                 const changeClass = price.price_change_percentage >= 0 ? 'text-success' : 'text-danger';
                 const changeIcon = price.price_change_percentage >= 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down';
-                const changePct = price.price_change_percentage !== null
-                    ? `<span class="${changeClass} fw-semibold"><i class="fa-light ${changeIcon} me-1"></i>${parseFloat(price.price_change_percentage).toFixed(2)}%</span>`
-                    : '—';
+                const changePct = price.price_change_percentage !== null ?
+                    `<span class="${changeClass} fw-semibold"><i class="fa-light ${changeIcon} me-1"></i>${parseFloat(price.price_change_percentage).toFixed(2)}%</span>` :
+                    '—';
 
                 return `
                                 <div class="row g-3">
@@ -351,8 +368,10 @@
                 }
 
                 return chains.map(chain => {
-                    const chainLabel = typeof chain.chain === 'object' ? chain.chain.value ?? chain.chain : chain.chain;
-                    const blockchainLabel = typeof chain.blockchain_name === 'object' ? chain.blockchain_name.value ?? chain.blockchain_name : chain.blockchain_name;
+                    const chainLabel = typeof chain.chain === 'object' ? chain.chain.value ?? chain.chain :
+                        chain.chain;
+                    const blockchainLabel = typeof chain.blockchain_name === 'object' ? chain.blockchain_name
+                        .value ?? chain.blockchain_name : chain.blockchain_name;
                     return `
                                 <div class="card border mb-3">
                                     <div class="card-header py-2 px-3 d-flex align-items-center justify-content-between">
@@ -387,7 +406,7 @@
                 }).join('');
             }
 
-            document.addEventListener('click', function (e) {
+            document.addEventListener('click', function(e) {
                 const btn = e.target.closest('.btn-currency-preview');
                 if (!btn) return;
 
@@ -404,12 +423,12 @@
                 bsModal.show();
 
                 fetch(url, {
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? ''
-                    }
-                })
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? ''
+                        }
+                    })
                     .then(res => {
                         if (!res.ok) throw new Error('HTTP ' + res.status);
                         return res.json();
@@ -426,7 +445,8 @@
                         document.getElementById('modal-edit-link').href = data.edit_url;
 
                         // Sections
-                        document.getElementById('price-content').innerHTML = renderPrice(data.price, c.symbol);
+                        document.getElementById('price-content').innerHTML = renderPrice(data.price, c
+                            .symbol);
                         document.getElementById('currency-info-content').innerHTML = renderCurrencyInfo(c);
                         document.getElementById('chains-content').innerHTML = renderChains(c.chains, c);
 
@@ -449,7 +469,7 @@
         on `document` and re-queries the container to survive that re-render.
     --}}
     <script>
-        (function () {
+        (function() {
             'use strict';
 
             const baseUrl = @json(route('admin.currency.index'));
@@ -462,7 +482,7 @@
 
             function buildParams() {
                 const params = new URLSearchParams();
-                getFilterEls().forEach(function (el) {
+                getFilterEls().forEach(function(el) {
                     const value = (el.value || '').trim();
                     if (value !== '' || el.id === 'status') {
                         // Always send status (even empty = "all") so the server
@@ -475,42 +495,64 @@
 
             function setLoading(isLoading) {
                 const container = document.getElementById('currencyTableContainer');
-                if (!container) return;
-                container.style.opacity = isLoading ? '0.5' : '';
-                container.style.pointerEvents = isLoading ? 'none' : '';
+                const content = document.getElementById('currencyTableContent');
+                const tableLoading = document.getElementById('currencyTableLoading');
+                const searchLoading = document.getElementById('currencySearchLoading');
+                const searchInput = document.getElementById('search');
+
+                if (container) {
+                    container.setAttribute('aria-busy', isLoading ? 'true' : 'false');
+                }
+                if (content) {
+                    content.style.pointerEvents = isLoading ? 'none' : '';
+                }
+                if (tableLoading) {
+                    tableLoading.classList.toggle('d-none', !isLoading);
+                    tableLoading.classList.toggle('d-flex', isLoading);
+                }
+                if (searchLoading) {
+                    searchLoading.classList.toggle('d-none', !isLoading);
+                }
+                if (searchInput) {
+                    searchInput.setAttribute('aria-busy', isLoading ? 'true' : 'false');
+                }
             }
 
             function load(url) {
                 if (activeController) {
                     activeController.abort();
                 }
-                activeController = new AbortController();
+                const requestController = new AbortController();
+                activeController = requestController;
 
                 setLoading(true);
 
                 fetch(url, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'text/html'
-                    },
-                    credentials: 'same-origin',
-                    signal: activeController.signal
-                })
-                    .then(function (res) {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'text/html'
+                        },
+                        credentials: 'same-origin',
+                        signal: requestController.signal
+                    })
+                    .then(function(res) {
                         if (!res.ok) throw new Error('HTTP ' + res.status);
                         return res.text();
                     })
-                    .then(function (html) {
-                        const container = document.getElementById('currencyTableContainer');
-                        if (container) container.innerHTML = html;
+                    .then(function(html) {
+                        const content = document.getElementById('currencyTableContent');
+                        if (content) content.innerHTML = html;
                         window.history.replaceState(null, '', url);
                     })
-                    .catch(function (err) {
+                    .catch(function(err) {
                         if (err.name === 'AbortError') return;
                         console.error('خطا در بارگذاری لیست کوین‌ها', err);
                     })
-                    .finally(function () {
-                        setLoading(false);
+                    .finally(function() {
+                        if (activeController === requestController) {
+                            activeController = null;
+                            setLoading(false);
+                        }
                     });
             }
 
@@ -518,23 +560,23 @@
                 load(baseUrl + '?' + buildParams().toString());
             }
 
-            document.addEventListener('input', function (e) {
+            document.addEventListener('input', function(e) {
                 if (e.target && e.target.id === 'search') {
                     clearTimeout(debounceTimer);
                     debounceTimer = setTimeout(reload, 300);
                 }
             });
 
-            document.addEventListener('change', function (e) {
+            document.addEventListener('change', function(e) {
                 const el = e.target;
                 if (el && el.classList && el.classList.contains('currency-filter') && el.id !== 'search') {
                     reload();
                 }
             });
 
-            document.addEventListener('click', function (e) {
+            document.addEventListener('click', function(e) {
                 if (e.target.closest('#clearFilters')) {
-                    getFilterEls().forEach(function (el) {
+                    getFilterEls().forEach(function(el) {
                         if (el.tagName === 'SELECT') {
                             el.value = el.id === 'status' ? 'active' : '';
                         } else {
