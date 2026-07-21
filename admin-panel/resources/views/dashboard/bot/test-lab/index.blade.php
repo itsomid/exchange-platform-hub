@@ -98,7 +98,8 @@
                 <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h5 class="card-title mb-0">
                         <i class="fa-light fa-flask me-1"></i>
-                        آزمایشگاه تست ربات — کاربر #<span id="lab-user-id">{{ $userId }}</span>
+                        آزمایشگاه تست ربات — کاربر(ان) <span id="lab-user-id">{{ $userId }}</span>
+                        <span class="badge bg-label-secondary ms-2" id="lab-driver-badge">…</span>
                     </h5>
                     <div class="lab-actions">
                         <button type="button" class="btn btn-sm btn-label-secondary" id="btn-refresh"
@@ -122,16 +123,23 @@
                         </div>
                     @endif
 
-                    <div class="alert alert-warning small mb-0">
-                        این صفحه فقط برای تست داخلی است. خرید/فروش روی صرافی مرجع <strong>شبیه‌سازی</strong> می‌شود و
-                        قیمت‌های دستی روی Redis و DB نوشته می‌شوند.
+                    <div class="alert alert-warning small mb-0" id="lab-mode-alert">
+                        در حال تشخیص حالت صرافی مرجع…
                     </div>
 
                     <div class="row g-3 mt-3">
                         <div class="col-lg-5 col-md-6 lab-user-field">
-                            <label class="form-label small mb-1" for="selectUser">کاربر</label>
+                            <label class="form-label small mb-1" for="selectUser">کاربر ۱</label>
                             <x-user-selection-component input-name="user_id" multiple="0" selected="{{ $userId }}"
-                                selected-label="{{ $selectedLabel }}" :disabled="!$labEnabled" />
+                                selected-label="{{ $selectedLabel }}" select-id="selectUser"
+                                :disabled="!$labEnabled" />
+                        </div>
+                        <div class="col-lg-5 col-md-6 lab-user-field">
+                            <label class="form-label small mb-1" for="selectUser2">
+                                کاربر ۲ <span class="text-muted">(اختیاری — شروع همزمان)</span>
+                            </label>
+                            <x-user-selection-component input-name="user_id_2" multiple="0" selected=""
+                                selected-label="" select-id="selectUser2" :disabled="!$labEnabled" />
                         </div>
                     </div>
 
@@ -149,13 +157,28 @@
                                 @if (!$labEnabled) disabled @endif>
                         </div>
                         <div class="col-auto">
+                            <div class="form-check form-switch mb-0 pt-1">
+                                <input class="form-check-input" type="checkbox" role="switch"
+                                    id="sim-sell-fail" @if (!$labEnabled) disabled @endif>
+                                <label class="form-check-label small" for="sim-sell-fail"
+                                    title="پله آخر placeLimitSell با خطای شبیه‌سازی‌شده curl/SSL fail می‌شود">
+                                    شبیه‌سازی شکست ثبت پله فروش
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-auto">
                             <button type="button" class="btn btn-success btn-sm" id="btn-start"
                                 @if (!$labEnabled) disabled @endif><i class="fa fa-play me-1"></i>
                                 شروع چرخه (Reset + Buy)</button>
                         </div>
                     </div>
                     <div class="text-muted small mt-2" id="start-hint">
-                        با زدن «شروع چرخه» داده‌های ربات کاربر پاک، سرمایه اعمال و BotBuyOrchestrator اجرا می‌شود.
+                        با زدن «شروع چرخه» داده‌های ربات کاربر پاک و چرخه خرید اجرا می‌شود.
+                    </div>
+                    <div class="text-muted small mt-1 d-none" id="sim-sell-fail-hint">
+                        وقتی سوییچ روشن است، خرید انجام می‌شود و پله‌های فروش تا یکی‌مانده‌آخر ثبت می‌شوند؛
+                        <strong>پله آخر</strong> با خطای <code>cURL/SSL TRANSPORT</code> fail می‌شود تا مسیر
+                        rollback پله‌های قبلی + markFailed (ریفاند و لیکویید) تست شود.
                     </div>
                 </div>
             </div>
@@ -297,6 +320,7 @@
         (function() {
             const LAB_ENABLED = @json($labEnabled);
             let userId = {{ (int) $userId }};
+            let exchangeDriver = null;
             const URL = {
                 status: @json(route('admin.bot.test-lab.status')),
                 start: @json(route('admin.bot.test-lab.start')),
@@ -305,6 +329,49 @@
                 reset: @json(route('admin.bot.test-lab.reset')),
             };
             const CSRF = @json(csrf_token());
+
+            function isFakeDriver() {
+                return exchangeDriver === 'fake';
+            }
+
+            function applyDriverUi(driver) {
+                const changed = !!driver && driver !== exchangeDriver;
+                if (driver) exchangeDriver = driver;
+                const badge = document.getElementById('lab-driver-badge');
+                const alert = document.getElementById('lab-mode-alert');
+                if (!exchangeDriver) return;
+
+                if (isFakeDriver()) {
+                    if (badge) {
+                        badge.className = 'badge bg-label-secondary ms-2';
+                        badge.textContent = 'driver: fake';
+                    }
+                    if (alert) {
+                        alert.className = 'alert alert-warning small mb-0';
+                        alert.innerHTML =
+                            'حالت <strong>fake</strong>: خرید/فروش روی صرافی مرجع شبیه‌سازی می‌شود و قیمت‌های دستی روی Redis و DB نوشته می‌شوند.';
+                    }
+                    if (changed) {
+                        setHint(
+                            'با زدن «شروع چرخه» داده‌های ربات پاک، سرمایه مستقیم به کیف ربات اعمال و BotBuyOrchestrator اجرا می‌شود.');
+                    }
+                } else {
+                    if (badge) {
+                        badge.className = 'badge bg-label-danger ms-2';
+                        badge.textContent = 'driver: ' + exchangeDriver;
+                    }
+                    if (alert) {
+                        alert.className = 'alert alert-danger small mb-0';
+                        alert.innerHTML =
+                            'حالت <strong>' + esc(exchangeDriver) +
+                            '</strong>: مثل کاربر واقعی — واریز به کیف ربات + روشن‌کردن auto-trade و ارسال سفارش به صرافی مرجع. تغییر دستی قیمت برای رسیدن به پله‌های فروش همچنان فعال است.';
+                    }
+                    if (changed) {
+                        setHint(
+                            'با زدن «شروع چرخه» کیف اصلی شارژ، transferIn واقعی انجام و سپس auto-trade روشن می‌شود (صرافی مرجع واقعی).');
+                    }
+                }
+            }
 
             function toast(msg, ok = true) {
                 if (typeof Toastify === 'undefined') {
@@ -498,6 +565,7 @@
 
             function render(snap) {
                 if (!snap) return;
+                applyDriverUi(snap.exchange_driver);
                 renderWallets(snap);
                 renderPriceControls(snap);
                 renderExecutions(snap);
@@ -505,21 +573,34 @@
                 renderTransactions(snap);
             }
 
+            function getUserIds() {
+                const ids = [];
+                const v1 = document.getElementById('selectUser')?.value;
+                const v2 = document.getElementById('selectUser2')?.value;
+                if (v1) ids.push(parseInt(v1, 10));
+                if (v2) {
+                    const id2 = parseInt(v2, 10);
+                    if (!ids.includes(id2)) ids.push(id2);
+                }
+                if (ids.length === 0 && userId) ids.push(userId);
+                return ids.filter(n => Number.isFinite(n) && n > 0);
+            }
+
             function getUserId() {
-                const sel = document.getElementById('selectUser');
-                const v = sel?.value;
-                return v ? parseInt(v, 10) : userId;
+                return getUserIds()[0] || userId;
             }
 
             function updateUserIdLabel() {
-                const id = getUserId();
+                const ids = getUserIds();
                 const el = document.getElementById('lab-user-id');
-                if (el) el.textContent = id;
+                if (!el) return;
+                el.textContent = ids.length ? ('#' + ids.join(' + #')) : '—';
             }
 
-            function refresh() {
+            function refresh(forUserId) {
                 if (!LAB_ENABLED) return Promise.resolve();
-                userId = getUserId();
+                const ids = getUserIds();
+                userId = forUserId || ids[0] || userId;
                 updateUserIdLabel();
                 return api('GET', URL.status + '?user_id=' + userId).then(render).catch(e => toast(e.message, false));
             }
@@ -527,6 +608,19 @@
             function setHint(html) {
                 const el = document.getElementById('start-hint');
                 if (el) el.innerHTML = html;
+            }
+
+            function startBodyFor(uid) {
+                const cap = Number(document.getElementById('cap-input').value);
+                const mb = document.getElementById('main-input').value;
+                const simFail = !!document.getElementById('sim-sell-fail')?.checked;
+                const body = {
+                    user_id: uid,
+                    capital_usdt: cap,
+                    simulate_sell_place_failure: simFail
+                };
+                if (mb) body.main_balance = Number(mb);
+                return body;
             }
 
             // Event delegation — robust against DOM nodes being replaced after this script runs
@@ -551,56 +645,92 @@
                 }
 
                 if (t.id === 'btn-reset') {
-                    userId = getUserId();
-                    if (!confirm('همه داده‌های ربات کاربر #' + userId + ' پاک شود؟')) return;
-                    api('POST', URL.reset, {
-                            user_id: userId
-                        }).then(j => {
-                            toast('ریست شد');
-                            render(j.snapshot);
-                            setHint('ریست شد. آماده شروع چرخه جدید.');
+                    const ids = getUserIds();
+                    if (!ids.length) {
+                        toast('لطفاً حداقل یک کاربر انتخاب کنید', false);
+                        return;
+                    }
+                    const label = ids.map(id => '#' + id).join(' و ');
+                    if (!confirm('همه داده‌های ربات کاربر(ان) ' + label + ' پاک شود؟')) return;
+                    Promise.all(ids.map(id => api('POST', URL.reset, {
+                            user_id: id
+                        })))
+                        .then(results => {
+                            toast(ids.length > 1 ? 'ریست همزمان انجام شد' : 'ریست شد');
+                            render(results[0].snapshot);
+                            setHint('ریست شد برای ' + label + '. آماده شروع چرخه جدید.');
                         })
                         .catch(e => toast(e.message, false));
                     return;
                 }
 
                 if (t.id === 'btn-start') {
-                    userId = getUserId();
+                    const ids = getUserIds();
                     const cap = Number(document.getElementById('cap-input').value);
-                    const mb = document.getElementById('main-input').value;
-                    if (!userId) {
-                        toast('لطفاً یک کاربر انتخاب کنید', false);
+                    const simFail = !!document.getElementById('sim-sell-fail')?.checked;
+                    if (!ids.length) {
+                        toast('لطفاً حداقل یک کاربر انتخاب کنید', false);
+                        return;
+                    }
+                    if (ids.length === 2 && ids[0] === ids[1]) {
+                        toast('دو کاربر باید متفاوت باشند', false);
                         return;
                     }
                     if (!cap || cap < 1) {
                         toast('سرمایه نامعتبر', false);
                         return;
                     }
-                    const body = {
-                        user_id: userId,
-                        capital_usdt: cap
-                    };
-                    if (mb) body.main_balance = Number(mb);
+                    const label = ids.map(id => '#' + id).join(' و ');
                     setHint(
-                        '<span class="text-info"><i class="fa fa-spinner fa-spin"></i> در حال اجرای چرخه…</span>'
+                        '<span class="text-info"><i class="fa fa-spinner fa-spin"></i> در حال اجرای چرخه همزمان برای ' +
+                        esc(label) + (simFail ? ' (با شبیه‌سازی شکست پله فروش)…' : '…') + '</span>'
                     );
-                    api('POST', URL.start, body).then(j => {
-                        render(j.snapshot);
-                        const bo = j.bot_order;
-                        if (!bo) {
-                            setHint('<span class="text-warning">BotBuyOrchestrator چیزی برنگرداند. علت: ' +
-                                esc(j.reason || 'نامشخص') + '</span>');
-                            toast('چرخه شروع شد ولی سفارشی ساخته نشد: ' + (j.reason || 'نامشخص'),
-                                false);
-                        } else {
-                            setHint('<span class="text-success">BotOrder #' + bo.id + ' ساخته شد (' +
-                                esc(bo.status) + ').</span>');
-                            toast('چرخه شروع شد — BotOrder #' + bo.id);
-                        }
-                    }).catch(e => {
-                        setHint('<span class="text-danger">خطا: ' + esc(e.message) + '</span>');
-                        toast(e.message, false);
-                    });
+                    // Fire both starts in parallel so they race on the bot/exchange path.
+                    Promise.all(ids.map(id => api('POST', URL.start, startBodyFor(id)).then(j => ({
+                            id,
+                            j
+                        })).catch(e => ({
+                            id,
+                            error: e
+                        }))))
+                        .then(results => {
+                            const ok = results.filter(r => !r.error);
+                            const bad = results.filter(r => r.error);
+                            if (ok[0]?.j?.exchange_driver) applyDriverUi(ok[0].j.exchange_driver);
+                            if (ok[0]?.j?.snapshot) render(ok[0].j.snapshot);
+
+                            const lines = results.map(r => {
+                                if (r.error) {
+                                    return '<span class="text-danger">#' + r.id + ': ' + esc(r.error.message) +
+                                        '</span>';
+                                }
+                                const bo = r.j.bot_order;
+                                if (!bo) {
+                                    return '<span class="text-warning">#' + r.id + ': سفارشی ساخته نشد (' +
+                                        esc(r.j.reason || 'نامشخص') + ')</span>';
+                                }
+                                return '<span class="text-success">#' + r.id + ': BotOrder #' + bo.id + ' (' +
+                                    esc(bo.status) + (bo.triggered_by ? ' / ' + esc(bo.triggered_by) : '') +
+                                    ')</span>';
+                            });
+                            let hint = lines.join('<br>');
+                            if (simFail && ok.length) {
+                                hint +=
+                                    '<br><span class="text-warning">شبیه‌سازی شکست پله فروش فعال بود — executions را برای FAILED / auto-liquidated چک کنید.</span>';
+                            }
+                            setHint(hint);
+
+                            if (bad.length && !ok.length) {
+                                toast(bad[0].error.message, false);
+                            } else if (bad.length) {
+                                toast('چرخه برای بعضی کاربران خطا داد', false);
+                            } else if (ids.length > 1) {
+                                toast('چرخه همزمان برای ' + label + ' شروع شد');
+                            } else {
+                                const bo = ok[0]?.j?.bot_order;
+                                toast(bo ? ('چرخه شروع شد — BotOrder #' + bo.id) : ('چرخه شروع شد ولی سفارشی ساخته نشد'), !!bo);
+                            }
+                        });
                     return;
                 }
 
@@ -624,11 +754,15 @@
                 }
             });
 
-            $(document).on('change', '#selectUser', function() {
+            $(document).on('change', '#selectUser, #selectUser2', function() {
                 if (!LAB_ENABLED) return;
-                userId = getUserId();
                 updateUserIdLabel();
                 refresh();
+            });
+
+            $(document).on('change', '#sim-sell-fail', function() {
+                const hint = document.getElementById('sim-sell-fail-hint');
+                if (hint) hint.classList.toggle('d-none', !this.checked);
             });
 
             if (LAB_ENABLED) {

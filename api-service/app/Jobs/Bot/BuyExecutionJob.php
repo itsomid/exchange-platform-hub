@@ -178,14 +178,15 @@ class BuyExecutionJob implements ShouldQueue
 
         if ($hasFill) {
             $execution->update([
-                'status'               => BotBuyExecution::STATUS_BOUGHT,
-                'filled_amount'        => $result->filledAmount,
-                'avg_buy_price'        => $result->avgPrice,
-                'buy_ref_exchange_fee' => $result->exchangeFee,
-                'exchange_order_id'    => $result->exchangeOrderId,
+                'status'                        => BotBuyExecution::STATUS_BOUGHT,
+                'filled_amount'                 => $result->filledAmount,
+                'avg_buy_price'                 => $result->avgPrice,
+                'buy_ref_exchange_fee'          => $result->exchangeFee,
+                'buy_ref_exchange_fee_currency' => $result->feeCurrency,
+                'exchange_order_id'             => $result->exchangeOrderId,
                 // Clear any transient retry note recorded by an earlier
                 // failed attempt — this one ultimately succeeded.
-                'failure_reason'       => null,
+                'failure_reason'                => null,
             ]);
 
             Log::channel('smart-bot')->info('bot.buy.execution.filled', [
@@ -194,6 +195,7 @@ class BuyExecutionJob implements ShouldQueue
                 'filled_amount'  => $result->filledAmount,
                 'avg_buy_price'  => $result->avgPrice,
                 'exchange_fee'   => $result->exchangeFee,
+                'fee_currency'   => $result->feeCurrency,
                 'exchange_order' => $result->exchangeOrderId,
                 'access_id'      => config('exchanges.coinex.access_id'),
                 'host'           => gethostname() ?: null,

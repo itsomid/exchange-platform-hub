@@ -9,6 +9,7 @@ use App\Models\Currency;
 use App\Models\CurrencyChain;
 use App\Services\Bot\ReferenceExchange\ExchangeContract;
 use App\Services\Bot\ReferenceExchange\ExchangeOrderResult;
+use App\Services\Bot\ReferenceExchange\ExchangePositionCloser;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -187,7 +188,7 @@ class BotOrderCancelService
 
                 // 2) liquidate the held coin (or skip if disabled)
                 if ($sellOnExch && $currency) {
-                    $result    = $this->marketSell($currency->symbol, $amount);
+                    $result    = $this->marketSell($sellOrder, $currency->symbol, $amount);
                     $fillPrice = $result && $result->isFilled() ? $this->num($result->avgPrice) : $this->currentPriceFor($currency->symbol);
                     $exchFee   = $result && $result->isFilled() ? $this->num($result->exchangeFee) : '0';
                 } else {
@@ -284,11 +285,18 @@ class BotOrderCancelService
         }
     }
 
-    private function marketSell(string $symbol, string $amount): ?ExchangeOrderResult
+    private function marketSell(BotSellOrder $sellOrder, string $symbol, string $amount): ?ExchangeOrderResult
     {
         $market = strtoupper($symbol).'USDT';
         try {
-            return $this->exchange->placeMarketSell($market, $amount);
+            $execution = $sellOrder->botBuyExecution;
+            $baseFee   = $execution
+                ? ExchangePositionCloser::baseFeeCoinFromExecution($execution)
+                : '0';
+
+            // baseFee is only applied on a failed first attempt (insufficient
+            // balance when fee was charged in base and amount was still gross).
+            return app(ExchangePositionCloser::class)->marketSell($market, $amount, $baseFee);
         } catch (\Throwable $e) {
             Log::warning('bot.cancel.market_sell_failed', [
                 'market' => $market,

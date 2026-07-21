@@ -54,14 +54,16 @@ class BotTestLabController extends Controller
         }
 
         $data = $request->validate([
-            'user_id'      => 'required|integer',
-            'capital_usdt' => 'required|numeric|min:1',
-            'main_balance' => 'nullable|numeric|min:0',
+            'user_id'                     => 'required|integer',
+            'capital_usdt'                => 'required|numeric|min:1',
+            'main_balance'                => 'nullable|numeric|min:0',
+            'simulate_sell_place_failure' => 'sometimes|boolean',
         ]);
         return $this->forward($this->api->start(
             (int) $data['user_id'],
             (float) $data['capital_usdt'],
             isset($data['main_balance']) ? (float) $data['main_balance'] : null,
+            (bool) ($data['simulate_sell_place_failure'] ?? false),
         ));
     }
 

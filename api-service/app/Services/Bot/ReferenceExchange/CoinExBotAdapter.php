@@ -245,26 +245,42 @@ class CoinExBotAdapter implements ExchangeContract
             );
         }
 
-        $orderId       = isset($data['order_id']) ? (string) $data['order_id'] : null;
-        $status        = $this->mapStatus((string) ($data['status'] ?? ''));
-        $filledAmount  = (string) ($data['filled_amount'] ?? '0');
-        $avgPrice      = $this->resolveAvgPrice($data);
-        $exchangeFee   = $this->resolveFee($data, $avgPrice);
+        $orderId  = isset($data['order_id']) ? (string) $data['order_id'] : null;
+        $status   = $this->mapStatus((string) ($data['status'] ?? ''));
+        $avgPrice = $this->resolveAvgPrice($data);
+        $side     = isset($data['side']) ? (string) $data['side'] : ($ctx['side'] ?? null);
+        $market   = (string) ($data['market'] ?? $ctx['market'] ?? '');
+        [$baseSymbol, $quoteSymbol] = $this->splitMarket($market);
+        $fill = CoinExFillResolver::resolve(
+            $data,
+            $avgPrice,
+            $side !== null ? (string) $side : null,
+            $baseSymbol,
+            $quoteSymbol,
+        );
 
         Log::channel('smart-bot')->info("coinex.bot.{$op}.ok", $ctx + [
             'exchange_order_id' => $orderId,
             'status'            => $status->value,
             'raw_status'        => $data['status'] ?? null,
-            'filled_amount'     => $filledAmount,
+            'side'              => $side,
+            'market'            => $market !== '' ? $market : null,
+            'gross_filled'      => $fill['gross_filled'],
+            'base_fee'          => $fill['base_fee'],
+            'quote_fee'         => $fill['quote_fee'],
+            'filled_amount'     => $fill['filled_amount'],
+            'fee_currency'      => $fill['fee_currency'],
+            'exchange_fee'      => $fill['exchange_fee'],
             'avg_price'         => $avgPrice,
         ]);
 
         return new ExchangeOrderResult(
             exchangeOrderId: $orderId,
             status:          $status,
-            filledAmount:    $filledAmount,
+            filledAmount:    $fill['filled_amount'],
             avgPrice:        $avgPrice,
-            exchangeFee:     $exchangeFee,
+            exchangeFee:     $fill['exchange_fee'],
+            feeCurrency:     $fill['fee_currency'],
         );
     }
 
@@ -293,25 +309,22 @@ class CoinExBotAdapter implements ExchangeContract
     }
 
     /**
-     * Normalize exchange fee to quote currency (USDT) regardless of which fee
-     * field CoinEx populated for this side.
+     * @return array{0: string, 1: string} [baseSymbol, quoteSymbol]
      */
-    private function resolveFee(array $data, string $avgPrice): string
+    private function splitMarket(string $market): array
     {
-        $quoteFee = (string) ($data['quote_fee'] ?? '0');
-        if (bccomp($quoteFee, '0', 8) > 0) {
-            return $quoteFee;
+        $market = strtoupper($market);
+        $quote  = $this->quoteOf($market);
+        if ($market !== '' && str_ends_with($market, $quote) && strlen($market) > strlen($quote)) {
+            return [substr($market, 0, -strlen($quote)), $quote];
         }
-        $baseFee = (string) ($data['base_fee'] ?? '0');
-        if (bccomp($baseFee, '0', 8) > 0 && bccomp($avgPrice, '0', 8) > 0) {
-            return bcmul($baseFee, $avgPrice, 8);
-        }
-        return '0';
+
+        return ['', $quote !== '' ? $quote : 'USDT'];
     }
 
     private function quoteOf(string $market): string
     {
         // Conventional CoinEx pair: BASE+QUOTE concatenated. Bot trades against USDT.
-        return str_ends_with($market, 'USDT') ? 'USDT' : substr($market, -3);
+        return str_ends_with($market, 'USDT') ? 'USDT' : (strlen($market) >= 3 ? substr($market, -3) : 'USDT');
     }
 }

@@ -56,6 +56,7 @@ it('on a successful market buy, marks execution BOUGHT and dispatches OpenSellOr
     $fake->marketBuyFilledAmount = '0.001';
     $fake->marketBuyAvgPrice     = '100000';
     $fake->marketBuyExchangeFee  = '0.1';
+    $fake->marketBuyFeeCurrency  = 'USDT';
 
     (new BuyExecutionJob($execution->id))->handle($fake);
 
@@ -63,7 +64,8 @@ it('on a successful market buy, marks execution BOUGHT and dispatches OpenSellOr
     expect($execution->status)->toBe(BotBuyExecution::STATUS_BOUGHT);
     expect((string) $execution->filled_amount)->toEqual('0.00100000');
     expect((string) $execution->avg_buy_price)->toEqual('100000.00000000');
-    expect((string) $execution->exchange_fee)->toEqual('0.10000000');
+    expect((string) $execution->buy_ref_exchange_fee)->toEqual('0.10000000');
+    expect($execution->buy_ref_exchange_fee_currency)->toBe('USDT');
 
     expect($fake->marketBuys)->toHaveCount(1);
     expect($fake->marketBuys[0]['market'])->toBe('BTCUSDT');

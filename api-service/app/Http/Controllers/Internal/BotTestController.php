@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Internal;
 
 use App\Actions\Bot\BotBuyOrchestrator;
+use App\Events\Bot\BotAutoTradeToggled;
+use App\Exceptions\Bot\BotTransferAmountTooLowException;
+use App\Exceptions\Bot\InsufficientBotWalletException;
 use App\Http\Controllers\Controller;
 use App\Models\Bot\BotBuyExecution;
 use App\Models\Bot\BotGlobalSettings;
@@ -13,35 +16,45 @@ use App\Models\Bot\BotTradeSettlement;
 use App\Models\Bot\BotUserSettings;
 use App\Models\Bot\BotWallet;
 use App\Models\Bot\BotWalletTransfer;
-use App\Models\Currency;
 use App\Models\ExchangePrice;
 use App\Models\Market;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Services\Bot\BotWalletService;
 use App\Services\Bot\ReferenceExchange\CoinExBotAdapter;
 use App\Services\Bot\ReferenceExchange\ExchangeContract;
+use App\Services\Bot\ReferenceExchange\ExchangePositionCloser;
 use App\Services\Bot\ReferenceExchange\FakeBotExchange;
+use App\Services\Bot\ReferenceExchange\TestLabFailingSellExchange;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Backend for admin-panel's "Bot Test Lab" page. Lets the admin spin up
- * a full lifecycle on a single demo user without touching the real
- * reference exchange:
+ * a full lifecycle on a single demo user:
  *
- *   - `start`       : reset user state, fund wallet, run real orchestrator
+ *   - `start`       : reset user state, fund wallet, trigger a buy cycle
  *   - `status`      : current snapshot for the UI
  *   - `bump-price`  : nudge a coin's spot price up/down (drives sell fills)
  *   - `set-price`   : set an absolute price
  *   - `sync`        : run `bot:sync-sell-orders` once synchronously
  *   - `reset`       : wipe everything and restore baseline
  *
- * The whole thing forces the fake exchange driver + sync queue for the
- * duration of each request so jobs execute inline (no worker needed).
+ * Behaviour depends on `BOT_EXCHANGE_DRIVER` / config('smart-bot.exchange_driver'):
+ *   - "fake"   → force FakeBotExchange, credit bot wallet directly, call
+ *                orchestrator with TRIGGER_MANUAL (current lab harness).
+ *   - "coinex" → keep the real CoinEx adapter; fund the main wallet, run a
+ *                real transferIn, then toggle auto-trade ON — same path a
+ *                live user takes when depositing and enabling the bot.
+ *
+ * Both modes force the sync queue for the duration of each request so jobs
+ * execute inline (no worker needed for the lab itself).
  *
  * Protected by `bot-test-auth` middleware (shared X-Internal-Token header).
  */
@@ -54,17 +67,32 @@ class BotTestController extends Controller
     public function start(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'user_id'      => 'required|integer|exists:users,id',
-            'capital_usdt' => 'required|numeric|min:1',
-            'main_balance' => 'nullable|numeric|min:0',
+            'user_id'                     => 'required|integer|exists:users,id',
+            'capital_usdt'                => 'required|numeric|min:1',
+            'main_balance'                => 'nullable|numeric|min:0',
+            'simulate_sell_place_failure' => 'sometimes|boolean',
         ]);
 
-        $this->forceTestMode();
+        $simulateSellFailure = (bool) ($data['simulate_sell_place_failure'] ?? false);
+        $this->prepareLabRuntime($simulateSellFailure);
 
         $userId  = (int) $data['user_id'];
         $capital = number_format((float) $data['capital_usdt'], self::SCALE, '.', '');
-        $main    = number_format((float) ($data['main_balance'] ?? self::DEFAULT_MAIN_BALANCE), self::SCALE, '.', '');
+        $mainDefault = max(self::DEFAULT_MAIN_BALANCE, (float) $data['capital_usdt']);
+        $main = number_format((float) ($data['main_balance'] ?? $mainDefault), self::SCALE, '.', '');
 
+        if ($this->isFakeDriver()) {
+            return $this->startFake($userId, $capital, $main, $simulateSellFailure);
+        }
+
+        return $this->startLive($userId, $capital, $main, $simulateSellFailure);
+    }
+
+    /**
+     * Fake-driver path: credit bot wallet directly and invoke orchestrator.
+     */
+    private function startFake(int $userId, string $capital, string $main, bool $simulateSellFailure = false): JsonResponse
+    {
         $this->wipeUser($userId);
 
         DB::transaction(function () use ($userId, $main, $capital) {
@@ -91,15 +119,83 @@ class BotTestController extends Controller
 
         /** @var BotBuyOrchestrator $orchestrator */
         $orchestrator = app(BotBuyOrchestrator::class);
-        $botOrder = $orchestrator((int) $userId, BotBuyOrchestrator::TRIGGER_MANUAL);
+        $botOrder = $orchestrator($userId, BotBuyOrchestrator::TRIGGER_MANUAL);
 
         $reason = $botOrder ? null : $this->diagnoseOrchestratorNull($userId);
 
         return response()->json([
-            'ok'        => true,
-            'bot_order' => $botOrder?->only(['id', 'status', 'total_amount_usdt', 'triggered_by', 'created_at']),
-            'reason'    => $reason,
-            'snapshot'  => $this->buildStatus($userId),
+            'ok'                          => true,
+            'exchange_driver'             => $this->exchangeDriver(),
+            'simulate_sell_place_failure' => $simulateSellFailure,
+            'bot_order'                   => $botOrder?->only(['id', 'status', 'total_amount_usdt', 'triggered_by', 'created_at']),
+            'reason'                      => $reason,
+            'snapshot'                    => $this->buildStatus($userId),
+        ]);
+    }
+
+    /**
+     * Live (CoinEx) path: mirror a real user — fund main wallet, transferIn
+     * to bot wallet, then flip auto_trade OFF→ON so HandleBotAutoTradeToggled
+     * runs the orchestrator with TRIGGER_TOGGLE_ON against the real exchange.
+     */
+    private function startLive(int $userId, string $capital, string $main, bool $simulateSellFailure = false): JsonResponse
+    {
+        if (bccomp($main, $capital, self::SCALE) < 0) {
+            return response()->json([
+                'ok'    => false,
+                'error' => "موجودی کیف اصلی ({$main}) باید حداقل برابر سرمایه واریزی ({$capital}) باشد.",
+            ], 422);
+        }
+
+        $this->wipeUser($userId);
+
+        $user = User::findOrFail($userId);
+
+        DB::transaction(function () use ($userId, $main) {
+            BotUserSettings::updateOrCreate(
+                ['user_id' => $userId],
+                ['auto_trade_enabled' => false, 'reinvest_enabled' => false, 'terms_accepted_at' => now()],
+            );
+
+            Wallet::updateOrCreate(
+                ['user_id' => $userId, 'currency_symbol' => 'USDT'],
+                ['balance' => $main, 'locked_balance' => 0],
+            );
+
+            BotWallet::updateOrCreate(
+                ['user_id' => $userId],
+                [
+                    'balance'           => 0,
+                    'principal_balance' => 0,
+                    'profit_balance'    => 0,
+                    'locked_balance'    => 0,
+                ],
+            );
+        });
+
+        try {
+            app(BotWalletService::class)->transferIn($user, $capital);
+        } catch (BotTransferAmountTooLowException $e) {
+            return response()->json(['ok' => false, 'error' => $e->getMessage() ?: 'مبلغ واریز کمتر از حداقل مجاز است.'], 422);
+        } catch (InsufficientBotWalletException $e) {
+            return response()->json(['ok' => false, 'error' => $e->getMessage() ?: 'موجودی کیف اصلی کافی نیست.'], 422);
+        }
+
+        $settings = BotUserSettings::where('user_id', $userId)->firstOrFail();
+        $settings->auto_trade_enabled = true;
+        $settings->save();
+        event(new BotAutoTradeToggled($userId, true));
+
+        $botOrder = BotOrder::where('user_id', $userId)->orderByDesc('id')->first();
+        $reason = $botOrder ? null : $this->diagnoseOrchestratorNull($userId);
+
+        return response()->json([
+            'ok'                          => true,
+            'exchange_driver'             => $this->exchangeDriver(),
+            'simulate_sell_place_failure' => $simulateSellFailure,
+            'bot_order'                   => $botOrder?->only(['id', 'status', 'total_amount_usdt', 'triggered_by', 'created_at']),
+            'reason'                      => $reason,
+            'snapshot'                    => $this->buildStatus($userId),
         ]);
     }
 
@@ -140,7 +236,7 @@ class BotTestController extends Controller
             'mode'      => 'nullable|in:percent,absolute',
         ]);
 
-        $this->forceTestMode();
+        $this->prepareLabRuntime();
 
         $symbol = strtoupper((string) $data['symbol']);
         $mode   = $data['mode'] ?? 'percent';
@@ -183,7 +279,7 @@ class BotTestController extends Controller
             'price'  => 'required|numeric|min:0.00000001',
         ]);
 
-        $this->forceTestMode();
+        $this->prepareLabRuntime();
 
         $symbol = strtoupper((string) $data['symbol']);
         $market = Market::where('base_currency', $symbol)->where('quote_currency', 'USDT')->first();
@@ -200,9 +296,13 @@ class BotTestController extends Controller
 
     public function sync(Request $request): JsonResponse
     {
-        $this->forceTestMode();
+        $this->prepareLabRuntime();
         Artisan::call('bot:sync-sell-orders');
-        return response()->json(['ok' => true, 'output' => trim(Artisan::output())]);
+        return response()->json([
+            'ok'              => true,
+            'exchange_driver' => $this->exchangeDriver(),
+            'output'          => trim(Artisan::output()),
+        ]);
     }
 
     public function reset(Request $request): JsonResponse
@@ -212,7 +312,7 @@ class BotTestController extends Controller
             'main_balance' => 'nullable|numeric|min:0',
         ]);
 
-        $this->forceTestMode();
+        $this->prepareLabRuntime();
         $userId = (int) $data['user_id'];
         $main   = number_format((float) ($data['main_balance'] ?? self::DEFAULT_MAIN_BALANCE), self::SCALE, '.', '');
 
@@ -235,18 +335,58 @@ class BotTestController extends Controller
         });
 
         return response()->json([
-            'ok'       => true,
-            'snapshot' => $this->buildStatus($userId),
+            'ok'              => true,
+            'exchange_driver' => $this->exchangeDriver(),
+            'snapshot'        => $this->buildStatus($userId),
         ]);
     }
 
     /* ──────────────────────── internals ──────────────────────── */
 
-    private function forceTestMode(): void
+    private function exchangeDriver(): string
     {
-        config(['smart-bot.exchange_driver' => 'fake']);
-        config(['queue.default'       => 'sync']);
-        app()->bind(ExchangeContract::class, FakeBotExchange::class);
+        return (string) config('smart-bot.exchange_driver', 'coinex');
+    }
+
+    private function isFakeDriver(): bool
+    {
+        return $this->exchangeDriver() === 'fake';
+    }
+
+    /**
+     * Always run lab jobs inline. Bind FakeBotExchange when the configured
+     * driver is fake. Optionally wrap the exchange so the 2nd placeLimitSell
+     * fails with a simulated curl/SSL transport error (Test Lab switch).
+     *
+     * The wrapper is bound as a container instance so the call counter survives
+     * BuyExecutionJob → OpenSellOrdersJob within the same sync request.
+     */
+    private function prepareLabRuntime(bool $simulateSellPlaceFailure = false): void
+    {
+        config(['queue.default' => 'sync']);
+
+        if ($this->isFakeDriver()) {
+            config(['smart-bot.exchange_driver' => 'fake']);
+        }
+
+        if (! $simulateSellPlaceFailure) {
+            if ($this->isFakeDriver()) {
+                app()->bind(ExchangeContract::class, FakeBotExchange::class);
+            }
+
+            return;
+        }
+
+        $inner = $this->isFakeDriver()
+            ? new FakeBotExchange()
+            : new CoinExBotAdapter();
+
+        // Fail the last placeLimitSell in each OpenSellOrdersJob batch (armed
+        // via expectLimitSells) so earlier tiers place, then rollback + markFailed.
+        app()->instance(
+            ExchangeContract::class,
+            new TestLabFailingSellExchange($inner),
+        );
     }
 
     private function writePrice(string $symbol, int $marketId, string $price): void
@@ -257,6 +397,8 @@ class BotTestController extends Controller
 
     private function wipeUser(int $userId): void
     {
+        $this->unwindExchangePositions($userId);
+
         DB::transaction(function () use ($userId) {
             $orderIds = BotOrder::where('user_id', $userId)->pluck('id')->all();
             $execIds  = BotBuyExecution::whereIn('bot_order_id', $orderIds)->pluck('id')->all();
@@ -279,7 +421,120 @@ class BotTestController extends Controller
                 ->delete();
         });
 
-        FakeBotExchange::purgeAll();
+        if ($this->isFakeDriver()) {
+            FakeBotExchange::purgeAll();
+        }
+    }
+
+    /**
+     * On live CoinEx lab reset: cancel OPEN limit sells, then market-sell the
+     * residual base inventory so the omnibus account is not left holding coins
+     * from the cancelled buy cycle. Market buys are already filled (nothing to
+     * "cancel"); the leftover is the bought base position.
+     *
+     * When the buy fee was charged in base, available balance may be lower than
+     * a gross amount — {@see ExchangePositionCloser} retries with fee subtracted.
+     */
+    private function unwindExchangePositions(int $userId): void
+    {
+        if ($this->isFakeDriver()) {
+            return;
+        }
+
+        $executions = BotBuyExecution::query()
+            ->where('status', BotBuyExecution::STATUS_BOUGHT)
+            ->whereHas('botOrder', fn ($q) => $q->where('user_id', $userId))
+            ->with(['currency', 'sellOrders'])
+            ->get();
+
+        if ($executions->isEmpty()) {
+            return;
+        }
+
+        $closer = app(ExchangePositionCloser::class);
+
+        foreach ($executions as $execution) {
+            $symbol = $execution->currency?->symbol;
+            if (! $symbol) {
+                continue;
+            }
+
+            $market = strtoupper($symbol).'USDT';
+            $exchange = app(ExchangeContract::class);
+
+            foreach ($execution->sellOrders as $sell) {
+                if ($sell->status !== BotSellOrder::STATUS_OPEN || ! $sell->exchange_order_id) {
+                    continue;
+                }
+                try {
+                    $exchange->cancelOrder($market, (string) $sell->exchange_order_id);
+                } catch (Throwable $e) {
+                    Log::channel('smart-bot')->warning('bot.test-lab.cancel_open_sell_failed', [
+                        'user_id'           => $userId,
+                        'sell_order_id'     => $sell->id,
+                        'market'            => $market,
+                        'exchange_order_id' => $sell->exchange_order_id,
+                        'error'             => $e->getMessage(),
+                    ]);
+                }
+            }
+
+            $amount = $this->residualBaseAmount($execution);
+            if (bccomp($amount, '0', self::SCALE) <= 0) {
+                continue;
+            }
+
+            $baseFee = ExchangePositionCloser::baseFeeCoinFromExecution($execution);
+            $result  = $closer->marketSell($market, $amount, $baseFee);
+
+            if ($result->exchangeOrderId === null) {
+                Log::channel('smart-bot')->warning('bot.test-lab.liquidate_failed', [
+                    'user_id'      => $userId,
+                    'execution_id' => $execution->id,
+                    'market'       => $market,
+                    'amount'       => $amount,
+                    'base_fee'     => $baseFee,
+                    'error_code'   => $result->errorCode,
+                    'error'        => $result->errorMessage,
+                ]);
+            } else {
+                Log::channel('smart-bot')->info('bot.test-lab.liquidated', [
+                    'user_id'           => $userId,
+                    'execution_id'      => $execution->id,
+                    'market'            => $market,
+                    'amount'            => $amount,
+                    'exchange_order_id' => $result->exchangeOrderId,
+                    'filled'            => $result->filledAmount,
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Base coin still held for a BOUGHT execution: OPEN tier sizes after cancel,
+     * or filled_amount minus already-FILLED tiers when no open sells remain.
+     */
+    private function residualBaseAmount(BotBuyExecution $execution): string
+    {
+        $openSum    = '0';
+        $filledSold = '0';
+
+        foreach ($execution->sellOrders as $sell) {
+            $amt = (string) $sell->amount_to_sell;
+            if ($sell->status === BotSellOrder::STATUS_OPEN) {
+                $openSum = bcadd($openSum, $amt, self::SCALE);
+            } elseif ($sell->status === BotSellOrder::STATUS_FILLED) {
+                $filledSold = bcadd($filledSold, $amt, self::SCALE);
+            }
+        }
+
+        if (bccomp($openSum, '0', self::SCALE) > 0) {
+            return $openSum;
+        }
+
+        $residual = bcsub((string) $execution->filled_amount, $filledSold, self::SCALE);
+
+        return bccomp($residual, '0', self::SCALE) > 0 ? $residual : '0';
     }
 
     private function buildStatus(int $userId): array
@@ -355,9 +610,10 @@ class BotTestController extends Controller
             ->get(['id', 'subtype', 'amount', 'balance', 'description', 'created_at']);
 
         return [
-            'user_id'      => $userId,
-            'main_wallet'  => $mainWallet ? ['balance' => (string) $mainWallet->balance] : null,
-            'bot_wallet'   => $botWallet ? [
+            'exchange_driver' => $this->exchangeDriver(),
+            'user_id'         => $userId,
+            'main_wallet'     => $mainWallet ? ['balance' => (string) $mainWallet->balance] : null,
+            'bot_wallet'      => $botWallet ? [
                 'balance'        => (string) $botWallet->balance,
                 'locked_balance' => (string) $botWallet->locked_balance,
                 'profit_balance' => (string) $botWallet->profit_balance,

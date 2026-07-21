@@ -27,12 +27,14 @@ class BotTestApiClient
             ->withHeaders(['X-Internal-Token' => $token]);
     }
 
-    public function start(int $userId, float $capitalUsdt, ?float $mainBalance = null): Response
+    public function start(int $userId, float $capitalUsdt, ?float $mainBalance = null, bool $simulateSellPlaceFailure = false): Response
     {
-        return $this->http()->post('/start', array_filter([
-            'user_id'      => $userId,
-            'capital_usdt' => $capitalUsdt,
-            'main_balance' => $mainBalance,
+        // Live CoinEx buys (market buy + sell fan-out) can exceed the default 60s.
+        return $this->http()->timeout(180)->post('/start', array_filter([
+            'user_id'                     => $userId,
+            'capital_usdt'                => $capitalUsdt,
+            'main_balance'                => $mainBalance,
+            'simulate_sell_place_failure' => $simulateSellPlaceFailure,
         ], fn ($v) => $v !== null));
     }
 

@@ -10,6 +10,8 @@ use App\Models\Currency;
 use App\Services\Bot\BotOrderDescriptionService;
 use App\Services\Bot\BotOrderStatusService;
 use App\Services\Bot\ReferenceExchange\ExchangeContract;
+use App\Services\Bot\ReferenceExchange\ExchangePositionCloser;
+use App\Services\Bot\ReferenceExchange\TestLabFailingSellExchange;
 use App\Services\Bot\TargetCollapseService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -131,6 +133,10 @@ class OpenSellOrdersJob implements ShouldQueue
         $market      = strtoupper((string) $execution->currency->symbol).'USDT';
         $defaultMode = $signal->sell_mode ?? 'percent';
         $placedIds   = [];
+
+        if ($exchange instanceof TestLabFailingSellExchange) {
+            $exchange->expectLimitSells(count($result['final_targets']));
+        }
 
         foreach ($result['final_targets'] as $index => $target) {
             $type     = $target['type'] ?? $defaultMode;
@@ -270,10 +276,15 @@ class OpenSellOrdersJob implements ShouldQueue
         // stranded on the omnibus account. This is a platform-side operation:
         // the proceeds/loss are NOT settled against the user (they were already
         // refunded their full principal above).
+        //
+        // When the buy fee was charged in base, available balance may be
+        // filled_amount − base_fee if filled_amount was stored gross — closer
+        // retries once with the fee subtracted.
         $currency = $execution->currency ?? Currency::find($execution->currency_id);
         $market   = strtoupper((string) ($currency?->symbol ?? '')).'USDT';
+        $baseFee  = ExchangePositionCloser::baseFeeCoinFromExecution($execution);
 
-        $disposeRes = $exchange->placeMarketSell($market, $filled);
+        $disposeRes = app(ExchangePositionCloser::class)->marketSell($market, $filled, $baseFee);
 
         if ($disposeRes->exchangeOrderId === null || $disposeRes->filledAmount === null) {
             // Disposal failed — coin really stranded; operator must reconcile.

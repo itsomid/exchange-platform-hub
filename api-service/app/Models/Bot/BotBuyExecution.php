@@ -27,6 +27,7 @@ class BotBuyExecution extends Model
         'filled_amount',
         'avg_buy_price',
         'buy_ref_exchange_fee',
+        'buy_ref_exchange_fee_currency',
         'network_fee',
         'exchange_transaction_id',
         'exchange_order_id',

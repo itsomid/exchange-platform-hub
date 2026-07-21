@@ -17,18 +17,27 @@ class UserSelectionComponent extends Component
     public ?string $selectedLabel = null;
     public bool $disabled = false;
     public bool $required = false;
+    public string $selectId = 'selectUser';
 
     /**
      * Create a new component instance.
      */
-    public function __construct(string $inputName, bool $multiple, string|int $selected, ?string $selectedLabel = null,bool $disabled=false,bool $required=false)
-    {
+    public function __construct(
+        string $inputName,
+        bool $multiple,
+        string|int $selected,
+        ?string $selectedLabel = null,
+        bool $disabled = false,
+        bool $required = false,
+        string $selectId = 'selectUser',
+    ) {
         $this->inputName = $inputName;
         $this->multiple = $multiple;
         $this->selected = $selected;
         $this->selectedLabel = $selectedLabel;
         $this->disabled = $disabled;
         $this->required = $required;
+        $this->selectId = $selectId;
     }
 
     /**

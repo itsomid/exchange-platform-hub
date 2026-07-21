@@ -303,7 +303,14 @@
                                 </div>
                                 <div class="col-md-3 col-xxl-2">
                                     <small class="text-muted d-block mb-1">کارمزد صرافی خرید</small>
-                                    <strong>{{ formatNumberTrimZeros($execution->buy_ref_exchange_fee, 8) }}</strong>
+                                    <strong>
+                                        {{ formatNumberTrimZeros($execution->buy_ref_exchange_fee, 8) }}
+                                        <span class="text-muted fw-normal">USDT</span>
+                                    </strong>
+                                    @if ($execution->buy_ref_exchange_fee_currency)
+                                        <small class="d-block text-muted">پرداخت با
+                                            {{ strtoupper($execution->buy_ref_exchange_fee_currency) }}</small>
+                                    @endif
                                 </div>
                                 <div class="col-md-3 col-xxl-2">
                                     <small class="text-muted d-block mb-1">تارگت‌ها</small>

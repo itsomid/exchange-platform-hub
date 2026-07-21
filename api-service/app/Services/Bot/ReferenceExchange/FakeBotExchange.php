@@ -61,6 +61,7 @@ class FakeBotExchange implements ExchangeContract
             filledAmount:    $amount,
             avgPrice:        $price,
             exchangeFee:     $fee,
+            feeCurrency:     'USDT',
         );
     }
 

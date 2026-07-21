@@ -14,6 +14,8 @@ final class ExchangeOrderResult
         public readonly string $filledAmount = '0',
         public readonly string $avgPrice = '0',
         public readonly string $exchangeFee = '0',
+        /** Which asset symbol the exchange charged the fee in (e.g. NEO, USDT). */
+        public readonly ?string $feeCurrency = null,
         public readonly ?string $errorCode = null,
         public readonly ?string $errorMessage = null,
     ) {}

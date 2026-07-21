@@ -32,8 +32,13 @@ class FakeExchange implements ExchangeContract
     public string $marketBuyFilledAmount = '1';
     public string $marketBuyAvgPrice     = '100';
     public string $marketBuyExchangeFee  = '0.1';
+    public ?string $marketBuyFeeCurrency = 'USDT';
     public bool   $failNextMarketBuy     = false;
     public bool   $failNextLimitSell     = false;
+    public bool   $failNextMarketSell    = false;
+
+    /** @var array<int,array<string,mixed>> */
+    public array $marketSells = [];
 
     public function placeMarketBuy(string $market, string $quoteAmount): ExchangeOrderResult
     {
@@ -48,6 +53,7 @@ class FakeExchange implements ExchangeContract
             filledAmount:    $this->marketBuyFilledAmount,
             avgPrice:        $this->marketBuyAvgPrice,
             exchangeFee:     $this->marketBuyExchangeFee,
+            feeCurrency:     $this->marketBuyFeeCurrency,
         );
     }
 
@@ -61,6 +67,23 @@ class FakeExchange implements ExchangeContract
         return new ExchangeOrderResult(
             exchangeOrderId: (string) $this->nextOrderId++,
             status:          ExchangeOrderStatus::OPEN,
+        );
+    }
+
+    public function placeMarketSell(string $market, string $baseAmount): ExchangeOrderResult
+    {
+        $this->marketSells[] = compact('market', 'baseAmount');
+        if ($this->failNextMarketSell) {
+            $this->failNextMarketSell = false;
+            return new ExchangeOrderResult(null, ExchangeOrderStatus::FAILED, errorCode: 'TEST', errorMessage: 'forced failure');
+        }
+        return new ExchangeOrderResult(
+            exchangeOrderId: (string) $this->nextOrderId++,
+            status:          ExchangeOrderStatus::FILLED,
+            filledAmount:    $baseAmount,
+            avgPrice:        '1',
+            exchangeFee:     '0',
+            feeCurrency:     'USDT',
         );
     }
 
