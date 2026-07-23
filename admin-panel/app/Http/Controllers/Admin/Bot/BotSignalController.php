@@ -15,7 +15,7 @@ class BotSignalController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = BotSignal::with('currency');
+        $query = BotSignal::with('currency.baseMarket.activeExchangePrice');
 
         if ($request->filled('search')) {
             $search = $request->get('search');

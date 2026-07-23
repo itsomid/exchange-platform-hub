@@ -54,6 +54,59 @@
             border-bottom: 2px dashed rgba(115, 103, 240, 0.35);
             opacity: 0.8;
         }
+
+        [data-role="last-price"] {
+            transition: transform 0.25s ease, filter 0.25s ease;
+            will-change: transform, filter;
+        }
+
+        @keyframes priceFlashUp {
+            0% {
+                color: #16c784;
+                filter: drop-shadow(0 0 0 rgba(25, 135, 84, 0));
+                transform: scale(1);
+            }
+
+            35% {
+                color: #16c784;
+                filter: drop-shadow(0 0 0.15rem rgba(25, 135, 84, 0.35));
+                transform: scale(1.18);
+            }
+
+            100% {
+                color: inherit;
+                filter: drop-shadow(0 0 0 rgba(25, 135, 84, 0));
+                transform: scale(1);
+            }
+        }
+
+        @keyframes priceFlashDown {
+            0% {
+                color: #dc3545;
+                filter: drop-shadow(0 0 0 rgba(220, 53, 69, 0));
+                transform: scale(1);
+            }
+
+            35% {
+                color: #dc3545;
+                filter: drop-shadow(0 0 0.15rem rgba(220, 53, 69, 0.35));
+                transform: scale(1.18);
+            }
+
+            100% {
+                color: inherit;
+                filter: drop-shadow(0 0 0 rgba(220, 53, 69, 0));
+                transform: scale(1);
+            }
+        }
+
+        .price-flash-up {
+            animation: priceFlashUp 2s ease;
+        }
+
+        .price-flash-down {
+            animation: priceFlashDown 2s ease;
+        }
     </style>
 @endsection
 
@@ -141,6 +194,7 @@
                         <th style="width:40px"></th>
                         <th>#</th>
                         <th>ارز</th>
+                        <th>قیمت لحظه‌ای (USDT)</th>
                         <th>اولویت</th>
                         <th>کف قیمت (USDT)</th>
                         <th>سقف قیمت (USDT)</th>
@@ -152,7 +206,11 @@
                 </thead>
                 <tbody>
                     @forelse ($signals as $signal)
-                        <tr data-id="{{ $signal->id }}">
+                        @php
+                            $market = $signal->currency?->baseMarket;
+                            $lastPrice = $market?->activeExchangePrice?->price;
+                        @endphp
+                        <tr data-id="{{ $signal->id }}" @if ($market) data-market-id="{{ $market->id }}" @endif>
                             <td class="drag-handle text-muted" style="cursor:grab"><i class="fas fa-grip-vertical"></i></td>
                             <td>{{ $signal->id }}</td>
                             <td class="d-flex align-items-center gap-3">
@@ -164,6 +222,14 @@
                                     <span>{{ $signal->currency?->symbol }}</span>
                                     <small class="d-block text-muted">{{ $signal->currency?->name }}</small>
                                 </div>
+                            </td>
+                            <td>
+                                <h4 class="font-number text-heading h5 mb-0">
+                                    <span class="ms-1" data-role="last-price">
+                                        {{ $lastPrice !== null ? formatNumberTrimZeros($lastPrice) : '—' }}
+                                    </span>
+                                    <small class="text-muted">USDT</small>
+                                </h4>
                             </td>
                             <td class="priority-cell">{{ $signal->priority }}</td>
                             <td>{{ formatNumberTrimZeros($signal->floor_price) }}</td>
@@ -205,7 +271,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="text-center text-muted py-4">
+                            <td colspan="11" class="text-center text-muted py-4">
                                 هیچ سیگنالی یافت نشد.
                             </td>
                         </tr>
@@ -283,6 +349,102 @@
                             }).showToast();
                         });
                 },
+            });
+
+            // Live market price via Echo (same channel as markets list)
+            if (typeof window.Echo === 'undefined') {
+                console.warn('Echo is not initialized. Check VITE_REVERB/VITE_PUSHER env vars and frontend build.');
+                return;
+            }
+
+            const marketRows = document.querySelectorAll('#signalsTable tr[data-market-id]');
+            const marketState = new Map();
+
+            const toNumber = (value) => {
+                if (value === null || typeof value === 'undefined') {
+                    return null;
+                }
+
+                const normalized = String(value).replace(/,/g, '').trim();
+                if (normalized === '' || normalized === '—') {
+                    return null;
+                }
+
+                const numeric = Number(normalized);
+                return Number.isFinite(numeric) ? numeric : null;
+            };
+
+            const formatPrice = (value) => {
+                const numeric = Number(value);
+                if (!Number.isFinite(numeric)) {
+                    return '—';
+                }
+
+                if (numeric === 0) {
+                    return '0';
+                }
+
+                const absolute = Math.abs(numeric);
+                if (absolute < 0.00000001) {
+                    const decimals = Math.min(20, Math.max(8, Math.ceil(-Math.log10(absolute)) + 4));
+                    return numeric
+                        .toFixed(decimals)
+                        .replace(/\.0+$/, '')
+                        .replace(/(\.\d*?)0+$/, '$1');
+                }
+
+                return numeric.toLocaleString('en-US', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 8,
+                });
+            };
+
+            const applyValueAnimation = (element, direction) => {
+                if (!element || direction === 0) {
+                    return;
+                }
+
+                const classToAdd = direction > 0 ? 'price-flash-up' : 'price-flash-down';
+
+                element.classList.remove('price-flash-up', 'price-flash-down');
+                void element.offsetWidth;
+                element.classList.add(classToAdd);
+
+                window.setTimeout(() => {
+                    element.classList.remove('price-flash-up', 'price-flash-down');
+                }, 2000);
+            };
+
+            marketRows.forEach((row) => {
+                const marketId = row.getAttribute('data-market-id');
+                if (!marketId) {
+                    return;
+                }
+
+                const lastPriceElement = row.querySelector('[data-role="last-price"]');
+                marketState.set(row, {
+                    last: toNumber(lastPriceElement?.textContent),
+                });
+
+                window.Echo.channel(`market.${marketId}`).listen('MarketUpdated', (event) => {
+                    if (typeof event.last === 'undefined' || !lastPriceElement) {
+                        return;
+                    }
+
+                    const numericValue = toNumber(event.last);
+                    if (numericValue === null) {
+                        return;
+                    }
+
+                    const previousValue = marketState.get(row)?.last ?? null;
+                    lastPriceElement.textContent = formatPrice(numericValue);
+
+                    if (previousValue !== null && previousValue !== numericValue) {
+                        applyValueAnimation(lastPriceElement, numericValue > previousValue ? 1 : -1);
+                    }
+
+                    marketState.set(row, { last: numericValue });
+                });
             });
         });
     </script>

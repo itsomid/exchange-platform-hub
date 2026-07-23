@@ -82,9 +82,9 @@
                                 <small class="text-muted d-block mb-1"><i class="fas fa-chart-line fa-xs me-1"></i>سود /
                                     زیان
                                     خالص (P&L)</small>
-                                <div
+                                <div dir="ltr"
                                     class="fw-bold fs-5 font-number {{ $totalPnl >= 0 ? 'text-success' : 'text-danger' }}">
-                                    {{ formatNumberTrimZeros($totalPnl) }}{{ $totalPnl >= 0 ? '+' : '' }}
+                                    {{ $totalPnl >= 0 ? '+' : '' }}{{ formatNumberTrimZeros($totalPnl) }}
                                 </div>
                                 <small class="text-muted">USDT</small>
                                 <div class="mt-1 d-flex justify-content-center gap-2">
@@ -103,9 +103,13 @@
                             <div class="border rounded p-3 text-center h-100">
                                 <small class="text-muted d-block mb-1"><i
                                         class="fas fa-arrow-down fa-xs me-1 text-success"></i>واریزی واقعی به بات از کیف پول
-                                    اصلی (شامل کارمزد)</small>
+                                    اصلی</small>
                                 <div class="fw-bold fs-6 font-number">{{ formatNumberTrimZeros($deposits) }}</div>
                                 <small class="text-muted">USDT</small>
+                                <small class="text-muted d-block mt-1 font-number">
+                                    {{ formatNumberTrimZeros($deposits - $depositTransferFee) }}
+                                    + ({{ formatNumberTrimZeros($depositTransferFee) }} کارمزد)
+                                </small>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">

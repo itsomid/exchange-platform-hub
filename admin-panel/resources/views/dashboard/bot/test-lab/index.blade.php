@@ -131,8 +131,7 @@
                         <div class="col-lg-5 col-md-6 lab-user-field">
                             <label class="form-label small mb-1" for="selectUser">کاربر ۱</label>
                             <x-user-selection-component input-name="user_id" multiple="0" selected="{{ $userId }}"
-                                selected-label="{{ $selectedLabel }}" select-id="selectUser"
-                                :disabled="!$labEnabled" />
+                                selected-label="{{ $selectedLabel }}" select-id="selectUser" :disabled="!$labEnabled" />
                         </div>
                         <div class="col-lg-5 col-md-6 lab-user-field">
                             <label class="form-label small mb-1" for="selectUser2">
@@ -158,8 +157,8 @@
                         </div>
                         <div class="col-auto">
                             <div class="form-check form-switch mb-0 pt-1">
-                                <input class="form-check-input" type="checkbox" role="switch"
-                                    id="sim-sell-fail" @if (!$labEnabled) disabled @endif>
+                                <input class="form-check-input" type="checkbox" role="switch" id="sim-sell-fail"
+                                    @if (!$labEnabled) disabled @endif>
                                 <label class="form-check-label small" for="sim-sell-fail"
                                     title="پله آخر placeLimitSell با خطای شبیه‌سازی‌شده curl/SSL fail می‌شود">
                                     شبیه‌سازی شکست ثبت پله فروش
@@ -196,7 +195,7 @@
                 </div>
 
                 <div class="col-lg-8 col-md-7">
-                    <div class="card lab-card">
+                    <div class="card lab-card" style="max-height: 600px; overflow-y: auto;">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h6 class="card-title mb-0">کنترل قیمت ارزهای سیگنال</h6>
                             <span class="badge bg-label-secondary" id="pcoins-count">0 ارز</span>
@@ -353,7 +352,8 @@
                     }
                     if (changed) {
                         setHint(
-                            'با زدن «شروع چرخه» داده‌های ربات پاک، سرمایه مستقیم به کیف ربات اعمال و BotBuyOrchestrator اجرا می‌شود.');
+                            'با زدن «شروع چرخه» داده‌های ربات پاک، سرمایه مستقیم به کیف ربات اعمال و BotBuyOrchestrator اجرا می‌شود.'
+                        );
                     }
                 } else {
                     if (badge) {
@@ -368,7 +368,8 @@
                     }
                     if (changed) {
                         setHint(
-                            'با زدن «شروع چرخه» کیف اصلی شارژ، transferIn واقعی انجام و سپس auto-trade روشن می‌شود (صرافی مرجع واقعی).');
+                            'با زدن «شروع چرخه» کیف اصلی شارژ، transferIn واقعی انجام و سپس auto-trade روشن می‌شود (صرافی مرجع واقعی).'
+                        );
                     }
                 }
             }
@@ -701,16 +702,20 @@
 
                             const lines = results.map(r => {
                                 if (r.error) {
-                                    return '<span class="text-danger">#' + r.id + ': ' + esc(r.error.message) +
+                                    return '<span class="text-danger">#' + r.id + ': ' + esc(r.error
+                                            .message) +
                                         '</span>';
                                 }
                                 const bo = r.j.bot_order;
                                 if (!bo) {
-                                    return '<span class="text-warning">#' + r.id + ': سفارشی ساخته نشد (' +
+                                    return '<span class="text-warning">#' + r.id +
+                                        ': سفارشی ساخته نشد (' +
                                         esc(r.j.reason || 'نامشخص') + ')</span>';
                                 }
-                                return '<span class="text-success">#' + r.id + ': BotOrder #' + bo.id + ' (' +
-                                    esc(bo.status) + (bo.triggered_by ? ' / ' + esc(bo.triggered_by) : '') +
+                                return '<span class="text-success">#' + r.id + ': BotOrder #' + bo
+                                    .id + ' (' +
+                                    esc(bo.status) + (bo.triggered_by ? ' / ' + esc(bo
+                                        .triggered_by) : '') +
                                     ')</span>';
                             });
                             let hint = lines.join('<br>');
@@ -728,7 +733,8 @@
                                 toast('چرخه همزمان برای ' + label + ' شروع شد');
                             } else {
                                 const bo = ok[0]?.j?.bot_order;
-                                toast(bo ? ('چرخه شروع شد — BotOrder #' + bo.id) : ('چرخه شروع شد ولی سفارشی ساخته نشد'), !!bo);
+                                toast(bo ? ('چرخه شروع شد — BotOrder #' + bo.id) : (
+                                    'چرخه شروع شد ولی سفارشی ساخته نشد'), !!bo);
                             }
                         });
                     return;

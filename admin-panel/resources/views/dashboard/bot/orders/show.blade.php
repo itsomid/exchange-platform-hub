@@ -102,9 +102,9 @@
                                 style="background:{{ $totalPnl > 0 ? 'rgba(40,199,111,.06)' : ($totalPnl < 0 ? 'rgba(234,84,85,.06)' : '') }}">
                                 <small class="text-muted d-block mb-1"><i class="fas fa-chart-line fa-xs me-1"></i>سود /
                                     زیان خالص (P&L)</small>
-                                <div
+                                <div dir="ltr"
                                     class="fw-bold fs-5 font-number {{ $totalPnl >= 0 ? 'text-success' : 'text-danger' }}">
-                                    {{ formatNumberTrimZeros($totalPnl) }}{{ $totalPnl >= 0 ? '+' : '' }}
+                                    {{ $totalPnl >= 0 ? '+' : '' }}{{ formatNumberTrimZeros($totalPnl) }}
                                 </div>
                                 <small class="text-muted">USDT</small>
                                 <div class="mt-1 d-flex justify-content-center gap-2">
