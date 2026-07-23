@@ -33,6 +33,17 @@ namespace App\Services\Bot;
  *      If A_i < effective_min_i the signal is SKIPPED and its share is redistributed
  *      ONCE among the still-allocated signals proportionally to their raw weights
  *      (subject to caps; any overflow ends up in the unallocated remainder).
+ *   5. Multi-pass refill: steps 1-4 form a single pass. While money remains
+ *      (> epsilon) and unseen candidates exist, the remainder is re-run through
+ *      the same pipeline against the rest of the candidate list, so cash never
+ *      sits idle just because the first K-slice couldn't absorb it:
+ *        - currencies bought in a pass leave the pool (their spend is added to
+ *          $committedPerCurrency so caps keep holding across passes);
+ *        - cap-exhausted currencies leave the pool permanently;
+ *        - if a pass buys NOTHING, every currency it skipped leaves the pool,
+ *          letting the next pass reach deeper (lower-priority) signals.
+ *      The loop stops when the pool is empty, the remainder is dust, or a pass
+ *      can neither buy nor skip anything (K = 0 / zero weights).
  *
  * All money math uses BCMath at scale 8.
  *
@@ -75,6 +86,103 @@ class AllocationService
     ): AllocationResult {
         $B       = $this->str($balance);
         $capBase = $capBase === null ? $B : $this->str($capBase);
+
+        if (empty($candidates)) {
+            return $this->allocatePass($candidates, $B, $alpha, $precheckFloorMode, $capBase, $committedPerCurrency);
+        }
+
+        $pool      = array_values($candidates);
+        $remaining = $B;
+        $committed = [];
+        foreach ($committedPerCurrency as $currencyId => $amount) {
+            $committed[(int) $currencyId] = $this->str($amount);
+        }
+
+        $allocations       = [];
+        $skippedByCurrency = [];
+        $passes            = 0;
+        $firstSnapshot     = null;
+
+        while (! empty($pool) && bccomp($remaining, self::EPSILON, self::SCALE) > 0) {
+            $pass = $this->allocatePass($pool, $remaining, $alpha, $precheckFloorMode, $capBase, $committed);
+            $passes++;
+            $firstSnapshot ??= $pass->snapshot;
+
+            // K = 0 (remainder too small) or zero weights: nothing further can happen.
+            if (empty($pass->allocations) && empty($pass->skipped)) {
+                break;
+            }
+
+            $removed = [];
+
+            foreach ($pass->allocations as $alloc) {
+                $allocations[] = $alloc;
+                $currencyId    = (int) $alloc['currency_id'];
+                // Count this pass's spend against the currency's cap and retire
+                // it from the pool so later passes can't buy it twice.
+                $committed[$currencyId] = bcadd($committed[$currencyId] ?? '0', $alloc['amount'], self::SCALE);
+                $removed[$currencyId]   = true;
+                // Bought after all — an earlier-pass skip record is obsolete.
+                unset($skippedByCurrency[$currencyId]);
+            }
+
+            foreach ($pass->skipped as $skip) {
+                $currencyId = (int) $skip['currency_id'];
+                $skippedByCurrency[$currencyId] = $skip;
+                // Cap-exhausted coins can never absorb more; drop them for good.
+                // When the pass bought nothing at all, drop every skipped coin
+                // too — otherwise the next pass would re-select the same
+                // unbuyable set and deeper (lower-priority) signals that COULD
+                // absorb the remainder would never be reached.
+                if (! empty($skip['cap_exhausted']) || empty($pass->allocations)) {
+                    $removed[$currencyId] = true;
+                }
+            }
+
+            $pool = array_values(array_filter(
+                $pool,
+                fn ($c) => ! isset($removed[(int) $c['currency_id']]),
+            ));
+            $remaining = $pass->unallocatedRemainder;
+        }
+
+        $totalAlloc = '0';
+        foreach ($allocations as $alloc) {
+            $totalAlloc = bcadd($totalAlloc, $alloc['amount'], self::SCALE);
+        }
+
+        return new AllocationResult(
+            allocations: $allocations,
+            skipped: array_values($skippedByCurrency),
+            unallocatedRemainder: bcsub($B, $totalAlloc, self::SCALE),
+            snapshot: [
+                'balance'         => $B,
+                'alpha'           => $firstSnapshot['alpha'] ?? $this->str($alpha),
+                'K'               => $firstSnapshot['K'] ?? 0,
+                'w_sum'           => $firstSnapshot['w_sum'] ?? '0',
+                'passes'          => $passes,
+                'total_allocated' => $totalAlloc,
+                'candidates'      => count($candidates),
+            ],
+        );
+    }
+
+    /**
+     * A single pass of the steps 1-4 pipeline (top-K selection, raw allocation,
+     * cap enforcement, D14 pre-check + one-shot redistribution).
+     *
+     * @param array<int, array<string, mixed>> $candidates
+     * @param array<int, string|float|int>     $committedPerCurrency
+     */
+    private function allocatePass(
+        array $candidates,
+        string $balance,
+        string|float $alpha,
+        string $precheckFloorMode,
+        string $capBase,
+        array $committedPerCurrency,
+    ): AllocationResult {
+        $B = $balance;
 
         $weightResult = $this->weights->compute($candidates, $B, $alpha);
         $selected     = $weightResult['selected'];

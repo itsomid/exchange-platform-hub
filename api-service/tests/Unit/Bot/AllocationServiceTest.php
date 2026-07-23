@@ -257,6 +257,58 @@ it('allocates only the remaining cap headroom after the wallet grows', function 
     expect($result->skipped)->toBeEmpty();
 });
 
+/**
+ * (i) Multi-pass refill: money left over after the first K-slice flows to
+ *     lower-priority candidates that were outside the initial top-K.
+ *
+ *     Real-world scenario: B=35 → K=floor(sqrt(35))=5, so only priorities 1-5
+ *     enter pass 1. Priority 1 (30% cap) buys 10.5; priorities 2-5 (10% cap →
+ *     3.5 each) sit below the 5 USDT effective_min and are skipped. Without
+ *     multi-pass the remaining 24.5 stayed idle even though priority 8 (30%
+ *     cap, min_buy 2) could absorb 10.5 of it.
+ */
+it('spends the remainder on lower-priority signals beyond the first top-K slice', function () {
+    $signal = fn (int $id, int $priority, string $maxPct, string $minBuy) => baseSignal([
+        'signal_id'                     => $id,
+        'currency_id'                   => $id,
+        'priority'                      => $priority,
+        'min_buy_amount_usdt'           => $minBuy,
+        'max_allocation_percent'        => $maxPct,
+        'sell_orders_count'             => 3,
+        'effective_p2p_min_order_value' => '4',
+    ]);
+
+    $result = makeAllocator()->allocate(
+        candidates: [
+            $signal(1, 1, '30', '5'),  // AVAX-like: bought in pass 1
+            $signal(2, 2, '10', '5'),  // caps at 3.5 < 5 → never buyable
+            $signal(3, 3, '10', '5'),
+            $signal(4, 4, '10', '5'),
+            $signal(5, 5, '10', '5'),  // last signal inside the pass-1 top-K
+            $signal(6, 6, '10', '5'),
+            $signal(7, 7, '10', '5'),
+            $signal(8, 8, '30', '2'),  // Sonic-like: reachable only via refill passes
+        ],
+        balance: '35',
+        alpha: '0.15',
+        precheckFloorMode: 'single',
+    );
+
+    $byId = collect($result->allocations)->keyBy('signal_id');
+
+    // Pass 1 buys signal 1 at its 30% cap; later passes reach signal 8.
+    expect($byId->keys()->sort()->values()->all())->toBe([1, 8]);
+    expect($byId[1]['amount'])->toBe('10.50000000');
+    expect($byId[8]['amount'])->toBe('10.50000000');
+
+    // Every 10%-cap coin is structurally unbuyable (3.5 < 5) and stays skipped.
+    expect(collect($result->skipped)->pluck('signal_id')->sort()->values()->all())
+        ->toBe([2, 3, 4, 5, 6, 7]);
+
+    // Only the structurally unspendable 14 USDT remains.
+    expect($result->unallocatedRemainder)->toBe('14.00000000');
+});
+
 it('reconciles truncation dust back into allocations when cap room remains', function () {
     $result = makeAllocator()->allocate(
         candidates: [
