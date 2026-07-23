@@ -232,10 +232,10 @@
                                 </h4>
                             </td>
                             <td class="priority-cell">{{ $signal->priority }}</td>
-                            <td>{{ formatNumberTrimZeros($signal->floor_price) }}</td>
-                            <td>{{ formatNumberTrimZeros($signal->ceiling_price) }}</td>
-                            <td>{{ $signal->max_allocation_percent }}٪</td>
-                            <td>{{ $signal->sell_orders_count }}</td>
+                            <td data-role="floor-price">{{ formatNumberTrimZeros($signal->floor_price) }}</td>
+                            <td data-role="ceiling-price">{{ formatNumberTrimZeros($signal->ceiling_price) }}</td>
+                            <td data-role="max-allocation">{{ $signal->max_allocation_percent }}٪</td>
+                            <td data-role="sell-orders-count">{{ $signal->sell_orders_count }}</td>
                             <td>
                                 @if ($signal->is_active)
                                     <span class="badge bg-success">فعال</span>
@@ -245,6 +245,20 @@
                             </td>
                             <td>
                                 <div class="d-flex gap-1">
+                                    <button type="button"
+                                        class="btn btn-sm btn-outline-info btn-quick-edit"
+                                        title="ویرایش سریع"
+                                        data-id="{{ $signal->id }}"
+                                        data-symbol="{{ $signal->currency?->symbol }}"
+                                        data-floor-price="{{ formatNumberTrimZeros($signal->floor_price) }}"
+                                        data-ceiling-price="{{ formatNumberTrimZeros($signal->ceiling_price) }}"
+                                        data-max-allocation="{{ $signal->max_allocation_percent }}"
+                                        data-sell-mode="{{ $signal->sell_mode }}"
+                                        data-sell-targets='@json($signal->sell_targets ?? [])'
+                                        data-url="{{ route('admin.bot.signal.quick-update', $signal) }}">
+                                        <i class="fas fa-bolt"></i>
+                                    </button>
+
                                     <a href="{{ route('admin.bot.signal.edit', $signal) }}"
                                         class="btn btn-sm btn-outline-primary" title="ویرایش">
                                         <i class="fas fa-edit"></i>
@@ -281,6 +295,77 @@
         </div>
         <div class="card-body">
             {{ $signals->links() }}
+        </div>
+    </div>
+
+    {{-- Quick Edit Modal --}}
+    <div class="modal fade" id="quickEditModal" tabindex="-1" aria-labelledby="quickEditModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <form id="quickEditForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="quickEditModalLabel">ویرایش سریع سیگنال</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="quickEditAlert" class="alert alert-danger d-none"></div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="qe_floor_price" class="form-label">کف قیمت (USDT) <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="qe_floor_price" name="floor_price" required>
+                                <div class="invalid-feedback" data-error="floor_price"></div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="qe_ceiling_price" class="form-label">سقف قیمت (USDT) <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="qe_ceiling_price" name="ceiling_price" required>
+                                <div class="invalid-feedback" data-error="ceiling_price"></div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="qe_max_allocation" class="form-label">سقف تخصیص (%) <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" min="0.01" max="100" class="form-control"
+                                    id="qe_max_allocation" name="max_allocation_percent" required>
+                                <div class="invalid-feedback" data-error="max_allocation_percent"></div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="qe_sell_mode" class="form-label">نوع هدف فروش <span class="text-danger">*</span></label>
+                            <select class="form-select" id="qe_sell_mode" name="sell_mode" required>
+                                <option value="percent">درصد تغییر قیمت</option>
+                                <option value="price">قیمت مطلق</option>
+                            </select>
+                            <div class="invalid-feedback" data-error="sell_mode"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">اهداف فروش</h6>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="qeAddTarget">
+                                <i class="fas fa-plus me-1"></i> افزودن هدف
+                            </button>
+                        </div>
+                        <div class="invalid-feedback d-block mb-2" data-error="sell_targets"></div>
+
+                        <div class="row g-1 mb-1">
+                            <div class="col-6"><small class="text-muted">هدف (% یا قیمت)</small></div>
+                            <div class="col-5"><small class="text-muted">سهم (%)</small></div>
+                            <div class="col-1"></div>
+                        </div>
+                        <div id="qeTargetsContainer"></div>
+                        <div class="mt-2">
+                            <small class="text-muted">مجموع سهم‌ها: <span id="qeShareTotal">0</span>٪
+                                <span id="qeShareTotalError" class="text-danger d-none"> — باید ۱۰۰٪ باشد</span>
+                            </small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+                        <button type="submit" class="btn btn-primary" id="qeSubmitBtn">
+                            <i class="fas fa-save me-1"></i> ذخیره
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -349,6 +434,242 @@
                             }).showToast();
                         });
                 },
+            });
+
+            // ── Quick Edit Modal ──────────────────────────────────────────────
+            const quickEditModalEl = document.getElementById('quickEditModal');
+            const quickEditModal = new bootstrap.Modal(quickEditModalEl);
+            const quickEditForm = document.getElementById('quickEditForm');
+            const qeTargetsContainer = document.getElementById('qeTargetsContainer');
+            const qeAlert = document.getElementById('quickEditAlert');
+            const qeSubmitBtn = document.getElementById('qeSubmitBtn');
+            let qeTargetIndex = 0;
+            let qeCurrentUrl = null;
+            let qeCurrentRow = null;
+            let qeCurrentBtn = null;
+
+            const showToast = (text, ok = true) => {
+                Toastify({
+                    text,
+                    duration: ok ? 3000 : 5000,
+                    close: true,
+                    gravity: 'top',
+                    position: 'right',
+                    stopOnFocus: true,
+                    style: { background: ok ? '#28C76F' : '#EA5455' },
+                }).showToast();
+            };
+
+            const clearQuickEditErrors = () => {
+                qeAlert.classList.add('d-none');
+                qeAlert.textContent = '';
+                quickEditForm.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                quickEditForm.querySelectorAll('[data-error]').forEach(el => {
+                    el.textContent = '';
+                    el.classList.add('d-none');
+                });
+            };
+
+            const qeRecalcTotal = () => {
+                let total = 0;
+                qeTargetsContainer.querySelectorAll('.qe-share-input').forEach(el => {
+                    total += parseFloat(el.value) || 0;
+                });
+                total = Math.round(total * 100) / 100;
+                document.getElementById('qeShareTotal').textContent = total;
+                const err = document.getElementById('qeShareTotalError');
+                if (Math.abs(total - 100) > 0.01) {
+                    err.classList.remove('d-none');
+                } else {
+                    err.classList.add('d-none');
+                }
+            };
+
+            const qeAddTargetRow = (trigger = '', share = '') => {
+                const i = qeTargetIndex++;
+                const html = `
+                    <div class="qe-target-row row g-1 mb-1" data-index="${i}">
+                        <div class="col-6">
+                            <div class="input-group input-group-sm">
+                                <input type="number" step="0.01" class="form-control form-control-sm qe-trigger-input"
+                                    name="sell_targets[${i}][trigger]" value="${trigger}" required>
+                                <span class="input-group-text">سود</span>
+                            </div>
+                        </div>
+                        <div class="col-5">
+                            <input type="number" step="0.01" min="0.01" max="100"
+                                class="form-control form-control-sm qe-share-input"
+                                name="sell_targets[${i}][share]" value="${share}" required>
+                        </div>
+                        <div class="col-1">
+                            <button type="button" class="btn btn-sm btn-outline-danger qe-remove-target w-100">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>`;
+                qeTargetsContainer.insertAdjacentHTML('beforeend', html);
+                qeRecalcTotal();
+            };
+
+            document.getElementById('qeAddTarget').addEventListener('click', () => {
+                if (qeTargetsContainer.querySelectorAll('.qe-target-row').length >= 10) {
+                    showToast('حداکثر ۱۰ هدف فروش مجاز است.', false);
+                    return;
+                }
+                qeAddTargetRow();
+            });
+
+            qeTargetsContainer.addEventListener('click', (e) => {
+                if (e.target.closest('.qe-remove-target')) {
+                    const rows = qeTargetsContainer.querySelectorAll('.qe-target-row');
+                    if (rows.length <= 1) {
+                        showToast('حداقل یک هدف فروش لازم است.', false);
+                        return;
+                    }
+                    e.target.closest('.qe-target-row').remove();
+                    qeRecalcTotal();
+                }
+            });
+
+            qeTargetsContainer.addEventListener('input', (e) => {
+                if (e.target.classList.contains('qe-share-input')) {
+                    qeRecalcTotal();
+                }
+            });
+
+            document.querySelectorAll('.btn-quick-edit').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    clearQuickEditErrors();
+                    qeCurrentUrl = btn.dataset.url;
+                    qeCurrentRow = btn.closest('tr');
+                    qeCurrentBtn = btn;
+
+                    const symbol = btn.dataset.symbol || '';
+                    document.getElementById('quickEditModalLabel').textContent =
+                        symbol ? `ویرایش سریع — ${symbol}` : 'ویرایش سریع سیگنال';
+
+                    document.getElementById('qe_floor_price').value = btn.dataset.floorPrice || '';
+                    document.getElementById('qe_ceiling_price').value = btn.dataset.ceilingPrice || '';
+                    document.getElementById('qe_max_allocation').value = btn.dataset.maxAllocation || '';
+                    document.getElementById('qe_sell_mode').value = btn.dataset.sellMode || 'percent';
+
+                    let targets = [];
+                    try {
+                        const raw = btn.getAttribute('data-sell-targets') || '[]';
+                        targets = JSON.parse(raw);
+                        if (!Array.isArray(targets)) targets = [];
+                    } catch (e) {
+                        targets = [];
+                    }
+
+                    qeTargetsContainer.innerHTML = '';
+                    qeTargetIndex = 0;
+                    if (!targets.length) {
+                        qeAddTargetRow();
+                    } else {
+                        targets.forEach(t => {
+                            const trigger = t.trigger ?? t.target ?? '';
+                            const share = t.share ?? '';
+                            qeAddTargetRow(trigger, share);
+                        });
+                    }
+
+                    quickEditModal.show();
+                });
+            });
+
+            quickEditForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                if (!qeCurrentUrl) return;
+
+                clearQuickEditErrors();
+
+                const sellTargets = [];
+                qeTargetsContainer.querySelectorAll('.qe-target-row').forEach(row => {
+                    sellTargets.push({
+                        trigger: row.querySelector('.qe-trigger-input').value,
+                        share: row.querySelector('.qe-share-input').value,
+                    });
+                });
+
+                const payload = {
+                    floor_price: document.getElementById('qe_floor_price').value,
+                    ceiling_price: document.getElementById('qe_ceiling_price').value,
+                    max_allocation_percent: document.getElementById('qe_max_allocation').value,
+                    sell_mode: document.getElementById('qe_sell_mode').value,
+                    sell_targets: sellTargets,
+                };
+
+                qeSubmitBtn.disabled = true;
+                const originalHtml = qeSubmitBtn.innerHTML;
+                qeSubmitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> در حال ذخیره...';
+
+                fetch(qeCurrentUrl, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    },
+                    body: JSON.stringify(payload),
+                })
+                    .then(async (res) => {
+                        const data = await res.json().catch(() => ({}));
+                        if (!res.ok) {
+                            if (res.status === 422 && data.errors) {
+                                Object.entries(data.errors).forEach(([field, messages]) => {
+                                    const msg = Array.isArray(messages) ? messages[0] : messages;
+                                    const baseField = field.split('.')[0];
+                                    const feedback = quickEditForm.querySelector(`[data-error="${field}"]`)
+                                        || quickEditForm.querySelector(`[data-error="${baseField}"]`);
+                                    if (feedback) {
+                                        feedback.textContent = msg;
+                                        feedback.classList.remove('d-none');
+                                        feedback.classList.add('d-block');
+                                    }
+                                    const input = quickEditForm.querySelector(`[name="${field}"]`)
+                                        || quickEditForm.querySelector(`[name="${baseField}"]`);
+                                    if (input) input.classList.add('is-invalid');
+                                });
+                                const firstError = Object.values(data.errors)[0];
+                                showToast(Array.isArray(firstError) ? firstError[0] : firstError, false);
+                                return;
+                            }
+                            throw new Error(data.message || 'خطا در ذخیره');
+                        }
+
+                        if (!data.success) throw new Error();
+
+                        const signal = data.signal;
+                        if (qeCurrentRow) {
+                            const floorCell = qeCurrentRow.querySelector('[data-role="floor-price"]');
+                            const ceilingCell = qeCurrentRow.querySelector('[data-role="ceiling-price"]');
+                            const allocCell = qeCurrentRow.querySelector('[data-role="max-allocation"]');
+                            const countCell = qeCurrentRow.querySelector('[data-role="sell-orders-count"]');
+                            if (floorCell) floorCell.textContent = signal.floor_price;
+                            if (ceilingCell) ceilingCell.textContent = signal.ceiling_price;
+                            if (allocCell) allocCell.textContent = signal.max_allocation_percent + '٪';
+                            if (countCell) countCell.textContent = signal.sell_orders_count;
+                        }
+
+                        if (qeCurrentBtn) {
+                            qeCurrentBtn.dataset.floorPrice = signal.floor_price;
+                            qeCurrentBtn.dataset.ceilingPrice = signal.ceiling_price;
+                            qeCurrentBtn.dataset.maxAllocation = signal.max_allocation_percent;
+                            qeCurrentBtn.dataset.sellMode = signal.sell_mode;
+                            qeCurrentBtn.dataset.sellTargets = JSON.stringify(signal.sell_targets || []);
+                        }
+
+                        quickEditModal.hide();
+                        showToast(data.message || 'سیگنال با موفقیت ویرایش شد.');
+                    })
+                    .catch((err) => {
+                        showToast(err.message || 'خطا در ذخیره تغییرات.', false);
+                    })
+                    .finally(() => {
+                        qeSubmitBtn.disabled = false;
+                        qeSubmitBtn.innerHTML = originalHtml;
+                    });
             });
 
             // Live market price via Echo (same channel as markets list)

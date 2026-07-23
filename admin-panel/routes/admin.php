@@ -429,6 +429,7 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::post('/signals', [BotSignalController::class, 'store'])->name('signal.store');
         Route::get('/signals/{botSignal}/edit', [BotSignalController::class, 'edit'])->name('signal.edit');
         Route::patch('/signals/{botSignal}', [BotSignalController::class, 'update'])->name('signal.update');
+        Route::patch('/signals/{botSignal}/quick-update', [BotSignalController::class, 'quickUpdate'])->name('signal.quick-update');
         Route::delete('/signals/{botSignal}', [BotSignalController::class, 'destroy'])->name('signal.destroy');
         Route::patch('/signals/{botSignal}/toggle-status', [BotSignalController::class, 'toggleStatus'])->name('signal.toggle-status');
 

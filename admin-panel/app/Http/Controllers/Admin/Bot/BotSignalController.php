@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Admin\Bot;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Bot\QuickUpdateBotSignalRequest;
 use App\Http\Requests\Bot\StoreBotSignalRequest;
 use App\Http\Requests\Bot\UpdateBotSignalRequest;
 use App\Models\Bot\BotSignal;
 use App\Models\Currency;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -78,6 +80,29 @@ class BotSignalController extends Controller
         return redirect()
             ->route('admin.bot.signal.index')
             ->with('success', 'سیگنال با موفقیت ویرایش شد.');
+    }
+
+    public function quickUpdate(QuickUpdateBotSignalRequest $request, BotSignal $botSignal): JsonResponse
+    {
+        $data = $request->validated();
+        $data['sell_orders_count'] = count($data['sell_targets']);
+
+        $botSignal->update($data);
+        $botSignal->refresh();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'سیگنال با موفقیت ویرایش شد.',
+            'signal'  => [
+                'id'                     => $botSignal->id,
+                'floor_price'            => formatNumberTrimZeros($botSignal->floor_price),
+                'ceiling_price'          => formatNumberTrimZeros($botSignal->ceiling_price),
+                'max_allocation_percent' => (float) $botSignal->max_allocation_percent,
+                'sell_orders_count'      => $botSignal->sell_orders_count,
+                'sell_mode'              => $botSignal->sell_mode,
+                'sell_targets'           => $botSignal->sell_targets,
+            ],
+        ]);
     }
 
     public function destroy(BotSignal $botSignal): RedirectResponse
