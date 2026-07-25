@@ -4,10 +4,10 @@ namespace App\Console\Commands\Bot;
 
 use App\Jobs\Bot\SignalScanBuyJob;
 use App\Models\Bot\BotBuyExecution;
-use App\Models\Bot\BotGlobalSettings;
 use App\Models\Bot\BotSignal;
 use App\Models\Bot\BotUserSettings;
 use App\Models\Bot\BotWallet;
+use App\Services\Bot\FeeCalculator;
 use App\Services\Bot\PriceFeed;
 use Illuminate\Console\Command;
 
@@ -93,13 +93,14 @@ class ScanBuyTriggersCommand extends Command
 
     /**
      * Dispatch a buy job per eligible user: auto-trade enabled, free balance
-     * (balance - locked_balance) >= min_deposit_usdt, and no in-flight buy
-     * cycle (to avoid overlapping batches). The orchestrator re-gates all of
-     * this, so this pre-filter is purely to avoid dispatching no-op jobs.
+     * (balance - locked_balance) >= minNetDeposit (min_deposit minus transfer
+     * fee), and no in-flight buy cycle (to avoid overlapping batches). The
+     * orchestrator re-gates all of this, so this pre-filter is purely to avoid
+     * dispatching no-op jobs.
      */
     private function dispatchEligibleUsers(): int
     {
-        $minDeposit = (string) BotGlobalSettings::current()->min_deposit_usdt;
+        $minNet = app(FeeCalculator::class)->minNetDeposit();
 
         $autoTradeUserIds = BotUserSettings::query()
             ->where('auto_trade_enabled', true)
@@ -111,7 +112,7 @@ class ScanBuyTriggersCommand extends Command
 
         $eligibleUserIds = BotWallet::query()
             ->whereIn('user_id', $autoTradeUserIds)
-            ->whereRaw('balance - locked_balance >= ?', [$minDeposit])
+            ->whereRaw('balance - locked_balance >= ?', [$minNet])
             ->pluck('user_id');
 
         if ($eligibleUserIds->isEmpty()) {

@@ -97,3 +97,27 @@ it('falls back to default tiers when transfer_fee_tiers is empty', function () {
     $calc = new FeeCalculator();
     expect($calc->transferFee('500'))->toBe('5.00000000');
 });
+
+it('returns min deposit net of transfer fee for buy-trigger threshold', function () {
+    seedDefaultTransferFeeTiers();
+    $calc = new FeeCalculator();
+
+    // min_deposit=20, fee flat=1 → net=19
+    expect($calc->minNetDeposit())->toBe('19.00000000');
+});
+
+it('returns minNetDeposit with percent fee tier when min is above 100', function () {
+    BotGlobalSettings::create([
+        'min_deposit_usdt'          => 200,
+        'alpha_weight'              => 0.15,
+        'default_sell_orders_count' => 3,
+        'performance_fee_percent'   => 22,
+        'p2p_min_order_value'       => 5,
+        'transfer_fee_tiers'        => BotGlobalSettings::defaultTransferFeeTiers(),
+        'is_enabled'                => true,
+    ]);
+
+    $calc = new FeeCalculator();
+    // 200 * 1% = 2 → net = 198
+    expect($calc->minNetDeposit())->toBe('198.00000000');
+});

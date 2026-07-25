@@ -22,6 +22,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Services\Bot\BotWalletService;
+use App\Services\Bot\FeeCalculator;
 use App\Services\Bot\ReferenceExchange\CoinExBotAdapter;
 use App\Services\Bot\ReferenceExchange\ExchangeContract;
 use App\Services\Bot\ReferenceExchange\ExchangePositionCloser;
@@ -211,8 +212,9 @@ class BotTestController extends Controller
         if (! $wallet) return 'BotWallet missing';
 
         $free = bcsub((string) $wallet->balance, (string) $wallet->locked_balance, 8);
-        if (bccomp($free, (string) $global->min_deposit_usdt, 8) < 0) {
-            return "free balance ({$free}) < min_deposit_usdt ({$global->min_deposit_usdt})";
+        $minNet = app(FeeCalculator::class)->minNetDeposit();
+        if (bccomp($free, $minNet, 8) < 0) {
+            return "free balance ({$free}) < min_net_deposit ({$minNet}) [min_deposit_usdt={$global->min_deposit_usdt}]";
         }
 
         $activeCount = BotSignal::where('is_active', true)->count();

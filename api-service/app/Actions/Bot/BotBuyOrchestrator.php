@@ -13,6 +13,7 @@ use App\Services\Bot\AllocationResult;
 use App\Services\Bot\AllocationService;
 use App\Services\Bot\BotOrderDescriptionService;
 use App\Services\Bot\BotOrderStatusService;
+use App\Services\Bot\FeeCalculator;
 use App\Services\Bot\PriceFeed;
 use App\Services\Bot\SignalFilterService;
 use Illuminate\Support\Collection;
@@ -23,7 +24,8 @@ use Illuminate\Support\Str;
 /**
  * Orchestrates a full "trigger to buy" cycle for a single user:
  *
- *   1. Validate auto-trade is enabled and free_balance ≥ min_deposit_usdt.
+ *   1. Validate auto-trade is enabled and free_balance ≥ minNetDeposit
+ *      (min_deposit_usdt minus the transfer fee on that amount).
  *   2. Gather eligible signals and compute the allocation pipeline.
  *   3. Persist a single bot_orders row + one bot_buy_executions row per signal
  *      (allocated → PENDING, D14-rejected → SKIPPED with failure_reason).
@@ -45,6 +47,7 @@ class BotBuyOrchestrator
         private readonly AllocationService $allocator,
         private readonly PriceFeed $priceFeed,
         private readonly BotOrderStatusService $orderStatus,
+        private readonly FeeCalculator $feeCalculator,
     ) {}
 
     public function __invoke(int $userId, string $triggeredBy = self::TRIGGER_MANUAL): ?BotOrder
@@ -68,13 +71,14 @@ class BotBuyOrchestrator
         }
 
         $free       = bcsub((string) $wallet->balance, (string) $wallet->locked_balance, 8);
-        $minDeposit = (string) $global->min_deposit_usdt;
-        if (bccomp($free, $minDeposit, 8) < 0) {
+        $minNet     = $this->feeCalculator->minNetDeposit();
+        if (bccomp($free, $minNet, 8) < 0) {
             $this->logNoOrder($userId, $triggeredBy, 'insufficient_free_balance', [
-                'balance'     => (string) $wallet->balance,
-                'locked'      => (string) $wallet->locked_balance,
-                'free'        => $free,
-                'min_deposit' => $minDeposit,
+                'balance'      => (string) $wallet->balance,
+                'locked'       => (string) $wallet->locked_balance,
+                'free'         => $free,
+                'min_deposit'  => (string) $global->min_deposit_usdt,
+                'min_net'      => $minNet,
             ]);
             return null;
         }

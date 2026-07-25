@@ -25,6 +25,20 @@ class FeeCalculator
     }
 
     /**
+     * Net USDT that lands in the bot wallet when transferring exactly
+     * min_deposit_usdt. Buy triggers must use this (not the gross minimum),
+     * otherwise a valid minimum deposit can never start trading after the
+     * transfer fee is deducted.
+     */
+    public function minNetDeposit(): string
+    {
+        $minDeposit = (string) BotGlobalSettings::current()->min_deposit_usdt;
+        $fee = $this->transferFee($minDeposit);
+
+        return bcsub($minDeposit, $fee, self::SCALE);
+    }
+
+    /**
      * Cancel fee charged when a user cancels a bot order before all sell legs fill.
      * Same tier schedule as transfer fee but without the minimum-deposit check.
      */

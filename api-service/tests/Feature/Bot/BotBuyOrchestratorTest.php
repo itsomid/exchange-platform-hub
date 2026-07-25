@@ -272,3 +272,61 @@ it('does nothing when auto_trade_enabled is false', function () {
     expect(BotOrder::count())->toBe(0);
     Queue::assertNothingPushed();
 });
+
+/**
+ * After a minimum gross deposit, only the net amount (minus transfer fee)
+ * lands in the bot wallet. Buy must still start at that net threshold.
+ */
+it('starts a buy when free balance equals min deposit net of transfer fee', function () {
+    // min_deposit=20, flat fee=1 → net credited = 19
+    $user = makeBotUser('19.00000000');
+
+    $c = makeCurrency('HHH');
+    makeSignal($c->id, ['priority' => 1, 'sell_orders_count' => 0, 'min_buy_amount_usdt' => '5']);
+
+    $this->app->bind(PriceFeed::class, function () use ($c) {
+        $stub = new class extends PriceFeed {
+            public array $map = [];
+            public function __construct() {}
+            public function getLive(int $currencyId): float
+            {
+                return $this->map[$currencyId] ?? 0.0;
+            }
+        };
+        $stub->map = [$c->id => 100.0];
+        return $stub;
+    });
+
+    $orchestrator = app(BotBuyOrchestrator::class);
+    $botOrder     = $orchestrator($user->id, BotBuyOrchestrator::TRIGGER_TRANSFER_IN);
+
+    expect($botOrder)->not->toBeNull();
+    Queue::assertPushed(\App\Jobs\Bot\BuyExecutionJob::class, 1);
+});
+
+it('does not start a buy when free balance is below min deposit net of fee', function () {
+    $user = makeBotUser('18.99999999');
+
+    $c = makeCurrency('III');
+    makeSignal($c->id);
+
+    $this->app->bind(PriceFeed::class, function () use ($c) {
+        $stub = new class extends PriceFeed {
+            public array $map = [];
+            public function __construct() {}
+            public function getLive(int $currencyId): float
+            {
+                return $this->map[$currencyId] ?? 0.0;
+            }
+        };
+        $stub->map = [$c->id => 100.0];
+        return $stub;
+    });
+
+    $orchestrator = app(BotBuyOrchestrator::class);
+    $result       = $orchestrator($user->id);
+
+    expect($result)->toBeNull();
+    expect(BotOrder::count())->toBe(0);
+    Queue::assertNothingPushed();
+});

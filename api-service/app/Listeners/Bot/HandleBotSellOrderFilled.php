@@ -36,7 +36,7 @@ class HandleBotSellOrderFilled implements ShouldQueue
 
             // Reinvest the freed principal + realized profit back into a new buy
             // cycle. The orchestrator self-gates on auto_trade_enabled and only
-            // opens a new order once free_balance reaches min_deposit_usdt, so
+            // opens a new order once free_balance reaches minNetDeposit, so
             // when auto-trade is off this is a no-op and freed funds simply stay
             // available for withdrawal.
             ($this->orchestrator)($settlement->user_id, BotBuyOrchestrator::TRIGGER_REINVEST);
