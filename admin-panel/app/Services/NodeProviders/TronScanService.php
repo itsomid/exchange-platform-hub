@@ -341,7 +341,7 @@ class TronScanService
         $url = $this->baseUrl . '/token_trc20/transfers';
         $params = [
             'relatedAddress' => $address,
-            'limit' => 200,
+            'limit' => 50, // TronScan /token_trc20/transfers allows limit in [0, 50] only
             'sort' => '-timestamp',
         ];
 
