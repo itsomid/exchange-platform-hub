@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Accounting\V1;
 
+use App\Http\Requests\Accounting\V1\ListTransactionsRequest;
 use App\Http\Requests\Accounting\V1\SaveJournalEntryNumberRequest;
 use App\Http\Resources\Accounting\V1\TransactionResource;
 use App\Models\Transaction;
@@ -40,11 +41,20 @@ class TransactionController
 
     }
 
-    public function index()
+    public function index(ListTransactionsRequest $request)
     {
         $transactions = Transaction::query()
             ->with('user', 'wallet')
             ->whereNull('journal_entry_number')
+            ->when($request->filled('from_id'), fn ($q) => $q->where('id', '>=', $request->integer('from_id')))
+            ->when($request->filled('to_id'), fn ($q) => $q->where('id', '<=', $request->integer('to_id')))
+            ->when($request->filled('type'), fn ($q) => $q->where('type', $request->input('type')))
+            ->when($request->filled('subtype'), fn ($q) => $q->where('subtype', $request->input('subtype')))
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->input('status')))
+            ->when($request->filled('date'), fn ($q) => $q->whereDate('created_at', $request->input('date')))
+            ->when($request->filled('date_from'), fn ($q) => $q->whereDate('created_at', '>=', $request->input('date_from')))
+            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('created_at', '<=', $request->input('date_to')))
+            ->orderBy('id')
             ->get();
 
         return TransactionResource::collection($transactions);
