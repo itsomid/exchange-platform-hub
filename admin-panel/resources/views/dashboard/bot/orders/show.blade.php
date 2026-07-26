@@ -6,7 +6,6 @@
 
     <div class="row">
         <div class="col-12">
-
             <div class="card mb-4">
                 @php
                     $badgeClass = match ($botOrder->status) {
@@ -253,7 +252,19 @@
                 </div>
                 <div class="card-body">
                     @forelse ($botOrder->buyExecutions as $execution)
-                        <div class="border rounded p-3 mb-3">
+                        @php
+                            $totalSells = $execution->sellOrders->count();
+                            $filledSells = $execution->sellOrders->where('status', 'FILLED')->count();
+                            $sellProgress = $totalSells > 0 ? $filledSells / $totalSells : 0;
+                            $allSellsFilled = $totalSells > 0 && $filledSells === $totalSells;
+                            $execCardClass = $allSellsFilled
+                                ? 'buy-exec-complete'
+                                : ($filledSells > 0
+                                    ? 'buy-exec-progress'
+                                    : '');
+                        @endphp
+                        <div class="border rounded p-3 mb-3 buy-execution-card {{ $execCardClass }}"
+                            @if ($filledSells > 0 && !$allSellsFilled) style="--exec-progress: {{ round($sellProgress, 3) }}" @endif>
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <div>
                                     <strong>{{ $execution->currency?->symbol }}</strong>
@@ -272,6 +283,19 @@
                                     $execCurrentPrice = $execSymbol ? cache("market:price:{$execSymbol}USDT") : null;
                                 @endphp
                                 <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                                    @if ($allSellsFilled)
+                                        <span class="badge buy-exec-complete-badge">
+                                            <i class="fas fa-trophy me-1"></i>همه تارگت‌ها تکمیل شد
+                                        </span>
+                                    @elseif ($filledSells > 0)
+                                        <span
+                                            class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25"
+                                            style="font-size:.72rem;">
+                                            <i
+                                                class="fas fa-check-circle me-1"></i>{{ $filledSells }}/{{ $totalSells }}
+                                            پله
+                                        </span>
+                                    @endif
                                     <div class="rounded px-3 py-1 text-end"
                                         style="background:rgba(0,0,0,.03); border:1px solid rgba(0,0,0,.07)">
                                         <small class="text-muted d-block" style="font-size:.65rem; line-height:1.1">قیمت
@@ -288,29 +312,34 @@
                                 </div>
                             </div>
 
-                            <div class="row text-sm gap-3">
+                            <div class="row text-sm ">
                                 <div class="col-md-3 col-xxl-2">
                                     <small class="text-muted d-block mb-1">تخصیص (USDT)</small>
-                                    <strong>{{ formatNumberTrimZeros($execution->allocated_usdt, 2) }}</strong>
+                                    <strong
+                                        class="font-number">{{ formatNumberTrimZeros($execution->allocated_usdt, 2) }}</strong>
                                 </div>
                                 <div class="col-md-3 col-xxl-2">
                                     <small class="text-muted d-block mb-1">مقدار خریده‌شده</small>
-                                    <strong>{{ formatNumberTrimZeros($execution->filled_amount) }}</strong>
+                                    <strong
+                                        class="font-number">{{ formatNumberTrimZeros($execution->filled_amount) }}</strong>
                                 </div>
                                 <div class="col-md-3 col-xxl-2">
                                     <small class="text-muted d-block mb-1">میانگین قیمت خرید</small>
-                                    <strong>{{ $execution->avg_buy_price ? formatNumberTrimZeros($execution->avg_buy_price) : '—' }}</strong>
+                                    <strong
+                                        class="font-number">{{ $execution->avg_buy_price ? formatNumberTrimZeros($execution->avg_buy_price) : '—' }}</strong>
                                 </div>
                                 <div class="col-md-3 col-xxl-2">
                                     <small class="text-muted d-block mb-1">کارمزد صرافی خرید</small>
-                                    <strong>
+                                    <strong class="font-number">
                                         {{ formatNumberTrimZeros($execution->buy_ref_exchange_fee, 8) }}
-                                        <span class="text-muted fw-normal">USDT</span>
+                                        <small class="text-muted fw-normal">USDT</small>
+                                        @if ($execution->buy_ref_exchange_fee_currency)
+                                            <small class="d-block text-muted"> (پرداخت با
+                                                {{ strtoupper($execution->buy_ref_exchange_fee_currency) }})
+                                            </small>
+                                        @endif
                                     </strong>
-                                    @if ($execution->buy_ref_exchange_fee_currency)
-                                        <small class="d-block text-muted">پرداخت با
-                                            {{ strtoupper($execution->buy_ref_exchange_fee_currency) }}</small>
-                                    @endif
+
                                 </div>
                                 <div class="col-md-3 col-xxl-2">
                                     <small class="text-muted d-block mb-1">تارگت‌ها</small>
@@ -411,7 +440,7 @@
                                                         <td class="text-center">
                                                             <span
                                                                 class="fw-semibold">{{ formatNumberTrimZeros($sell->target_value, 8) }}</span>
-                                                            <small class="text-muted d-block"
+                                                            <small class="text-muted me-1"
                                                                 style="font-size:.75rem">{{ $sell->target_type }}</small>
                                                         </td>
                                                         <td class="text-center font-number">
@@ -470,7 +499,8 @@
                                                                 class="badge {{ $sellBadge }}">{{ $sell->status }}</span>
                                                         </td>
                                                         <td class="text-center">
-                                                            <small>{{ $sell->filled_at?->format('Y-m-d H:i') ?? '—' }}</small>
+                                                            <small
+                                                                dir=ltr>{{ $sell->filled_at?->format('Y-m-d H:i') ?? '—' }}</small>
                                                         </td>
                                                         <td class="text-center">
                                                             @if ($hasSettlement)
@@ -498,6 +528,23 @@
                                                             // settlement->exchange_fee is already buy_share + sell_fee (combined by SettlementService)
                                                             $stepTotalExchangeFee =
                                                                 (float) $sell->settlement->exchange_fee;
+                                                            $stepGrossPnl =
+                                                                (float) $sell->settlement->gross_revenue -
+                                                                (float) $sell->settlement->cost_basis;
+                                                            $stepNetworkFee = (float) $sell->settlement->network_fee;
+                                                            $stepSpreadFee =
+                                                                (float) ($sell->settlement->spread_fee ?? 0);
+                                                            $stepPerfFee = (float) $sell->settlement->performance_fee;
+                                                            // Same base SettlementService uses: gross_pnl − network − exchange − spread
+                                                            $stepPnlAfterFees =
+                                                                $stepGrossPnl -
+                                                                $stepNetworkFee -
+                                                                $stepTotalExchangeFee -
+                                                                $stepSpreadFee;
+                                                            $stepPerfPct =
+                                                                $stepPnlAfterFees > 0 && $stepPerfFee > 0
+                                                                    ? round(($stepPerfFee / $stepPnlAfterFees) * 100, 2)
+                                                                    : null;
                                                         @endphp
                                                         <tr class="settlement-detail d-none"
                                                             id="settlement-{{ $sell->id }}">
@@ -527,16 +574,105 @@
                                                                                 class="font-number text-warning">{{ formatNumberTrimZeros($sell->settlement->gross_revenue - $sell->settlement->cost_basis) }}</strong>
                                                                         </div>
                                                                     </div>
-
-
                                                                     <div class="col-6 col-md-3">
-                                                                        <div class="p-2 rounded border bg-white">
-                                                                            <small class="text-muted d-block">کارمزد صرافی
-                                                                                مرجع (خرید+فروش)</small>
+                                                                        <div id="card-perf-fee-{{ $sell->id }}"
+                                                                            class="card-clickable p-2 rounded border bg-white h-100"
+                                                                            style="cursor:pointer;">
+                                                                            <small class="text-muted d-block">کارمزد عملکرد
+                                                                                صرافی
+                                                                                (performance_fee)</small>
                                                                             <strong
-                                                                                class="font-number text-warning">{{ formatNumberTrimZeros($stepTotalExchangeFee) }}</strong>
+                                                                                class="font-number text-warning">{{ formatNumberTrimZeros($sell->settlement->performance_fee) }}</strong>
+                                                                        </div>
+                                                                        <div class="d-none">
+                                                                            <div id="pop-perf-fee-{{ $sell->id }}">
+                                                                                <div class="mb-2 pb-2 border-bottom">
+                                                                                    <small
+                                                                                        class="text-muted d-block mb-1">فرمول</small>
+                                                                                    <code class="d-block"
+                                                                                        style="font-size:.72rem; white-space:normal; direction:ltr; text-align:left;">
+                                                                                        (gross_pnl − fees) ×
+                                                                                        {{ $stepPerfPct !== null ? formatNumberTrimZeros($stepPerfPct) . '%' : 'rate%' }}
+                                                                                    </code>
+                                                                                    <small class="text-muted d-block mt-1"
+                                                                                        style="font-size:.7rem;">
+                                                                                        fees = exchange_fee
+                                                                                        @if ($stepNetworkFee > 0)
+                                                                                            + network_fee
+                                                                                        @endif
+                                                                                        @if ($stepSpreadFee > 0)
+                                                                                            + spread_fee
+                                                                                        @endif
+                                                                                    </small>
+                                                                                </div>
+                                                                                <div
+                                                                                    class="d-flex justify-content-between align-items-center py-1 border-bottom gap-2">
+                                                                                    <small
+                                                                                        class="text-muted">gross_pnl</small>
+                                                                                    <span
+                                                                                        class="font-number">{{ formatNumberTrimZeros($stepGrossPnl) }}</span>
+                                                                                </div>
+                                                                                <div
+                                                                                    class="d-flex justify-content-between align-items-center py-1 border-bottom gap-2">
+                                                                                    <small
+                                                                                        class="text-muted">exchange_fee</small>
+                                                                                    <span
+                                                                                        class="font-number">{{ formatNumberTrimZeros($stepTotalExchangeFee) }}</span>
+                                                                                </div>
+                                                                                @if ($stepNetworkFee > 0)
+                                                                                    <div
+                                                                                        class="d-flex justify-content-between align-items-center py-1 border-bottom gap-2">
+                                                                                        <small class="text-muted">−
+                                                                                            network_fee</small>
+                                                                                        <span
+                                                                                            class="font-number">{{ formatNumberTrimZeros($stepNetworkFee) }}</span>
+                                                                                    </div>
+                                                                                @endif
+                                                                                @if ($stepSpreadFee > 0)
+                                                                                    <div
+                                                                                        class="d-flex justify-content-between align-items-center py-1 border-bottom gap-2">
+                                                                                        <small class="text-muted">−
+                                                                                            spread_fee</small>
+                                                                                        <span
+                                                                                            class="font-number">{{ formatNumberTrimZeros($stepSpreadFee) }}</span>
+                                                                                    </div>
+                                                                                @endif
+                                                                                <div
+                                                                                    class="d-flex justify-content-between align-items-center py-1 border-bottom gap-2">
+                                                                                    <small class="text-muted">پایه مشمول
+                                                                                        کارمزد</small>
+                                                                                    <span
+                                                                                        class="font-number fw-semibold">{{ formatNumberTrimZeros($stepPnlAfterFees) }}</span>
+                                                                                </div>
+                                                                                @if ($stepPerfPct !== null)
+                                                                                    <div
+                                                                                        class="d-flex justify-content-between align-items-center py-1 border-bottom gap-2">
+                                                                                        <small class="text-muted">نرخ
+                                                                                            کارمزد عملکرد</small>
+                                                                                        <span
+                                                                                            class="font-number text-warning fw-semibold">{{ formatNumberTrimZeros($stepPerfPct) }}٪</span>
+                                                                                    </div>
+                                                                                    <div
+                                                                                        class="d-flex justify-content-between align-items-center py-1 gap-2">
+                                                                                        <small class="text-muted">کارمزد
+                                                                                            عملکرد</small>
+                                                                                        <span
+                                                                                            class="font-number text-warning fw-bold">{{ formatNumberTrimZeros($stepPerfFee) }}</span>
+                                                                                    </div>
+                                                                                @else
+                                                                                    <div class="py-1">
+                                                                                        <small class="text-muted"
+                                                                                            style="font-size:.72rem;">
+                                                                                            چون پایه مشمول کارمزد مثبت
+                                                                                            نبوده، کارمزد عملکرد صفر
+                                                                                            شده است.
+                                                                                        </small>
+                                                                                    </div>
+                                                                                @endif
+                                                                            </div>
                                                                         </div>
                                                                     </div>
+
                                                                     <div class="col-6 col-md-3">
                                                                         <div class="p-2 rounded border bg-white">
                                                                             <small class="text-muted d-block">سهم کارمزد
@@ -553,14 +689,16 @@
                                                                                 class="font-number text-warning">{{ formatNumberTrimZeros($stepSellExchangeFee) }}</strong>
                                                                         </div>
                                                                     </div>
+
                                                                     <div class="col-6 col-md-3">
                                                                         <div class="p-2 rounded border bg-white">
-                                                                            <small class="text-muted d-block">کارمزد عملکرد
-                                                                                (performance_fee)</small>
+                                                                            <small class="text-muted d-block">کارمزد صرافی
+                                                                                مرجع (خرید+فروش)</small>
                                                                             <strong
-                                                                                class="font-number text-warning">{{ formatNumberTrimZeros($sell->settlement->performance_fee) }}</strong>
+                                                                                class="font-number text-warning">{{ formatNumberTrimZeros($stepTotalExchangeFee) }}</strong>
                                                                         </div>
                                                                     </div>
+
                                                                     <div class="col-6 col-md-3">
                                                                         <div
                                                                             class="p-2 rounded border {{ (float) $sell->settlement->referral_fee > 0 ? 'border-info bg-white' : 'bg-white' }}">
@@ -594,6 +732,7 @@
                                                                     <div class="col-6 col-md-3">
                                                                         <div class="p-2 rounded border bg-white">
                                                                             <small class="text-muted d-block">سود/زیان خالص
+                                                                                کاربر
                                                                                 (net_pnl)</small>
                                                                             <strong
                                                                                 class="font-number {{ (float) $sell->settlement->net_pnl >= 0 ? 'text-success' : 'text-danger' }}">
@@ -605,7 +744,7 @@
                                                                         <div class="p-2 rounded border bg-white">
                                                                             <small class="text-muted d-block">تسویه
                                                                                 در</small>
-                                                                            <strong>{{ $sell->settlement->settled_at?->format('Y-m-d H:i') ?? '—' }}</strong>
+                                                                            <strong>{{ $sell->settlement->settled_at?->format('H:i Y-m-d') ?? '—' }}</strong>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -620,7 +759,7 @@
                             @endif
                         </div>
                     @empty
-                        <p class="text-muted text-center py-3">هیچ اجرای خریدی ثبت نشده است.</p>
+                        <p class="text-muted text-center py-3">هیچ اجرای خریدی ثبت نشده است.</p>)
                     @endforelse
                 </div>
             </div>
@@ -766,9 +905,115 @@
 
 @endsection
 
+@section('vendor-style')
+    <style>
+        .card-clickable {
+            transition: box-shadow .15s ease, transform .1s ease;
+            user-select: none;
+        }
+
+        .card-clickable:hover {
+            box-shadow: 0 4px 14px rgba(0, 0, 0, .12);
+            transform: translateY(-1px);
+        }
+
+        .card-clickable:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        .popover-fee-detail {
+            min-width: 280px;
+            font-size: .82rem;
+            direction: rtl;
+            text-align: right;
+        }
+
+        .popover-fee-detail .popover-header {
+            font-weight: 700;
+            font-size: .82rem;
+        }
+
+        .popover-fee-detail .popover-body {
+            padding: .6rem .75rem;
+        }
+
+        /* Buy execution progress — intensifies as sell steps fill */
+        .buy-execution-card {
+            transition: background .25s ease, border-color .25s ease, box-shadow .25s ease;
+        }
+
+        .buy-exec-progress {
+            background: rgba(40, 199, 111, calc(0.04 + var(--exec-progress, 0) * 0.14));
+            border-color: rgba(40, 199, 111, calc(0.18 + var(--exec-progress, 0) * 0.4)) !important;
+            box-shadow: inset 3px 0 0 rgba(40, 199, 111, calc(0.35 + var(--exec-progress, 0) * 0.45));
+        }
+
+        .buy-exec-complete {
+            background:
+                linear-gradient(135deg,
+                    rgba(40, 199, 111, .16) 0%,
+                    rgba(40, 199, 111, .07) 45%,
+                    rgba(255, 255, 255, .95) 100%);
+            border-color: rgba(40, 199, 111, .55) !important;
+            box-shadow:
+                inset 4px 0 0 #28c76f,
+                0 0 0 3px rgba(40, 199, 111, .1),
+                0 6px 20px rgba(40, 199, 111, .14);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .buy-exec-complete::before {
+            content: '';
+            position: absolute;
+            top: -40%;
+            left: -20%;
+            width: 60%;
+            height: 180%;
+            background: linear-gradient(120deg, transparent, rgba(40, 199, 111, .08), transparent);
+            pointer-events: none;
+            transform: rotate(12deg);
+        }
+
+        .buy-exec-complete-badge {
+            background: linear-gradient(135deg, #28c76f, #1f9d57);
+            color: #fff;
+            font-size: .72rem;
+            font-weight: 600;
+            padding: .4rem .65rem;
+            box-shadow: 0 2px 8px rgba(40, 199, 111, .35);
+        }
+    </style>
+@endsection
+
 @section('vendor-script')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+
+            // ── Performance fee formula popovers ─────────────────────────────
+            document.querySelectorAll('[id^="card-perf-fee-"]').forEach(function(card) {
+                var sellId = card.id.replace('card-perf-fee-', '');
+                var contentEl = document.getElementById('pop-perf-fee-' + sellId);
+                if (!contentEl || typeof bootstrap === 'undefined') return;
+
+                var pop = new bootstrap.Popover(card, {
+                    html: true,
+                    sanitize: false,
+                    trigger: 'click',
+                    placement: 'bottom',
+                    title: 'نحوه محاسبه کارمزد عملکرد',
+                    content: contentEl.innerHTML,
+                    customClass: 'popover-fee-detail',
+                    container: 'body',
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (!card.contains(e.target) && !e.target.closest('.popover-fee-detail')) {
+                        pop.hide();
+                    }
+                });
+            });
 
             // ── Expandable settlement rows ────────────────────────────────────────
             document.querySelectorAll('.sell-main-row[data-sell-id]').forEach(function(row) {
