@@ -25,7 +25,10 @@ use Illuminate\Support\Str;
  * Orchestrates a full "trigger to buy" cycle for a single user:
  *
  *   1. Validate auto-trade is enabled and free_balance ≥ minNetDeposit
- *      (min_deposit_usdt minus the transfer fee on that amount).
+ *      (min_deposit_usdt minus the transfer fee on that amount). REINVEST
+ *      triggers are instead gated on the cheapest in-range signal's effective
+ *      minimum, so freed principal re-enters the cycle as soon as it can buy
+ *      anything at all.
  *   2. Gather eligible signals and compute the allocation pipeline.
  *   3. Persist a single bot_orders row + one bot_buy_executions row per signal
  *      (allocated → PENDING, D14-rejected → SKIPPED with failure_reason).
@@ -72,7 +75,11 @@ class BotBuyOrchestrator
 
         $free       = bcsub((string) $wallet->balance, (string) $wallet->locked_balance, 8);
         $minNet     = $this->feeCalculator->minNetDeposit();
-        if (bccomp($free, $minNet, 8) < 0) {
+        // REINVEST is gated further down against the cheapest in-range buy
+        // floor instead of the full min-deposit, so principal freed by a
+        // filled sell tier goes straight back to work instead of idling
+        // until min_deposit_usdt of free cash piles up.
+        if ($triggeredBy !== self::TRIGGER_REINVEST && bccomp($free, $minNet, 8) < 0) {
             $this->logNoOrder($userId, $triggeredBy, 'insufficient_free_balance', [
                 'balance'      => (string) $wallet->balance,
                 'locked'       => (string) $wallet->locked_balance,
@@ -124,6 +131,25 @@ class BotBuyOrchestrator
 
         $alpha  = (string) $global->alpha_weight;
         $floorMode = (string) ($global->precheck_floor_mode ?? 'multi');
+
+        // Reinvest gate: only require enough free USDT to clear the smallest
+        // effective minimum among in-range signals (same formula as the
+        // allocator's D14 pre-check), not the full min-deposit. Below that
+        // floor no signal could receive a viable allocation anyway. With no
+        // eligible signal to measure against, fall back to the legacy gate.
+        if ($triggeredBy === self::TRIGGER_REINVEST) {
+            $minBuyFloor = $this->minEffectiveBuyFloor($eligible, $floorMode) ?? $minNet;
+            if (bccomp($free, $minBuyFloor, 8) < 0) {
+                $this->logNoOrder($userId, $triggeredBy, 'insufficient_free_balance', [
+                    'balance'       => (string) $wallet->balance,
+                    'locked'        => (string) $wallet->locked_balance,
+                    'free'          => $free,
+                    'min_buy_floor' => $minBuyFloor,
+                ]);
+                return null;
+            }
+        }
+
         // Enforce max_allocation_percent against the TOTAL wallet balance minus
         // what each currency already holds, so re-buying from the freed
         // remainder (e.g. after toggling the bot off/on) can never push a coin
@@ -165,6 +191,35 @@ class BotBuyOrchestrator
             'triggered_by' => $triggeredBy,
             'reason'       => $reason,
         ], $context));
+    }
+
+    /**
+     * Smallest USDT amount that could still produce a buy across the given
+     * in-range signals: min over signals of max(min_buy_amount_usdt, order
+     * floor), where the order floor mirrors the allocator's D14 pre-check
+     * (effective_p2p_min_order_value, multiplied by sell_orders_count in
+     * 'multi' floor mode). Returns null when there are no eligible signals.
+     *
+     * @param Collection<int, BotSignal> $eligible
+     */
+    private function minEffectiveBuyFloor(Collection $eligible, string $floorMode): ?string
+    {
+        $min = null;
+
+        foreach ($eligible as $signal) {
+            $p2pMin     = (string) $signal->effective_p2p_min_order_value;
+            $orderFloor = $floorMode === 'single'
+                ? $p2pMin
+                : bcmul((string) (int) $signal->sell_orders_count, $p2pMin, 8);
+            $minBuy       = (string) $signal->min_buy_amount_usdt;
+            $effectiveMin = bccomp($minBuy, $orderFloor, 8) >= 0 ? $minBuy : $orderFloor;
+
+            if ($min === null || bccomp($effectiveMin, $min, 8) < 0) {
+                $min = $effectiveMin;
+            }
+        }
+
+        return $min;
     }
 
     /**
