@@ -7,6 +7,7 @@ use App\Models\Bot\BotBuyExecution;
 use App\Models\Bot\BotOrder;
 use App\Models\Bot\BotSellOrder;
 use App\Models\Bot\BotUserSettings;
+use App\Services\Bot\BotCoinAnonymizer;
 use App\Services\Bot\BotOrderCancelService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -15,16 +16,21 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class BotOrderController extends Controller
 {
-    public function __construct(private readonly BotOrderCancelService $cancelService) {}
+    public function __construct(
+        private readonly BotOrderCancelService $cancelService,
+        private readonly BotCoinAnonymizer $anonymizer,
+    ) {}
 
     /**
      * Aggregated capital allocation across the user's currently-active bot
      * positions (BOUGHT executions that still have at least one OPEN sell
-     * order). Used by the dashboard "ترکیب تخصیص ارزها" pie chart.
+     * order). Used by the dashboard "ترکیب تخصیص ارزها" pie chart. Coin
+     * identity is intentionally hidden behind a generic per-user label
+     * (display_name).
      *
      * Response shape:
      *   data: [
-     *     { currency: 'BTC', name: 'Bitcoin', allocated_usdt: '120.00', amount: '0.0023', logo: '...' },
+     *     { display_index: 1, display_name: 'ارز ۱', allocated_usdt: '120.00', amount: '0.0023' },
      *     ...
      *   ]
      *   meta: { total_usdt: '200.00', currencies_count: 3 }
@@ -47,23 +53,22 @@ class BotOrderController extends Controller
                     ->where('bot_sell_orders.status', BotSellOrder::STATUS_OPEN);
             })
             ->groupBy('bot_buy_executions.currency_id')
-            ->with('currency:id,symbol,name,persian_name,logo')
             ->get();
 
+        $anonymizedMap = $this->anonymizer->mapForUser($userId);
+
         $total = '0';
-        $data  = $rows->map(function (BotBuyExecution $row) use (&$total) {
+        $data  = $rows->map(function (BotBuyExecution $row) use (&$total, $anonymizedMap) {
             $alloc = (string) $row->allocated_usdt;
             $total = bcadd($total, $alloc, 8);
+            $displayIndex = $anonymizedMap[$row->currency_id] ?? 0;
             return [
-                'currency_id'    => $row->currency_id,
-                'currency'       => $row->currency?->symbol,
-                'name'           => $row->currency?->name,
-                'persian_name'   => $row->currency?->persian_name,
-                'logo'           => $row->currency?->logo,
+                'display_index'  => $displayIndex,
+                'display_name'   => $this->anonymizer->label($displayIndex),
                 'allocated_usdt' => $alloc,
                 'amount'         => (string) $row->amount,
             ];
-        })->values();
+        })->sortBy('display_index')->values();
 
         return response()->json([
             'data' => $data,

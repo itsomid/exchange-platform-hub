@@ -113,7 +113,7 @@ class SettlementService
             ]);
 
             $this->updateWallet($userId, $execution, $costBasis, $netPnl);
-            $this->writeTxns($userId, $execution, $grossRevenue, $networkFee, $effectiveExchangeFee, $spreadFee, $performanceFee, null);
+            $this->writeTxns($userId, $execution, $networkFee, $effectiveExchangeFee, $spreadFee, $performanceFee, null);
             $this->payReferral($referral, $execution, $userId);
 
             return $settlement;
@@ -158,7 +158,7 @@ class SettlementService
             ]);
 
             $this->updateWallet($userId, $execution, $costBasis, $netPnl);
-            $this->writeTxns($userId, $execution, '0', '0', '0', '0', '0', $cancelFee);
+            $this->writeTxns($userId, $execution, '0', '0', '0', '0', $cancelFee);
 
             return $settlement;
         });
@@ -230,7 +230,7 @@ class SettlementService
             ]);
 
             $this->updateWallet($userId, $execution, $costBasis, $netPnl);
-            $this->writeTxns($userId, $execution, $grossRevenue, $networkFee, $effectiveExchangeFee, '0', $perfFee, null);
+            $this->writeTxns($userId, $execution, $networkFee, $effectiveExchangeFee, '0', $perfFee, null);
             $this->payReferral($referral, $execution, $userId);
 
             return $settlement;
@@ -383,41 +383,39 @@ class SettlementService
     private function writeTxns(
         int $userId,
         BotBuyExecution $execution,
-        string $grossRevenue,
         string $networkFee,
         string $exchangeFee,
         string $spreadFee,
         string $performanceFee,
         ?string $cancelFee,
     ): void {
-        $walletId = Wallet::where('user_id', $userId)
+        $wallet = Wallet::where('user_id', $userId)
             ->where('currency_symbol', 'USDT')
-            ->value('id');
+            ->first();
 
         $base = [
             'user_id'              => $userId,
-            'wallet_id'            => $walletId,
+            'wallet_id'            => $wallet?->id,
             'bot_order_id'         => $execution->bot_order_id,
             'bot_buy_execution_id' => $execution->id,
+            'balance'              => $wallet?->balance,
             'type'                 => TransactionTypeEnum::BOT,
             'status'               => TransactionStatusEnum::SUCCESS,
         ];
 
-        if (bccomp($grossRevenue, '0', self::SCALE) > 0) {
-            Transaction::create($base + [
-                'amount'  => $grossRevenue,
-                'subtype' => TransactionSubTypeEnum::BOT_SELL,
-            ]);
-        }
         foreach ([
-            [$networkFee,     TransactionSubTypeEnum::BOT_NETWORK_FEE],
-            [$exchangeFee,    TransactionSubTypeEnum::BOT_EXCHANGE_FEE],
-            [$spreadFee,      TransactionSubTypeEnum::BOT_SPREAD_FEE],
-            [$performanceFee, TransactionSubTypeEnum::BOT_PERFORMANCE_FEE],
+            [$networkFee, TransactionSubTypeEnum::BOT_NETWORK_FEE],
+            [$spreadFee,  TransactionSubTypeEnum::BOT_SPREAD_FEE],
         ] as [$amount, $subtype]) {
             if (bccomp($amount, '0', self::SCALE) > 0) {
                 Transaction::create($base + ['amount' => $amount, 'subtype' => $subtype]);
             }
+        }
+        if (bccomp($exchangeFee, '0', self::SCALE) > 0) {
+            $this->recordExchangeFee($execution, $exchangeFee);
+        }
+        if (bccomp($performanceFee, '0', self::SCALE) > 0) {
+            $this->creditExchangePerformanceFee($execution, $performanceFee, $userId);
         }
         if ($cancelFee !== null && bccomp($cancelFee, '0', self::SCALE) > 0) {
             Transaction::create($base + [
@@ -425,5 +423,88 @@ class SettlementService
                 'subtype' => TransactionSubTypeEnum::BOT_CANCEL_FEE,
             ]);
         }
+    }
+
+    /**
+     * Ledger the ref-exchange trading fee against the Bitexroom user on the
+     * wallet of the asset the fee was actually paid in (same pattern as
+     * ExchangeService REF_EXCHANGE_*_FEE — negative amount, no bot-trader txn).
+     */
+    private function recordExchangeFee(BotBuyExecution $execution, string $exchangeFeeUsdt): void
+    {
+        $exchangeUserId = (int) config('bitexroom.user_id', 1);
+        $feeCurrency    = strtoupper((string) ($execution->buy_ref_exchange_fee_currency ?: 'USDT'));
+
+        // Settlement stores fees in USDT terms; convert back to fee-asset units when needed.
+        $feeAmount = $exchangeFeeUsdt;
+        if ($feeCurrency !== 'USDT') {
+            $avg = (string) ($execution->avg_buy_price ?? '0');
+            if (bccomp($avg, '0', self::SCALE) > 0) {
+                $feeAmount = bcdiv($exchangeFeeUsdt, $avg, self::SCALE);
+            }
+        }
+
+        $exchangeWallet = Wallet::query()->firstOrCreate(
+            [
+                'user_id'         => $exchangeUserId,
+                'currency_symbol' => $feeCurrency,
+            ],
+            [
+                'balance'        => '0',
+                'locked_balance' => '0',
+            ],
+        );
+        $exchangeWallet = Wallet::where('id', $exchangeWallet->id)->lockForUpdate()->firstOrFail();
+
+        Transaction::create([
+            'user_id'              => $exchangeUserId,
+            'wallet_id'            => $exchangeWallet->id,
+            'bot_order_id'         => $execution->bot_order_id,
+            'bot_buy_execution_id' => $execution->id,
+            'amount'               => bcmul($feeAmount, '-1', self::SCALE),
+            'balance'              => $exchangeWallet->balance,
+            'type'                 => TransactionTypeEnum::BOT,
+            'subtype'              => TransactionSubTypeEnum::BOT_EXCHANGE_FEE,
+            'status'               => TransactionStatusEnum::SUCCESS,
+            'description'          => sprintf(
+                'Exchange fee %s (%s) paid for bot order #%s',
+           
+                $feeCurrency,
+                formatNumberTrimZeros($feeAmount),
+                $execution->bot_order_id,
+            ),
+        ]);
+    }
+
+    /**
+     * Performance fee is the exchange's take — credit the Bitexroom USDT wallet
+     * and ledger the txn against config('bitexroom.user_id'), not the trader.
+     */
+    private function creditExchangePerformanceFee(
+        BotBuyExecution $execution,
+        string $performanceFee,
+        int $fromUserId,
+    ): void {
+        $exchangeUserId = (int) config('bitexroom.user_id', 1);
+        $exchangeWallet = Wallet::where('user_id', $exchangeUserId)
+            ->where('currency_symbol', 'USDT')
+            ->lockForUpdate()
+            ->firstOrFail();
+
+        $balanceBefore = $exchangeWallet->balance;
+        $exchangeWallet->increment('balance', $performanceFee);
+
+        Transaction::create([
+            'user_id'              => $exchangeUserId,
+            'wallet_id'            => $exchangeWallet->id,
+            'bot_order_id'         => $execution->bot_order_id,
+            'bot_buy_execution_id' => $execution->id,
+            'amount'               => $performanceFee,
+            'balance'              => $balanceBefore,
+            'type'                 => TransactionTypeEnum::BOT,
+            'subtype'              => TransactionSubTypeEnum::BOT_PERFORMANCE_FEE,
+            'status'               => TransactionStatusEnum::SUCCESS,
+            'description'          => "Bot performance fee from user #{$fromUserId} (bot order #{$execution->bot_order_id})",
+        ]);
     }
 }

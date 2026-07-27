@@ -63,7 +63,7 @@ enum TransactionSubTypeEnum: string
         self::BOT_TRANSFER_FEE->value => 'کارمزد انتقال ربات',
         self::BOT_BUY->value => 'خرید ربات',
         self::BOT_SELL->value => 'فروش ربات',
-        self::BOT_EXCHANGE_FEE->value => 'کارمزد صرافی ربات',
+        self::BOT_EXCHANGE_FEE->value => 'کارمزد صرافی مرجع ربات',
         self::BOT_SPREAD_FEE->value => 'اسپرد ربات',
         self::BOT_PERFORMANCE_FEE->value => 'کارمزد عملکرد ربات',
         self::BOT_CANCEL_FEE->value => 'کارمزد لغو ربات',

@@ -312,72 +312,89 @@
                                 </div>
                             </div>
 
-                            <div class="row text-sm ">
-                                <div class="col-md-3 col-xxl-2">
-                                    <small class="text-muted d-block mb-1">تخصیص (USDT)</small>
-                                    <strong
-                                        class="font-number">{{ formatNumberTrimZeros($execution->allocated_usdt, 2) }}</strong>
+                            <div class="row g-2 text-center mt-1">
+                                <div class="col-6 col-md">
+                                    <div class="exec-stat-box p-2 rounded border bg-white h-100">
+                                        <small class="text-muted d-block mb-1" style="font-size:.7rem;">تخصیص
+                                            (USDT)
+                                        </small>
+                                        <strong
+                                            class="font-number d-block">{{ formatNumberTrimZeros($execution->allocated_usdt, 2) }}</strong>
+                                    </div>
                                 </div>
-                                <div class="col-md-3 col-xxl-2">
-                                    <small class="text-muted d-block mb-1">مقدار خریده‌شده</small>
-                                    <strong
-                                        class="font-number">{{ formatNumberTrimZeros($execution->filled_amount) }}</strong>
+                                <div class="col-6 col-md">
+                                    <div class="exec-stat-box p-2 rounded border bg-white h-100">
+                                        <small class="text-muted d-block mb-1" style="font-size:.7rem;">مقدار
+                                            خریده‌شده</small>
+                                        <strong
+                                            class="font-number d-block">{{ formatNumberTrimZeros($execution->filled_amount) }}</strong>
+                                    </div>
                                 </div>
-                                <div class="col-md-3 col-xxl-2">
-                                    <small class="text-muted d-block mb-1">میانگین قیمت خرید</small>
-                                    <strong
-                                        class="font-number">{{ $execution->avg_buy_price ? formatNumberTrimZeros($execution->avg_buy_price) : '—' }}</strong>
+                                <div class="col-6 col-md">
+                                    <div class="exec-stat-box p-2 rounded border bg-white h-100">
+                                        <small class="text-muted d-block mb-1" style="font-size:.7rem;">میانگین قیمت
+                                            خرید</small>
+                                        <strong
+                                            class="font-number d-block">{{ $execution->avg_buy_price ? formatNumberTrimZeros($execution->avg_buy_price) : '—' }}</strong>
+                                    </div>
                                 </div>
-                                <div class="col-md-3 col-xxl-2">
-                                    <small class="text-muted d-block mb-1">کارمزد صرافی خرید</small>
-                                    <strong class="font-number">
-                                        {{ formatNumberTrimZeros($execution->buy_ref_exchange_fee, 8) }}
-                                        <small class="text-muted fw-normal">USDT</small>
-                                        @if ($execution->buy_ref_exchange_fee_currency)
-                                            <small class="d-block text-muted"> (پرداخت با
-                                                {{ strtoupper($execution->buy_ref_exchange_fee_currency) }})
-                                            </small>
-                                        @endif
-                                    </strong>
-
+                                <div class="col-6 col-md">
+                                    <div class="exec-stat-box p-2 rounded border bg-white h-100">
+                                        <small class="text-muted d-block mb-1" style="font-size:.7rem;">کارمزد صرافی
+                                            خرید</small>
+                                        <strong class="font-number d-block">
+                                            {{ formatNumberTrimZeros($execution->buy_ref_exchange_fee, 8) }}
+                                            <small class="text-muted" style="font-size:.65rem;">USDT</small>
+                                        </strong>
+                                        <small class=" d-block" style="font-size:.65rem;">
+                                            @if ($execution->buy_ref_exchange_fee_currency)
+                                                (پرداخت با {{ strtoupper($execution->buy_ref_exchange_fee_currency) }})
+                                            @endif
+                                        </small>
+                                    </div>
                                 </div>
-                                <div class="col-md-3 col-xxl-2">
-                                    <small class="text-muted d-block mb-1">تارگت‌ها</small>
-                                    @php
-                                        $orig = $execution->original_sell_orders_count;
-                                        $eff = $execution->effective_sell_orders_count;
-                                    @endphp
-                                    @if ($orig === null && $eff === null)
-                                        <strong>—</strong>
-                                    @elseif ($orig !== null && $eff !== null && $eff != $orig)
+                                <div class="col-6 col-md">
+                                    <div class="exec-stat-box p-2 rounded border bg-white h-100">
+                                        <small class="text-muted d-block mb-1" style="font-size:.7rem;">تارگت‌ها</small>
                                         @php
-                                            $p2pMin = data_get(
-                                                $execution->signal_snapshot,
-                                                'effective_p2p_min_order_value',
-                                            );
-                                            $posValue =
-                                                (float) $execution->filled_amount * (float) $execution->avg_buy_price;
-                                            $avgTierValue = $orig > 0 ? $posValue / $orig : 0;
+                                            $orig = $execution->original_sell_orders_count;
+                                            $eff = $execution->effective_sell_orders_count;
                                         @endphp
-                                        <span class="d-inline-flex align-items-center gap-1">
+                                        @if ($orig === null && $eff === null)
+                                            <strong class="d-block">—</strong>
+                                        @elseif ($orig !== null && $eff !== null && $eff != $orig)
+                                            @php
+                                                $p2pMin = data_get(
+                                                    $execution->signal_snapshot,
+                                                    'effective_p2p_min_order_value',
+                                                );
+                                                $posValue =
+                                                    (float) $execution->filled_amount *
+                                                    (float) $execution->avg_buy_price;
+                                                $avgTierValue = $orig > 0 ? $posValue / $orig : 0;
+                                            @endphp
                                             <span
-                                                class="badge bg-warning text-dark">{{ $eff }}/{{ $orig }}
-                                                (Collapsed)
+                                                class="d-inline-flex align-items-center justify-content-center gap-1 flex-wrap">
+                                                <span
+                                                    class="badge bg-warning text-dark">{{ $eff }}/{{ $orig }}
+                                                    (Collapsed)
+                                                </span>
+                                                <i class="fa-regular fa-info-circle text-warning" style="cursor:help"
+                                                    data-bs-toggle="tooltip" data-bs-html="true" data-bs-placement="top"
+                                                    title="<div class='text-end' style='min-width:250px;line-height:1.7'>
+                                                        <div class='fw-bold mb-1'>چرا پله‌های فروش ادغام شد؟</div>
+                                                        <div class='mb-1'>برای این ارز <b>{{ $orig }}</b> پله فروش تعریف شده بود، اما چون مقدار خریداری‌شده کم بود، اگر همان مقدار به <b>{{ $orig }}</b> پله تقسیم می‌شد ارزش هر پله کمتر از حداقل ارزش سفارش مجاز در صرافی مرجع (P2P) می‌شد. به همین دلیل ربات پله‌ها را ادغام کرد تا ارزش هر پله بالای حداقل بماند و در نهایت به <b>{{ $eff }}</b> پله رسید.</div>
+                                                        <hr class='my-1'>
+                                                        <div>کل ارزش موقعیت ≈ <b class='font-monospace'>{{ formatNumberTrimZeros($posValue, 2) }}</b> USDT</div>
+                                                        <div>حداقل ارزش هر سفارش (P2P) = <b class='font-monospace'>{{ $p2pMin !== null ? formatNumberTrimZeros($p2pMin, 2) : '—' }}</b> USDT</div>
+                                                        <div>ارزش تقریبی هر پله در حالت <b>{{ $orig }}</b>‌تایی ≈ <b class='font-monospace'>{{ formatNumberTrimZeros($avgTierValue, 2) }}</b> USDT (کمتر از حداقل)</div>
+                                                    </div>"></i>
                                             </span>
-                                            <i class="fa-regular fa-info-circle text-warning" style="cursor:help"
-                                                data-bs-toggle="tooltip" data-bs-html="true" data-bs-placement="top"
-                                                title="<div class='text-end' style='min-width:250px;line-height:1.7'>
-                                                    <div class='fw-bold mb-1'>چرا پله‌های فروش ادغام شد؟</div>
-                                                    <div class='mb-1'>برای این ارز <b>{{ $orig }}</b> پله فروش تعریف شده بود، اما چون مقدار خریداری‌شده کم بود، اگر همان مقدار به <b>{{ $orig }}</b> پله تقسیم می‌شد ارزش هر پله کمتر از حداقل ارزش سفارش مجاز در صرافی مرجع (P2P) می‌شد. به همین دلیل ربات پله‌ها را ادغام کرد تا ارزش هر پله بالای حداقل بماند و در نهایت به <b>{{ $eff }}</b> پله رسید.</div>
-                                                    <hr class='my-1'>
-                                                    <div>کل ارزش موقعیت ≈ <b class='font-monospace'>{{ formatNumberTrimZeros($posValue, 2) }}</b> USDT</div>
-                                                    <div>حداقل ارزش هر سفارش (P2P) = <b class='font-monospace'>{{ $p2pMin !== null ? formatNumberTrimZeros($p2pMin, 2) : '—' }}</b> USDT</div>
-                                                    <div>ارزش تقریبی هر پله در حالت <b>{{ $orig }}</b>‌تایی ≈ <b class='font-monospace'>{{ formatNumberTrimZeros($avgTierValue, 2) }}</b> USDT (کمتر از حداقل)</div>
-                                                </div>"></i>
-                                        </span>
-                                    @else
-                                        <strong>{{ $eff ?? $orig }}/{{ $orig }}</strong>
-                                    @endif
+                                        @else
+                                            <strong
+                                                class="font-number d-block">{{ $eff ?? $orig }}/{{ $orig }}</strong>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
 
@@ -983,6 +1000,30 @@
             font-weight: 600;
             padding: .4rem .65rem;
             box-shadow: 0 2px 8px rgba(40, 199, 111, .35);
+        }
+
+        .exec-stat-box {
+            min-height: 64px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .exec-stat-box strong {
+            font-size: .95rem;
+            line-height: 1.3;
+            word-break: break-all;
+        }
+
+        @media (max-width: 767.98px) {
+            .exec-stat-box {
+                min-height: 72px;
+                padding: .65rem .5rem !important;
+            }
+
+            .exec-stat-box strong {
+                font-size: .88rem;
+            }
         }
     </style>
 @endsection

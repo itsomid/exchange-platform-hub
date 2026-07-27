@@ -11,6 +11,7 @@ use App\Models\Bot\BotSellOrder;
 use App\Models\Bot\BotTradeSettlement;
 use App\Models\Bot\BotWallet;
 use App\Models\Transaction;
+use App\Services\Bot\BotCoinAnonymizer;
 use App\Services\Bot\PriceFeed;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -18,7 +19,10 @@ use Throwable;
 
 class ReportController extends Controller
 {
-    public function __construct(private readonly PriceFeed $priceFeed) {}
+    public function __construct(
+        private readonly PriceFeed $priceFeed,
+        private readonly BotCoinAnonymizer $anonymizer,
+    ) {}
 
     /**
      * @OA\Get(
@@ -98,7 +102,7 @@ class ReportController extends Controller
      * @OA\Get(
      *     path="/api/v1/bot/reports/per-coin",
      *     summary="Bot reports per-coin breakdown",
-     *     description="Per-currency aggregation of the authenticated user's bot holdings: total bought amount, weighted average buy price, current value and realized PnL.",
+     *     description="Per-position aggregation of the authenticated user's bot holdings: current value and realized PnL. Coin identity is intentionally hidden behind a generic per-user label (display_name).",
      *     tags={"Bot Reports"},
      *     security={{"sanctum": {}}},
      *
@@ -125,7 +129,6 @@ class ReportController extends Controller
             ->when($from, fn ($q) => $q->whereDate('bot_buy_executions.created_at', '>=', $from))
             ->when($to, fn ($q) => $q->whereDate('bot_buy_executions.created_at', '<=', $to))
             ->groupBy('bot_buy_executions.currency_id')
-            ->with('currency:id,symbol,name,persian_name,logo')
             ->get();
 
         // Realized PnL per currency (from settlements joined to their buy execution).
@@ -142,14 +145,11 @@ class ReportController extends Controller
         // Total expected net profit across every (non-canceled) sell step, per currency,
         // assuming each step fills at its target price.
         $expectedByCurrency = $this->expectedProfitByCurrency($userId, $from, $to);
+        $anonymizedMap = $this->anonymizer->mapForUser($userId);
 
-        $data = $execRows->map(function (BotBuyExecution $row) use ($realizedPnl, $expectedByCurrency) {
+        $data = $execRows->map(function (BotBuyExecution $row) use ($realizedPnl, $expectedByCurrency, $anonymizedMap) {
             $totalAmount = (string) $row->total_amount;
             $costTotal   = (string) $row->cost_total;
-
-            $avgBuyPrice = bccomp($totalAmount, '0', 12) === 1
-                ? bcdiv($costTotal, $totalAmount, 8)
-                : '0';
 
             $currentValue = null;
             try {
@@ -165,20 +165,17 @@ class ReportController extends Controller
                 $expectedProfit = '0';
             }
 
+            $displayIndex = $anonymizedMap[$row->currency_id] ?? 0;
+
             return [
-                'currency_id'   => $row->currency_id,
-                'currency'      => $row->currency?->symbol,
-                'name'          => $row->currency?->name,
-                'persian_name'  => $row->currency?->persian_name,
-                'currency_logo' => $row->currency?->logo ? config('bitexroom.currency_logo_base_url') . '/' . $row->currency->logo : null,
-                'total_amount'  => $totalAmount,
-                'avg_buy_price' => $avgBuyPrice,
-                'cost_basis'    => $costTotal,
+                'display_index'   => $displayIndex,
+                'display_name'    => $this->anonymizer->label($displayIndex),
+                'cost_basis'      => $costTotal,
                 'current_value'   => $currentValue,
                 'expected_profit' => $expectedProfit,
                 'realized_pnl'    => $realized,
             ];
-        })->values();
+        })->sortBy('display_index')->values();
 
         return response()->json(['data' => $data]);
     }

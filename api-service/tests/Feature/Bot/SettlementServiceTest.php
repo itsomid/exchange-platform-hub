@@ -1,16 +1,32 @@
 <?php
 
+use App\Enums\TransactionSubTypeEnum;
 use App\Models\Bot\BotBuyExecution;
 use App\Models\Bot\BotOrder;
 use App\Models\Bot\BotSellOrder;
 use App\Models\Bot\BotTradeSettlement;
 use App\Models\Bot\BotWallet;
 use App\Models\Currency;
+use App\Models\Transaction;
 use App\Models\User;
+use App\Models\Wallet;
 use App\Services\Bot\SettlementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
+
+function ensureExchangeUsdtWallet(string $balance = '0.00000000'): Wallet
+{
+    $exchangeUser = User::factory()->create();
+    config(['bitexroom.user_id' => $exchangeUser->id]);
+
+    return Wallet::create([
+        'user_id'         => $exchangeUser->id,
+        'currency_symbol' => 'USDT',
+        'balance'         => $balance,
+        'locked_balance'  => '0.00000000',
+    ]);
+}
 
 function makeOpenSellOrder(string $filledAmount, string $avgBuyPrice, string $startingBalance, string $startingLocked, string $startingProfit = '0'): BotSellOrder
 {
@@ -58,6 +74,7 @@ function makeOpenSellOrder(string $filledAmount, string $avgBuyPrice, string $st
 it('settles a profitable fill — performance fee applied, profit_balance increases', function () {
     // bought 10 units @ 100 → cost basis 1000; sold @ 120 → revenue 1200; no fees
     // gross_pnl = 200; perf fee 22% = 44; net = 156
+    $exchangeWallet = ensureExchangeUsdtWallet();
     $sell = makeOpenSellOrder('10', '100', '0', '1000');
 
     /** @var SettlementService $svc */
@@ -75,6 +92,55 @@ it('settles a profitable fill — performance fee applied, profit_balance increa
     expect((float) $wallet->locked_balance)->toBe(0.0);
 
     expect($sell->fresh()->status)->toBe(BotSellOrder::STATUS_FILLED);
+
+    $exchangeWallet->refresh();
+    expect((float) $exchangeWallet->balance)->toBe(44.0);
+
+    $perfTxn = Transaction::where('subtype', TransactionSubTypeEnum::BOT_PERFORMANCE_FEE)->first();
+    expect($perfTxn)->not->toBeNull();
+    expect($perfTxn->user_id)->toBe((int) config('bitexroom.user_id'));
+    expect($perfTxn->wallet_id)->toBe($exchangeWallet->id);
+    expect((float) $perfTxn->amount)->toBe(44.0);
+
+    expect(Transaction::where('subtype', TransactionSubTypeEnum::BOT_SELL)->count())->toBe(0);
+});
+
+it('records BOT_EXCHANGE_FEE on the exchange fee-currency wallet, not the trader', function () {
+    $exchangeUser = User::factory()->create();
+    config(['bitexroom.user_id' => $exchangeUser->id]);
+    Wallet::create([
+        'user_id'         => $exchangeUser->id,
+        'currency_symbol' => 'USDT',
+        'balance'         => '0.00000000',
+        'locked_balance'  => '0.00000000',
+    ]);
+
+    $sell = makeOpenSellOrder('10', '100', '0', '1000');
+    $execution = $sell->botBuyExecution;
+    $execution->update([
+        'buy_ref_exchange_fee'          => '0',
+        'buy_ref_exchange_fee_currency' => 'USDT',
+    ]);
+
+    // sell ref fee 5 USDT; no buy fee share → exchange_fee = 5
+    app(SettlementService::class)->settleFill($sell, '10', '120', '0', '5', '0');
+
+    $feeTxn = Transaction::where('subtype', TransactionSubTypeEnum::BOT_EXCHANGE_FEE)->first();
+    expect($feeTxn)->not->toBeNull();
+    expect($feeTxn->user_id)->toBe($exchangeUser->id);
+    expect((float) $feeTxn->amount)->toBe(-5.0);
+    expect($feeTxn->description)->toContain((string) $execution->bot_order_id);
+    expect($feeTxn->description)->toContain('صرافی مرجع');
+
+    $feeWallet = Wallet::find($feeTxn->wallet_id);
+    expect($feeWallet->user_id)->toBe($exchangeUser->id);
+    expect($feeWallet->currency_symbol)->toBe('USDT');
+
+    expect(
+        Transaction::where('user_id', $execution->botOrder->user_id)
+            ->where('subtype', TransactionSubTypeEnum::BOT_EXCHANGE_FEE)
+            ->count()
+    )->toBe(0);
 });
 
 it('settles a losing fill — no performance fee, profit_balance untouched', function () {
