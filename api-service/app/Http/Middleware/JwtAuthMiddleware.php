@@ -11,9 +11,9 @@ class JwtAuthMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        $bearerToken = $request->header('authorization');
+        $bearerToken = $request->header('Authorization');
 
-        if (! str_starts_with($bearerToken, 'Bearer ')) {
+        if (! is_string($bearerToken) || ! str_starts_with($bearerToken, 'Bearer ')) {
             return $this->unauthorizedResponse();
         }
 
