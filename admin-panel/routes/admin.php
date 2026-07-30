@@ -19,6 +19,7 @@ use App\Http\Controllers\Exchange\MarketController;
 use App\Http\Controllers\Exchange\NodeProviderController;
 use App\Http\Controllers\Exchange\RefExchangeController;
 use App\Http\Controllers\Exchange\RefExchangeAssetsWithdrawalController;
+use App\Http\Controllers\Exchange\CoinexSpotOrderController;
 use App\Http\Controllers\OTCOrder\OTCOrderController;
 use App\Http\Controllers\SpotTrade\SpotTradeController;
 use App\Http\Controllers\SpotOrder\SpotOrderController;
@@ -241,6 +242,10 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::patch('/currency/{currencyId}/withdrawal-settings', [RefExchangeAssetsWithdrawalController::class, 'updateCurrencyWithdrawalSettings'])->name('ref-exchange.currency.withdrawal-settings.update');
         Route::post('/currency/withdrawal-settings/bulk', [RefExchangeAssetsWithdrawalController::class, 'bulkUpdateCurrencyWithdrawalSettings'])->name('ref-exchange.currency.withdrawal-settings.bulk-update');
         Route::post('/currency/{currencyId}/toggle-withdrawal', [RefExchangeAssetsWithdrawalController::class, 'toggleCurrencyWithdrawalStatus'])->name('ref-exchange.currency.toggle-withdrawal');
+
+        // CoinEx spot orders (pending / finished / cancel)
+        Route::get('/coinex-spot-orders', [CoinexSpotOrderController::class, 'index'])->name('ref-exchange.coinex-spot-orders.index')->can('ref-exchanges');
+        Route::post('/coinex-spot-orders/cancel', [CoinexSpotOrderController::class, 'cancel'])->name('ref-exchange.coinex-spot-orders.cancel')->can('ref-exchanges');
     });
 
     Route::prefix('transactions')->group(function () {

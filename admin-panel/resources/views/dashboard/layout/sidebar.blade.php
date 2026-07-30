@@ -192,12 +192,20 @@
                     <div>Market</div>
                 </a>
             </li>
-            <li class="menu-item @if (request()->is('admin/ref-exchanges')) active @endif">
+            <li class="menu-item @if (request()->is('admin/ref-exchanges') && !request()->is('admin/ref-exchanges/*')) active @endif">
                 <a href="{{ route('admin.exchange.index') }}" class="menu-link">
                     <i class="menu-icon fa-regular fa-display-chart-up-circle-dollar"></i>
                     <div>مدیریت صرافی های مرجع</div>
                 </a>
             </li>
+            @can('ref-exchanges')
+                <li class="menu-item @if (request()->is('admin/ref-exchanges/coinex-spot-orders*')) active @endif">
+                    <a href="{{ route('admin.ref-exchange.coinex-spot-orders.index') }}" class="menu-link">
+                        <i class="menu-icon fa-regular fa-book-open-cover"></i>
+                        <div>سفارش‌های اسپات CoinEx</div>
+                    </a>
+                </li>
+            @endcan
         @endcanany
         @can(['support'])
         <li class="menu-header small text-uppercase">
