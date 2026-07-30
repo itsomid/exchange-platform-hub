@@ -149,11 +149,11 @@ $targets = old('sell_targets', $signal->sell_targets ?? [
                             <div class="target-row row g-1 mb-1" data-index="{{ $i }}">
                                 <div class="col-6">
                                     <div class="input-group input-group-sm">
-                                        <input type="number" step="0.01"
-                                            class="form-control form-control-sm @error("sell_targets.{$i}.trigger") is-invalid @enderror"
+                                        <input type="number" step="{{ old('sell_mode', $signal->sell_mode ?? 'percent') === 'price' ? 'any' : '0.01' }}"
+                                            class="form-control form-control-sm trigger-input @error("sell_targets.{$i}.trigger") is-invalid @enderror"
                                             name="sell_targets[{{ $i }}][trigger]"
                                             value="{{ $target['trigger'] }}" aria-describedby="basic-addon1">
-                                        <span class="input-group-text" id="basic-addon1">سود</span>
+                                        <span class="input-group-text trigger-suffix" id="basic-addon1">{{ old('sell_mode', $signal->sell_mode ?? 'percent') === 'price' ? 'USDT' : 'سود' }}</span>
                                     </div>
                                 </div>
                                 <div class="col-5">
@@ -194,6 +194,22 @@ $targets = old('sell_targets', $signal->sell_targets ?? [
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         let targetIndex = {{ count($targets ?? []) }};
+        const sellModeEl = document.getElementById('sell_mode');
+
+        function isPriceMode() {
+            return sellModeEl && sellModeEl.value === 'price';
+        }
+
+        function syncTriggerInputs() {
+            const step = isPriceMode() ? 'any' : '0.01';
+            const suffix = isPriceMode() ? 'USDT' : 'سود';
+            document.querySelectorAll('.trigger-input').forEach(el => {
+                el.step = step;
+            });
+            document.querySelectorAll('.trigger-suffix').forEach(el => {
+                el.textContent = suffix;
+            });
+        }
 
         function recalcTotal() {
             let total = 0;
@@ -213,13 +229,15 @@ $targets = old('sell_targets', $signal->sell_targets ?? [
         document.getElementById('addTarget').addEventListener('click', function () {
             const container = document.getElementById('targetsContainer');
             const i = targetIndex++;
+            const step = isPriceMode() ? 'any' : '0.01';
+            const suffix = isPriceMode() ? 'USDT' : 'سود';
             const html = `
                 <div class="target-row row g-1 mb-1" data-index="${i}">
                     <div class="col-6">
                         <div class="input-group input-group-sm">
-                            <input type="number" step="0.01" class="form-control form-control-sm"
+                            <input type="number" step="${step}" class="form-control form-control-sm trigger-input"
                                 name="sell_targets[${i}][trigger]" value="">
-                            <span class="input-group-text">سود</span>
+                            <span class="input-group-text trigger-suffix">${suffix}</span>
                         </div>
                     </div>
                     <div class="col-5">
@@ -248,6 +266,11 @@ $targets = old('sell_targets', $signal->sell_targets ?? [
             if (e.target.classList.contains('share-input')) recalcTotal();
         });
 
+        if (sellModeEl) {
+            sellModeEl.addEventListener('change', syncTriggerInputs);
+        }
+
+        syncTriggerInputs();
         recalcTotal();
     });
 </script>

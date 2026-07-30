@@ -485,15 +485,32 @@
                 }
             };
 
+            const qeSellModeEl = document.getElementById('qe_sell_mode');
+
+            const qeIsPriceMode = () => qeSellModeEl && qeSellModeEl.value === 'price';
+
+            const qeSyncTriggerInputs = () => {
+                const step = qeIsPriceMode() ? 'any' : '0.01';
+                const suffix = qeIsPriceMode() ? 'USDT' : 'سود';
+                qeTargetsContainer.querySelectorAll('.qe-trigger-input').forEach(el => {
+                    el.step = step;
+                });
+                qeTargetsContainer.querySelectorAll('.qe-trigger-suffix').forEach(el => {
+                    el.textContent = suffix;
+                });
+            };
+
             const qeAddTargetRow = (trigger = '', share = '') => {
                 const i = qeTargetIndex++;
+                const step = qeIsPriceMode() ? 'any' : '0.01';
+                const suffix = qeIsPriceMode() ? 'USDT' : 'سود';
                 const html = `
                     <div class="qe-target-row row g-1 mb-1" data-index="${i}">
                         <div class="col-6">
                             <div class="input-group input-group-sm">
-                                <input type="number" step="0.01" class="form-control form-control-sm qe-trigger-input"
+                                <input type="number" step="${step}" class="form-control form-control-sm qe-trigger-input"
                                     name="sell_targets[${i}][trigger]" value="${trigger}" required>
-                                <span class="input-group-text">سود</span>
+                                <span class="input-group-text qe-trigger-suffix">${suffix}</span>
                             </div>
                         </div>
                         <div class="col-5">
@@ -510,6 +527,8 @@
                 qeTargetsContainer.insertAdjacentHTML('beforeend', html);
                 qeRecalcTotal();
             };
+
+            qeSellModeEl.addEventListener('change', qeSyncTriggerInputs);
 
             document.getElementById('qeAddTarget').addEventListener('click', () => {
                 if (qeTargetsContainer.querySelectorAll('.qe-target-row').length >= 10) {
