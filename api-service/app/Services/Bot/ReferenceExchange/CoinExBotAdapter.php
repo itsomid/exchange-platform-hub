@@ -73,7 +73,6 @@ class CoinExBotAdapter implements ExchangeContract
         ]);
         $pathWithQuery = '/v2/spot/order-status?'.$query;
 
-        Log::channel('smart-bot')->info('coinex.bot.get_order.request', $ctx);
 
         try {
             $response = $this->signedGet($pathWithQuery);
@@ -149,8 +148,6 @@ class CoinExBotAdapter implements ExchangeContract
             'price'  => $payload['price'] ?? null,
             'ccy'    => $payload['ccy'] ?? null,
         ]);
-
-        Log::channel('smart-bot')->info('coinex.bot.place.request', $ctx);
 
         try {
             $response = CoinexRequest::send(MethodEnum::POST, '/v2/spot/order', $payload);
@@ -259,20 +256,20 @@ class CoinExBotAdapter implements ExchangeContract
             $quoteSymbol,
         );
 
-        Log::channel('smart-bot')->info("coinex.bot.{$op}.ok", $ctx + [
-            'exchange_order_id' => $orderId,
-            'status'            => $status->value,
-            'raw_status'        => $data['status'] ?? null,
-            'side'              => $side,
-            'market'            => $market !== '' ? $market : null,
-            'gross_filled'      => $fill['gross_filled'],
-            'base_fee'          => $fill['base_fee'],
-            'quote_fee'         => $fill['quote_fee'],
-            'filled_amount'     => $fill['filled_amount'],
-            'fee_currency'      => $fill['fee_currency'],
-            'exchange_fee'      => $fill['exchange_fee'],
-            'avg_price'         => $avgPrice,
-        ]);
+        // Log::channel('smart-bot')->info("coinex.bot.{$op}.ok", $ctx + [
+        //     'exchange_order_id' => $orderId,
+        //     'status'            => $status->value,
+        //     'raw_status'        => $data['status'] ?? null,
+        //     'side'              => $side,
+        //     'market'            => $market !== '' ? $market : null,
+        //     'gross_filled'      => $fill['gross_filled'],
+        //     'base_fee'          => $fill['base_fee'],
+        //     'quote_fee'         => $fill['quote_fee'],
+        //     'filled_amount'     => $fill['filled_amount'],
+        //     'fee_currency'      => $fill['fee_currency'],
+        //     'exchange_fee'      => $fill['exchange_fee'],
+        //     'avg_price'         => $avgPrice,
+        // ]);
 
         return new ExchangeOrderResult(
             exchangeOrderId: $orderId,

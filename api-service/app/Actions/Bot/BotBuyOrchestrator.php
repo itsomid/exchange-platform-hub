@@ -393,8 +393,11 @@ class BotBuyOrchestrator
             }
         });
 
-        Log::info('bot.orchestrator.dispatched', [
+        $userEmail = optional($botOrder->user)->email;
+
+        Log::channel('smart-bot')->info("bot.orchestrator.dispatched.{$userEmail}", [
             'user_id'        => $userId,
+            'user_email'     => $userEmail,
             'bot_order_id'   => $botOrder->id,
             'allocated'      => count($result->allocations),
             'skipped'        => count($result->skipped),
