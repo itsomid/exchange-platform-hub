@@ -20,6 +20,51 @@ class CoinexSpotOrderService
         return $this->listOrders('/v2/spot/finished-order', $market, $side, $page, $limit);
     }
 
+    /**
+     * Spot balances for a market's base coin and USDT.
+     *
+     * @return array{base: array{ccy: string, available: string, frozen: string, total: string}, usdt: array{ccy: string, available: string, frozen: string, total: string}}
+     */
+    public function getMarketBalances(string $baseSymbol): array
+    {
+        $baseSymbol = strtoupper($baseSymbol);
+
+        try {
+            $response = CoinexRequest::send(MethodEnum::GET, '/v2/assets/spot/balance');
+        } catch (ConnectionException|Throwable $exception) {
+            report($exception);
+            throw new CantResolveCoinexException($exception->getMessage(), (int) $exception->getCode(), $exception);
+        }
+
+        if (!$response->ok() || $response->json('code') !== 0) {
+            Log::channel('ref-exchange')->error('Coinex spot balance failed', [
+                'body' => $response->body(),
+            ]);
+
+            $message = $response->json('message') ?: 'خطا در دریافت موجودی از CoinEx';
+            $mapped = CoinexError::tryFrom((int) $response->json('code'));
+            if ($mapped) {
+                $message = CoinexError::mapErrorToResponse($mapped);
+            }
+
+            throw new CantResolveCoinexException($message, (int) $response->json('code'));
+        }
+
+        $byCcy = [];
+        foreach ($response->json('data') ?? [] as $item) {
+            $ccy = strtoupper((string) ($item['ccy'] ?? ''));
+            if ($ccy === '') {
+                continue;
+            }
+            $byCcy[$ccy] = $item;
+        }
+
+        return [
+            'base' => $this->normalizeBalance($baseSymbol, $byCcy[$baseSymbol] ?? null),
+            'usdt' => $this->normalizeBalance('USDT', $byCcy['USDT'] ?? null),
+        ];
+    }
+
     public function cancelOrder(string $market, int|string $orderId): array
     {
         $payload = [
@@ -51,6 +96,19 @@ class CoinexSpotOrderService
         }
 
         return $response->json('data') ?? [];
+    }
+
+    private function normalizeBalance(string $ccy, ?array $item): array
+    {
+        $available = (string) ($item['available'] ?? '0');
+        $frozen = (string) ($item['frozen'] ?? '0');
+
+        return [
+            'ccy' => $ccy,
+            'available' => $available,
+            'frozen' => $frozen,
+            'total' => bcadd($available, $frozen, 8),
+        ];
     }
 
     private function listOrders(string $path, string $market, ?string $side, int $page, int $limit): array

@@ -31,6 +31,7 @@ class CoinexSpotOrderController extends Controller
         $pendingSell = ['data' => [], 'pagination' => ['total' => 0, 'has_next' => false]];
         $finishedBuy = ['data' => [], 'pagination' => ['total' => 0, 'has_next' => false]];
         $finishedSell = ['data' => [], 'pagination' => ['total' => 0, 'has_next' => false]];
+        $balances = null;
         $error = null;
 
         if ($selectedCurrencyId) {
@@ -42,6 +43,7 @@ class CoinexSpotOrderController extends Controller
                 $limit = min(100, max(1, (int) $request->input('limit', 50)));
 
                 try {
+                    $balances = $this->coinexSpotOrderService->getMarketBalances($selectedCurrency->symbol);
                     $pending = $this->coinexSpotOrderService->getPendingOrders($market, null, $page, $limit);
                     $finished = $this->coinexSpotOrderService->getFinishedOrders($market, null, $page, $limit);
 
@@ -65,6 +67,7 @@ class CoinexSpotOrderController extends Controller
             'currencies' => $currencies,
             'selectedCurrency' => $selectedCurrency,
             'market' => $market,
+            'balances' => $balances,
             'pendingBuy' => $pendingBuy,
             'pendingSell' => $pendingSell,
             'finishedBuy' => $finishedBuy,

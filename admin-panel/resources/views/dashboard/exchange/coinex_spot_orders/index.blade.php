@@ -41,6 +41,21 @@
             color: #fff;
         }
 
+        .coinex-orders-page .stat-balance-base {
+            background: linear-gradient(135deg, #00cfe8 0%, #1a9bb0 100%);
+            color: #fff;
+        }
+
+        .coinex-orders-page .stat-balance-usdt {
+            background: linear-gradient(135deg, #28c76f 0%, #198754 100%);
+            color: #fff;
+        }
+
+        .coinex-orders-page .balance-meta {
+            font-size: 0.78rem;
+            opacity: 0.9;
+        }
+
         .coinex-orders-page .market-pill {
             display: inline-flex;
             align-items: center;
@@ -230,6 +245,41 @@
                 </div>
             </div>
         @elseif (!$error)
+            @if ($balances)
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="card stat-card stat-balance-base h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <small class="opacity-75">موجودی {{ $balances['base']['ccy'] }} (Base)</small>
+                                    @if ($selectedCurrency?->coinLogo())
+                                        <img src="{{ $selectedCurrency->coinLogo() }}" alt="{{ $balances['base']['ccy'] }}"
+                                            style="width:28px;height:28px;border-radius:50%;object-fit:contain;background:#fff;">
+                                    @endif
+                                </div>
+                                <h3 class="mb-2 text-white">{{ $fmt($balances['base']['total']) }}</h3>
+                                <div class="balance-meta d-flex flex-wrap gap-3">
+                                    <span>آزاد: {{ $fmt($balances['base']['available']) }}</span>
+                                    <span>قفل: {{ $fmt($balances['base']['frozen']) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card stat-card stat-balance-usdt h-100">
+                            <div class="card-body">
+                                <small class="d-block opacity-75 mb-2">موجودی USDT (Quote)</small>
+                                <h3 class="mb-2 text-white">{{ $fmt($balances['usdt']['total']) }}</h3>
+                                <div class="balance-meta d-flex flex-wrap gap-3">
+                                    <span>آزاد: {{ $fmt($balances['usdt']['available']) }}</span>
+                                    <span>قفل: {{ $fmt($balances['usdt']['frozen']) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <div class="row g-3 mb-4">
                 <div class="col-sm-6 col-xl-3">
                     <div class="card stat-card stat-pending h-100">
