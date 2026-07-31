@@ -149,7 +149,7 @@ $targets = old('sell_targets', $signal->sell_targets ?? [
                             <div class="target-row row g-1 mb-1" data-index="{{ $i }}">
                                 <div class="col-6">
                                     <div class="input-group input-group-sm">
-                                        <input type="number" step="{{ old('sell_mode', $signal->sell_mode ?? 'percent') === 'price' ? 'any' : '0.01' }}"
+                                        <input type="number" step="any" min="0"
                                             class="form-control form-control-sm trigger-input @error("sell_targets.{$i}.trigger") is-invalid @enderror"
                                             name="sell_targets[{{ $i }}][trigger]"
                                             value="{{ $target['trigger'] }}" aria-describedby="basic-addon1">
@@ -201,11 +201,7 @@ $targets = old('sell_targets', $signal->sell_targets ?? [
         }
 
         function syncTriggerInputs() {
-            const step = isPriceMode() ? 'any' : '0.01';
             const suffix = isPriceMode() ? 'USDT' : 'سود';
-            document.querySelectorAll('.trigger-input').forEach(el => {
-                el.step = step;
-            });
             document.querySelectorAll('.trigger-suffix').forEach(el => {
                 el.textContent = suffix;
             });
@@ -229,13 +225,12 @@ $targets = old('sell_targets', $signal->sell_targets ?? [
         document.getElementById('addTarget').addEventListener('click', function () {
             const container = document.getElementById('targetsContainer');
             const i = targetIndex++;
-            const step = isPriceMode() ? 'any' : '0.01';
             const suffix = isPriceMode() ? 'USDT' : 'سود';
             const html = `
                 <div class="target-row row g-1 mb-1" data-index="${i}">
                     <div class="col-6">
                         <div class="input-group input-group-sm">
-                            <input type="number" step="${step}" class="form-control form-control-sm trigger-input"
+                            <input type="number" step="any" min="0" class="form-control form-control-sm trigger-input"
                                 name="sell_targets[${i}][trigger]" value="">
                             <span class="input-group-text trigger-suffix">${suffix}</span>
                         </div>

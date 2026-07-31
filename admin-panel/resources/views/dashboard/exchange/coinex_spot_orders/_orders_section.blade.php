@@ -2,6 +2,30 @@
     $isBuy = ($side ?? '') === 'buy';
     $orders = $orders ?? [];
     $pagination = $pagination ?? [];
+
+    // CoinEx market orders return price "0"; use avg fill (filled_value / filled_amount).
+    $resolveOrderPrice = function (array $order): ?string {
+        $type = strtolower((string) ($order['type'] ?? ''));
+        $rawPrice = $order['price'] ?? null;
+        $hasLimitPrice = $rawPrice !== null && $rawPrice !== '' && (float) $rawPrice > 0;
+
+        if ($type !== 'market' && $hasLimitPrice) {
+            return (string) $rawPrice;
+        }
+
+        $filledAmount = (string) ($order['filled_amount'] ?? '0');
+        $filledValue = (string) ($order['filled_value'] ?? '0');
+        if ((float) $filledAmount > 0 && (float) $filledValue > 0) {
+            return bcdiv($filledValue, $filledAmount, 8);
+        }
+
+        $lastFill = $order['last_fill_price'] ?? $order['last_filled_price'] ?? null;
+        if ($lastFill !== null && $lastFill !== '' && (float) $lastFill > 0) {
+            return (string) $lastFill;
+        }
+
+        return null;
+    };
 @endphp
 
 <div class="card mb-4">
@@ -51,6 +75,7 @@
                                 $baseFee = $order['base_fee'] ?? '0';
                                 $quoteFee = $order['quote_fee'] ?? '0';
                                 $discountFee = $order['discount_fee'] ?? '0';
+                                $displayPrice = $resolveOrderPrice($order);
                                 $modalId = 'coinex-order-' . ($cancellable ? 'p' : 'f') . '-' . ($order['side'] ?? 'x') . '-' . $orderId;
                             @endphp
                             <tr>
@@ -68,7 +93,13 @@
                                     <span class="badge bg-label-secondary">{{ $order['type'] ?? '—' }}</span>
                                 </td>
                                 <td>{{ $fmt($order['amount'] ?? 0) }}</td>
-                                <td>{{ $fmt($order['price'] ?? 0) }}</td>
+                                <td>
+                                    @if ($displayPrice === null)
+                                        <span class="text-muted">بازار</span>
+                                    @else
+                                        {{ $fmt($displayPrice) }}
+                                    @endif
+                                </td>
                                 <td>
                                     <div>{{ $fmt($order['filled_amount'] ?? 0) }}</div>
                                     @if (!empty($order['last_fill_amount']) || !empty($order['last_filled_amount']))
@@ -154,7 +185,9 @@
                                                                     <span class="value">
                                                                         @if (in_array($key, ['created_at', 'updated_at'], true))
                                                                             {{ $fmtTs($order[$key]) }}
-                                                                        @elseif (in_array($key, ['amount', 'price', 'unfilled_amount', 'filled_amount', 'filled_value', 'base_fee', 'quote_fee', 'discount_fee', 'last_fill_amount', 'last_filled_amount', 'last_fill_price', 'last_filled_price', 'maker_fee_rate', 'taker_fee_rate'], true))
+                                                                        @elseif ($key === 'price')
+                                                                            {{ $displayPrice === null ? 'بازار' : $fmt($displayPrice) }}
+                                                                        @elseif (in_array($key, ['amount', 'unfilled_amount', 'filled_amount', 'filled_value', 'base_fee', 'quote_fee', 'discount_fee', 'last_fill_amount', 'last_filled_amount', 'last_fill_price', 'last_filled_price', 'maker_fee_rate', 'taker_fee_rate'], true))
                                                                             {{ $fmt($order[$key]) }}
                                                                         @else
                                                                             {{ $order[$key] }}
