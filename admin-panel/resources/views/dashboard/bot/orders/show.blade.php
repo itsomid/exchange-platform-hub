@@ -49,10 +49,20 @@
                                 <span>آلفا: <strong>{{ $botOrder->alpha_snapshot }}</strong></span>
                             </div>
                         </div>
-                        <a href="{{ $botOrder->user_id ? route('admin.bot.order.user', $botOrder->user_id) : route('admin.bot.order.index') }}"
-                            class="btn btn-outline-secondary btn-sm">
-                            <i class="fas fa-arrow-right me-1"></i> بازگشت به کاربر
-                        </a>
+                        <div class="d-flex align-items-center gap-2">
+                            @if (!in_array($botOrder->status, ['CANCELED', 'FAILED'], true))
+                                <button type="button" class="btn btn-danger btn-sm js-bot-cancel"
+                                    data-preview-url="{{ route('admin.bot.order.cancel-preview', $botOrder) }}"
+                                    data-cancel-url="{{ route('admin.bot.order.cancel', $botOrder) }}"
+                                    data-title="لغو سفارش #{{ $botOrder->id }}" data-mode="single">
+                                    <i class="fas fa-ban me-1"></i> لغو سفارش
+                                </button>
+                            @endif
+                            <a href="{{ $botOrder->user_id ? route('admin.bot.order.user', $botOrder->user_id) : route('admin.bot.order.index') }}"
+                                class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-arrow-right me-1"></i> بازگشت به کاربر
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -324,8 +334,39 @@
                                 </div>
                                 <div class="col-6 col-md">
                                     <div class="exec-stat-box p-2 rounded border bg-white h-100">
-                                        <small class="text-muted d-block mb-1" style="font-size:.7rem;">مقدار
-                                            خریده‌شده</small>
+                                        @php
+                                            $feeCurrency = strtoupper(
+                                                (string) ($execution->buy_ref_exchange_fee_currency ?? ''),
+                                            );
+                                            $feeUsdt = (float) $execution->buy_ref_exchange_fee;
+                                            $avgBuy = (float) $execution->avg_buy_price;
+                                            $netFilled = (float) $execution->filled_amount;
+                                            $isBaseCoinFee =
+                                                $feeUsdt > 0 &&
+                                                $feeCurrency !== '' &&
+                                                $feeCurrency !== 'USDT' &&
+                                                $avgBuy > 0;
+                                            $feeInBase = $isBaseCoinFee ? $feeUsdt / $avgBuy : 0;
+                                            $grossFilled = $isBaseCoinFee ? $netFilled + $feeInBase : $netFilled;
+                                        @endphp
+                                        <small class="text-muted d-block mb-1" style="font-size:.7rem;">
+                                            مقدار خریده‌شده
+                                            @if ($isBaseCoinFee)
+                                                <i class="fa-solid fa-exclamation-circle text-warning ms-1"
+                                                    style="cursor:help; font-size:1rem;" data-bs-toggle="tooltip"
+                                                    data-bs-html="true" data-bs-placement="top"
+                                                    title="<div class='text-end' style='min-width:240px;line-height:1.7'>
+                                                        <div class='fw-bold mb-1'>کارمزد از ارز پایه کسر شده</div>
+                                                        <div class='mb-1'>صرافی مرجع کارمزد خرید را با <b>{{ $feeCurrency }}</b> گرفته؛ بنابراین مقدار قابل‌فروش کمتر از مقدار خام خرید ثبت شده است.</div>
+                                                        <hr class='my-1'>
+                                                        <div>مقدار خام خرید: <b class='font-monospace'>{{ formatNumberTrimZeros($grossFilled) }}</b> {{ $feeCurrency }}</div>
+                                                        <div>کارمزد کسرشده: <b class='font-monospace text-warning'>−{{ formatNumberTrimZeros($feeInBase) }}</b> {{ $feeCurrency }}
+                                                            <span class='text-muted'>(≈ {{ formatNumberTrimZeros($feeUsdt, 8) }} USDT)</span>
+                                                        </div>
+                                                        <div>مقدار خالص ثبت‌شده: <b class='font-monospace'>{{ formatNumberTrimZeros($netFilled) }}</b> {{ $feeCurrency }}</div>
+                                                    </div>"></i>
+                                            @endif
+                                        </small>
                                         <strong
                                             class="font-number d-block">{{ formatNumberTrimZeros($execution->filled_amount) }}</strong>
                                     </div>
@@ -919,6 +960,7 @@
 
     @include('dashboard.bot.orders.partials.description-modal')
     @include('dashboard.bot.orders.partials.system-description-modal')
+    @include('dashboard.bot.orders.partials.cancel-orders-modal')
 
 @endsection
 
@@ -940,7 +982,7 @@
         }
 
         .popover-fee-detail {
-            min-width: 280px;
+            min-width: 300px;
             font-size: .82rem;
             direction: rtl;
             text-align: right;
