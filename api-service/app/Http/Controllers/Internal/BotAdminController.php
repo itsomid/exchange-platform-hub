@@ -39,30 +39,68 @@ class BotAdminController extends Controller
 
     public function cancelPreview(int $orderId): JsonResponse
     {
-        $order = BotOrder::find($orderId);
-        if (! $order) {
-            return response()->json(['ok' => false, 'error' => 'سفارش یافت نشد.'], 404);
-        }
-
-        if ($order->status === 'CANCELED') {
-            return response()->json(['ok' => false, 'error' => 'این سفارش قبلاً لغو شده است.'], 422);
-        }
-
-        $preview = $this->cancelService->preview($order);
-
-        return response()->json([
-            'ok'               => true,
-            'mode'             => 'single',
-            'sell_on_exchange' => $preview['sell_on_exchange'],
-            'in_flight'        => $this->inFlightSummary($order),
-            'orders'           => [$preview],
-            'totals'           => [
-                'open_sell_orders'  => $preview['open_sell_orders'],
-                'total_current_value' => $preview['total_current_value'],
-                'total_fee'         => $preview['total_fee'],
-                'refund_to_balance' => $preview['refund_to_balance'],
-            ],
+        Log::channel('smart-bot')->info('bot.admin.cancel_preview.start', [
+            'bot_order_id' => $orderId,
         ]);
+
+        try {
+            $order = BotOrder::find($orderId);
+            if (! $order) {
+                Log::channel('smart-bot')->warning('bot.admin.cancel_preview.not_found', [
+                    'bot_order_id' => $orderId,
+                ]);
+
+                return response()->json(['ok' => false, 'error' => 'سفارش یافت نشد.'], 404);
+            }
+
+            if ($order->status === 'CANCELED') {
+                Log::channel('smart-bot')->warning('bot.admin.cancel_preview.already_canceled', [
+                    'bot_order_id' => $orderId,
+                    'status'       => $order->status,
+                ]);
+
+                return response()->json(['ok' => false, 'error' => 'این سفارش قبلاً لغو شده است.'], 422);
+            }
+
+            $preview = $this->cancelService->preview($order);
+
+            Log::channel('smart-bot')->info('bot.admin.cancel_preview.ok', [
+                'bot_order_id'     => $orderId,
+                'user_id'          => $order->user_id,
+                'open_sell_orders' => $preview['open_sell_orders'] ?? null,
+                'sell_on_exchange' => $preview['sell_on_exchange'] ?? null,
+                'in_flight'        => $this->inFlightSummary($order),
+            ]);
+
+            return response()->json([
+                'ok'               => true,
+                'mode'             => 'single',
+                'sell_on_exchange' => $preview['sell_on_exchange'],
+                'in_flight'        => $this->inFlightSummary($order),
+                'orders'           => [$preview],
+                'totals'           => [
+                    'open_sell_orders'  => $preview['open_sell_orders'],
+                    'total_current_value' => $preview['total_current_value'],
+                    'total_fee'         => $preview['total_fee'],
+                    'refund_to_balance' => $preview['refund_to_balance'],
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            Log::channel('smart-bot')->error('bot.admin.cancel_preview.exception', [
+                'bot_order_id' => $orderId,
+                'exception'    => $e::class,
+                'message'      => $e->getMessage(),
+                'file'         => $e->getFile().':'.$e->getLine(),
+                'trace'        => collect($e->getTrace())->take(8)->map(
+                    fn ($f) => ($f['file'] ?? '?').':'.($f['line'] ?? '?').' '.($f['function'] ?? '')
+                )->all(),
+            ]);
+
+            return response()->json([
+                'ok'    => false,
+                'error' => 'خطای داخلی در پیش‌نمایش لغو: '.$e->getMessage(),
+            ], 500);
+        }
     }
 
     public function cancel(int $orderId): JsonResponse
@@ -104,50 +142,82 @@ class BotAdminController extends Controller
 
     public function cancelAllPreview(int $userId): JsonResponse
     {
-        if (! User::whereKey($userId)->exists()) {
-            return response()->json(['ok' => false, 'error' => 'کاربر یافت نشد.'], 404);
-        }
-
-        $orders = $this->cancelableOrders($userId);
-
-        $previews    = [];
-        $totalSells  = 0;
-        $totalValue  = '0';
-        $totalFee    = '0';
-        $totalRefund = '0';
-        $sellOnExch  = true;
-        $inFlight    = [];
-
-        foreach ($orders as $order) {
-            $preview    = $this->cancelService->preview($order);
-            $previews[] = $preview;
-            $sellOnExch = (bool) $preview['sell_on_exchange'];
-
-            $totalSells += (int) $preview['open_sell_orders'];
-            $totalValue  = bcadd($totalValue, $preview['total_current_value'], self::SCALE);
-            $totalFee    = bcadd($totalFee, $preview['total_fee'], self::SCALE);
-            $totalRefund = bcadd($totalRefund, $preview['refund_to_balance'], self::SCALE);
-
-            if ($flight = $this->inFlightSummary($order)) {
-                $inFlight[] = $flight;
-            }
-        }
-
-        return response()->json([
-            'ok'               => true,
-            'mode'             => 'all',
-            'sell_on_exchange' => $sellOnExch,
-            'in_flight'        => $inFlight,
-            'orders'           => $previews,
-            'totals'           => [
-                'orders'            => count($previews),
-                'open_sell_orders'  => $totalSells,
-                'total_current_value' => $totalValue,
-                'total_fee'         => $totalFee,
-                'refund_to_balance' => $totalRefund,
-            ],
-            'wallet' => $this->walletSnapshot($userId),
+        Log::channel('smart-bot')->info('bot.admin.cancel_all_preview.start', [
+            'user_id' => $userId,
         ]);
+
+        try {
+            if (! User::whereKey($userId)->exists()) {
+                Log::channel('smart-bot')->warning('bot.admin.cancel_all_preview.user_not_found', [
+                    'user_id' => $userId,
+                ]);
+
+                return response()->json(['ok' => false, 'error' => 'کاربر یافت نشد.'], 404);
+            }
+
+            $orders = $this->cancelableOrders($userId);
+
+            $previews    = [];
+            $totalSells  = 0;
+            $totalValue  = '0';
+            $totalFee    = '0';
+            $totalRefund = '0';
+            $sellOnExch  = true;
+            $inFlight    = [];
+
+            foreach ($orders as $order) {
+                $preview    = $this->cancelService->preview($order);
+                $previews[] = $preview;
+                $sellOnExch = (bool) $preview['sell_on_exchange'];
+
+                $totalSells += (int) $preview['open_sell_orders'];
+                $totalValue  = bcadd($totalValue, $preview['total_current_value'], self::SCALE);
+                $totalFee    = bcadd($totalFee, $preview['total_fee'], self::SCALE);
+                $totalRefund = bcadd($totalRefund, $preview['refund_to_balance'], self::SCALE);
+
+                if ($flight = $this->inFlightSummary($order)) {
+                    $inFlight[] = $flight;
+                }
+            }
+
+            Log::channel('smart-bot')->info('bot.admin.cancel_all_preview.ok', [
+                'user_id'          => $userId,
+                'orders'           => count($previews),
+                'open_sell_orders' => $totalSells,
+                'in_flight_count'  => count($inFlight),
+            ]);
+
+            return response()->json([
+                'ok'               => true,
+                'mode'             => 'all',
+                'sell_on_exchange' => $sellOnExch,
+                'in_flight'        => $inFlight,
+                'orders'           => $previews,
+                'totals'           => [
+                    'orders'            => count($previews),
+                    'open_sell_orders'  => $totalSells,
+                    'total_current_value' => $totalValue,
+                    'total_fee'         => $totalFee,
+                    'refund_to_balance' => $totalRefund,
+                ],
+                'wallet' => $this->walletSnapshot($userId),
+            ]);
+        } catch (\Throwable $e) {
+            Log::channel('smart-bot')->error('bot.admin.cancel_all_preview.exception', [
+                'user_id'   => $userId,
+                'exception' => $e::class,
+                'message'   => $e->getMessage(),
+                'file'      => $e->getFile().':'.$e->getLine(),
+                'trace'     => collect($e->getTrace())->take(8)->map(
+                    fn ($f) => ($f['file'] ?? '?').':'.($f['line'] ?? '?').' '.($f['function'] ?? '')
+                )->all(),
+            ]);
+
+            return response()->json([
+                'ok'    => false,
+                'error' => 'خطای داخلی در پیش‌نمایش لغو همه: '.$e->getMessage(),
+            ], 500);
+        }
     }
 
     public function cancelAll(int $userId): JsonResponse

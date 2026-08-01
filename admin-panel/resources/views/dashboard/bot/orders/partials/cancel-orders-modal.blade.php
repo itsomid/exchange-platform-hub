@@ -66,6 +66,7 @@
         }
 
         function post(url) {
+            console.info('[bot-cancel] POST', url);
             return fetch(url, {
                 method: 'POST',
                 headers: {
@@ -74,11 +75,33 @@
                     'Accept': 'application/json',
                 },
             }).then(function(res) {
-                return res.json().then(function(data) {
+                return res.text().then(function(text) {
+                    var data = null;
+                    try {
+                        data = text ? JSON.parse(text) : null;
+                    } catch (e) {
+                        console.error('[bot-cancel] non-JSON response', {
+                            url: url,
+                            status: res.status,
+                            body: text.slice(0, 2000),
+                        });
+                        data = {
+                            ok: false,
+                            error: 'پاسخ غیر JSON از سرور (HTTP ' + res.status + '): ' +
+                                text.slice(0, 300),
+                            raw: text.slice(0, 2000),
+                        };
+                    }
+                    console.info('[bot-cancel] response', {
+                        url: url,
+                        status: res.status,
+                        ok: res.ok,
+                        data: data,
+                    });
                     return {
                         status: res.status,
                         ok: res.ok,
-                        data: data
+                        data: data || { ok: false, error: 'پاسخ خالی از سرور (HTTP ' + res.status + ').' }
                     };
                 });
             });
@@ -322,13 +345,18 @@
                 post(btn.dataset.previewUrl)
                     .then(function(res) {
                         if (!res.ok || res.data.ok === false) {
-                            renderError(res.data.error || 'خطا در دریافت پیش‌نمایش لغو.');
+                            console.error('[bot-cancel] preview failed', res);
+                            var msg = (res.data && res.data.error) ||
+                                ('خطا در دریافت پیش‌نمایش لغو (HTTP ' + res.status + ').');
+                            renderError(msg);
                             return;
                         }
                         renderPreview(res.data);
                     })
-                    .catch(function() {
-                        renderError('ارتباط با سرور برقرار نشد.');
+                    .catch(function(err) {
+                        console.error('[bot-cancel] preview network/parse error', err);
+                        renderError('ارتباط با سرور برقرار نشد: ' +
+                            (err && err.message ? err.message : String(err)));
                     });
             });
         });
@@ -352,8 +380,10 @@
                         window.location.reload();
                     }, 1200);
                 })
-                .catch(function() {
-                    toast('ارتباط با سرور برقرار نشد.', false);
+                .catch(function(err) {
+                    console.error('[bot-cancel] confirm network/parse error', err);
+                    toast('ارتباط با سرور برقرار نشد: ' +
+                        (err && err.message ? err.message : String(err)), false);
                 })
                 .finally(function() {
                     confirmBtn.innerHTML = '<i class="fas fa-ban me-1"></i> تایید و لغو';

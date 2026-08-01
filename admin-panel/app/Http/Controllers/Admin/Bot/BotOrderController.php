@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Services\Bot\BotAdminApiClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class BotOrderController extends Controller
@@ -339,24 +340,55 @@ class BotOrderController extends Controller
 
     private function forwardBotApi(\Closure $call): JsonResponse
     {
+        $context = [
+            'api_url' => (string) config('smart-bot.api_url'),
+            'path'    => request()->path(),
+            'method'  => request()->method(),
+            'admin_id'=> auth()->id(),
+        ];
+
         try {
             $response = $call();
         } catch (\Throwable $e) {
+            Log::error('bot.cancel.forward_exception', $context + [
+                'exception' => $e::class,
+                'message'   => $e->getMessage(),
+                'file'      => $e->getFile().':'.$e->getLine(),
+            ]);
+
             return response()->json([
                 'ok'    => false,
                 'error' => 'ارتباط با سرویس API برقرار نشد: ' . $e->getMessage(),
             ], 502);
         }
 
+        $status  = $response->status();
+        $rawBody = (string) $response->body();
         $payload = $response->json();
+
+        if ($payload === null || ($payload['ok'] ?? true) === false || $status >= 400) {
+            Log::warning('bot.cancel.forward_bad_response', $context + [
+                'http_status' => $status,
+                'ok_flag'     => $payload['ok'] ?? null,
+                'error'       => $payload['error'] ?? null,
+                'body_snip'   => mb_substr($rawBody, 0, 2000),
+            ]);
+        } else {
+            Log::info('bot.cancel.forward_ok', $context + [
+                'http_status' => $status,
+                'mode'        => $payload['mode'] ?? null,
+                'orders'      => isset($payload['orders']) ? count($payload['orders']) : null,
+            ]);
+        }
+
         if ($payload === null) {
             return response()->json([
                 'ok'    => false,
                 'error' => 'پاسخ نامعتبر از سرویس API.',
-                'body'  => (string) $response->body(),
-            ], $response->status() ?: 502);
+                'body'  => $rawBody,
+            ], $status ?: 502);
         }
 
-        return response()->json($payload, $response->status());
+        return response()->json($payload, $status);
     }
 }
