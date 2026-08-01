@@ -68,8 +68,16 @@
                                                 <span class="badge bg-secondary">خاموش</span>
                                             @endif
                                         </td>
-                                        <td>
+                                        <td dir="ltr">
                                             <small>{{ $row->last_order_at ? \Illuminate\Support\Carbon::parse($row->last_order_at)->format('Y-m-d H:i') : '—' }}</small>
+                                            @if ($row->last_order_at)
+                                                <div>
+                                                    <small class="text-muted">
+                                                        {{ \App\Helpers\DateFormatter::convertToPersianDate($row->last_order_at, '%Y/%m/%d H:i:s') }}
+                                                    </small>
+                                                </div>
+                                            @endif
+
                                         </td>
                                         <td>
                                             <a href="{{ route('admin.bot.order.user', $row->user_id) }}"
