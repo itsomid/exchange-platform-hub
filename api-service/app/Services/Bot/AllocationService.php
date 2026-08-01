@@ -292,17 +292,17 @@ class AllocationService
                     : ($precheckFloorMode === 'single'
                         ? sprintf(
                             'Allocation %s below effective_min %s (min_buy=%s, p2p_min=%s)',
-                            $s['amount'],
-                            $effectiveMin,
-                            $minBuy,
-                            $p2pMin,
+                            formatNumberTrimZeros($s['amount'], self::SCALE),
+                            formatNumberTrimZeros($effectiveMin, self::SCALE),
+                            formatNumberTrimZeros($minBuy, self::SCALE),
+                            formatNumberTrimZeros($p2pMin, self::SCALE),
                         )
                         : sprintf(
                             'Allocation %s below effective_min %s (%d targets × %s min)',
-                            $s['amount'],
-                            $effectiveMin,
+                            formatNumberTrimZeros($s['amount'], self::SCALE),
+                            formatNumberTrimZeros($effectiveMin, self::SCALE),
                             $sellCount,
-                            $p2pMin,
+                            formatNumberTrimZeros($p2pMin, self::SCALE),
                         ));
                 $s['_would_have']  = $s['amount'];
                 $freed             = bcadd($freed, $s['amount'], self::SCALE);
