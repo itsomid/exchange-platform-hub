@@ -55,6 +55,34 @@ class SettlementService
     }
 
     /**
+     * Portion of the execution's originally locked capital (allocated_usdt)
+     * that a settled amount represents.
+     *
+     * When the buy fee is paid in the base currency, filled_amount is net of
+     * that fee, so cost_basis (filled_amount * avg_buy_price) is smaller than
+     * allocated_usdt. Releasing only cost_basis would strand the fee component
+     * in locked_balance forever; releasing the allocated share guarantees the
+     * full lock is freed once every tier of the execution settles.
+     */
+    private function lockedReleaseFor(BotBuyExecution $execution, string $settledAmount, string $fallback): string
+    {
+        $allocated   = (string) ($execution->allocated_usdt ?? '0');
+        $totalFilled = (string) ($execution->filled_amount ?? '0');
+
+        if (
+            bccomp($allocated, '0', self::SCALE) <= 0 ||
+            bccomp($totalFilled, '0', self::SCALE) <= 0 ||
+            bccomp($settledAmount, '0', self::SCALE) <= 0
+        ) {
+            return $fallback;
+        }
+
+        $release = bcdiv(bcmul($allocated, $settledAmount, self::SCALE), $totalFilled, self::SCALE);
+
+        return bccomp($release, $allocated, self::SCALE) > 0 ? $allocated : $release;
+    }
+
+    /**
      * Settle a filled sell order.
      */
     public function settleFill(
@@ -112,7 +140,7 @@ class SettlementService
                 'filled_at' => now(),
             ]);
 
-            $this->updateWallet($userId, $execution, $costBasis, $netPnl);
+            $this->updateWallet($userId, $execution, $this->lockedReleaseFor($execution, $filledAmount, $costBasis), $netPnl);
             $this->writeTxns($userId, $execution, $networkFee, $effectiveExchangeFee, $spreadFee, $performanceFee, null);
             $this->payReferral($referral, $execution, $userId);
 
@@ -157,7 +185,12 @@ class SettlementService
                 'filled_at' => null,
             ]);
 
-            $this->updateWallet($userId, $execution, $costBasis, $netPnl);
+            $this->updateWallet(
+                $userId,
+                $execution,
+                $this->lockedReleaseFor($execution, (string) $sellOrder->amount_to_sell, $costBasis),
+                $netPnl,
+            );
             $this->writeTxns($userId, $execution, '0', '0', '0', '0', $cancelFee);
 
             return $settlement;
@@ -174,8 +207,8 @@ class SettlementService
      *   - network_fee    = withdrawal fee for the cheapest chain, in USDT
      *   - performance_fee = max(0, gross_revenue - cost_basis) * perfPct / 100
      *   - net_pnl        = gross_revenue - cost_basis - network - exchange - performance
-     *   - locked_balance is released by cost_basis (same as settleFill).
-     *   - balance += cost_basis + net_pnl  (the net refund the user receives).
+     *   - locked_balance is released by this tier's share of allocated_usdt (same as settleFill).
+     *   - balance += net_pnl (the principal was never deducted from balance at buy time).
      */
     public function settleCancelMarketSell(
         BotSellOrder $sellOrder,
@@ -229,7 +262,7 @@ class SettlementService
                 'filled_at' => null,
             ]);
 
-            $this->updateWallet($userId, $execution, $costBasis, $netPnl);
+            $this->updateWallet($userId, $execution, $this->lockedReleaseFor($execution, $filledAmount, $costBasis), $netPnl);
             $this->writeTxns($userId, $execution, $networkFee, $effectiveExchangeFee, '0', $perfFee, null);
             $this->payReferral($referral, $execution, $userId);
 
@@ -239,23 +272,24 @@ class SettlementService
 
     /**
      * Wallet update rules:
-     *   - Release the locked cost from `locked_balance` (it was reserved at buy time).
-     *   - balance += net_pnl only.  The cost_basis was never subtracted from `balance`
+     *   - Release the settled tier's share of the locked principal from
+     *     `locked_balance` (it was reserved as allocated_usdt at buy time).
+     *   - balance += net_pnl only.  The principal was never subtracted from `balance`
      *     when buying (only `locked_balance` was incremented), so adding it here would
      *     double-count it and inflate the available balance.
      *   - profit_balance += net_pnl when profitable.
      */
-    private function updateWallet(int $userId, BotBuyExecution $execution, string $costBasis, string $netPnl): void
+    private function updateWallet(int $userId, BotBuyExecution $execution, string $lockedRelease, string $netPnl): void
     {
         $wallet = BotWallet::where('user_id', $userId)->lockForUpdate()->firstOrFail();
 
-        // Release the portion of locked principal that this sell-side cost basis represents.
-        $newLocked = bcsub((string) $wallet->locked_balance, $costBasis, self::SCALE);
+        // Release this tier's share of the locked principal.
+        $newLocked = bcsub((string) $wallet->locked_balance, $lockedRelease, self::SCALE);
         if (bccomp($newLocked, '0', self::SCALE) < 0) {
             $newLocked = '0';
         }
 
-        // Only the profit/loss adjusts the total balance; the principal (cost_basis) was
+        // Only the profit/loss adjusts the total balance; the principal was
         // already counted in balance since it was never deducted at buy time.
         $newBalance = bcadd((string) $wallet->balance, $netPnl, self::SCALE);
 

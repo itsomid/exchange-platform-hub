@@ -982,7 +982,7 @@
         }
 
         .popover-fee-detail {
-            min-width: 300px;
+            min-width: 350px;
             font-size: .82rem;
             direction: rtl;
             text-align: right;

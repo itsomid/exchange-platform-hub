@@ -21,4 +21,15 @@ return [
     | in admin-panel's env. Empty disables the endpoints entirely.
     */
     'internal_test_token' => env('BOT_INTERNAL_TEST_TOKEN', ''),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Internal admin token
+    |--------------------------------------------------------------------------
+    | Shared secret used by admin-panel to call the protected
+    | /api/internal/bot-admin/* endpoints (order cancel / liquidation).
+    | Unlike the test-lab token these endpoints DO work in production.
+    | Falls back to BOT_INTERNAL_TEST_TOKEN when not set.
+    */
+    'internal_admin_token' => env('BOT_INTERNAL_ADMIN_TOKEN', env('BOT_INTERNAL_TEST_TOKEN', '')),
 ];

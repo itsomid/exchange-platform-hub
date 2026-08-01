@@ -55,6 +55,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 'basic.auth' => \App\Http\Middleware\BasicAuthMiddleware::class,
                 'api.system.auth' => \App\Http\Middleware\ApiSystemAuthMiddleware::class,
                 'bot-test-auth' => \App\Http\Middleware\InternalBotTestAuth::class,
+                'bot-admin-auth' => \App\Http\Middleware\InternalBotAdminAuth::class,
             ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -88,13 +88,15 @@ class BotOrderCancelService
         $items             = [];
         $totalCurrentValue = '0';
         $totalNetworkFee   = '0';
+        $totalExchangeFee  = '0';
         $totalPerfFee      = '0';
 
         foreach ($openSells as $so) {
-            $currency = $so->botBuyExecution?->currency;
-            $amount   = $this->num($so->amount_to_sell);
-            $avgBuy   = $this->num($so->botBuyExecution?->avg_buy_price);
-            $cost     = bcmul($amount, $avgBuy, self::SCALE);
+            $execution = $so->botBuyExecution;
+            $currency  = $execution?->currency;
+            $amount    = $this->num($so->amount_to_sell);
+            $avgBuy    = $this->num($execution?->avg_buy_price);
+            $cost      = bcmul($amount, $avgBuy, self::SCALE);
 
             $currentPrice = $this->currentPriceFor($currency?->symbol);
             $currentValue = bcmul($amount, $currentPrice, self::SCALE);
@@ -105,14 +107,28 @@ class BotOrderCancelService
                 : '0';
             $networkFeeUsdt = bcmul($feeCoin, $currentPrice, self::SCALE);
 
+            // Buy-side ref-exchange fee share for this tier (USDT terms). The
+            // settlement (SettlementService::allocatedBuyExchangeFee) WILL
+            // charge this proportionally on cancel, so the preview must show
+            // it too. The sell-side market fee is unknown until execution and
+            // is intentionally not estimated here.
+            $buyFeeShare = $this->allocatedBuyFeeShare($execution, $amount);
+
+            // Formula components exposed so the UI can show a full breakdown.
+            $buyFeeTotal = $this->num($execution?->buy_ref_exchange_fee);
+            $totalFilled = $this->num($execution?->filled_amount);
+            $sharePct    = bccomp($totalFilled, '0', self::SCALE) > 0
+                ? bcmul(bcdiv($amount, $totalFilled, self::SCALE), '100', 4)
+                : '0';
+
             $grossPnl     = bcsub($currentValue, $cost, self::SCALE);
-            $pnlAfterFees = bcsub($grossPnl, $networkFeeUsdt, self::SCALE);
+            $pnlAfterFees = bcsub(bcsub($grossPnl, $networkFeeUsdt, self::SCALE), $buyFeeShare, self::SCALE);
             $perfFee      = '0';
             if (bccomp($pnlAfterFees, '0', self::SCALE) > 0) {
                 $perfFee = bcdiv(bcmul($pnlAfterFees, $perfPct, self::SCALE), '100', self::SCALE);
             }
 
-            $itemFee = bcadd($networkFeeUsdt, $perfFee, self::SCALE);
+            $itemFee = bcadd(bcadd($networkFeeUsdt, $buyFeeShare, self::SCALE), $perfFee, self::SCALE);
             $refund  = bcsub($currentValue, $itemFee, self::SCALE);
             if (bccomp($refund, '0', self::SCALE) < 0) {
                 $refund = '0';
@@ -130,32 +146,38 @@ class BotOrderCancelService
                 'current_value'   => $currentValue,
                 'gross_pnl'       => $grossPnl,
                 'is_profitable'   => bccomp($pnlAfterFees, '0', self::SCALE) > 0,
-                'network_fee'     => $networkFeeUsdt,
-                'performance_fee' => $perfFee,
-                'total_fee'       => $itemFee,
-                'refund'          => $refund,
-                'chain'           => $chain?->chain instanceof \BackedEnum ? $chain->chain->value : (string) ($chain?->chain ?? ''),
+                'network_fee'       => $networkFeeUsdt,
+                'network_fee_coin'  => $feeCoin,
+                'exchange_fee'      => $buyFeeShare,
+                'buy_fee_total'     => $buyFeeTotal,
+                'buy_fee_share_pct' => $sharePct,
+                'performance_fee'   => $perfFee,
+                'total_fee'         => $itemFee,
+                'refund'            => $refund,
+                'chain'             => $chain?->chain instanceof \BackedEnum ? $chain->chain->value : (string) ($chain?->chain ?? ''),
             ];
 
             $totalCurrentValue = bcadd($totalCurrentValue, $currentValue, self::SCALE);
             $totalNetworkFee   = bcadd($totalNetworkFee, $networkFeeUsdt, self::SCALE);
+            $totalExchangeFee  = bcadd($totalExchangeFee, $buyFeeShare, self::SCALE);
             $totalPerfFee      = bcadd($totalPerfFee, $perfFee, self::SCALE);
         }
 
-        $totalFee = bcadd($totalNetworkFee, $totalPerfFee, self::SCALE);
+        $totalFee = bcadd(bcadd($totalNetworkFee, $totalExchangeFee, self::SCALE), $totalPerfFee, self::SCALE);
         $refund   = bcsub($totalCurrentValue, $totalFee, self::SCALE);
         if (bccomp($refund, '0', self::SCALE) < 0) {
             $refund = '0';
         }
 
         return [
-            'order_id'              => $order->id,
-            'open_sell_orders'      => $openSells->count(),
-            'sell_on_exchange'      => $sellOnExch,
+            'order_id'                => $order->id,
+            'open_sell_orders'        => $openSells->count(),
+            'sell_on_exchange'        => $sellOnExch,
+            'performance_fee_percent' => $perfPct,
             'remaining_cost_basis'  => $remainingCost,
             'total_current_value'   => $totalCurrentValue,
             'total_network_fee'     => $totalNetworkFee,
-            'total_exchange_fee'    => '0',
+            'total_exchange_fee'    => $totalExchangeFee,
             'total_performance_fee' => $totalPerfFee,
             'total_fee'             => $totalFee,
             'refund_to_balance'     => $refund,
@@ -241,6 +263,30 @@ class BotOrderCancelService
                 'total_refund' => $totalRefund,
             ];
         });
+    }
+
+    /**
+     * Proportional share of the execution's buy-side ref-exchange fee that
+     * this tier will carry at settlement (USDT terms). Mirrors
+     * SettlementService::allocatedBuyExchangeFee so the preview matches what
+     * the cancel actually charges. Note: buy_ref_exchange_fee is stored in
+     * USDT even when the exchange charged it in the base coin
+     * (buy_ref_exchange_fee_currency), so no conversion is needed here.
+     */
+    private function allocatedBuyFeeShare(?\App\Models\Bot\BotBuyExecution $execution, string $amount): string
+    {
+        $totalBuyFee = $this->num($execution?->buy_ref_exchange_fee);
+        $totalFilled = $this->num($execution?->filled_amount);
+
+        if (
+            bccomp($totalBuyFee, '0', self::SCALE) <= 0 ||
+            bccomp($totalFilled, '0', self::SCALE) <= 0 ||
+            bccomp($amount, '0', self::SCALE) <= 0
+        ) {
+            return '0';
+        }
+
+        return bcdiv(bcmul($totalBuyFee, $amount, self::SCALE), $totalFilled, self::SCALE);
     }
 
     /**

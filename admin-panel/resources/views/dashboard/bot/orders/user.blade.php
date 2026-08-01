@@ -27,7 +27,7 @@
                                 <span>{{ $user->mobile }}</span>
                             </div>
                         </div>
-                        <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center flex-wrap gap-3">
                             <div class="form-check form-switch m-0 d-flex align-items-center gap-2">
                                 <input class="form-check-input" type="checkbox" role="switch" id="autoTradeSwitch"
                                     data-url="{{ route('admin.bot.order.user.toggle', $user->id) }}"
@@ -35,6 +35,12 @@
                                     style="width:3rem;height:1.5rem;cursor:pointer;">
                                 <label class="form-check-label small" for="autoTradeSwitch">خرید و فروش خودکار</label>
                             </div>
+                            <button type="button" class="btn btn-danger btn-sm js-bot-cancel"
+                                data-preview-url="{{ route('admin.bot.order.user.cancel-all-preview', $user) }}"
+                                data-cancel-url="{{ route('admin.bot.order.user.cancel-all', $user) }}"
+                                data-title="لغو همه سفارش‌ها و آزادسازی وجوه کاربر" data-mode="all">
+                                <i class="fas fa-ban me-1"></i> لغو همه سفارش‌ها و آزادسازی وجوه
+                            </button>
                             <a href="{{ route('admin.bot.order.index') }}" class="btn btn-outline-secondary btn-sm">
                                 <i class="fas fa-arrow-right me-1"></i> بازگشت به لیست
                             </a>
@@ -45,7 +51,7 @@
                 <div class="card-body">
                     {{-- ── Row 1: real-money state ─────────────────────────────── --}}
                     <div class="row g-3 mb-3">
-                        <div class="col-6 col-md-3">
+                        <div class="col-12 col-md-3">
                             <div class="border rounded p-3 text-center h-100" style="background:rgba(105,108,255,.06)">
                                 <small class="text-muted d-block mb-1"><i class="fas fa-wallet fa-xs me-1"></i>مقدار واقعی
                                     سرمایه‌گذاری</small>
@@ -54,7 +60,7 @@
                                 <small class="text-muted">مقدار واریزی + سود محقق شده</small>
                             </div>
                         </div>
-                        <div class="col-6 col-md-3">
+                        <div class="col-12 col-md-3">
                             <div class="border border-success rounded p-3 text-center h-100"
                                 style="background:rgba(40,199,111,.06)">
                                 <small class="text-muted d-block mb-1"><i
@@ -65,20 +71,27 @@
                                 <small class="text-muted">USDT</small>
                             </div>
                         </div>
-                        <div class="col-6 col-md-3">
-                            <div class="border border-warning rounded p-3 text-center h-100"
-                                style="background:rgba(255,159,67,.06)">
+                        <div class="col-12 col-md-3">
+                            <div id="card-locked"
+                                class="card-clickable border border-warning rounded p-3 text-center h-100 d-flex flex-column justify-content-between"
+                                style="background:rgba(255,159,67,.06); cursor:pointer;">
                                 <small class="text-muted d-block mb-1"><i
                                         class="fas fa-lock fa-xs me-1 text-warning"></i>قفل‌شده (در انتظار فروش)</small>
                                 <div class="fw-bold fs-5 font-number text-warning">{{ formatNumberTrimZeros($locked) }}
                                 </div>
                                 <small class="text-muted">USDT</small>
+                                <div class="mt-2">
+                                    <span class="badge bg-warning bg-opacity-10 text-warning" style="font-size:.7rem;">
+                                        <i class="fas fa-chevron-down fa-xs me-1"></i>جزئیات
+                                    </span>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-6 col-md-3">
-                            <div class="border rounded p-3 text-center h-100
+                        <div class="col-12 col-md-3">
+                            <div id="card-pnl"
+                                class="card-clickable border rounded p-3 text-center h-100 d-flex flex-column justify-content-between
                                 {{ $totalPnl > 0 ? 'border-success' : ($totalPnl < 0 ? 'border-danger' : '') }}"
-                                style="background:{{ $totalPnl > 0 ? 'rgba(40,199,111,.06)' : ($totalPnl < 0 ? 'rgba(234,84,85,.06)' : '') }}">
+                                style="background:{{ $totalPnl > 0 ? 'rgba(40,199,111,.06)' : ($totalPnl < 0 ? 'rgba(234,84,85,.06)' : '') }}; cursor:pointer;">
                                 <small class="text-muted d-block mb-1"><i class="fas fa-chart-line fa-xs me-1"></i>سود /
                                     زیان
                                     خالص (P&L)</small>
@@ -92,6 +105,13 @@
                                         style="font-size:.72rem">▲ {{ formatNumberTrimZeros($positivePnl) }}</span>
                                     <span class="badge bg-danger bg-opacity-25 text-danger font-number"
                                         style="font-size:.72rem">▼ {{ formatNumberTrimZeros($negativePnl) }}</span>
+                                </div>
+                                <div class="mt-2">
+                                    <span
+                                        class="badge {{ $totalPnl >= 0 ? 'bg-success bg-opacity-10 text-success' : 'bg-danger bg-opacity-10 text-danger' }}"
+                                        style="font-size:.7rem;">
+                                        <i class="fas fa-chevron-down fa-xs me-1"></i>جزئیات
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -202,6 +222,93 @@
 
                     {{-- Hidden popover contents (not rendered in DOM flow) --}}
                     <div class="d-none">
+                        <div id="pop-locked">
+                            <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
+                                <small class="text-muted">قفل بابت پله‌های فروش باز</small>
+                                <span class="font-number">{{ formatNumberTrimZeros($lockedOpenCost) }} <small
+                                        style="font-size:.5rem;" class="text-muted">USDT</small></span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
+                                <small class="text-muted">باقیمانده کارمزد خرید (پرداخت‌شده با کوین)</small>
+                                <span class="font-number text-warning">{{ formatNumberTrimZeros($lockedResidual) }}
+                                    <small style="font-size:.5rem;" class="text-muted">USDT</small></span>
+                            </div>
+                            @foreach ($baseFeeBuys as $bf)
+                                <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
+                                    <small class="text-muted">کارمزد خرید {{ $bf->fee_currency }} (با خود کوین)</small>
+                                    <span class="font-number">{{ formatNumberTrimZeros($bf->fee_usdt) }} <small
+                                            style="font-size:.5rem;" class="text-muted">USDT</small></span>
+                                </div>
+                            @endforeach
+                            <div class="small text-muted pt-2" style="font-size:.7rem; line-height:1.8;">
+                                هنگام خرید، کل مبلغ تخصیص‌یافته (شامل کارمزد) در «قفل‌شده» می‌رود؛ اما وقتی صرافی مرجع
+                                کارمزد خرید را با خود کوین برمی‌دارد، مقدار خریداری‌شده ثبت‌شده خالصِ کارمزد است و
+                                تسویه‌ها فقط «مقدار × قیمت خرید» را آزاد می‌کنند. بنابراین معادل همان کارمزد در
+                                قفل‌شده باقی می‌ماند. این کارمزد قبلاً در سود/زیان خالص کاربر لحاظ شده است.
+                            </div>
+                        </div>
+                        <div id="pop-pnl">
+                            <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
+                                <small class="text-muted">درآمد کل فروش (gross_revenue)</small>
+                                <span class="font-number">{{ formatNumberTrimZeros($grossRevenue) }} <small
+                                        style="font-size:.5rem;" class="text-muted">USDT</small></span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
+                                <small class="text-muted">بهای تمام‌شده (cost_basis)</small>
+                                <span class="font-number">{{ formatNumberTrimZeros($freedUsdt) }} <small
+                                        style="font-size:.5rem;" class="text-muted">USDT</small></span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
+                                <small class="text-muted">سود/زیان قیمتی (فروش − خرید)</small>
+                                <span dir="ltr"
+                                    class="font-number {{ $pricePnl >= 0 ? 'text-success' : 'text-danger' }}">
+                                    {{ $pricePnl >= 0 ? '+' : '' }}{{ formatNumberTrimZeros($pricePnl) }} <small
+                                        style="font-size:.5rem;" class="text-muted">USDT</small></span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
+                                <small class="text-muted">− کارمزد شبکه</small>
+                                <span class="font-number text-warning">{{ formatNumberTrimZeros($networkFee) }} <small
+                                        style="font-size:.5rem;" class="text-muted">USDT</small></span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
+                                <small class="text-muted">− کارمزد صرافی مرجع (خرید+فروش، در تسویه)</small>
+                                <span class="font-number text-warning">{{ formatNumberTrimZeros($settledExchangeFee) }}
+                                    <small style="font-size:.5rem;" class="text-muted">USDT</small></span>
+                            </div>
+                            @if ($spreadFee > 0)
+                                <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
+                                    <small class="text-muted">− کارمزد اسپرد</small>
+                                    <span class="font-number text-warning">{{ formatNumberTrimZeros($spreadFee) }}
+                                        <small style="font-size:.5rem;" class="text-muted">USDT</small></span>
+                                </div>
+                            @endif
+                            @if ($performanceFee > 0)
+                                <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
+                                    <small class="text-muted">− کارمزد عملکرد</small>
+                                    <span class="font-number text-warning">{{ formatNumberTrimZeros($performanceFee) }}
+                                        <small style="font-size:.5rem;" class="text-muted">USDT</small></span>
+                                </div>
+                            @endif
+                            @if ($cancelFee > 0)
+                                <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
+                                    <small class="text-muted">− کارمزد لغو</small>
+                                    <span class="font-number text-warning">{{ formatNumberTrimZeros($cancelFee) }}
+                                        <small style="font-size:.5rem;" class="text-muted">USDT</small></span>
+                                </div>
+                            @endif
+                            <div class="d-flex justify-content-between align-items-center py-1 gap-3">
+                                <small class="fw-bold">سود/زیان خالص (P&L)</small>
+                                <span dir="ltr"
+                                    class="font-number fw-bold {{ $totalPnl >= 0 ? 'text-success' : 'text-danger' }}">
+                                    {{ $totalPnl >= 0 ? '+' : '' }}{{ formatNumberTrimZeros($totalPnl) }} <small
+                                        style="font-size:.5rem;" class="text-muted">USDT</small></span>
+                            </div>
+                            <div class="small text-muted pt-2 border-top mt-1" style="font-size:.7rem; line-height:1.8;">
+                                جمع ردیف‌های net_pnl تسویه‌هاست: (درآمد فروش − بهای خرید) منهای کارمزدهای شبکه،
+                                صرافی مرجع، اسپرد، عملکرد و لغو. کارمزد واریز/برداشت کیف ربات در این عدد نیست و در
+                                کارت «کارمزد پرداختی (کل)» دیده می‌شود.
+                            </div>
+                        </div>
                         <div id="pop-platform-revenue">
                             <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
                                 <small class="text-muted">کارمزد عملکرد</small>
@@ -443,6 +550,7 @@
 
     @include('dashboard.bot.orders.partials.description-modal')
     @include('dashboard.bot.orders.partials.system-description-modal')
+    @include('dashboard.bot.orders.partials.cancel-orders-modal')
 
 @endsection
 
@@ -464,7 +572,7 @@
         }
 
         .popover-fee-detail {
-            min-width: 260px;
+            min-width: 350px;
             font-size: .82rem;
             direction: rtl;
             text-align: right;
@@ -487,6 +595,16 @@
         document.addEventListener('DOMContentLoaded', function() {
             // ── Click-to-reveal popovers ─────────────────────────────────────
             [{
+                    cardId: 'card-locked',
+                    contentId: 'pop-locked',
+                    title: 'تفکیک موجودی قفل‌شده'
+                },
+                {
+                    cardId: 'card-pnl',
+                    contentId: 'pop-pnl',
+                    title: 'نحوه محاسبه سود/زیان خالص'
+                },
+                {
                     cardId: 'card-platform-revenue',
                     contentId: 'pop-platform-revenue',
                     title: 'تفکیک درآمد صرافی'

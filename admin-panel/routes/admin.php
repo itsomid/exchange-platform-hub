@@ -442,8 +442,12 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::get('/orders', [BotOrderController::class, 'index'])->name('order.index');
         Route::get('/orders/user/{user}', [BotOrderController::class, 'userShow'])->name('order.user');
         Route::post('/orders/user/{user}/toggle-auto-trade', [BotOrderController::class, 'toggleAutoTrade'])->name('order.user.toggle');
+        Route::post('/orders/user/{user}/cancel-all-preview', [BotOrderController::class, 'cancelAllPreview'])->name('order.user.cancel-all-preview');
+        Route::post('/orders/user/{user}/cancel-all', [BotOrderController::class, 'cancelAll'])->name('order.user.cancel-all');
         Route::get('/orders/{botOrder}', [BotOrderController::class, 'show'])->name('order.show');
         Route::patch('/orders/{botOrder}/description', [BotOrderController::class, 'updateDescription'])->name('order.update-description');
+        Route::post('/orders/{botOrder}/cancel-preview', [BotOrderController::class, 'cancelPreview'])->name('order.cancel-preview');
+        Route::post('/orders/{botOrder}/cancel', [BotOrderController::class, 'cancel'])->name('order.cancel');
 
         // Wallet Transfers (deposits/withdrawals between main wallet and bot wallet)
         Route::get('/wallet-transfers', [BotWalletTransferController::class, 'index'])->name('wallet-transfer.index');

@@ -11,12 +11,17 @@ use App\Models\Bot\BotUserSettings;
 use App\Models\Bot\BotWallet;
 use App\Models\Bot\BotWalletTransfer;
 use App\Models\User;
+use App\Services\Bot\BotAdminApiClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class BotOrderController extends Controller
 {
+    public function __construct(private readonly BotAdminApiClient $botApi)
+    {
+    }
+
     /**
      * Landing page: one row per user who has placed at least one bot order,
      * with a quick aggregate of their activity and a user search filter.
@@ -70,10 +75,41 @@ class BotOrderController extends Controller
         $actualInvestment = $balance;
         $realizedProfit   = (float) $wallet->profit_balance;
 
+        // ── Locked-balance breakdown (for the card popover) ────────────────
+        // At buy time the FULL allocated_usdt is locked, but settlements only
+        // release cost_basis (amount × avg_buy_price). When the reference
+        // exchange charged the buy fee in the BASE coin, filled_amount is
+        // recorded net of that fee, so cost_basis = allocated − fee and the
+        // fee-equivalent stays behind in locked_balance. Split the current
+        // locked into "backing open sell tiers" vs that residual.
+        $lockedOpenCost = (float) BotSellOrder::query()
+            ->join('bot_buy_executions', 'bot_buy_executions.id', '=', 'bot_sell_orders.bot_buy_execution_id')
+            ->join('bot_orders', 'bot_orders.id', '=', 'bot_buy_executions.bot_order_id')
+            ->where('bot_orders.user_id', $user->id)
+            ->where('bot_sell_orders.status', 'OPEN')
+            ->selectRaw('COALESCE(SUM(bot_sell_orders.amount_to_sell * bot_buy_executions.avg_buy_price),0) as v')
+            ->value('v');
+        $lockedResidual = max(0, $locked - $lockedOpenCost);
+
+        // Buy fees the reference exchange charged in the base coin (stored in
+        // USDT terms) — the source of the residual above.
+        $baseFeeBuys = BotBuyExecution::query()
+            ->join('bot_orders', 'bot_orders.id', '=', 'bot_buy_executions.bot_order_id')
+            ->where('bot_orders.user_id', $user->id)
+            ->where('bot_buy_executions.buy_ref_exchange_fee', '>', 0)
+            ->whereNotNull('bot_buy_executions.buy_ref_exchange_fee_currency')
+            ->whereRaw("UPPER(bot_buy_executions.buy_ref_exchange_fee_currency) <> 'USDT'")
+            ->selectRaw('UPPER(bot_buy_executions.buy_ref_exchange_fee_currency) as fee_currency')
+            ->selectRaw('SUM(bot_buy_executions.buy_ref_exchange_fee) as fee_usdt')
+            ->groupByRaw('UPPER(bot_buy_executions.buy_ref_exchange_fee_currency)')
+            ->get();
+
         // ── Lifetime realized figures (from settlements) ──────────────────────
         $pnl = BotTradeSettlement::where('user_id', $user->id)
             ->selectRaw('COALESCE(SUM(net_pnl),0) as net_pnl')
             ->selectRaw('COALESCE(SUM(cost_basis),0) as freed')
+            ->selectRaw('COALESCE(SUM(gross_revenue),0) as gross_revenue')
+            ->selectRaw('COALESCE(SUM(exchange_fee),0) as settled_exchange_fee')
             ->selectRaw('COALESCE(SUM(CASE WHEN net_pnl > 0 THEN net_pnl ELSE 0 END),0) as positive_pnl')
             ->selectRaw('COALESCE(SUM(CASE WHEN net_pnl < 0 THEN net_pnl ELSE 0 END),0) as negative_pnl')
             ->selectRaw('COALESCE(SUM(network_fee),0) as network_fee')
@@ -86,6 +122,13 @@ class BotOrderController extends Controller
         $freedUsdt   = (float) $pnl->freed;
         $positivePnl = (float) $pnl->positive_pnl;
         $negativePnl = abs((float) $pnl->negative_pnl);
+
+        // P&L breakdown for the card popover: net_pnl is exactly
+        // price-pnl − (network + exchange + spread + performance + cancel),
+        // all summed from the same settlement rows.
+        $grossRevenue       = (float) $pnl->gross_revenue;
+        $settledExchangeFee = (float) $pnl->settled_exchange_fee;
+        $pricePnl           = $grossRevenue - $freedUsdt;
 
         $networkFee     = (float) $pnl->network_fee;
         $spreadFee      = (float) $pnl->spread_fee;
@@ -167,7 +210,9 @@ class BotOrderController extends Controller
             'tradeFees', 'transferFees', 'totalFees',
             'depositTransferFee', 'withdrawTransferFee', 'refExchangeFee',
             'networkFee', 'spreadFee', 'performanceFee', 'cancelFee',
-            'platformRevenue', 'introducer', 'referralPaid'
+            'platformRevenue', 'introducer', 'referralPaid',
+            'grossRevenue', 'settledExchangeFee', 'pricePnl',
+            'lockedOpenCost', 'lockedResidual', 'baseFeeBuys'
         ));
     }
 
@@ -266,5 +311,52 @@ class BotOrderController extends Controller
             'admin_description' => $botOrder->admin_description,
             'message'           => 'یادداشت ادمین ذخیره شد.',
         ]);
+    }
+
+    /* ── Cancel operations (proxied to api-service, where the reference-exchange
+       adapter lives). All real work — canceling limit sells on the reference
+       exchange and market-selling the freed coin — happens there. ── */
+
+    public function cancelPreview(BotOrder $botOrder): JsonResponse
+    {
+        return $this->forwardBotApi(fn () => $this->botApi->cancelOrderPreview($botOrder->id));
+    }
+
+    public function cancel(BotOrder $botOrder): JsonResponse
+    {
+        return $this->forwardBotApi(fn () => $this->botApi->cancelOrder($botOrder->id));
+    }
+
+    public function cancelAllPreview(User $user): JsonResponse
+    {
+        return $this->forwardBotApi(fn () => $this->botApi->cancelAllPreview($user->id));
+    }
+
+    public function cancelAll(User $user): JsonResponse
+    {
+        return $this->forwardBotApi(fn () => $this->botApi->cancelAll($user->id));
+    }
+
+    private function forwardBotApi(\Closure $call): JsonResponse
+    {
+        try {
+            $response = $call();
+        } catch (\Throwable $e) {
+            return response()->json([
+                'ok'    => false,
+                'error' => 'ارتباط با سرویس API برقرار نشد: ' . $e->getMessage(),
+            ], 502);
+        }
+
+        $payload = $response->json();
+        if ($payload === null) {
+            return response()->json([
+                'ok'    => false,
+                'error' => 'پاسخ نامعتبر از سرویس API.',
+                'body'  => (string) $response->body(),
+            ], $response->status() ?: 502);
+        }
+
+        return response()->json($payload, $response->status());
     }
 }
