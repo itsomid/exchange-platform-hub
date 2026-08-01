@@ -403,7 +403,20 @@ class AllocationService
 
     private function str(string|float|int $v): string
     {
+        if (is_int($v)) {
+            return (string) $v;
+        }
+
         if (is_string($v)) {
+            $v = trim($v);
+            if ($v === '' || ! is_numeric($v)) {
+                return '0';
+            }
+            // PHP casts of tiny floats become "1.23E-8"; BCMath rejects that form.
+            if (stripos($v, 'e') !== false) {
+                return number_format((float) $v, self::SCALE, '.', '');
+            }
+
             return $v;
         }
 

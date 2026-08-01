@@ -325,3 +325,38 @@ it('reconciles truncation dust back into allocations when cap room remains', fun
     expect($result->totalAllocated())->toBe('200.00000000');
     expect($result->unallocatedRemainder)->toBe('0.00000000');
 });
+
+/**
+ * Tiny float prices become scientific notation under (string) cast (e.g. "1.23E-7").
+ * BCMath rejects that form — WeightCalculator must normalize before bcsub/bcdiv.
+ */
+it('handles scientific-notation micro prices without BCMath ValueError', function () {
+    $micro = (string) 1.23e-7; // "1.23E-7"
+    expect(stripos($micro, 'e'))->not->toBeFalse();
+
+    $weights = (new WeightCalculatorService())->compute(
+        candidates: [baseSignal([
+            'floor_price'   => '0',
+            'ceiling_price' => '0.000001',
+            'current_price' => $micro,
+        ])],
+        balance: '100',
+        alpha: '0.15',
+    );
+
+    expect($weights['K'])->toBe(1);
+    expect($weights['selected'])->toHaveCount(1);
+    expect((float) $weights['selected'][0]['q'])->toBeGreaterThan(0);
+
+    $result = makeAllocator()->allocate(
+        candidates: [baseSignal([
+            'floor_price'   => '0',
+            'ceiling_price' => '0.000001',
+            'current_price' => $micro,
+        ])],
+        balance: '100',
+        alpha: '0.15',
+    );
+
+    expect($result->allocations)->toHaveCount(1);
+});

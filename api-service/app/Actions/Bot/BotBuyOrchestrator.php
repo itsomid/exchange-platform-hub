@@ -121,7 +121,8 @@ class BotBuyOrchestrator
                 'priority'                      => (int) $signal->priority,
                 'floor_price'                   => (string) $signal->floor_price,
                 'ceiling_price'                 => (string) $signal->ceiling_price,
-                'current_price'                 => (string) $signal->getAttribute('live_price'),
+                // number_format: (string) on tiny floats yields "1.23E-8" which BCMath rejects.
+                'current_price'                 => number_format((float) $signal->getAttribute('live_price'), 8, '.', ''),
                 'min_buy_amount_usdt'           => (string) $signal->min_buy_amount_usdt,
                 'max_allocation_percent'        => (string) $signal->max_allocation_percent,
                 'sell_orders_count'             => (int) $signal->sell_orders_count,
