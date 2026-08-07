@@ -37,7 +37,8 @@
                                     <th>کاربر</th>
                                     <th>تعداد سفارش</th>
                                     <th>مجموع تخصیص (USDT)</th>
-                                    <th>موجودی کیف پول (USDT)</th>
+                                    <th>مقدار قفل شده (USDT)</th>
+                                    <th>سود کلی (USDT)</th>
                                     <th>وضعیت ربات</th>
                                     <th>آخرین سفارش</th>
                                     <th>عملیات</th>
@@ -48,9 +49,8 @@
                                     @php
                                         $wallet = $wallets[$row->user_id] ?? null;
                                         $setting = $settings[$row->user_id] ?? null;
-                                        $walletTotal = $wallet
-                                            ? (float) $wallet->balance + (float) $wallet->locked_balance
-                                            : 0;
+                                        $lockedBalance = $wallet ? (float) $wallet->locked_balance : 0;
+                                        $profitBalance = $wallet ? (float) $wallet->profit_balance : 0;
                                         $autoOn = $setting?->auto_trade_enabled ?? false;
                                     @endphp
                                     <tr>
@@ -59,8 +59,13 @@
                                             <small class="text-muted">{{ $row->mobile }}</small>
                                         </td>
                                         <td><span class="badge bg-secondary">{{ $row->orders_count }}</span></td>
-                                        <td class="font-number">{{ number_format((float) $row->total_allocated, 2) }}</td>
-                                        <td class="font-number">{{ number_format($walletTotal, 2) }}</td>
+                                        <td class="font-number">
+                                            {{ formatNumberTrimZeros((float) $row->total_allocated, 4) }}</td>
+                                        <td class="font-number">{{ formatNumberTrimZeros($lockedBalance, 4) }}</td>
+                                        <td
+                                            class="font-number {{ $profitBalance > 0 ? 'text-success' : ($profitBalance < 0 ? 'text-danger' : '') }}">
+                                            {{ formatNumberTrimZeros($profitBalance, 4) }}
+                                        </td>
                                         <td>
                                             @if ($autoOn)
                                                 <span class="badge bg-success">روشن</span>
@@ -88,7 +93,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center text-muted py-4">
+                                        <td colspan="8" class="text-center text-muted py-4">
                                             هیچ کاربری با سفارش ربات یافت نشد.
                                         </td>
                                     </tr>
