@@ -14,10 +14,13 @@
                 <div class="card-body">
                     {{-- Filters --}}
                     <form method="GET" class="mb-4">
+                        <input type="hidden" name="sort" value="{{ $sort }}">
+                        <input type="hidden" name="dir" value="{{ $dir }}">
                         <div class="row g-2">
                             <div class="col-md-4">
                                 <input type="text" name="search" class="form-control"
-                                    placeholder="جستجوی کاربر بر اساس ایمیل یا موبایل..." value="{{ request('search') }}">
+                                    placeholder="جستجوی کاربر بر اساس ایمیل، موبایل یا نام کاربری..."
+                                    value="{{ request('search') }}">
                             </div>
                             <div class="col-md-4">
                                 <button type="submit" class="btn btn-secondary">
@@ -35,33 +38,65 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>کاربر</th>
-                                    <th>تعداد سفارش</th>
-                                    <th>مجموع تخصیص (USDT)</th>
-                                    <th>مقدار قفل شده (USDT)</th>
-                                    <th>سود کلی (USDT)</th>
-                                    <th>وضعیت ربات</th>
-                                    <th>آخرین سفارش</th>
+                                    @foreach ([
+                                        'orders_count' => 'تعداد سفارش',
+                                        'total_allocated' => 'مجموع تخصیص (USDT)',
+                                        'locked_balance' => 'مقدار قفل شده (USDT)',
+                                        'free_balance' => 'موجودی آزاد (USDT)',
+                                        'profit_balance' => 'سود کلی (USDT)',
+                                        'auto_trade' => 'وضعیت ربات',
+                                        'last_order_at' => 'آخرین سفارش',
+                                    ] as $column => $label)
+                                        @php
+                                            $isActive = $sort === $column;
+                                            $nextDir = $isActive && $dir === 'desc' ? 'asc' : 'desc';
+                                            $href = route(
+                                                'admin.bot.order.index',
+                                                array_merge(request()->except(['page', 'sort', 'dir']), [
+                                                    'sort' => $column,
+                                                    'dir' => $nextDir,
+                                                ]),
+                                            );
+                                        @endphp
+                                        <th>
+                                            <a href="{{ $href }}" class="text-body text-nowrap text-decoration-none">
+                                                {{ $label }}
+                                                @if ($isActive)
+                                                    <i
+                                                        class="fas {{ $dir === 'asc' ? 'fa-arrow-up' : 'fa-arrow-down' }} text-primary fa-xs"></i>
+                                                @else
+                                                    <i class="fas fa-sort text-muted fa-xs"></i>
+                                                @endif
+                                            </a>
+                                        </th>
+                                    @endforeach
                                     <th>عملیات</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse ($rows as $row)
                                     @php
-                                        $wallet = $wallets[$row->user_id] ?? null;
-                                        $setting = $settings[$row->user_id] ?? null;
-                                        $lockedBalance = $wallet ? (float) $wallet->locked_balance : 0;
-                                        $profitBalance = $wallet ? (float) $wallet->profit_balance : 0;
-                                        $autoOn = $setting?->auto_trade_enabled ?? false;
+                                        $lockedBalance = (float) $row->locked_balance;
+                                        $freeBalance = (float) $row->free_balance;
+                                        $profitBalance = (float) $row->profit_balance;
+                                        $autoOn = (bool) $row->auto_trade_enabled;
                                     @endphp
                                     <tr>
                                         <td>
-                                            <div>{{ $row->email }}</div>
-                                            <small class="text-muted">{{ $row->mobile }}</small>
+                                            <div class="d-flex flex-column">
+                                                <a href="{{ route('admin.inquiry.user-details', ['user' => $row->user_id]) }}"
+                                                    class="text-heading text-truncate">
+                                                    <span class="fw-medium">{{ $row->email }}</span>
+                                                </a>
+                                                <small>{{ $row->username }}</small>
+                                            </div>
                                         </td>
                                         <td><span class="badge bg-secondary">{{ $row->orders_count }}</span></td>
                                         <td class="font-number">
                                             {{ formatNumberTrimZeros((float) $row->total_allocated, 4) }}</td>
                                         <td class="font-number">{{ formatNumberTrimZeros($lockedBalance, 4) }}</td>
+                                        <td class="font-number text-success">
+                                            {{ formatNumberTrimZeros($freeBalance, 4) }}</td>
                                         <td
                                             class="font-number {{ $profitBalance > 0 ? 'text-success' : ($profitBalance < 0 ? 'text-danger' : '') }}">
                                             {{ formatNumberTrimZeros($profitBalance, 4) }}
@@ -82,7 +117,6 @@
                                                     </small>
                                                 </div>
                                             @endif
-
                                         </td>
                                         <td>
                                             <a href="{{ route('admin.bot.order.user', $row->user_id) }}"
@@ -93,7 +127,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-center text-muted py-4">
+                                        <td colspan="9" class="text-center text-muted py-4">
                                             هیچ کاربری با سفارش ربات یافت نشد.
                                         </td>
                                     </tr>

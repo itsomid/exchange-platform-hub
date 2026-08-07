@@ -31,28 +31,46 @@ class BotOrderController extends Controller
     {
         $search = $request->get('search');
 
+        $sortable = [
+            'orders_count'    => 'orders_count',
+            'total_allocated' => 'total_allocated',
+            'locked_balance'  => 'locked_balance',
+            'free_balance'    => 'free_balance',
+            'profit_balance'  => 'profit_balance',
+            'auto_trade'      => 'auto_trade_enabled',
+            'last_order_at'   => 'last_order_at',
+        ];
+        $sort = array_key_exists($request->get('sort'), $sortable)
+            ? $request->get('sort')
+            : 'last_order_at';
+        $dir = strtolower((string) $request->get('dir')) === 'asc' ? 'asc' : 'desc';
+
         $rows = BotOrder::query()
             ->join('users', 'users.id', '=', 'bot_orders.user_id')
-            ->selectRaw('users.id as user_id, users.email, users.mobile')
+            ->leftJoin('bot_wallets', 'bot_wallets.user_id', '=', 'users.id')
+            ->leftJoin('bot_user_settings', 'bot_user_settings.user_id', '=', 'users.id')
+            ->selectRaw('users.id as user_id, users.email, users.mobile, users.username')
             ->selectRaw('COUNT(bot_orders.id) as orders_count')
             ->selectRaw('SUM(bot_orders.total_amount_usdt) as total_allocated')
             ->selectRaw('MAX(bot_orders.created_at) as last_order_at')
+            ->selectRaw('COALESCE(MAX(bot_wallets.locked_balance), 0) as locked_balance')
+            ->selectRaw('COALESCE(MAX(bot_wallets.profit_balance), 0) as profit_balance')
+            ->selectRaw('CASE WHEN (COALESCE(MAX(bot_wallets.balance), 0) - COALESCE(MAX(bot_wallets.locked_balance), 0)) > 0 THEN (COALESCE(MAX(bot_wallets.balance), 0) - COALESCE(MAX(bot_wallets.locked_balance), 0)) ELSE 0 END as free_balance')
+            ->selectRaw('COALESCE(MAX(bot_user_settings.auto_trade_enabled), 0) as auto_trade_enabled')
             ->when($search, function ($q) use ($search) {
                 $q->where(function ($w) use ($search) {
                     $w->where('users.email', 'like', "%{$search}%")
-                        ->orWhere('users.mobile', 'like', "%{$search}%");
+                        ->orWhere('users.mobile', 'like', "%{$search}%")
+                        ->orWhere('users.username', 'like', "%{$search}%");
                 });
             })
-            ->groupBy('users.id', 'users.email', 'users.mobile')
-            ->orderByDesc('last_order_at')
+            ->groupBy('users.id', 'users.email', 'users.mobile', 'users.username')
+            ->orderBy($sortable[$sort], $dir)
+            ->when($sort !== 'last_order_at', fn ($q) => $q->orderByDesc('last_order_at'))
             ->paginate(20)
             ->withQueryString();
 
-        $userIds  = collect($rows->items())->pluck('user_id');
-        $wallets  = BotWallet::whereIn('user_id', $userIds)->get()->keyBy('user_id');
-        $settings = BotUserSettings::whereIn('user_id', $userIds)->get()->keyBy('user_id');
-
-        return view('dashboard.bot.orders.index', compact('rows', 'wallets', 'settings'));
+        return view('dashboard.bot.orders.index', compact('rows', 'sort', 'dir'));
     }
 
     /**
