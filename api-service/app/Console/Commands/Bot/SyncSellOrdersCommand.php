@@ -7,6 +7,7 @@ use App\Models\Bot\BotSellOrder;
 use App\Services\Bot\ReferenceExchange\ExchangeContract;
 use App\Services\Bot\ReferenceExchange\ExchangeOrderStatus;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -20,10 +21,18 @@ use Illuminate\Support\Facades\Log;
  *              cancel originated locally; if it was canceled directly on the
  *              exchange we leave principal release to a manual reconcile path).
  *
+ * Each run polls at most --limit orders, continuing from where the previous
+ * run stopped (rotating cursor persisted in cache) and wrapping around at the
+ * end of the list. This guarantees every OPEN order is eventually polled even
+ * when the OPEN backlog is much larger than --limit — old far-target orders
+ * can no longer starve newer ones.
+ *
  * Scheduled every minute via routes/console.php (withoutOverlapping).
  */
 class SyncSellOrdersCommand extends Command
 {
+    private const CURSOR_CACHE_KEY = 'bot:sync-sell-orders:cursor';
+
     protected $signature = 'bot:sync-sell-orders {--limit=100 : Max orders to poll per run}';
 
     protected $description = 'Poll reference exchange for fill/cancel status of OPEN bot sell orders';
@@ -32,13 +41,7 @@ class SyncSellOrdersCommand extends Command
     {
         $limit = max(1, (int) $this->option('limit'));
 
-        $orders = BotSellOrder::query()
-            ->where('status', BotSellOrder::STATUS_OPEN)
-            ->whereNotNull('exchange_order_id')
-            ->with(['botBuyExecution', 'botBuyExecution.currency'])
-            ->orderBy('id')
-            ->limit($limit)
-            ->get();
+        $orders = $this->nextBatch($limit);
 
         $checked = 0;
         $filled  = 0;
@@ -110,5 +113,38 @@ class SyncSellOrdersCommand extends Command
         $this->info("bot:sync-sell-orders checked={$checked} filled={$filled} canceled={$canceled} errors={$errors}");
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Fetch the next window of OPEN orders after the cached cursor, wrapping
+     * around to the beginning of the list when the end is reached, so the
+     * whole backlog is covered across consecutive runs.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, BotSellOrder>
+     */
+    private function nextBatch(int $limit)
+    {
+        $base = fn () => BotSellOrder::query()
+            ->where('status', BotSellOrder::STATUS_OPEN)
+            ->whereNotNull('exchange_order_id')
+            ->with(['botBuyExecution', 'botBuyExecution.currency'])
+            ->orderBy('id');
+
+        $cursor = (int) Cache::get(self::CURSOR_CACHE_KEY, 0);
+
+        $orders = $base()->where('id', '>', $cursor)->limit($limit)->get();
+
+        // Reached the end of the list: wrap around and take the remainder
+        // from the beginning (rows we already fetched are excluded by id).
+        if ($orders->count() < $limit && $cursor > 0) {
+            $remaining = $limit - $orders->count();
+            $orders = $orders->concat(
+                $base()->where('id', '<=', $cursor)->limit($remaining)->get(),
+            );
+        }
+
+        Cache::forever(self::CURSOR_CACHE_KEY, $orders->isEmpty() ? 0 : (int) $orders->last()->id);
+
+        return $orders;
     }
 }
