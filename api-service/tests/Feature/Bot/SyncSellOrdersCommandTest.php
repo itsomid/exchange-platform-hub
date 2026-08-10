@@ -16,10 +16,14 @@ use Tests\Support\FakeExchange;
 
 uses(RefreshDatabase::class);
 
-function makeOpenSellOrder(string $exchangeOrderId): BotSellOrder
+function makeOpenSellOrder(string $exchangeOrderId, string $symbol = 'eth'): BotSellOrder
 {
     $user     = User::factory()->create();
-    $currency = Currency::factory()->create(['symbol' => 'eth']);
+    $currency = Currency::forceCreate([
+        'name'         => strtoupper($symbol),
+        'persian_name' => $symbol,
+        'symbol'       => $symbol,
+    ]);
 
     $order = BotOrder::create([
         'user_id'           => $user->id,
@@ -96,6 +100,25 @@ it('flips local row to CANCELED when CoinEx reports CANCELED', function () {
 
     $sellOrder->refresh();
     expect($sellOrder->status)->toBe(BotSellOrder::STATUS_CANCELED);
+});
+
+it('rotates through the OPEN backlog across runs instead of re-polling the same head', function () {
+    Event::fake([BotSellOrderFilled::class]);
+
+    makeOpenSellOrder('1001', 'eth');
+    makeOpenSellOrder('1002', 'btc');
+    makeOpenSellOrder('1003', 'sol');
+
+    $fake = new FakeExchange(); // every getOrder returns OPEN by default
+    $this->app->instance(ExchangeContract::class, $fake);
+
+    // First run: polls the first two orders.
+    $this->artisan('bot:sync-sell-orders', ['--limit' => 2])->assertExitCode(0);
+    expect(array_column($fake->statusQueries, 'exchangeOrderId'))->toBe(['1001', '1002']);
+
+    // Second run: continues with the third order, then wraps to the first.
+    $this->artisan('bot:sync-sell-orders', ['--limit' => 2])->assertExitCode(0);
+    expect(array_column($fake->statusQueries, 'exchangeOrderId'))->toBe(['1001', '1002', '1003', '1001']);
 });
 
 it('skips orders without exchange_order_id', function () {

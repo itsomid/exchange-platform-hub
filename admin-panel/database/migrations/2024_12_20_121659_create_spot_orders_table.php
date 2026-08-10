@@ -45,7 +45,6 @@ return new class extends Migration
 
             $table->unique(['maker_order_id', 'taker_order_id']);
             $table->timestamps();
-                     $table->softDeletes();
         });
     }
 

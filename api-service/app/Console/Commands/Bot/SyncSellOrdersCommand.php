@@ -27,7 +27,7 @@ use Illuminate\Support\Facades\Log;
  * when the OPEN backlog is much larger than --limit — old far-target orders
  * can no longer starve newer ones.
  *
- * Scheduled every minute via routes/console.php (withoutOverlapping).
+ * Scheduled every 30 minutes via routes/console.php (withoutOverlapping).
  */
 class SyncSellOrdersCommand extends Command
 {
@@ -40,6 +40,9 @@ class SyncSellOrdersCommand extends Command
     public function handle(ExchangeContract $exchange): int
     {
         $limit = max(1, (int) $this->option('limit'));
+
+        $this->info('bot:sync-sell-orders starting limit='.$limit);
+        Log::channel('smart-bot')->info('bot.sync.sell.start', ['limit' => $limit]);
 
         $orders = $this->nextBatch($limit);
 
@@ -110,7 +113,16 @@ class SyncSellOrdersCommand extends Command
             }
         }
 
-        $this->info("bot:sync-sell-orders checked={$checked} filled={$filled} canceled={$canceled} errors={$errors}");
+        $summary = "bot:sync-sell-orders checked={$checked} filled={$filled} canceled={$canceled} errors={$errors} batch={$orders->count()}";
+        $this->info($summary);
+        Log::channel('smart-bot')->info('bot.sync.sell.done', [
+            'checked'  => $checked,
+            'filled'   => $filled,
+            'canceled' => $canceled,
+            'errors'   => $errors,
+            'batch'    => $orders->count(),
+            'cursor'   => (int) Cache::get(self::CURSOR_CACHE_KEY, 0),
+        ]);
 
         return self::SUCCESS;
     }
