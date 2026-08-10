@@ -143,6 +143,7 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::patch('/{user}/update', [UserController::class, 'update'])->name('user.update')->can('user.edit');
         Route::patch('/{user}/toggle-status', [UserController::class, 'suspendUser'])->name('user.toggle-status')->can('user.index');
         Route::patch('/{user}/active-user', [UserController::class, 'activeUser'])->name('user.active-user')->can('user.index');
+        Route::patch('/{user}/verify-email', [UserController::class, 'verifyEmail'])->name('user.verify-email')->can('user.index');
 
         Route::post('excel_export', [UserController::class, 'exportExcel'])->name('user.excel-export')->can('user.index');
 

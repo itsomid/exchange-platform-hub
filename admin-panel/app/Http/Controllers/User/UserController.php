@@ -246,4 +246,25 @@ class UserController extends Controller
 
         return redirect()->back();
     }
+
+    public function verifyEmail(User $user)
+    {
+        if ($user->email_verified_at) {
+            Toast::message('ایمیل کاربر قبلا تایید شده است')->danger();
+
+            return redirect()->back();
+        }
+
+        $user->email_verified_at = now();
+
+        if ($user->status === UserStatusEnum::INACTIVE) {
+            $user->status = UserStatusEnum::ACTIVE;
+        }
+
+        $user->save();
+
+        Toast::message('ایمیل کاربر با موفقیت تایید شد')->success();
+
+        return redirect()->back();
+    }
 }
