@@ -27,13 +27,14 @@ use Illuminate\Support\Facades\Log;
  * when the OPEN backlog is much larger than --limit — old far-target orders
  * can no longer starve newer ones.
  *
- * Scheduled every 30 minutes via routes/console.php (withoutOverlapping).
+ * Scheduled every 5 minutes via routes/console.php with --limit=500
+ * (withoutOverlapping).
  */
 class SyncSellOrdersCommand extends Command
 {
     private const CURSOR_CACHE_KEY = 'bot:sync-sell-orders:cursor';
 
-    protected $signature = 'bot:sync-sell-orders {--limit=100 : Max orders to poll per run}';
+    protected $signature = 'bot:sync-sell-orders {--limit=500 : Max orders to poll per run}';
 
     protected $description = 'Poll reference exchange for fill/cancel status of OPEN bot sell orders';
 

@@ -10,8 +10,8 @@ use Illuminate\Support\Facades\Schedule;
 //})->purpose('Display an inspiring quote')->everyTenSeconds();
 
 
-Schedule::command('bot:sync-sell-orders')
-    ->everyThirtyMinutes()
+Schedule::command('bot:sync-sell-orders --limit=500')
+    ->everyFiveMinutes()
     ->withoutOverlapping()
     // Stream command stdout/stderr into the container PID-1 streams so
     // `docker compose logs -f api-cron` shows each run's summary line.
