@@ -43,9 +43,10 @@ class SyncSellOrdersCommand extends Command
         $limit = max(1, (int) $this->option('limit'));
 
         $this->info('bot:sync-sell-orders starting limit='.$limit);
-        Log::channel('smart-bot')->info('bot.sync.sell.start', ['limit' => $limit]);
 
         $orders = $this->nextBatch($limit);
+        $batchStartId = $orders->isEmpty() ? null : $orders->first()->id;
+        $batchEndId = $orders->isEmpty() ? null : $orders->last()->id;
 
         $checked = 0;
         $filled  = 0;
@@ -114,7 +115,7 @@ class SyncSellOrdersCommand extends Command
             }
         }
 
-        $summary = "bot:sync-sell-orders checked={$checked} filled={$filled} canceled={$canceled} errors={$errors} batch={$orders->count()}";
+        $summary = "bot:sync-sell-orders checked={$checked} filled={$filled} canceled={$canceled} errors={$errors} batch={$orders->count()} start_id={$batchStartId} end_id={$batchEndId}";
         $this->info($summary);
         Log::channel('smart-bot')->info('bot.sync.sell.done', [
             'checked'  => $checked,

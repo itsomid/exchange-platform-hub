@@ -329,7 +329,7 @@
                                             (USDT)
                                         </small>
                                         <strong
-                                            class="font-number d-block">{{ formatNumberTrimZeros($execution->allocated_usdt, 2) }}</strong>
+                                            class="font-number d-block">{{ formatNumberTrimZeros($execution->allocated_usdt) }}</strong>
                                     </div>
                                 </div>
                                 <div class="col-6 col-md">
