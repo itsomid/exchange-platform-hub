@@ -741,16 +741,21 @@ class HdWalletIndexReportController extends Controller
                 return $service->getBalance($currencySymbol, $address);
 
             case CurrencyChainEnum::ERC20->value:
-                $service = new EtherScanService();
-                return $service->getBalance($currencySymbol, $address);
-
             case CurrencyChainEnum::BSC->value:
-                $service = new EtherScanService();
-                return $service->getBalance($currencySymbol, $address, 56);
-
             case CurrencyChainEnum::POLYGON->value:
+            case CurrencyChainEnum::ARBITRUM->value:
+            case CurrencyChainEnum::OPTIMISM->value:
+            case CurrencyChainEnum::AVALANCHE->value:
+            case CurrencyChainEnum::SONIC->value:
+                $chainEnum = $chain instanceof CurrencyChainEnum
+                    ? $chain
+                    : CurrencyChainEnum::from($chainValue);
                 $service = new EtherScanService();
-                return $service->getBalance($currencySymbol, $address, EtherScanService::chainIdFromEnum(CurrencyChainEnum::POLYGON));
+                return $service->getBalance(
+                    $currencySymbol,
+                    $address,
+                    EtherScanService::chainIdFromEnum($chainEnum)
+                );
 
             case CurrencyChainEnum::BTC->value:
             case CurrencyChainEnum::DOGE->value:
