@@ -760,6 +760,7 @@ class HdWalletIndexReportController extends Controller
             case CurrencyChainEnum::BTC->value:
             case CurrencyChainEnum::DOGE->value:
             case CurrencyChainEnum::LTC->value:
+            case CurrencyChainEnum::DASH->value:
                 $service = new BlockchairService();
                 return $service->getBalance($currencySymbol, $address);
 
