@@ -30,7 +30,6 @@ enum TransactionSubTypeEnum: string
     case BOT_BUY = 'bot_buy';
     case BOT_SELL = 'bot_sell';
     case BOT_EXCHANGE_FEE = 'bot_exchange_fee';
-    case BOT_SPREAD_FEE = 'bot_spread_fee';
     case BOT_PERFORMANCE_FEE = 'bot_performance_fee';
     case BOT_CANCEL_FEE = 'bot_cancel_fee';
     case BOT_NETWORK_FEE = 'bot_network_fee';
@@ -64,7 +63,6 @@ enum TransactionSubTypeEnum: string
         self::BOT_BUY->value => 'خرید ربات',
         self::BOT_SELL->value => 'فروش ربات',
         self::BOT_EXCHANGE_FEE->value => 'کارمزد صرافی مرجع ربات',
-        self::BOT_SPREAD_FEE->value => 'اسپرد ربات',
         self::BOT_PERFORMANCE_FEE->value => 'کارمزد عملکرد ربات',
         self::BOT_CANCEL_FEE->value => 'کارمزد لغو ربات',
         self::BOT_NETWORK_FEE->value => 'کارمزد شبکه ربات',
@@ -98,7 +96,6 @@ enum TransactionSubTypeEnum: string
         self::BOT_BUY->value => 'success',
         self::BOT_SELL->value => 'danger',
         self::BOT_EXCHANGE_FEE->value => 'warning',
-        self::BOT_SPREAD_FEE->value => 'warning',
         self::BOT_PERFORMANCE_FEE->value => 'warning',
         self::BOT_CANCEL_FEE->value => 'danger',
         self::BOT_NETWORK_FEE->value => 'warning',

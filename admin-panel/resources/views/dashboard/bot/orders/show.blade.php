@@ -590,15 +590,12 @@
                                                                 (float) $sell->settlement->gross_revenue -
                                                                 (float) $sell->settlement->cost_basis;
                                                             $stepNetworkFee = (float) $sell->settlement->network_fee;
-                                                            $stepSpreadFee =
-                                                                (float) ($sell->settlement->spread_fee ?? 0);
                                                             $stepPerfFee = (float) $sell->settlement->performance_fee;
-                                                            // Same base SettlementService uses: gross_pnl − network − exchange − spread
+                                                            // Same base SettlementService uses: gross_pnl − network − exchange
                                                             $stepPnlAfterFees =
                                                                 $stepGrossPnl -
                                                                 $stepNetworkFee -
-                                                                $stepTotalExchangeFee -
-                                                                $stepSpreadFee;
+                                                                $stepTotalExchangeFee;
                                                             $stepPerfPct =
                                                                 $stepPnlAfterFees > 0 && $stepPerfFee > 0
                                                                     ? round(($stepPerfFee / $stepPnlAfterFees) * 100, 2)
@@ -658,9 +655,6 @@
                                                                                         @if ($stepNetworkFee > 0)
                                                                                             + network_fee
                                                                                         @endif
-                                                                                        @if ($stepSpreadFee > 0)
-                                                                                            + spread_fee
-                                                                                        @endif
                                                                                     </small>
                                                                                 </div>
                                                                                 <div
@@ -684,15 +678,6 @@
                                                                                             network_fee</small>
                                                                                         <span
                                                                                             class="font-number">{{ formatNumberTrimZeros($stepNetworkFee) }}</span>
-                                                                                    </div>
-                                                                                @endif
-                                                                                @if ($stepSpreadFee > 0)
-                                                                                    <div
-                                                                                        class="d-flex justify-content-between align-items-center py-1 border-bottom gap-2">
-                                                                                        <small class="text-muted">−
-                                                                                            spread_fee</small>
-                                                                                        <span
-                                                                                            class="font-number">{{ formatNumberTrimZeros($stepSpreadFee) }}</span>
                                                                                     </div>
                                                                                 @endif
                                                                                 <div

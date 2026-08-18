@@ -96,7 +96,6 @@ class SyncSellOrdersCommand extends Command
                     $result->avgPrice,
                     '0',                  // networkFee — none on spot fills
                     $result->exchangeFee, // exchangeFee in quote (USDT)
-                    '0',                  // spreadFee — none on direct exchange fills
                 );
                 $filled++;
                 continue;

@@ -47,7 +47,6 @@ class BotEnumTest extends TestCase
             ['BOT_BUY',            'bot_buy'],
             ['BOT_SELL',           'bot_sell'],
             ['BOT_EXCHANGE_FEE',   'bot_exchange_fee'],
-            ['BOT_SPREAD_FEE',     'bot_spread_fee'],
             ['BOT_PERFORMANCE_FEE','bot_performance_fee'],
             ['BOT_CANCEL_FEE',     'bot_cancel_fee'],
             ['BOT_NETWORK_FEE',    'bot_network_fee'],

@@ -31,7 +31,6 @@ class HandleBotSellOrderFilled implements ShouldQueue
                 $event->fillPrice,
                 $event->networkFee,
                 $event->exchangeFee,
-                $event->spreadFee,
             );
 
             // Reinvest the freed principal + realized profit back into a new buy

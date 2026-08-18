@@ -17,7 +17,6 @@ return new class extends Migration
             $table->decimal('cost_basis', 20, 8)->default(0);
             $table->decimal('network_fee', 20, 8)->default(0);
             $table->decimal('exchange_fee', 20, 8)->default(0);
-            $table->decimal('spread_fee', 20, 8)->default(0);
             $table->decimal('performance_fee', 20, 8)->default(0);
             $table->decimal('cancel_fee', 20, 8)->default(0);
             $table->decimal('net_pnl', 20, 8)->default(0);

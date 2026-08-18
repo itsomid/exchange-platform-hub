@@ -23,6 +23,5 @@ class BotSellOrderFilled
         public readonly string $fillPrice,
         public readonly string $networkFee = '0',
         public readonly string $exchangeFee = '0',
-        public readonly string $spreadFee = '0',
     ) {}
 }

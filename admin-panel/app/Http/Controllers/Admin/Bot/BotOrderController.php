@@ -132,7 +132,6 @@ class BotOrderController extends Controller
             ->selectRaw('COALESCE(SUM(CASE WHEN net_pnl > 0 THEN net_pnl ELSE 0 END),0) as positive_pnl')
             ->selectRaw('COALESCE(SUM(CASE WHEN net_pnl < 0 THEN net_pnl ELSE 0 END),0) as negative_pnl')
             ->selectRaw('COALESCE(SUM(network_fee),0) as network_fee')
-            ->selectRaw('COALESCE(SUM(spread_fee),0) as spread_fee')
             ->selectRaw('COALESCE(SUM(performance_fee),0) as performance_fee')
             ->selectRaw('COALESCE(SUM(cancel_fee),0) as cancel_fee')
             ->first();
@@ -143,14 +142,13 @@ class BotOrderController extends Controller
         $negativePnl = abs((float) $pnl->negative_pnl);
 
         // P&L breakdown for the card popover: net_pnl is exactly
-        // price-pnl − (network + exchange + spread + performance + cancel),
+        // price-pnl − (network + exchange + performance + cancel),
         // all summed from the same settlement rows.
         $grossRevenue       = (float) $pnl->gross_revenue;
         $settledExchangeFee = (float) $pnl->settled_exchange_fee;
         $pricePnl           = $grossRevenue - $freedUsdt;
 
         $networkFee     = (float) $pnl->network_fee;
-        $spreadFee      = (float) $pnl->spread_fee;
         $performanceFee = (float) $pnl->performance_fee;
         $cancelFee      = (float) $pnl->cancel_fee;
 
@@ -182,7 +180,7 @@ class BotOrderController extends Controller
             ->where('direction', BotWalletTransfer::DIRECTION_OUT)
             ->sum('fee');
 
-        $tradeFees    = $networkFee + $refExchangeFee + $spreadFee + $performanceFee + $cancelFee;
+        $tradeFees    = $networkFee + $refExchangeFee + $performanceFee + $cancelFee;
         $transferFees = $depositTransferFee + $withdrawTransferFee;
         $totalFees    = $tradeFees + $transferFees;
 
@@ -228,7 +226,7 @@ class BotOrderController extends Controller
             'deposits', 'withdrawals', 'lockedPct', 'freePct',
             'tradeFees', 'transferFees', 'totalFees',
             'depositTransferFee', 'withdrawTransferFee', 'refExchangeFee',
-            'networkFee', 'spreadFee', 'performanceFee', 'cancelFee',
+            'networkFee', 'performanceFee', 'cancelFee',
             'platformRevenue', 'introducer', 'referralPaid',
             'grossRevenue', 'settledExchangeFee', 'pricePnl',
             'lockedOpenCost', 'lockedResidual', 'baseFeeBuys'

@@ -91,9 +91,8 @@ class SettlementService
         string $fillPrice,
         string $networkFee = '0',
         string $sellRefExchangeFee = '0',
-        string $spreadFee = '0',
     ): BotTradeSettlement {
-        return DB::transaction(function () use ($sellOrder, $filledAmount, $fillPrice, $networkFee, $sellRefExchangeFee, $spreadFee) {
+        return DB::transaction(function () use ($sellOrder, $filledAmount, $fillPrice, $networkFee, $sellRefExchangeFee) {
             $sellOrder->refresh();
             $execution = $sellOrder->botBuyExecution()->lockForUpdate()->firstOrFail();
             $userId    = $execution->botOrder->user_id;
@@ -103,7 +102,7 @@ class SettlementService
 
             $grossRevenue  = bcmul($filledAmount, $fillPrice, self::SCALE);
             $costBasis     = bcmul($filledAmount, (string) $execution->avg_buy_price, self::SCALE);
-            $totalFees     = bcadd(bcadd($networkFee, $effectiveExchangeFee, self::SCALE), $spreadFee, self::SCALE);
+            $totalFees     = bcadd($networkFee, $effectiveExchangeFee, self::SCALE);
             $grossPnl      = bcsub($grossRevenue, $costBasis, self::SCALE);
             $pnlAfterFees  = bcsub($grossPnl, $totalFees, self::SCALE);
 
@@ -126,7 +125,6 @@ class SettlementService
                 'cost_basis'           => $costBasis,
                 'network_fee'          => $networkFee,
                 'exchange_fee'         => $effectiveExchangeFee,
-                'spread_fee'           => $spreadFee,
                 'performance_fee'      => $performanceFee,
                 'referral_fee'         => $referral['fee'] ?? '0',
                 'referral_user_id'     => $referral['introducer']->id ?? null,
@@ -141,7 +139,7 @@ class SettlementService
             ]);
 
             $this->updateWallet($userId, $execution, $this->lockedReleaseFor($execution, $filledAmount, $costBasis), $netPnl);
-            $this->writeTxns($userId, $execution, $networkFee, $effectiveExchangeFee, $spreadFee, $performanceFee, null);
+            $this->writeTxns($userId, $execution, $networkFee, $effectiveExchangeFee, $performanceFee, null);
             $this->payReferral($referral, $execution, $userId);
 
             return $settlement;
@@ -173,7 +171,6 @@ class SettlementService
                 'cost_basis'           => $costBasis,
                 'network_fee'          => '0',
                 'exchange_fee'         => '0',
-                'spread_fee'           => '0',
                 'performance_fee'      => '0',
                 'cancel_fee'           => $cancelFee,
                 'net_pnl'              => $netPnl,
@@ -191,7 +188,7 @@ class SettlementService
                 $this->lockedReleaseFor($execution, (string) $sellOrder->amount_to_sell, $costBasis),
                 $netPnl,
             );
-            $this->writeTxns($userId, $execution, '0', '0', '0', '0', $cancelFee);
+            $this->writeTxns($userId, $execution, '0', '0', '0', $cancelFee);
 
             return $settlement;
         });
@@ -248,7 +245,6 @@ class SettlementService
                 'cost_basis'           => $costBasis,
                 'network_fee'          => $networkFee,
                 'exchange_fee'         => $effectiveExchangeFee,
-                'spread_fee'           => '0',
                 'performance_fee'      => $perfFee,
                 'referral_fee'         => $referral['fee'] ?? '0',
                 'referral_user_id'     => $referral['introducer']->id ?? null,
@@ -263,7 +259,7 @@ class SettlementService
             ]);
 
             $this->updateWallet($userId, $execution, $this->lockedReleaseFor($execution, $filledAmount, $costBasis), $netPnl);
-            $this->writeTxns($userId, $execution, $networkFee, $effectiveExchangeFee, '0', $perfFee, null);
+            $this->writeTxns($userId, $execution, $networkFee, $effectiveExchangeFee, $perfFee, null);
             $this->payReferral($referral, $execution, $userId);
 
             return $settlement;
@@ -419,7 +415,6 @@ class SettlementService
         BotBuyExecution $execution,
         string $networkFee,
         string $exchangeFee,
-        string $spreadFee,
         string $performanceFee,
         ?string $cancelFee,
     ): void {
@@ -437,13 +432,8 @@ class SettlementService
             'status'               => TransactionStatusEnum::SUCCESS,
         ];
 
-        foreach ([
-            [$networkFee, TransactionSubTypeEnum::BOT_NETWORK_FEE],
-            [$spreadFee,  TransactionSubTypeEnum::BOT_SPREAD_FEE],
-        ] as [$amount, $subtype]) {
-            if (bccomp($amount, '0', self::SCALE) > 0) {
-                Transaction::create($base + ['amount' => $amount, 'subtype' => $subtype]);
-            }
+        if (bccomp($networkFee, '0', self::SCALE) > 0) {
+            Transaction::create($base + ['amount' => $networkFee, 'subtype' => TransactionSubTypeEnum::BOT_NETWORK_FEE]);
         }
         if (bccomp($exchangeFee, '0', self::SCALE) > 0) {
             $this->recordExchangeFee($execution, $exchangeFee);

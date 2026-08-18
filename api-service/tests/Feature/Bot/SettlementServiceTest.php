@@ -123,7 +123,7 @@ it('records BOT_EXCHANGE_FEE on the exchange fee-currency wallet, not the trader
     ]);
 
     // sell ref fee 5 USDT; no buy fee share → exchange_fee = 5
-    app(SettlementService::class)->settleFill($sell, '10', '120', '0', '5', '0');
+    app(SettlementService::class)->settleFill($sell, '10', '120', '0', '5');
 
     $feeTxn = Transaction::where('subtype', TransactionSubTypeEnum::BOT_EXCHANGE_FEE)->first();
     expect($feeTxn)->not->toBeNull();

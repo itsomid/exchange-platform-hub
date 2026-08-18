@@ -34,7 +34,6 @@ class BotReportController extends Controller
             ->selectRaw('COALESCE(SUM(cancel_fee),0) as cancel_fee')
             ->selectRaw('COALESCE(SUM(exchange_fee),0) as exchange_fee')
             ->selectRaw('COALESCE(SUM(network_fee),0) as network_fee')
-            ->selectRaw('COALESCE(SUM(spread_fee),0) as spread_fee')
             ->selectRaw('COALESCE(SUM(CASE WHEN net_pnl > 0 THEN net_pnl ELSE 0 END),0) as winning_pnl')
             ->selectRaw('COALESCE(SUM(CASE WHEN net_pnl < 0 THEN net_pnl ELSE 0 END),0) as losing_pnl')
             ->selectRaw('COALESCE(SUM(CASE WHEN net_pnl > 0 THEN 1 ELSE 0 END),0) as winning_count')
@@ -51,7 +50,6 @@ class BotReportController extends Controller
             'cancel_fee'       => (string) $totals->cancel_fee,
             'exchange_fee'     => (string) $totals->exchange_fee,
             'network_fee'      => (string) $totals->network_fee,
-            'spread_fee'       => (string) $totals->spread_fee,
             'winning_pnl'      => (string) $totals->winning_pnl,
             'losing_pnl'       => (string) $totals->losing_pnl,
             'winning_count'    => (int) $totals->winning_count,
@@ -88,7 +86,6 @@ class BotReportController extends Controller
         $kpi['platform_revenue'] = bcsub(
             collect([
                 $kpi['performance_fee'],
-                $kpi['spread_fee'],
                 $kpi['cancel_fee'],
                 $kpi['transfer_fee'] ?? '0',
             ])->reduce(fn (string $carry, string $amount) => bcadd($carry, $amount, 8), '0'),
@@ -200,7 +197,7 @@ class BotReportController extends Controller
 
         $headings = [
             'ID', 'کاربر', 'ارز', 'درآمد ناخالص', ' (Cost Basis)بهای تمام‌شده', 'کارمزد شبکه',
-            'کارمزد صرافی (خرید+فروش)', 'اسپرد', 'کارمزد عملکرد', 'کارمزد لغو', 'سود/زیان خالص', 'تاریخ تسویه',
+            'کارمزد صرافی (خرید+فروش)', 'کارمزد عملکرد', 'کارمزد لغو', 'سود/زیان خالص', 'تاریخ تسویه',
         ];
 
         return $this->streamCsv('bot_settlements', $headings, function ($write) use ($query) {
@@ -214,7 +211,6 @@ class BotReportController extends Controller
                         $s->cost_basis,
                         $s->network_fee,
                         $s->exchange_fee,
-                        $s->spread_fee,
                         $s->performance_fee,
                         $s->cancel_fee,
                         $s->net_pnl,

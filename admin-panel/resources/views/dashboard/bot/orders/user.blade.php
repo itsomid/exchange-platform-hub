@@ -275,13 +275,6 @@
                                 <span class="font-number text-warning">{{ formatNumberTrimZeros($settledExchangeFee) }}
                                     <small style="font-size:.5rem;" class="text-muted">USDT</small></span>
                             </div>
-                            @if ($spreadFee > 0)
-                                <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
-                                    <small class="text-muted">− کارمزد اسپرد</small>
-                                    <span class="font-number text-warning">{{ formatNumberTrimZeros($spreadFee) }}
-                                        <small style="font-size:.5rem;" class="text-muted">USDT</small></span>
-                                </div>
-                            @endif
                             @if ($performanceFee > 0)
                                 <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
                                     <small class="text-muted">− کارمزد عملکرد</small>
@@ -305,7 +298,7 @@
                             </div>
                             <div class="small text-muted pt-2 border-top mt-1" style="font-size:.7rem; line-height:1.8;">
                                 جمع ردیف‌های net_pnl تسویه‌هاست: (درآمد فروش − بهای خرید) منهای کارمزدهای شبکه،
-                                صرافی مرجع، اسپرد، عملکرد و لغو. کارمزد واریز/برداشت کیف ربات در این عدد نیست و در
+                                صرافی مرجع، عملکرد و لغو. کارمزد واریز/برداشت کیف ربات در این عدد نیست و در
                                 کارت «کارمزد پرداختی (کل)» دیده می‌شود.
                             </div>
                         </div>
@@ -352,13 +345,6 @@
                                 <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
                                     <small class="text-muted">کارمزد عملکرد</small>
                                     <span class="font-number">{{ formatNumberTrimZeros($performanceFee) }} <small
-                                            style="font-size: .5rem;" class="text-muted">USDT</small></span>
-                                </div>
-                            @endif
-                            @if ($spreadFee > 0)
-                                <div class="d-flex justify-content-between align-items-center py-1 border-bottom gap-3">
-                                    <small class="text-muted">کارمزد اسپرد</small>
-                                    <span class="font-number">{{ formatNumberTrimZeros($spreadFee) }} <small
                                             style="font-size: .5rem;" class="text-muted">USDT</small></span>
                                 </div>
                             @endif
