@@ -3,11 +3,13 @@
 @section('title', 'گزارش‌های ربات معاملاتی')
 
 @php
-    $exportQuery = http_build_query(array_filter([
-        'from' => $from,
-        'to' => $to,
-        'currency_id' => $currencyId,
-    ]));
+    $exportQuery = http_build_query(
+        array_filter([
+            'from' => $from,
+            'to' => $to,
+            'currency_id' => $currencyId,
+        ]),
+    );
 @endphp
 
 @section('content')
@@ -48,7 +50,8 @@
                             <select name="currency_id" class="form-select">
                                 <option value="">همه ارزها</option>
                                 @foreach ($currencies as $c)
-                                    <option value="{{ $c->id }}" {{ (int) $currencyId === $c->id ? 'selected' : '' }}>
+                                    <option value="{{ $c->id }}"
+                                        {{ (int) $currencyId === $c->id ? 'selected' : '' }}>
                                         {{ $c->symbol }}
                                     </option>
                                 @endforeach
@@ -153,7 +156,8 @@
                             <p class="mb-0 mt-3" style="font-size: .82rem; line-height: 2;">
                                 <strong>راه راستی‌آزمایی:</strong> سود تسویه‌های سودده قبل از کسر کارمزد عملکرد باید
                                 حدوداً
-                                <span class="fw-bold" dir="ltr">{{ formatNumberTrimZeros($winnersProfitBeforeFee, 2) }}</span>
+                                <span class="fw-bold"
+                                    dir="ltr">{{ formatNumberTrimZeros($winnersProfitBeforeFee, 2) }}</span>
                                 USDT بوده باشد
                                 (کارمزد عملکرد ÷ {{ formatNumberTrimZeros($perfPct, 2) }}٪). از این مقدار،
                                 {{ formatNumberTrimZeros($perfPct, 2) }}٪ سهم پلتفرم شده و بقیه یعنی
@@ -294,7 +298,7 @@
                         formatNumberTrimZeros($kpi['net_pnl'], 2),
                         $netPnlColor,
                         'fa-chart-line',
-                        'مجموع net_pnl تسویه‌ها: (درآمد فروش − بهای تمام‌شده) منهای کارمزدهای شبکه، صرافی مرجع، اسپرد، عملکرد و لغو. این عدد سود پلتفرم نیست؛ سود کاربران است و کارمزد عملکرد از آن کسر شده.',
+                        'مجموع net_pnl تسویه‌ها: (درآمد فروش − بهای تمام‌شده) منهای کارمزدهای شبکه، صرافی مرجع، عملکرد و لغو. این عدد سود پلتفرم نیست؛ سود کاربران است و کارمزد عملکرد از آن کسر شده.',
                     ],
                 ],
             ],
@@ -306,7 +310,7 @@
                         formatNumberTrimZeros($kpi['platform_revenue'], 2),
                         'success',
                         'fa-building-columns',
-                        'کارمزد عملکرد + اسپرد + لغو + انتقال، منهای کارمزد معرف. کارمزد صرافی مرجع و شبکه چون به بیرون پرداخت می‌شوند در این عدد نیستند.',
+                        'کارمزد عملکرد + لغو + انتقال، منهای کارمزد معرف. کارمزد صرافی مرجع و شبکه چون به بیرون پرداخت می‌شوند در این عدد نیستند.',
                     ],
                     [
                         'کارمزد عملکرد (USDT)',
@@ -314,14 +318,7 @@
                         'warning',
                         'fa-percent',
                         formatNumberTrimZeros($perfPct, 2) .
-                        '٪ از سود هر تسویه سودده، بعد از کسر کارمزد شبکه/صرافی/اسپرد. روی تسویه‌های زیان‌ده صفر است.',
-                    ],
-                    [
-                        'کارمزد اسپرد (USDT)',
-                        formatNumberTrimZeros($kpi['spread_fee'], 2),
-                        'warning',
-                        'fa-arrows-left-right-to-line',
-                        'اختلاف قیمت اعمال‌شده هنگام فروش که به‌عنوان درآمد پلتفرم ثبت می‌شود.',
+                        '٪ از سود هر تسویه سودده، بعد از کسر کارمزد شبکه/صرافی. روی تسویه‌های زیان‌ده صفر است.',
                     ],
                     [
                         'کارمزد لغو (USDT)',
@@ -400,7 +397,7 @@
                         number_format($kpi['failed_count']),
                         'danger',
                         'fa-circle-exclamation',
-                        'اجراهایی که با خطا شکست خورده‌اند (مثلاً نبود قیمت زنده). برخلاف Skipped، این‌ها نیاز به بررسی دارند.',
+                        'اجراهایی که با خطا شکست خورده‌اند (مثلاً نبود قیمت زنده). نیاز به بررسی دارند.',
                     ],
                     [
                         'تعداد Collapsed',
@@ -435,7 +432,8 @@
                                         data-bs-placement="bottom" data-bs-title="{{ $label }}"
                                         data-bs-content="{{ $hint }}"></i>
                                 </div>
-                                <div class="h5 mb-0 fw-bold text-{{ $color }}" dir="ltr">{{ $value }}</div>
+                                <div class="h5 mb-0 fw-bold text-{{ $color }}" dir="ltr">{{ $value }}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -466,37 +464,37 @@
                                     <th>مقدار خریداری‌شده</th>
                                     <th>
                                         سود/زیان خالص (USDT)
-                                        <i class="fas fa-circle-info text-muted js-kpi-hint" role="button" tabindex="0"
-                                            style="font-size: .7rem;" data-bs-toggle="popover" data-bs-trigger="focus"
-                                            data-bs-placement="bottom" data-bs-title="سود/زیان خالص هر ارز"
+                                        <i class="fas fa-circle-info text-muted js-kpi-hint" role="button"
+                                            tabindex="0" style="font-size: .7rem;" data-bs-toggle="popover"
+                                            data-bs-trigger="focus" data-bs-placement="bottom"
+                                            data-bs-title="سود/زیان خالص هر ارز"
                                             data-bs-content="سهم کاربران از این ارز بعد از کسر همه کارمزدها. جمع جبری تسویه‌های سودده و زیان‌ده همان ارز است، پس می‌تواند از کارمزد عملکرد همان سطر کمتر باشد."></i>
                                     </th>
                                     <th>کارمزد عملکرد</th>
                                     <th>کارمزد لغو</th>
                                     <th>
                                         Skipped
-                                        <i class="fas fa-circle-info text-muted js-kpi-hint" role="button" tabindex="0"
-                                            style="font-size: .7rem;" data-bs-toggle="popover" data-bs-trigger="focus"
-                                            data-bs-placement="bottom" data-bs-title="Skipped"
+                                        <i class="fas fa-circle-info text-muted js-kpi-hint" role="button"
+                                            tabindex="0" style="font-size: .7rem;" data-bs-toggle="popover"
+                                            data-bs-trigger="focus" data-bs-placement="bottom" data-bs-title="Skipped"
                                             data-bs-content="تعداد اجراهایی که ربات برای این ارز عمداً خرید نکرده است."></i>
                                     </th>
                                     <th>
                                         Collapsed
-                                        <i class="fas fa-circle-info text-muted js-kpi-hint" role="button" tabindex="0"
-                                            style="font-size: .7rem;" data-bs-toggle="popover" data-bs-trigger="focus"
-                                            data-bs-placement="bottom" data-bs-title="Collapsed"
+                                        <i class="fas fa-circle-info text-muted js-kpi-hint" role="button"
+                                            tabindex="0" style="font-size: .7rem;" data-bs-toggle="popover"
+                                            data-bs-trigger="focus" data-bs-placement="bottom" data-bs-title="Collapsed"
                                             data-bs-content="تعداد اجراهایی که پله‌های فروششان به‌خاطر حداقل مبلغ سفارش ادغام شده و از تعداد اولیه کمتر شده است."></i>
                                     </th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse ($perCoin as $row)
-
                                     <tr>
                                         <td>
                                             @if ($row['logo'])
-                                                <img src="{{ $row['logo'] }}" alt="" width="20" height="20"
-                                                    class="rounded-circle me-1">
+                                                <img src="{{ $row['logo'] }}" alt="" width="20"
+                                                    height="20" class="rounded-circle me-1">
                                             @endif
                                             <strong>{{ $row['symbol'] ?? '—' }}</strong>
 
@@ -508,7 +506,8 @@
                                         </td>
                                         <td>{{ formatNumberTrimZeros($row['performance_fee']) }}</td>
                                         <td>{{ formatNumberTrimZeros($row['cancel_fee']) }}</td>
-                                        <td><span class="badge bg-label-dark">{{ number_format($row['skipped_count']) }}</span>
+                                        <td><span
+                                                class="badge bg-label-dark">{{ number_format($row['skipped_count']) }}</span>
                                         </td>
                                         <td><span
                                                 class="badge bg-label-warning text-dark">{{ number_format($row['collapsed_count']) }}</span>
@@ -516,7 +515,8 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-center text-muted py-4">داده‌ای برای نمایش وجود ندارد.</td>
+                                        <td colspan="8" class="text-center text-muted py-4">داده‌ای برای نمایش وجود
+                                            ندارد.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -535,8 +535,8 @@
                     <h5 class="card-title mb-0">تسویه‌ها</h5>
                     <small class="text-muted">
                         هر سطر یک فروش یا لغو تمام‌شده است. رابطه ستون‌ها:
-                        <span dir="ltr" class="fw-bold">net_pnl = درآمد ناخالص − بهای تمام‌شده − شبکه − صرافی − اسپرد −
-                            عملکرد − لغو</span>.
+                        <span dir="ltr" class="fw-bold">net_pnl = درآمد ناخالص − بهای تمام‌شده − شبکه − صرافی − عملکرد −
+                            لغو</span>.
                         کارمزد معرف در این رابطه نیست چون از سهم پلتفرم برداشته می‌شود؛ برای دیدن آن از خروجی CSV تسویه‌ها
                         استفاده کنید.
                     </small>
@@ -553,7 +553,6 @@
                                     <th>بهای تمام‌شده (Cost_basis)</th>
                                     <th>کارمزد شبکه</th>
                                     <th>کارمزد صرافی</th>
-                                    <th>اسپرد</th>
                                     <th>کارمزد عملکرد</th>
                                     <th>کارمزد لغو</th>
                                     <th>سود/زیان خالص</th>
@@ -564,13 +563,12 @@
                                 @forelse ($settlements as $s)
                                     <tr>
                                         <td>{{ $s->id }}</td>
-                                        <td>{{ $s->user?->email ?? $s->user?->mobile ?? 'N/A' }}</td>
+                                        <td>{{ $s->user?->email ?? ($s->user?->mobile ?? 'N/A') }}</td>
                                         <td>{{ $s->buyExecution?->currency?->symbol ?? '—' }}</td>
                                         <td>{{ formatNumberTrimZeros($s->gross_revenue) }}</td>
                                         <td>{{ formatNumberTrimZeros($s->cost_basis) }}</td>
                                         <td>{{ formatNumberTrimZeros($s->network_fee) }}</td>
                                         <td>{{ formatNumberTrimZeros($s->exchange_fee) }}</td>
-                                        <td>{{ formatNumberTrimZeros($s->spread_fee) }}</td>
                                         <td>{{ formatNumberTrimZeros($s->performance_fee) }}</td>
                                         <td>{{ formatNumberTrimZeros($s->cancel_fee) }}</td>
                                         <td class="{{ (float) $s->net_pnl >= 0 ? 'text-success' : 'text-danger' }}">
@@ -580,7 +578,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="12" class="text-center text-muted py-4">هیچ تسویه‌ای یافت نشد.</td>
+                                        <td colspan="11" class="text-center text-muted py-4">هیچ تسویه‌ای یافت نشد.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
