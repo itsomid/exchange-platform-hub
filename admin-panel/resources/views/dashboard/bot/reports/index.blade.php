@@ -73,7 +73,7 @@
             $cards = [
                 ['حجم خرید (USDT)', formatNumberTrimZeros($kpi['bought_volume'], 2), 'primary', 'fa-cart-shopping'],
                 ['درآمد فروش (USDT)', formatNumberTrimZeros($kpi['gross_revenue'], 2), 'info', 'fa-sack-dollar'],
-                ['سود خالص مجموعه (USDT)', formatNumberTrimZeros($kpi['net_pnl'], 2), $kpi['net_pnl'] >= 0 ? 'success' : 'danger', 'fa-chart-line'],
+                ['سود/زیان خالص کاربران (USDT)', formatNumberTrimZeros($kpi['net_pnl'], 2), $kpi['net_pnl'] >= 0 ? 'success' : 'danger', 'fa-chart-line'],
                 ['کارمزد عملکرد (USDT)', formatNumberTrimZeros($kpi['performance_fee'], 2), 'warning', 'fa-percent'],
                 ['کارمزد لغو (USDT)', formatNumberTrimZeros($kpi['cancel_fee'], 2), 'warning', 'fa-ban'],
                 ['کارمزد صرافی (USDT)', formatNumberTrimZeros($kpi['exchange_fee'], 2), 'secondary', 'fa-building-columns'],
