@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\Bot;
 use App\Enums\TransactionSubTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Bot\BotBuyExecution;
+use App\Models\Bot\BotGlobalSettings;
 use App\Models\Bot\BotOrder;
 use App\Models\Bot\BotTradeSettlement;
 use App\Models\Currency;
@@ -19,34 +20,83 @@ class BotReportController extends Controller
     {
         [$from, $to, $currencyId] = $this->filters($request);
 
-        $settlementBase = $this->settlementQuery($from, $to, $currencyId);
+        $settings = BotGlobalSettings::current();
+
+        // Winning/losing splits are needed to explain the headline numbers: the
+        // performance fee is charged per profitable settlement, while net_pnl is a
+        // net of winners and losers, so the two totals move independently.
+        $totals = $this->settlementQuery($from, $to, $currencyId)
+            ->selectRaw('COALESCE(SUM(gross_revenue),0) as gross_revenue')
+            ->selectRaw('COALESCE(SUM(cost_basis),0) as cost_basis')
+            ->selectRaw('COALESCE(SUM(net_pnl),0) as net_pnl')
+            ->selectRaw('COALESCE(SUM(performance_fee),0) as performance_fee')
+            ->selectRaw('COALESCE(SUM(referral_fee),0) as referral_fee')
+            ->selectRaw('COALESCE(SUM(cancel_fee),0) as cancel_fee')
+            ->selectRaw('COALESCE(SUM(exchange_fee),0) as exchange_fee')
+            ->selectRaw('COALESCE(SUM(network_fee),0) as network_fee')
+            ->selectRaw('COALESCE(SUM(spread_fee),0) as spread_fee')
+            ->selectRaw('COALESCE(SUM(CASE WHEN net_pnl > 0 THEN net_pnl ELSE 0 END),0) as winning_pnl')
+            ->selectRaw('COALESCE(SUM(CASE WHEN net_pnl < 0 THEN net_pnl ELSE 0 END),0) as losing_pnl')
+            ->selectRaw('COALESCE(SUM(CASE WHEN net_pnl > 0 THEN 1 ELSE 0 END),0) as winning_count')
+            ->selectRaw('COALESCE(SUM(CASE WHEN net_pnl < 0 THEN 1 ELSE 0 END),0) as losing_count')
+            ->selectRaw('COUNT(*) as settlement_count')
+            ->first();
 
         $kpi = [
-            'gross_revenue'   => (clone $settlementBase)->sum('gross_revenue'),
-            'cost_basis'      => (clone $settlementBase)->sum('cost_basis'),
-            'net_pnl'         => (clone $settlementBase)->sum('net_pnl'),
-            'performance_fee' => (clone $settlementBase)->sum('performance_fee'),
-            'cancel_fee'      => (clone $settlementBase)->sum('cancel_fee'),
-            'exchange_fee'    => (clone $settlementBase)->sum('exchange_fee'),
-            'network_fee'     => (clone $settlementBase)->sum('network_fee'),
-            'spread_fee'      => (clone $settlementBase)->sum('spread_fee'),
+            'gross_revenue'    => (string) $totals->gross_revenue,
+            'cost_basis'       => (string) $totals->cost_basis,
+            'net_pnl'          => (string) $totals->net_pnl,
+            'performance_fee'  => (string) $totals->performance_fee,
+            'referral_fee'     => (string) $totals->referral_fee,
+            'cancel_fee'       => (string) $totals->cancel_fee,
+            'exchange_fee'     => (string) $totals->exchange_fee,
+            'network_fee'      => (string) $totals->network_fee,
+            'spread_fee'       => (string) $totals->spread_fee,
+            'winning_pnl'      => (string) $totals->winning_pnl,
+            'losing_pnl'       => (string) $totals->losing_pnl,
+            'winning_count'    => (int) $totals->winning_count,
+            'losing_count'     => (int) $totals->losing_count,
+            'settlement_count' => (int) $totals->settlement_count,
         ];
 
-        $execBase = $this->executionQuery($from, $to, $currencyId);
+        $execTotals = $this->executionQuery($from, $to, $currencyId)
+            ->selectRaw("COALESCE(SUM(CASE WHEN status = 'BOUGHT' THEN allocated_usdt ELSE 0 END),0) as bought_volume")
+            ->selectRaw("COALESCE(SUM(CASE WHEN status = 'BOUGHT' THEN 1 ELSE 0 END),0) as bought_count")
+            ->selectRaw("COALESCE(SUM(CASE WHEN status = 'SKIPPED' THEN 1 ELSE 0 END),0) as skipped_count")
+            ->selectRaw("COALESCE(SUM(CASE WHEN status = 'FAILED' THEN 1 ELSE 0 END),0) as failed_count")
+            ->selectRaw('COALESCE(SUM(CASE WHEN effective_sell_orders_count IS NOT NULL AND original_sell_orders_count IS NOT NULL AND effective_sell_orders_count < original_sell_orders_count THEN 1 ELSE 0 END),0) as collapsed_count')
+            ->first();
 
-        $kpi['bought_volume']   = (clone $execBase)->where('status', 'BOUGHT')->sum('allocated_usdt');
-        $kpi['skipped_count']   = (clone $execBase)->where('status', 'SKIPPED')->count();
-        $kpi['collapsed_count'] = (clone $execBase)
-            ->whereNotNull('effective_sell_orders_count')
-            ->whereNotNull('original_sell_orders_count')
-            ->whereColumn('effective_sell_orders_count', '<', 'original_sell_orders_count')
-            ->count();
+        $kpi['bought_volume']   = (string) $execTotals->bought_volume;
+        $kpi['bought_count']    = (int) $execTotals->bought_count;
+        $kpi['skipped_count']   = (int) $execTotals->skipped_count;
+        $kpi['failed_count']    = (int) $execTotals->failed_count;
+        $kpi['collapsed_count'] = (int) $execTotals->collapsed_count;
 
-        $kpi['transfer_fee'] = (string) Transaction::query()
+        // Wallet transfer fees are ledgered per transaction and carry no currency of
+        // their own, so a coin filter cannot narrow them. Expose null in that case
+        // rather than a page-wide total that looks like it belongs to the coin.
+        $kpi['transfer_fee'] = $currencyId ? null : (string) Transaction::query()
             ->where('subtype', TransactionSubTypeEnum::BOT_TRANSFER_FEE)
             ->when($from, fn ($q) => $q->whereDate('created_at', '>=', $from))
             ->when($to, fn ($q) => $q->whereDate('created_at', '<=', $to))
             ->sum('amount');
+
+        // What the platform actually keeps. Exchange and network fees are excluded:
+        // they are passed straight through to the reference exchange and the chain.
+        // The referral share is carved out of the performance fee, so it is deducted.
+        $kpi['platform_revenue'] = bcsub(
+            collect([
+                $kpi['performance_fee'],
+                $kpi['spread_fee'],
+                $kpi['cancel_fee'],
+                $kpi['transfer_fee'] ?? '0',
+            ])->reduce(fn (string $carry, string $amount) => bcadd($carry, $amount, 8), '0'),
+            $kpi['referral_fee'],
+            8,
+        );
+
+        $execBase = $this->executionQuery($from, $to, $currencyId);
 
         $kpi['active_users'] = (clone $execBase)
             ->join('bot_orders', 'bot_orders.id', '=', 'bot_buy_executions.bot_order_id')
@@ -64,7 +114,7 @@ class BotReportController extends Controller
         $currencies = Currency::orderBy('symbol')->get(['id', 'symbol']);
 
         return view('dashboard.bot.reports.index', compact(
-            'kpi', 'perCoin', 'settlements', 'currencies', 'from', 'to', 'currencyId'
+            'kpi', 'perCoin', 'settlements', 'currencies', 'from', 'to', 'currencyId', 'settings'
         ));
     }
 
