@@ -26,17 +26,16 @@
                     <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
                         <div>
                             <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
-                                <h4 class="mb-0">سفارش #{{ $botOrder->id }}</h4>
+                                <h4 class="mb-0" title="bot_orders.id">سفارش #{{ $botOrder->id }}</h4>
                                 <span class="badge {{ $badgeClass }} px-3"
                                     style="font-size:.85rem">{{ $botOrder->status }}</span>
                                 <span class="badge bg-secondary">{{ $botOrder->triggered_by }}</span>
                             </div>
                             <div class="small text-muted d-flex flex-wrap align-items-center gap-2">
-                                <span><i class="fas fa-user fa-xs me-1"></i>{{ $botOrder->user?->email }}</span>
+                                <span><i class="fas fa-user fa-xs me-1"></i>{{ $botOrder->user?->email }}
+                                    <code class="small" title="users.id">#{{ $botOrder->user_id }}</code></span>
                                 <span class="opacity-50">|</span>
                                 <span>{{ $botOrder->user?->mobile }}</span>
-                                <span class="opacity-50">|</span>
-                                <code class="small">{{ $botOrder->batch_uuid }}</code>
                             </div>
                             <div class="small text-muted mt-1 d-flex flex-wrap align-items-center gap-2">
                                 <span><i class="fas fa-calendar-alt fa-xs me-1"></i>ایجاد:
@@ -279,6 +278,8 @@
                                 <div>
                                     <strong>{{ $execution->currency?->symbol }}</strong>
                                     — {{ $execution->currency?->name }}
+                                    <code class="small text-muted d-block" title="bot_buy_executions.id">buy_exec
+                                        #{{ $execution->id }}</code>
                                 </div>
                                 @php
                                     $execBadge = match ($execution->status) {
@@ -454,13 +455,14 @@
                                         <table class="table table-sm table-hover table-bordered mb-0 align-middle">
                                             <thead class="table-dark">
                                                 <tr>
-                                                    <th class="text-center" style="width:15%">هدف</th>
-                                                    <th class="text-center" style="width:15%">قیمت هدف (USDT)</th>
-                                                    <th class="text-center" style="width:14%">فاصله تا هدف</th>
+                                                    <th class="text-center" style="width:10%">ID</th>
+                                                    <th class="text-center" style="width:13%">هدف</th>
+                                                    <th class="text-center" style="width:14%">قیمت هدف (USDT)</th>
+                                                    <th class="text-center" style="width:13%">فاصله تا هدف</th>
                                                     <th class="text-center" style="width:8%">سهم (%)</th>
-                                                    <th class="text-center" style="width:14%">مقدار فروش</th>
+                                                    <th class="text-center" style="width:13%">مقدار فروش</th>
                                                     <th class="text-center" style="width:10%">وضعیت</th>
-                                                    <th class="text-center" style="width:14%">تکمیل در</th>
+                                                    <th class="text-center" style="width:13%">تکمیل در</th>
                                                     <th class="text-center" style="width:4%"></th>
                                                 </tr>
                                             </thead>
@@ -495,6 +497,15 @@
                                                     <tr class="sell-main-row" data-sell-id="{{ $sell->id }}"
                                                         data-status="{{ $sell->status }}"
                                                         style="{{ $hasSettlement ? 'cursor:pointer;' : '' }}">
+                                                        <td class="text-center">
+                                                            <code class="small d-block"
+                                                                title="bot_sell_orders.id">#{{ $sell->id }}</code>
+                                                            @if ($hasSettlement)
+                                                                <code class="small text-muted"
+                                                                    title="bot_trade_settlements.id">settle
+                                                                    #{{ $sell->settlement->id }}</code>
+                                                            @endif
+                                                        </td>
                                                         <td class="text-center">
                                                             <span
                                                                 class="fw-semibold">{{ formatNumberTrimZeros($sell->target_value, 8) }}</span>
@@ -593,9 +604,7 @@
                                                             $stepPerfFee = (float) $sell->settlement->performance_fee;
                                                             // Same base SettlementService uses: gross_pnl − network − exchange
                                                             $stepPnlAfterFees =
-                                                                $stepGrossPnl -
-                                                                $stepNetworkFee -
-                                                                $stepTotalExchangeFee;
+                                                                $stepGrossPnl - $stepNetworkFee - $stepTotalExchangeFee;
                                                             $stepPerfPct =
                                                                 $stepPnlAfterFees > 0 && $stepPerfFee > 0
                                                                     ? round(($stepPerfFee / $stepPnlAfterFees) * 100, 2)
@@ -603,7 +612,15 @@
                                                         @endphp
                                                         <tr class="settlement-detail d-none"
                                                             id="settlement-{{ $sell->id }}">
-                                                            <td colspan="8" class="p-3 bg-light">
+                                                            <td colspan="9" class="p-3 bg-light">
+                                                                <div
+                                                                    class="d-flex justify-content-between align-items-center mb-2">
+                                                                    <small class="text-muted">
+                                                                        جزئیات تسویه
+                                                                        <code class="ms-1"
+                                                                            title="bot_trade_settlements.id">#{{ $sell->settlement->id }}</code>
+                                                                    </small>
+                                                                </div>
                                                                 <div class="row g-2 text-center">
                                                                     <div class="col-6 col-md-3">
                                                                         <div class="p-2 rounded border bg-white">
@@ -886,6 +903,7 @@
                             <table class="table table-sm table-bordered align-middle mb-0">
                                 <thead class="table-light">
                                     <tr>
+                                        <th>ID</th>
                                         <th>زمان</th>
                                         <th>کوین</th>
                                         <th>وضعیت sell</th>
@@ -902,11 +920,24 @@
                                 <tbody>
                                     @foreach ($settlements as $s)
                                         <tr>
+                                            <td>
+                                                <code class="small d-block"
+                                                    title="bot_trade_settlements.id">#{{ $s->id }}</code>
+                                                @if ($s->bot_sell_order_id)
+                                                    <code class="small text-muted" title="bot_sell_orders.id">sell
+                                                        #{{ $s->bot_sell_order_id }}</code>
+                                                @endif
+                                            </td>
                                             <td><small>{{ $s->settled_at?->format('Y-m-d H:i:s') ?? '—' }}</small></td>
                                             <td>
                                                 <strong>{{ $s->buyExecution?->currency?->symbol ?? '—' }}</strong>
                                                 <small
                                                     class="d-block text-muted">{{ $s->buyExecution?->currency?->name }}</small>
+                                                @if ($s->bot_buy_execution_id)
+                                                    <code class="small text-muted d-block"
+                                                        title="bot_buy_executions.id">buy_exec
+                                                        #{{ $s->bot_buy_execution_id }}</code>
+                                                @endif
                                             </td>
                                             <td>
                                                 @php
