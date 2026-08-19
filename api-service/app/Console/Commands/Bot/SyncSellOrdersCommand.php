@@ -116,14 +116,14 @@ class SyncSellOrdersCommand extends Command
 
         $summary = "bot:sync-sell-orders checked={$checked} filled={$filled} canceled={$canceled} errors={$errors} batch={$orders->count()} start_id={$batchStartId} end_id={$batchEndId}";
         $this->info($summary);
-        Log::channel('smart-bot')->info('bot.sync.sell.done', [
-            'checked'  => $checked,
-            'filled'   => $filled,
-            'canceled' => $canceled,
-            'errors'   => $errors,
-            'batch'    => $orders->count(),
-            'cursor'   => (int) Cache::get(self::CURSOR_CACHE_KEY, 0),
-        ]);
+        // Log::channel('smart-bot')->info('bot.sync.sell.done', [
+        //     'checked'  => $checked,
+        //     'filled'   => $filled,
+        //     'canceled' => $canceled,
+        //     'errors'   => $errors,
+        //     'batch'    => $orders->count(),
+        //     'cursor'   => (int) Cache::get(self::CURSOR_CACHE_KEY, 0),
+        // ]);
 
         return self::SUCCESS;
     }
