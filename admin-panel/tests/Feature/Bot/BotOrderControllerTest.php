@@ -3,7 +3,9 @@
 namespace Tests\Feature\Bot;
 
 use App\Models\Admin;
+use App\Models\Bot\BotAutoTradeEvent;
 use App\Models\Bot\BotOrder;
+use App\Models\Bot\BotUserSettings;
 use App\Models\Bot\BotWallet;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -191,5 +193,47 @@ class BotOrderControllerTest extends TestCase
         $this->actingAs($this->admin, 'admin')
             ->delete('/admin/auto-trade/orders/'.$order->id)
             ->assertNotFound();
+    }
+
+    public function test_admin_toggle_records_reason_and_user_page_shows_last_change(): void
+    {
+        $user = User::factory()->create([
+            'email'  => 'audit-user@example.com',
+            'mobile' => '09121114113',
+        ]);
+
+        $this->actingAs($this->admin, 'admin');
+        $controller = $this->app->make(\App\Http\Controllers\Admin\Bot\BotOrderController::class);
+
+        $on = $controller->toggleAutoTrade($user)->getData(true);
+        $this->assertTrue($on['enabled']);
+
+        $off = $controller->toggleAutoTrade($user)->getData(true);
+        $this->assertFalse($off['enabled']);
+        $this->assertSame(BotAutoTradeEvent::REASON_ADMIN_TOGGLE, $off['last_disable']['reason_code']);
+        $this->assertStringContainsString('ادمین سوئیچ خرید و فروش خودکار', $off['last_disable']['reason']);
+
+        $this->assertDatabaseHas('bot_auto_trade_events', [
+            'user_id'     => $user->id,
+            'enabled'     => 0,
+            'source'      => BotAutoTradeEvent::SOURCE_ADMIN,
+            'reason_code' => BotAutoTradeEvent::REASON_ADMIN_TOGGLE,
+            'actor_id'    => $this->admin->id,
+        ]);
+        $this->assertFalse((bool) BotUserSettings::where('user_id', $user->id)->value('auto_trade_enabled'));
+
+        $view = $controller->userShow($user);
+        $this->assertSame('dashboard.bot.orders.user', $view->name());
+        $this->assertFalse((bool) $view->getData()['settings']->auto_trade_enabled);
+        $this->assertNotNull($view->getData()['lastChange']);
+        $this->assertNotNull($view->getData()['lastDisable']);
+        $this->assertSame(
+            BotAutoTradeEvent::REASON_ADMIN_TOGGLE,
+            $view->getData()['lastDisable']->reason_code,
+        );
+        $this->assertStringContainsString(
+            'ادمین سوئیچ خرید و فروش خودکار را از صفحه کاربر خاموش کرد.',
+            $view->getData()['lastDisable']->reason,
+        );
     }
 }

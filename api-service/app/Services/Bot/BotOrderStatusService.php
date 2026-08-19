@@ -4,7 +4,6 @@ namespace App\Services\Bot;
 
 use App\Models\Bot\BotBuyExecution;
 use App\Models\Bot\BotOrder;
-use App\Models\Bot\BotUserSettings;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -26,6 +25,8 @@ use Illuminate\Support\Facades\Log;
  */
 class BotOrderStatusService
 {
+    public function __construct(private readonly BotAutoTradeToggleService $toggle) {}
+
     public function finalizeIfAllFailed(int $botOrderId): void
     {
         DB::transaction(function () use ($botOrderId) {
@@ -54,11 +55,10 @@ class BotOrderStatusService
                 'completed_at' => now(),
             ]);
 
-            // Whole order failed → turn auto-trade off (no event needed: the
-            // toggle listener only acts on OFF→ON). Partial failures never get
-            // here, so a bot with at least one successful buy stays on.
-            BotUserSettings::where('user_id', $order->user_id)
-                ->update(['auto_trade_enabled' => false]);
+            // Whole order failed → turn auto-trade off (no BotAutoTradeToggled
+            // event: the toggle listener only acts on OFF→ON). Partial failures
+            // never get here, so a bot with at least one successful buy stays on.
+            $this->toggle->disableBecauseAllBuysFailed($order->user_id, $order->id);
 
             Log::warning('bot.order.failed_all', [
                 'bot_order_id' => $order->id,

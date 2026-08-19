@@ -26,7 +26,7 @@ class BotAdminApiClient
         return Http::baseUrl(rtrim($base, '/').'/api/internal/bot-admin')
             ->acceptJson()
             ->timeout(180)
-            ->withHeaders(['X-Internal-Token' => $token]);
+            ->withHeaders($this->headers($token));
     }
 
     public function cancelOrderPreview(int $orderId): Response
@@ -47,5 +47,22 @@ class BotAdminApiClient
     public function cancelAll(int $userId): Response
     {
         return $this->http()->post("/users/{$userId}/cancel-all");
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function headers(string $token): array
+    {
+        $headers = ['X-Internal-Token' => $token];
+        $admin   = auth('admin')->user();
+        if (! $admin) {
+            return $headers;
+        }
+
+        $headers['X-Admin-Id']    = (string) $admin->id;
+        $headers['X-Admin-Label'] = $admin->email ?: ($admin->mobile ?: 'admin#'.$admin->id);
+
+        return $headers;
     }
 }

@@ -6,11 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Bot\BotBuyExecution;
 use App\Models\Bot\BotOrder;
 use App\Models\Bot\BotSellOrder;
-use App\Models\Bot\BotUserSettings;
 use App\Models\Bot\BotWallet;
 use App\Models\User;
+use App\Services\Bot\BotAutoTradeToggleService;
 use App\Services\Bot\BotOrderCancelService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -35,7 +36,10 @@ class BotAdminController extends Controller
 {
     private const SCALE = 8;
 
-    public function __construct(private readonly BotOrderCancelService $cancelService) {}
+    public function __construct(
+        private readonly BotOrderCancelService $cancelService,
+        private readonly BotAutoTradeToggleService $toggle,
+    ) {}
 
     public function cancelPreview(int $orderId): JsonResponse
     {
@@ -220,7 +224,7 @@ class BotAdminController extends Controller
         }
     }
 
-    public function cancelAll(int $userId): JsonResponse
+    public function cancelAll(Request $request, int $userId): JsonResponse
     {
         if (! User::whereKey($userId)->exists()) {
             return response()->json(['ok' => false, 'error' => 'کاربر یافت نشد.'], 404);
@@ -234,9 +238,12 @@ class BotAdminController extends Controller
 
         // Turn auto-trade off FIRST so nothing (reinvest / new signal cycle)
         // re-opens positions while we are freeing the user's funds.
-        $autoTradeDisabled = BotUserSettings::where('user_id', $userId)
-            ->where('auto_trade_enabled', true)
-            ->update(['auto_trade_enabled' => false]) > 0;
+        $adminId = $request->header('X-Admin-Id') !== null && $request->header('X-Admin-Id') !== ''
+            ? (int) $request->header('X-Admin-Id')
+            : null;
+        $adminLabel = $request->header('X-Admin-Label') ?: null;
+
+        $autoTradeDisabled = $this->toggle->disableByAdminCancelAll($userId, $adminId, $adminLabel);
 
         $results     = [];
         $totalSells  = 0;

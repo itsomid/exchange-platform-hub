@@ -48,6 +48,34 @@
                     </div>
                 </div>
 
+                <div id="bot-toggle-audit" class="px-4 py-3"
+                    style="background: {{ $settings->auto_trade_enabled ? 'rgba(105,108,255,.04)' : 'rgba(234,84,85,.06)' }}; border-bottom: 1px solid rgba(0,0,0,.08);">
+                    <div id="audit-current-off" class="mb-2 {{ $settings->auto_trade_enabled ? 'd-none' : '' }}">
+                        <strong class="text-danger"><i class="fas fa-power-off fa-xs me-1"></i>ربات الان خاموش است.</strong>
+                        <span id="audit-current-off-reason" class="small">
+                            @if ($lastDisable)
+                                {{ $lastDisable->reason }}
+                            @else
+                                دلیل این خاموش شدن قبل از شروع ثبت سابقه مشخص نیست.
+                            @endif
+                        </span>
+                    </div>
+                    <div class="small">
+                        <div class="mb-1">
+                            <span class="text-muted">آخرین تغییر وضعیت:</span>
+                            <span id="audit-last-change">
+                                {{ $lastChange?->summaryLine() ?? 'سابقه‌ای ثبت نشده است' }}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-muted">آخرین خاموش شدن:</span>
+                            <span id="audit-last-disable">
+                                {{ $lastDisable?->summaryLine() ?? 'سابقه‌ای ثبت نشده است' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card-body">
                     {{-- ── Row 1: real-money state ─────────────────────────────── --}}
                     <div class="row g-3 mb-3">
@@ -748,6 +776,38 @@
                             badge.textContent = data.enabled ? 'ربات روشن' : 'ربات خاموش';
                             badge.className = 'badge px-3 ' + (data.enabled ? 'bg-success' :
                                 'bg-secondary');
+                        }
+                        var audit = document.getElementById('bot-toggle-audit');
+                        if (audit) {
+                            audit.style.background = data.enabled
+                                ? 'rgba(105,108,255,.04)'
+                                : 'rgba(234,84,85,.06)';
+                        }
+                        var currentOff = document.getElementById('audit-current-off');
+                        var currentOffReason = document.getElementById('audit-current-off-reason');
+                        if (currentOff) {
+                            if (data.enabled) {
+                                currentOff.classList.add('d-none');
+                            } else {
+                                currentOff.classList.remove('d-none');
+                                if (currentOffReason) {
+                                    currentOffReason.textContent = (data.last_disable && data.last_disable.reason)
+                                        ? data.last_disable.reason
+                                        : 'دلیل این خاموش شدن قبل از شروع ثبت سابقه مشخص نیست.';
+                                }
+                            }
+                        }
+                        var lastChangeEl = document.getElementById('audit-last-change');
+                        if (lastChangeEl) {
+                            lastChangeEl.textContent = (data.last_change && data.last_change.summary_line)
+                                ? data.last_change.summary_line
+                                : 'سابقه‌ای ثبت نشده است';
+                        }
+                        var lastDisableEl = document.getElementById('audit-last-disable');
+                        if (lastDisableEl) {
+                            lastDisableEl.textContent = (data.last_disable && data.last_disable.summary_line)
+                                ? data.last_disable.summary_line
+                                : 'سابقه‌ای ثبت نشده است';
                         }
                         toast(data.message, true);
                     })

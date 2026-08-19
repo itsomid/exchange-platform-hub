@@ -3,15 +3,18 @@
 namespace App\Http\Controllers\Admin\Bot;
 
 use App\Http\Controllers\Controller;
+use App\Models\Admin;
 use App\Models\Bot\BotBuyExecution;
 use App\Models\Bot\BotOrder;
 use App\Models\Bot\BotSellOrder;
 use App\Models\Bot\BotTradeSettlement;
+use App\Models\Bot\BotAutoTradeEvent;
 use App\Models\Bot\BotUserSettings;
 use App\Models\Bot\BotWallet;
 use App\Models\Bot\BotWalletTransfer;
 use App\Models\User;
 use App\Services\Bot\BotAdminApiClient;
+use App\Services\Bot\BotAutoTradeToggleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -19,8 +22,10 @@ use Illuminate\View\View;
 
 class BotOrderController extends Controller
 {
-    public function __construct(private readonly BotAdminApiClient $botApi)
-    {
+    public function __construct(
+        private readonly BotAdminApiClient $botApi,
+        private readonly BotAutoTradeToggleService $toggle,
+    ) {
     }
 
     /**
@@ -219,6 +224,12 @@ class BotOrderController extends Controller
             ->latest('created_at')
             ->paginate(15);
 
+        $lastChange  = BotAutoTradeEvent::where('user_id', $user->id)->latest('id')->first();
+        $lastDisable = BotAutoTradeEvent::where('user_id', $user->id)
+            ->where('enabled', false)
+            ->latest('id')
+            ->first();
+
         return view('dashboard.bot.orders.user', compact(
             'user', 'settings', 'orders',
             'balance', 'locked', 'withdrawable', 'actualInvestment', 'realizedProfit',
@@ -229,7 +240,8 @@ class BotOrderController extends Controller
             'networkFee', 'performanceFee', 'cancelFee',
             'platformRevenue', 'introducer', 'referralPaid',
             'grossRevenue', 'settledExchangeFee', 'pricePnl',
-            'lockedOpenCost', 'lockedResidual', 'baseFeeBuys'
+            'lockedOpenCost', 'lockedResidual', 'baseFeeBuys',
+            'lastChange', 'lastDisable'
         ));
     }
 
@@ -239,19 +251,34 @@ class BotOrderController extends Controller
      */
     public function toggleAutoTrade(User $user): JsonResponse
     {
+        $admin = auth('admin')->user();
+        if (! $admin instanceof Admin) {
+            abort(401);
+        }
+
         $settings = BotUserSettings::firstOrCreate(
             ['user_id' => $user->id],
             ['auto_trade_enabled' => false, 'reinvest_enabled' => false],
         );
 
-        $settings->auto_trade_enabled = ! $settings->auto_trade_enabled;
-        $settings->save();
+        $enabled = ! (bool) $settings->auto_trade_enabled;
+        $this->toggle->setByAdmin($user, $enabled, $admin);
+
+        $settings->refresh();
+
+        $lastChange  = BotAutoTradeEvent::where('user_id', $user->id)->latest('id')->first();
+        $lastDisable = BotAutoTradeEvent::where('user_id', $user->id)
+            ->where('enabled', false)
+            ->latest('id')
+            ->first();
 
         return response()->json([
-            'enabled' => $settings->auto_trade_enabled,
-            'message' => $settings->auto_trade_enabled
+            'enabled'      => (bool) $settings->auto_trade_enabled,
+            'message'      => $settings->auto_trade_enabled
                 ? 'ربات برای این کاربر روشن شد.'
                 : 'ربات برای این کاربر خاموش شد.',
+            'last_change'  => $lastChange?->toAdminArray(),
+            'last_disable' => $lastDisable?->toAdminArray(),
         ]);
     }
 
