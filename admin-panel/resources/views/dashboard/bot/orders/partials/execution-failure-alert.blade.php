@@ -4,7 +4,7 @@
     // note) is informational, not a failure, so it must never surface as an
     // execution error. Guards legacy rows where the collapse note was stored
     // in failure_reason.
-    $showFailure = $execution->status !== 'BOUGHT'
+    $showFailure = ! in_array($execution->status, ['BOUGHT', 'CLOSED'], true)
         && ($reason !== '' || in_array($execution->status, ['FAILED', 'SKIPPED'], true));
 @endphp
 

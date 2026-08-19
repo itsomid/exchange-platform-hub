@@ -122,7 +122,7 @@ class BotAdminController extends Controller
             return $blocked;
         }
 
-        $result = $this->cancelService->cancel($order);
+        $result = $this->cancelService->cancel($order, BotOrder::CANCEL_SOURCE_ADMIN);
 
         Log::channel('smart-bot')->info('bot.admin.order_canceled', [
             'bot_order_id' => $order->id,
@@ -251,7 +251,7 @@ class BotAdminController extends Controller
         $totalRefund = '0';
 
         foreach ($orders as $order) {
-            $result    = $this->cancelService->cancel($order);
+            $result    = $this->cancelService->cancel($order, BotOrder::CANCEL_SOURCE_ADMIN);
             $results[] = $result;
 
             $totalSells += (int) $result['canceled'];

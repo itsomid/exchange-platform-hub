@@ -153,8 +153,9 @@ class SettlementService
     public function settleCancel(
         BotSellOrder $sellOrder,
         string $cancelFee,
+        string $cancelReason = BotSellOrder::CANCEL_USER,
     ): BotTradeSettlement {
-        return DB::transaction(function () use ($sellOrder, $cancelFee) {
+        return DB::transaction(function () use ($sellOrder, $cancelFee, $cancelReason) {
             $sellOrder->refresh();
             $execution = $sellOrder->botBuyExecution()->lockForUpdate()->firstOrFail();
             $userId    = $execution->botOrder->user_id;
@@ -178,8 +179,9 @@ class SettlementService
             ]);
 
             $sellOrder->update([
-                'status'    => BotSellOrder::STATUS_CANCELED,
-                'filled_at' => null,
+                'status'        => BotSellOrder::STATUS_CANCELED,
+                'cancel_reason' => $cancelReason,
+                'filled_at'     => null,
             ]);
 
             $this->updateWallet(
@@ -214,8 +216,9 @@ class SettlementService
         string $networkFee,
         string $sellRefExchangeFee,
         string $perfFeePercent,
+        string $cancelReason,
     ): BotTradeSettlement {
-        return DB::transaction(function () use ($sellOrder, $filledAmount, $fillPrice, $networkFee, $sellRefExchangeFee, $perfFeePercent) {
+        return DB::transaction(function () use ($sellOrder, $filledAmount, $fillPrice, $networkFee, $sellRefExchangeFee, $perfFeePercent, $cancelReason) {
             $sellOrder->refresh();
             $execution = $sellOrder->botBuyExecution()->lockForUpdate()->firstOrFail();
             $userId    = $execution->botOrder->user_id;
@@ -254,8 +257,9 @@ class SettlementService
             ]);
 
             $sellOrder->update([
-                'status'    => BotSellOrder::STATUS_CANCELED,
-                'filled_at' => null,
+                'status'        => BotSellOrder::STATUS_CANCELED,
+                'cancel_reason' => $cancelReason,
+                'filled_at'     => null,
             ]);
 
             $this->updateWallet($userId, $execution, $this->lockedReleaseFor($execution, $filledAmount, $costBasis), $netPnl);

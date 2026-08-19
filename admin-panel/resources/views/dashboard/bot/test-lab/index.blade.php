@@ -437,6 +437,7 @@
                     PENDING: 'bg-label-secondary',
                     BUYING: 'bg-label-info',
                     BOUGHT: 'bg-label-success',
+                    CLOSED: 'bg-label-dark',
                     FAILED: 'bg-label-danger',
                     SKIPPED: 'bg-label-warning',
                     OPEN: 'bg-label-info',
@@ -463,7 +464,7 @@
                 const avgByCoin = new Map();
                 (snap.executions || []).forEach(e => {
                     if (!e.currency) return;
-                    if (e.status !== 'BOUGHT' && Number(e.avg_buy_price || 0) <= 0) return;
+                    if (e.status !== 'BOUGHT' && e.status !== 'CLOSED' && Number(e.avg_buy_price || 0) <= 0) return;
                     const prev = avgByCoin.get(e.currency);
                     if (!prev || Number(e.id) > Number(prev.id)) avgByCoin.set(e.currency, e);
                 });

@@ -2,6 +2,7 @@
 
 namespace App\Services\Bot;
 
+use App\Models\Bot\BotBuyExecution;
 use App\Models\Bot\BotGlobalSettings;
 use App\Models\Bot\BotOrder;
 use App\Models\Bot\BotSellOrder;
@@ -188,13 +189,20 @@ class BotOrderCancelService
     /**
      * @return array{order_id:int, canceled:int, total_fee:string, total_refund:string}
      */
-    public function cancel(BotOrder $order): array
+    public function cancel(BotOrder $order, string $source = BotOrder::CANCEL_SOURCE_USER): array
     {
+        $source = $source === BotOrder::CANCEL_SOURCE_ADMIN
+            ? BotOrder::CANCEL_SOURCE_ADMIN
+            : BotOrder::CANCEL_SOURCE_USER;
+        $cancelReason = $source === BotOrder::CANCEL_SOURCE_ADMIN
+            ? BotSellOrder::CANCEL_ADMIN
+            : BotSellOrder::CANCEL_USER;
+
         $settings   = BotGlobalSettings::current();
         $perfPct    = $this->num($settings->performance_fee_percent);
         $sellOnExch = (bool) $settings->cancel_sell_on_exchange_enabled;
 
-        return DB::transaction(function () use ($order, $perfPct, $sellOnExch) {
+        return DB::transaction(function () use ($order, $perfPct, $sellOnExch, $source, $cancelReason) {
             [$openSells] = $this->collectOpen($order);
 
             $totalFee    = '0';
@@ -235,6 +243,7 @@ class BotOrderCancelService
                     networkFee:         $networkFeeUsdt,
                     sellRefExchangeFee: $exchFee,
                     perfFeePercent:     $perfPct,
+                    cancelReason:       $cancelReason,
                 );
 
                 $itemFee = bcadd(
@@ -252,9 +261,12 @@ class BotOrderCancelService
             }
 
             $order->update([
-                'status'       => 'CANCELED',
-                'completed_at' => now(),
+                'status'        => 'CANCELED',
+                'cancel_source' => $source,
+                'completed_at'  => now(),
             ]);
+
+            $this->closeBoughtExecutions($order);
 
             return [
                 'order_id'     => $order->id,
@@ -263,6 +275,40 @@ class BotOrderCancelService
                 'total_refund' => $totalRefund,
             ];
         });
+    }
+
+    /**
+     * A bought execution with no remaining OPEN sells is no longer a live
+     * position — mark it CLOSED so the UI doesn't look like we still hold it.
+     */
+    private function closeBoughtExecutions(BotOrder $order): void
+    {
+        $boughtIds = BotBuyExecution::query()
+            ->where('bot_order_id', $order->id)
+            ->where('status', BotBuyExecution::STATUS_BOUGHT)
+            ->pluck('id');
+
+        foreach ($boughtIds as $executionId) {
+            $hasOpen = BotSellOrder::query()
+                ->where('bot_buy_execution_id', $executionId)
+                ->where('status', BotSellOrder::STATUS_OPEN)
+                ->exists();
+            if ($hasOpen) {
+                continue;
+            }
+
+            $wasUnwound = BotSellOrder::query()
+                ->where('bot_buy_execution_id', $executionId)
+                ->where('status', BotSellOrder::STATUS_CANCELED)
+                ->exists();
+            if (! $wasUnwound) {
+                continue;
+            }
+
+            BotBuyExecution::where('id', $executionId)
+                ->where('status', BotBuyExecution::STATUS_BOUGHT)
+                ->update(['status' => BotBuyExecution::STATUS_CLOSED]);
+        }
     }
 
     /**

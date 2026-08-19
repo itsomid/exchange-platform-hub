@@ -12,6 +12,12 @@ class BotSellOrder extends Model
 {
     use HasFactory;
 
+    public const CANCEL_ADMIN          = 'admin_cancel';
+    public const CANCEL_USER           = 'user_cancel';
+    public const CANCEL_EXCHANGE_SYNC  = 'exchange_sync';
+    public const CANCEL_PLACE_FAILED   = 'sell_place_failed';
+    public const CANCEL_PLACE_ROLLBACK = 'sell_place_rollback';
+
     protected $fillable = [
         'bot_buy_execution_id',
         'exchange_order_id',
@@ -21,6 +27,7 @@ class BotSellOrder extends Model
         'amount_to_sell',
         'sell_ref_exchange_fee',
         'status',
+        'cancel_reason',
         'filled_at',
     ];
 

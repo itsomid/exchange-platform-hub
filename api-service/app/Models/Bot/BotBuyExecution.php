@@ -14,8 +14,15 @@ class BotBuyExecution extends Model
     public const STATUS_PENDING = 'PENDING';
     public const STATUS_BUYING  = 'BUYING';
     public const STATUS_BOUGHT  = 'BOUGHT';
+    public const STATUS_CLOSED  = 'CLOSED';
     public const STATUS_FAILED  = 'FAILED';
     public const STATUS_SKIPPED = 'SKIPPED';
+
+    /** Buy succeeded on the reference exchange (still holding or later unwound). */
+    public static function successfulBuyStatuses(): array
+    {
+        return [self::STATUS_BOUGHT, self::STATUS_CLOSED];
+    }
 
     protected $fillable = [
         'bot_order_id',

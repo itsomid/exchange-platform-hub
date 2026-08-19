@@ -88,7 +88,7 @@ class BotOrderController extends Controller
      * Response:
      *   data: {
      *     auto_trade_enabled, has_order, order_id, order_status, triggered_by,
-     *     created_at, total, in_flight, retrying, bought, skipped, failed,
+     *     created_at, total, in_flight, retrying, bought, closed, skipped, failed,
      *     sells_open, sells_pending, completed
      *   }
      */
@@ -114,6 +114,7 @@ class BotOrderController extends Controller
                     'in_flight'          => 0,
                     'retrying'           => 0,
                     'bought'             => 0,
+                    'closed'             => 0,
                     'skipped'            => 0,
                     'failed'             => 0,
                     'sells_open'         => 0,
@@ -132,9 +133,10 @@ class BotOrderController extends Controller
         $pending  = (int) ($counts[BotBuyExecution::STATUS_PENDING] ?? 0);
         $buying   = (int) ($counts[BotBuyExecution::STATUS_BUYING] ?? 0);
         $bought   = (int) ($counts[BotBuyExecution::STATUS_BOUGHT] ?? 0);
+        $closed   = (int) ($counts[BotBuyExecution::STATUS_CLOSED] ?? 0);
         $skipped  = (int) ($counts[BotBuyExecution::STATUS_SKIPPED] ?? 0);
         $failed   = (int) ($counts[BotBuyExecution::STATUS_FAILED] ?? 0);
-        $total    = $pending + $buying + $bought + $skipped + $failed;
+        $total    = $pending + $buying + $bought + $closed + $skipped + $failed;
         $inFlight = $pending + $buying;
 
         // BUYING rows that already failed at least one attempt (network
@@ -175,6 +177,7 @@ class BotOrderController extends Controller
                 'in_flight'          => $inFlight,
                 'retrying'           => $retrying,
                 'bought'             => $bought,
+                'closed'             => $closed,
                 'skipped'            => $skipped,
                 'failed'             => $failed,
                 'sells_open'         => $sellsOpen,
@@ -195,7 +198,7 @@ class BotOrderController extends Controller
     public function cancel(int $id): JsonResponse
     {
         $order  = $this->findOwnedOrder($id);
-        $result = $this->cancelService->cancel($order);
+        $result = $this->cancelService->cancel($order, BotOrder::CANCEL_SOURCE_USER);
 
         return response()->json([
             'message' => 'سفارش‌های باز ربات لغو شدند.',

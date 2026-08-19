@@ -27,8 +27,16 @@
                         <div>
                             <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
                                 <h4 class="mb-0" title="bot_orders.id">سفارش #{{ $botOrder->id }}</h4>
-                                <span class="badge {{ $badgeClass }} px-3"
-                                    style="font-size:.85rem">{{ $botOrder->status }}</span>
+                                @if ($botOrder->status === 'CANCELED')
+                                    @include('dashboard.bot.orders.partials.canceled-status-badge', [
+                                        'explain' => \App\Services\Bot\BotCanceledReason::forBotOrder($botOrder),
+                                        'class' => $badgeClass . ' px-3',
+                                        'style' => 'font-size:.85rem',
+                                    ])
+                                @else
+                                    <span class="badge {{ $badgeClass }} px-3"
+                                        style="font-size:.85rem">{{ $botOrder->status }}</span>
+                                @endif
                                 <span class="badge bg-secondary">{{ $botOrder->triggered_by }}</span>
                             </div>
                             <div class="small text-muted d-flex flex-wrap align-items-center gap-2">
@@ -284,6 +292,7 @@
                                 @php
                                     $execBadge = match ($execution->status) {
                                         'BOUGHT' => 'bg-success',
+                                        'CLOSED' => 'bg-dark',
                                         'PENDING' => 'bg-warning text-dark',
                                         'FAILED' => 'bg-danger',
                                         'SKIPPED' => 'bg-secondary',
@@ -319,7 +328,18 @@
                                             {{ $execCurrentPrice ? formatNumberTrimZeros($execCurrentPrice) : '—' }}
                                         </strong>
                                     </div>
-                                    <span class="badge {{ $execBadge }}">{{ $execution->status }}</span>
+                                    @if ($execution->status === 'CLOSED')
+                                        @include('dashboard.bot.orders.partials.canceled-status-badge', [
+                                            'explain' => \App\Services\Bot\BotCanceledReason::forBuyExecution(
+                                                $execution,
+                                                $botOrder,
+                                            ),
+                                            'label' => 'CLOSED',
+                                            'class' => $execBadge,
+                                        ])
+                                    @else
+                                        <span class="badge {{ $execBadge }}">{{ $execution->status }}</span>
+                                    @endif
                                 </div>
                             </div>
 
@@ -564,8 +584,22 @@
                                                         <td class="text-center font-number">
                                                             {{ formatNumberTrimZeros($sell->amount_to_sell, 8) }}</td>
                                                         <td class="text-center">
-                                                            <span
-                                                                class="badge {{ $sellBadge }}">{{ $sell->status }}</span>
+                                                            @if ($sell->status === 'CANCELED')
+                                                                @include(
+                                                                    'dashboard.bot.orders.partials.canceled-status-badge',
+                                                                    [
+                                                                        'explain' => \App\Services\Bot\BotCanceledReason::forSellOrder(
+                                                                            $sell,
+                                                                            $execution,
+                                                                            $botOrder,
+                                                                        ),
+                                                                        'class' => $sellBadge,
+                                                                    ]
+                                                                )
+                                                            @else
+                                                                <span
+                                                                    class="badge {{ $sellBadge }}">{{ $sell->status }}</span>
+                                                            @endif
                                                         </td>
                                                         <td class="text-center">
                                                             <small
@@ -949,7 +983,22 @@
                                                         default => 'bg-secondary',
                                                     };
                                                 @endphp
-                                                <span class="badge {{ $stBadge }}">{{ $st ?? '—' }}</span>
+                                                @if ($st === 'CANCELED' && $s->sellOrder && $s->buyExecution)
+                                                    @include(
+                                                        'dashboard.bot.orders.partials.canceled-status-badge',
+                                                        [
+                                                            'explain' => \App\Services\Bot\BotCanceledReason::forSellOrder(
+                                                                $s->sellOrder,
+                                                                $s->buyExecution,
+                                                                $botOrder,
+                                                                $s,
+                                                            ),
+                                                            'class' => $stBadge,
+                                                        ]
+                                                    )
+                                                @else
+                                                    <span class="badge {{ $stBadge }}">{{ $st ?? '—' }}</span>
+                                                @endif
                                             </td>
                                             <td>{{ formatNumberTrimZeros($s->gross_revenue) }}</td>
                                             <td>{{ formatNumberTrimZeros($s->cost_basis) }}</td>
@@ -995,6 +1044,18 @@
         .card-clickable:active {
             transform: translateY(0);
             box-shadow: none;
+        }
+
+        .tooltip-cancel-reason {
+            --bs-tooltip-max-width: 360px;
+        }
+
+        .tooltip-cancel-reason .tooltip-inner {
+            text-align: right;
+            direction: rtl;
+            line-height: 1.7;
+            padding: .65rem .8rem;
+            font-size: .8rem;
         }
 
         .popover-fee-detail {
@@ -1137,6 +1198,12 @@
                     new bootstrap.Tooltip(el);
                 });
             }
+
+            document.querySelectorAll('.canceled-reason-badge').forEach(function(badge) {
+                badge.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+            });
 
             // ── Live price via WebSocket ──────────────────────────────────────────
             if (typeof window.Echo === 'undefined') {

@@ -107,7 +107,10 @@ class SyncSellOrdersCommand extends Command
                 DB::transaction(function () use ($sellOrder) {
                     $fresh = BotSellOrder::where('id', $sellOrder->id)->lockForUpdate()->first();
                     if ($fresh && $fresh->status === BotSellOrder::STATUS_OPEN) {
-                        $fresh->update(['status' => BotSellOrder::STATUS_CANCELED]);
+                        $fresh->update([
+                            'status'        => BotSellOrder::STATUS_CANCELED,
+                            'cancel_reason' => BotSellOrder::CANCEL_EXCHANGE_SYNC,
+                        ]);
                     }
                 });
                 $canceled++;

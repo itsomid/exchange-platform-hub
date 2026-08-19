@@ -100,6 +100,7 @@ it('flips local row to CANCELED when CoinEx reports CANCELED', function () {
 
     $sellOrder->refresh();
     expect($sellOrder->status)->toBe(BotSellOrder::STATUS_CANCELED);
+    expect($sellOrder->cancel_reason)->toBe(BotSellOrder::CANCEL_EXCHANGE_SYNC);
 });
 
 it('rotates through the OPEN backlog across runs instead of re-polling the same head', function () {

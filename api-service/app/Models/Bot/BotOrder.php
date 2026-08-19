@@ -11,12 +11,16 @@ class BotOrder extends Model
 {
     public const UPDATED_AT = null;
 
+    public const CANCEL_SOURCE_ADMIN = 'admin';
+    public const CANCEL_SOURCE_USER  = 'user';
+
     protected $fillable = [
         'user_id',
         'batch_uuid',
         'total_amount_usdt',
         'alpha_snapshot',
         'status',
+        'cancel_source',
         'description',
         'admin_description',
         'triggered_by',

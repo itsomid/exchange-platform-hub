@@ -355,8 +355,9 @@ class OpenSellOrdersJob implements ShouldQueue
         BotSellOrder::where('bot_buy_execution_id', $execution->id)
             ->where('status', BotSellOrder::STATUS_OPEN)
             ->update([
-                'status'    => BotSellOrder::STATUS_CANCELED,
-                'filled_at' => null,
+                'status'        => BotSellOrder::STATUS_CANCELED,
+                'cancel_reason' => BotSellOrder::CANCEL_PLACE_ROLLBACK,
+                'filled_at'     => null,
             ]);
     }
 
@@ -390,6 +391,7 @@ class OpenSellOrdersJob implements ShouldQueue
                 'share_percent'        => $target['share'],
                 'amount_to_sell'       => (string) $target['amount'],
                 'status'               => BotSellOrder::STATUS_CANCELED,
+                'cancel_reason'        => BotSellOrder::CANCEL_PLACE_FAILED,
             ]);
         }
     }

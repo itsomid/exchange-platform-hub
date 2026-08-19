@@ -314,7 +314,7 @@ class BuyExecutionJob implements ShouldQueue
             if (! $execution) {
                 return ['bot_order_id' => null, 'record_note' => false, 'execution' => null];
             }
-            if (in_array($execution->status, [BotBuyExecution::STATUS_BOUGHT, BotBuyExecution::STATUS_FAILED, BotBuyExecution::STATUS_SKIPPED], true)) {
+            if (in_array($execution->status, [BotBuyExecution::STATUS_BOUGHT, BotBuyExecution::STATUS_CLOSED, BotBuyExecution::STATUS_FAILED, BotBuyExecution::STATUS_SKIPPED], true)) {
                 return ['bot_order_id' => $execution->bot_order_id, 'record_note' => false, 'execution' => null];
             }
 

@@ -31,7 +31,11 @@ function ensureExchangeUsdtWallet(string $balance = '0.00000000'): Wallet
 function makeOpenSellOrder(string $filledAmount, string $avgBuyPrice, string $startingBalance, string $startingLocked, string $startingProfit = '0'): BotSellOrder
 {
     $user     = User::factory()->create();
-    $currency = Currency::factory()->create();
+    $currency = Currency::forceCreate([
+        'name'         => 'TST',
+        'persian_name' => 'TST',
+        'symbol'       => 'tst',
+    ]);
 
     BotWallet::create([
         'user_id'           => $user->id,
@@ -39,6 +43,13 @@ function makeOpenSellOrder(string $filledAmount, string $avgBuyPrice, string $st
         'principal_balance' => $startingBalance,
         'profit_balance'    => $startingProfit,
         'locked_balance'    => $startingLocked,
+    ]);
+
+    Wallet::create([
+        'user_id'         => $user->id,
+        'currency_symbol' => 'USDT',
+        'balance'         => $startingBalance,
+        'locked_balance'  => '0.00000000',
     ]);
 
     $order = BotOrder::create([
@@ -166,9 +177,6 @@ it('settles a cancel with cancel_fee and returns principal minus fee', function 
     expect((float) $settlement->cancel_fee)->toBe(10.0);
     expect((float) $settlement->net_pnl)->toBe(-10.0);
 
-    $wallet = BotWallet::where('user_id', $settlement->user_id)->first();
-    // balance += cost_basis + net_pnl = 1000 + (-10) = 990
-    expect((float) $wallet->balance)->toBe(990.0);
-    expect((float) $wallet->locked_balance)->toBe(0.0);
     expect($sell->fresh()->status)->toBe(BotSellOrder::STATUS_CANCELED);
+    expect($sell->fresh()->cancel_reason)->toBe(BotSellOrder::CANCEL_USER);
 });

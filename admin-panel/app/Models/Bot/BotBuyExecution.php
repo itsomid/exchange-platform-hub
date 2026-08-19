@@ -17,6 +17,9 @@ class BotBuyExecution extends Model
 
     public const UPDATED_AT = null;
 
+    public const STATUS_BOUGHT = 'BOUGHT';
+    public const STATUS_CLOSED = 'CLOSED';
+
     protected $fillable = [
         'bot_order_id',
         'currency_id',
@@ -73,6 +76,11 @@ class BotBuyExecution extends Model
 
     public function scopeBought(Builder $query): Builder
     {
-        return $query->where('status', 'BOUGHT');
+        return $query->where('status', self::STATUS_BOUGHT);
+    }
+
+    public function scopeSuccessfulBuy(Builder $query): Builder
+    {
+        return $query->whereIn('status', [self::STATUS_BOUGHT, self::STATUS_CLOSED]);
     }
 }

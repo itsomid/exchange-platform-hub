@@ -36,6 +36,8 @@ class FakeExchange implements ExchangeContract
     public bool   $failNextMarketBuy     = false;
     public bool   $failNextLimitSell     = false;
     public bool   $failNextMarketSell    = false;
+    public ?int   $failLimitSellAt       = null;
+    private int   $limitSellCalls        = 0;
 
     /** @var array<int,array<string,mixed>> */
     public array $marketSells = [];
@@ -60,8 +62,13 @@ class FakeExchange implements ExchangeContract
     public function placeLimitSell(string $market, string $baseAmount, string $price): ExchangeOrderResult
     {
         $this->limitSells[] = compact('market', 'baseAmount', 'price');
+        $this->limitSellCalls++;
+        $failThis = $this->failNextLimitSell
+            || ($this->failLimitSellAt !== null && $this->limitSellCalls === $this->failLimitSellAt);
         if ($this->failNextLimitSell) {
             $this->failNextLimitSell = false;
+        }
+        if ($failThis) {
             return new ExchangeOrderResult(null, ExchangeOrderStatus::FAILED, errorCode: 'TEST', errorMessage: 'forced failure');
         }
         return new ExchangeOrderResult(

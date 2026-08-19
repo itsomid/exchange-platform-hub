@@ -58,8 +58,8 @@ class BotReportController extends Controller
         ];
 
         $execTotals = $this->executionQuery($from, $to, $currencyId)
-            ->selectRaw("COALESCE(SUM(CASE WHEN status = 'BOUGHT' THEN allocated_usdt ELSE 0 END),0) as bought_volume")
-            ->selectRaw("COALESCE(SUM(CASE WHEN status = 'BOUGHT' THEN 1 ELSE 0 END),0) as bought_count")
+            ->selectRaw("COALESCE(SUM(CASE WHEN status IN ('BOUGHT','CLOSED') THEN allocated_usdt ELSE 0 END),0) as bought_volume")
+            ->selectRaw("COALESCE(SUM(CASE WHEN status IN ('BOUGHT','CLOSED') THEN 1 ELSE 0 END),0) as bought_count")
             ->selectRaw("COALESCE(SUM(CASE WHEN status = 'SKIPPED' THEN 1 ELSE 0 END),0) as skipped_count")
             ->selectRaw("COALESCE(SUM(CASE WHEN status = 'FAILED' THEN 1 ELSE 0 END),0) as failed_count")
             ->selectRaw('COALESCE(SUM(CASE WHEN effective_sell_orders_count IS NOT NULL AND original_sell_orders_count IS NOT NULL AND effective_sell_orders_count < original_sell_orders_count THEN 1 ELSE 0 END),0) as collapsed_count')
@@ -257,8 +257,8 @@ class BotReportController extends Controller
     {
         $execAgg = $this->executionQuery($from, $to, $currencyId)
             ->select('bot_buy_executions.currency_id')
-            ->selectRaw("SUM(CASE WHEN status = 'BOUGHT' THEN allocated_usdt ELSE 0 END) as bought_volume")
-            ->selectRaw("SUM(CASE WHEN status = 'BOUGHT' THEN filled_amount ELSE 0 END) as bought_amount")
+            ->selectRaw("SUM(CASE WHEN status IN ('BOUGHT','CLOSED') THEN allocated_usdt ELSE 0 END) as bought_volume")
+            ->selectRaw("SUM(CASE WHEN status IN ('BOUGHT','CLOSED') THEN filled_amount ELSE 0 END) as bought_amount")
             ->selectRaw("SUM(CASE WHEN status = 'SKIPPED' THEN 1 ELSE 0 END) as skipped_count")
             ->selectRaw('SUM(CASE WHEN effective_sell_orders_count IS NOT NULL AND original_sell_orders_count IS NOT NULL AND effective_sell_orders_count < original_sell_orders_count THEN 1 ELSE 0 END) as collapsed_count')
             ->groupBy('bot_buy_executions.currency_id')

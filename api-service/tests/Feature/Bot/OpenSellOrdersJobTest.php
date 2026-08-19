@@ -15,7 +15,11 @@ uses(RefreshDatabase::class);
 function makeExecutionWithSignal(string $filledAmount, array $sellTargets, string $p2pMin): BotBuyExecution
 {
     $user     = User::factory()->create();
-    $currency = Currency::factory()->create();
+    $currency = Currency::forceCreate([
+        'name'         => 'AAA',
+        'persian_name' => 'AAA',
+        'symbol'       => 'aaa'.uniqid(),
+    ]);
 
     BotSignal::create([
         'currency_id'              => $currency->id,
@@ -97,6 +101,49 @@ it('opens 1 sell order when filled=5 collapses 4→1', function () {
     expect($orders)->toHaveCount(1);
     expect((float) $orders->first()->amount_to_sell)->toBe(5.0);
     expect((float) $orders->first()->share_percent)->toBe(100.0);
+});
+
+it('records sell_place_failed when the first limit sell cannot be placed', function () {
+    $execution = makeExecutionWithSignal('20', [
+        ['trigger' => 20, 'share' => 25],
+        ['trigger' => 30, 'share' => 25],
+        ['trigger' => 40, 'share' => 25],
+        ['trigger' => 50, 'share' => 25],
+    ], '5');
+
+    $fake = new FakeExchange();
+    $fake->failNextLimitSell = true;
+    $this->app->instance(\App\Services\Bot\ReferenceExchange\ExchangeContract::class, $fake);
+    (new OpenSellOrdersJob($execution->id))->handle(new \App\Services\Bot\TargetCollapseService(), $fake);
+
+    $orders = BotSellOrder::where('bot_buy_execution_id', $execution->id)->get();
+    expect($orders)->not->toBeEmpty();
+    foreach ($orders as $o) {
+        expect($o->status)->toBe(BotSellOrder::STATUS_CANCELED);
+        expect($o->cancel_reason)->toBe(BotSellOrder::CANCEL_PLACE_FAILED);
+        expect($o->exchange_order_id)->toBeNull();
+    }
+    expect($execution->fresh()->status)->toBe(BotBuyExecution::STATUS_FAILED);
+});
+
+it('records sell_place_rollback on already-placed tiers when a later place fails', function () {
+    $execution = makeExecutionWithSignal('20', [
+        ['trigger' => 20, 'share' => 25],
+        ['trigger' => 30, 'share' => 25],
+        ['trigger' => 40, 'share' => 25],
+        ['trigger' => 50, 'share' => 25],
+    ], '5');
+
+    $fake = new FakeExchange();
+    $fake->failLimitSellAt = 2;
+    $this->app->instance(\App\Services\Bot\ReferenceExchange\ExchangeContract::class, $fake);
+    (new OpenSellOrdersJob($execution->id))->handle(new \App\Services\Bot\TargetCollapseService(), $fake);
+
+    $orders = BotSellOrder::where('bot_buy_execution_id', $execution->id)->orderBy('id')->get();
+    expect($orders->first()->cancel_reason)->toBe(BotSellOrder::CANCEL_PLACE_ROLLBACK);
+    expect($orders->first()->exchange_order_id)->not->toBeNull();
+    expect($orders->skip(1)->every(fn ($o) => $o->cancel_reason === BotSellOrder::CANCEL_PLACE_FAILED))->toBeTrue();
+    expect($execution->fresh()->status)->toBe(BotBuyExecution::STATUS_FAILED);
 });
 
 it('opens 4 sell orders unchanged when filled=20 covers all minimums', function () {
