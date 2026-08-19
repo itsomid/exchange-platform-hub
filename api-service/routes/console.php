@@ -12,10 +12,12 @@ use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('bot:sync-sell-orders --limit=500')
     ->everyFiveMinutes()
-    ->withoutOverlapping()
-    // Stream command stdout/stderr into the container PID-1 streams so
-    // `docker compose logs -f api-cron` shows each run's summary line.
-    ->sendOutputTo('/proc/1/fd/1')
-    ->appendOutputTo('/proc/1/fd/2');
+    // Default mutex TTL is 24h; a killed api-cron run would skip this job
+    // silently until then. 10 min is enough for one poll batch to finish,
+    // and recovers on the next */5 tick after a crash.
+    ->withoutOverlapping(10)
+    // appendOutputTo overwrites sendOutputTo — use only this. >> PID-1
+    // stdout so `docker compose logs -f api-cron` shows the summary line.
+    ->appendOutputTo('/proc/1/fd/1');
 
 Schedule::command('bot:scan-buy-triggers')->everyMinute()->withoutOverlapping();
