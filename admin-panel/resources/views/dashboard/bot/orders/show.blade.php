@@ -288,6 +288,10 @@
                                     — {{ $execution->currency?->name }}
                                     <code class="small text-muted d-block" title="bot_buy_executions.id">buy_exec
                                         #{{ $execution->id }}</code>
+                                    @if ($execution->exchange_order_id)
+                                        <code class="small text-muted d-block" title="شناسه سفارش خرید در صرافی مرجع">coinex
+                                            #{{ $execution->exchange_order_id }}</code>
+                                    @endif
                                 </div>
                                 @php
                                     $execBadge = match ($execution->status) {
@@ -520,6 +524,11 @@
                                                         <td class="text-center">
                                                             <code class="small d-block"
                                                                 title="bot_sell_orders.id">#{{ $sell->id }}</code>
+                                                            @if ($sell->exchange_order_id)
+                                                                <code class="small text-muted d-block"
+                                                                    title="شناسه سفارش فروش در صرافی مرجع">coinex
+                                                                    #{{ $sell->exchange_order_id }}</code>
+                                                            @endif
                                                             @if ($hasSettlement)
                                                                 <code class="small text-muted"
                                                                     title="bot_trade_settlements.id">settle
