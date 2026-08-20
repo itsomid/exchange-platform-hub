@@ -47,28 +47,31 @@ class OTCBuyRequest extends FormRequest
     {
         return [
             'market_id' => ['required', 'integer', 'exists:markets,id'],
-            'quantity' => ['required', 'numeric'],
+            'quantity' => ['required', 'numeric', 'gt:0'],
         ];
     }
 
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
+            if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
+
             $marketId = $this->input('market_id');
             $quantity = $this->input('quantity');
+            $market = Market::find($marketId);
 
-            if ($marketId && $quantity) {
-                $market = Market::find($marketId);
+            if (!$market) {
+                return;
+            }
 
-                if ($market) {
-                    if ($quantity < $market->min_otc_amount) {
-                        throw new MinOTCAmountException(null, null, $market->min_otc_amount);
-                    }
+            if ($quantity < $market->min_otc_amount) {
+                throw new MinOTCAmountException(null, null, $market->min_otc_amount);
+            }
 
-                    if ($quantity > $market->max_otc_amount) {
-                        throw new MaxOTCAmountException(null, null, $market->max_otc_amount);
-                    }
-                }
+            if ($quantity > $market->max_otc_amount) {
+                throw new MaxOTCAmountException(null, null, $market->max_otc_amount);
             }
         });
     }

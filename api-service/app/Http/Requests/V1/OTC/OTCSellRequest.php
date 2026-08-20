@@ -49,7 +49,7 @@ class OTCSellRequest extends FormRequest
         return [
             'market_id' => ['required', 'integer', 'exists:markets,id'],
             'quantity' => array_merge(
-                ['required', 'numeric'],
+                ['required', 'numeric', 'gt:0'],
                 $market ? ['min:'.$market->min_otc_amount, 'max:'.$market->max_otc_amount] : []
             ),
         ];

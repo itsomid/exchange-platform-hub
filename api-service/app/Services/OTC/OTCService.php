@@ -10,6 +10,7 @@ use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Exceptions\V1\OTC\BuyTradeWasFiledException;
+use App\Exceptions\V1\OTC\MinOTCAmountException;
 use App\Exceptions\V1\OTC\SellTradeWasFiledException;
 use App\Exceptions\V1\Wallet\InsufficientBalanceException;
 use App\Helpers\Math;
@@ -138,6 +139,9 @@ class OTCService
                 );
 
             $buyAmount = $requestDTO->getQuantity();
+            if (Math::comp($buyAmount, '0') !== 1) {
+                throw new MinOTCAmountException(null, null, (float) $market->min_otc_amount);
+            }
             $amountInQuoteCurrency = Math::mul($market->exchangePrice->buy_price, $requestDTO->getQuantity());
             $fee = Math::mul($buyAmount, Math::div(Setting::getSetting('otc_buy_fee'), 100));
             $receivedAmount = Math::sub($buyAmount, $fee);
@@ -395,6 +399,9 @@ class OTCService
                 );
 
             $sellAmount = $requestDTO->getQuantity();
+            if (Math::comp($sellAmount, '0') !== 1) {
+                throw new MinOTCAmountException(null, null, (float) $market->min_otc_amount);
+            }
             $amountInQuoteCurrency = Math::mul($market->exchangePrice->sell_price, $sellAmount);
             $fee = Math::mul($amountInQuoteCurrency, Math::div(Setting::getSetting('otc_sell_fee'), 100));
             $receivedAmount = Math::sub($amountInQuoteCurrency, $fee);
