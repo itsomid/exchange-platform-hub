@@ -289,7 +289,7 @@
                                     <code class="small text-muted d-block" title="bot_buy_executions.id">buy_exec
                                         #{{ $execution->id }}</code>
                                     @if ($execution->exchange_order_id)
-                                        <code class="small text-muted d-block" title="شناسه سفارش خرید در صرافی مرجع">coinex
+                                        <code class="small text-muted d-block" title="شناسه سفارش خرید در صرافی مرجع">
                                             #{{ $execution->exchange_order_id }}</code>
                                     @endif
                                 </div>
@@ -336,8 +336,7 @@
                                         @include('dashboard.bot.orders.partials.canceled-status-badge', [
                                             'explain' => \App\Services\Bot\BotCanceledReason::forBuyExecution(
                                                 $execution,
-                                                $botOrder,
-                                            ),
+                                                $botOrder),
                                             'label' => 'CLOSED',
                                             'class' => $execBadge,
                                         ])
@@ -526,7 +525,7 @@
                                                                 title="bot_sell_orders.id">#{{ $sell->id }}</code>
                                                             @if ($sell->exchange_order_id)
                                                                 <code class="small text-muted d-block"
-                                                                    title="شناسه سفارش فروش در صرافی مرجع">coinex
+                                                                    title="شناسه سفارش فروش در صرافی مرجع">
                                                                     #{{ $sell->exchange_order_id }}</code>
                                                             @endif
                                                             @if ($hasSettlement)
@@ -600,8 +599,7 @@
                                                                         'explain' => \App\Services\Bot\BotCanceledReason::forSellOrder(
                                                                             $sell,
                                                                             $execution,
-                                                                            $botOrder,
-                                                                        ),
+                                                                            $botOrder),
                                                                         'class' => $sellBadge,
                                                                     ]
                                                                 )
@@ -1000,8 +998,7 @@
                                                                 $s->sellOrder,
                                                                 $s->buyExecution,
                                                                 $botOrder,
-                                                                $s,
-                                                            ),
+                                                                $s),
                                                             'class' => $stBadge,
                                                         ]
                                                     )

@@ -112,7 +112,6 @@ Route::prefix('/tickets')->group(function () {
 Route::prefix('/spot')->group(function () {
     Route::get('/fee', [\App\Http\Controllers\V1\Spot\FeeController::class, '__invoke'])->name('spot.fee')->withoutMiddleware(['auth:sanctum', 'verified']);
 
-
     Route::prefix('/orders')->group(function () {
         Route::post('/', [\App\Http\Controllers\V1\Spot\OrderController::class, 'store'])->middleware([FinancialTradeBlockMiddleware::class]);
         Route::get('/', [\App\Http\Controllers\V1\Spot\OrderController::class, 'lists']);
