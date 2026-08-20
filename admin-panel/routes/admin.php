@@ -246,6 +246,7 @@ Route::middleware(['admin.2fa'])->group(function () {
 
         // CoinEx spot orders (pending / finished / cancel)
         Route::get('/coinex-spot-orders', [CoinexSpotOrderController::class, 'index'])->name('ref-exchange.coinex-spot-orders.index')->can('ref-exchanges');
+        Route::get('/coinex-spot-orders/lookup', [CoinexSpotOrderController::class, 'lookup'])->name('ref-exchange.coinex-spot-orders.lookup')->can('ref-exchanges');
         Route::post('/coinex-spot-orders/cancel', [CoinexSpotOrderController::class, 'cancel'])->name('ref-exchange.coinex-spot-orders.cancel')->can('ref-exchanges');
     });
 

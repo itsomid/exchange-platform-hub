@@ -104,6 +104,61 @@ class CoinexSpotOrderController extends Controller
         }
     }
 
+    public function lookup(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'currency_id' => ['required', 'integer'],
+            'order_id' => ['required', 'integer', 'min:1'],
+        ]);
+
+        $currency = Currency::query()
+            ->where('is_active', true)
+            ->where('symbol', '!=', 'USDT')
+            ->find((int) $validated['currency_id']);
+
+        if (!$currency) {
+            return response()->json([
+                'success' => false,
+                'message' => 'کوین انتخاب‌شده معتبر نیست.',
+            ], 422);
+        }
+
+        $market = strtoupper($currency->symbol).'USDT';
+
+        try {
+            $order = $this->coinexSpotOrderService->getOrderStatus($market, $validated['order_id']);
+        } catch (CantResolveCoinexException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage() ?: 'خطا در دریافت سفارش از CoinEx',
+            ], 422);
+        }
+
+        if ($order === [] || !isset($order['order_id'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'سفارشی با این شناسه یافت نشد.',
+            ], 404);
+        }
+
+        $deals = [];
+        $dealsError = null;
+
+        try {
+            $deals = $this->coinexSpotOrderService->getOrderDeals($market, $validated['order_id'])['data'] ?? [];
+        } catch (CantResolveCoinexException $e) {
+            $dealsError = $e->getMessage() ?: 'خطا در دریافت معاملات سفارش';
+        }
+
+        return response()->json([
+            'success' => true,
+            'market' => $market,
+            'order' => $order,
+            'deals' => $deals,
+            'deals_error' => $dealsError,
+        ]);
+    }
+
     private function splitBySide(array $result, string $side): array
     {
         $filtered = array_values(array_filter(

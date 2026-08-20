@@ -98,6 +98,76 @@ class CoinexSpotOrderService
         return $response->json('data') ?? [];
     }
 
+    public function getOrderStatus(string $market, int|string $orderId): array
+    {
+        $query = [
+            'market' => $market,
+            'order_id' => (int) $orderId,
+        ];
+
+        $response = $this->sendGet(
+            '/v2/spot/order-status',
+            $query,
+            'Coinex order status failed',
+            'خطا در دریافت وضعیت سفارش از CoinEx'
+        );
+
+        return $response->json('data') ?? [];
+    }
+
+    public function getOrderDeals(string $market, int|string $orderId, int $page = 1, int $limit = 100): array
+    {
+        $query = [
+            'market' => $market,
+            'market_type' => 'SPOT',
+            'order_id' => (int) $orderId,
+            'page' => $page,
+            'limit' => $limit,
+        ];
+
+        $response = $this->sendGet(
+            '/v2/spot/order-deals',
+            $query,
+            'Coinex order deals failed',
+            'خطا در دریافت معاملات سفارش از CoinEx'
+        );
+
+        return [
+            'data' => $response->json('data') ?? [],
+            'pagination' => $response->json('pagination') ?? [
+                'has_next' => false,
+            ],
+        ];
+    }
+
+    private function sendGet(string $path, array $query, string $logMessage, string $fallbackMessage): \Illuminate\Http\Client\Response
+    {
+        try {
+            $response = CoinexRequest::send(MethodEnum::GET, $path, $query);
+        } catch (ConnectionException|Throwable $exception) {
+            report($exception);
+            throw new CantResolveCoinexException($exception->getMessage(), (int) $exception->getCode(), $exception);
+        }
+
+        if (!$response->ok() || $response->json('code') !== 0) {
+            Log::channel('ref-exchange')->error($logMessage, [
+                'path' => $path,
+                'query' => $query,
+                'body' => $response->body(),
+            ]);
+
+            $message = $response->json('message') ?: $fallbackMessage;
+            $mapped = CoinexError::tryFrom((int) $response->json('code'));
+            if ($mapped) {
+                $message = CoinexError::mapErrorToResponse($mapped);
+            }
+
+            throw new CantResolveCoinexException($message, (int) $response->json('code'));
+        }
+
+        return $response;
+    }
+
     private function normalizeBalance(string $ccy, ?array $item): array
     {
         $available = (string) ($item['available'] ?? '0');

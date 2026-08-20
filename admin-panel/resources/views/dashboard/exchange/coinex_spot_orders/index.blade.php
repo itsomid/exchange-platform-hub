@@ -154,6 +154,65 @@
             font-weight: 600;
             word-break: break-all;
         }
+
+        .coinex-orders-page .lookup-panel {
+            margin-top: 1.25rem;
+            padding-top: 1.25rem;
+            border-top: 1px dashed #d9dee3;
+        }
+
+        .coinex-orders-page .lookup-panel .lookup-title {
+            font-weight: 700;
+            margin-bottom: 0.15rem;
+        }
+
+        .coinex-order-lookup-modal .modal-content {
+            border: 0;
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+
+        .coinex-order-lookup-modal .modal-header {
+            border-bottom: 0;
+            color: #fff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .coinex-order-lookup-modal .modal-header.is-buy {
+            background: linear-gradient(135deg, #28c76f 0%, #1f9d57 100%);
+        }
+
+        .coinex-order-lookup-modal .modal-header.is-sell {
+            background: linear-gradient(135deg, #ea5455 0%, #c73e3f 100%);
+        }
+
+        .coinex-order-lookup-modal .modal-header .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+
+        .coinex-order-lookup-modal .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.2rem 0.7rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.18);
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .coinex-order-lookup-modal pre.raw-json {
+            background: #1e1e2d;
+            color: #e4e6f1;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            font-size: 0.75rem;
+            max-height: 280px;
+            overflow: auto;
+            direction: ltr;
+            text-align: left;
+            margin: 0;
+        }
     </style>
 @endsection
 
@@ -226,6 +285,29 @@
                         </a>
                     </div>
                 </form>
+
+                <div class="lookup-panel">
+                    <div class="mb-2">
+                        <div class="lookup-title">جستجو بر اساس شناسه سفارش CoinEx</div>
+                        <p class="text-muted small mb-0">
+                            کوین را انتخاب کنید، شناسه سفارش را وارد کنید و جزئیات کامل سفارش به‌همراه معاملات در پنجره نمایش داده می‌شود.
+                        </p>
+                    </div>
+                    <form id="coinex-order-lookup-form" class="row g-3 align-items-end">
+                        <div class="col-lg-8 col-md-8">
+                            <label class="form-label" for="lookup_order_id">شناسه سفارش</label>
+                            <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off"
+                                class="form-control" id="lookup_order_id" name="order_id"
+                                placeholder="مثال: 13400" required>
+                        </div>
+                        <div class="col-lg-4 col-md-4">
+                            <button type="submit" class="btn btn-primary w-100" id="coinex-order-lookup-btn">
+                                <i class="fas fa-search me-1"></i>
+                                جستجوی سفارش
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -388,6 +470,49 @@
                 </div>
             </div>
         @endif
+
+        <div class="modal fade coinex-order-lookup-modal" id="coinex-order-lookup-modal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header" id="coinex-lookup-modal-header">
+                        <div>
+                            <h5 class="modal-title mb-1" id="coinex-lookup-modal-title">جزئیات سفارش</h5>
+                            <div class="d-flex flex-wrap align-items-center gap-2" id="coinex-lookup-modal-meta"></div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="detail-grid mb-4" id="coinex-lookup-detail-grid"></div>
+
+                        <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                            <h6 class="mb-0">معاملات این سفارش (Fills)</h6>
+                            <span class="badge bg-label-primary" id="coinex-lookup-deals-count">0</span>
+                        </div>
+                        <div id="coinex-lookup-deals-wrap"></div>
+
+                        <div class="accordion mt-4" id="coinex-lookup-raw-accordion">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                        data-bs-target="#coinex-lookup-raw-json">
+                                        پاسخ خام CoinEx (JSON)
+                                    </button>
+                                </h2>
+                                <div id="coinex-lookup-raw-json" class="accordion-collapse collapse"
+                                    data-bs-parent="#coinex-lookup-raw-accordion">
+                                    <div class="accordion-body">
+                                        <pre class="raw-json" id="coinex-lookup-raw"></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">بستن</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 @endsection
 
@@ -399,7 +524,51 @@
     <script>
         (function () {
             const cancelUrl = @json(route('admin.ref-exchange.coinex-spot-orders.cancel'));
+            const lookupUrl = @json(route('admin.ref-exchange.coinex-spot-orders.lookup'));
             const csrfToken = @json(csrf_token());
+
+            const fieldLabels = {
+                order_id: 'Order ID',
+                market: 'بازار',
+                market_type: 'نوع بازار',
+                ccy: 'ارز',
+                side: 'سمت',
+                type: 'نوع سفارش',
+                amount: 'مقدار',
+                price: 'قیمت',
+                unfilled_amount: 'باقی‌مانده',
+                filled_amount: 'پر شده',
+                filled_value: 'ارزش پرشده',
+                client_id: 'Client ID',
+                base_fee: 'کارمزد پایه',
+                quote_fee: 'کارمزد نقل‌قول',
+                discount_fee: 'کارمزد تخفیف',
+                maker_fee_rate: 'نرخ Maker',
+                taker_fee_rate: 'نرخ Taker',
+                last_fill_amount: 'آخرین مقدار پرشده',
+                last_filled_amount: 'آخرین مقدار پرشده',
+                last_fill_price: 'آخرین قیمت پرشده',
+                last_filled_price: 'آخرین قیمت پرشده',
+                created_at: 'زمان ایجاد',
+                updated_at: 'زمان بروزرسانی',
+                status: 'وضعیت',
+            };
+
+            const numericKeys = [
+                'amount', 'price', 'unfilled_amount', 'filled_amount', 'filled_value',
+                'base_fee', 'quote_fee', 'discount_fee', 'maker_fee_rate', 'taker_fee_rate',
+                'last_fill_amount', 'last_filled_amount', 'last_fill_price', 'last_filled_price',
+            ];
+
+            const statusLabels = {
+                open: 'باز',
+                part_deal: 'بخشی پر شده',
+                filled: 'تکمیل‌شده',
+                canceled: 'لغو شده',
+                cancelled: 'لغو شده',
+                finish: 'تکمیل‌شده',
+                pending: 'در انتظار',
+            };
 
             function toast(text, ok) {
                 Toastify({
@@ -411,6 +580,162 @@
                     stopOnFocus: true,
                     style: { background: ok ? '#28C76F' : '#EA5455' },
                 }).showToast();
+            }
+
+            function escapeHtml(value) {
+                return String(value ?? '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            function fmtNum(value) {
+                if (value === null || value === undefined || value === '') {
+                    return '—';
+                }
+                const num = Number(value);
+                if (Number.isNaN(num)) {
+                    return String(value);
+                }
+                return num.toLocaleString('en-US', { maximumFractionDigits: 8 });
+            }
+
+            function fmtTs(value) {
+                const ms = Number(value);
+                if (!ms) {
+                    return '—';
+                }
+                const date = new Date(ms);
+                if (Number.isNaN(date.getTime())) {
+                    return '—';
+                }
+                const pad = (n) => String(n).padStart(2, '0');
+                return date.getFullYear() + '/' + pad(date.getMonth() + 1) + '/' + pad(date.getDate())
+                    + ' ' + pad(date.getHours()) + ':' + pad(date.getMinutes()) + ':' + pad(date.getSeconds());
+            }
+
+            function sideLabel(side) {
+                return side === 'buy' ? 'خرید' : (side === 'sell' ? 'فروش' : (side || '—'));
+            }
+
+            function statusLabel(status) {
+                if (!status) {
+                    return '—';
+                }
+                return statusLabels[status] || status;
+            }
+
+            function fieldValue(key, order) {
+                const value = order[key];
+                if (value === null || value === undefined || value === '') {
+                    return null;
+                }
+                if (key === 'created_at' || key === 'updated_at') {
+                    return fmtTs(value);
+                }
+                if (key === 'side') {
+                    return sideLabel(value);
+                }
+                if (key === 'status') {
+                    return statusLabel(value);
+                }
+                if (key === 'price' && (Number(value) === 0 || String(order.type || '').toLowerCase() === 'market')) {
+                    const filledAmount = Number(order.filled_amount || 0);
+                    const filledValue = Number(order.filled_value || 0);
+                    if (filledAmount > 0 && filledValue > 0) {
+                        return fmtNum(filledValue / filledAmount);
+                    }
+                    return 'بازار';
+                }
+                if (numericKeys.indexOf(key) !== -1) {
+                    return fmtNum(value);
+                }
+                return String(value);
+            }
+
+            function renderDetails(order) {
+                const grid = document.getElementById('coinex-lookup-detail-grid');
+                const known = Object.keys(fieldLabels);
+                const keys = known.concat(Object.keys(order).filter((key) => known.indexOf(key) === -1));
+                let html = '';
+
+                keys.forEach((key) => {
+                    if (!Object.prototype.hasOwnProperty.call(order, key)) {
+                        return;
+                    }
+                    const display = fieldValue(key, order);
+                    if (display === null) {
+                        return;
+                    }
+                    html += '<div class="detail-item"><span class="label">'
+                        + escapeHtml(fieldLabels[key] || key)
+                        + '</span><span class="value">' + escapeHtml(display) + '</span></div>';
+                });
+
+                grid.innerHTML = html || '<div class="text-muted">فیلدی برای نمایش وجود ندارد.</div>';
+            }
+
+            function renderDeals(deals, dealsError) {
+                const wrap = document.getElementById('coinex-lookup-deals-wrap');
+                const countEl = document.getElementById('coinex-lookup-deals-count');
+                const list = Array.isArray(deals) ? deals : [];
+                countEl.textContent = String(list.length);
+
+                if (dealsError) {
+                    wrap.innerHTML = '<div class="alert alert-warning mb-0">' + escapeHtml(dealsError) + '</div>';
+                    return;
+                }
+
+                if (!list.length) {
+                    wrap.innerHTML = '<div class="empty-state py-3"><i class="fa-light fa-inbox fa-2x mb-2"></i><div>معامله‌ای برای این سفارش ثبت نشده است.</div></div>';
+                    return;
+                }
+
+                let rows = '';
+                list.forEach((deal) => {
+                    rows += '<tr>'
+                        + '<td class="fw-semibold">#' + escapeHtml(deal.deal_id ?? '—') + '</td>'
+                        + '<td>' + escapeHtml(sideLabel(deal.side)) + '</td>'
+                        + '<td>' + escapeHtml(fmtNum(deal.amount)) + '</td>'
+                        + '<td>' + escapeHtml(fmtNum(deal.price)) + '</td>'
+                        + '<td>' + escapeHtml(deal.role || '—') + '</td>'
+                        + '<td>' + escapeHtml(fmtNum(deal.fee)) + ' ' + escapeHtml(deal.fee_ccy || '') + '</td>'
+                        + '<td>' + escapeHtml(fmtTs(deal.created_at)) + '</td>'
+                        + '</tr>';
+                });
+
+                wrap.innerHTML = '<div class="table-responsive"><table class="table table-hover align-middle mb-0">'
+                    + '<thead><tr><th>Deal ID</th><th>سمت</th><th>مقدار</th><th>قیمت</th><th>نقش</th><th>کارمزد</th><th>زمان</th></tr></thead>'
+                    + '<tbody>' + rows + '</tbody></table></div>';
+            }
+
+            function showLookupModal(payload) {
+                const order = payload.order || {};
+                const side = String(order.side || '').toLowerCase();
+                const header = document.getElementById('coinex-lookup-modal-header');
+                header.classList.remove('is-buy', 'is-sell');
+                if (side === 'buy' || side === 'sell') {
+                    header.classList.add('is-' + side);
+                }
+
+                document.getElementById('coinex-lookup-modal-title').textContent = 'جزئیات سفارش #' + (order.order_id || '');
+                document.getElementById('coinex-lookup-modal-meta').innerHTML =
+                    '<span class="status-pill">' + escapeHtml(payload.market || order.market || '') + '</span>'
+                    + '<span class="status-pill">' + escapeHtml(sideLabel(side)) + '</span>'
+                    + '<span class="status-pill">' + escapeHtml(order.type || '—') + '</span>'
+                    + '<span class="status-pill">' + escapeHtml(statusLabel(order.status)) + '</span>';
+
+                renderDetails(order);
+                renderDeals(payload.deals, payload.deals_error);
+                document.getElementById('coinex-lookup-raw').textContent = JSON.stringify({
+                    order: order,
+                    deals: payload.deals || [],
+                }, null, 2);
+
+                const modalEl = document.getElementById('coinex-order-lookup-modal');
+                bootstrap.Modal.getOrCreateInstance(modalEl).show();
             }
 
             document.addEventListener('click', function (e) {
@@ -452,6 +777,58 @@
                         toast(err.message || 'خطا در لغو سفارش', false);
                         btn.disabled = false;
                         btn.innerHTML = originalHtml;
+                    });
+            });
+
+            const lookupForm = document.getElementById('coinex-order-lookup-form');
+            const lookupBtn = document.getElementById('coinex-order-lookup-btn');
+            const lookupInput = document.getElementById('lookup_order_id');
+
+            lookupForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                const currencySelect = document.getElementById('currency_id');
+                const currencyId = currencySelect ? currencySelect.value : '';
+                const orderId = (lookupInput.value || '').trim();
+
+                if (!currencyId) {
+                    toast('ابتدا کوین مربوط به سفارش را انتخاب کنید.', false);
+                    return;
+                }
+
+                if (!/^\d+$/.test(orderId)) {
+                    toast('شناسه سفارش باید یک عدد معتبر باشد.', false);
+                    return;
+                }
+
+                const originalHtml = lookupBtn.innerHTML;
+                lookupBtn.disabled = true;
+                lookupBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> در حال جستجو...';
+
+                const params = new URLSearchParams({
+                    currency_id: currencyId,
+                    order_id: orderId,
+                });
+
+                fetch(lookupUrl + '?' + params.toString(), {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                })
+                    .then(async (res) => {
+                        const json = await res.json().catch(() => ({}));
+                        if (!res.ok || !json.success) {
+                            throw new Error(json.message || (json.errors ? Object.values(json.errors).flat().join(' ') : 'سفارش یافت نشد'));
+                        }
+                        showLookupModal(json);
+                    })
+                    .catch((err) => {
+                        toast(err.message || 'خطا در دریافت سفارش', false);
+                    })
+                    .finally(() => {
+                        lookupBtn.disabled = false;
+                        lookupBtn.innerHTML = originalHtml;
                     });
             });
         })();
