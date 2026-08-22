@@ -290,23 +290,24 @@
                     <div class="mb-2">
                         <div class="lookup-title">جستجو بر اساس شناسه سفارش CoinEx</div>
                         <p class="text-muted small mb-0">
-                            کوین را انتخاب کنید، شناسه سفارش را وارد کنید و جزئیات کامل سفارش به‌همراه معاملات در پنجره نمایش داده می‌شود.
+                            شناسه سفارش CoinEx را وارد کنید. اگر کوین را هم انتخاب کنید جستجو سریع‌تر انجام می‌شود؛ در غیر این صورت در همه بازارهای فعال جستجو می‌شود.
                         </p>
                     </div>
-                    <form id="coinex-order-lookup-form" class="row g-3 align-items-end">
+                    <div id="coinex-order-lookup-form" class="row g-3 align-items-end">
                         <div class="col-lg-8 col-md-8">
                             <label class="form-label" for="lookup_order_id">شناسه سفارش</label>
                             <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off"
-                                class="form-control" id="lookup_order_id" name="order_id"
-                                placeholder="مثال: 13400" required>
+                                class="form-control" id="lookup_order_id" name="lookup_order_id"
+                                value="{{ request('order_id') }}"
+                                placeholder="مثال: 173390586784" required>
                         </div>
                         <div class="col-lg-4 col-md-4">
-                            <button type="submit" class="btn btn-primary w-100" id="coinex-order-lookup-btn">
+                            <button type="button" class="btn btn-primary w-100" id="coinex-order-lookup-btn">
                                 <i class="fas fa-search me-1"></i>
                                 جستجوی سفارش
                             </button>
                         </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -523,9 +524,11 @@
 @push('scripts')
     <script>
         (function () {
+            function initCoinexOrderLookup() {
             const cancelUrl = @json(route('admin.ref-exchange.coinex-spot-orders.cancel'));
             const lookupUrl = @json(route('admin.ref-exchange.coinex-spot-orders.lookup'));
             const csrfToken = @json(csrf_token());
+            const initialOrderId = @json(request('order_id'));
 
             const fieldLabels = {
                 order_id: 'Order ID',
@@ -571,6 +574,11 @@
             };
 
             function toast(text, ok) {
+                if (typeof Toastify === 'undefined') {
+                    window.alert(text);
+                    return;
+                }
+
                 Toastify({
                     text: text,
                     duration: ok ? 3000 : 5000,
@@ -735,10 +743,71 @@
                 }, null, 2);
 
                 const modalEl = document.getElementById('coinex-order-lookup-modal');
+                if (!modalEl || typeof bootstrap === 'undefined') {
+                    toast('امکان نمایش جزئیات سفارش وجود ندارد.', false);
+                    return;
+                }
+
                 bootstrap.Modal.getOrCreateInstance(modalEl).show();
             }
 
+            function runOrderLookup() {
+                const lookupBtn = document.getElementById('coinex-order-lookup-btn');
+                const lookupInput = document.getElementById('lookup_order_id');
+                const currencySelect = document.getElementById('currency_id');
+
+                if (!lookupBtn || !lookupInput) {
+                    toast('فرم جستجو در صفحه یافت نشد.', false);
+                    return;
+                }
+
+                const currencyId = currencySelect ? currencySelect.value : '';
+                const orderId = (lookupInput.value || '').trim();
+
+                if (!/^\d+$/.test(orderId)) {
+                    toast('شناسه سفارش باید یک عدد معتبر باشد.', false);
+                    return;
+                }
+
+                const originalHtml = lookupBtn.innerHTML;
+                lookupBtn.disabled = true;
+                lookupBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> در حال جستجو...';
+
+                const params = new URLSearchParams({ order_id: orderId });
+                if (currencyId) {
+                    params.set('currency_id', currencyId);
+                }
+
+                fetch(lookupUrl + '?' + params.toString(), {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                })
+                    .then(async (res) => {
+                        const json = await res.json().catch(() => ({}));
+                        if (!res.ok || !json.success) {
+                            throw new Error(json.message || (json.errors ? Object.values(json.errors).flat().join(' ') : 'سفارش یافت نشد'));
+                        }
+                        showLookupModal(json);
+                    })
+                    .catch((err) => {
+                        toast(err.message || 'خطا در دریافت سفارش', false);
+                    })
+                    .finally(() => {
+                        lookupBtn.disabled = false;
+                        lookupBtn.innerHTML = originalHtml;
+                    });
+            }
+
             document.addEventListener('click', function (e) {
+                const lookupBtn = e.target.closest('#coinex-order-lookup-btn');
+                if (lookupBtn) {
+                    e.preventDefault();
+                    runOrderLookup();
+                    return;
+                }
+
                 const btn = e.target.closest('.cancel-coinex-order');
                 if (!btn) return;
 
@@ -780,57 +849,34 @@
                     });
             });
 
-            const lookupForm = document.getElementById('coinex-order-lookup-form');
-            const lookupBtn = document.getElementById('coinex-order-lookup-btn');
-            const lookupInput = document.getElementById('lookup_order_id');
+            document.addEventListener('keydown', function (e) {
+                if (e.key !== 'Enter') {
+                    return;
+                }
 
-            lookupForm.addEventListener('submit', function (e) {
+                const lookupInput = document.getElementById('lookup_order_id');
+                if (!lookupInput || e.target !== lookupInput) {
+                    return;
+                }
+
                 e.preventDefault();
-
-                const currencySelect = document.getElementById('currency_id');
-                const currencyId = currencySelect ? currencySelect.value : '';
-                const orderId = (lookupInput.value || '').trim();
-
-                if (!currencyId) {
-                    toast('ابتدا کوین مربوط به سفارش را انتخاب کنید.', false);
-                    return;
-                }
-
-                if (!/^\d+$/.test(orderId)) {
-                    toast('شناسه سفارش باید یک عدد معتبر باشد.', false);
-                    return;
-                }
-
-                const originalHtml = lookupBtn.innerHTML;
-                lookupBtn.disabled = true;
-                lookupBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> در حال جستجو...';
-
-                const params = new URLSearchParams({
-                    currency_id: currencyId,
-                    order_id: orderId,
-                });
-
-                fetch(lookupUrl + '?' + params.toString(), {
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                })
-                    .then(async (res) => {
-                        const json = await res.json().catch(() => ({}));
-                        if (!res.ok || !json.success) {
-                            throw new Error(json.message || (json.errors ? Object.values(json.errors).flat().join(' ') : 'سفارش یافت نشد'));
-                        }
-                        showLookupModal(json);
-                    })
-                    .catch((err) => {
-                        toast(err.message || 'خطا در دریافت سفارش', false);
-                    })
-                    .finally(() => {
-                        lookupBtn.disabled = false;
-                        lookupBtn.innerHTML = originalHtml;
-                    });
+                runOrderLookup();
             });
+
+            if (initialOrderId && /^\d+$/.test(String(initialOrderId))) {
+                const lookupInput = document.getElementById('lookup_order_id');
+                if (lookupInput) {
+                    lookupInput.value = String(initialOrderId);
+                    runOrderLookup();
+                }
+            }
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initCoinexOrderLookup);
+            } else {
+                initCoinexOrderLookup();
+            }
         })();
     </script>
 @endpush

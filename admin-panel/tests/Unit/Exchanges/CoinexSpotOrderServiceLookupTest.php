@@ -41,6 +41,28 @@ class CoinexSpotOrderServiceLookupTest extends TestCase
         $this->assertFalse($result['pagination']['has_next']);
     }
 
+    public function test_find_order_by_id_scans_markets_until_match(): void
+    {
+        Http::fake([
+            'api.coinex.com/v2/spot/order-status*' => function ($request) {
+                if (str_contains($request->url(), 'market=BTCUSDT')) {
+                    return Http::response(['code' => 4004, 'message' => 'not found', 'data' => null], 200);
+                }
+
+                return Http::response($this->orderStatusResponse(), 200);
+            },
+        ]);
+
+        $found = (new CoinexSpotOrderService())->findOrderById(
+            '173390586784',
+            null,
+            ['BTCUSDT', 'ADAUSDT']
+        );
+
+        $this->assertSame('ADAUSDT', $found['market']);
+        $this->assertSame(13400, $found['order']['order_id']);
+    }
+
     public function test_get_order_status_throws_on_coinex_error(): void
     {
         Http::fake([

@@ -70,7 +70,7 @@ class CoinexSpotOrderService
         $payload = [
             'market' => $market,
             'market_type' => 'SPOT',
-            'order_id' => (int) $orderId,
+            'order_id' => $orderId,
         ];
 
         try {
@@ -100,19 +100,48 @@ class CoinexSpotOrderService
 
     public function getOrderStatus(string $market, int|string $orderId): array
     {
-        $query = [
-            'market' => $market,
-            'order_id' => (int) $orderId,
-        ];
+        $order = $this->fetchOrderStatus($market, $orderId);
 
-        $response = $this->sendGet(
-            '/v2/spot/order-status',
-            $query,
-            'Coinex order status failed',
-            'خطا در دریافت وضعیت سفارش از CoinEx'
-        );
+        if ($order === null) {
+            throw new CantResolveCoinexException('سفارشی با این شناسه در بازار '.$market.' یافت نشد.');
+        }
 
-        return $response->json('data') ?? [];
+        return $order;
+    }
+
+    /**
+     * @param  list<string>  $markets
+     * @return array{market: string, order: array}
+     */
+    public function findOrderById(int|string $orderId, ?string $market = null, array $markets = []): array
+    {
+        $targets = $market !== null && $market !== ''
+            ? [strtoupper($market)]
+            : array_values(array_unique(array_map('strtoupper', $markets)));
+
+        if ($targets === []) {
+            throw new CantResolveCoinexException('بازاری برای جستجوی سفارش مشخص نشده است.');
+        }
+
+        $lastError = null;
+
+        foreach ($targets as $targetMarket) {
+            try {
+                $order = $this->fetchOrderStatus($targetMarket, $orderId);
+            } catch (CantResolveCoinexException $e) {
+                $lastError = $e;
+                continue;
+            }
+
+            if ($order !== null) {
+                return [
+                    'market' => $targetMarket,
+                    'order' => $order,
+                ];
+            }
+        }
+
+        throw $lastError ?? new CantResolveCoinexException('سفارشی با این شناسه یافت نشد.');
     }
 
     public function getOrderDeals(string $market, int|string $orderId, int $page = 1, int $limit = 100): array
@@ -120,7 +149,7 @@ class CoinexSpotOrderService
         $query = [
             'market' => $market,
             'market_type' => 'SPOT',
-            'order_id' => (int) $orderId,
+            'order_id' => $orderId,
             'page' => $page,
             'limit' => $limit,
         ];
@@ -166,6 +195,48 @@ class CoinexSpotOrderService
         }
 
         return $response;
+    }
+
+    private function fetchOrderStatus(string $market, int|string $orderId): ?array
+    {
+        $query = [
+            'market' => $market,
+            'order_id' => $orderId,
+        ];
+
+        try {
+            $response = CoinexRequest::send(MethodEnum::GET, '/v2/spot/order-status', $query);
+        } catch (ConnectionException|Throwable $exception) {
+            report($exception);
+            throw new CantResolveCoinexException($exception->getMessage(), (int) $exception->getCode(), $exception);
+        }
+
+        if ($response->ok() && $response->json('code') === 0) {
+            $data = $response->json('data') ?? [];
+
+            return isset($data['order_id']) ? $data : null;
+        }
+
+        $code = (int) $response->json('code');
+        $message = $response->json('message') ?: 'خطا در دریافت وضعیت سفارش از CoinEx';
+
+        Log::channel('ref-exchange')->warning('Coinex order status lookup miss', [
+            'market' => $market,
+            'order_id' => $orderId,
+            'code' => $code,
+            'body' => $response->body(),
+        ]);
+
+        if (in_array($code, [4004, 3639], true)) {
+            return null;
+        }
+
+        $mapped = CoinexError::tryFrom($code);
+        if ($mapped) {
+            $message = CoinexError::mapErrorToResponse($mapped);
+        }
+
+        throw new CantResolveCoinexException($message, $code);
     }
 
     private function normalizeBalance(string $ccy, ?array $item): array

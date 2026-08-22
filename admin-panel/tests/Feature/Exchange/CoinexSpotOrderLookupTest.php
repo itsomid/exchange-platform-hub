@@ -59,23 +59,19 @@ class CoinexSpotOrderLookupTest extends TestCase
 
     public function test_index_shows_order_id_search_box(): void
     {
-        $response = $this->actingAs($this->admin, 'admin')
-            ->get(route('admin.ref-exchange.coinex-spot-orders.index'));
-
-        dump($response->status(), $response->headers->get('Location'), app()->environment(), config('app.env'));
-
-        $response
+        $this->actingAs($this->admin, 'admin')
+            ->get(route('admin.ref-exchange.coinex-spot-orders.index'))
             ->assertOk()
             ->assertSee('جستجو بر اساس شناسه سفارش CoinEx')
             ->assertSee('lookup_order_id', false);
     }
 
-    public function test_lookup_requires_currency_and_order_id(): void
+    public function test_lookup_requires_order_id(): void
     {
         $this->actingAs($this->admin, 'admin')
             ->getJson(route('admin.ref-exchange.coinex-spot-orders.lookup'))
             ->assertStatus(422)
-            ->assertJsonValidationErrors(['currency_id', 'order_id']);
+            ->assertJsonValidationErrors(['order_id']);
     }
 
     public function test_lookup_rejects_invalid_currency(): void
@@ -143,6 +139,24 @@ class CoinexSpotOrderLookupTest extends TestCase
                 'deals' => [],
             ])
             ->assertJsonPath('deals_error', fn ($value) => is_string($value) && $value !== '');
+    }
+
+    public function test_lookup_can_find_order_without_currency_by_scanning_markets(): void
+    {
+        Http::fake([
+            'api.coinex.com/v2/spot/order-status*' => Http::response($this->orderStatusResponse(), 200),
+            'api.coinex.com/v2/spot/order-deals*' => Http::response($this->orderDealsResponse(), 200),
+        ]);
+
+        $this->actingAs($this->admin, 'admin')
+            ->getJson(route('admin.ref-exchange.coinex-spot-orders.lookup', [
+                'order_id' => '173390586784',
+            ]))
+            ->assertOk()
+            ->assertJson([
+                'success' => true,
+                'market' => 'ADAUSDT',
+            ]);
     }
 
     public function test_lookup_surfaces_coinex_order_error(): void
