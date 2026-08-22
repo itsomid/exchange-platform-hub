@@ -150,7 +150,8 @@
                         <div class="col-6 col-md-3">
                             <div class="border rounded p-3 text-center h-100">
                                 <small class="text-muted d-block mb-1"><i
-                                        class="fas fa-arrow-down fa-xs me-1 text-success"></i>واریزی واقعی به بات از کیف پول
+                                        class="fas fa-arrow-down fa-xs me-1 text-success"></i>واریزی واقعی به بات از کیف
+                                    پول
                                     اصلی</small>
                                 <div class="fw-bold fs-6 font-number">{{ formatNumberTrimZeros($deposits) }}</div>
                                 <small class="text-muted">USDT</small>
@@ -170,7 +171,8 @@
                         </div>
                         <div class="col-6 col-md-3">
                             <div class="border rounded p-3 text-center h-100">
-                                <small class="text-muted d-block mb-1"><i class="fas fa-coins fa-xs me-1"></i>مجموع تخصیص به
+                                <small class="text-muted d-block mb-1"><i class="fas fa-coins fa-xs me-1"></i>مجموع تخصیص
+                                    به
                                     بات (ناخالص)</small>
                                 <div class="fw-bold fs-6 font-number">{{ formatNumberTrimZeros($grossAllocated) }}</div>
                                 <small class="text-muted">USDT</small>
@@ -478,7 +480,6 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>#</th>
-                                    <th>UUID</th>
                                     <th>مبلغ کل (USDT)</th>
                                     <th>وضعیت</th>
                                     <th>تریگر</th>
@@ -501,7 +502,6 @@
                                     @endphp
                                     <tr>
                                         <td>{{ $order->id }}</td>
-                                        <td><code class="small">{{ Str::limit($order->batch_uuid, 20) }}</code></td>
                                         <td class="font-number">{{ number_format($order->total_amount_usdt, 2) }}</td>
                                         <td><span class="badge {{ $badgeClass }}">{{ $order->status }}</span></td>
                                         <td><small>{{ $order->triggered_by }}</small></td>
@@ -779,9 +779,9 @@
                         }
                         var audit = document.getElementById('bot-toggle-audit');
                         if (audit) {
-                            audit.style.background = data.enabled
-                                ? 'rgba(105,108,255,.04)'
-                                : 'rgba(234,84,85,.06)';
+                            audit.style.background = data.enabled ?
+                                'rgba(105,108,255,.04)' :
+                                'rgba(234,84,85,.06)';
                         }
                         var currentOff = document.getElementById('audit-current-off');
                         var currentOffReason = document.getElementById('audit-current-off-reason');
@@ -791,23 +791,26 @@
                             } else {
                                 currentOff.classList.remove('d-none');
                                 if (currentOffReason) {
-                                    currentOffReason.textContent = (data.last_disable && data.last_disable.reason)
-                                        ? data.last_disable.reason
-                                        : 'دلیل این خاموش شدن قبل از شروع ثبت سابقه مشخص نیست.';
+                                    currentOffReason.textContent = (data.last_disable && data
+                                            .last_disable.reason) ?
+                                        data.last_disable.reason :
+                                        'دلیل این خاموش شدن قبل از شروع ثبت سابقه مشخص نیست.';
                                 }
                             }
                         }
                         var lastChangeEl = document.getElementById('audit-last-change');
                         if (lastChangeEl) {
-                            lastChangeEl.textContent = (data.last_change && data.last_change.summary_line)
-                                ? data.last_change.summary_line
-                                : 'سابقه‌ای ثبت نشده است';
+                            lastChangeEl.textContent = (data.last_change && data.last_change
+                                    .summary_line) ?
+                                data.last_change.summary_line :
+                                'سابقه‌ای ثبت نشده است';
                         }
                         var lastDisableEl = document.getElementById('audit-last-disable');
                         if (lastDisableEl) {
-                            lastDisableEl.textContent = (data.last_disable && data.last_disable.summary_line)
-                                ? data.last_disable.summary_line
-                                : 'سابقه‌ای ثبت نشده است';
+                            lastDisableEl.textContent = (data.last_disable && data.last_disable
+                                    .summary_line) ?
+                                data.last_disable.summary_line :
+                                'سابقه‌ای ثبت نشده است';
                         }
                         toast(data.message, true);
                     })
