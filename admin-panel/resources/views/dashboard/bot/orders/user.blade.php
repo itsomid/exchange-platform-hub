@@ -428,41 +428,63 @@
                     </div>
 
                     {{-- Capital allocation chart --}}
-                    <div class="row align-items-center g-3">
-                        <div class="col-md-3">
-                            <div id="capital-distribution-chart" style="min-height:150px;">
-                                <div class="d-flex justify-content-center align-items-center" style="height:150px;">
-                                    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                    <div class="row align-items-stretch g-3">
+                        <div class="col-md-4 col-lg-3">
+                            <div class="capital-chart-wrapper h-100">
+                                <div id="capital-distribution-chart" class="w-100">
+                                    <div class="capital-chart-loading">
+                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                            <span class="visually-hidden">در حال بارگذاری...</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-9">
-                            <small class="text-muted d-block mb-2">وضعیت تخصیص سرمایه واقعی</small>
-                            <ul class="list-unstyled mb-0 small">
-                                <li class="d-flex justify-content-between align-items-center py-1 border-bottom">
-                                    <span><i class="fas fa-circle text-warning me-2" style="font-size:.55rem"></i>قفل‌شده
-                                        (در انتظار فروش)</span>
-                                    <span class="font-number">{{ formatNumberTrimZeros($locked) }} <small
-                                            class="text-muted">USDT</small></span>
-                                </li>
-                                <li class="d-flex justify-content-between align-items-center py-1 border-bottom">
-                                    <span><i class="fas fa-circle text-success me-2" style="font-size:.55rem"></i>قابل
-                                        برداشت</span>
-                                    <span class="font-number">{{ formatNumberTrimZeros($withdrawable) }} <small
-                                            class="text-muted">USDT</small></span>
-                                </li>
-                                <li class="d-flex justify-content-between align-items-center py-1 border-bottom">
-                                    <span class="fw-semibold">مجموع (سرمایه واقعی)</span>
-                                    <span class="font-number">{{ formatNumberTrimZeros($actualInvestment) }} <small
-                                            class="text-muted">USDT</small></span>
-                                </li>
-                                <li class="d-flex justify-content-between align-items-center py-1">
-                                    <span class="text-muted"><i class="fas fa-circle text-info me-2"
-                                            style="font-size:.55rem"></i>سود محقق‌شده (تجمیعی)</span>
-                                    <span class="font-number">{{ formatNumberTrimZeros($realizedProfit) }} <small
-                                            class="text-muted">USDT</small></span>
-                                </li>
-                            </ul>
+                        <div class="col-md-8 col-lg-9">
+                            <div class="h-100 d-flex flex-column justify-content-center">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <small class="text-muted">وضعیت تخصیص سرمایه واقعی</small>
+                                    <span class="badge bg-label-primary font-number">{{ number_format($lockedPct, 0) }}%
+                                        قفل / {{ number_format($freePct, 0) }}% آزاد</span>
+                                </div>
+                                <div class="capital-allocation-item">
+                                    <div class="d-flex justify-content-between align-items-center mb-1 small">
+                                        <span><i class="fas fa-lock text-warning me-2" style="font-size:.7rem"></i>قفل‌شده
+                                            (در انتظار فروش)</span>
+                                        <span class="font-number fw-semibold">{{ formatNumberTrimZeros($locked) }} <small
+                                                class="text-muted">USDT</small></span>
+                                    </div>
+                                    <div class="capital-allocation-bar">
+                                        <span style="width: {{ $lockedPct }}%; background: linear-gradient(90deg, #ff9f43, #ffb976);"></span>
+                                    </div>
+                                </div>
+                                <div class="capital-allocation-item">
+                                    <div class="d-flex justify-content-between align-items-center mb-1 small">
+                                        <span><i class="fas fa-unlock text-success me-2" style="font-size:.7rem"></i>قابل
+                                            برداشت</span>
+                                        <span class="font-number fw-semibold">{{ formatNumberTrimZeros($withdrawable) }}
+                                            <small class="text-muted">USDT</small></span>
+                                    </div>
+                                    <div class="capital-allocation-bar">
+                                        <span style="width: {{ $freePct }}%; background: linear-gradient(90deg, #28c76f, #48da89);"></span>
+                                    </div>
+                                </div>
+                                <div class="capital-allocation-item">
+                                    <div class="d-flex justify-content-between align-items-center small">
+                                        <span class="fw-semibold">مجموع (سرمایه واقعی)</span>
+                                        <span class="font-number fw-bold">{{ formatNumberTrimZeros($actualInvestment) }}
+                                            <small class="text-muted">USDT</small></span>
+                                    </div>
+                                </div>
+                                <div class="capital-allocation-item">
+                                    <div class="d-flex justify-content-between align-items-center small text-muted">
+                                        <span><i class="fas fa-chart-line text-info me-2" style="font-size:.7rem"></i>سود
+                                            محقق‌شده (تجمیعی)</span>
+                                        <span class="font-number">{{ formatNumberTrimZeros($realizedProfit) }} <small
+                                                class="text-muted">USDT</small></span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -600,6 +622,47 @@
         .popover-fee-detail .popover-body {
             padding: .6rem .75rem;
         }
+
+        .capital-chart-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+            padding: .75rem;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 0, 0, .06);
+            background: linear-gradient(145deg, rgba(105, 108, 255, .05) 0%, rgba(40, 199, 111, .05) 100%);
+        }
+
+        .capital-chart-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 200px;
+        }
+
+        .capital-allocation-item {
+            padding: .55rem 0;
+        }
+
+        .capital-allocation-item + .capital-allocation-item {
+            border-top: 1px solid rgba(0, 0, 0, .06);
+        }
+
+        .capital-allocation-bar {
+            height: 6px;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, .06);
+            overflow: hidden;
+        }
+
+        .capital-allocation-bar > span {
+            display: block;
+            height: 100%;
+            border-radius: inherit;
+            transition: width .6s ease;
+        }
     </style>
 @endsection
 
@@ -661,80 +724,133 @@
                 var chartEl = document.getElementById('capital-distribution-chart');
                 if (!chartEl) return;
 
-                if (typeof ApexCharts === 'undefined') {
+                var renderMessage = function(message, icon) {
                     chartEl.innerHTML =
-                        '<div class="text-center text-muted py-4"><i class="fa fa-chart-pie me-1"></i>نمودار در دسترس نیست</div>';
+                        '<div class="text-center text-muted py-4"><i class="fa ' + icon + ' me-1"></i>' +
+                        message + '</div>';
+                };
+
+                if (typeof ApexCharts === 'undefined') {
+                    renderMessage('نمودار در دسترس نیست', 'fa-chart-pie');
                     return;
                 }
 
                 var locked = {{ (float) $locked }};
                 var withdrawable = {{ (float) $withdrawable }};
+                var totalCapital = locked + withdrawable;
 
-                if (locked + withdrawable <= 0) {
-                    chartEl.innerHTML =
-                        '<div class="text-center text-muted py-4"><i class="fa fa-info-circle me-1"></i>داده‌ای برای نمایش وجود ندارد</div>';
+                if (totalCapital <= 0) {
+                    renderMessage('داده‌ای برای نمایش وجود ندارد', 'fa-info-circle');
                     return;
                 }
+
+                chartEl.innerHTML = '';
+
+                var formatUsdt = function(val) {
+                    return val.toLocaleString('en-US', {
+                        maximumFractionDigits: 8
+                    }) + ' USDT';
+                };
 
                 new ApexCharts(chartEl, {
                     series: [locked, withdrawable],
                     chart: {
                         type: 'donut',
-                        height: 150,
+                        height: 200,
                         fontFamily: 'inherit',
-                        sparkline: {
-                            enabled: true
+                        animations: {
+                            enabled: true,
+                            easing: 'easeinout',
+                            speed: 700,
                         },
                     },
                     labels: ['قفل‌شده', 'قابل برداشت'],
                     colors: ['#ff9f43', '#28c76f'],
                     stroke: {
-                        width: 2,
+                        width: 4,
+                        colors: ['#fff'],
+                    },
+                    fill: {
+                        type: 'gradient',
+                        gradient: {
+                            shade: 'light',
+                            type: 'vertical',
+                            shadeIntensity: 0.25,
+                            opacityFrom: 1,
+                            opacityTo: 0.85,
+                            stops: [0, 100],
+                        },
+                    },
+                    legend: {
+                        show: false,
                     },
                     dataLabels: {
                         enabled: false,
                     },
                     tooltip: {
+                        theme: 'light',
                         y: {
-                            formatter: function(val) {
-                                return val.toLocaleString('en-US', {
-                                    maximumFractionDigits: 8
-                                }) + ' USDT';
-                            }
-                        }
+                            formatter: formatUsdt,
+                        },
+                    },
+                    states: {
+                        hover: {
+                            filter: {
+                                type: 'lighten',
+                                value: 0.08,
+                            },
+                        },
+                        active: {
+                            filter: {
+                                type: 'none',
+                            },
+                        },
                     },
                     plotOptions: {
                         pie: {
+                            expandOnClick: false,
                             donut: {
-                                size: '78%',
+                                size: '74%',
                                 labels: {
                                     show: true,
                                     name: {
-                                        show: false
+                                        show: true,
+                                        fontSize: '12px',
+                                        fontWeight: 500,
+                                        color: '#8a8d93',
+                                        offsetY: -6,
                                     },
                                     value: {
-                                        show: false
+                                        show: true,
+                                        fontSize: '18px',
+                                        fontWeight: 700,
+                                        color: '#4b4b4b',
+                                        offsetY: 6,
+                                        formatter: function(val) {
+                                            return Number(val).toLocaleString('en-US', {
+                                                maximumFractionDigits: 2,
+                                            });
+                                        },
                                     },
                                     total: {
                                         show: true,
                                         showAlways: true,
-                                        label: 'قفل‌شده',
-                                        fontSize: '.7rem',
-                                        fontWeight: 700,
+                                        label: 'مجموع سرمایه',
+                                        fontSize: '12px',
+                                        fontWeight: 500,
+                                        color: '#8a8d93',
                                         formatter: function(w) {
-                                            var total = w.globals.seriesTotals.reduce(function(a,
-                                                b) {
+                                            var total = w.globals.seriesTotals.reduce(function(a, b) {
                                                 return a + b;
                                             }, 0);
-                                            var lockedShare = total > 0 ? (w.globals.series[0] /
-                                                    total) *
-                                                100 : 0;
-                                            return lockedShare.toFixed(0) + '%';
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                                            return total.toLocaleString('en-US', {
+                                                maximumFractionDigits: 2,
+                                            });
+                                        },
+                                    },
+                                },
+                            },
+                        },
                     },
                 }).render();
             })();
