@@ -2,6 +2,7 @@
 
 namespace App\Services\Bot;
 
+use App\Actions\Bot\BotBuyOrchestrator;
 use App\Models\Bot\BotBuyExecution;
 use App\Models\Bot\BotOrder;
 use Illuminate\Support\Facades\DB;
@@ -18,10 +19,11 @@ use Illuminate\Support\Facades\Log;
  * single execution ended up BOUGHT. Orders with at least one bought signal
  * keep their existing behavior.
  *
- * When (and only when) the whole order fails this way, the user's auto-trade
- * is also switched off so the bot doesn't keep retrying a setup that just
- * failed end-to-end. A partial failure (some coins bought) never reaches this
- * branch, so in that case the bot stays on.
+ * When the whole order fails this way AND it was the cycle started by the
+ * user turning the bot on (TOGGLE_ON), auto-trade is switched off so they
+ * notice the first buy did not go through. Later cycles (SIGNAL_SCAN,
+ * REINVEST, TRANSFER_IN, …) stay on so a transient exchange error cannot
+ * park free capital until the user notices.
  */
 class BotOrderStatusService
 {
@@ -55,15 +57,16 @@ class BotOrderStatusService
                 'completed_at' => now(),
             ]);
 
-            // Whole order failed → turn auto-trade off (no BotAutoTradeToggled
-            // event: the toggle listener only acts on OFF→ON). Partial failures
-            // never get here, so a bot with at least one successful buy stays on.
-            $this->toggle->disableBecauseAllBuysFailed($order->user_id, $order->id);
+            $disableBot = $order->triggered_by === BotBuyOrchestrator::TRIGGER_TOGGLE_ON;
+            if ($disableBot) {
+                $this->toggle->disableBecauseAllBuysFailed($order->user_id, $order->id);
+            }
 
             Log::warning('bot.order.failed_all', [
                 'bot_order_id' => $order->id,
                 'user_id'      => $order->user_id,
-                'auto_trade'   => 'disabled',
+                'triggered_by' => $order->triggered_by,
+                'auto_trade'   => $disableBot ? 'disabled' : 'unchanged',
             ]);
         });
     }
