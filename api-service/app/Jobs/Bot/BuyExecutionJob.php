@@ -77,17 +77,6 @@ class BuyExecutionJob implements ShouldQueue
             return;
         }
 
-        Log::channel('smart-bot')->info('bot.buy.execution.start', [
-            'execution_id' => $execution->id,
-            'status'       => $execution->status,
-            'currency'     => $execution->currency?->symbol,
-            'allocated'    => $execution->allocated_usdt,
-            'access_id'    => config('exchanges.coinex.access_id'),
-            'host'         => gethostname() ?: null,
-            'pid'          => getmypid() ?: null,
-            'queue'        => $this->job?->getQueue(),
-            'attempt'      => $this->attempts(),
-        ]);
 
         // Resumed attempt: a previous run already placed a real order on
         // CoinEx but couldn't confirm a terminal fill in time. Only re-check

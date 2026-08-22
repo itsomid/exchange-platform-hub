@@ -57,18 +57,6 @@ class OpenSellOrdersJob implements ShouldQueue
             return;
         }
 
-        Log::channel('smart-bot')->info('bot.sell.open.start', [
-            'execution_id'  => $execution->id,
-            'currency'      => $execution->currency?->symbol,
-            'filled_amount' => $execution->filled_amount,
-            'avg_buy_price' => $execution->avg_buy_price,
-            'access_id'     => config('exchanges.coinex.access_id'),
-            'host'          => gethostname() ?: null,
-            'pid'           => getmypid() ?: null,
-            'queue'         => $this->job?->getQueue(),
-            'attempt'       => $this->attempts(),
-        ]);
-
         $signal = BotSignal::where('currency_id', $execution->currency_id)->first();
         if (! $signal) {
             $this->markFailed($execution, 'No active BotSignal for currency on sell-open', $exchange);
