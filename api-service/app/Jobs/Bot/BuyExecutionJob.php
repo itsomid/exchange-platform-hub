@@ -178,18 +178,6 @@ class BuyExecutionJob implements ShouldQueue
                 'failure_reason'                => null,
             ]);
 
-            Log::channel('smart-bot')->info('bot.buy.execution.filled', [
-                'execution_id'   => $execution->id,
-                'market'         => $market,
-                'filled_amount'  => $result->filledAmount,
-                'avg_buy_price'  => $result->avgPrice,
-                'exchange_fee'   => $result->exchangeFee,
-                'fee_currency'   => $result->feeCurrency,
-                'exchange_order' => $result->exchangeOrderId,
-                'access_id'      => config('exchanges.coinex.access_id'),
-                'host'           => gethostname() ?: null,
-                'pid'            => getmypid() ?: null,
-            ]);
 
             OpenSellOrdersJob::dispatch($execution->id)->onQueue('bot-sell');
             return;

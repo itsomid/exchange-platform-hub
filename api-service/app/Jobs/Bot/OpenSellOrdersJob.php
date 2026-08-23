@@ -183,17 +183,7 @@ class OpenSellOrdersJob implements ShouldQueue
             ]);
         }
 
-        Log::channel('smart-bot')->info('bot.sell.opened', [
-            'execution_id'    => $execution->id,
-            'market'          => $market,
-            'original_count'  => $result['original_count'],
-            'effective_count' => $result['effective_count'],
-            'collapsed'       => $result['collapsed'],
-            'exchange_orders' => $placedIds,
-            'access_id'       => config('exchanges.coinex.access_id'),
-            'host'            => gethostname() ?: null,
-            'pid'             => getmypid() ?: null,
-        ]);
+    
     }
 
     private function resolveAbsolutePrice(string $type, string $trigger, string $avgBuyPrice): string
