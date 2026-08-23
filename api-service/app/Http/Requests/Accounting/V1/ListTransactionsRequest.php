@@ -20,6 +20,8 @@ class ListTransactionsRequest extends FormRequest
      */
     public function rules(): array
     {
+        $referenceIdRules = ['sometimes', 'integer', 'min:1'];
+
         return [
             'from_id' => ['sometimes', 'integer', 'min:1'],
             'to_id' => ['sometimes', 'integer', 'min:1', Rule::when($this->filled('from_id'), ['gte:from_id'])],
@@ -29,6 +31,14 @@ class ListTransactionsRequest extends FormRequest
             'date' => ['sometimes', 'date', 'prohibits:date_from,date_to'],
             'date_from' => ['sometimes', 'date', 'prohibits:date'],
             'date_to' => ['sometimes', 'date', 'prohibits:date', Rule::when($this->filled('date_from'), ['after_or_equal:date_from'])],
+            'deposit_id' => $referenceIdRules,
+            'withdrawal_id' => $referenceIdRules,
+            'otc_order_id' => $referenceIdRules,
+            'spot_trade_id' => $referenceIdRules,
+            'stock_contract_id' => $referenceIdRules,
+            'bot_order_id' => $referenceIdRules,
+            'bot_buy_execution_id' => $referenceIdRules,
+            'bot_wallet_transfer_id' => $referenceIdRules,
         ];
     }
 }

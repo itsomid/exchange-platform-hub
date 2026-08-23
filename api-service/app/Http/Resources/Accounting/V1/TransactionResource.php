@@ -26,6 +26,7 @@ class TransactionResource extends JsonResource
             'stock_contract_id' => $this->stock_contract_id,
             'deposit_id' => $this->deposit_id,
             'withdrawal_id' => $this->withdrawal_id,
+            'bot_wallet_transfer_id' => $this->bot_wallet_transfer_id,
             'bot_order_id' => $this->bot_order_id,
             'price' => $this->coin_price,
             'wallet_id' => $this->wallet_id,

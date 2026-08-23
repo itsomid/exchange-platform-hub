@@ -43,7 +43,18 @@ class TransactionController
 
     public function index(ListTransactionsRequest $request)
     {
-        $transactions = Transaction::query()
+        $referenceIdFilters = [
+            'deposit_id',
+            'withdrawal_id',
+            'otc_order_id',
+            'spot_trade_id',
+            'stock_contract_id',
+            'bot_order_id',
+            'bot_buy_execution_id',
+            'bot_wallet_transfer_id',
+        ];
+
+        $query = Transaction::query()
             ->with('user', 'wallet')
             ->whereNull('journal_entry_number')
             ->when($request->filled('from_id'), fn ($q) => $q->where('id', '>=', $request->integer('from_id')))
@@ -53,9 +64,16 @@ class TransactionController
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->input('status')))
             ->when($request->filled('date'), fn ($q) => $q->whereDate('created_at', $request->input('date')))
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('created_at', '>=', $request->input('date_from')))
-            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('created_at', '<=', $request->input('date_to')))
-            ->orderBy('id')
-            ->get();
+            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('created_at', '<=', $request->input('date_to')));
+
+        foreach ($referenceIdFilters as $column) {
+            $query->when(
+                $request->filled($column),
+                fn ($q) => $q->where($column, $request->integer($column))
+            );
+        }
+
+        $transactions = $query->orderBy('id')->get();
 
         return TransactionResource::collection($transactions);
     }
