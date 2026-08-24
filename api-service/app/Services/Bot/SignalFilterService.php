@@ -16,20 +16,27 @@ use Illuminate\Support\Collection;
  *     This is a data/infrastructure problem — NOT a "no opportunity" outcome —
  *     so the caller can surface it as a buy failure instead of silently
  *     pretending there was simply nothing to buy.
- *   - (dropped): a price exists but sits outside the window. This is a normal
- *     no-opportunity case and is silently excluded from both lists.
+ *   - out_of_range: a price exists but sits outside [floor, ceiling]. A normal
+ *     no-opportunity case, excluded from allocation, but reported (decorated
+ *     with `live_price` too) so a caller can explain WHY there was nothing to
+ *     buy instead of only stating that there wasn't.
  */
 class SignalFilterService
 {
     public function __construct(private readonly PriceFeed $priceFeed) {}
 
     /**
-     * @return array{eligible: Collection<int, BotSignal>, unpriced: Collection<int, BotSignal>}
+     * @return array{
+     *     eligible: Collection<int, BotSignal>,
+     *     unpriced: Collection<int, BotSignal>,
+     *     out_of_range: Collection<int, BotSignal>
+     * }
      */
     public function classify(): array
     {
-        $eligible = collect();
-        $unpriced = collect();
+        $eligible   = collect();
+        $unpriced   = collect();
+        $outOfRange = collect();
 
         foreach (BotSignal::active()->get() as $signal) {
             try {
@@ -39,20 +46,23 @@ class SignalFilterService
                 continue;
             }
 
+            $signal->setAttribute('live_price', $price);
+
             $floor = (float) $signal->floor_price;
             $ceil  = (float) $signal->ceiling_price;
 
             if ($price < $floor || $price > $ceil) {
+                $outOfRange->push($signal);
                 continue;
             }
 
-            $signal->setAttribute('live_price', $price);
             $eligible->push($signal);
         }
 
         return [
-            'eligible' => $eligible->values(),
-            'unpriced' => $unpriced->values(),
+            'eligible'     => $eligible->values(),
+            'unpriced'     => $unpriced->values(),
+            'out_of_range' => $outOfRange->values(),
         ];
     }
 }

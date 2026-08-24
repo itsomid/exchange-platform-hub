@@ -28,4 +28,6 @@ Route::prefix('bot-admin')->middleware('bot-admin-auth')->group(function () {
     Route::post('orders/{order}/cancel',           [BotAdminController::class, 'cancel']);
     Route::post('users/{user}/cancel-all-preview', [BotAdminController::class, 'cancelAllPreview']);
     Route::post('users/{user}/cancel-all',         [BotAdminController::class, 'cancelAll']);
+    Route::post('users/{user}/buy-preview',        [BotAdminController::class, 'buyPreview']);
+    Route::post('users/{user}/buy',                [BotAdminController::class, 'buy']);
 });

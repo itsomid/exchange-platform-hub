@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Internal;
 
+use App\Actions\Bot\BotBuyOrchestrator;
 use App\Http\Controllers\Controller;
 use App\Models\Bot\BotBuyExecution;
 use App\Models\Bot\BotOrder;
@@ -39,6 +40,7 @@ class BotAdminController extends Controller
     public function __construct(
         private readonly BotOrderCancelService $cancelService,
         private readonly BotAutoTradeToggleService $toggle,
+        private readonly BotBuyOrchestrator $orchestrator,
     ) {}
 
     public function cancelPreview(int $orderId): JsonResponse
@@ -286,6 +288,163 @@ class BotAdminController extends Controller
             ],
             'wallet' => $this->walletSnapshot($userId),
         ]);
+    }
+
+    /* ── Admin-triggered buy from the user's free balance ──────────────────
+       Puts idle free balance to work on demand. The heavy lifting stays in
+       BotBuyOrchestrator, which is gated on the cheapest in-range buy floor
+       for the ADMIN_BUY trigger, so a free balance that CAN buy something is
+       deployed instead of waiting for a full min-deposit to pile up. ── */
+
+    /**
+     * Read-only "what would happen if I bought now": the wallet snapshot, the
+     * gate it must clear, the per-coin allocation and each coin's planned sell
+     * tiers — or the exact reason no purchase is possible.
+     */
+    public function buyPreview(int $userId): JsonResponse
+    {
+        if (! User::whereKey($userId)->exists()) {
+            return response()->json(['ok' => false, 'error' => 'کاربر یافت نشد.'], 404);
+        }
+
+        try {
+            $preview = $this->orchestrator->preview($userId, BotBuyOrchestrator::TRIGGER_ADMIN_BUY);
+        } catch (\Throwable $e) {
+            Log::channel('smart-bot')->error('bot.admin.buy_preview.exception', [
+                'user_id'   => $userId,
+                'exception' => $e::class,
+                'message'   => $e->getMessage(),
+                'file'      => $e->getFile().':'.$e->getLine(),
+            ]);
+
+            return response()->json([
+                'ok'    => false,
+                'error' => 'خطای داخلی در پیش‌نمایش خرید: '.$e->getMessage(),
+            ], 500);
+        }
+
+        Log::channel('smart-bot')->info('bot.admin.buy_preview', [
+            'user_id'     => $userId,
+            'buyable'     => $preview['ok'],
+            'reason'      => $preview['reason'],
+            'free'        => $preview['wallet']['free_balance'],
+            'gate'        => $preview['gate']['amount'],
+            'allocations' => $preview['totals']['allocated_count'],
+        ]);
+
+        // A preview that cannot buy is still a successful preview — the modal
+        // needs the numbers to explain why. `buyable` carries the verdict.
+        return response()->json(array_merge($preview, [
+            'ok'      => true,
+            'buyable' => $preview['ok'],
+            'blocker' => $preview['ok'] ? null : $this->buyBlockMessage($preview),
+        ]));
+    }
+
+    /**
+     * Execute the buy previewed above. Re-runs the same gate first so the admin
+     * gets the precise reason (not a bare "nothing happened") when the state
+     * changed between opening the modal and confirming it.
+     */
+    public function buy(Request $request, int $userId): JsonResponse
+    {
+        if (! User::whereKey($userId)->exists()) {
+            return response()->json(['ok' => false, 'error' => 'کاربر یافت نشد.'], 404);
+        }
+
+        $preview = $this->orchestrator->preview($userId, BotBuyOrchestrator::TRIGGER_ADMIN_BUY);
+
+        if (! $preview['ok']) {
+            Log::channel('smart-bot')->warning('bot.admin.buy.refused', [
+                'user_id' => $userId,
+                'reason'  => $preview['reason'],
+                'free'    => $preview['wallet']['free_balance'],
+                'gate'    => $preview['gate']['amount'],
+            ]);
+
+            return response()->json([
+                'ok'      => false,
+                'reason'  => $preview['reason'],
+                'error'   => $this->buyBlockMessage($preview),
+                'preview' => $preview,
+            ], 422);
+        }
+
+        $order = ($this->orchestrator)($userId, BotBuyOrchestrator::TRIGGER_ADMIN_BUY);
+
+        if (! $order) {
+            // The orchestrator re-checks under the wallet row lock, so a
+            // concurrent settlement or buy can still legitimately win the race.
+            Log::channel('smart-bot')->warning('bot.admin.buy.no_order', ['user_id' => $userId]);
+
+            return response()->json([
+                'ok'    => false,
+                'error' => 'در لحظه اجرا شرایط خرید برقرار نبود (احتمالاً یک خرید یا تسویه همزمان موجودی آزاد را مصرف کرد). پیش‌نمایش را دوباره بگیرید.',
+            ], 409);
+        }
+
+        $order->loadCount('buyExecutions');
+
+        Log::channel('smart-bot')->info('bot.admin.buy.dispatched', [
+            'user_id'      => $userId,
+            'bot_order_id' => $order->id,
+            'total_usdt'   => (string) $order->total_amount_usdt,
+            'admin_id'     => $request->header('X-Admin-Id'),
+            'admin_label'  => $request->header('X-Admin-Label'),
+        ]);
+
+        return response()->json([
+            'ok'      => true,
+            'message' => sprintf(
+                'سفارش خرید #%d با مبلغ %s USDT ثبت شد و در حال اجرا در صرافی مرجع است.',
+                $order->id,
+                formatNumberTrimZeros((string) $order->total_amount_usdt),
+            ),
+            'order'   => [
+                'id'                => (int) $order->id,
+                'total_amount_usdt' => (string) $order->total_amount_usdt,
+                'executions'        => (int) $order->buy_executions_count,
+            ],
+            'wallet'  => $this->walletSnapshot($userId),
+        ]);
+    }
+
+    /**
+     * Turn an orchestrator block reason into the sentence the admin sees. Each
+     * one names the number that failed, so "nothing was bought" is never left
+     * unexplained.
+     *
+     * @param array<string, mixed> $preview
+     */
+    private function buyBlockMessage(array $preview): string
+    {
+        $free = formatNumberTrimZeros((string) $preview['wallet']['free_balance']);
+        $gate = formatNumberTrimZeros((string) $preview['gate']['amount']);
+
+        return match ($preview['reason']) {
+            'auto_trade_disabled' => 'ربات این کاربر خاموش است. برای خرید، ابتدا «خرید و فروش خودکار» را روشن کنید.',
+            'bot_globally_disabled' => 'ربات به صورت سراسری غیرفعال است (تنظیمات کلی ربات).',
+            'no_bot_wallet' => 'برای این کاربر کیف پول ربات ساخته نشده است؛ هنوز واریزی به ربات نداشته.',
+            'insufficient_free_balance' => $preview['gate']['kind'] === 'buy_floor'
+                ? sprintf(
+                    'موجودی آزاد کاربر %s USDT است و از حداقل خرید ارزان‌ترین ارز در بازه (%s USDT) کمتر است، پس هیچ ارزی قابل خرید نیست.',
+                    $free,
+                    $gate,
+                )
+                : sprintf(
+                    'موجودی آزاد کاربر %s USDT است و از حداقل واریز خالص (%s USDT) کمتر است.',
+                    $free,
+                    $gate,
+                ),
+            'no_eligible_signals' => count($preview['out_of_range']) > 0
+                ? 'هیچ سیگنال فعالی در بازه قیمتی خودش نیست؛ قیمت لحظه‌ای همه ارزها بیرون از بازه کف/سقف تعریف‌شده است.'
+                : 'هیچ سیگنال فعالی برای خرید وجود ندارد.',
+            'no_buyable_allocation' => sprintf(
+                'موجودی آزاد %s USDT بین سیگنال‌ها تقسیم شد، اما سهم هیچ ارزی به حداقل خرید قابل‌قبول آن نرسید (یا سقف تخصیص ارزها پر است).',
+                $free,
+            ),
+            default => 'خرید با موجودی آزاد این کاربر امکان‌پذیر نیست.',
+        };
     }
 
     /* ──────────────────────── internals ──────────────────────── */

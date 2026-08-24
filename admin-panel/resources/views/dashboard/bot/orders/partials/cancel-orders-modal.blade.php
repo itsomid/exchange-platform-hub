@@ -30,6 +30,11 @@
     </div>
 </div>
 
+{{-- Pushed to the layout's script stack: this partial is included inside #app,
+     which the dashboard mounts a Vue app on, and Vue's runtime template compiler
+     strips <script> tags out of a client component template (and warns loudly).
+     @stack('scripts') renders outside #app. --}}
+@push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var modalEl = document.getElementById('botCancelModal');
@@ -391,3 +396,4 @@
         });
     });
 </script>
+@endpush

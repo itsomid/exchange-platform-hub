@@ -35,6 +35,11 @@
                                     style="width:3rem;height:1.5rem;cursor:pointer;">
                                 <label class="form-check-label small" for="autoTradeSwitch">خرید و فروش خودکار</label>
                             </div>
+                            <button type="button" class="btn btn-success btn-sm js-bot-buy-now"
+                                data-preview-url="{{ route('admin.bot.order.user.buy-preview', $user) }}"
+                                data-buy-url="{{ route('admin.bot.order.user.buy', $user) }}">
+                                <i class="fas fa-cart-plus me-1"></i> خرید با موجودی آزاد
+                            </button>
                             <button type="button" class="btn btn-danger btn-sm js-bot-cancel"
                                 data-preview-url="{{ route('admin.bot.order.user.cancel-all-preview', $user) }}"
                                 data-cancel-url="{{ route('admin.bot.order.user.cancel-all', $user) }}"
@@ -587,6 +592,7 @@
     @include('dashboard.bot.orders.partials.description-modal')
     @include('dashboard.bot.orders.partials.system-description-modal')
     @include('dashboard.bot.orders.partials.cancel-orders-modal')
+    @include('dashboard.bot.orders.partials.buy-now-modal')
 
 @endsection
 

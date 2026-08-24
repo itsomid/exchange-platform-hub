@@ -381,7 +381,21 @@ class BotOrderController extends Controller
         return $this->forwardBotApi(fn () => $this->botApi->cancelAll($user->id));
     }
 
-    private function forwardBotApi(\Closure $call): JsonResponse
+    /* ── Admin-triggered buy from the user's free bot balance. Sizing, gating
+       and the wallet lock all live in api-service's BotBuyOrchestrator; the
+       panel only previews and confirms. ── */
+
+    public function buyPreview(User $user): JsonResponse
+    {
+        return $this->forwardBotApi(fn () => $this->botApi->buyPreview($user->id), 'buy');
+    }
+
+    public function buy(User $user): JsonResponse
+    {
+        return $this->forwardBotApi(fn () => $this->botApi->buy($user->id), 'buy');
+    }
+
+    private function forwardBotApi(\Closure $call, string $logKey = 'cancel'): JsonResponse
     {
         $context = [
             'api_url' => (string) config('smart-bot.api_url'),
@@ -393,7 +407,7 @@ class BotOrderController extends Controller
         try {
             $response = $call();
         } catch (\Throwable $e) {
-            Log::error('bot.cancel.forward_exception', $context + [
+            Log::error("bot.{$logKey}.forward_exception", $context + [
                 'exception' => $e::class,
                 'message'   => $e->getMessage(),
                 'file'      => $e->getFile().':'.$e->getLine(),
@@ -410,14 +424,14 @@ class BotOrderController extends Controller
         $payload = $response->json();
 
         if ($payload === null || ($payload['ok'] ?? true) === false || $status >= 400) {
-            Log::warning('bot.cancel.forward_bad_response', $context + [
+            Log::warning("bot.{$logKey}.forward_bad_response", $context + [
                 'http_status' => $status,
                 'ok_flag'     => $payload['ok'] ?? null,
                 'error'       => $payload['error'] ?? null,
                 'body_snip'   => mb_substr($rawBody, 0, 2000),
             ]);
         } else {
-            Log::info('bot.cancel.forward_ok', $context + [
+            Log::info("bot.{$logKey}.forward_ok", $context + [
                 'http_status' => $status,
                 'mode'        => $payload['mode'] ?? null,
                 'orders'      => isset($payload['orders']) ? count($payload['orders']) : null,

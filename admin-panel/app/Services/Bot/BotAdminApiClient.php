@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\Http;
 
 /**
  * Thin HTTP wrapper around api-service's /api/internal/bot-admin endpoints
- * (bot-order cancel / user-wide cancel + liquidation).
+ * (bot-order cancel / user-wide cancel + liquidation, and the admin-triggered
+ * buy from a user's free balance).
  *
  * Configured via config/smart-bot.php:
  *   - api_url              : api-service base URL
@@ -47,6 +48,16 @@ class BotAdminApiClient
     public function cancelAll(int $userId): Response
     {
         return $this->http()->post("/users/{$userId}/cancel-all");
+    }
+
+    public function buyPreview(int $userId): Response
+    {
+        return $this->http()->post("/users/{$userId}/buy-preview");
+    }
+
+    public function buy(int $userId): Response
+    {
+        return $this->http()->post("/users/{$userId}/buy");
     }
 
     /**
