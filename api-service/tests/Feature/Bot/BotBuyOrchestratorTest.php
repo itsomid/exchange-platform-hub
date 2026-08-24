@@ -49,6 +49,7 @@ function makeCurrency(string $symbol): Currency
     // written from admin-panel, so the fixture has to bypass mass assignment.
     return Currency::forceCreate([
         'name'             => $symbol,
+        'persian_name'     => $symbol,
         'symbol'           => $symbol,
         'price_precision'  => 2,
         'amount_precision' => 8,
