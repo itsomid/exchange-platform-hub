@@ -20,6 +20,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use RuntimeException;
 
 /**
  * Orchestrates a full "trigger to buy" cycle for a single user:
@@ -73,21 +74,26 @@ class BotBuyOrchestrator
             return null;
         }
 
-        $free       = bcsub((string) $wallet->balance, (string) $wallet->locked_balance, 8);
-        $minNet     = $this->feeCalculator->minNetDeposit();
-        // REINVEST is gated further down against the cheapest in-range buy
-        // floor instead of the full min-deposit, so principal freed by a
-        // filled sell tier goes straight back to work instead of idling
-        // until min_deposit_usdt of free cash piles up.
-        if ($triggeredBy !== self::TRIGGER_REINVEST && bccomp($free, $minNet, 8) < 0) {
-            $this->logNoOrder($userId, $triggeredBy, 'insufficient_free_balance', [
-                'balance'      => (string) $wallet->balance,
-                'locked'       => (string) $wallet->locked_balance,
-                'free'         => $free,
-                'min_deposit'  => (string) $global->min_deposit_usdt,
-                'min_net'      => $minNet,
-            ]);
-            return null;
+        $minNet = $this->feeCalculator->minNetDeposit();
+        // Unlocked fast path: keeps signal classification off the hot path for
+        // wallets that plainly cannot buy. The binding check is the one under
+        // the wallet row lock further down — this read may already be stale.
+        // REINVEST is gated there against the cheapest in-range buy floor
+        // instead of the full min-deposit, so principal freed by a filled sell
+        // tier goes straight back to work instead of idling until
+        // min_deposit_usdt of free cash piles up.
+        if ($triggeredBy !== self::TRIGGER_REINVEST) {
+            $free = bcsub((string) $wallet->balance, (string) $wallet->locked_balance, 8);
+            if (bccomp($free, $minNet, 8) < 0) {
+                $this->logNoOrder($userId, $triggeredBy, 'insufficient_free_balance', [
+                    'balance'      => (string) $wallet->balance,
+                    'locked'       => (string) $wallet->locked_balance,
+                    'free'         => $free,
+                    'min_deposit'  => (string) $global->min_deposit_usdt,
+                    'min_net'      => $minNet,
+                ]);
+                return null;
+            }
         }
 
         // Classify active signals: those we can price & trade vs. those whose
@@ -133,50 +139,67 @@ class BotBuyOrchestrator
         $alpha  = (string) $global->alpha_weight;
         $floorMode = (string) ($global->precheck_floor_mode ?? 'multi');
 
-        // Reinvest gate: only require enough free USDT to clear the smallest
-        // effective minimum among in-range signals (same formula as the
-        // allocator's D14 pre-check), not the full min-deposit. Below that
-        // floor no signal could receive a viable allocation anyway. With no
-        // eligible signal to measure against, fall back to the legacy gate.
-        if ($triggeredBy === self::TRIGGER_REINVEST) {
-            $minBuyFloor = $this->minEffectiveBuyFloor($eligible, $floorMode) ?? $minNet;
-            if (bccomp($free, $minBuyFloor, 8) < 0) {
+        // Reading the free balance, sizing the allocation against it and
+        // writing the resulting lock must all observe the same wallet
+        // snapshot. They used to straddle an unlocked read, so two sell
+        // settlements completing at once on separate queue workers each
+        // allocated the other's freed principal and drove locked_balance above
+        // balance (negative withdrawable). The row lock serialises the whole
+        // decision per user: a concurrent trigger blocks here and then re-reads
+        // the post-commit balance.
+        return DB::transaction(function () use ($userId, $triggeredBy, $candidates, $eligible, $unpriced, $alpha, $floorMode, $minNet) {
+            $wallet = BotWallet::where('user_id', $userId)->lockForUpdate()->first();
+            if (! $wallet) {
+                $this->logNoOrder($userId, $triggeredBy, 'no_bot_wallet');
+                return null;
+            }
+
+            $free = bcsub((string) $wallet->balance, (string) $wallet->locked_balance, 8);
+
+            // Reinvest gate: only require enough free USDT to clear the smallest
+            // effective minimum among in-range signals (same formula as the
+            // allocator's D14 pre-check), not the full min-deposit. Below that
+            // floor no signal could receive a viable allocation anyway. With no
+            // eligible signal to measure against, fall back to the legacy gate.
+            $gate = $triggeredBy === self::TRIGGER_REINVEST
+                ? ($this->minEffectiveBuyFloor($eligible, $floorMode) ?? $minNet)
+                : $minNet;
+
+            if (bccomp($free, $gate, 8) < 0) {
                 $this->logNoOrder($userId, $triggeredBy, 'insufficient_free_balance', [
-                    'balance'       => (string) $wallet->balance,
-                    'locked'        => (string) $wallet->locked_balance,
-                    'free'          => $free,
-                    'min_buy_floor' => $minBuyFloor,
+                    'balance' => (string) $wallet->balance,
+                    'locked'  => (string) $wallet->locked_balance,
+                    'free'    => $free,
+                    'gate'    => $gate,
                 ]);
                 return null;
             }
-        }
 
-        // Enforce max_allocation_percent against the TOTAL wallet balance minus
-        // what each currency already holds, so re-buying from the freed
-        // remainder (e.g. after toggling the bot off/on) can never push a coin
-        // past its cap of the whole wallet.
-        $committed = $this->committedUsdtPerCurrency($userId);
-        $result = empty($candidates)
-            ? new AllocationResult([], [], $free, [])
-            : $this->allocator->allocate($candidates, $free, $alpha, $floorMode, (string) $wallet->balance, $committed);
+            // Enforce max_allocation_percent against the TOTAL wallet balance minus
+            // what each currency already holds, so re-buying from the freed
+            // remainder (e.g. after toggling the bot off/on) can never push a coin
+            // past its cap of the whole wallet.
+            $committed = $this->committedUsdtPerCurrency($userId);
+            $result = empty($candidates)
+                ? new AllocationResult([], [], $free, [])
+                : $this->allocator->allocate($candidates, $free, $alpha, $floorMode, (string) $wallet->balance, $committed);
 
-        // No buyable allocation → don't create an order at all. Skipped-only
-        // outcomes (every coin already at its max_allocation_percent cap, or
-        // below its tradeable minimum) carry no purchase, so recording an
-        // order full of SKIPPED rows would just be noise. Unpriced signals are
-        // the one exception: we still create the order so the underlying data
-        // failure surfaces to the user instead of a misleading "no opportunity".
-        if (empty($result->allocations) && $unpriced->isEmpty()) {
-            $this->logNoOrder($userId, $triggeredBy, 'no_buyable_allocation', [
-                'candidates' => count($candidates),
-                'skipped'    => count($result->skipped),
-                'free'       => $free,
-            ]);
-            return null;
-        }
+            // No buyable allocation → don't create an order at all. Skipped-only
+            // outcomes (every coin already at its max_allocation_percent cap, or
+            // below its tradeable minimum) carry no purchase, so recording an
+            // order full of SKIPPED rows would just be noise. Unpriced signals are
+            // the one exception: we still create the order so the underlying data
+            // failure surfaces to the user instead of a misleading "no opportunity".
+            if (empty($result->allocations) && $unpriced->isEmpty()) {
+                $this->logNoOrder($userId, $triggeredBy, 'no_buyable_allocation', [
+                    'candidates' => count($candidates),
+                    'skipped'    => count($result->skipped),
+                    'free'       => $free,
+                ]);
+                return null;
+            }
 
-        return DB::transaction(function () use ($userId, $free, $alpha, $triggeredBy, $result, $unpriced) {
-            return $this->persistAndDispatch($userId, $free, $alpha, $triggeredBy, $result, $unpriced);
+            return $this->persistAndDispatch($userId, $wallet, $free, $alpha, $triggeredBy, $result, $unpriced);
         });
     }
 
@@ -290,8 +313,13 @@ class BotBuyOrchestrator
         return array_map(fn ($v) => (string) $v, $committed);
     }
 
+    /**
+     * @param BotWallet $wallet Already locked with lockForUpdate() by the caller,
+     *                          inside the same transaction.
+     */
     private function persistAndDispatch(
         int $userId,
+        BotWallet $wallet,
         string $totalAmount,
         string $alpha,
         string $triggeredBy,
@@ -372,11 +400,23 @@ class BotBuyOrchestrator
         }
 
         if (bccomp($totalLock, '0', 8) > 0) {
-            // Lock funds on the bot wallet (row lock for atomicity).
-            $wallet = BotWallet::where('user_id', $userId)->lockForUpdate()->first();
-            $wallet->update([
-                'locked_balance' => bcadd((string) $wallet->locked_balance, $totalLock, 8),
-            ]);
+            $newLocked = bcadd((string) $wallet->locked_balance, $totalLock, 8);
+
+            // The allocator is capped at the free balance read under this same
+            // lock, so this can only trip on a genuine logic bug. Abort loudly
+            // rather than reserve money the wallet does not hold — the whole
+            // order (and its executions) rolls back with the transaction.
+            if (bccomp($newLocked, (string) $wallet->balance, 8) > 0) {
+                throw new RuntimeException(sprintf(
+                    'bot.orchestrator.overlock user=%d balance=%s locked=%s requested=%s',
+                    $userId,
+                    (string) $wallet->balance,
+                    (string) $wallet->locked_balance,
+                    $totalLock,
+                ));
+            }
+
+            $wallet->update(['locked_balance' => $newLocked]);
         }
 
         // No buy jobs will run (e.g. every eligible signal was unpriced and

@@ -23,7 +23,7 @@ function makeBotUser(string $balance = '100.00000000'): User
         'email'      => 'bot-trader-' . uniqid() . '@example.test',
         'username'   => 'bot' . uniqid(),
         'password'   => bcrypt('secret-pass'),
-        'status'     => 'ACTIVE',
+        'status'     => 'active',
     ]);
 
     BotWallet::create([
@@ -45,7 +45,9 @@ function makeBotUser(string $balance = '100.00000000'): User
 
 function makeCurrency(string $symbol): Currency
 {
-    return Currency::create([
+    // Currency is read-only in api-service ($fillable = []); it is only ever
+    // written from admin-panel, so the fixture has to bypass mass assignment.
+    return Currency::forceCreate([
         'name'             => $symbol,
         'symbol'           => $symbol,
         'price_precision'  => 2,
