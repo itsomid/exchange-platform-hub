@@ -107,6 +107,18 @@
         .price-flash-down {
             animation: priceFlashDown 2s ease;
         }
+
+        #signalsTable tbody tr.signal-in-range td {
+            background-color: rgba(40, 199, 111, 0.12) !important;
+        }
+
+        #signalsTable tbody tr.signal-below-floor td {
+            background-color: rgba(255, 159, 67, 0.14) !important;
+        }
+
+        #signalsTable tbody tr.signal-below-floor {
+            cursor: help;
+        }
     </style>
 @endsection
 
@@ -119,24 +131,27 @@
                 <div class="row mb-3">
                     <div class="col-lg-4 col-md-5 col-sm-12 mb-2">
                         <label class="form-label" for="search">جستجو:</label>
-                        <input type="text" name="search" id="search" class="form-control" placeholder="نام یا سیمبل ارز..."
-                            value="{{ request('search') }}">
+                        <input type="text" name="search" id="search" class="form-control"
+                            placeholder="نام یا سیمبل ارز..." value="{{ request('search') }}">
                     </div>
                     <div class="col-lg-2 col-md-3 col-sm-6 mb-2">
                         <label class="form-label" for="status">وضعیت:</label>
                         <select name="status" id="status" class="form-select">
                             <option value="">همه وضعیت‌ها</option>
                             <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>فعال</option>
-                            <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>غیرفعال</option>
+                            <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>غیرفعال
+                            </option>
                         </select>
                     </div>
                     <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
                         <label class="form-label" for="sell_mode">نوع هدف فروش:</label>
                         <select name="sell_mode" id="sell_mode" class="form-select">
                             <option value="">همه</option>
-                            <option value="percent" {{ request('sell_mode') === 'percent' ? 'selected' : '' }}>درصد تغییر قیمت
+                            <option value="percent" {{ request('sell_mode') === 'percent' ? 'selected' : '' }}>درصد تغییر
+                                قیمت
                             </option>
-                            <option value="price" {{ request('sell_mode') === 'price' ? 'selected' : '' }}>قیمت مطلق</option>
+                            <option value="price" {{ request('sell_mode') === 'price' ? 'selected' : '' }}>قیمت مطلق
+                            </option>
                         </select>
                     </div>
                     <div class="col-lg-3 col-md-3 col-sm-6 mb-2 d-flex align-items-end">
@@ -188,7 +203,7 @@
             </div>
         </div>
         <div class="table-responsive text-nowrap">
-            <table class="table table-striped align-middle" id="signalsTable">
+            <table class="table align-middle" id="signalsTable">
                 <thead>
                     <tr>
                         <th style="width:40px"></th>
@@ -209,14 +224,28 @@
                         @php
                             $market = $signal->currency?->baseMarket;
                             $lastPrice = $market?->activeExchangePrice?->price;
+                            $floor = (float) $signal->floor_price;
+                            $ceiling = (float) $signal->ceiling_price;
+                            $rowClass = '';
+                            if ($lastPrice !== null) {
+                                $price = (float) $lastPrice;
+                                if ($price >= $floor && $price <= $ceiling) {
+                                    $rowClass = 'signal-in-range';
+                                } elseif ($price < $floor) {
+                                    $rowClass = 'signal-below-floor';
+                                }
+                            }
                         @endphp
-                        <tr data-id="{{ $signal->id }}" @if ($market) data-market-id="{{ $market->id }}" @endif>
+                        <tr data-id="{{ $signal->id }}" class="{{ $rowClass }}"
+                            data-floor-price="{{ formatNumberTrimZeros($signal->floor_price) }}"
+                            data-ceiling-price="{{ formatNumberTrimZeros($signal->ceiling_price) }}"
+                            @if ($market) data-market-id="{{ $market->id }}" @endif>
                             <td class="drag-handle text-muted" style="cursor:grab"><i class="fas fa-grip-vertical"></i></td>
                             <td>{{ $signal->id }}</td>
-                            <td class="d-flex align-items-center gap-3">
+                            <td class="d-flex align-items-center gap-3 signal-hint-anchor">
                                 @if ($signal->currency)
-                                    <img src="{{ $signal->currency->coinLogo() }}" class="rounded-circle me-1" width="32"
-                                        height="32" alt="{{ $signal->currency->symbol }}">
+                                    <img src="{{ $signal->currency->coinLogo() }}" class="rounded-circle me-1"
+                                        width="32" height="32" alt="{{ $signal->currency->symbol }}">
                                 @endif
                                 <div>
                                     <span>{{ $signal->currency?->symbol }}</span>
@@ -245,10 +274,8 @@
                             </td>
                             <td>
                                 <div class="d-flex gap-1">
-                                    <button type="button"
-                                        class="btn btn-sm btn-outline-info btn-quick-edit"
-                                        title="ویرایش سریع"
-                                        data-id="{{ $signal->id }}"
+                                    <button type="button" class="btn btn-sm btn-outline-info btn-quick-edit"
+                                        title="ویرایش سریع" data-id="{{ $signal->id }}"
                                         data-symbol="{{ $signal->currency?->symbol }}"
                                         data-floor-price="{{ formatNumberTrimZeros($signal->floor_price) }}"
                                         data-ceiling-price="{{ formatNumberTrimZeros($signal->ceiling_price) }}"
@@ -299,7 +326,8 @@
     </div>
 
     {{-- Quick Edit Modal --}}
-    <div class="modal fade" id="quickEditModal" tabindex="-1" aria-labelledby="quickEditModalLabel" aria-hidden="true">
+    <div class="modal fade" id="quickEditModal" tabindex="-1" aria-labelledby="quickEditModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <form id="quickEditForm">
@@ -312,17 +340,22 @@
 
                         <div class="row">
                             <div class="col-md-4 mb-3">
-                                <label for="qe_floor_price" class="form-label">کف قیمت (USDT) <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="qe_floor_price" name="floor_price" required>
+                                <label for="qe_floor_price" class="form-label">کف قیمت (USDT) <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="qe_floor_price" name="floor_price"
+                                    required>
                                 <div class="invalid-feedback" data-error="floor_price"></div>
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label for="qe_ceiling_price" class="form-label">سقف قیمت (USDT) <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="qe_ceiling_price" name="ceiling_price" required>
+                                <label for="qe_ceiling_price" class="form-label">سقف قیمت (USDT) <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="qe_ceiling_price" name="ceiling_price"
+                                    required>
                                 <div class="invalid-feedback" data-error="ceiling_price"></div>
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label for="qe_max_allocation" class="form-label">سقف تخصیص (%) <span class="text-danger">*</span></label>
+                                <label for="qe_max_allocation" class="form-label">سقف تخصیص (%) <span
+                                        class="text-danger">*</span></label>
                                 <input type="number" step="0.01" min="0.01" max="100" class="form-control"
                                     id="qe_max_allocation" name="max_allocation_percent" required>
                                 <div class="invalid-feedback" data-error="max_allocation_percent"></div>
@@ -330,7 +363,8 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="qe_sell_mode" class="form-label">نوع هدف فروش <span class="text-danger">*</span></label>
+                            <label for="qe_sell_mode" class="form-label">نوع هدف فروش <span
+                                    class="text-danger">*</span></label>
                             <select class="form-select" id="qe_sell_mode" name="sell_mode" required>
                                 <option value="percent">درصد تغییر قیمت</option>
                                 <option value="price">قیمت مطلق</option>
@@ -374,9 +408,9 @@
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const body = document.body;
-            document.getElementById('clearFilters').addEventListener('click', function () {
+            document.getElementById('clearFilters').addEventListener('click', function() {
                 window.location.href = '{{ route('admin.bot.signal.index') }}';
             });
 
@@ -387,29 +421,32 @@
                 ghostClass: 'signal-row-ghost',
                 chosenClass: 'signal-row-chosen',
                 dragClass: 'signal-row-dragging',
-                onStart: function () {
+                onStart: function() {
                     body.classList.add('signals-dragging');
                 },
-                onEnd: function () {
+                onEnd: function() {
                     body.classList.remove('signals-dragging');
                     const order = Array.from(tbody.querySelectorAll('tr[data-id]'))
                         .map(tr => tr.dataset.id);
 
                     fetch('{{ route('admin.bot.signal.reorder') }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        },
-                        body: JSON.stringify({ order }),
-                    })
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            },
+                            body: JSON.stringify({
+                                order
+                            }),
+                        })
                         .then(res => res.json())
                         .then(data => {
                             if (!data.success) throw new Error();
                             tbody.querySelectorAll('tr[data-id]').forEach(tr => {
                                 const id = tr.dataset.id;
                                 if (data.priorities[id] !== undefined) {
-                                    tr.querySelector('td.priority-cell').textContent = data.priorities[id];
+                                    tr.querySelector('td.priority-cell').textContent = data
+                                        .priorities[id];
                                 }
                             });
                             Toastify({
@@ -419,7 +456,9 @@
                                 gravity: 'top',
                                 position: 'right',
                                 stopOnFocus: true,
-                                style: { background: '#28C76F' },
+                                style: {
+                                    background: '#28C76F'
+                                },
                             }).showToast();
                         })
                         .catch(() => {
@@ -430,11 +469,97 @@
                                 gravity: 'top',
                                 position: 'right',
                                 stopOnFocus: true,
-                                style: { background: '#EA5455' },
+                                style: {
+                                    background: '#EA5455'
+                                },
                             }).showToast();
                         });
                 },
             });
+
+            const toNumber = (value) => {
+                if (value === null || typeof value === 'undefined') {
+                    return null;
+                }
+
+                const normalized = String(value).replace(/,/g, '').trim();
+                if (normalized === '' || normalized === '—') {
+                    return null;
+                }
+
+                const numeric = Number(normalized);
+                return Number.isFinite(numeric) ? numeric : null;
+            };
+
+            const BELOW_FLOOR_HINT = 'این کوین الان از کف قیمت هم پایین‌تر است';
+
+            const getHintAnchor = (row) => row.querySelector('td.signal-hint-anchor');
+
+            const clearRowHint = (row) => {
+                if (row._belowFloorTipHandlers) {
+                    row.removeEventListener('mouseenter', row._belowFloorTipHandlers.show);
+                    row.removeEventListener('mouseleave', row._belowFloorTipHandlers.hide);
+                    delete row._belowFloorTipHandlers;
+                }
+
+                const anchor = getHintAnchor(row);
+                if (!anchor) {
+                    return;
+                }
+
+                const existing = bootstrap.Tooltip.getInstance(anchor);
+                if (existing) {
+                    existing.dispose();
+                }
+
+                anchor.removeAttribute('data-bs-title');
+                anchor.removeAttribute('title');
+            };
+
+            const setBelowFloorHint = (row) => {
+                const anchor = getHintAnchor(row);
+                if (!anchor) {
+                    return;
+                }
+
+                clearRowHint(row);
+
+                const tip = bootstrap.Tooltip.getOrCreateInstance(anchor, {
+                    container: 'body',
+                    placement: 'top',
+                    trigger: 'manual',
+                    title: BELOW_FLOOR_HINT,
+                });
+
+                const show = () => tip.show();
+                const hide = () => tip.hide();
+                row.addEventListener('mouseenter', show);
+                row.addEventListener('mouseleave', hide);
+                row._belowFloorTipHandlers = { show, hide };
+            };
+
+            const updateRowPriceState = (row, price) => {
+                if (!row) {
+                    return;
+                }
+
+                const floor = toNumber(row.dataset.floorPrice);
+                const ceiling = toNumber(row.dataset.ceilingPrice);
+
+                row.classList.remove('signal-in-range', 'signal-below-floor');
+                clearRowHint(row);
+
+                if (price === null || floor === null || ceiling === null) {
+                    return;
+                }
+
+                if (price >= floor && price <= ceiling) {
+                    row.classList.add('signal-in-range');
+                } else if (price < floor) {
+                    row.classList.add('signal-below-floor');
+                    setBelowFloorHint(row);
+                }
+            };
 
             // ── Quick Edit Modal ──────────────────────────────────────────────
             const quickEditModalEl = document.getElementById('quickEditModal');
@@ -456,7 +581,9 @@
                     gravity: 'top',
                     position: 'right',
                     stopOnFocus: true,
-                    style: { background: ok ? '#28C76F' : '#EA5455' },
+                    style: {
+                        background: ok ? '#28C76F' : '#EA5455'
+                    },
                 }).showToast();
             };
 
@@ -563,9 +690,12 @@
                         symbol ? `ویرایش سریع — ${symbol}` : 'ویرایش سریع سیگنال';
 
                     document.getElementById('qe_floor_price').value = btn.dataset.floorPrice || '';
-                    document.getElementById('qe_ceiling_price').value = btn.dataset.ceilingPrice || '';
-                    document.getElementById('qe_max_allocation').value = btn.dataset.maxAllocation || '';
-                    document.getElementById('qe_sell_mode').value = btn.dataset.sellMode || 'percent';
+                    document.getElementById('qe_ceiling_price').value = btn.dataset.ceilingPrice ||
+                        '';
+                    document.getElementById('qe_max_allocation').value = btn.dataset
+                        .maxAllocation || '';
+                    document.getElementById('qe_sell_mode').value = btn.dataset.sellMode ||
+                        'percent';
 
                     let targets = [];
                     try {
@@ -592,7 +722,7 @@
                 });
             });
 
-            quickEditForm.addEventListener('submit', function (e) {
+            quickEditForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 if (!qeCurrentUrl) return;
 
@@ -616,37 +746,44 @@
 
                 qeSubmitBtn.disabled = true;
                 const originalHtml = qeSubmitBtn.innerHTML;
-                qeSubmitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> در حال ذخیره...';
+                qeSubmitBtn.innerHTML =
+                    '<span class="spinner-border spinner-border-sm me-1"></span> در حال ذخیره...';
 
                 fetch(qeCurrentUrl, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    },
-                    body: JSON.stringify(payload),
-                })
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        },
+                        body: JSON.stringify(payload),
+                    })
                     .then(async (res) => {
                         const data = await res.json().catch(() => ({}));
                         if (!res.ok) {
                             if (res.status === 422 && data.errors) {
                                 Object.entries(data.errors).forEach(([field, messages]) => {
-                                    const msg = Array.isArray(messages) ? messages[0] : messages;
+                                    const msg = Array.isArray(messages) ? messages[0] :
+                                        messages;
                                     const baseField = field.split('.')[0];
-                                    const feedback = quickEditForm.querySelector(`[data-error="${field}"]`)
-                                        || quickEditForm.querySelector(`[data-error="${baseField}"]`);
+                                    const feedback = quickEditForm.querySelector(
+                                            `[data-error="${field}"]`) ||
+                                        quickEditForm.querySelector(
+                                            `[data-error="${baseField}"]`);
                                     if (feedback) {
                                         feedback.textContent = msg;
                                         feedback.classList.remove('d-none');
                                         feedback.classList.add('d-block');
                                     }
-                                    const input = quickEditForm.querySelector(`[name="${field}"]`)
-                                        || quickEditForm.querySelector(`[name="${baseField}"]`);
+                                    const input = quickEditForm.querySelector(
+                                            `[name="${field}"]`) ||
+                                        quickEditForm.querySelector(
+                                        `[name="${baseField}"]`);
                                     if (input) input.classList.add('is-invalid');
                                 });
                                 const firstError = Object.values(data.errors)[0];
-                                showToast(Array.isArray(firstError) ? firstError[0] : firstError, false);
+                                showToast(Array.isArray(firstError) ? firstError[0] : firstError,
+                                    false);
                                 return;
                             }
                             throw new Error(data.message || 'خطا در ذخیره');
@@ -656,14 +793,27 @@
 
                         const signal = data.signal;
                         if (qeCurrentRow) {
-                            const floorCell = qeCurrentRow.querySelector('[data-role="floor-price"]');
-                            const ceilingCell = qeCurrentRow.querySelector('[data-role="ceiling-price"]');
-                            const allocCell = qeCurrentRow.querySelector('[data-role="max-allocation"]');
-                            const countCell = qeCurrentRow.querySelector('[data-role="sell-orders-count"]');
+                            const floorCell = qeCurrentRow.querySelector(
+                                '[data-role="floor-price"]');
+                            const ceilingCell = qeCurrentRow.querySelector(
+                                '[data-role="ceiling-price"]');
+                            const allocCell = qeCurrentRow.querySelector(
+                                '[data-role="max-allocation"]');
+                            const countCell = qeCurrentRow.querySelector(
+                                '[data-role="sell-orders-count"]');
                             if (floorCell) floorCell.textContent = signal.floor_price;
                             if (ceilingCell) ceilingCell.textContent = signal.ceiling_price;
-                            if (allocCell) allocCell.textContent = signal.max_allocation_percent + '٪';
+                            if (allocCell) allocCell.textContent = signal.max_allocation_percent +
+                                '٪';
                             if (countCell) countCell.textContent = signal.sell_orders_count;
+
+                            qeCurrentRow.dataset.floorPrice = signal.floor_price;
+                            qeCurrentRow.dataset.ceilingPrice = signal.ceiling_price;
+                            const currentPrice = toNumber(
+                                qeCurrentRow.querySelector('[data-role="last-price"]')
+                                ?.textContent
+                            );
+                            updateRowPriceState(qeCurrentRow, currentPrice);
                         }
 
                         if (qeCurrentBtn) {
@@ -671,7 +821,8 @@
                             qeCurrentBtn.dataset.ceilingPrice = signal.ceiling_price;
                             qeCurrentBtn.dataset.maxAllocation = signal.max_allocation_percent;
                             qeCurrentBtn.dataset.sellMode = signal.sell_mode;
-                            qeCurrentBtn.dataset.sellTargets = JSON.stringify(signal.sell_targets || []);
+                            qeCurrentBtn.dataset.sellTargets = JSON.stringify(signal.sell_targets ||
+                                []);
                         }
 
                         quickEditModal.hide();
@@ -686,6 +837,12 @@
                     });
             });
 
+            // Sync row highlight + tooltip from current prices (works even without Echo)
+            document.querySelectorAll('#signalsTable tr[data-id]').forEach((row) => {
+                const price = toNumber(row.querySelector('[data-role="last-price"]')?.textContent);
+                updateRowPriceState(row, price);
+            });
+
             // Live market price via Echo (same channel as markets list)
             if (typeof window.Echo === 'undefined') {
                 console.warn('Echo is not initialized. Check VITE_REVERB/VITE_PUSHER env vars and frontend build.');
@@ -694,20 +851,6 @@
 
             const marketRows = document.querySelectorAll('#signalsTable tr[data-market-id]');
             const marketState = new Map();
-
-            const toNumber = (value) => {
-                if (value === null || typeof value === 'undefined') {
-                    return null;
-                }
-
-                const normalized = String(value).replace(/,/g, '').trim();
-                if (normalized === '' || normalized === '—') {
-                    return null;
-                }
-
-                const numeric = Number(normalized);
-                return Number.isFinite(numeric) ? numeric : null;
-            };
 
             const formatPrice = (value) => {
                 const numeric = Number(value);
@@ -757,8 +900,9 @@
                 }
 
                 const lastPriceElement = row.querySelector('[data-role="last-price"]');
+                const initialPrice = toNumber(lastPriceElement?.textContent);
                 marketState.set(row, {
-                    last: toNumber(lastPriceElement?.textContent),
+                    last: initialPrice,
                 });
 
                 window.Echo.channel(`market.${marketId}`).listen('MarketUpdated', (event) => {
@@ -773,12 +917,16 @@
 
                     const previousValue = marketState.get(row)?.last ?? null;
                     lastPriceElement.textContent = formatPrice(numericValue);
+                    updateRowPriceState(row, numericValue);
 
                     if (previousValue !== null && previousValue !== numericValue) {
-                        applyValueAnimation(lastPriceElement, numericValue > previousValue ? 1 : -1);
+                        applyValueAnimation(lastPriceElement, numericValue > previousValue ? 1 : -
+                        1);
                     }
 
-                    marketState.set(row, { last: numericValue });
+                    marketState.set(row, {
+                        last: numericValue
+                    });
                 });
             });
         });
