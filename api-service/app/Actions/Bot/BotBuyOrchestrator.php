@@ -26,9 +26,10 @@ use RuntimeException;
 /**
  * Orchestrates a full "trigger to buy" cycle for a single user:
  *
- *   1. Validate auto-trade is enabled and free_balance ≥ minNetDeposit
- *      (min_deposit_usdt minus the transfer fee on that amount). REINVEST and
- *      ADMIN_BUY triggers are instead gated on the cheapest in-range signal's
+ *   1. Validate auto-trade is enabled and the free balance clears the trigger's
+ *      gate. Only TRANSFER_IN is held to minNetDeposit (min_deposit_usdt minus
+ *      the transfer fee on that amount); every other trigger deploys cash the
+ *      wallet already holds and is gated on the cheapest in-range signal's
  *      effective minimum, so already-present cash re-enters the cycle as soon
  *      as it can buy anything at all.
  *   2. Gather eligible signals and compute the allocation pipeline.
@@ -464,14 +465,28 @@ class BotBuyOrchestrator
 
     /**
      * Triggers that deploy cash the wallet already holds — principal freed by a
-     * filled sell tier, or an admin pushing an idle free balance back to work —
-     * are gated on the cheapest in-range buy floor rather than the full
-     * min-deposit, so money that CAN buy something does not sit idle until
-     * min_deposit_usdt of free cash piles up again.
+     * filled sell tier, a signal opening a new opportunity, or an admin pushing
+     * an idle free balance back to work — are gated on the cheapest in-range
+     * buy floor rather than the full min-deposit, so money that CAN buy
+     * something does not sit idle until min_deposit_usdt of free cash piles up
+     * again.
+     *
+     * min_deposit_usdt is the minimum a user must TRANSFER IN, so TRANSFER_IN
+     * is the only trigger it legitimately applies to. Applying it to the scan
+     * meant a balance freed below that minimum got exactly one shot (the
+     * REINVEST fired the instant a sell tier filled) and was never retried
+     * afterwards — the scheduled scan filtered the user out for good. Applying
+     * it to TOGGLE_ON meant switching the bot on with such a balance did
+     * nothing at all, with no visible reason.
      */
     private function gatesOnBuyFloor(string $triggeredBy): bool
     {
-        return in_array($triggeredBy, [self::TRIGGER_REINVEST, self::TRIGGER_ADMIN_BUY], true);
+        return in_array($triggeredBy, [
+            self::TRIGGER_REINVEST,
+            self::TRIGGER_SIGNAL_SCAN,
+            self::TRIGGER_TOGGLE_ON,
+            self::TRIGGER_ADMIN_BUY,
+        ], true);
     }
 
     /**
@@ -577,10 +592,7 @@ class BotBuyOrchestrator
 
     /**
      * Smallest USDT amount that could still produce a buy across the given
-     * in-range signals: min over signals of max(min_buy_amount_usdt, order
-     * floor), where the order floor mirrors the allocator's D14 pre-check
-     * (effective_p2p_min_order_value, multiplied by sell_orders_count in
-     * 'multi' floor mode). Returns null when there are no eligible signals.
+     * in-range signals. Returns null when there are no eligible signals.
      *
      * @param Collection<int, BotSignal> $eligible
      */
@@ -589,12 +601,7 @@ class BotBuyOrchestrator
         $min = null;
 
         foreach ($eligible as $signal) {
-            $p2pMin     = (string) $signal->effective_p2p_min_order_value;
-            $orderFloor = $floorMode === 'single'
-                ? $p2pMin
-                : bcmul((string) (int) $signal->sell_orders_count, $p2pMin, 8);
-            $minBuy       = (string) $signal->min_buy_amount_usdt;
-            $effectiveMin = bccomp($minBuy, $orderFloor, 8) >= 0 ? $minBuy : $orderFloor;
+            $effectiveMin = $signal->effectiveMinBuyUsdt($floorMode);
 
             if ($min === null || bccomp($effectiveMin, $min, 8) < 0) {
                 $min = $effectiveMin;

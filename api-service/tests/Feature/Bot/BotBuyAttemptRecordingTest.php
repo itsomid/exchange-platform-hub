@@ -177,13 +177,90 @@ it('records the out-of-range signals when no signal is priced inside its window'
     expect($attempt->details['out_of_range'][0]['floor_price'])->toBe('10.00000000');
 });
 
-it('records the free balance and the gate that a SIGNAL_SCAN failed to clear', function () {
-    // Free balance under the net min deposit: exactly the case where the
-    // scheduled scan can never deploy the money, because it gates on the full
-    // min deposit rather than on the cheapest in-range buy floor.
-    $user = attemptUser('15.00000000');
+it('lets a SIGNAL_SCAN deploy a balance that is under the net min deposit', function () {
+    // min_deposit_usdt is the minimum for transferring NEW money in. A balance
+    // already inside the bot that is under it must still buy, otherwise money
+    // freed by a partial sale is stranded until the user tops the wallet up.
+    $user     = attemptUser('15.00000000');
+    $currency = attemptCurrency('AAA');
+
+    expect(15.0)->toBeLessThan((float) app(FeeCalculator::class)->minNetDeposit());
+
+    BotSignal::create([
+        'currency_id'            => $currency->id,
+        'priority'               => 1,
+        'floor_price'            => '0',
+        'ceiling_price'          => '1000000',
+        'min_buy_amount_usdt'    => '5',
+        'max_allocation_percent' => '100',
+        'sell_orders_count'      => 0,
+        'sell_mode'              => 'EQUAL',
+        'sell_targets'           => [],
+        'is_active'              => true,
+    ]);
+
+    stubPrice($currency->id, 50.0);
 
     $order = app(BotBuyOrchestrator::class)($user->id, BotBuyOrchestrator::TRIGGER_SIGNAL_SCAN);
+
+    expect($order)->not->toBeNull();
+
+    $attempt = BotBuyAttempt::where('user_id', $user->id)->sole();
+
+    expect($attempt->outcome)->toBe(BotBuyAttempt::OUTCOME_ORDER_CREATED);
+    expect($attempt->gate_kind)->toBe('buy_floor');
+    expect((float) $attempt->gate_amount)->toBe(5.0);
+});
+
+it('lets TOGGLE_ON deploy a balance that is under the net min deposit', function () {
+    // Switching the bot on redeploys money already inside it, so it must not be
+    // held to the deposit minimum either — the user had no way to tell why
+    // turning the bot on repeatedly did nothing.
+    $user     = attemptUser('15.00000000');
+    $currency = attemptCurrency('AAA');
+
+    BotSignal::create([
+        'currency_id'            => $currency->id,
+        'priority'               => 1,
+        'floor_price'            => '0',
+        'ceiling_price'          => '1000000',
+        'min_buy_amount_usdt'    => '5',
+        'max_allocation_percent' => '100',
+        'sell_orders_count'      => 0,
+        'sell_mode'              => 'EQUAL',
+        'sell_targets'           => [],
+        'is_active'              => true,
+    ]);
+
+    stubPrice($currency->id, 50.0);
+
+    $order = app(BotBuyOrchestrator::class)($user->id, BotBuyOrchestrator::TRIGGER_TOGGLE_ON);
+
+    expect($order)->not->toBeNull();
+    expect(BotBuyAttempt::where('user_id', $user->id)->sole()->gate_kind)->toBe('buy_floor');
+});
+
+it('still holds a TRANSFER_IN to the net min deposit', function () {
+    // The one trigger the deposit minimum genuinely belongs to.
+    $user     = attemptUser('15.00000000');
+    $currency = attemptCurrency('AAA');
+
+    BotSignal::create([
+        'currency_id'            => $currency->id,
+        'priority'               => 1,
+        'floor_price'            => '0',
+        'ceiling_price'          => '1000000',
+        'min_buy_amount_usdt'    => '5',
+        'max_allocation_percent' => '100',
+        'sell_orders_count'      => 0,
+        'sell_mode'              => 'EQUAL',
+        'sell_targets'           => [],
+        'is_active'              => true,
+    ]);
+
+    stubPrice($currency->id, 50.0);
+
+    $order = app(BotBuyOrchestrator::class)($user->id, BotBuyOrchestrator::TRIGGER_TRANSFER_IN);
 
     expect($order)->toBeNull();
 
@@ -192,6 +269,37 @@ it('records the free balance and the gate that a SIGNAL_SCAN failed to clear', f
     expect($attempt->reason_code)->toBe('insufficient_free_balance');
     expect($attempt->gate_kind)->toBe('min_deposit');
     expect((float) $attempt->gate_amount)->toBe((float) app(FeeCalculator::class)->minNetDeposit());
+});
+
+it('records the buy floor that a SIGNAL_SCAN failed to clear', function () {
+    $user     = attemptUser('15.00000000');
+    $currency = attemptCurrency('AAA');
+
+    BotSignal::create([
+        'currency_id'            => $currency->id,
+        'priority'               => 1,
+        'floor_price'            => '0',
+        'ceiling_price'          => '1000000',
+        // Cheapest in-range buy costs more than the whole free balance.
+        'min_buy_amount_usdt'    => '30',
+        'max_allocation_percent' => '100',
+        'sell_orders_count'      => 0,
+        'sell_mode'              => 'EQUAL',
+        'sell_targets'           => [],
+        'is_active'              => true,
+    ]);
+
+    stubPrice($currency->id, 50.0);
+
+    $order = app(BotBuyOrchestrator::class)($user->id, BotBuyOrchestrator::TRIGGER_SIGNAL_SCAN);
+
+    expect($order)->toBeNull();
+
+    $attempt = BotBuyAttempt::where('user_id', $user->id)->sole();
+
+    expect($attempt->reason_code)->toBe('insufficient_free_balance');
+    expect($attempt->gate_kind)->toBe('buy_floor');
+    expect((float) $attempt->gate_amount)->toBe(30.0);
     expect((float) $attempt->free_balance)->toBe(15.0);
 });
 

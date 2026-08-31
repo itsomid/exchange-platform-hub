@@ -57,6 +57,31 @@ class BotSignal extends Model
         );
     }
 
+    /**
+     * Smallest USDT allocation that could still produce a buy on this signal:
+     * max(min_buy_amount_usdt, order floor), where the order floor mirrors the
+     * allocator's D14 pre-check — effective_p2p_min_order_value, multiplied by
+     * sell_orders_count in the conservative 'multi' floor mode.
+     *
+     * Shared by BotBuyOrchestrator (to gate a trigger) and by
+     * bot:scan-buy-triggers (to decide whom to wake up), so the amount a user
+     * must hold to be dispatched is always the amount the buy cycle will
+     * actually require.
+     */
+    public function effectiveMinBuyUsdt(?string $floorMode = null): string
+    {
+        $floorMode ??= (string) (BotGlobalSettings::current()->precheck_floor_mode ?? 'multi');
+
+        $p2pMin     = (string) $this->effective_p2p_min_order_value;
+        $orderFloor = $floorMode === 'single'
+            ? $p2pMin
+            : bcmul((string) (int) $this->sell_orders_count, $p2pMin, 8);
+
+        $minBuy = (string) $this->min_buy_amount_usdt;
+
+        return bccomp($minBuy, $orderFloor, 8) >= 0 ? $minBuy : $orderFloor;
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);

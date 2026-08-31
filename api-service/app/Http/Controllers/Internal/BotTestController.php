@@ -7,8 +7,8 @@ use App\Events\Bot\BotAutoTradeToggled;
 use App\Exceptions\Bot\BotTransferAmountTooLowException;
 use App\Exceptions\Bot\InsufficientBotWalletException;
 use App\Http\Controllers\Controller;
+use App\Models\Bot\BotBuyAttempt;
 use App\Models\Bot\BotBuyExecution;
-use App\Models\Bot\BotGlobalSettings;
 use App\Models\Bot\BotOrder;
 use App\Models\Bot\BotSellOrder;
 use App\Models\Bot\BotSignal;
@@ -22,7 +22,6 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Services\Bot\BotWalletService;
-use App\Services\Bot\FeeCalculator;
 use App\Services\Bot\ReferenceExchange\CoinExBotAdapter;
 use App\Services\Bot\ReferenceExchange\ExchangeContract;
 use App\Services\Bot\ReferenceExchange\ExchangePositionCloser;
@@ -202,25 +201,12 @@ class BotTestController extends Controller
 
     private function diagnoseOrchestratorNull(int $userId): string
     {
-        $settings = BotUserSettings::where('user_id', $userId)->first();
-        if (! $settings || ! $settings->auto_trade_enabled) return 'auto_trade_enabled = false';
+        // The orchestrator records the exact gate it failed on, so read that
+        // back instead of re-deriving the checks here — a copy of the gates
+        // that drifts out of sync reports confidently wrong reasons.
+        $attempt = BotBuyAttempt::where('user_id', $userId)->latest('id')->first();
 
-        $global = BotGlobalSettings::current();
-        if (! $global->is_enabled) return 'BotGlobalSettings.is_enabled = false';
-
-        $wallet = BotWallet::where('user_id', $userId)->first();
-        if (! $wallet) return 'BotWallet missing';
-
-        $free = bcsub((string) $wallet->balance, (string) $wallet->locked_balance, 8);
-        $minNet = app(FeeCalculator::class)->minNetDeposit();
-        if (bccomp($free, $minNet, 8) < 0) {
-            return "free balance ({$free}) < min_net_deposit ({$minNet}) [min_deposit_usdt={$global->min_deposit_usdt}]";
-        }
-
-        $activeCount = BotSignal::where('is_active', true)->count();
-        if ($activeCount === 0) return 'no active BotSignal rows';
-
-        return "active signals=$activeCount but none eligible (price outside floor/ceiling, or no live price). check PriceFeed cache `market:price:{SYMBOL}USDT`.";
+        return $attempt?->reason_message ?? 'no bot_buy_attempts row recorded for this user';
     }
 
     public function status(Request $request): JsonResponse
