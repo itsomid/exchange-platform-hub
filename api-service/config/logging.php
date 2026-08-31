@@ -147,6 +147,13 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
             'replace_placeholders' => true,
         ],
+
+        'bot-buy-attempts' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/bot-buy-attempts.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
         
         'spot-order-matching' => [
             'driver' => 'single',

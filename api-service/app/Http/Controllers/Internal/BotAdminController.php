@@ -10,6 +10,7 @@ use App\Models\Bot\BotSellOrder;
 use App\Models\Bot\BotWallet;
 use App\Models\User;
 use App\Services\Bot\BotAutoTradeToggleService;
+use App\Services\Bot\BotBuyAttemptRecorder;
 use App\Services\Bot\BotOrderCancelService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -41,6 +42,7 @@ class BotAdminController extends Controller
         private readonly BotOrderCancelService $cancelService,
         private readonly BotAutoTradeToggleService $toggle,
         private readonly BotBuyOrchestrator $orchestrator,
+        private readonly BotBuyAttemptRecorder $attemptRecorder,
     ) {}
 
     public function cancelPreview(int $orderId): JsonResponse
@@ -410,41 +412,15 @@ class BotAdminController extends Controller
     }
 
     /**
-     * Turn an orchestrator block reason into the sentence the admin sees. Each
-     * one names the number that failed, so "nothing was bought" is never left
-     * unexplained.
+     * Turn an orchestrator block reason into the sentence the admin sees. Shares
+     * the recorder's wording so the modal and bot_buy_attempts explain a refusal
+     * in exactly the same words.
      *
      * @param array<string, mixed> $preview
      */
     private function buyBlockMessage(array $preview): string
     {
-        $free = formatNumberTrimZeros((string) $preview['wallet']['free_balance']);
-        $gate = formatNumberTrimZeros((string) $preview['gate']['amount']);
-
-        return match ($preview['reason']) {
-            'auto_trade_disabled' => 'ربات این کاربر خاموش است. برای خرید، ابتدا «خرید و فروش خودکار» را روشن کنید.',
-            'bot_globally_disabled' => 'ربات به صورت سراسری غیرفعال است (تنظیمات کلی ربات).',
-            'no_bot_wallet' => 'برای این کاربر کیف پول ربات ساخته نشده است؛ هنوز واریزی به ربات نداشته.',
-            'insufficient_free_balance' => $preview['gate']['kind'] === 'buy_floor'
-                ? sprintf(
-                    'موجودی آزاد کاربر %s USDT است و از حداقل خرید ارزان‌ترین ارز در بازه (%s USDT) کمتر است، پس هیچ ارزی قابل خرید نیست.',
-                    $free,
-                    $gate,
-                )
-                : sprintf(
-                    'موجودی آزاد کاربر %s USDT است و از حداقل واریز خالص (%s USDT) کمتر است.',
-                    $free,
-                    $gate,
-                ),
-            'no_eligible_signals' => count($preview['out_of_range']) > 0
-                ? 'هیچ سیگنال فعالی در بازه قیمتی خودش نیست؛ قیمت لحظه‌ای همه ارزها بیرون از بازه کف/سقف تعریف‌شده است.'
-                : 'هیچ سیگنال فعالی برای خرید وجود ندارد.',
-            'no_buyable_allocation' => sprintf(
-                'موجودی آزاد %s USDT بین سیگنال‌ها تقسیم شد، اما سهم هیچ ارزی به حداقل خرید قابل‌قبول آن نرسید (یا سقف تخصیص ارزها پر است).',
-                $free,
-            ),
-            default => 'خرید با موجودی آزاد این کاربر امکان‌پذیر نیست.',
-        };
+        return $this->attemptRecorder->message($preview);
     }
 
     /* ──────────────────────── internals ──────────────────────── */

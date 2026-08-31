@@ -448,6 +448,7 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::post('/orders/user/{user}/cancel-all', [BotOrderController::class, 'cancelAll'])->name('order.user.cancel-all');
         Route::post('/orders/user/{user}/buy-preview', [BotOrderController::class, 'buyPreview'])->name('order.user.buy-preview');
         Route::post('/orders/user/{user}/buy', [BotOrderController::class, 'buy'])->name('order.user.buy');
+        Route::get('/orders/user/{user}/buy-attempts', [BotOrderController::class, 'buyAttempts'])->name('order.user.buy-attempts');
         Route::get('/orders/{botOrder}', [BotOrderController::class, 'show'])->name('order.show');
         Route::patch('/orders/{botOrder}/description', [BotOrderController::class, 'updateDescription'])->name('order.update-description');
         Route::post('/orders/{botOrder}/cancel-preview', [BotOrderController::class, 'cancelPreview'])->name('order.cancel-preview');

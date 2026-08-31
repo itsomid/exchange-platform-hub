@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Admin\Bot;
 
+use App\Helpers\DateFormatter;
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
+use App\Models\Bot\BotBuyAttempt;
 use App\Models\Bot\BotBuyExecution;
 use App\Models\Bot\BotOrder;
 use App\Models\Bot\BotSellOrder;
@@ -393,6 +395,54 @@ class BotOrderController extends Controller
     public function buy(User $user): JsonResponse
     {
         return $this->forwardBotApi(fn () => $this->botApi->buy($user->id), 'buy');
+    }
+
+    /**
+     * Why the user's free balance did (or did not) enter a buy cycle.
+     *
+     * Reads bot_buy_attempts straight from the shared DB — api-service writes a
+     * row on every orchestrator run, so no proxy call is needed. Paired with the
+     * settlement timeline so a stranded balance can be traced to the sell fill
+     * that freed it.
+     */
+    public function buyAttempts(User $user): JsonResponse
+    {
+        $attempts = BotBuyAttempt::where('user_id', $user->id)
+            ->latest('id')
+            ->limit(50)
+            ->get()
+            ->map(fn (BotBuyAttempt $a) => $a->toAdminArray())
+            ->all();
+
+        $settlements = BotTradeSettlement::query()
+            ->join('bot_buy_executions', 'bot_buy_executions.id', '=', 'bot_trade_settlements.bot_buy_execution_id')
+            ->leftJoin('currencies', 'currencies.id', '=', 'bot_buy_executions.currency_id')
+            ->where('bot_trade_settlements.user_id', $user->id)
+            ->orderByDesc('bot_trade_settlements.settled_at')
+            ->limit(50)
+            ->get([
+                'bot_trade_settlements.id',
+                'bot_trade_settlements.bot_sell_order_id',
+                'bot_trade_settlements.cost_basis',
+                'bot_trade_settlements.net_pnl',
+                'bot_trade_settlements.settled_at',
+                'currencies.symbol as currency_symbol',
+            ])
+            ->map(fn ($s) => [
+                'id'                => (int) $s->id,
+                'bot_sell_order_id' => (int) $s->bot_sell_order_id,
+                'currency_symbol'   => strtoupper((string) $s->currency_symbol),
+                'freed_usdt'        => (string) $s->cost_basis,
+                'net_pnl'           => (string) $s->net_pnl,
+                'at_display'        => DateFormatter::convertToPersianDate($s->settled_at, 'H:i:s %Y/%m/%d'),
+            ])
+            ->all();
+
+        return response()->json([
+            'ok'          => true,
+            'attempts'    => $attempts,
+            'settlements' => $settlements,
+        ]);
     }
 
     private function forwardBotApi(\Closure $call, string $logKey = 'cancel'): JsonResponse

@@ -94,7 +94,7 @@
                             </div>
                         </div>
                         <div class="col-12 col-md-3">
-                            <div class="border border-success rounded p-3 text-center h-100"
+                            <div class="border border-success rounded p-3 text-center h-100 d-flex flex-column justify-content-between"
                                 style="background:rgba(40,199,111,.06)">
                                 <small class="text-muted d-block mb-1"><i
                                         class="fas fa-cash-register fa-xs me-1 text-success"></i>قابل برداشت</small>
@@ -102,6 +102,15 @@
                                     {{ formatNumberTrimZeros($withdrawable) }}
                                 </div>
                                 <small class="text-muted">USDT</small>
+                                <div class="mt-2">
+                                    <button type="button"
+                                        class="btn btn-sm p-0 border-0 bg-transparent js-bot-buy-attempts"
+                                        data-attempts-url="{{ route('admin.bot.order.user.buy-attempts', $user) }}">
+                                        <span class="badge bg-success bg-opacity-10 text-success" style="font-size:.7rem;">
+                                            <i class="fas fa-search-dollar fa-xs me-1"></i>جزئیات دقیق
+                                        </span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <div class="col-12 col-md-3">
@@ -593,6 +602,7 @@
     @include('dashboard.bot.orders.partials.system-description-modal')
     @include('dashboard.bot.orders.partials.cancel-orders-modal')
     @include('dashboard.bot.orders.partials.buy-now-modal')
+    @include('dashboard.bot.orders.partials.buy-attempts-modal')
 
 @endsection
 

@@ -11,6 +11,7 @@ use App\Models\Bot\BotUserSettings;
 use App\Models\Bot\BotWallet;
 use App\Services\Bot\AllocationResult;
 use App\Services\Bot\AllocationService;
+use App\Services\Bot\BotBuyAttemptRecorder;
 use App\Services\Bot\BotOrderDescriptionService;
 use App\Services\Bot\BotOrderStatusService;
 use App\Services\Bot\FeeCalculator;
@@ -53,14 +54,30 @@ class BotBuyOrchestrator
         private readonly PriceFeed $priceFeed,
         private readonly BotOrderStatusService $orderStatus,
         private readonly FeeCalculator $feeCalculator,
+        private readonly BotBuyAttemptRecorder $recorder,
     ) {}
 
-    public function __invoke(int $userId, string $triggeredBy = self::TRIGGER_MANUAL): ?BotOrder
-    {
+    /**
+     * @param int|null $sellOrderId the sell tier whose fill freed the balance,
+     *                              recorded on the attempt so a stranded
+     *                              REINVEST can be traced back to its source.
+     */
+    public function __invoke(
+        int $userId,
+        string $triggeredBy = self::TRIGGER_MANUAL,
+        ?int $sellOrderId = null,
+    ): ?BotOrder {
         $prep = $this->prepare($userId, $triggeredBy);
 
         if ($prep['blocked'] !== null) {
             $this->logNoOrder($userId, $triggeredBy, $prep['blocked'], $prep['context']);
+            $this->recorder->record(
+                $userId,
+                $triggeredBy,
+                $this->describe($prep, null, BotWallet::where('user_id', $userId)->first(), $triggeredBy),
+                sellOrderId: $sellOrderId,
+            );
+
             return null;
         }
 
@@ -72,6 +89,11 @@ class BotBuyOrchestrator
             ]);
         }
 
+        $wallet   = null;
+        $sized    = null;
+        $describe = null;
+        $order    = null;
+
         // Reading the free balance, sizing the allocation against it and
         // writing the resulting lock must all observe the same wallet
         // snapshot. They used to straddle an unlocked read, so two sell
@@ -80,30 +102,56 @@ class BotBuyOrchestrator
         // balance (negative withdrawable). The row lock serialises the whole
         // decision per user: a concurrent trigger blocks here and then re-reads
         // the post-commit balance.
-        return DB::transaction(function () use ($userId, $triggeredBy, $prep) {
-            $wallet = BotWallet::where('user_id', $userId)->lockForUpdate()->first();
-            if (! $wallet) {
-                $this->logNoOrder($userId, $triggeredBy, 'no_bot_wallet');
-                return null;
-            }
+        try {
+            DB::transaction(function () use ($userId, $triggeredBy, $prep, &$wallet, &$sized, &$describe, &$order) {
+                $wallet = BotWallet::where('user_id', $userId)->lockForUpdate()->first();
+                if (! $wallet) {
+                    $this->logNoOrder($userId, $triggeredBy, 'no_bot_wallet');
+                    $describe = $this->describe($prep, ['blocked' => 'no_bot_wallet'], null, $triggeredBy);
+                    return;
+                }
 
-            $sized = $this->sizeAllocation($wallet, $prep, $triggeredBy);
+                $sized = $this->sizeAllocation($wallet, $prep, $triggeredBy);
 
-            if ($sized['blocked'] !== null) {
-                $this->logNoOrder($userId, $triggeredBy, $sized['blocked'], $sized['context']);
-                return null;
-            }
+                // Snapshot the verdict before persistAndDispatch() raises
+                // locked_balance, so the attempt records the numbers the
+                // decision was actually made on.
+                $describe = $this->describe($prep, $sized, $wallet, $triggeredBy);
 
-            return $this->persistAndDispatch(
+                if ($sized['blocked'] !== null) {
+                    $this->logNoOrder($userId, $triggeredBy, $sized['blocked'], $sized['context']);
+                    return;
+                }
+
+                $order = $this->persistAndDispatch(
+                    $userId,
+                    $wallet,
+                    $sized['free'],
+                    $prep['alpha'],
+                    $triggeredBy,
+                    $sized['result'],
+                    $prep['unpriced'],
+                );
+            });
+        } catch (\Throwable $e) {
+            // Recorded outside the transaction so the explanation survives the
+            // rollback that just discarded the order.
+            $describe ??= $this->describe($prep, $sized, $wallet, $triggeredBy);
+            $this->recorder->record(
                 $userId,
-                $wallet,
-                $sized['free'],
-                $prep['alpha'],
                 $triggeredBy,
-                $sized['result'],
-                $prep['unpriced'],
+                $describe,
+                sellOrderId: $sellOrderId,
+                exception: $e,
             );
-        });
+
+            throw $e;
+        }
+
+        $describe ??= $this->describe($prep, $sized, $wallet, $triggeredBy);
+        $this->recorder->record($userId, $triggeredBy, $describe, $order, $sellOrderId);
+
+        return $order;
     }
 
     /**
@@ -127,6 +175,23 @@ class BotBuyOrchestrator
             ? $this->sizeAllocation($wallet, $prep, $triggeredBy)
             : null;
 
+        return $this->describe($prep, $sized, $wallet, $triggeredBy);
+    }
+
+    /**
+     * Render a prepare()/sizeAllocation() pair as the full verdict payload: the
+     * wallet snapshot, the gate, the per-coin allocation and sell plan, and the
+     * coins that were skipped, priced out of range or not priced at all.
+     *
+     * Shared by the admin preview and by the attempt recorder, so what an admin
+     * sees in the modal and what lands in bot_buy_attempts can never disagree.
+     *
+     * @param array<string, mixed>      $prep  output of prepare()
+     * @param array<string, mixed>|null $sized output of sizeAllocation(), null when prepare() already blocked
+     * @return array<string, mixed>
+     */
+    private function describe(array $prep, ?array $sized, ?BotWallet $wallet, string $triggeredBy): array
+    {
         $balance = $wallet ? (string) $wallet->balance : '0';
         $locked  = $wallet ? (string) $wallet->locked_balance : '0';
         $free    = bcsub($balance, $locked, 8);
