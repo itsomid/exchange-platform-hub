@@ -109,11 +109,15 @@
         }
 
         #signalsTable tbody tr.signal-in-range td {
-            background-color: rgba(40, 199, 111, 0.12) !important;
+            background-color: rgba(40, 199, 111, 0.14) !important;
+        }
+
+        #signalsTable tbody tr.signal-above-ceiling td {
+            background-color: rgba(255, 193, 7, 0.18) !important;
         }
 
         #signalsTable tbody tr.signal-below-floor td {
-            background-color: rgba(255, 159, 67, 0.14) !important;
+            background-color: rgba(234, 84, 85, 0.14) !important;
         }
 
         #signalsTable tbody tr.signal-below-floor {
@@ -233,6 +237,8 @@
                                     $rowClass = 'signal-in-range';
                                 } elseif ($price < $floor) {
                                     $rowClass = 'signal-below-floor';
+                                } elseif ($price > $ceiling) {
+                                    $rowClass = 'signal-above-ceiling';
                                 }
                             }
                         @endphp
@@ -546,7 +552,7 @@
                 const floor = toNumber(row.dataset.floorPrice);
                 const ceiling = toNumber(row.dataset.ceilingPrice);
 
-                row.classList.remove('signal-in-range', 'signal-below-floor');
+                row.classList.remove('signal-in-range', 'signal-below-floor', 'signal-above-ceiling');
                 clearRowHint(row);
 
                 if (price === null || floor === null || ceiling === null) {
@@ -558,6 +564,8 @@
                 } else if (price < floor) {
                     row.classList.add('signal-below-floor');
                     setBelowFloorHint(row);
+                } else if (price > ceiling) {
+                    row.classList.add('signal-above-ceiling');
                 }
             };
 
