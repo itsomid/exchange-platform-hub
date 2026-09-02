@@ -96,8 +96,13 @@ services:
 
   # MySQL Database (Single Instance for both systems)
   database:
-    image: mysql:latest
+    image: mysql:8.0
     container_name: database
+    # The data volume can land on an overlay filesystem inside the Cloud Agent
+    # VM, where InnoDB's default O_DIRECT flush method and native async I/O are
+    # unsupported (mysqld aborts with "OS error 22"). fsync + disabled native
+    # AIO make MySQL work on any filesystem, including overlayfs.
+    command: --innodb-flush-method=fsync --innodb-use-native-aio=0
     restart: unless-stopped
     tty: true
     ports:

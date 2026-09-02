@@ -12,9 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('otc_ref_exchange_withdrawals', function (Blueprint $table) {
-            // First drop the existing foreign key if needed
-            // $table->dropForeign(['currency_id']);
-            
+            // First drop the existing foreign key so it can be recreated with the
+            // desired cascade behavior (the table's create migration already adds one).
+            $table->dropForeign(['currency_id']);
+
             // Then add the new foreign key with your desired constraints
             $table->foreign('currency_id')
                 ->references('id')

@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\SpotOrderSourceEnum;
 use App\Models\Market;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
@@ -16,7 +17,7 @@ return new class extends Migration
         Schema::create('spot_orders', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(User::class)->constrained();
-            $table->string('source')->default(SpotOrderSourceEnum::USER->value)->after('user_id');
+            $table->string('source')->default(SpotOrderSourceEnum::USER->value);
             $table->foreignIdFor(Market::class)->constrained();
             $table->string('side'); //buy, sell
             $table->string('type'); //market, limit

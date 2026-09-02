@@ -11,6 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip when the columns already exist on a fresh database.
+        if (Schema::hasColumn('stocks', 'available_quantity')) {
+            return;
+        }
+
         Schema::table('stocks', function (Blueprint $table) {
             $table->decimal('initial_quantity', 18, 3)->default(0)->after('value')->comment('تعداد کل سهام اولیه');
             $table->decimal('available_quantity', 18, 3)->default(0)->after('initial_quantity')->comment('تعداد سهام موجود');

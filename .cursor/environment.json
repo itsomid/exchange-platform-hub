@@ -1,0 +1,6 @@
+{
+  "name": "exchange-platform-hub",
+  "install": "bash .cursor/install.sh",
+  "start": "bash .cursor/start.sh",
+  "ports": [8000, 8001, 8081]
+}
