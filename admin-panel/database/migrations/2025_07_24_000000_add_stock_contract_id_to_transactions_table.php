@@ -11,6 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip when the column already exists on a fresh database.
+        if (Schema::hasColumn('transactions', 'stock_contract_id')) {
+            return;
+        }
+
         Schema::table('transactions', function (Blueprint $table) {
             $table->unsignedBigInteger('stock_contract_id')->nullable()->after('spot_trade_id');
             $table->foreign('stock_contract_id')

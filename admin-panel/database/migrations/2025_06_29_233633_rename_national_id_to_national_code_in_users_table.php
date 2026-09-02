@@ -11,9 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->renameColumn('national_id', 'national_code');
-        });
+        // On a fresh database the users table is already created with
+        // national_code, so only rename when the legacy column is present.
+        if (Schema::hasColumn('users', 'national_id') && ! Schema::hasColumn('users', 'national_code')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->renameColumn('national_id', 'national_code');
+            });
+        }
     }
 
     /**

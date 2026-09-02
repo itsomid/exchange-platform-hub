@@ -12,18 +12,24 @@ return new class extends Migration
      */
     public function up(): void
     {
-      
+        // On a fresh database the currency_chains create migration already adds
+        // this foreign key, so only add it when it is genuinely missing.
+        $foreignKeyExists = ! empty(DB::select(
+            "SELECT 1 FROM information_schema.TABLE_CONSTRAINTS
+             WHERE CONSTRAINT_SCHEMA = DATABASE()
+               AND TABLE_NAME = 'currency_chains'
+               AND CONSTRAINT_NAME = 'currency_chains_currency_id_foreign'
+               AND CONSTRAINT_TYPE = 'FOREIGN KEY'"
+        ));
 
-        // Add the foreign key constraint if it doesn't exist
-        Schema::table('currency_chains', function (Blueprint $table) {
-            // Check if the column exists
-
-            // Add the foreign key constraint without trying to drop it first
-            $table->foreign('currency_id')
-                  ->references('id')
-                  ->on('currencies')
-                  ->onDelete('cascade');
-        });
+        if (! $foreignKeyExists) {
+            Schema::table('currency_chains', function (Blueprint $table) {
+                $table->foreign('currency_id')
+                      ->references('id')
+                      ->on('currencies')
+                      ->onDelete('cascade');
+            });
+        }
     }
 
     /**
