@@ -85,7 +85,7 @@ class StockService
             $this->transactionRepository->create(
                 resolve(CreateTransactionRequestDTO::class)
                     ->setUserId(config('bitexroom.user_id'))
-                    ->setType(TransactionTypeEnum::BUY)
+                    ->setType(TransactionTypeEnum::SELL)
                     ->setWalletId($ExchangeWallet->id)
                     ->setStockContractId($stockContract->id)
                     ->setCoinPrice(1)
