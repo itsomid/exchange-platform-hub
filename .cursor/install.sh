@@ -86,30 +86,11 @@ generate_key env/admin_panel.env artisan-admin
 generate_key env/api_service.env  artisan-api
 
 # --- Database ----------------------------------------------------------------
-# Bring up MySQL and wait until it accepts connections before migrating.
-$DC up -d database redis
-echo "Waiting for MySQL to accept connections..."
-for _ in $(seq 1 60); do
-  if $DC exec -T database mysqladmin ping -h 127.0.0.1 -uroot -p123456 --silent >/dev/null 2>&1; then
-    echo "MySQL is ready."
-    break
-  fi
-  sleep 2
-done
-
-# admin-panel owns all migrations (including the api_system_db connection ones).
-$DC run --rm artisan-admin migrate --force
-
-# Seed baseline data (roles, admins, currencies, markets, ...) only once. The
-# seeders are not idempotent (they insert fixed primary keys), so guard on an
-# empty admins table.
-admin_count="$($DC exec -T database mysql -uroot -p123456 laravel -N -e \
-  "SELECT COUNT(*) FROM admins;" 2>/dev/null || echo 0)"
-if [ "${admin_count:-0}" = "0" ]; then
-  $DC run --rm artisan-admin db:seed --force
-else
-  echo "Database already seeded (admins=${admin_count}); skipping db:seed."
-fi
+# Bring up Redis and MySQL, then migrate + seed (see db-setup.sh for the
+# overlay-snapshot reinit handling). admin-panel owns all migrations, including
+# the ones for the separate api_system_db connection.
+$DC up -d redis
+bash "$REPO_ROOT/.cursor/db-setup.sh"
 
 # --- Frontend assets ---------------------------------------------------------
 # The admin-panel UI is rendered with Vite (Vue/Vuetify); build its assets so

@@ -11,6 +11,11 @@ cd "$REPO_ROOT"
 
 bash "$REPO_ROOT/.cursor/ensure-docker.sh"
 
+# Ensure MySQL is healthy, migrated and seeded (reinitializes the data dir when
+# it was restored from an overlay snapshot and cannot be reopened).
+sudo docker compose up -d redis
+bash "$REPO_ROOT/.cursor/db-setup.sh"
+
 sudo docker compose up -d \
   database \
   redis \
