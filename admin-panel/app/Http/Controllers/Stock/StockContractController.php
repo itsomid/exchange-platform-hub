@@ -297,7 +297,7 @@ class StockContractController extends Controller
                     'amount' => -$refundAmount,
                     'balance' => $ExchangeWallet->balance,
                     'coin_price' => "1",
-                    'type' => TransactionTypeEnum::SELL,
+                    'type' => TransactionTypeEnum::BUY,
                     'subtype' => TransactionSubTypeEnum::STOCK,
                     'status' => TransactionStatusEnum::SUCCESS,
                     'description' => 'بابت لغو سهام توسط ادمین (#' . auth()->user()->id . '-' . auth()->user()->fullname() . ') - شماره قرارداد: ' . $stockContract->contract_number,
