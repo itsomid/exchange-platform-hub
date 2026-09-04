@@ -519,7 +519,7 @@
                                     <th>مبلغ کل (USDT)</th>
                                     <th>وضعیت</th>
                                     <th>تریگر</th>
-                                    <th>یادداشت ادمین</th>
+                                    <th>سود / زیان</th>
                                     <th>تاریخ ایجاد</th>
                                     <th>عملیات</th>
                                 </tr>
@@ -535,18 +535,24 @@
                                             'CANCELED' => 'bg-danger',
                                             default => 'bg-secondary',
                                         };
+                                        $hasAdminDescription = filled($order->admin_description);
+                                        $orderNetPnl = (float) ($orderPnl->get($order->id)->net_pnl ?? 0);
                                     @endphp
                                     <tr>
                                         <td>{{ $order->id }}</td>
                                         <td class="font-number">{{ number_format($order->total_amount_usdt, 2) }}</td>
                                         <td><span class="badge {{ $badgeClass }}">{{ $order->status }}</span></td>
                                         <td><small>{{ $order->triggered_by }}</small></td>
-                                        <td style="max-width:180px;">
-                                            <div id="order-admin-description-preview-{{ $order->id }}"
-                                                class="small text-muted text-truncate"
-                                                title="{{ $order->admin_description ?? '' }}">
-                                                {{ $order->admin_description ? Str::limit($order->admin_description, 60) : '—' }}
-                                            </div>
+                                        <td>
+                                            @if ($orderNetPnl == 0)
+                                                <span class="text-muted">—</span>
+                                            @else
+                                                <span dir="ltr"
+                                                    class="font-number fw-semibold {{ $orderNetPnl > 0 ? 'text-success' : 'text-danger' }}"
+                                                    title="سود/زیان خالص تحقق‌یافته تا این لحظه">
+                                                    {{ $orderNetPnl > 0 ? '+' : '' }}{{ formatNumberTrimZeros($orderNetPnl) }}
+                                                </span>
+                                            @endif
                                         </td>
                                         <td><small>{{ $order->created_at?->format('Y-m-d H:i') }}</small></td>
                                         <td>
@@ -559,8 +565,9 @@
                                                     </button>
                                                 @endif
                                                 <button type="button"
-                                                    class="btn btn-sm btn-outline-secondary js-edit-order-admin-description"
-                                                    title="یادداشت ادمین" data-order-id="{{ $order->id }}"
+                                                    class="btn btn-sm {{ $hasAdminDescription ? 'btn-secondary' : 'btn-outline-secondary' }} js-edit-order-admin-description"
+                                                    title="{{ $hasAdminDescription ? 'یادداشت ادمین (ثبت‌شده)' : 'یادداشت ادمین' }}"
+                                                    data-order-id="{{ $order->id }}"
                                                     data-update-url="{{ route('admin.bot.order.update-description', $order) }}"
                                                     data-admin-description="{{ e($order->admin_description ?? '') }}">
                                                     <i class="fas fa-pen"></i>
@@ -584,7 +591,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-center text-muted py-4">هیچ سفارشی یافت نشد.</td>
+                                        <td colspan="7" class="text-center text-muted py-4">هیچ سفارشی یافت نشد.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

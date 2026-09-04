@@ -25,15 +25,21 @@
             var activeUrl = null;
             var activeOrderId = null;
             var activeDisplayEl = null;
-            var activePreviewEl = null;
+
+            function syncAdminDescriptionButton(btn, desc) {
+                btn.dataset.adminDescription = desc;
+                if (btn.classList.contains('btn-secondary') || btn.classList.contains('btn-outline-secondary')) {
+                    btn.classList.toggle('btn-secondary', !!desc);
+                    btn.classList.toggle('btn-outline-secondary', !desc);
+                    btn.title = desc ? 'یادداشت ادمین (ثبت‌شده)' : 'یادداشت ادمین';
+                }
+            }
 
             document.querySelectorAll('.js-edit-order-admin-description').forEach(function(btn) {
                 btn.addEventListener('click', function() {
                     activeUrl = btn.dataset.updateUrl;
                     activeOrderId = btn.dataset.orderId;
                     activeDisplayEl = document.getElementById('order-admin-description-display');
-                    activePreviewEl = document.getElementById('order-admin-description-preview-' +
-                        activeOrderId);
                     if (input) input.value = btn.dataset.adminDescription || '';
                     if (orderIdLabel) orderIdLabel.textContent = activeOrderId ? ('#' + activeOrderId) : '';
                     modal.show();
@@ -65,7 +71,7 @@
                         document.querySelectorAll(
                             '.js-edit-order-admin-description[data-order-id="' + activeOrderId + '"]'
                         ).forEach(function(btn) {
-                            btn.dataset.adminDescription = desc;
+                            syncAdminDescriptionButton(btn, desc);
                         });
                         if (activeDisplayEl) {
                             if (desc) {
@@ -80,12 +86,6 @@
                                 activeDisplayEl.innerHTML =
                                     '<span class="text-muted small">هنوز یادداشت ادمینی ثبت نشده است.</span>';
                             }
-                        }
-                        if (activePreviewEl) {
-                            activePreviewEl.textContent = desc ?
-                                (desc.length > 60 ? desc.slice(0, 60) + '…' : desc) :
-                                '—';
-                            activePreviewEl.title = desc;
                         }
                         modal.hide();
                         toast(data.message || 'ذخیره شد.', true);

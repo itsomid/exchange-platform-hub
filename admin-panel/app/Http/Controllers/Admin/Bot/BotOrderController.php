@@ -226,6 +226,18 @@ class BotOrderController extends Controller
             ->latest('created_at')
             ->paginate(15);
 
+        $orderIds = $orders->getCollection()->pluck('id');
+        $orderPnl = $orderIds->isEmpty()
+            ? collect()
+            : BotTradeSettlement::query()
+                ->join('bot_buy_executions', 'bot_buy_executions.id', '=', 'bot_trade_settlements.bot_buy_execution_id')
+                ->whereIn('bot_buy_executions.bot_order_id', $orderIds)
+                ->groupBy('bot_buy_executions.bot_order_id')
+                ->selectRaw('bot_buy_executions.bot_order_id')
+                ->selectRaw('COALESCE(SUM(bot_trade_settlements.net_pnl), 0) as net_pnl')
+                ->get()
+                ->keyBy('bot_order_id');
+
         $lastChange  = BotAutoTradeEvent::where('user_id', $user->id)->latest('id')->first();
         $lastDisable = BotAutoTradeEvent::where('user_id', $user->id)
             ->where('enabled', false)
@@ -233,7 +245,7 @@ class BotOrderController extends Controller
             ->first();
 
         return view('dashboard.bot.orders.user', compact(
-            'user', 'settings', 'orders',
+            'user', 'settings', 'orders', 'orderPnl',
             'balance', 'locked', 'withdrawable', 'actualInvestment', 'realizedProfit',
             'totalPnl', 'freedUsdt', 'positivePnl', 'negativePnl', 'grossAllocated',
             'deposits', 'withdrawals', 'lockedPct', 'freePct',
