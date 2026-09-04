@@ -55,7 +55,7 @@ class TransactionController
         ];
 
         $query = Transaction::query()
-            ->with('user', 'wallet')
+            ->with('user', 'wallet', 'stockContract.stock')
             ->whereNull('journal_entry_number')
             ->when($request->filled('from_id'), fn ($q) => $q->where('id', '>=', $request->integer('from_id')))
             ->when($request->filled('to_id'), fn ($q) => $q->where('id', '<=', $request->integer('to_id')))
