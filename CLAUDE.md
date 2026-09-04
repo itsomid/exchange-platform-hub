@@ -21,6 +21,8 @@ Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-s
 - **For cache separation/handling between `admin-panel` and `api-service`, use the `APP_NAME` prefix in each project's `.env`.**
   - Set a distinct `APP_NAME` per project so cache keys are namespaced and do not collide.
 
+- **Never run Feature tests against the shared MySQL database.** Tests use `RefreshDatabase` (`migrate:fresh`) and must stay on sqlite `:memory:` (enforced in `phpunit.xml` + TestCase). `php artisan config:cache` can bake the real DB into `bootstrap/cache/config.php` — the TestCase override exists specifically to prevent wiping production/dev data.
+
 ## Graphify
 
 Each project keeps its own knowledge graph in its local `graphify-out/` directory with god nodes, community structure, and cross-file relationships.

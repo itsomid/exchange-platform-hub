@@ -24,6 +24,7 @@ admin-panel/.env
 admin-panel/.phpstorm.meta.php
 admin-panel/graphify-out
 admin-panel/.claude
+admin-panel/.graphifyignore
 
 api-service/.phpunit.cache
 api-service/node_modules
@@ -47,6 +48,7 @@ api-service/.env
 api-service/.phpstorm.meta.php
 api-service/graphify-out
 api-service/.claude
+api-service/.graphifyignore
 
 env/mysql.env
 env/admin_panel.env
