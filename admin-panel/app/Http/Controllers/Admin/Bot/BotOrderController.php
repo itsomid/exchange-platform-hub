@@ -14,6 +14,7 @@ use App\Models\Bot\BotAutoTradeEvent;
 use App\Models\Bot\BotUserSettings;
 use App\Models\Bot\BotWallet;
 use App\Models\Bot\BotWalletTransfer;
+use App\Models\Currency;
 use App\Models\User;
 use App\Services\Bot\BotAdminApiClient;
 use App\Services\Bot\BotAutoTradeToggleService;
@@ -32,11 +33,12 @@ class BotOrderController extends Controller
 
     /**
      * Landing page: one row per user who has placed at least one bot order,
-     * with a quick aggregate of their activity and a user search filter.
+     * with a quick aggregate of their activity and user/coin search filters.
      */
     public function index(Request $request): View
     {
         $search = $request->get('search');
+        $currencyId = $request->filled('currency_id') ? (int) $request->get('currency_id') : null;
 
         $sortable = [
             'orders_count'    => 'orders_count',
@@ -52,6 +54,10 @@ class BotOrderController extends Controller
             : 'last_order_at';
         $dir = strtolower((string) $request->get('dir')) === 'asc' ? 'asc' : 'desc';
 
+        $currencies = Currency::query()
+            ->orderBy('symbol')
+            ->get(['id', 'name', 'symbol', 'logo']);
+
         $rows = BotOrder::query()
             ->join('users', 'users.id', '=', 'bot_orders.user_id')
             ->leftJoin('bot_wallets', 'bot_wallets.user_id', '=', 'users.id')
@@ -64,6 +70,14 @@ class BotOrderController extends Controller
             ->selectRaw('COALESCE(MAX(bot_wallets.profit_balance), 0) as profit_balance')
             ->selectRaw('CASE WHEN (COALESCE(MAX(bot_wallets.balance), 0) - COALESCE(MAX(bot_wallets.locked_balance), 0)) > 0 THEN (COALESCE(MAX(bot_wallets.balance), 0) - COALESCE(MAX(bot_wallets.locked_balance), 0)) ELSE 0 END as free_balance')
             ->selectRaw('COALESCE(MAX(bot_user_settings.auto_trade_enabled), 0) as auto_trade_enabled')
+            ->when($currencyId, function ($q) use ($currencyId) {
+                $q->whereIn('users.id', function ($sub) use ($currencyId) {
+                    $sub->select('bot_orders.user_id')
+                        ->from('bot_orders')
+                        ->join('bot_buy_executions', 'bot_buy_executions.bot_order_id', '=', 'bot_orders.id')
+                        ->where('bot_buy_executions.currency_id', $currencyId);
+                });
+            })
             ->when($search, function ($q) use ($search) {
                 $q->where(function ($w) use ($search) {
                     $w->where('users.email', 'like', "%{$search}%")
@@ -77,7 +91,7 @@ class BotOrderController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('dashboard.bot.orders.index', compact('rows', 'sort', 'dir'));
+        return view('dashboard.bot.orders.index', compact('rows', 'sort', 'dir', 'currencies'));
     }
 
     /**

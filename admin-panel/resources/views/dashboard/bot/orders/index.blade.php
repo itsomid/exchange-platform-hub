@@ -16,9 +16,19 @@
                     <form method="GET" class="mb-4">
                         <input type="hidden" name="sort" value="{{ $sort }}">
                         <input type="hidden" name="dir" value="{{ $dir }}">
-                        <div class="row g-2">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-3">
+                                <label class="form-label" for="currency_id">کوین</label>
+                                <x-currency-select
+                                    name="currency_id"
+                                    :currencies="$currencies"
+                                    :selected="old('currency_id', request('currency_id'))"
+                                    placeholder="همه کوین‌ها..."
+                                />
+                            </div>
                             <div class="col-md-4">
-                                <input type="text" name="search" class="form-control"
+                                <label class="form-label" for="search">کاربر</label>
+                                <input type="text" name="search" id="search" class="form-control"
                                     placeholder="جستجوی کاربر بر اساس ایمیل، موبایل یا نام کاربری..."
                                     value="{{ request('search') }}">
                             </div>
