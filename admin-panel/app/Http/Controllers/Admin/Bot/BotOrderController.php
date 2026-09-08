@@ -98,10 +98,11 @@ class BotOrderController extends Controller
      * Per-user overview: a full capital/PnL summary aggregated across ALL of the
      * user's bot orders, plus an auto-trade toggle and the user's order list.
      */
-    public function userShow(User $user): View
+    public function userShow(Request $request, User $user): View
     {
         $wallet   = BotWallet::firstOrNew(['user_id' => $user->id]);
         $settings = BotUserSettings::firstOrNew(['user_id' => $user->id]);
+        $currencyId = $request->filled('currency_id') ? (int) $request->get('currency_id') : null;
 
         // ── Current real-money state (authoritative, from the bot wallet) ──────
         // `balance` already represents the user's total capital in the bot — it is
@@ -236,9 +237,22 @@ class BotOrderController extends Controller
         $introducer = $user->introducerReferral?->user;
         $referralPaid = (float) BotTradeSettlement::where('user_id', $user->id)->sum('referral_fee');
 
+        $currencies = Currency::query()
+            ->orderBy('symbol')
+            ->get(['id', 'name', 'symbol', 'logo']);
+
         $orders = BotOrder::where('user_id', $user->id)
+            ->when($currencyId, function ($q) use ($currencyId) {
+                $q->whereExists(function ($sub) use ($currencyId) {
+                    $sub->selectRaw('1')
+                        ->from('bot_buy_executions')
+                        ->whereColumn('bot_buy_executions.bot_order_id', 'bot_orders.id')
+                        ->where('bot_buy_executions.currency_id', $currencyId);
+                });
+            })
             ->latest('created_at')
-            ->paginate(15);
+            ->paginate(15)
+            ->withQueryString();
 
         $orderIds = $orders->getCollection()->pluck('id');
         $orderPnl = $orderIds->isEmpty()
@@ -259,7 +273,7 @@ class BotOrderController extends Controller
             ->first();
 
         return view('dashboard.bot.orders.user', compact(
-            'user', 'settings', 'orders', 'orderPnl',
+            'user', 'settings', 'orders', 'orderPnl', 'currencies',
             'balance', 'locked', 'withdrawable', 'actualInvestment', 'realizedProfit',
             'totalPnl', 'freedUsdt', 'positivePnl', 'negativePnl', 'grossAllocated',
             'deposits', 'withdrawals', 'lockedPct', 'freePct',

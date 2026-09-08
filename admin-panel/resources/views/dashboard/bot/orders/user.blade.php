@@ -469,7 +469,8 @@
                                                 class="text-muted">USDT</small></span>
                                     </div>
                                     <div class="capital-allocation-bar">
-                                        <span style="width: {{ $lockedPct }}%; background: linear-gradient(90deg, #ff9f43, #ffb976);"></span>
+                                        <span
+                                            style="width: {{ $lockedPct }}%; background: linear-gradient(90deg, #ff9f43, #ffb976);"></span>
                                     </div>
                                 </div>
                                 <div class="capital-allocation-item">
@@ -480,7 +481,8 @@
                                             <small class="text-muted">USDT</small></span>
                                     </div>
                                     <div class="capital-allocation-bar">
-                                        <span style="width: {{ $freePct }}%; background: linear-gradient(90deg, #28c76f, #48da89);"></span>
+                                        <span
+                                            style="width: {{ $freePct }}%; background: linear-gradient(90deg, #28c76f, #48da89);"></span>
                                     </div>
                                 </div>
                                 <div class="capital-allocation-item">
@@ -506,9 +508,25 @@
 
             {{-- User's orders --}}
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">سفارش‌های کاربر</h5>
-                    <span class="badge bg-secondary">{{ $orders->total() }} سفارش</span>
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <h5 class="mb-0">سفارش‌های کاربر</h5>
+                        <span class="badge bg-secondary">{{ $orders->total() }} سفارش</span>
+                    </div>
+                    <form method="GET" action="{{ route('admin.bot.order.user', $user) }}"
+                        class="d-flex align-items-center gap-2 flex-wrap">
+                        <div style="min-width: 280px;">
+                            <x-currency-select name="currency_id" :currencies="$currencies" :selected="old('currency_id', request('currency_id'))"
+                                placeholder="فیلتر بر اساس کوین..." />
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-secondary">
+                            <i class="fas fa-search me-1"></i> جستجو
+                        </button>
+                        @if (request()->filled('currency_id'))
+                            <a href="{{ route('admin.bot.order.user', $user) }}"
+                                class="btn btn-sm btn-outline-secondary">پاک‌کردن</a>
+                        @endif
+                    </form>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -669,7 +687,7 @@
             padding: .55rem 0;
         }
 
-        .capital-allocation-item + .capital-allocation-item {
+        .capital-allocation-item+.capital-allocation-item {
             border-top: 1px solid rgba(0, 0, 0, .06);
         }
 
@@ -680,7 +698,7 @@
             overflow: hidden;
         }
 
-        .capital-allocation-bar > span {
+        .capital-allocation-bar>span {
             display: block;
             height: 100%;
             border-radius: inherit;
@@ -863,7 +881,8 @@
                                         fontWeight: 500,
                                         color: '#8a8d93',
                                         formatter: function(w) {
-                                            var total = w.globals.seriesTotals.reduce(function(a, b) {
+                                            var total = w.globals.seriesTotals.reduce(function(a,
+                                                b) {
                                                 return a + b;
                                             }, 0);
                                             return total.toLocaleString('en-US', {
