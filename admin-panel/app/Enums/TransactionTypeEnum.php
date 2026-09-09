@@ -22,7 +22,6 @@ enum TransactionTypeEnum: string
         self::FEE->value => 'کارمزد',
         self::REF_EXCHANGE->value => 'صرافی مرجع',
         self::BOT->value => 'ربات معاملاتی',
-        //        self::ADMIN_CREDIT->value => 'اعتبار ادمین',
     ];
 
     const array TYPE_COLOR = [
@@ -34,7 +33,6 @@ enum TransactionTypeEnum: string
         self::FEE->value => 'info',
         self::REF_EXCHANGE->value => 'info',
         self::BOT->value => 'warning',
-        //        self::ADMIN_CREDIT->value => 'info',
     ];
 
     const array TYPE_ICON = [
@@ -46,8 +44,6 @@ enum TransactionTypeEnum: string
         self::FEE->value => 'hand-holding-dollar',
         self::REF_EXCHANGE->value => 'hand-holding-dollar',
         self::BOT->value => 'robot',
-
-        //        self::ADMIN_CREDIT->value => 'user-tie-hair',
     ];
 
     public function label(): string

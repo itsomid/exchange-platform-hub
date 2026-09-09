@@ -334,6 +334,12 @@
                                 <div>لیست ارزها</div>
                             </a>
                         </li>
+                        <li class="menu-item @if (request()->is('admin/hd-wallet/sweeper-transactions*')) active @endif">
+                            <a href="{{ route('admin.hd-wallet.sweeper-transactions') }}" class="menu-link">
+                                <i class="menu-icon fa-regular fa-arrows-rotate"></i>
+                                <div>تراکنش‌های Sweeper</div>
+                            </a>
+                        </li>
 
                     </ul>
                 </li>
