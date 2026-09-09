@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Report;
 
 use App\Http\Controllers\Controller;
 use App\Models\SweeperTransactionLog;
+use App\Models\User;
 use App\Services\Sweeper\CreateSweeperAccountingTransactionsService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -24,6 +25,7 @@ class SweeperTransactionLogController extends Controller
     public function index(Request $request): View
     {
         $logs = SweeperTransactionLog::query()
+            ->with(['transactions.wallet.currency', 'transactions.admin', 'transactions.user'])
             ->orderByDesc('broadcast_at')
             ->orderByDesc('id')
             ->paginate(25)
@@ -44,7 +46,9 @@ class SweeperTransactionLogController extends Controller
                 ->count(),
         ];
 
-        return view('dashboard.hd-wallet.sweeper-transactions.index', compact('logs', 'stats'));
+        $exchangeUser = User::query()->find((int) config('bitexroom.user_id', 1));
+
+        return view('dashboard.hd-wallet.sweeper-transactions.index', compact('logs', 'stats', 'exchangeUser'));
     }
 
     public function sync(): JsonResponse

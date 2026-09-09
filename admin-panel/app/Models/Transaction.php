@@ -29,6 +29,7 @@ class Transaction extends Model
         'withdrawal_id',
         'otc_order_id',
         'bot_wallet_transfer_id',
+        'sweeper_tx_id',
         'amount',
         'balance',
         'coin_price',
@@ -98,5 +99,10 @@ class Transaction extends Model
     public function botWalletTransfer(): BelongsTo
     {
         return $this->belongsTo(BotWalletTransfer::class);
+    }
+
+    public function sweeperTransactionLog(): BelongsTo
+    {
+        return $this->belongsTo(SweeperTransactionLog::class, 'sweeper_tx_id');
     }
 }

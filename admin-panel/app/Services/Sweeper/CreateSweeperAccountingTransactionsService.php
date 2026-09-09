@@ -87,6 +87,7 @@ class CreateSweeperAccountingTransactionsService
                 'user_id' => $exchangeUserId,
                 'admin_id' => $adminId,
                 'wallet_id' => $amountWallet->id,
+                'sweeper_tx_id' => $locked->id,
                 'amount' => -abs($amount),
                 'balance' => $amountWallet->balance,
                 'coin_price' => $amountCoinPrice,
@@ -94,7 +95,7 @@ class CreateSweeperAccountingTransactionsService
                 'subtype' => TransactionSubTypeEnum::SWEEPER,
                 'status' => TransactionStatusEnum::SUCCESS,
                 'description' => sprintf(
-                    'برداشت سوئیپر | sweeper_log=#%s',
+                    'برداشت سوئیپر | sweeper_tx_id=#%s',
                     $locked->id
                 ),
                 'admin_description' => 'Sweeper sweep accounting withdrawal',
@@ -110,6 +111,7 @@ class CreateSweeperAccountingTransactionsService
                 'user_id' => $exchangeUserId,
                 'admin_id' => $adminId,
                 'wallet_id' => $feeWallet->id,
+                'sweeper_tx_id' => $locked->id,
                 'amount' => -abs($feeAmount),
                 'balance' => $feeWallet->balance,
                 'coin_price' => $feeCoinPrice,
@@ -117,7 +119,7 @@ class CreateSweeperAccountingTransactionsService
                 'subtype' => TransactionSubTypeEnum::SWEEPER,
                 'status' => TransactionStatusEnum::SUCCESS,
                 'description' => sprintf(
-                    'کارمزد شبکه سوئیپر | sweeper_log=#%s',
+                    'کارمزد برداشت سوئیپر | sweeper_tx_id=#%s',
                     $locked->id
                 ),
                 'admin_description' => 'Sweeper sweep accounting network fee',

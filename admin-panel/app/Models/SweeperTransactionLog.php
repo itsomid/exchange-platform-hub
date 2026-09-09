@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SweeperTransactionLog extends Model
 {
@@ -68,6 +69,11 @@ class SweeperTransactionLog extends Model
     public function feeTransaction(): BelongsTo
     {
         return $this->belongsTo(Transaction::class, 'fee_transaction_id');
+    }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class, 'sweeper_tx_id');
     }
 
     public function hasAccountingTransactions(): bool
