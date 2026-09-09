@@ -30,6 +30,7 @@ class Transaction extends Model
         'bot_order_id',
         'bot_buy_execution_id',
         'bot_wallet_transfer_id',
+        'sweeper_tx_id',
         'amount',
         'balance',
         'coin_price',

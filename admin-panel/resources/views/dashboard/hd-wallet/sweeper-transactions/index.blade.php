@@ -130,9 +130,23 @@
                                 </td>
                                 <td>
                                     @if ($isAccounted)
-                                        <button type="button" class="btn btn-sm btn-label-secondary" disabled>
-                                            ثبت شده
-                                        </button>
+                                        @php
+                                            $modalUser = $log->transactions->first()?->user ?? $exchangeUser;
+                                        @endphp
+                                        @if ($modalUser)
+                                            <a href="" class="btn btn-icon btn-text-secondary" data-bs-toggle="modal"
+                                                data-bs-target="#sweeper-tx-{{ $log->id }}">
+                                                <i class="fa-light fa-memo-circle-info fa-xl"></i>
+                                            </a>
+                                            <x-transaction-modal
+                                                :modalId="'sweeper-tx-' . $log->id"
+                                                :title="'تراکنش‌های سوئیپر #' . $log->id"
+                                                :user="$modalUser"
+                                                :transactions="$log->transactions"
+                                                route-name="admin.transaction.index"
+                                                route-param="sweeper_tx_id"
+                                                :route-param-value="$log->id" />
+                                        @endif
                                     @else
                                         <button type="button"
                                             class="btn btn-sm btn-outline-success create-one-accounting-btn"
@@ -396,20 +410,8 @@
 
             const markRowAccounted = (row, data) => {
                 if (!row) return;
-                const statusCell = row.querySelector('.accounting-status-cell');
-                if (statusCell) {
-                    statusCell.innerHTML = `
-                        <span class="badge bg-label-success">ثبت شده</span>
-                        <div class="small text-secondary mt-1">
-                            W:#${data.withdrawal_transaction_id || '—'} /
-                            F:#${data.fee_transaction_id || '—'}
-                        </div>
-                    `;
-                }
-                const actionCell = row.querySelector('td:last-child');
-                if (actionCell) {
-                    actionCell.innerHTML = `<button type="button" class="btn btn-sm btn-label-secondary" disabled>ثبت شده</button>`;
-                }
+                // Reload so the transaction modal (server-rendered) becomes available.
+                window.location.reload();
             };
 
             const reloadOnHide = (modalEl) => {
