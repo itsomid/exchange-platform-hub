@@ -49,6 +49,7 @@ use App\Http\Controllers\ApiSystem\ApiSystemController;
 use App\Http\Controllers\ApiSystem\ApiSystemTokenController;
 use App\Http\Controllers\Report\HdWalletIndexReportController;
 use App\Http\Controllers\Report\HdWalletCurrencyController;
+use App\Http\Controllers\Report\SweeperTransactionLogController;
 use App\Http\Controllers\Admin\Bot\BotSettingsController;
 use App\Http\Controllers\Admin\Bot\BotSignalController;use App\Http\Controllers\Admin\Bot\BotOrderController;
 use App\Http\Controllers\Admin\Bot\BotReportController;
@@ -360,6 +361,11 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::post('currencies/create', [HdWalletCurrencyController::class, 'create'])->name('hd-wallet.currencies.create')->can('hd_wallet');
         Route::post('currencies/update', [HdWalletCurrencyController::class, 'update'])->name('hd-wallet.currencies.update')->can('hd_wallet');
         Route::post('currencies/delete', [HdWalletCurrencyController::class, 'destroy'])->name('hd-wallet.currencies.delete')->can('hd_wallet');
+
+        Route::get('sweeper-transactions', [SweeperTransactionLogController::class, 'index'])->name('hd-wallet.sweeper-transactions')->can('hd_wallet');
+        Route::post('sweeper-transactions/sync', [SweeperTransactionLogController::class, 'sync'])->name('hd-wallet.sweeper-transactions.sync')->can('hd_wallet');
+        Route::post('sweeper-transactions/create-accounting', [SweeperTransactionLogController::class, 'createAccountingTransactions'])->name('hd-wallet.sweeper-transactions.create-accounting')->can('hd_wallet');
+        Route::post('sweeper-transactions/{sweeperTransaction}/create-accounting', [SweeperTransactionLogController::class, 'createAccountingTransaction'])->name('hd-wallet.sweeper-transactions.create-accounting-one')->can('hd_wallet');
     });
 
 
