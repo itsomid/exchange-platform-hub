@@ -31,6 +31,12 @@ class TransactionResource extends JsonResource
             'price' => $isStock
                 ? $this->stockContract?->stock?->value
                 : $this->coin_price,
+            'stock_id' => $isStock
+                ? $this->stockContract?->stock?->id
+                : null,
+            'stock_name' => $isStock
+                ? $this->stockContract?->stock?->name
+                : null,
             'stock_amount' => $isStock
                 ? $this->stockContract?->amount
                 : null,
