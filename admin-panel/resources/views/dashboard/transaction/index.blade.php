@@ -139,15 +139,46 @@
                     </div>
                     <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
                         <label class="form-label" for="currency">رمز ارز:</label>
-                        <select name="currency" class="form-select" id="currency">
-                            <option value="">همه ارزها</option>
-                            @foreach (\App\Models\Currency::all() as $currency)
-                                <option value="{{ $currency->symbol }}"
-                                    {{ request()->input('currency') == $currency->symbol ? 'selected' : '' }}>
-                                    {{ $currency->name }} ({{ $currency->symbol }})
-                                </option>
-                            @endforeach
-                        </select>
+                        <x-currency-select
+                            name="currency"
+                            id="currency"
+                            :currencies="$currencies"
+                            :selected="$currencies->firstWhere('symbol', request()->input('currency'))?->id ?? ''"
+                            :required="false"
+                            error="currency"
+                            placeholder="همه کوین‌ها"
+                        />
+                    </div>
+                </div>
+                <!-- ID / Date Range Filters -->
+                <div class="row mb-3">
+                    <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
+                        <label class="form-label" for="from_id">از آیدی:</label>
+                        <input type="number" name="from_id" class="form-control" id="from_id"
+                            placeholder="از آیدی" min="1" value="{{ request()->input('from_id') }}">
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
+                        <label class="form-label" for="to_id">تا آیدی:</label>
+                        <input type="number" name="to_id" class="form-control" id="to_id"
+                            placeholder="تا آیدی" min="1" value="{{ request()->input('to_id') }}">
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
+                        <label class="form-label" for="from_date">از تاریخ:</label>
+                        <div class="input-group input-group-merge">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                            <input type="text" name="from_date" class="form-control" id="from_date" data-jdp
+                                placeholder="جهت درج تاریخ کلیک کنید" autocomplete="off"
+                                value="{{ request()->input('from_date') }}">
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
+                        <label class="form-label" for="to_date">تا تاریخ:</label>
+                        <div class="input-group input-group-merge">
+                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                            <input type="text" name="to_date" class="form-control" id="to_date" data-jdp
+                                placeholder="جهت درج تاریخ کلیک کنید" autocomplete="off"
+                                value="{{ request()->input('to_date') }}">
+                        </div>
                     </div>
                 </div>
                 <!-- User and Buttons Row -->
@@ -201,7 +232,7 @@
                     </div>
                 </div>
                 <!-- Active filter summary -->
-                @if (request()->hasAny(['type', 'subtype', 'currency', 'user', 'transaction_value_min', 'transaction_value_max']))
+                @if (request()->hasAny(['type', 'subtype', 'currency', 'user', 'from_id', 'to_id', 'from_date', 'to_date', 'transaction_value_min', 'transaction_value_max']))
                     <div class="alert alert-info d-flex align-items-center flex-wrap">
                         <i class="fas fa-info-circle me-2"></i>
                         <span class="me-2">فیلترهای فعال:</span>
@@ -217,6 +248,18 @@
                             @endif
                             @if (request()->filled('user'))
                                 <span class="badge bg-primary">کاربر: {{ request()->input('user') }}</span>
+                            @endif
+                            @if (request()->filled('from_id'))
+                                <span class="badge bg-primary">از آیدی: {{ request()->input('from_id') }}</span>
+                            @endif
+                            @if (request()->filled('to_id'))
+                                <span class="badge bg-primary">تا آیدی: {{ request()->input('to_id') }}</span>
+                            @endif
+                            @if (request()->filled('from_date'))
+                                <span class="badge bg-primary">از تاریخ: {{ request()->input('from_date') }}</span>
+                            @endif
+                            @if (request()->filled('to_date'))
+                                <span class="badge bg-primary">تا تاریخ: {{ request()->input('to_date') }}</span>
                             @endif
                             @if (request()->filled('transaction_value_min'))
                                 <span class="badge bg-primary">حداقل ارزش: ${{ request()->input('transaction_value_min') }}</span>
@@ -438,6 +481,8 @@
 @endsection
 
 @section('vendor-script')
+    @parent
+    @vite(['resources/assets/js/jalalidatepicker.js'])
     <script>
         $(document).ready(function () {
             // Toggle advanced filters
@@ -459,10 +504,10 @@
                 window.location.href = '{{ route('admin.transaction.index') }}';
             });
 
-            // Export with current filters
+            // Export with current form filters
             $('#exportFiltered').on('click', function () {
-                const params = new URLSearchParams(window.location.search);
-                window.location.href = '{{ route('admin.transaction.excel-export') }}?' + params.toString();
+                const formData = $('#filterForm').serialize();
+                window.location.href = '{{ route('admin.transaction.excel-export') }}?' + formData;
             });
 
             // Auto-show advanced section if any advanced input has a value

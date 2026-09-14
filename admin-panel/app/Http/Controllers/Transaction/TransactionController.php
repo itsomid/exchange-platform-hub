@@ -6,6 +6,7 @@ use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Exports\TransactionExport;
 use App\Http\Controllers\Controller;
+use App\Models\Currency;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
@@ -15,6 +16,8 @@ class TransactionController extends Controller
 {
     public function index()
     {
+        $this->normalizeCurrencyFilter();
+
         $transactions = Transaction::with(['user', 'wallet', 'admin', 'wallet.currency', 'deposit', 'withdrawal'])->filterBy(request()->all())->paginate(100);
 
 
@@ -46,8 +49,11 @@ class TransactionController extends Controller
                     : 0;
             });
 
+        $currencies = Currency::query()->where('is_active', true)->get();
+
         return view('dashboard.transaction.index', [
             'transactions' => $transactions,
+            'currencies' => $currencies,
             'OTCFeeTransactionsCount' => $OTCFeeTransactionsCount,
             'withdrawalFeeTransactionsCount' => $withdrawalFeeTransactionsCount,
             'OTCFeeTransactionsSum' => $OTCFeeTransactionsSum,
@@ -57,13 +63,17 @@ class TransactionController extends Controller
 
     public function excelExport(Request $request)
     {
-        $filename = 'transactions_' . now()->format('Y-m-d_H-i-s');
+        $this->normalizeCurrencyFilter();
+
+        $from = $request->get('from_id');
+        $to = $request->get('to_id');
+        $filename = 'transactions_' . ($from && $to ? $from . '_' . $to : now()->format('Y-m-d_H-i-s'));
 
         // Build query with filters
         $transactionQuery = Transaction::query()
             ->with(['user:id,email,username', 'wallet:id,currency_symbol', 'admin:id,first_name,last_name'])
             ->orderBy('id')
-            ->filterBy($request->all());
+            ->filterBy(request()->all());
 
         // Check total records to prevent memory issues
         $totalRecords = $transactionQuery->count();
@@ -104,5 +114,15 @@ class TransactionController extends Controller
         $transaction->update(['notes' => $request->input('notes')]);
 
         return response()->json(['success' => true, 'message' => 'نوت با موفقیت ذخیره شد.']);
+    }
+
+    private function normalizeCurrencyFilter(): void
+    {
+        if (request()->filled('currency') && ctype_digit((string) request('currency'))) {
+            $selectedCurrency = Currency::query()->find((int) request('currency'));
+            if ($selectedCurrency) {
+                request()->merge(['currency' => $selectedCurrency->symbol]);
+            }
+        }
     }
 }
