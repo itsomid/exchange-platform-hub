@@ -66,7 +66,7 @@ class DepositController extends Controller
         $totalTopUsersDeposit = $topUsers->sum('totalDeposit');
 //        return $topUsers;
 
-        $deposits = Deposit::filterBy(request()->all())->with(['user','currency','currencyChain', 'transaction'])
+        $deposits = Deposit::filterBy(request()->all())->with(['user','currency','currencyChain', 'transaction', 'transactions'])
             ->orderBy('id', request()->input('sortById', 'desc'))
             ->paginate(20);
 
@@ -112,6 +112,7 @@ class DepositController extends Controller
                 DateFormatter::convertToPersianDate($deposit->created_at,'%Y/%m/%d H:i:s'),
                 DateFormatter::convertToPersianDate($deposit->confirmed_at,'%Y/%m/%d H:i:s'),
                 $deposit->status->label(),
+                $deposit->type?->label(),
                 $deposit->description ,
             ];
         });

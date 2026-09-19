@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\DepositStatusEnum;
+use App\Enums\DepositTypeEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -15,6 +16,7 @@ class Deposit extends Model
         'amount',
         'address',
         'status',
+        'type',
         'expiration_date',
         'confirmed_at',
         'transaction_hash',
@@ -27,6 +29,7 @@ class Deposit extends Model
     {
         return [
             'status' => DepositStatusEnum::class,
+            'type' => DepositTypeEnum::class,
             'expiration_date' => 'datetime',
             'confirmed_at' => 'datetime',
         ];

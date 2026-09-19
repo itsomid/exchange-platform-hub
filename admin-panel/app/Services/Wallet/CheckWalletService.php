@@ -3,6 +3,7 @@
 namespace App\Services\Wallet;
 
 use App\Enums\DepositStatusEnum;
+use App\Enums\DepositTypeEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
@@ -99,6 +100,7 @@ class CheckWalletService
                         'transaction_hash' => $transaction->getTransactionHash(),
                         'confirmed_at' => $transaction->getTimestamp(),
                         'status' => $depositStatus,
+                        'type' => DepositTypeEnum::USER_INITIATED,
                         'usdt_value' => $usdtValue,
                     ]);
 
@@ -212,6 +214,7 @@ class CheckWalletService
                     'transaction_hash' => $transaction->getTransactionHash(),
                     'confirmed_at' => $transaction->getTimestamp(),
                     'status' => $depositStatus,
+                    'type' => DepositTypeEnum::USER_INITIATED,
                     'usdt_value' => $usdtValue,
                 ]);
 
@@ -284,7 +287,8 @@ class CheckWalletService
                     'address' => $transaction->getWalletAddress(),
                     'transaction_hash' => $transaction->getTransactionHash(),
                     'confirmed_at' => $transaction->getTimestamp(),
-                    'status' => DepositStatusEnum::CONFIRMED
+                    'status' => DepositStatusEnum::CONFIRMED,
+                    'type' => DepositTypeEnum::USER_INITIATED,
                 ]);
             }
         }

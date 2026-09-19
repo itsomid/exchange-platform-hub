@@ -20,7 +20,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-12 col-xl-3">
+        <div class="col-sm-12 col-xl-4">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
@@ -39,7 +39,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-12 col-xl-3">
+        <div class="col-sm-12 col-xl-4">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
@@ -58,7 +58,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-12 col-xl-3">
+        <div class="col-sm-12 col-xl-4">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
@@ -78,15 +78,16 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-12 col-xl-4">
+        <div class="col-sm-12 col-xl-5">
             <div class="card">
                 <div class="card-body bg-success">
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
                             <span class="text-white">کاربران با بیشترین واریزی</span>
-                            <div class="d-flex align-items-baseline my-1">
+                            <div class="d-flex align-items-baseline mt-4">
                                 <small class="text-white mx-2">مجموع: </small>
-                                <h4 class="mb-0 me-2 text-primary">{{ formatNumberTrimZeros($totalTopUsersDeposit, 2) }}</h4>
+                                <h4 class="mb-0 me-2 text-primary">{{ formatNumberTrimZeros($totalTopUsersDeposit, 2) }}
+                                </h4>
                                 <small class="text-primary">USDT</small>
                             </div>
                         </div>
@@ -171,7 +172,7 @@
                             @endforeach
                         </select>
                     </div>
-                    
+
                     <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
                         <label class="form-label" for="currency">کوین:</label>
                         <select name="currency" class="form-select" id="currency">
@@ -184,7 +185,7 @@
                             @endforeach
                         </select>
                     </div>
-                    
+
                     <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
                         <label class="form-label" for="currencyChain">شبکه:</label>
                         <select name="currencyChain" class="form-select" id="currencyChain">
@@ -197,7 +198,7 @@
                             @endforeach
                         </select>
                     </div>
-                    
+
                     <div class="col-lg-3 col-md-12 col-12 mb-2">
                         <label class="form-label d-none d-lg-block">&nbsp;</label>
                         <div class="d-flex flex-wrap gap-1 justify-content-start">
@@ -214,7 +215,7 @@
 
                 <!-- Second Row for User and Search Filters -->
                 <div class="row mb-3">
-                    <div class="col-lg-6 col-md-6 col-sm-12 mb-2">
+                    <div class="col-lg-5 col-md-6 col-sm-12 mb-2">
                         <label class="form-label" for="user">کاربر:</label>
                         <x-user-selection-component input-name="user" multiple="0"
                             selected="{{ request()->filled('user') && $deposits->isNotEmpty() && $deposits[0]->user ? $deposits[0]->user->id : '' }}"
@@ -222,36 +223,58 @@
                                 ? '(' . $deposits[0]->user->id . '#) ' . $deposits[0]->user->fullname() . ' | ' . $deposits[0]->user->email
                                 : '' }}"></x-user-selection-component>
                     </div>
-                    
+
                     <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
+                        <label class="form-label" for="type">نوع واریز:</label>
+                        <select name="type" class="form-select" id="type">
+                            <option value="">همه</option>
+                            @foreach (\App\Enums\DepositTypeEnum::cases() as $case)
+                                <option value="{{ $case->value }}"
+                                    {{ request()->input('type') == $case->value ? 'selected' : '' }}>
+                                    {{ $case->label() }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                         <label class="form-label" for="from_id">از آیدی:</label>
                         <input type="number" name="from_id" class="form-control font-number" id="from_id"
                             placeholder="از آیدی" min="1" value="{{ request()->input('from_id') }}">
                     </div>
 
-                    <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
+                    <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                         <label class="form-label" for="to_id">تا آیدی:</label>
                         <input type="number" name="to_id" class="form-control font-number" id="to_id"
                             placeholder="تا آیدی" min="1" value="{{ request()->input('to_id') }}">
                     </div>
-                    
+
                     <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
                         <label class="form-label" for="address">آدرس واریز:</label>
-                        <input type="text" name="address" id="address" class="form-control font-monospace" 
-                            placeholder="آدرس کیف پول..." 
-                            value="{{ request()->input('address') }}">
+                        <input type="text" name="address" id="address" class="form-control font-monospace"
+                            placeholder="آدرس کیف پول..." value="{{ request()->input('address') }}">
                     </div>
-                    
+
                     <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
                         <label class="form-label" for="transactionHash">هش تراکنش (TxID):</label>
-                        <input type="text" name="transactionHash" id="transactionHash" class="form-control font-monospace" 
-                            placeholder="هش تراکنش..." 
+                        <input type="text" name="transactionHash" id="transactionHash"
+                            class="form-control font-monospace" placeholder="هش تراکنش..."
                             value="{{ request()->input('transactionHash') }}">
                     </div>
                 </div>
 
                 <!-- Filter Summary (Show active filters) -->
-                @if (request()->hasAny(['status', 'currency', 'currencyChain', 'user', 'from_id', 'to_id', 'address', 'transactionHash']))
+                @if (request()->hasAny([
+                        'status',
+                        'type',
+                        'currency',
+                        'currencyChain',
+                        'user',
+                        'from_id',
+                        'to_id',
+                        'address',
+                        'transactionHash',
+                    ]))
                     <div class="row">
                         <div class="col-12">
                             <div class="alert alert-info d-flex align-items-center">
@@ -265,11 +288,23 @@
                                             );
                                         @endphp
                                         <span class="badge bg-primary">وضعیت:
-                                            {{ $selectedStatus?->label() ?? \App\Enums\DepositStatusEnum::TYPE_LABEL[request()->input('status')] ?? request()->input('status') }}</span>
+                                            {{ $selectedStatus?->label() ?? (\App\Enums\DepositStatusEnum::TYPE_LABEL[request()->input('status')] ?? request()->input('status')) }}</span>
+                                    @endif
+                                    @if (request()->filled('type'))
+                                        @php
+                                            $selectedType = \App\Enums\DepositTypeEnum::tryFrom(
+                                                request()->input('type'),
+                                            );
+                                        @endphp
+                                        <span class="badge bg-primary">نوع:
+                                            {{ $selectedType?->label() ?? request()->input('type') }}</span>
                                     @endif
                                     @if (request()->filled('currency'))
                                         @php
-                                            $selectedCurrency = $currencies->firstWhere('symbol', request()->input('currency'));
+                                            $selectedCurrency = $currencies->firstWhere(
+                                                'symbol',
+                                                request()->input('currency'),
+                                            );
                                         @endphp
                                         <span class="badge bg-primary">کوین:
                                             {{ $selectedCurrency ? $selectedCurrency->symbol . ' - ' . $selectedCurrency->name : request()->input('currency') }}</span>
@@ -285,7 +320,10 @@
                                     @endif
                                     @if (request()->filled('user'))
                                         @php
-                                            $selectedUser = $deposits->isNotEmpty() && $deposits[0]->user ? $deposits[0]->user : \App\Models\User::find(request()->input('user'));
+                                            $selectedUser =
+                                                $deposits->isNotEmpty() && $deposits[0]->user
+                                                    ? $deposits[0]->user
+                                                    : \App\Models\User::find(request()->input('user'));
                                         @endphp
                                         @if ($selectedUser)
                                             <span class="badge bg-primary">کاربر: (#{{ $selectedUser->id }})
@@ -301,10 +339,12 @@
                                         <span class="badge bg-primary">تا آیدی: {{ request()->input('to_id') }}</span>
                                     @endif
                                     @if (request()->filled('address'))
-                                        <span class="badge bg-success">آدرس: {{ Str::limit(request()->input('address'), 20) }}</span>
+                                        <span class="badge bg-success">آدرس:
+                                            {{ Str::limit(request()->input('address'), 20) }}</span>
                                     @endif
                                     @if (request()->filled('transactionHash'))
-                                        <span class="badge bg-warning">TxID: {{ Str::limit(request()->input('transactionHash'), 20) }}</span>
+                                        <span class="badge bg-warning">TxID:
+                                            {{ Str::limit(request()->input('transactionHash'), 20) }}</span>
                                     @endif
                                 </div>
                             </div>
@@ -401,13 +441,14 @@
 
                         </th>
                         <th>وضعیت</th>
+                        <th>نوع</th>
                         <th>عملیات</th>
                     </tr>
                 </thead>
                 <tbody class="table-border-bottom-0">
                     @if ($deposits->isEmpty())
                         <tr>
-                            <td colspan="11" class="text-center">واریزی یافت نشد.</td>
+                            <td colspan="12" class="text-center">واریزی یافت نشد.</td>
                         </tr>
                     @else
                         @foreach ($deposits as $deposit)
@@ -416,7 +457,8 @@
 
                                 <td>
                                     <div class="d-flex flex-column">
-                                        <a href="{{ route('admin.inquiry.user-details', ['user' => $deposit->user]) }}" class="text-heading text-truncate">
+                                        <a href="{{ route('admin.inquiry.user-details', ['user' => $deposit->user]) }}"
+                                            class="text-heading text-truncate">
                                             <span class="fw-medium">{{ $deposit->user->email }}</span>
                                         </a>
                                         <small>{{ $deposit->user->username }}</small>
@@ -531,6 +573,14 @@
                                         class="badge bg-label-{{ $deposit->status->color() }}">{{ $deposit->status->label() }}</span>
                                 </td>
                                 <td>
+                                    @if ($deposit->type)
+                                        <span
+                                            class="badge bg-label-{{ $deposit->type->color() }}">{{ $deposit->type->label() }}</span>
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </td>
+                                <td>
                                     @if ($deposit->status === \App\Enums\DepositStatusEnum::CONFIRMED)
                                         <a href="" class="btn btn-icon btn-text-secondary" data-bs-toggle="modal"
                                             data-bs-target="#deposit-{{ $deposit->id }}">
@@ -539,11 +589,22 @@
                                         @include('dashboard.deposits.deposit-detail-modal', [
                                             'deposit' => $deposit,
                                         ])
-                                    @elseif($deposit->status === \App\Enums\DepositStatusEnum::TOO_SMALL)
-                                        <form action="{{ route('admin.deposit.approve', $deposit->id) }}" method="POST" 
+                                    @endif
+                                    @if ($deposit->transactions->isNotEmpty())
+                                        <a href="" class="btn btn-icon btn-text-secondary" data-bs-toggle="modal"
+                                            data-bs-target="#deposit-transactions-{{ $deposit->id }}">
+                                            <i class="fa-light fa-memo-circle-info fa-xl"></i>
+                                        </a>
+                                        <x-transaction-modal :modalId="'deposit-transactions-' . $deposit->id" :title="'تراکنش های واریز #' . $deposit->id" :user="$deposit->user"
+                                            :transactions="$deposit->transactions" route-name="admin.transaction.index"
+                                            route-param="deposit_id" :route-param-value="$deposit->id" />
+                                    @endif
+                                    @if ($deposit->status === \App\Enums\DepositStatusEnum::TOO_SMALL)
+                                        <form action="{{ route('admin.deposit.approve', $deposit->id) }}" method="POST"
                                             onsubmit="return confirm('آیا از تایید این واریزی و افزودن به حساب کاربر اطمینان دارید؟');">
                                             @csrf
-                                            <button type="submit" class="btn btn-sm btn-success" title="تایید و افزودن به حساب">
+                                            <button type="submit" class="btn btn-sm btn-success"
+                                                title="تایید و افزودن به حساب">
                                                 <i class="fa-solid fa-check me-1"></i> تایید
                                             </button>
                                         </form>
@@ -594,6 +655,11 @@
             // Clear filters button
             $('#clearFilters').on('click', function() {
                 window.location.href = "{{ route('admin.deposit.index') }}";
+            });
+
+            // Move modals to body to avoid layout issues inside table
+            $('.table-responsive .modal').each(function() {
+                $(this).appendTo('body');
             });
         });
     </script>

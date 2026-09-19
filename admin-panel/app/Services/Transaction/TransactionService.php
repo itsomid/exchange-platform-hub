@@ -3,6 +3,7 @@
 namespace App\Services\Transaction;
 
 use App\Enums\DepositStatusEnum;
+use App\Enums\DepositTypeEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
@@ -60,6 +61,7 @@ class TransactionService
                     'transaction_hash' => $transactionHash,
                     'description' => 'Exchange Wallet credit increase by admin: (#' . $adminId . ') ' . Admin::find($adminId)->fullname(),
                     'status' => DepositStatusEnum::CONFIRMED,
+                    'type' => DepositTypeEnum::MANUAL_ADMIN,
                 ]);
                 $this->logTransaction(
                     wallet: $exchangeWallet,
@@ -170,6 +172,7 @@ class TransactionService
                     User::find($type === TransactionTypeEnum::DEPOSIT->value ? $toUserId : $fromUserId)->username
                 ),
                 'status' => DepositStatusEnum::CONFIRMED,
+                'type' => DepositTypeEnum::MANUAL_ADMIN,
             ]);
 
             $withdrawal = Withdrawal::create([

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\DepositStatusEnum;
+use App\Enums\DepositTypeEnum;
 use App\Filters\Filterable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,10 +18,11 @@ class Deposit extends Model
     public $filterNameSpace = 'App\Filters\DepositFilter';
 
     protected $fillable = [
-        'user_id', 'currency_chain_id', 'currency_symbol', 'amount','usdt_value', 'address','transaction_hash','confirmed_at', 'status', 'description', 'expiration_date',
+        'user_id', 'currency_chain_id', 'currency_symbol', 'amount','usdt_value', 'address','transaction_hash','confirmed_at', 'status', 'type', 'description', 'expiration_date',
     ];
     protected $casts = [
-        'status' => DepositStatusEnum::class
+        'status' => DepositStatusEnum::class,
+        'type' => DepositTypeEnum::class,
     ];
 
     public function user()
@@ -41,6 +43,11 @@ class Deposit extends Model
     public function transaction()
     {
         return $this->hasOne(Transaction::class, 'deposit_id');
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class, 'deposit_id');
     }
 
     public function wallet()
