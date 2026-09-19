@@ -170,8 +170,9 @@ class DepositController extends Controller
                 'deposit_id' => $deposit->id,
                 'amount' => $deposit->amount,
                 'balance' => $balanceBeforeIncrease,
+                'coin_price' => $deposit->currency?->exchangePrice,
                 'type' => TransactionTypeEnum::DEPOSIT,
-                'subtype' => TransactionSubTypeEnum::MANUAL_ADMIN,
+                'subtype' => TransactionSubTypeEnum::USER_INITIATED,
                 'status' => TransactionStatusEnum::SUCCESS,
                 'description' => 'واریز تایید شده توسط ادمین ' . $adminName . ' - آدرس: ' . $deposit->address . ($deposit->transaction_hash ? ' | هش: ' . $deposit->transaction_hash : ''),
                 'admin_description' => 'تایید واریزی کمتر از حد مجاز توسط ادمین ' . $adminName

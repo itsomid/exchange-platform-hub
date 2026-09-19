@@ -104,20 +104,20 @@ class CheckWalletService
                         'usdt_value' => $usdtValue,
                     ]);
 
-                    Transaction::create([
-                        'user_id' => $requestDTO->getUserId(),
-                        'deposit_id' => $deposit->id,
-                        'wallet_id' => $wallet->id,
-                        'amount' => $transaction->getAmount(),
-                        'balance' => $wallet->balance,
-                        'coin_price' => $currency->exchangePrice,
-                        'type' => TransactionTypeEnum::DEPOSIT,
-                        'subtype' => TransactionSubTypeEnum::USER_INITIATED,
-                        'status' => TransactionStatusEnum::SUCCESS,
-                        'description' => 'واریز به آدرس: ' . $deposit->address . ' هش تراکنش: ' . $transactionHash
-                    ]);
-
                     if ($depositStatus === DepositStatusEnum::CONFIRMED) {
+                        Transaction::create([
+                            'user_id' => $requestDTO->getUserId(),
+                            'deposit_id' => $deposit->id,
+                            'wallet_id' => $wallet->id,
+                            'amount' => $transaction->getAmount(),
+                            'balance' => $wallet->balance,
+                            'coin_price' => $currency->exchangePrice,
+                            'type' => TransactionTypeEnum::DEPOSIT,
+                            'subtype' => TransactionSubTypeEnum::USER_INITIATED,
+                            'status' => TransactionStatusEnum::SUCCESS,
+                            'description' => 'واریز به آدرس: ' . $deposit->address . ' هش تراکنش: ' . $transactionHash
+                        ]);
+
                         $wallet->increment('balance', $transaction->getAmount());
                         DepositDetected::dispatch($requestDTO->getUserId(), [
                             'currency' => $transaction->getCryptocurrency(),
@@ -218,20 +218,20 @@ class CheckWalletService
                     'usdt_value' => $usdtValue,
                 ]);
 
-                Transaction::create([
-                    'user_id' => $userId,
-                    'deposit_id' => $deposit->id,
-                    'wallet_id' => $wallet->id,
-                    'amount' => $transaction->getAmount(),
-                    'balance' => $wallet->balance,
-                    'coin_price' => $currency->exchangePrice,
-                    'type' => TransactionTypeEnum::DEPOSIT,
-                    'subtype' => TransactionSubTypeEnum::USER_INITIATED,
-                    'status' => TransactionStatusEnum::SUCCESS,
-                    'description' => 'واریز به آدرس: ' . $deposit->address . ' هش تراکنش: ' . $transactionHash
-                ]);
-
                 if ($depositStatus === DepositStatusEnum::CONFIRMED) {
+                    Transaction::create([
+                        'user_id' => $userId,
+                        'deposit_id' => $deposit->id,
+                        'wallet_id' => $wallet->id,
+                        'amount' => $transaction->getAmount(),
+                        'balance' => $wallet->balance,
+                        'coin_price' => $currency->exchangePrice,
+                        'type' => TransactionTypeEnum::DEPOSIT,
+                        'subtype' => TransactionSubTypeEnum::USER_INITIATED,
+                        'status' => TransactionStatusEnum::SUCCESS,
+                        'description' => 'واریز به آدرس: ' . $deposit->address . ' هش تراکنش: ' . $transactionHash
+                    ]);
+
                     $wallet->increment('balance', $transaction->getAmount());
                     DepositDetected::dispatch($userId, [
                         'currency' => $transaction->getCryptocurrency(),

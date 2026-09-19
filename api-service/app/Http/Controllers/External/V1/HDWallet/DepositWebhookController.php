@@ -168,22 +168,22 @@ class DepositWebhookController extends Controller
                     ->setUsdtValue($usdtValue)
             );
 
-            $this->transactionRepository->create(
-                resolve(CreateTransactionRequestDTO::class)
-                    ->setUserId($userId)
-                    ->setDepositId($deposit->id)
-                    ->setWalletId($wallet->id)
-                    ->setBalance($wallet->balance)
-                    ->setAmount($data['amount'])
-                    ->setCoinPrice($currency->exchangePrice ?? 0)
-                    ->setExchangeId(null)
-                    ->setType(TransactionTypeEnum::DEPOSIT)
-                    ->setSubtype(TransactionSubTypeEnum::USER_INITIATED)
-                    ->setStatus(TransactionStatusEnum::SUCCESS)
-                    ->setDescription('واریز به آدرس: ' . $data['toAddress'] . ' هش تراکنش: ' . $txHash)
-            );
-
             if ($depositStatus === DepositStatusEnum::CONFIRMED) {
+                $this->transactionRepository->create(
+                    resolve(CreateTransactionRequestDTO::class)
+                        ->setUserId($userId)
+                        ->setDepositId($deposit->id)
+                        ->setWalletId($wallet->id)
+                        ->setBalance($wallet->balance)
+                        ->setAmount($data['amount'])
+                        ->setCoinPrice($currency->exchangePrice ?? 0)
+                        ->setExchangeId(null)
+                        ->setType(TransactionTypeEnum::DEPOSIT)
+                        ->setSubtype(TransactionSubTypeEnum::USER_INITIATED)
+                        ->setStatus(TransactionStatusEnum::SUCCESS)
+                        ->setDescription('واریز به آدرس: ' . $data['toAddress'] . ' هش تراکنش: ' . $txHash)
+                );
+
                 $wallet->increment('balance', $data['amount']);
                 $user->notify(new DepositSuccessful($currencySymbol, $data['amount'], $user->name));
             }
