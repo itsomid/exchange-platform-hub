@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
+use App\Models\Bot\BotWalletTransfer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -26,6 +27,10 @@ class Transaction extends Model
         'otc_order_id',
         'spot_trade_id',
         'stock_contract_id',
+        'bot_order_id',
+        'bot_buy_execution_id',
+        'bot_wallet_transfer_id',
+        'sweeper_tx_id',
         'amount',
         'balance',
         'coin_price',
@@ -75,8 +80,18 @@ class Transaction extends Model
         return $this->belongsTo(SpotTrade::class, 'spot_trade_id');
     }
 
+    public function stockContract(): BelongsTo
+    {
+        return $this->belongsTo(StockContract::class, 'stock_contract_id');
+    }
+
     public function exchange(): BelongsTo
     {
         return $this->belongsTo(Exchange::class, 'exchange_id');
+    }
+
+    public function botWalletTransfer(): BelongsTo
+    {
+        return $this->belongsTo(BotWalletTransfer::class);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Exchange;
 
 use App\Enums\OTCRefExchangeWithdrawalStatusEnum;
+use App\Exceptions\Exchange\CantResolveCoinexException;
 use App\Exceptions\Exchange\CoinexWithdrawalException;
 use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
@@ -12,11 +13,11 @@ use App\Models\ExchangeAssetsWithdrawal;
 use App\Models\OTCRefExchangeWithdrawal;
 use App\Models\Exchange;
 use App\Models\Setting;
+use App\Repositories\ExchangeRepository;
+use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Services\Exchanges\Asset\AssetFactory;
 use App\Services\Exchanges\DTO\ChargeCurrencyRequestDTO;
-use App\Repositories\ExchangeRepository;
 use App\Services\Exchanges\ExchangeService;
-use App\Services\Wallet\WalletService;
 use App\Http\Requests\Exchange\RefExchangeAssetsWithdrawalRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +26,7 @@ use Illuminate\Support\Facades\Cache;
 class RefExchangeAssetsWithdrawalController extends Controller
 {
     public function __construct(
-        private readonly WalletService $walletService,
+        private readonly WalletRepositoryInterface $walletRepository,
         private readonly ExchangeRepository $exchangeRepository,
     ) {}
     public function index()
@@ -60,7 +61,7 @@ class RefExchangeAssetsWithdrawalController extends Controller
         $currencyChains = $currency->chains;
 
 
-        $wallet = $this->walletService->getExchangeWallet($currency->symbol);
+        $wallet = $this->walletRepository->getExchangeWallet($currency->symbol);
 
         $walletChains = $wallet?->walletChains;
 
@@ -135,18 +136,30 @@ class RefExchangeAssetsWithdrawalController extends Controller
                 ->notify();
 
             return redirect()->route('admin.ref-exchange.assets-gathering-to-hd-wallet.index');
+        } catch (CantResolveCoinexException $e) {
+            report($e);
+            Toast::message('عملیات با شکست مواجه شد.')
+                ->danger()
+                ->notify();
+            return redirect()->back()->withInput()->with('operation_errors', [
+                trim($e->getMessage()) !== '' ? $e->getMessage() : 'خطا در برقراری ارتباط با Coinex',
+            ]);
         } catch (CoinexWithdrawalException $e) {
             report($e);
-            Toast::message('خطا در برداشت از صرافی: ' . $e->getMessage())
+            Toast::message('عملیات با شکست مواجه شد.')
                 ->danger()
                 ->notify();
-            return redirect()->back()->withInput();
+            return redirect()->back()->withInput()->with('operation_errors', [
+                trim($e->getMessage()) !== '' ? $e->getMessage() : 'خطا در برداشت از صرافی',
+            ]);
         } catch (\Throwable $e) {
             report($e);
-            Toast::message('فرآیند برداشت با شکست مواجه شد. لطفا دوباره تلاش کنید.')
+            Toast::message('عملیات با شکست مواجه شد.')
                 ->danger()
                 ->notify();
-            return redirect()->back()->withInput();
+            return redirect()->back()->withInput()->with('operation_errors', [
+                trim($e->getMessage()) !== '' ? $e->getMessage() : 'خطای ناشناخته در فرآیند برداشت',
+            ]);
         }
     }
 
@@ -260,7 +273,7 @@ class RefExchangeAssetsWithdrawalController extends Controller
             'currencies.*.currency_id' => 'required|exists:currencies,id',
             'currencies.*.symbol' => 'required|string',
             'currencies.*.type' => 'required|in:amount,percent',
-            'currencies.*.value' => 'required|numeric|min:0',
+            'currencies.*.value' => 'nullable|numeric|min:0',
         ]);
 
         $selectedExchange = $this->exchangeRepository->getExchangeBySlug($request->input('exchange_slug'));
@@ -332,9 +345,16 @@ class RefExchangeAssetsWithdrawalController extends Controller
 
                 $successCount++;
 
+            } catch (CantResolveCoinexException $e) {
+                report($e);
+                $failedCurrencies[] = $currencyData['symbol'] . ': ' . (trim($e->getMessage()) !== ''
+                    ? $e->getMessage()
+                    : 'خطا در برقراری ارتباط با Coinex');
             } catch (\Throwable $e) {
                 report($e);
-                $failedCurrencies[] = $currencyData['symbol'] . ' (' . class_basename($e) . ')';
+                $failedCurrencies[] = $currencyData['symbol'] . ': ' . (trim($e->getMessage()) !== ''
+                    ? $e->getMessage()
+                    : class_basename($e));
             }
         }
 
@@ -343,17 +363,16 @@ class RefExchangeAssetsWithdrawalController extends Controller
             Toast::message("عملیات تجمیع برای {$successCount} ارز با موفقیت آغاز شد.")
                 ->success()
                 ->notify();
-        } elseif ($successCount > 0 && !empty($failedCurrencies)) {
-            Toast::message("عملیات تجمیع برای {$successCount} ارز موفق و " . count($failedCurrencies) . " ارز ناموفق بود: " . implode(', ', $failedCurrencies))
-                ->warning()
-                ->notify();
-        } else {
-            Toast::message('عملیات تجمیع با شکست مواجه شد: ' . implode(', ', $failedCurrencies))
-                ->danger()
-                ->notify();
+            return redirect()->route('admin.ref-exchange.assets-gathering-to-hd-wallet.pending-withdrawal');
         }
 
-        return redirect()->route('admin.ref-exchange.assets-gathering-to-hd-wallet.pending-withdrawal');
+        Toast::message('عملیات با شکست مواجه شد.')
+                ->danger()
+                ->notify();
+
+        return redirect()->route('admin.ref-exchange.assets-gathering-to-hd-wallet.pending-withdrawal')
+            ->with('operation_errors', $failedCurrencies)
+            ->with('operation_success_count', $successCount);
     }
 
     /**

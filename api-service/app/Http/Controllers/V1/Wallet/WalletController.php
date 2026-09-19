@@ -49,11 +49,23 @@ class WalletController extends Controller
     }
 
 
-    public function lists()
+    public function lists(Request $request)
     {
+        $request->validate([
+            'page' => 'nullable|integer|min:1',
+            'per_page' => ['nullable', \Illuminate\Validation\Rule::in([20, 30, 50, 100, 'all'])],
+            'hide_zero_balance' => 'nullable|boolean',
+        ]);
+
+        $fetchAll = $request->input('per_page') === 'all';
+        $perPage = $fetchAll ? PHP_INT_MAX : $request->integer('per_page', 20);
+
         $responseDTO = $this->walletService->getLists(
             resolve(WalletListsRequestDTO::class)
                 ->setUserId(Auth::id())
+                ->setPage(1)
+                ->setPerPage($perPage)
+                ->setHideZeroBalance($request->boolean('hide_zero_balance', false))
         );
 
         return new WalletListsCollection($responseDTO);
@@ -116,10 +128,14 @@ class WalletController extends Controller
     {
         $request->validate([
             'currency_symbol' => 'required|string|exists:currencies,symbol',
+            'chain' => 'nullable|string',
+            'ttl_minutes' => 'nullable|integer|min:1|max:30',
         ]);
 
         $userId = Auth::id();
         $currencySymbol = $request->input('currency_symbol');
+        $selectedChain = $request->input('chain');
+        $ttlMinutes = $request->integer('ttl_minutes', 10);
 
         $wallet = resolve(WalletRepositoryInterface::class)->getOneByCurrency($currencySymbol, $userId);
 
@@ -138,6 +154,11 @@ class WalletController extends Controller
                 continue;
             }
 
+            // If a specific chain is selected, only watch that chain
+            if ($selectedChain && $walletChain->currency_chain->value !== $selectedChain) {
+                continue;
+            }
+
             $currencyChain = $walletChain->wallet->currency->chains
                 ->where('chain', $walletChain->currency_chain)->first();
 
@@ -149,9 +170,9 @@ class WalletController extends Controller
                 $result = $hdWalletFacade->watchDeposit(
                     $userId,
                     $walletChain->address,
-                    $currencyChain->blockchain_name->value,
+                    $currencyChain->blockchain_name,
                     $currencySymbol,
-                    10,
+                    $ttlMinutes,
                 );
 
                 if ($result) {
@@ -170,8 +191,8 @@ class WalletController extends Controller
             'message' => 'واریز شما در حال بررسی است',
             'data' => [
                 'watched_chains' => $watchedChains,
-                'ttl_minutes' => 10,
-                'expires_at' => now()->addMinutes(10)->format('Y-m-d H:i:s'),
+                'ttl_minutes' => $ttlMinutes,
+                'expires_at' => now()->addMinutes($ttlMinutes)->format('Y-m-d H:i:s'),
             ],
         ]);
     }
@@ -184,10 +205,12 @@ class WalletController extends Controller
     {
         $request->validate([
             'currency_symbol' => 'required|string',
+            'chain' => 'nullable|string',
         ]);
 
         $userId = Auth::id();
         $currencySymbol = $request->input('currency_symbol');
+        $selectedChain = $request->input('chain');
 
         $wallet = resolve(WalletRepositoryInterface::class)->getOneByCurrency($currencySymbol, $userId);
 
@@ -199,6 +222,11 @@ class WalletController extends Controller
         $hdWalletFacade = resolve(HDWalletFacade::class);
 
         foreach ($wallet->chains as $walletChain) {
+            // If a specific chain is selected, only unwatch that chain
+            if ($selectedChain && $walletChain->currency_chain->value !== $selectedChain) {
+                continue;
+            }
+
             $currencyChain = $walletChain->wallet->currency->chains
                 ->where('chain', $walletChain->currency_chain)->first();
 
@@ -207,7 +235,7 @@ class WalletController extends Controller
             try {
                 $hdWalletFacade->unwatchDeposit(
                     $userId,
-                    $currencyChain->blockchain_name->value,
+                    $currencyChain->blockchain_name,
                     $currencySymbol,
                 );
             } catch (\Throwable $e) {

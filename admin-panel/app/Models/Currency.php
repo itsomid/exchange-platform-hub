@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * @property Collection $chains
@@ -16,12 +17,15 @@ class Currency extends Model
 {
     use filterable, HasFactory;
 
+    private const WALLET_LIST_CURRENCIES_CACHE_KEY = 'App\Repositories\WalletRepository.getListsPaginated.currencies';
+
     public $filterNameSpace = 'App\Filters\CurrencyFilter';
 
     protected $fillable = [
         'name',
         'persian_name',
         'symbol',
+        'is_active',
         'logo',
         'price_precision',
         'amount_precision',
@@ -34,11 +38,19 @@ class Currency extends Model
     ];
 
     protected $casts = [
+        'is_active' => 'boolean',
         'ref_exchange_withdrawal_enabled' => 'boolean',
         'ref_exchange_withdrawal_interval_minutes' => 'integer',
         'ref_exchange_withdrawal_min_count' => 'integer',
         'ref_exchange_withdrawal_aggregation_percent' => 'integer',
     ];
+
+    protected static function booted(): void
+    {
+        static::created(fn () => self::clearWalletListCurrenciesCache());
+        static::updated(fn () => self::clearWalletListCurrenciesCache());
+        static::deleted(fn () => self::clearWalletListCurrenciesCache());
+    }
 
     /**
      * Get the effective withdrawal interval for this currency.
@@ -104,6 +116,10 @@ class Currency extends Model
 
     public function coinLogo(): string
     {
+        if (!$this->logo) {
+            return asset('images/coins/default.png');
+        }
+
         $logoPath = storage_path("app/public/coins/{$this->logo}");
         if (file_exists($logoPath)) {
             return asset("storage/coins/{$this->logo}");
@@ -115,5 +131,10 @@ class Currency extends Model
     public function interTransferStatus()
     {
         return (bool) $this->inter_transfer_enabled;
+    }
+
+    private static function clearWalletListCurrenciesCache(): void
+    {
+        Cache::forget(self::WALLET_LIST_CURRENCIES_CACHE_KEY);
     }
 }

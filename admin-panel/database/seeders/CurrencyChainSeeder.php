@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Enums\CurrencyBlockChainNameEnum;
 use App\Enums\CurrencyChainEnum;
 use App\Models\Currency;
 use App\Models\CurrencyChain;
@@ -21,6 +20,13 @@ class CurrencyChainSeeder extends Seeder
         $trx = Currency::where('symbol', 'TRX')->first();
         $bnb = Currency::where('symbol', 'BNB')->first();
         $doge = Currency::where('symbol', 'DOGE')->first();
+        $pol = Currency::where('symbol', 'POL')->first();
+        $arb = Currency::where('symbol', 'ARB')->first();
+        $avax = Currency::where('symbol', 'AVAX')->first();
+        $sonic = Currency::where('symbol', 'S')->first();
+        $ltc = Currency::where('symbol', 'LTC')->first();
+        $dash = Currency::where('symbol', 'DASH')->first();
+        $op = Currency::where('symbol', 'OP')->first();
 
         // Seed Currency Chains Data
         $currencyChains = [
@@ -29,7 +35,7 @@ class CurrencyChainSeeder extends Seeder
                 'currency_id' => $btc->id,
                 'chain' => CurrencyChainEnum::BTC,
                 'chain_name' => 'Bitcoin',
-                'blockchain_name' => CurrencyBlockChainNameEnum::BITCOIN,
+                'blockchain_name' => 'BITCOIN',
                 'min_deposit_amount' => 0.001,
                 'min_withdraw_amount' => 0.001,
                 'deposit_enabled' => true,
@@ -50,7 +56,7 @@ class CurrencyChainSeeder extends Seeder
                 'currency_id' => $eth->id,
                 'chain' => CurrencyChainEnum::ERC20,
                 'chain_name' => 'Ethereum (ERC20)',
-                'blockchain_name' => CurrencyBlockChainNameEnum::ETHEREUM,
+                'blockchain_name' => 'ETHEREUM',
                 'min_deposit_amount' => 0.01,
                 'min_withdraw_amount' => 0.01,
                 'deposit_enabled' => true,
@@ -66,13 +72,54 @@ class CurrencyChainSeeder extends Seeder
                 'explorer_address_url' => 'https://etherscan.io/address/{address}',
                 'explorer_tx_url' => 'https://etherscan.io/tx/{hash}',
             ],
-
+             // ETH (Arbitrum) chains
+            [
+                'currency_id' => $eth->id,
+                'chain' => CurrencyChainEnum::ARBITRUM,
+                'chain_name' => 'Arbitrum',
+                'blockchain_name' => 'ARBITRUM',
+                'min_deposit_amount' => 0.01,
+                'min_withdraw_amount' => 0.01,
+                'deposit_enabled' => true,
+                'withdraw_enabled' => true,
+                'deposit_delay_minutes' => 5,
+                'safe_confirmations' => 12,
+                'exchange_withdrawal_fee' => 0.001,
+                'network_fee' => 0.01,
+                'withdrawal_precision' => 18,
+                'memo' => null,
+                'is_memo_required_for_deposit' => false,
+                'is_base_coin' => true,
+                'explorer_address_url' => 'https://arbiscan.io/address/{address}',
+                'explorer_tx_url' => 'https://arbiscan.io/tx/{hash}',
+            ],
+            // OP (Optimism) chain
+            [
+                'currency_id' => $eth->id,
+                'chain' => CurrencyChainEnum::OPTIMISM,
+                'chain_name' => 'Optimism',
+                'blockchain_name' => 'OPTIMISM',
+                'min_deposit_amount' => 0.01,
+                'min_withdraw_amount' => 0.01,
+                'deposit_enabled' => true,
+                'withdraw_enabled' => true,
+                'deposit_delay_minutes' => 5,
+                'safe_confirmations' => 12,
+                'exchange_withdrawal_fee' => 0.001,
+                'network_fee' => 0.01,
+                'withdrawal_precision' => 18,
+                'memo' => null,
+                'is_memo_required_for_deposit' => false,
+                'is_base_coin' => true,
+                'explorer_address_url' => 'https://optimistic.etherscan.io/address/{address}',
+                'explorer_tx_url' => 'https://optimistic.etherscan.io/tx/{hash}',
+            ],
             // TRC20 chain for USDT
             [
                 'currency_id' => $usdt->id,
                 'chain' => CurrencyChainEnum::TRC20,
                 'chain_name' => 'TRON (TRC20)',
-                'blockchain_name' => CurrencyBlockChainNameEnum::TRON,
+                'blockchain_name' => 'TRON',
                 'min_deposit_amount' => 1,
                 'min_withdraw_amount' => 1,
                 'deposit_enabled' => true,
@@ -93,7 +140,7 @@ class CurrencyChainSeeder extends Seeder
                 'currency_id' => $usdt->id,
                 'chain' => CurrencyChainEnum::ERC20,
                 'chain_name' => 'Ethereum (ERC20)',
-                'blockchain_name' => CurrencyBlockChainNameEnum::ETHEREUM,
+                'blockchain_name' => 'ETHEREUM',
                 'min_deposit_amount' => 1,
                 'min_withdraw_amount' => 1,
                 'deposit_enabled' => true,
@@ -114,7 +161,7 @@ class CurrencyChainSeeder extends Seeder
                 'currency_id' => $usdt->id,
                 'chain' => CurrencyChainEnum::BSC,
                 'chain_name' => 'BSC (BEP20)',
-                'blockchain_name' => CurrencyBlockChainNameEnum::BINANCE,
+                'blockchain_name' => 'BINANCE',
                 'min_deposit_amount' => 1,
                 'min_withdraw_amount' => 1,
                 'deposit_enabled' => true,
@@ -137,7 +184,7 @@ class CurrencyChainSeeder extends Seeder
                 'currency_id' => $bnb->id,
                 'chain' => CurrencyChainEnum::BSC,
                 'chain_name' => 'BSC (BEP20)',
-                'blockchain_name' => CurrencyBlockChainNameEnum::BINANCE,
+                'blockchain_name' => 'BINANCE',
                 'min_deposit_amount' => 0.01,
                 'min_withdraw_amount' => 0.01,
                 'deposit_enabled' => true,
@@ -159,7 +206,7 @@ class CurrencyChainSeeder extends Seeder
                 'currency_id' => $trx->id,
                 'chain' => CurrencyChainEnum::TRC20,
                 'chain_name' => 'TRON (TRC20)',
-                'blockchain_name' => CurrencyBlockChainNameEnum::TRON,
+                'blockchain_name' => 'TRON',
                 'min_deposit_amount' => 0.1,
                 'min_withdraw_amount' => 0.1,
                 'deposit_enabled' => true,
@@ -181,7 +228,7 @@ class CurrencyChainSeeder extends Seeder
                 'currency_id' => $doge->id,
                 'chain' => 'DOGE',
                 'chain_name' => 'Dogecoin',
-                'blockchain_name' => CurrencyBlockChainNameEnum::DOGE,
+                'blockchain_name' => 'DOGE',
                 'min_deposit_amount' => 1,
                 'min_withdraw_amount' => 1,
                 'deposit_enabled' => true,
@@ -198,10 +245,165 @@ class CurrencyChainSeeder extends Seeder
                 'explorer_address_url' => 'https://blockchair.com/dogecoin/address/{address}',
                 'explorer_tx_url' => 'https://blockchair.com/dogecoin/transaction/{hash}',
             ],
+            // POL (Polygon) chain
+            [
+                'currency_id' => $pol->id,
+                'chain' => CurrencyChainEnum::POLYGON,
+                'chain_name' => 'Polygon',
+                'blockchain_name' => 'POLYGON',
+                'min_deposit_amount' => 2,
+                'min_withdraw_amount' => 6,
+                'deposit_enabled' => true,
+                'withdraw_enabled' => true,
+                'deposit_delay_minutes' => 0,
+                'safe_confirmations' => 128,
+                'exchange_withdrawal_fee' => 0.5,
+                'network_fee' => 0.001,
+                'withdrawal_precision' => 6,
+                'memo' => null,
+                'is_memo_required_for_deposit' => false,
+                'is_base_coin' => true,
+                'explorer_address_url' => 'https://polygonscan.com/address/{address}',
+                'explorer_tx_url' => 'https://polygonscan.com/tx/{hash}',
+            ],
+            [
+                'currency_id' => $arb->id,
+                'chain' => CurrencyChainEnum::ARBITRUM,
+                'chain_name' => 'Arbitrum',
+                'blockchain_name' => 'ARBITRUM',
+                'min_deposit_amount' => 2,
+                'min_withdraw_amount' => 6,
+                'deposit_enabled' => true,
+                'withdraw_enabled' => true,
+                'deposit_delay_minutes' => 0,
+                'safe_confirmations' => 128,
+                'exchange_withdrawal_fee' => 0.5,
+                'network_fee' => 0.001,
+                'withdrawal_precision' => 6,
+                'memo' => null,
+                'is_memo_required_for_deposit' => false,
+                'is_base_coin' => false,
+                'explorer_address_url' => 'https://arbiscan.io/address/{address}',
+                'explorer_tx_url' => 'https://arbiscan.io/tx/{hash}',
+            ],
+            // AVAX (Avalanche C-Chain)
+            [
+                'currency_id' => $avax->id,
+                'chain' => CurrencyChainEnum::AVALANCHE,
+                'chain_name' => 'Avalanche',
+                'blockchain_name' => 'AVALANCHE',
+                'min_deposit_amount' => 0.1,
+                'min_withdraw_amount' => 0.1,
+                'deposit_enabled' => true,
+                'withdraw_enabled' => true,
+                'deposit_delay_minutes' => 0,
+                'safe_confirmations' => 12,
+                'exchange_withdrawal_fee' => 0.01,
+                'network_fee' => 0.001,
+                'withdrawal_precision' => 18,
+                'memo' => null,
+                'is_memo_required_for_deposit' => false,
+                'is_base_coin' => true,
+                'explorer_address_url' => 'https://snowtrace.io/address/{address}',
+                'explorer_tx_url' => 'https://snowtrace.io/tx/{hash}',
+            ],
+            // Sonic (S) chain
+            [
+                'currency_id' => $sonic->id,
+                'chain' => CurrencyChainEnum::SONIC,
+                'chain_name' => 'Sonic',
+                'blockchain_name' => 'SONIC',
+                'min_deposit_amount' => 3,
+                'min_withdraw_amount' => 20,
+                'deposit_enabled' => true,
+                'withdraw_enabled' => true,
+                'deposit_delay_minutes' => 0,
+                'safe_confirmations' => 12,
+                'exchange_withdrawal_fee' => 0.01,
+                'network_fee' => 0.001,
+                'withdrawal_precision' => 18,
+                'memo' => null,
+                'is_memo_required_for_deposit' => false,
+                'is_base_coin' => true,
+                'explorer_address_url' => 'https://sonicscan.org/address/{address}',
+                'explorer_tx_url' => 'https://sonicscan.org/tx/{hash}',
+            ],
+            // LTC (Litecoin) chain
+            [
+                'currency_id' => $ltc->id,
+                'chain' => CurrencyChainEnum::LTC,
+                'chain_name' => 'Litecoin',
+                'blockchain_name' => 'LITECOIN',
+                'min_deposit_amount' => 0.01,
+                'min_withdraw_amount' => 0.01,
+                'deposit_enabled' => true,
+                'withdraw_enabled' => true,
+                'deposit_delay_minutes' => 5,
+                'safe_confirmations' => 6,
+                'exchange_withdrawal_fee' => 0.001,
+                'network_fee' => 0.001,
+                'withdrawal_precision' => 8,
+                'memo' => null,
+                'is_memo_required_for_deposit' => false,
+                'is_base_coin' => true,
+                'explorer_address_url' => 'https://blockchair.com/litecoin/address/{address}',
+                'explorer_tx_url' => 'https://blockchair.com/litecoin/transaction/{hash}',
+            ],
+            // DASH (Dash) chain
+            [
+                'currency_id' => $dash->id,
+                'chain' => CurrencyChainEnum::DASH,
+                'chain_name' => 'Dash',
+                'blockchain_name' => 'DASH',
+                'min_deposit_amount' => 0.01,
+                'min_withdraw_amount' => 0.01,
+                'deposit_enabled' => true,
+                'withdraw_enabled' => true,
+                'deposit_delay_minutes' => 5,
+                'safe_confirmations' => 6,
+                'exchange_withdrawal_fee' => 0.001,
+                'network_fee' => 0.001,
+                'withdrawal_precision' => 8,
+                'memo' => null,
+                'is_memo_required_for_deposit' => false,
+                'is_base_coin' => true,
+                'explorer_address_url' => 'https://blockchair.com/dash/address/{address}',
+                'explorer_tx_url' => 'https://blockchair.com/dash/transaction/{hash}',
+            ],
+            // OP (Optimism) chain
+            [
+                'currency_id' => $op->id,
+                'chain' => CurrencyChainEnum::OPTIMISM,
+                'chain_name' => 'OP',
+                'blockchain_name' => 'OPTIMISM',
+                'min_deposit_amount' => 0.01,
+                'min_withdraw_amount' => 0.01,
+                'deposit_enabled' => true,
+                'withdraw_enabled' => true,
+                'deposit_delay_minutes' => 5,
+                'safe_confirmations' => 12,
+                'exchange_withdrawal_fee' => 0.001,
+                'network_fee' => 0.01,
+                'withdrawal_precision' => 18,
+                'contract_address' => '0x4200000000000000000000000000000000000042',
+                'memo' => null,
+                'is_memo_required_for_deposit' => false,
+                'is_base_coin' => false,
+                'explorer_address_url' => 'https://optimistic.etherscan.io/address/{address}',
+                'explorer_tx_url' => 'https://optimistic.etherscan.io/tx/{hash}',
+            ]
+
         ];
 
         foreach ($currencyChains as $chainData) {
-            CurrencyChain::create($chainData);
+            CurrencyChain::firstOrCreate(
+                [
+                    'currency_id' => $chainData['currency_id'],
+                    'chain' => $chainData['chain'],
+                    'contract_address' => $chainData['contract_address'] ?? null,
+                ],
+                $chainData
+            );
         }
     }
 }

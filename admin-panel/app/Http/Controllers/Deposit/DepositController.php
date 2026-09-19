@@ -14,6 +14,7 @@ use App\Enums\CurrencyChainEnum;
 use App\Models\Transaction;
 use App\Models\Currency;
 use App\Models\CurrencyChain;
+use App\Events\DepositDetected;
 use App\Services\Wallet\WalletService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -65,7 +66,7 @@ class DepositController extends Controller
         $totalTopUsersDeposit = $topUsers->sum('totalDeposit');
 //        return $topUsers;
 
-        $deposits = Deposit::filterBy(request()->all())->with(['user','currency','currencyChain', 'transaction'])
+        $deposits = Deposit::filterBy(request()->all())->with(['user','currency','currencyChain', 'transaction', 'transactions'])
             ->orderBy('id', request()->input('sortById', 'desc'))
             ->paginate(20);
 
@@ -111,6 +112,7 @@ class DepositController extends Controller
                 DateFormatter::convertToPersianDate($deposit->created_at,'%Y/%m/%d H:i:s'),
                 DateFormatter::convertToPersianDate($deposit->confirmed_at,'%Y/%m/%d H:i:s'),
                 $deposit->status->label(),
+                $deposit->type?->label(),
                 $deposit->description ,
             ];
         });
@@ -168,14 +170,22 @@ class DepositController extends Controller
                 'deposit_id' => $deposit->id,
                 'amount' => $deposit->amount,
                 'balance' => $balanceBeforeIncrease,
+                'coin_price' => $deposit->currency?->exchangePrice,
                 'type' => TransactionTypeEnum::DEPOSIT,
-                'subtype' => TransactionSubTypeEnum::MANUAL_ADMIN,
+                'subtype' => TransactionSubTypeEnum::USER_INITIATED,
                 'status' => TransactionStatusEnum::SUCCESS,
                 'description' => 'واریز تایید شده توسط ادمین ' . $adminName . ' - آدرس: ' . $deposit->address . ($deposit->transaction_hash ? ' | هش: ' . $deposit->transaction_hash : ''),
                 'admin_description' => 'تایید واریزی کمتر از حد مجاز توسط ادمین ' . $adminName
             ]);
 
             DB::commit();
+
+            DepositDetected::dispatch($deposit->user_id, [
+                'currency' => $deposit->currency_symbol,
+                'amount' => $deposit->amount,
+                'tx_hash' => $deposit->transaction_hash,
+                'status' => 'confirmed',
+            ]);
 
             return redirect()->back()->with('success', 'واریزی با موفقیت تایید و به حساب کاربر اضافه شد.');
         } catch (\Exception $e) {

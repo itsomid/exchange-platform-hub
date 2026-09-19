@@ -21,7 +21,7 @@ class DepositListCollection extends ResourceCollection
             'amount' => $deposit->amount,
             'currency_symbol' => $deposit->currency_symbol,
             'currency_chain' => $deposit->currencyChain?->chain_name,
-            'currency_logo' => $deposit->currency?->logo,
+            'currency_logo' => $deposit->currency?->logo ? config('bitexroom.currency_logo_base_url') . '/' . $deposit->currency->logo : null,
             'transaction_hash' => $deposit->transaction_hash,
             'wallet_address' => $deposit->address,
             'status' => $deposit->status->name ?? $deposit->status,

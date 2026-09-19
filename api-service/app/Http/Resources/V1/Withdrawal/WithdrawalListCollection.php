@@ -23,7 +23,7 @@ class WithdrawalListCollection extends ResourceCollection
                     'fee' => $withdrawal->total_fee,
                     'currency_symbol' => $withdrawal->currency_symbol,
                     'currency_chain' => $withdrawal->currencyChain?->chain?->value ?? null,
-                    'currency_logo' => $withdrawal->currency?->logo ?? null,
+                    'currency_logo' => $withdrawal->currency?->logo ? config('bitexroom.currency_logo_base_url') . '/' . $withdrawal->currency->logo : null,
                     'transaction_hash' => $withdrawal->transaction_hash,
                     'wallet_address' => $withdrawal->address,
                     'type' => 'withdrawal',

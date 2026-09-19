@@ -68,6 +68,12 @@ return [
             'driver' => 'single',
             'path' => storage_path('logs/ref-exchange.log'),
         ],
+        'smart-bot' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/smart-bot.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
         'hd-wallet' => [
             'driver' => 'single',
             'path' => storage_path('logs/hd-wallet.log'),

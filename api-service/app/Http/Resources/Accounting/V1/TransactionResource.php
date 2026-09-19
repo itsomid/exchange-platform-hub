@@ -14,7 +14,7 @@ class TransactionResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-
+        $isStock = $this->stock_contract_id !== null;
 
         return [
             'id' => $this->id,
@@ -24,7 +24,22 @@ class TransactionResource extends JsonResource
             'otc_order_id' => $this->otc_order_id,
             'spot_trade_id' => $this->spot_trade_id,
             'stock_contract_id' => $this->stock_contract_id,
-            'price' => $this->coin_price,
+            'deposit_id' => $this->deposit_id,
+            'withdrawal_id' => $this->withdrawal_id,
+            'bot_wallet_transfer_id' => $this->bot_wallet_transfer_id,
+            'bot_order_id' => $this->bot_order_id,
+            'price' => $isStock
+                ? $this->stockContract?->stock?->value
+                : $this->coin_price,
+            'stock_id' => $isStock
+                ? $this->stockContract?->stock?->id
+                : null,
+            'stock_name' => $isStock
+                ? $this->stockContract?->stock?->name
+                : null,
+            'stock_amount' => $isStock
+                ? $this->stockContract?->amount
+                : null,
             'wallet_id' => $this->wallet_id,
             'amount' => $this->amount,
             'balance' => $this->balance,

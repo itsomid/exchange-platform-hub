@@ -10,11 +10,11 @@ use Illuminate\Support\Str;
 
 class HdWalletCurrencyController extends Controller
 {
-    private const TOKEN_NETWORKS = ['ethereum', 'bnb', 'tron'];
+    private const TOKEN_NETWORKS = ['ethereum', 'bnb', 'tron', 'polygon', 'arbitrum', 'optimism', 'avalanche', 'sonic'];
 
     public function index()
     {
-        $currencyChains = CurrencyChain::with('currency')
+         $currencyChains = CurrencyChain::with('currency')
             ->whereNotNull('chain')
             ->whereHas('currency')
             ->get()
@@ -25,6 +25,7 @@ class HdWalletCurrencyController extends Controller
 
         $sweeperStatus = $this->fetchCurrencies('sweeper');
         $serviceStatus = $this->fetchCurrencies('service_new');
+        $wallets = $this->fetchWallets();
 
         $sweeperMap = $this->buildCurrencyMap($sweeperStatus['currencies']);
         $serviceMap = $this->buildCurrencyMap($serviceStatus['currencies']);
@@ -53,6 +54,7 @@ class HdWalletCurrencyController extends Controller
                 'network' => $network,
                 'network_label' => $chain->chain_name ?: $chainValue,
                 'chain' => $chainValue,
+                'is_base_coin' => (bool) $chain->is_base_coin,
                 'contract_address' => $contractAddress,
                 'decimals' => $decimals,
                 'description' => $displayName,
@@ -67,11 +69,12 @@ class HdWalletCurrencyController extends Controller
                 'create_allowed' => $createAllowed,
             ];
         });
-
+        
         return view('dashboard.hd-wallet.currencies.index', [
             'items' => $items,
             'sweeperStatus' => $sweeperStatus,
             'serviceStatus' => $serviceStatus,
+            'wallets' => $wallets,
         ]);
     }
 
@@ -147,6 +150,9 @@ class HdWalletCurrencyController extends Controller
             'confirmations' => 'nullable|integer|min:1',
             'description' => 'nullable|string|max:255',
             'is_active' => 'nullable|boolean',
+            'assigned_wallet_id' => 'nullable|string|max:50',
+            'is_native' => 'nullable|boolean',
+            'parent_assigned_wallet_id' => 'nullable|string|max:50',
         ]);
 
         $baseUrl = $validated['target'] === 'sweeper'
@@ -174,6 +180,10 @@ class HdWalletCurrencyController extends Controller
             'description' => $validated['description'] ?? '',
             'isActive' => $request->boolean('is_active'),
         ];
+
+        if ($validated['target'] === 'service_new' && $request->boolean('is_native')) {
+            $payload['assignedWalletId'] = ($validated['assigned_wallet_id'] ?? '') ?: null;
+        }
 
         try {
             $response = $client->put(
@@ -309,7 +319,38 @@ class HdWalletCurrencyController extends Controller
             'BSC' => 'bnb',
             'BTC' => 'bitcoin',
             'DOGE' => 'dogecoin',
+            'POLYGON' => 'polygon',
+            'ARBITRUM' => 'arbitrum',
+            'OPTIMISM' => 'optimism',
+            'AVALANCHE' => 'avalanche',
+            'AVAX' => 'avalanche',
+            'SONIC' => 'sonic',
+            'LTC' => 'litecoin',
+            'DASH' => 'dash',
             default => null,
         };
+    }
+
+    private function fetchWallets(): array
+    {
+        $baseUrl = config('hd-wallet.new_base_url');
+        $apiKey = config('hd-wallet.api_key');
+
+        $client = Http::timeout(15)->acceptJson();
+        if ($apiKey) {
+            $client = $client->withHeaders(['x-api-key' => $apiKey]);
+        }
+
+        try {
+            $response = $client->get(rtrim($baseUrl, '/') . '/api/currencies/wallets');
+        } catch (\Throwable $exception) {
+            return [];
+        }
+
+        if (! $response->successful()) {
+            return [];
+        }
+
+        return $response->json('data.wallets') ?? [];
     }
 }

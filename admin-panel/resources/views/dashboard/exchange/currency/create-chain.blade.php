@@ -16,7 +16,7 @@
                                     <label class="form-label" for="chain">انتخاب شبکه :</label>
                                     <select id="chain" name="chain" class="form-select text-capitalize mb-md-0 ">
                                         @foreach (\App\Enums\CurrencyChainEnum::cases() as $chain)
-                                            <option value="{{ $chain->value }}">{{ $chain->value }}</option>
+                                            <option value="{{ $chain->value }}">{{ $chain->chain_name() }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -25,8 +25,7 @@
                                 <div class="form-group">
                                     <label class="form-label" for="contract_address">آدرس کانترکت</label>
                                     <input name="contract_address" id="contract_address" class="form-control"
-                                        placeholder="آدرس کانترکت را وارد کنید." value="{{ old('contract_address') }}"
-                                        required>
+                                        placeholder="آدرس کانترکت را وارد کنید." value="{{ old('contract_address') }}">
                                     @error('contract_address')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
@@ -55,8 +54,8 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="form-label" for="memo">MEMO (اختیاری)</label>
-                                    <input name="memo" id="memo" class="form-control"
-                                        placeholder="ممور را وارد کنید." value="{{ old('memo') }}">
+                                    <input name="memo" id="memo" class="form-control" placeholder="ممور را وارد کنید."
+                                        value="{{ old('memo') }}">
                                 </div>
                             </div>
                         </div>
@@ -122,9 +121,9 @@
                                 <div class="form-group">
                                     <label class="form-label" for="exchange_withdrawal_fee">فی بیتکس روم برای برداشت
                                         (واحد)</label>
-                                    <input name="exchange_withdrawal_fee" id="exchange_withdrawal_fee"
-                                        class="form-control" placeholder="فی صرافیی را وارد کنید."
-                                        value="{{ old('exchange_withdrawal_fee') }}" required>
+                                    <input name="exchange_withdrawal_fee" id="exchange_withdrawal_fee" class="form-control"
+                                        placeholder="فی صرافیی را وارد کنید." value="{{ old('exchange_withdrawal_fee') }}"
+                                        required>
                                     @error('exchange_withdrawal_fee')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
@@ -132,9 +131,10 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label class="form-label" for="network_fee">فی صرافی مرجع برای برداشت <b>(این فی از صرافی مرجع گرفته میشود)</b></label>
-                                    <input name="network_fee" id="network_fee" class="form-control"
-                                        placeholder="فی شبکه." value="{{ old('network_fee') }}" required>
+                                    <label class="form-label" for="network_fee">فی صرافی مرجع برای برداشت <b>(این فی از
+                                            صرافی مرجع گرفته میشود)</b></label>
+                                    <input name="network_fee" id="network_fee" class="form-control" placeholder="فی شبکه."
+                                        value="{{ old('network_fee') }}" required>
                                     @error('network_fee')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
@@ -151,8 +151,7 @@
                             <div class="w-100"></div>
                             <div class="col-md-6 mt-5">
                                 <label class="switch  switch-lg">
-                                    <input type="checkbox" class="switch-input" name="withdraw_enabled"
-                                        value="1" />
+                                    <input type="checkbox" class="switch-input" name="withdraw_enabled" value="1" />
                                     <span class="switch-toggle-slider"></span>
                                     <span class="switch-label">وضعیت برداشت</span>
                                 </label>

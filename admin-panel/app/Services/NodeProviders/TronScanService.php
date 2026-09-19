@@ -27,6 +27,7 @@ class TronScanService
         'WTRX' => 6,
         'TUSD' => 18,
         'USDJ' => 18,
+        'WIN' => 6,
     ];
 
     /**
@@ -124,10 +125,12 @@ class TronScanService
                     return [
                         'amount' => $balance
                     ];
-                } else {
-                    // If no data found, try alternative approach with contract address
-                    return $this->getTokenBalanceByContract($currency, $address);
                 }
+
+                // Empty data means the address does not hold this token → balance is zero.
+                return [
+                    'amount' => '0'
+                ];
             }
 
             return [
@@ -182,8 +185,13 @@ class TronScanService
                 }
             }
 
+            $reason = !$response->successful()
+                ? 'HTTP ' . $response->status() . ': ' . $response->body()
+                : 'Missing or empty constant_result in response: ' . json_encode($response->json());
+
             return [
-                'error' => 'Unable to fetch token balance'
+                'error' => 'Unable to fetch token balance',
+                'details' => $reason,
             ];
         } catch (\Exception $e) {
             return [
@@ -333,7 +341,7 @@ class TronScanService
         $url = $this->baseUrl . '/token_trc20/transfers';
         $params = [
             'relatedAddress' => $address,
-            'limit' => 200,
+            'limit' => 50, // TronScan /token_trc20/transfers allows limit in [0, 50] only
             'sort' => '-timestamp',
         ];
 

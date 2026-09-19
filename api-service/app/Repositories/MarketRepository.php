@@ -16,6 +16,17 @@ class MarketRepository implements MarketRepositoryInterface
         });
     }
 
+    public function getHomeMarkets(): Collection
+    {
+        return Cache::remember(__CLASS__.'getHomeMarkets', 30, function () {
+            return Market::query()
+                ->where('is_active', true)
+                ->where('show_in_home', true)
+                ->with('currency')
+                ->get();
+        });
+    }
+
     public function getMarketById(int $marketId): ?Market
     {
         return Market::query()

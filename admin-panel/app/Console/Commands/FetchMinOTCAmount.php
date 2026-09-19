@@ -32,11 +32,12 @@ class FetchMinOTCAmount extends Command
         $service = ExchangeFactory::make($exchange);
         $fetchMarkets = collect($service->fetchMinTrade())->keyBy('base_ccy');
 
-        $markets = Market::query()->get();
+        $markets = Market::where('is_active', true)->get();
 
         foreach ($markets as $market){
             $minAmount = $fetchMarkets[$market->base_currency]['min_amount'];
             $market->update([
+                'min_trade_amount' => $minAmount,
                 'min_otc_amount' => $minAmount
             ]);
             $this->info("Update min_otc_amount {$market->base_currency} : {$minAmount}");

@@ -22,64 +22,20 @@ use App\Repositories\WalletChainRepository;
 
 class WalletService
 {
-    protected $bitexroomUserId;
+    protected $exchangeUserId;
 
     public function __construct(
         private readonly WalletRepository $walletRepository,
         private readonly WalletChainRepository $walletChainRepository
     ) {
         // Load exchange user ID from config
-        $this->bitexroomUserId = config('bitexroom.user_id', 1);
+        $this->exchangeUserId = config('bitexroom.user_id', 1);
     }
 
 
     /**
      * Calculate the total assets value for a user's wallets.
-     *
-     * @param \App\Models\User $user
-     * @return float
      */
-    /**
-     * Get a user's wallet by currency.
-     */
-    public function getUserWallet(int $userId, string $currency): ?Wallet
-    {
-        return Wallet::where('user_id', $userId)
-            ->where('currency_symbol', $currency)
-            ->first();
-    }
-
-    /**
-     * Get the exchange (system) wallet for a specific currency.
-     */
-    public function getExchangeWallet(string $currency): ?Wallet
-    {
-        return Wallet::where('user_id', $this->bitexroomUserId)
-            ->where('currency_symbol', $currency)
-            ->first();
-    }
-
-    public function getExchangeAllWallet()
-    {
-        return Wallet::where('user_id', $this->bitexroomUserId)->get();
-    }
-    public function getExchangeAllWalletExceptUSDT()
-    {
-        return Wallet::where('user_id', $this->bitexroomUserId)->where('currency_symbol', '!=', 'USDT')->get();
-    }
-
-    public function getExchangeAllWalletChain()
-    {
-        $allExchangeWallet = $this->getExchangeAllWallet();
-        $walletIds = $allExchangeWallet->pluck('id')->toArray();
-        return WalletChain::with('wallet')->whereIn('wallet_id', $walletIds)->get();
-    }
-    public function getExchangeAllWalletChainExceptUSDT()
-    {
-        $allExchangeWallet = $this->getExchangeAllWalletExceptUSDT();
-        $walletIds = $allExchangeWallet->pluck('id')->toArray();
-        return WalletChain::with(['wallet', 'wallet.currency'])->whereIn('wallet_id', $walletIds)->get();
-    }
     public function totalAssetsValue(User $user)
     {
 
@@ -430,14 +386,14 @@ class WalletService
         try {
             return DB::transaction(function () use ($currencySymbol) {
                 // Check if exchange wallet already exists
-                $existingWallet = $this->getExchangeWallet($currencySymbol);
+                $existingWallet = $this->walletRepository->getExchangeWallet($currencySymbol);
                 if ($existingWallet) {
                     return $existingWallet;
                 }
 
                 // Create new exchange wallet
                 $wallet = Wallet::create([
-                    'user_id' => $this->bitexroomUserId,
+                    'user_id' => $this->exchangeUserId,
                     'currency_symbol' => $currencySymbol,
                     'balance' => 0,
                     'locked_balance' => 0,
@@ -465,7 +421,7 @@ class WalletService
             $currencies = \App\Models\Currency::all();
 
             foreach ($currencies as $currency) {
-                $existingWallet = $this->getExchangeWallet($currency->symbol);
+                $existingWallet = $this->walletRepository->getExchangeWallet($currency->symbol);
 
                 if (!$existingWallet) {
                     $wallet = $this->createExchangeWallet($currency->symbol);
@@ -490,9 +446,8 @@ class WalletService
     {
         $createdChains = [];
         try {
-            $exchangeWallets = Wallet::where('user_id', $this->bitexroomUserId)
-                ->with(['currency.chains', 'walletChains'])
-                ->get();
+            $exchangeWallets = $this->walletRepository->getExchangeAllWallets()
+                ->load(['currency.chains', 'walletChains']);
 
             foreach ($exchangeWallets as $wallet) {
                 if (!$wallet->currency) {
@@ -580,7 +535,7 @@ class WalletService
             // Find the user
             $user = User::find($userId);
             $blockchainName = CurrencyChain::where('chain', $chain)
-                ->first()->blockchain_name->value;
+                ->first()->blockchain_name;
             if (!$user) {
                 throw new InternalWalletHasProblemException('User not found');
             }

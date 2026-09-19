@@ -4,9 +4,9 @@
             <img src="{{ asset('images/logo/logo.svg') }}" class="img-fluid w-50">
         </a>
         <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
-            {{--            <i class="ti menu-toggle-icon d-none d-xl-block ti-sm align-middle"></i> --}}
+            {{-- <i class="ti menu-toggle-icon d-none d-xl-block ti-sm align-middle"></i> --}}
             <i class="fa-solid fa-scrubber d-none d-xl-block align-middle "></i>
-            {{--            <i class="fa-solid fa-scrubber"></i> --}}
+            {{-- <i class="fa-solid fa-scrubber"></i> --}}
             <i class="fa-light fa-xmark d-block d-xl-none ti-sm align-middle"></i>
         </a>
     </div>
@@ -16,19 +16,24 @@
     <ul class="menu-inner py-1">
         <li class="menu-item @if (request()->is('admin')) active @endif">
             <a href="{{ route('admin.dashboard') }}" class="menu-link">
-                {{--                    <i class=" tf-icons ti ti-users"></i> --}}
+                {{-- <i class=" tf-icons ti ti-users"></i> --}}
                 <i class="menu-icon  fa-regular fa-chart-pie-simple fa-sm"></i>
                 <div>داشبورد</div>
             </a>
         </li>
-
+        <li class="menu-item @if (request()->is('admin/financial-dashboard*')) active @endif">
+            <a href="{{ route('admin.financial-dashboard') }}" class="menu-link">
+                <i class="menu-icon  fa-regular fa-chart-pie-simple fa-sm"></i>
+                <div>داشبورد مالی</div>
+            </a>
+        </li>
         <li class="menu-header small text-uppercase">
             <span class="menu-header-text">افراد و دپارتمان ها</span>
         </li>
         @can('admin.index')
             <li class="menu-item @if (request()->is('admin/admins')) active @endif">
                 <a href="{{ route('admin.admin.index') }}" class="menu-link">
-                    {{--                    <i class=" tf-icons ti ti-users"></i> --}}
+                    {{-- <i class=" tf-icons ti ti-users"></i> --}}
 
                     <i class="menu-icon fa-solid fa-user-tie-hair fa-lg"></i>
                     <div>مدیریت همکاران</div>
@@ -85,14 +90,14 @@
         <li class="menu-header small text-uppercase">
             <span class="menu-header-text">مالی و خرید ها</span>
         </li>
-        {{--        @can('order.index') --}}
-        {{--            <li class="menu-item @if (request()->is('admin/exchange/market123123*')) active @endif"> --}}
-        {{--                <a href="{{route('admin.wallet.index')}}" class="menu-link"> --}}
-        {{--                    <i class="menu-icon fa-regular fa-wallet"></i> --}}
-        {{--                    <div>مدیریت کیف پول ها</div> --}}
-        {{--                </a> --}}
-        {{--            </li> --}}
-        {{--        @endcan --}}
+        {{-- @can('order.index') --}}
+        {{-- <li class="menu-item @if (request()->is('admin/exchange/market123123*')) active @endif"> --}}
+        {{-- <a href="{{route('admin.wallet.index')}}" class="menu-link"> --}}
+        {{-- <i class="menu-icon fa-regular fa-wallet"></i> --}}
+        {{-- <div>مدیریت کیف پول ها</div> --}}
+        {{-- </a> --}}
+        {{-- </li> --}}
+        {{-- @endcan --}}
         @can('transaction')
             <li class="menu-item @if (request()->is('admin/transactions*')) active @endif">
                 <a href="{{ route('admin.transaction.index') }}" class="menu-link">
@@ -170,7 +175,7 @@
             </li>
         @endcan
 
-        @canany(['currency', 'market', 'ref-exchanges'])
+        @canany(['currency', 'market', 'ref-exchanges', 'ref-exchanges-coinex-spot-orders'])
             <li class="menu-header small text-uppercase">
                 <span class="menu-header-text">مدیریت Exchange</span>
             </li>
@@ -186,12 +191,20 @@
                     <div>Market</div>
                 </a>
             </li>
-            <li class="menu-item @if (request()->is('admin/ref-exchanges')) active @endif">
+            <li class="menu-item @if (request()->is('admin/ref-exchanges') && !request()->is('admin/ref-exchanges/*')) active @endif">
                 <a href="{{ route('admin.exchange.index') }}" class="menu-link">
                     <i class="menu-icon fa-regular fa-display-chart-up-circle-dollar"></i>
                     <div>مدیریت صرافی های مرجع</div>
                 </a>
             </li>
+            @can('ref-exchanges-coinex-spot-orders')
+                <li class="menu-item @if (request()->is('admin/ref-exchanges/coinex-spot-orders*')) active @endif">
+                    <a href="{{ route('admin.ref-exchange.coinex-spot-orders.index') }}" class="menu-link">
+                        <i class="menu-icon fa-regular fa-book-open-cover"></i>
+                        <div>سفارش‌های اسپات CoinEx</div>
+                    </a>
+                </li>
+            @endcan
         @endcanany
         @can(['support'])
             <li class="menu-header small text-uppercase">
@@ -321,6 +334,12 @@
                                 <div>لیست ارزها</div>
                             </a>
                         </li>
+                        <li class="menu-item @if (request()->is('admin/hd-wallet/sweeper-transactions*')) active @endif">
+                            <a href="{{ route('admin.hd-wallet.sweeper-transactions') }}" class="menu-link">
+                                <i class="menu-icon fa-regular fa-arrows-rotate"></i>
+                                <div>تراکنش‌های Sweeper</div>
+                            </a>
+                        </li>
 
                     </ul>
                 </li>
@@ -330,7 +349,6 @@
         <li class="menu-header small text-uppercase">
             <span class="menu-header-text">مدیریت API</span>
         </li>
-
         <li class="menu-item @if (request()->is('admin/api-systems*')) active open @endif">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="menu-icon fa-regular fa-code"></i>
@@ -357,6 +375,56 @@
                 </li>
             </ul>
         </li>
+        @can('bot-management')
+            <li class="menu-header small text-uppercase">
+                <span class="menu-header-text">ربات معاملاتی</span>
+            </li>
+            <li class="menu-item @if (request()->is('admin/auto-trade*')) active open @endif">
+                <a href="javascript:void(0);" class="menu-link menu-toggle">
+                    <i class="menu-icon fa-regular fa-robot"></i>
+                    <div>ربات معاملاتی</div>
+                </a>
+                <ul class="menu-sub">
+                    <li class="menu-item @if (request()->is('admin/auto-trade/settings*')) active @endif">
+                        <a href="{{ route('admin.bot.settings.index') }}" class="menu-link">
+                            <i class="menu-icon fa-light fa-sliders fa-sm"></i>
+                            <div>تنظیمات کلی</div>
+                        </a>
+                    </li>
+                    <li class="menu-item @if (request()->is('admin/auto-trade/signals*')) active @endif">
+                        <a href="{{ route('admin.bot.signal.index') }}" class="menu-link">
+                            <i class="menu-icon fa-light fa-signal fa-sm"></i>
+                            <div>سیگنال‌ها</div>
+                        </a>
+                    </li>
+                    <li class="menu-item @if (request()->is('admin/auto-trade/orders*')) active @endif">
+                        <a href="{{ route('admin.bot.order.index') }}" class="menu-link">
+                            <i class="menu-icon fa-light fa-list-check fa-sm"></i>
+                            <div>سفارش‌ها</div>
+                        </a>
+                    </li>
+                    <li class="menu-item @if (request()->is('admin/auto-trade/wallet-transfers*')) active @endif">
+                        <a href="{{ route('admin.bot.wallet-transfer.index') }}" class="menu-link">
+                            <i class="menu-icon fa-light fa-right-left fa-sm"></i>
+                            <div>واریز/برداشت‌ها</div>
+                        </a>
+                    </li>
+                    <li class="menu-item @if (request()->is('admin/auto-trade/reports*')) active @endif">
+                        <a href="{{ route('admin.bot.report.index') }}" class="menu-link">
+                            <i class="menu-icon fa-light fa-chart-line fa-sm"></i>
+                            <div>گزارش‌ها</div>
+                        </a>
+                    </li>
+                    <li class="menu-item @if (request()->is('admin/auto-trade/test-lab*')) active @endif">
+                        <a href="{{ route('admin.bot.test-lab.index') }}" class="menu-link">
+                            <i class="menu-icon fa-light fa-flask fa-sm"></i>
+                            <div>آزمایشگاه تست</div>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+        @endcan
+
 
         @canany(['report'])
             <li class="menu-header small text-uppercase">
@@ -451,13 +519,13 @@
                             </a>
                         </li>
                     @endcan
-                    {{--                    @can('setting.ext.index') --}}
-                    {{--                        <li class="menu-item  @if (request()->is('admin/external-settings*')) active @endif"> --}}
-                    {{--                            <a href="{{route('admin.external-setting.index')}}" disabled="disabled" class="menu-link"> --}}
-                    {{--                                <div>تنظیمات خارجی</div> --}}
-                    {{--                            </a> --}}
-                    {{--                        </li> --}}
-                    {{--                    @endcan --}}
+                    {{-- @can('setting.ext.index') --}}
+                    {{-- <li class="menu-item  @if (request()->is('admin/external-settings*')) active @endif"> --}}
+                    {{-- <a href="{{route('admin.external-setting.index')}}" disabled="disabled" class="menu-link"> --}}
+                    {{-- <div>تنظیمات خارجی</div> --}}
+                    {{-- </a> --}}
+                    {{-- </li> --}}
+                    {{-- @endcan --}}
                 </ul>
             </li>
         @endcan

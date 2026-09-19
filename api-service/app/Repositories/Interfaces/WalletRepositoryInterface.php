@@ -4,6 +4,7 @@ namespace App\Repositories\Interfaces;
 
 use App\Models\Wallet;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 interface WalletRepositoryInterface
 {
@@ -14,6 +15,8 @@ interface WalletRepositoryInterface
 
     public function getLists(int $getUserId): ?Collection;
 
+    public function getListsPaginated(int $userId, bool $hideZeroBalance, int $page, int $perPage): LengthAwarePaginator;
+
     public function getListsWithMarket(int $getUserId): ?Collection;
 
     public function getOrCreateWallet(int $userId, string $symbol): Wallet;
@@ -22,9 +25,9 @@ interface WalletRepositoryInterface
 
     public function getOneOrCreateByCurrencyWithLock(string $base_currency, int $userId): Wallet;
 
-    public function getBitexroomWallet(string $currency): Wallet;
+    public function getExchangeWallet(string $currency): Wallet;
 
-    public function getBitexroomWalletWithLock(string $currency): Wallet;
+    public function getExchangeWalletWithLock(string $currency): Wallet;
 
     public function increaseBalance(int $user_id, string $baseCurrency, string $tradeQuantity);
     public function decreaseBalance(int $user_id, string $baseCurrency, string $tradeQuantity);

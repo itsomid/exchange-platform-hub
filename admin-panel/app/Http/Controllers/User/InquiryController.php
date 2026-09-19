@@ -13,6 +13,7 @@ use App\Models\Withdrawal;
 use App\Repositories\WalletRepository;
 use App\Services\Wallet\WalletService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class InquiryController extends Controller
 {
@@ -97,6 +98,20 @@ class InquiryController extends Controller
             $wallet->assetValue = $specificAssetValue; // Add the value to the wallet object
             return $wallet;
         })->sortByDesc('assetValue');
+
+        $orphanWallets = $walletsWithAssetsValues->filter(fn ($wallet) => $wallet->currency === null);
+        if ($orphanWallets->isNotEmpty()) {
+            Log::warning('Orphan wallets found on user inquiry: currency_symbol missing from currencies table', [
+                'user_id' => $user->id,
+                'orphan_count' => $orphanWallets->count(),
+                'orphans' => $orphanWallets->map(fn ($wallet) => [
+                    'wallet_id' => $wallet->id,
+                    'currency_symbol' => $wallet->currency_symbol,
+                    'balance' => $wallet->balance,
+                    'locked_balance' => $wallet->locked_balance,
+                ])->values()->all(),
+            ]);
+        }
 
         // Get all currencies for wallet creation modal
         $currencies = Currency::orderBy('symbol')->get();

@@ -18,6 +18,12 @@ class BuyDTORequest
 
     private string $currency;
 
+    private ?string $tradeType = null;
+
+    private ?int $userId = null;
+
+    private ?int $orderId = null;
+
     public function setMarket(string $market): BuyDTORequest
     {
         $this->market = $market;
@@ -100,5 +106,41 @@ class BuyDTORequest
     public function getCurrency(): string
     {
         return $this->currency;
+    }
+
+    public function setTradeType(string $tradeType): BuyDTORequest
+    {
+        $this->tradeType = $tradeType;
+
+        return $this;
+    }
+
+    public function getTradeType(): ?string
+    {
+        return $this->tradeType;
+    }
+
+    public function setUserId(?int $userId): BuyDTORequest
+    {
+        $this->userId = $userId;
+
+        return $this;
+    }
+
+    public function getUserId(): ?int
+    {
+        return $this->userId;
+    }
+
+    public function setOrderId(?int $orderId): BuyDTORequest
+    {
+        $this->orderId = $orderId;
+
+        return $this;
+    }
+
+    public function getOrderId(): ?int
+    {
+        return $this->orderId;
     }
 }

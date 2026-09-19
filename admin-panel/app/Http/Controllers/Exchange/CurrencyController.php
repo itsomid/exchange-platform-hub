@@ -20,22 +20,43 @@ class CurrencyController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
 
-        $currencies = Currency::query()->with('chains')->filterBy(request()->all())->get();
+        $availableChains = CurrencyChain::query()->distinct()->orderBy('chain')->pluck('chain');
 
-        $currenciesWithChainsCount = $currencies->filter(function ($currency) {
-            return $currency->chains->isNotEmpty();
-        })->count();
-        $currenciesWithoutChainsCount = $currencies->filter(function ($currency) {
-            return $currency->chains->isEmpty();
-        })->count();
+        // Global stats over the whole dataset (independent of the current filters).
+        $totalCount = Currency::query()->count();
+        $activeCount = Currency::query()->where('is_active', true)->count();
+        $inactiveCount = Currency::query()->where('is_active', false)->count();
+        $noChainsCount = Currency::query()->whereDoesntHave('chains')->count();
+
+        // By default (no explicit status in the request) hide inactive coins.
+        $filters = $request->all();
+        if (! $request->has('status')) {
+            $filters['status'] = 'active';
+        }
+
+        $currencies = Currency::query()
+            ->with('chains')
+            ->filterBy($filters)
+            ->orderBy('id')
+            ->paginate(50)
+            ->withQueryString();
+
+        if ($request->ajax()) {
+            return view('dashboard.exchange.currency._table', [
+                'currencies' => $currencies,
+            ])->render();
+        }
 
         return view('dashboard.exchange.currency.index', [
             'currencies' => $currencies,
-            'currenciesWithChainsCount' => $currenciesWithChainsCount,
-            'currenciesWithoutChainsCount' => $currenciesWithoutChainsCount,
+            'totalCount' => $totalCount,
+            'activeCount' => $activeCount,
+            'inactiveCount' => $inactiveCount,
+            'noChainsCount' => $noChainsCount,
+            'availableChains' => $availableChains,
         ]);
     }
 
@@ -60,7 +81,7 @@ class CurrencyController extends Controller
             'name' => $request->name,
             'persian_name' => $request->persian_name,
             'symbol' => $request->symbol,
-            'is_active' => $request->is_active
+            'is_active' => isset($request->is_active) && $request->is_active == '1',
         ]);
 
         if ($request->hasFile('logo')) {
@@ -86,9 +107,29 @@ class CurrencyController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Currency $currency)
     {
-        //
+        $currency->load(['chains', 'baseMarket.activeExchangePrice']);
+
+        $priceData = null;
+        if ($currency->baseMarket && $currency->baseMarket->activeExchangePrice) {
+            $ep = $currency->baseMarket->activeExchangePrice;
+            $priceData = [
+                'market'                   => $currency->baseMarket->name,
+                'price'                    => $ep->price,
+                'open_price'               => $ep->open_price,
+                'price_change_percentage'  => $ep->price_change_percentage,
+                'exchange_sell_price'      => $ep->exchange_sell_price,
+                'exchange_buy_price'       => $ep->exchange_buy_price,
+            ];
+        }
+
+        return response()->json([
+            'currency'  => $currency,
+            'logo_url'  => $currency->coinLogo(),
+            'edit_url'  => route('admin.currency.edit', $currency),
+            'price'     => $priceData,
+        ]);
     }
 
     /**
@@ -129,6 +170,7 @@ class CurrencyController extends Controller
             'amount_precision' => $request->amount_precision,
             'inter_transfer_enabled' => isset($request->inter_transfer_enabled) && $request->inter_transfer_enabled == '1',
             'max_auto_withdraw_amount' => $request->max_auto_withdraw_amount,
+            'is_active' => isset($request->is_active) && $request->is_active == '1',
         ]);
         // Check if the old image exists and delete it
         if ($request->hasFile('logo')) {

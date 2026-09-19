@@ -6,48 +6,7 @@ use App\Repositories\DTO\Currency\ChainResponseDTO;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
-/**
- * @OA\Schema(
- *      schema="ConfigCollection",
- *      type="object",
- *
- *      @OA\Property(
- *          property="asset",
- *          type="object",
- *          @OA\Property(property="ccy", type="string", example="BTC", description="Currency symbol."),
- *          @OA\Property(
- *              property="max_auto_withdraw_amount",
- *              type="string",
- *              example="2.5",
- *              description="The maximum amount for automatic withdrawal. If the withdrawal amount exceeds this value, the withdrawal status will be set to 'awaiting admin approval'."
- *          ),
- *          @OA\Property(property="currency_name", type="string", example="Bitcoin", description="Currency name."),
- *          @OA\Property(property="currency_persian_name", type="string", example="بیت کوین", description="Currency persian name."),
- *          @OA\Property(property="currency_logo", type="string", example="BTC", description="Currency logo."),
- *          @OA\Property(property="inter_transfer_enabled", type="boolean", example=true, description="Whether inter-transfer is enabled for this currency.")
- *      ),
- *      @OA\Property(
- *          property="chains",
- *          type="array",
- *
- *          @OA\Items(
- *              type="object",
- *
- *              @OA\Property(property="chain", type="string", example="BTC", description="Chain name."),
- *              @OA\Property(property="min_deposit_amount", type="number", format="float", example=0.0001, description="Minimum deposit amount."),
- *              @OA\Property(property="min_withdraw_amount", type="number", format="float", example=0.001, description="Minimum withdrawal amount."),
- *              @OA\Property(property="deposit_enabled", type="boolean", example=true, description="Whether deposits are enabled."),
- *              @OA\Property(property="withdraw_enabled", type="boolean", example=true, description="Whether withdrawals are enabled."),
- *              @OA\Property(property="deposit_delay_minutes", type="integer", example=10, description="Delay in minutes for deposits."),
- *              @OA\Property(property="safe_confirmations", type="integer", example=6, description="Number of safe confirmations."),
- *              @OA\Property(property="irreversible_confirmations", type="integer", example=10, description="Number of irreversible confirmations."),
- *              @OA\Property(property="withdrawal_fee", type="number", format="float", example=0.0005, description="Withdrawal fee."),
- *              @OA\Property(property="withdrawal_precision", type="integer", example=8, description="Precision for withdrawal amounts."),
- *              @OA\Property(property="memo", type="string", nullable=true, example="Required for some transactions.", description="Additional memo information for the chain.")
- *          )
- *      )
- *  )
- */
+
 class ConfigCollection extends ResourceCollection
 {
     /**
@@ -62,7 +21,7 @@ class ConfigCollection extends ResourceCollection
                 'ccy' => $configResponseDTO->getSymbol(),
                 'currency_name' => $configResponseDTO->getCurrencyName(),
                 'currency_persian_name' => $configResponseDTO->getCurrencyPersianName(),
-                'currency_logo' => $configResponseDTO->getCurrencyLogo(),
+                'currency_logo' => $configResponseDTO->getCurrencyLogo() ? config('bitexroom.currency_logo_base_url') . '/' . $configResponseDTO->getCurrencyLogo() : null,
                 'inter_transfer_enabled' => $configResponseDTO->getInterTransferEnabled(),
                 'max_auto_withdraw_amount' => $configResponseDTO->getMaxAutoWithdrawAmount(),
                 'price_precision' => $configResponseDTO->getPricePrecision(),

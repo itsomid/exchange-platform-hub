@@ -10,6 +10,7 @@ use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Exceptions\V1\OTC\BuyTradeWasFiledException;
+use App\Exceptions\V1\OTC\MinOTCAmountException;
 use App\Exceptions\V1\OTC\SellTradeWasFiledException;
 use App\Exceptions\V1\Wallet\InsufficientBalanceException;
 use App\Helpers\Math;
@@ -73,6 +74,7 @@ class OTCService
                 ->setCurrencyName($market->currency->name)
                 ->setCurrencyPersianName($market->currency->persian_name)
                 ->setCurrencyLogo($market->currency->logo)
+                ->setQuoteCurrencyLogo($usdtCurrency?->logo ?? null)
                 ->setQuoteCurrency($market->quote_currency)
                 ->setIsActive($market->is_active)
                 ->setMinTradeAmount($market->min_trade_amount)
@@ -99,7 +101,7 @@ class OTCService
         ];
     }
 
-    public function bitexroomAvailableBalance(int $marketId): string
+    public function exchangeAvailableBalance(int $marketId): string
     {
         $market = $this->marketRepository->getMarketById($marketId);
 
@@ -137,6 +139,9 @@ class OTCService
                 );
 
             $buyAmount = $requestDTO->getQuantity();
+            if (Math::comp($buyAmount, '0') !== 1) {
+                throw new MinOTCAmountException(null, null, (float) $market->min_otc_amount);
+            }
             $amountInQuoteCurrency = Math::mul($market->exchangePrice->buy_price, $requestDTO->getQuantity());
             $fee = Math::mul($buyAmount, Math::div(Setting::getSetting('otc_buy_fee'), 100));
             $receivedAmount = Math::sub($buyAmount, $fee);
@@ -394,6 +399,9 @@ class OTCService
                 );
 
             $sellAmount = $requestDTO->getQuantity();
+            if (Math::comp($sellAmount, '0') !== 1) {
+                throw new MinOTCAmountException(null, null, (float) $market->min_otc_amount);
+            }
             $amountInQuoteCurrency = Math::mul($market->exchangePrice->sell_price, $sellAmount);
             $fee = Math::mul($amountInQuoteCurrency, Math::div(Setting::getSetting('otc_sell_fee'), 100));
             $receivedAmount = Math::sub($amountInQuoteCurrency, $fee);
@@ -484,7 +492,18 @@ class OTCService
                     'ref_exchange_description' => $description,
                 ]);
                 DB::commit();
-                throw new SellTradeWasFiledException(message: $description, marketName: $market->base_currency . $market->quote_currency);
+
+                AdminNotification::sendSellFailed(
+                    otcOrderId: $otc_order->id,
+                    userId: $requestDTO->getSellerUserId(),
+                    marketName: $market->base_currency . $market->quote_currency,
+                    sellAmount: $sellAmount,
+                    receivedAmount: $receivedAmount,
+                    buyerQuoteWalletBalance: $buyerQuoteWallet->available_balance,
+                    reason: $description,
+                );
+
+                throw new SellTradeWasFiledException(marketName: $market->base_currency . $market->quote_currency);
             }
         } catch (Throwable $exception) {
             DB::rollBack();

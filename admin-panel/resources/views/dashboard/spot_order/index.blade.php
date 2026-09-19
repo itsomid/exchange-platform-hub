@@ -1,7 +1,7 @@
 @extends('dashboard.layout.master')
 @section('title', 'مدیریت سفارشات Spot')
 @section('content')
-    {{--    TODO: Complete OTC ORder Card --}}
+    {{-- TODO: Complete OTC ORder Card --}}
 
     <!-- Tab Navigation -->
     <div class="card mb-4">
@@ -58,8 +58,7 @@
                             <option value="">همه بازارها</option>
                             @if (isset($markets))
                                 @foreach ($markets as $market)
-                                    <option value="{{ $market->id }}"
-                                        {{ request()->input('market') == $market->id ? 'selected' : '' }}>
+                                    <option value="{{ $market->id }}" {{ request()->input('market') == $market->id ? 'selected' : '' }}>
                                         {{ $market->base_currency }}/{{ $market->quote_currency }}
                                     </option>
                                 @endforeach
@@ -71,8 +70,7 @@
                         <select name="type" class="form-select" id="type">
                             <option value="">همه</option>
                             @foreach (\App\Enums\SpotOrderTypeEnum::cases() as $case)
-                                <option value="{{ $case->name }}"
-                                    {{ request()->has('type') && request()->input('type') == $case->name ? 'selected' : '' }}>
+                                <option value="{{ $case->name }}" {{ request()->has('type') && request()->input('type') == $case->name ? 'selected' : '' }}>
                                     {{ $case->label() }}
                                 </option>
                             @endforeach
@@ -83,14 +81,13 @@
                         <select name="status" class="form-select" id="status">
                             <option value="">همه وضعیت‌ها</option>
                             @foreach (\App\Enums\SpotOrderStatusEnum::cases() as $case)
-                                <option value="{{ $case->name }}"
-                                    {{ request()->input('status') == $case->name ? 'selected' : '' }}>
+                                <option value="{{ $case->name }}" {{ request()->input('status') == $case->name ? 'selected' : '' }}>
                                     {{ $case->label() }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-lg-3 col-md-12 col-12 mb-2">
+                    <div class="col-lg-3 col-md-12 col-12">
                         <label class="form-label d-none d-lg-block">&nbsp;</label>
                         <div class="d-flex flex-wrap gap-1 justify-content-start">
                             <button class="btn btn-success btn-sm flex-fill" type="submit" style="min-width: 70px;">
@@ -111,20 +108,19 @@
                 <!-- Second Row for User and Date Filters -->
                 <div class="row mb-3">
                     @if (request()->input('source', 'user') === 'user')
-                        <div class="col-lg-6 col-md-6 col-sm-12 mb-2">
-                            <label class="form-label" for="user">کاربر:</label>
-                            <x-user-selection-component input-name="user" multiple="0"
-                                selected="{{ request()->filled('user') ? request()->input('user') : '' }}"
-                                selected-label="{{ request()->filled('user')
-                                    ? '(#' .
-                                            request()->input('user') .
-                                            ') ' .
-                                            \App\Models\User::find(request()->input('user'))?->fullname() .
-                                            ' - ' .
-                                            \App\Models\User::find(request()->input('user'))?->email ??
-                                        'کاربر #' . request()->input('user')
-                                    : '' }}"></x-user-selection-component>
-                        </div>
+                                <div class="col-lg-6 col-md-6 col-sm-12 mb-2">
+                                    <label class="form-label" for="user">کاربر:</label>
+                                    <x-user-selection-component input-name="user" multiple="0"
+                                        selected="{{ request()->filled('user') ? request()->input('user') : '' }}" selected-label="{{ request()->filled('user')
+                        ? '(#' .
+                        request()->input('user') .
+                        ') ' .
+                        \App\Models\User::find(request()->input('user'))?->fullname() .
+                        ' - ' .
+                        \App\Models\User::find(request()->input('user'))?->email ??
+                        'کاربر #' . request()->input('user')
+                        : '' }}"></x-user-selection-component>
+                                </div>
                     @endif
                     <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
                         <label class="form-label" for="date_from">از تاریخ:</label>
@@ -142,45 +138,47 @@
                 <div class="row mb-3" id="advancedFilters" style="display: none;">
                     <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
                         <label class="form-label" for="quantity_min">حداقل مقدار:</label>
-                        <input type="number" name="quantity_min" class="form-control" id="quantity_min"
-                            placeholder="0.00" step="0.00000001" value="{{ request()->input('quantity_min') }}">
+                        <input type="number" name="quantity_min" class="form-control" id="quantity_min" placeholder="0.00"
+                            step="0.00000001" value="{{ request()->input('quantity_min') }}">
                     </div>
                     <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
                         <label class="form-label" for="quantity_max">حداکثر مقدار:</label>
-                        <input type="number" name="quantity_max" class="form-control" id="quantity_max"
-                            placeholder="0.00" step="0.00000001" value="{{ request()->input('quantity_max') }}">
+                        <input type="number" name="quantity_max" class="form-control" id="quantity_max" placeholder="0.00"
+                            step="0.00000001" value="{{ request()->input('quantity_max') }}">
                     </div>
                     <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
                         <label class="form-label" for="price_min">حداقل قیمت:</label>
                         <div class="input-group">
-                            <input type="number" name="price_min" class="form-control" id="price_min"
-                                placeholder="0.00" step="0.01" value="{{ request()->input('price_min') }}">
+                            <input type="number" name="price_min" class="form-control" id="price_min" placeholder="0.00"
+                                step="0.01" value="{{ request()->input('price_min') }}">
                             <span class="input-group-text">USDT</span>
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
                         <label class="form-label" for="price_max">حداکثر قیمت:</label>
                         <div class="input-group">
-                            <input type="number" name="price_max" class="form-control" id="price_max"
-                                placeholder="0.00" step="0.01" value="{{ request()->input('price_max') }}">
+                            <input type="number" name="price_max" class="form-control" id="price_max" placeholder="0.00"
+                                step="0.01" value="{{ request()->input('price_max') }}">
                             <span class="input-group-text">USDT</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Filter Summary (Show active filters) -->
-                @if (request()->hasAny([
-                        'market',
-                        'type',
-                        'status',
-                        'user',
-                        'date_from',
-                        'date_to',
-                        'price_min',
-                        'price_max',
-                        'quantity_min',
-                        'quantity_max',
-                    ]))
+                @if (
+                        request()->hasAny([
+                            'market',
+                            'type',
+                            'status',
+                            'user',
+                            'date_from',
+                            'date_to',
+                            'price_min',
+                            'price_max',
+                            'quantity_min',
+                            'quantity_max',
+                        ])
+                    )
                     <div class="row">
                         <div class="col-12">
                             <div class="alert alert-info d-flex align-items-center">
@@ -407,8 +405,8 @@
                             <tr class="table-striped">
                                 <td>{{ $spotOrder->id }}</td>
                                 <td class="text-heading fw-medium">
-                                    <img src="{{ asset($spotOrder->market->baseCurrency->coinLogo()) }}"
-                                        class="rounded-circle" width="32px">
+                                    <img src="{{ asset($spotOrder->market->baseCurrency->coinLogo()) }}" class="rounded-circle me-1"
+                                        width="32px">
                                     <small>{{ $spotOrder->market->name }}</small>
                                 </td>
                                 <td>
@@ -418,20 +416,20 @@
                                 </td>
                                 <td>{{ $spotOrder->type->label() }}</td>
                                 <td>
-                                    <span class="ms-1 fw-bold">{{ formatNumberTrimZeros($spotOrder->quantity) }}</span>
+                                    <span class="ms-1 fw-bold font-number">{{ formatNumberTrimZeros($spotOrder->quantity) }}</span>
                                     <small>{{ $spotOrder->market->base_currency }}</small>
                                 </td>
-                                <td class="fw-bold">
+                                <td class="fw-bold font-number">
                                     @if ($spotOrder->price === null)
                                         @php
                                             $averagePrice = $spotOrder->getAveragePrice();
                                         @endphp
                                         @if ($averagePrice)
-                                            <span data-bs-toggle="tooltip" data-bs-placement="top"
+                                            <span class="" data-bs-toggle="tooltip" data-bs-placement="top"
                                                 data-bs-custom-class="tooltip-dark"
                                                 title="این قیمت میانگین معاملات match شده با این سفارش است">
                                                 {{ formatNumberTrimZeros($averagePrice) }}
-                                                <i class="fa-regular fa-info-circle ms-1"></i>
+                                                <i class="fa-regular fa-info-circle ms-1 "></i>
                                             </span>
                                         @else
                                             <span class="text-muted">-</span>
@@ -440,15 +438,20 @@
                                         {{ formatNumberTrimZeros($spotOrder->price) }}
                                     @endif
                                 </td>
-                                <td>{{ $spotOrder->user->email }}</td>
                                 <td>
+                                    <a class="text-heading text-truncate" target="_blank"
+                                        href="{{ route('admin.inquiry.user-details', [$spotOrder->user]) }}">
+                                        <span class="fw-medium">{{ $spotOrder->user->email }}</span>
+                                    </a>
+                                </td>
+                                <td class="font-number">
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="position-relative">
                                             <svg class="" width="40" height="40" viewBox="0 0 36 36">
-                                                <circle cx="18" cy="18" r="16" fill="none"
-                                                    stroke="#e9ecef" stroke-width="4"></circle>
-                                                <circle cx="18" cy="18" r="16" fill="none"
-                                                    stroke="#6f38d4" stroke-width="4" stroke-dasharray="100"
+                                                <circle cx="18" cy="18" r="16" fill="none" stroke="#e9ecef" stroke-width="4">
+                                                </circle>
+                                                <circle cx="18" cy="18" r="16" fill="none" stroke="#6f38d4" stroke-width="4"
+                                                    stroke-dasharray="100"
                                                     stroke-dashoffset="{{ 100 - ($spotOrder->filled_quantity / $spotOrder->quantity) * 100 }}"
                                                     transform="rotate(-90 18 18)"></circle>
                                             </svg>
@@ -470,8 +473,8 @@
                                         {{ $spotOrder->status->label() }}
                                     </span>
                                     @if ($spotOrder->status === \App\Enums\SpotOrderStatusEnum::PARTIALLY_FILLED_CANCELED)
-                                        <i class="fa-regular fa-info-circle fa-lg ms-2" data-bs-toggle="tooltip"
-                                            data-bs-placement="top" data-bs-custom-class="tooltip-dark"
+                                        <i class="fa-regular fa-info-circle fa-lg ms-2" data-bs-toggle="tooltip" data-bs-placement="top"
+                                            data-bs-custom-class="tooltip-dark"
                                             title="با توجه به اینکه دیگر سفارش از نوع {{ $spotOrder->side === \App\Enums\SpotOrderSideEnum::BUY ? \App\Enums\SpotOrderSideEnum::SELL->label() : \App\Enums\SpotOrderSideEnum::BUY->label() }} برای پر کردن این سفارش موجود نبود یا سفارش به صورت ناقص پر شده مابقی مبلغ به حساب کاربر بازگردانده شد."></i>
                                     @endif
                                 </td>
@@ -480,18 +483,17 @@
                                         data-bs-target="#order-{{ $spotOrder->id }}">
                                         <i class="fa-light fa-eye fa-lg"></i>
                                     </a>
-                                    @if (request()->input('source', 'user') === 'user' && 
-                                         $spotOrder->status === \App\Enums\SpotOrderStatusEnum::OPEN)
-                                        <button type="button" 
-                                                class="btn btn-sm btn-icon btn-danger cancel-single-order" 
-                                                data-order-id="{{ $spotOrder->id }}"
-                                                data-bs-toggle="tooltip"
-                                                title="لغو سفارش">
+                                    @if (
+                                            request()->input('source', 'user') === 'user' &&
+                                            $spotOrder->status === \App\Enums\SpotOrderStatusEnum::OPEN
+                                        )
+                                        <button type="button" class="btn btn-sm btn-icon btn-danger cancel-single-order"
+                                            data-order-id="{{ $spotOrder->id }}" data-bs-toggle="tooltip" title="لغو سفارش">
                                             <i class="fa-light fa-times fa-lg"></i>
                                         </button>
                                     @endif
-                                    <div class="modal fade " id="order-{{ $spotOrder->id }}" tabindex="-1"
-                                        aria-modal="true" role="dialog">
+                                    <div class="modal fade " id="order-{{ $spotOrder->id }}" tabindex="-1" aria-modal="true"
+                                        role="dialog">
                                         <div class="modal-dialog modal-xl" role="document">
                                             <div class="modal-content">
                                                 <div class="modal-header justify-content-between">
@@ -501,8 +503,7 @@
                                                             #{{ $spotOrder->id }}</h6>
                                                     </div>
                                                     <div class="d-flex flex-column ">
-                                                        <a href=""
-                                                            class="text-heading text-truncate text-end mb-2">
+                                                        <a href="" class="text-heading text-truncate text-end mb-2">
                                                             <span class="me-1">{{ $spotOrder->user->email }}</span>
                                                             <span class="me-2">({{ $spotOrder->user->username }})</span>
                                                         </a>
@@ -523,8 +524,7 @@
                                                                 class="me-2 badge bg-{{ $spotOrder->role->color() }}">{{ $spotOrder->role->label() }}</span>
                                                             <h5 class="me-2 fw-bold text-black m-0">
                                                                 {{ $spotOrder->market->name }}
-                                                                <span
-                                                                    class="text-primary">({{ $spotOrder->type->value }})</span>
+                                                                <span class="text-primary">({{ $spotOrder->type->value }})</span>
                                                             </h5>
                                                             <span
                                                                 class="text-uppercase badge bg-{{ $spotOrder->side->color() }}">{{ $spotOrder->side }}</span>
@@ -570,7 +570,7 @@
                                                         <h6 class="m-0 mb-2 mb-md-0 me-12">ارزش اجرا شده</h6>
                                                         <div class="d-flex flex-wrap gap-1 font-number" dir="ltr">
                                                             @php
-                                                                $executedValue = $spotOrder->makerTrades->merge($spotOrder->takerTrades)->sum(function($trade) {
+                                                                $executedValue = $spotOrder->makerTrades->merge($spotOrder->takerTrades)->sum(function ($trade) {
                                                                     return bcmul($trade->price, $trade->quantity, 8);
                                                                 });
                                                             @endphp
@@ -705,11 +705,11 @@
 @endsection
 @section('vendor-script')
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             $('[data-bs-toggle="tooltip"]').tooltip();
 
             // Toggle Advanced Filters
-            $('#toggleAdvancedFilter').click(function() {
+            $('#toggleAdvancedFilter').click(function () {
                 const advancedFilters = $('#advancedFilters');
                 const button = $(this);
                 const icon = button.find('i');
@@ -726,7 +726,7 @@
             });
 
             // Clear Filters Button
-            $('#clearFilters').click(function() {
+            $('#clearFilters').click(function () {
                 // Get current source parameter
                 const currentSource = $('input[name="source"]').val();
 
@@ -737,7 +737,7 @@
             });
 
             // Export to Excel Button
-            $('#exportFiltered').click(function() {
+            $('#exportFiltered').click(function () {
                 const button = $(this);
                 const originalText = button.html();
 
@@ -760,7 +760,7 @@
                 document.body.removeChild(link);
 
                 // Reset button state after delay
-                setTimeout(function() {
+                setTimeout(function () {
                     button.prop('disabled', false);
                     button.html(originalText);
                 }, 2000);
@@ -770,7 +770,7 @@
             const advancedInputs = ['quantity_min', 'quantity_max', 'price_min', 'price_max'];
             let hasAdvancedValue = false;
 
-            advancedInputs.forEach(function(inputName) {
+            advancedInputs.forEach(function (inputName) {
                 if ($('input[name="' + inputName + '"]').val()) {
                     hasAdvancedValue = true;
                 }
@@ -782,7 +782,7 @@
             }
 
             // Cancel All Open Orders Button
-            $('#cancelAllOpenOrders').click(function() {
+            $('#cancelAllOpenOrders').click(function () {
                 if (!confirm('آیا مطمئن هستید که می‌خواهید تمام سفارشات باز را لغو کنید؟\n\nاین عملیات قابل بازگشت نیست.')) {
                     return;
                 }
@@ -800,7 +800,7 @@
                     data: {
                         _token: '{{ csrf_token() }}'
                     },
-                    success: function(response) {
+                    success: function (response) {
                         if (response.success) {
                             alert(response.message);
                             location.reload();
@@ -810,7 +810,7 @@
                             button.html(originalText);
                         }
                     },
-                    error: function(xhr) {
+                    error: function (xhr) {
                         let errorMsg = 'خطا در لغو سفارشات';
                         if (xhr.responseJSON && xhr.responseJSON.message) {
                             errorMsg = xhr.responseJSON.message;
@@ -823,9 +823,9 @@
             });
 
             // Cancel Single Order Button
-            $(document).on('click', '.cancel-single-order', function() {
+            $(document).on('click', '.cancel-single-order', function () {
                 const orderId = $(this).data('order-id');
-                
+
                 if (!confirm('آیا مطمئن هستید که می‌خواهید این سفارش را لغو کنید؟\n\nسفارش #' + orderId + '\n\nاین عملیات قابل بازگشت نیست.')) {
                     return;
                 }
@@ -843,7 +843,7 @@
                     data: {
                         _token: '{{ csrf_token() }}'
                     },
-                    success: function(response) {
+                    success: function (response) {
                         if (response.success) {
                             alert(response.message);
                             location.reload();
@@ -853,7 +853,7 @@
                             button.html(originalHtml);
                         }
                     },
-                    error: function(xhr) {
+                    error: function (xhr) {
                         let errorMsg = 'خطا در لغو سفارش';
                         if (xhr.responseJSON && xhr.responseJSON.message) {
                             errorMsg = xhr.responseJSON.message;

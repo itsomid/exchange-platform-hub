@@ -3,10 +3,14 @@
 namespace App\Repositories;
 
 use App\Helpers\Math;
+use App\Models\Currency;
 use App\Models\Wallet;
 use App\Models\WalletChain;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class WalletRepository implements WalletRepositoryInterface
 {
@@ -38,10 +42,62 @@ class WalletRepository implements WalletRepositoryInterface
 
     public function getLists(int $getUserId): ?Collection
     {
+
         return Wallet::query()
             ->where('user_id', $getUserId)
             ->with('exchangePrice')
             ->get();
+    }
+
+    public function getListsPaginated(int $userId, bool $hideZeroBalance, int $page, int $perPage): LengthAwarePaginator
+    {
+        $wallets = Wallet::query()
+            ->where('user_id', $userId)
+            ->get(['id', 'currency_symbol', 'balance', 'locked_balance'])
+            ->keyBy('currency_symbol');
+
+        $items = $this->getCachedWalletListCurrencies()
+            ->map(function (Currency $currency) use ($wallets) {
+                $wallet = $wallets->get($currency->symbol);
+                $balance = $wallet?->balance ?? '0';
+                $exchangePrice = $currency->baseMarket?->exchangePrice?->price;
+
+                return (object) [
+                    'currency_symbol' => $currency->symbol,
+                    'logo' => $currency->logo,
+                    'wallet_id' => $wallet?->id,
+                    'balance' => $balance,
+                    'locked_balance' => $wallet?->locked_balance ?? '0',
+                    'exchange_price' => $exchangePrice,
+                    'asset_value' => $exchangePrice
+                        ? Math::mul($balance, $exchangePrice)
+                        : $balance,
+                ];
+            })
+            ->when($hideZeroBalance, fn ($currencies) => $currencies->filter(
+                fn (object $item) => Math::comp($item->balance, '0') === 1
+            ))
+            ->sort(function (object $left, object $right) {
+                $assetValueComparison = Math::comp($right->asset_value, $left->asset_value);
+
+                if ($assetValueComparison !== 0) {
+                    return $assetValueComparison;
+                }
+
+                return strcmp($left->currency_symbol, $right->currency_symbol);
+            })
+            ->values();
+
+        return new LengthAwarePaginator(
+            $items->forPage($page, $perPage)->values(),
+            $items->count(),
+            $perPage,
+            $page,
+            [
+                'path' => LengthAwarePaginator::resolveCurrentPath(),
+                'pageName' => 'page',
+            ]
+        );
     }
 
     public function getListsWithMarket(int $getUserId): ?Collection
@@ -50,6 +106,11 @@ class WalletRepository implements WalletRepositoryInterface
             ->where('user_id', $getUserId)
             ->with('market')
             ->get();
+    }
+
+    public function createOrGetWallet(string $symbol, int $userId): Wallet
+    {
+        return $this->getOrCreateWallet($userId, $symbol);
     }
 
     public function getOrCreateWallet(int $userId, string $symbol): Wallet
@@ -97,21 +158,26 @@ class WalletRepository implements WalletRepositoryInterface
             );
     }
 
-    public function getBitexroomWallet(string $currency): Wallet
+    public function getExchangeWallet(string $currency): Wallet
     {
         return Wallet::query()
             ->where('currency_symbol', $currency)
-            ->where('user_id', 1)
+            ->where('user_id', $this->exchangeUserId())
             ->first();
     }
 
-    public function getBitexroomWalletWithLock(string $currency): Wallet
+    public function getExchangeWalletWithLock(string $currency): Wallet
     {
         return Wallet::query()
             ->where('currency_symbol', $currency)
-            ->where('user_id', 1)
+            ->where('user_id', $this->exchangeUserId())
             ->lockForUpdate()
             ->first();
+    }
+
+    private function exchangeUserId(): int
+    {
+        return (int) config('bitexroom.user_id', 1);
     }
 
     public function increaseBalance(int $user_id, string $baseCurrency, string $tradeQuantity): void
@@ -129,27 +195,44 @@ class WalletRepository implements WalletRepositoryInterface
 
     public function decreaseLockedBalance(int $user_id, string $quoteCurrency, string $totalTradeValue): void
     {
+        // Truncate to the currency's actual precision to eliminate floating-point noise
+        // from intermediate BCMath calculations (e.g. 11.14500000890 → 11.14500000).
+        $precision = Currency::where('symbol', $quoteCurrency)->value('amount_precision') ?? 8;
+        $totalTradeValue = bcadd($totalTradeValue, '0', $precision);
+
         // Use pessimistic lock to avoid race conditions on concurrent decrements
         $wallet = $this->getWalletWithLock($quoteCurrency, $user_id);
         $newLockedBalance = Math::sub($wallet->locked_balance, $totalTradeValue);
-        
+
         // Critical validation: prevent negative locked_balance
         if (Math::comp($newLockedBalance, '0') === -1) {
             \Illuminate\Support\Facades\Log::channel('locked-balance-detail')->error(
                 "Attempted to set negative locked_balance for user {$user_id}, currency {$quoteCurrency}. Current: {$wallet->locked_balance}, Decrease by: {$totalTradeValue}, Would be: {$newLockedBalance}"
             );
-            
+
             // Log stack trace to help debug where this is coming from
             \Illuminate\Support\Facades\Log::channel('locked-balance-detail')->error(
                 'Stack trace: ' . json_encode(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), JSON_PRETTY_PRINT)
             );
-            
+
             throw new \RuntimeException(
                 "Cannot decrease locked_balance below zero. User: {$user_id}, Currency: {$quoteCurrency}, Current: {$wallet->locked_balance}, Attempted decrease: {$totalTradeValue}"
             );
         }
-        
+
         $wallet->locked_balance = $newLockedBalance;
         $wallet->save();
+    }
+
+    private function getCachedWalletListCurrencies(): Collection
+    {
+        return Cache::remember(__CLASS__.'.getListsPaginated.currencies', 3600, fn () => Currency::query()
+            ->select(['id', 'symbol', 'logo'])
+            ->with([
+                'baseMarket:id,base_currency',
+                'baseMarket.exchangePrice:id,market_id,price',
+            ])
+            ->orderBy('symbol')
+            ->get());
     }
 }

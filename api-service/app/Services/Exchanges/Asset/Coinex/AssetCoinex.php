@@ -85,7 +85,14 @@ class AssetCoinex implements AssetInterface
         }
         if (! $response->ok() || $response->json('code') !== 0) {
             Log::channel('ref-exchange')->info($response->body());
-            AdminNotification::logError($request->getMarket(), $request->getQuantity(), $response->body());
+            AdminNotification::logError(
+                $request->getMarket(),
+                $request->getQuantity(),
+                $response->body(),
+                $request->getTradeType(),
+                $request->getUserId(),
+                $request->getOrderId(),
+            );
 
             return resolve(BuyDTOResponse::class)
                 ->setSpotStatus(SpotStatusEnum::BuyOrderFailed)
@@ -136,7 +143,7 @@ class AssetCoinex implements AssetInterface
             'fee_ccy' => 'CET',
         ];
         if ($requestDTO->getChain()) {
-            $requestBody['chain'] = $requestDTO->getChain();
+            $requestBody['chain'] = $this->mapChainToCoinexNetwork($requestDTO->getChain());
         }
         try {
             $response = CoinexRequest::send(MethodEnum::POST, '/v2/assets/withdraw', $requestBody);
@@ -172,5 +179,19 @@ class AssetCoinex implements AssetInterface
             ->setStatus($data['status'])
             ->setFee($data['tx_fee'] > 0 ? $data['tx_fee'] : $data['fee_amount'])
             ->setCurrencyFee($data['fee_ccy']);
+    }
+
+    /**
+     * CoinEx chain names that differ from CurrencyChainEnum.
+     * AVAX C-Chain is AVA_C; X-Chain is AVA and must not be used for EVM HD wallets.
+     */
+    private function mapChainToCoinexNetwork(string $chain): string
+    {
+        $chainMapping = [
+            'AVALANCHE' => 'AVA_C',
+            'POLYGON' => 'MATIC',
+        ];
+
+        return $chainMapping[$chain] ?? $chain;
     }
 }

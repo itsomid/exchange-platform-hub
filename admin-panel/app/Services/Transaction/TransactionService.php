@@ -3,6 +3,7 @@
 namespace App\Services\Transaction;
 
 use App\Enums\DepositStatusEnum;
+use App\Enums\DepositTypeEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
@@ -15,15 +16,15 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\Withdrawal;
-use App\Services\Wallet\WalletService;
+use App\Repositories\Interfaces\WalletRepositoryInterface;
 
 class TransactionService
 {
-    protected $walletService;
+    protected WalletRepositoryInterface $walletRepository;
 
-    public function __construct(WalletService $walletService)
+    public function __construct(WalletRepositoryInterface $walletRepository)
     {
-        $this->walletService = $walletService;
+        $this->walletRepository = $walletRepository;
     }
 
     public function increaseDecreaseAdminWalletCredit(
@@ -39,7 +40,7 @@ class TransactionService
     ) {
         \DB::transaction(function () use ($userId, $amount, $transactionHash, $currency, $currencyChain, $type, $adminId, $description, $admin_description) {
             // Fetch the wallet
-            $exchangeWallet = $this->walletService->getExchangeWallet($currency->symbol);
+            $exchangeWallet = $this->walletRepository->getExchangeWallet($currency->symbol);
             if (!$exchangeWallet) {
                 return redirect()->back()->withErrors(['wallet' => 'کیف پول مورد نظر یافت نشد.']);
             }
@@ -60,6 +61,7 @@ class TransactionService
                     'transaction_hash' => $transactionHash,
                     'description' => 'Exchange Wallet credit increase by admin: (#' . $adminId . ') ' . Admin::find($adminId)->fullname(),
                     'status' => DepositStatusEnum::CONFIRMED,
+                    'type' => DepositTypeEnum::MANUAL_ADMIN,
                 ]);
                 $this->logTransaction(
                     wallet: $exchangeWallet,
@@ -170,6 +172,7 @@ class TransactionService
                     User::find($type === TransactionTypeEnum::DEPOSIT->value ? $toUserId : $fromUserId)->username
                 ),
                 'status' => DepositStatusEnum::CONFIRMED,
+                'type' => DepositTypeEnum::MANUAL_ADMIN,
             ]);
 
             $withdrawal = Withdrawal::create([
@@ -258,6 +261,50 @@ class TransactionService
         ]);
     }
 
+
+    /**
+     * Directly credit or debit a wallet without creating deposit/withdrawal records.
+     * Used for chainless currencies (internal assets).
+     */
+    public function directWalletCredit(
+        int      $userId,
+        float    $amount,
+        Currency $currency,
+        string   $type,
+        ?int     $adminId = null,
+        ?string  $adminDescription = null
+    ): void {
+        \DB::transaction(function () use ($userId, $amount, $currency, $type, $adminId, $adminDescription) {
+            $wallet = Wallet::firstOrCreate(
+                ['user_id' => $userId, 'currency_symbol' => $currency->symbol],
+                ['balance' => 0]
+            );
+
+            if ($type === TransactionTypeEnum::WITHDRAWAL->value && $wallet->balance < $amount) {
+                throw new \Exception('موجودی کافی نیست.');
+            }
+
+            $type === TransactionTypeEnum::DEPOSIT->value
+                ? $wallet->increment('balance', $amount)
+                : $wallet->decrement('balance', $amount);
+
+            Transaction::create([
+                'user_id'           => $wallet->user_id,
+                'admin_id'          => $adminId,
+                'wallet_id'         => $wallet->id,
+                'deposit_id'        => null,
+                'withdrawal_id'     => null,
+                'amount'            => $type === TransactionTypeEnum::DEPOSIT->value ? $amount : -$amount,
+                'balance'           => $wallet->fresh()->balance,
+                'coin_price'        => $currency->exchangePrice,
+                'type'              => $type,
+                'subtype'           => TransactionSubTypeEnum::MANUAL_ADMIN,
+                'status'            => TransactionStatusEnum::SUCCESS,
+                'description'       => 'Direct wallet credit by admin #' . $adminId,
+                'admin_description' => $adminDescription,
+            ]);
+        });
+    }
 
     //report////
     public function totalTransactionsBasedType(int $userId, string $currencySymbol, array $transactionTypes): float

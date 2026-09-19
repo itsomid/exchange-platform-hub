@@ -14,7 +14,6 @@ use App\Models\HdWalletOutgoingTransaction;
 use App\Models\Wallet;
 use App\Models\WalletChain;
 use App\Services\NodeProviders\BlockchairService;
-use App\Services\NodeProviders\BscScanService;
 use App\Services\NodeProviders\EtherScanService;
 use App\Services\NodeProviders\TronScanService;
 use Illuminate\Http\Request;
@@ -98,6 +97,7 @@ class HdWalletIndexReportController extends Controller
                     WHERE status = ?
                         AND transaction_hash IS NOT NULL
                         AND currency_symbol = ?
+                        AND user_id != 1
                         {$chainCondition}
                     GROUP BY user_id, currency_symbol, currency_chain_id
                 ) as d
@@ -110,6 +110,7 @@ class HdWalletIndexReportController extends Controller
                         COUNT(*) as outgoing_count
                     FROM hd_wallet_outgoing_transactions
                     WHERE currency_symbol = ?
+                        AND user_id != 1
                         {$chainCondition}
                     GROUP BY user_id, currency_symbol, currency_chain_id
                 ) as o ON d.user_id = o.user_id
@@ -159,6 +160,7 @@ class HdWalletIndexReportController extends Controller
                 ->where('status', DepositStatusEnum::CONFIRMED)
                 ->whereNotNull('transaction_hash')
                 ->where('currency_symbol', $currencySymbol)
+                ->where('user_id', '!=', 1)
                 ->when($currencyChainId, function ($query) use ($currencyChainId) {
                     $query->where('currency_chain_id', $currencyChainId);
                 })
@@ -184,14 +186,16 @@ class HdWalletIndexReportController extends Controller
             $balances = $balancesQuery->paginate($perPage);
         }
 
-        // Calculate summary totals
+        // Calculate summary totals (excluding index 1)
         $totalDeposits = Deposit::where('status', DepositStatusEnum::CONFIRMED)
             ->whereNotNull('transaction_hash')
             ->where('currency_symbol', $currencySymbol)
+            ->where('user_id', '!=', 1)
             ->when($currencyChainId, fn($q) => $q->where('currency_chain_id', $currencyChainId))
             ->sum('amount');
 
         $totalOutgoing = HdWalletOutgoingTransaction::where('currency_symbol', $currencySymbol)
+            ->where('user_id', '!=', 1)
             ->when($currencyChainId, fn($q) => $q->where('currency_chain_id', $currencyChainId))
             ->sum('amount');
 
@@ -200,6 +204,7 @@ class HdWalletIndexReportController extends Controller
         $totalIndexCount = Deposit::where('status', DepositStatusEnum::CONFIRMED)
             ->whereNotNull('transaction_hash')
             ->where('currency_symbol', $currencySymbol)
+            ->where('user_id', '!=', 1)
             ->when($currencyChainId, fn($q) => $q->where('currency_chain_id', $currencyChainId))
             ->distinct('user_id')
             ->count('user_id');
@@ -207,10 +212,12 @@ class HdWalletIndexReportController extends Controller
         $totalDepositCount = Deposit::where('status', DepositStatusEnum::CONFIRMED)
             ->whereNotNull('transaction_hash')
             ->where('currency_symbol', $currencySymbol)
+            ->where('user_id', '!=', 1)
             ->when($currencyChainId, fn($q) => $q->where('currency_chain_id', $currencyChainId))
             ->count();
 
         $totalOutgoingCount = HdWalletOutgoingTransaction::where('currency_symbol', $currencySymbol)
+            ->where('user_id', '!=', 1)
             ->when($currencyChainId, fn($q) => $q->where('currency_chain_id', $currencyChainId))
             ->count();
 
@@ -447,11 +454,7 @@ class HdWalletIndexReportController extends Controller
 
             $responseData = $response->json();
 
-            \Illuminate\Support\Facades\Log::channel('hd-wallet')->info('Sweep indices result:', [
-                'request' => $requestBody,
-                'summary' => $responseData['data']['summary'] ?? null,
-            ]);
-
+          
             return response()->json([
                 'success' => true,
                 'data' => $responseData['data'] ?? [],
@@ -571,11 +574,7 @@ class HdWalletIndexReportController extends Controller
 
             $responseData = $response->json();
 
-            \Illuminate\Support\Facades\Log::channel('hd-wallet')->info('Fund indices result:', [
-                'request' => $requestBody,
-                'summary' => $responseData['data']['summary'] ?? null,
-            ]);
-
+    
             return response()->json([
                 'success' => true,
                 'data' => $responseData['data'] ?? [],
@@ -742,16 +741,26 @@ class HdWalletIndexReportController extends Controller
                 return $service->getBalance($currencySymbol, $address);
 
             case CurrencyChainEnum::ERC20->value:
-                $service = new EtherScanService();
-                return $service->getBalance($currencySymbol, $address);
-
             case CurrencyChainEnum::BSC->value:
-                $service = new BscScanService();
-                return $service->getBalance($currencySymbol, $address);
+            case CurrencyChainEnum::POLYGON->value:
+            case CurrencyChainEnum::ARBITRUM->value:
+            case CurrencyChainEnum::OPTIMISM->value:
+            case CurrencyChainEnum::AVALANCHE->value:
+            case CurrencyChainEnum::SONIC->value:
+                $chainEnum = $chain instanceof CurrencyChainEnum
+                    ? $chain
+                    : CurrencyChainEnum::from($chainValue);
+                $service = new EtherScanService();
+                return $service->getBalance(
+                    $currencySymbol,
+                    $address,
+                    EtherScanService::chainIdFromEnum($chainEnum)
+                );
 
             case CurrencyChainEnum::BTC->value:
             case CurrencyChainEnum::DOGE->value:
             case CurrencyChainEnum::LTC->value:
+            case CurrencyChainEnum::DASH->value:
                 $service = new BlockchairService();
                 return $service->getBalance($currencySymbol, $address);
 
@@ -771,17 +780,20 @@ class HdWalletIndexReportController extends Controller
             'currency_symbol' => 'required|string|exists:currencies,symbol',
             'currency_chain_id' => 'required|integer|exists:currency_chains,id',
             'delay' => 'nullable|integer|min:100|max:5000',
+            'indices' => 'nullable|array',
+            'indices.*' => 'integer|min:1',
         ]);
 
         $currencySymbol = $request->currency_symbol;
         $currencyChainId = $request->currency_chain_id;
         $delay = $request->delay ?? 500;
+        $indices = $request->input('indices', []);
 
         // Generate unique sync ID
         $syncId = 'sync_' . Str::uuid();
 
         // Dispatch job
-        SyncHdWalletOutgoingTransactionsJob::dispatch($syncId, $currencySymbol, $currencyChainId, $delay);
+        SyncHdWalletOutgoingTransactionsJob::dispatch($syncId, $currencySymbol, $currencyChainId, $delay, $indices);
 
         // Store initial progress
         Cache::put("sync_progress:{$syncId}", [
@@ -873,7 +885,7 @@ class HdWalletIndexReportController extends Controller
                 $service = new EtherScanService();
                 $gasEstimate = $service->estimateTokenTransferGasCost($currencyChain->currency->symbol, 'SafeGasPrice');
             } elseif ($chainValue === 'BSC') {
-                $service = new BscScanService();
+                $service = new EtherScanService();
                 $gasEstimate = $service->estimateTokenTransferGasCost($currencyChain->currency->symbol, 'SafeGasPrice');
             } elseif ($chainValue === 'TRC20') {
                 // For TRC20, use approximate values (TronGrid doesn't have simple gas oracle)

@@ -29,14 +29,40 @@ class WithdrawalController extends Controller
 
     public function index()
     {
+        if (request()->filled('currency') && ctype_digit((string) request('currency'))) {
+            $selectedCurrency = Currency::query()->find((int) request('currency'));
+            if ($selectedCurrency) {
+                request()->merge(['currency' => $selectedCurrency->symbol]);
+            }
+        }
+
+        $exchangeUserId = (int) config('bitexroom.user_id', 1);
+        $showExchangeUserWithdrawals = request()->boolean('show_exchange_user_withdrawals');
+        $onlyRealNetworkWithdrawals = request()->boolean('only_real_network_withdrawals');
+
+        $applyVisibilityFilters = function ($query) use ($exchangeUserId, $showExchangeUserWithdrawals, $onlyRealNetworkWithdrawals) {
+            if (! $showExchangeUserWithdrawals) {
+                $query->where('user_id', '!=', $exchangeUserId)->where('user_id', '!=', 2);
+            }
+
+            if ($onlyRealNetworkWithdrawals) {
+                $query->whereNotNull('transaction_hash')
+                    ->where('transaction_hash', '!=', '');
+            }
+
+            return $query;
+        };
 
         $today = now()->toDateString(); // Get today's date
 
         // Count of today's deposits
-        $todayWithdrawalsCount = Withdrawal::whereDate('created_at', $today)->count();
+        $todayWithdrawalsCount = $applyVisibilityFilters(
+            Withdrawal::query()->whereDate('created_at', $today)
+        )->count();
 
-        $totalWithdrawalsValue = Withdrawal::with('currency')
-            ->whereDate('created_at', $today) // Assuming `currency` has the price
+        $totalWithdrawalsValue = $applyVisibilityFilters(
+            Withdrawal::query()->with('currency')->whereDate('created_at', $today)
+        )
             ->get()
             ->sum(function ($withdraw) {
                 return $withdraw->amount * $withdraw->currency->exchange_price; // Multiply amount by coin price
@@ -44,9 +70,12 @@ class WithdrawalController extends Controller
 
         // First 5 users with the most deposits (considering currency prices)
 
-        $topUsers = Withdrawal::with(['currency', 'user'])
-            ->where('status', WithdrawalStatusEnum::COMPLETED)
-            ->whereDate('created_at', $today)
+        $topUsers = $applyVisibilityFilters(
+            Withdrawal::query()
+                ->with(['currency', 'user'])
+                ->where('status', WithdrawalStatusEnum::COMPLETED)
+                ->whereDate('created_at', $today)
+        )
             ->get()
             ->groupBy('user_id')
             ->map(function ($withdraws, $userId) {
@@ -63,11 +92,13 @@ class WithdrawalController extends Controller
             ->take(5);
         $totalTopUsersWithdrawals = $topUsers->sum('totalWithdraw');
 
-        $withdraws = Withdrawal::filterBy(request()->all())->with(['user', 'currency', 'currencyChain', 'transaction'])
+        $withdraws = $applyVisibilityFilters(Withdrawal::query())
+            ->filterBy(request()->all())
+            ->with(['user', 'currency', 'currencyChain', 'transaction'])
             ->orderBy('id', request()->input('sortById', 'desc'))
             ->paginate(20);
 
-        $currencies = Currency::all();
+        $currencies = Currency::query()->where('is_active', true)->get();
         $chains = CurrencyChainEnum::cases();
 
         return view('dashboard.withdraw.index', [
@@ -227,15 +258,9 @@ class WithdrawalController extends Controller
 
     public function excelExport(Request $request)
     {
-        $from = $request->get('from_id');
-        $to = $request->get('to_id');
-        $filename = 'withdrawal_' . $from . '_' . $to;
+        $filename = 'withdrawals_' . now()->format('Y-m-d_H-i-s');
 
         $withdrawalQuery = Withdrawal::orderBy('id')->filterBy(request()->all());
-        if ($request->get('from_id') && $request->get('to_id')) {
-            $withdrawalQuery->where('id', '>=', $request->from_id)
-                ->where('id', '<=', $request->to_id);
-        }
         $withdrawals = $withdrawalQuery->get();
 
         $withdrawals = $withdrawals->map(function (Withdrawal $withdrawal) {

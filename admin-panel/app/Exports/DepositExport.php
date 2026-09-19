@@ -35,6 +35,7 @@ class DepositExport implements FromCollection, WithHeadings
             'تاریخ ایجاد',
             'تاریخ تایید',
             'وضعیت',
+            'نوع واریز',
             'توضیحات واریز',
         ];
     }

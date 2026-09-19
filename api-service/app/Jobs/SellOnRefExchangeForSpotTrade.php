@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Enums\RefExchangeSellStatusEnum;
 use App\Models\SpotTrade;
 use App\Services\Exchanges\DTO\SpotRefExchangeSellRequestDTO;
 use App\Services\Exchanges\ExchangeService;
@@ -64,12 +65,15 @@ class SellOnRefExchangeForSpotTrade implements ShouldQueue
             );
 
             if ($response->isDone()) {
+                $spotTrade->update(['ref_exchange_sell_status' => RefExchangeSellStatusEnum::COMPLETED]);
+
                 Log::channel('spot-ref-exchange')->info("Ref exchange sell completed successfully for spot trade", [
                     'spot_trade_id' => $this->spotTradeId,
                     'market_id' => $this->marketId,
                     'quantity' => $this->quantity,
                 ]);
             } else {
+                // Keep PENDING so admin can trigger manually via the admin panel button
                 Log::channel('spot-ref-exchange')->error("Ref exchange sell failed for spot trade", [
                     'spot_trade_id' => $this->spotTradeId,
                     'market_id' => $this->marketId,
@@ -93,6 +97,9 @@ class SellOnRefExchangeForSpotTrade implements ShouldQueue
 
     public function failed(Throwable $exception): void
     {
+        $spotTrade = SpotTrade::find($this->spotTradeId);
+        $spotTrade?->update(['ref_exchange_sell_status' => RefExchangeSellStatusEnum::FAILED]);
+
         Log::channel('spot-ref-exchange')->critical("Job failed permanently for spot trade ref exchange sell", [
             'spot_trade_id' => $this->spotTradeId,
             'market_id' => $this->marketId,

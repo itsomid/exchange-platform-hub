@@ -9,8 +9,6 @@ use App\Infrastructure\HDWallet\Exceptions\HDDWalletUnavailable;
 use App\Infrastructure\HDWallet\Exceptions\HDWalletException;
 use App\Infrastructure\HDWallet\HDWallet;
 use App\Infrastructure\HDWalletNew\HDWalletFacade;
-use App\Models\Market;
-use App\Repositories\Interfaces\MarketRepositoryInterface;
 use App\Repositories\Interfaces\WalletChainRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Services\Wallet\DTO\Wallet\GenerateAddressRequestDTO;
@@ -20,8 +18,11 @@ use App\Services\Wallet\DTO\Wallet\GetOneWalletResponseDTO;
 use App\Services\Wallet\DTO\Wallet\UpdateBalanceRequestDTO;
 use App\Services\Wallet\DTO\Wallet\WalletListsResponseDTO;
 use App\Services\Wallet\DTO\Wallet\WalletValueUSDTRequestDTO;
+use App\Services\Exchanges\AdminNotification;
+use Illuminate\Pagination\LengthAwarePaginator;
 use App\Services\Wallet\DTO\Wallet\WalletValueUSDTResponseDTO;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class WalletService
@@ -29,7 +30,6 @@ class WalletService
     public function __construct(
         private readonly WalletRepositoryInterface $walletRepository,
         private readonly WalletChainRepositoryInterface $walletChainRepository,
-        private readonly MarketRepositoryInterface $marketRepository,
     ) {}
 
     public function createWallet(int $userId, string $currencySymbol): void
@@ -66,9 +66,33 @@ class WalletService
             // stays populated. The new service's getUserAddress() is idempotent:
             // it returns the existing address if found, otherwise generates a new one.
             if (is_null($address) || $hdWallet->isNewSystem()) {
-                $blockchainName = $chain->wallet->currency->chains
-                    ->where('chain', $chain->currency_chain)->first()->blockchain_name->value;
-                $currencySymbol = $chain->wallet->currency->symbol;
+                $currency = $chain->wallet->currency;
+                $matchedChain = $currency->chains->where('chain', $chain->currency_chain)->first();
+
+                if (is_null($matchedChain)) {
+                    $availableChains = $currency->chains->pluck('chain')->implode(', ');
+
+                    Log::error('WalletService: blockchain_name not found for chain', [
+                        'user_id'          => $requestDTO->getUserId(),
+                        'currency_symbol'  => $currency->symbol,
+                        'requested_chain'  => $chain->currency_chain,
+                        'wallet_chain_id'  => $chain->id,
+                        'available_chains' => $availableChains ?: 'none',
+                    ]);
+
+                    AdminNotification::sendWalletChainNotFound(
+                        $requestDTO->getUserId(),
+                        $currency->symbol,
+                        $chain->currency_chain,
+                        $availableChains ?: 'none',
+                        $chain->id,
+                    );
+
+                    throw new InternalWalletHasProblemException;
+                }
+
+                $blockchainName = $matchedChain->blockchain_name;
+                $currencySymbol = $currency->symbol;
 
                 try {
                     $newAddress = $hdWallet->generateAddress(
@@ -133,25 +157,36 @@ class WalletService
         }
     }
 
-    public function getLists(DTO\Wallet\WalletListsRequestDTO $requestDTO): array
+    public function getLists(DTO\Wallet\WalletListsRequestDTO $requestDTO): LengthAwarePaginator
     {
-        $wallets = $this->walletRepository->getLists($requestDTO->getUserId());
-        $markets = $this->marketRepository->getActiveMarket();
+        $paginator = $this->walletRepository->getListsPaginated(
+            $requestDTO->getUserId(),
+            $requestDTO->getHideZeroBalance(),
+            $requestDTO->getPage(),
+            $requestDTO->getPerPage(),
+        );
+        
+        return $paginator->through(function ($item) {
+            $balance = $item->balance ?? '0';
+            $lockedBalance = $item->locked_balance ?? '0';
+            $availableBalance = Math::sub($balance, $lockedBalance);
+            $usdtBalance = $item->exchange_price
+                ? Math::mul($item->exchange_price, $balance)
+                : $balance;
+            $usdtLockedBalance = $item->exchange_price
+                ? Math::mul($item->exchange_price, $lockedBalance)
+                : $lockedBalance;
 
-        $lists = [];
-
-        $wallets = $wallets->keyBy('currency_symbol');
-
-        foreach ($markets as $market) {
-            $wallet = $wallets[$market->base_currency] ?? null;
-            $lists[] = $this->SetWalletDTO($wallet, $market);
-        }
-
-        //USDT
-        $wallet = $wallets['USDT'] ?? null;
-        $lists[] = $this->SetWalletDTO($wallet);
-
-        return $lists;
+            return resolve(WalletListsResponseDTO::class)
+                ->setId($item->wallet_id)
+                ->setCurrency($item->currency_symbol)
+                ->setCurrencyLogo($item->logo ?? '')
+                ->setBalance($balance)
+                ->setLockedBalance($lockedBalance)
+                ->setAvailableBalance($availableBalance)
+                ->setUsdtBalance($usdtBalance)
+                ->setUsdtLockedBalance($usdtLockedBalance);
+        });
     }
 
     public function getWallet(GetOneWalletRequestDTO $requestDTO): GetOneWalletResponseDTO
@@ -227,35 +262,24 @@ class WalletService
             ->setAmount($sumAmount);
     }
 
-    public function SetWalletDTO(?\App\Models\Wallet $wallet, ?Market $market = null): WalletListsResponseDTO
+    private function SetWalletDTO(\App\Models\Wallet $wallet): WalletListsResponseDTO
     {
-
-        if (is_null($wallet)) {
-            return resolve(WalletListsResponseDTO::class)
-                ->setCurrency($market ? $market->base_currency : 'USDT')
-                ->setCurrencyLogo($market ? $market->baseCurrency->logo : 'usdt.svg')
-                ->setBalance('0')
-                ->setLockedBalance('0')
-                ->setAvailableBalance('0')
-                ->setUsdtLockedBalance('0')
-                ->setUsdtBalance('0')
-                ->setId(null);
-        }
-
         return resolve(WalletListsResponseDTO::class)
-            ->setId($wallet->id ?? null)
-            ->setCurrency($wallet->currency_symbol ?? $market->base_currency)
+            ->setId($wallet->id)
+            ->setCurrency($wallet->currency_symbol)
             ->setCurrencyLogo($wallet->currency->logo ?? '')
             ->setBalance($wallet->balance ?? 0)
             ->setLockedBalance($wallet->locked_balance ?? 0)
             ->setAvailableBalance($wallet->available_balance ?? 0)
             ->setUsdtBalance(
-                $wallet && $wallet->exchangePrice ?
-                    Math::mul($wallet->exchangePrice->price, $wallet->balance ?? 0) : $wallet->balance
+                $wallet->exchangePrice
+                    ? Math::mul($wallet->exchangePrice->price, $wallet->balance ?? 0)
+                    : $wallet->balance
             )
             ->setUsdtLockedBalance(
-                $wallet && $wallet->exchangePrice ?
-                    Math::mul($wallet->exchangePrice->price, $wallet->locked_balance ?? 0) : $wallet->locked_balance
+                $wallet->exchangePrice
+                    ? Math::mul($wallet->exchangePrice->price, $wallet->locked_balance ?? 0)
+                    : $wallet->locked_balance
             );
     }
 }

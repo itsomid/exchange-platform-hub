@@ -6,9 +6,8 @@
     $contentLayout = isset($container) ? ($container === 'container-xxl' ? 'layout-compact' : 'layout-wide') : '';
     $navbarType = 'layout-navbar-fixed'; // "layout-navbar-fixed" : "";
 @endphp
-<html lang="en"
-    class="{{ $configData['styleOpt'] }}-style {{ $contentLayout }} {{ $navbarType }} layout-menu-fixed" dir="rtl"
-    data-theme="theme-default" data-assets-path="{{ asset('/assets') . '/' }}"
+<html lang="en" class="{{ $configData['styleOpt'] }}-style {{ $contentLayout }} {{ $navbarType }} layout-menu-fixed"
+    dir="rtl" data-theme="theme-default" data-assets-path="{{ asset('/assets') . '/' }}"
     data-template="vertical-menu-template-no-customizer-starter">
 
 <head>
@@ -27,16 +26,24 @@
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon/favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/favicon/favicon-16x16.png') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/favicon/apple-touch-icon.png') }}">
-    <link rel="icon" type="image/png" sizes="192x192"
-        href="{{ asset('images/favicon/android-chrome-192x192.png') }}">
-    <link rel="icon" type="image/png" sizes="512x512"
-        href="{{ asset('images/favicon/android-chrome-512x512.png') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('images/favicon/android-chrome-192x192.png') }}">
+    <link rel="icon" type="image/png" sizes="512x512" href="{{ asset('images/favicon/android-chrome-512x512.png') }}">
     <link rel="manifest" href="{{ asset('images/favicon/site.webmanifest') }}">
     <!-- core css -->
 
     @vite(['resources/assets/scss/admin/app' . ($configData['styleOpt'] !== 'light' ? '-' . $configData['styleOpt'] : '') . '.scss'])
     @vite(['resources/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.scss'])
     @yield('vendor-style')
+
+    {{-- Reverb public config: browser connects here. Set REVERB_PUBLIC_* in .env per environment. --}}
+    <script>
+        window.__reverbConfig = {
+            key: '{{ config("broadcasting.connections.reverb.key") }}',
+            host: '{{ config("broadcasting.connections.reverb.public.host") }}',
+            port: '{{ config("broadcasting.connections.reverb.public.port") }}',
+            scheme: '{{ config("broadcasting.connections.reverb.public.scheme") }}',
+        };
+    </script>
 
 </head>
 
@@ -70,8 +77,7 @@
                                         <li>{{ $error }}</li>
                                     @endforeach
                                 </ul>
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"
-                                    aria-label="Close"></button>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
                         @endif
                         @yield('content')

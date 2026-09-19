@@ -24,12 +24,17 @@ use Log;
 
 class WalletController extends Controller
 {
-    protected $bitexroomUserId;
+    protected $exchangeUserId;
 
     public function __construct()
     {
 
-        $this->bitexroomUserId = config('bitexroom.user_id', 1);
+        $this->exchangeUserId = config('bitexroom.user_id', 1);
+    }
+
+    private function isBotUser(int $userId): bool
+    {
+        return \App\Models\SpotBotSetting::where('fake_user_id', $userId)->exists();
     }
 
     public function increaseCreditForm(Request $request)
@@ -46,21 +51,18 @@ class WalletController extends Controller
 
     private function getCreditFormData(Request $request)
     {
-        // Initialize variables to avoid undefined variable warnings
         $currencies = Currency::all();
-        $currencyChains = CurrencyChain::all();
+        $currencyChains = collect();
         $selectedCurrency = null;
         $selectedUser = null;
 
-        // Check if a specific currency is selected
-        if ($request->has('currency')) {
-            $selectedCurrency = Currency::where('symbol', $request->get('currency'))->first();
+        if ($request->has('currency_id')) {
+            $selectedCurrency = Currency::find($request->currency_id);
             if ($selectedCurrency) {
                 $currencyChains = $selectedCurrency->chains;
             }
         }
 
-        // Check if a specific user is selected
         if ($request->has('user')) {
             $selectedUser = User::find($request->user);
         }
@@ -70,131 +72,146 @@ class WalletController extends Controller
             'selectedUser' => $selectedUser,
             'selectedCurrency' => $selectedCurrency,
             'currencyChains' => $currencyChains,
+            'hasChains' => $selectedCurrency && $currencyChains->isNotEmpty(),
         ];
     }
 
     public function increaseCredit(IncreaseCreditRequest $request, TransactionService $transactionService)
     {
-
         try {
-            $admin = auth()->user(); // Assuming the admin is logged in.
+            $admin = auth()->user();
 
-            $currency = Currency::where('symbol', $request->currency)->first();
-            $currencyChain = CurrencyChain::where('chain', $request->chain)->first();
+            $currency = Currency::find($request->currency_id);
 
             if (!$currency) {
-                return redirect()->back()->withErrors(['currency' => 'ارز انتخاب شده معتبر نیست.']);
+                return redirect()->back()->withErrors(['currency_id' => 'ارز انتخاب شده معتبر نیست.']);
             }
 
-            // Retrieve valid chains for this currency
             $validChains = $currency->chains()->pluck('chain')->map(fn($chain) => $chain->value)->toArray();
-            // Check if the selected chain is valid
-            if (!in_array($request->chain, $validChains)) {
-                return redirect()->back()->withErrors(['chain' => 'شبکه انتخاب شده با ارز مطابقت ندارد.']);
-            }
+            $isChainless = empty($validChains);
 
+            if ($isChainless) {
+                if ($request->user != $this->exchangeUserId && !$this->isBotUser((int) $request->user)) {
+                    return redirect()->back()->withErrors(['currency_id' => 'واریز دستی برای این ارز فقط برای کاربر صرافی و کاربران بات مجاز است.']);
+                }
 
-            if ($request->user == $this->bitexroomUserId) {
-
-                $transactionService->increaseDecreaseAdminWalletCredit(
-                    userId: $this->bitexroomUserId,
+                $transactionService->directWalletCredit(
+                    userId: $request->user,
                     amount: $request->amount,
                     currency: $currency,
-                    currencyChain: $currencyChain,
                     type: TransactionTypeEnum::DEPOSIT->value,
-                    transactionHash: $request->transaction_hash, // Always increasing
                     adminId: $admin->id,
-                    description: 'Manual credit increase by admin #' . $admin->id,
-                    admin_description: $request->admin_description
+                    adminDescription: $request->admin_description
                 );
-
-                Toast::message('واریز اعتبار با موفقیت انجام شد.')->success()->notify();
-                return redirect()->route('admin.wallet.index', ['user' => $this->bitexroomUserId]);
             } else {
+                $currencyChain = CurrencyChain::where('chain', $request->chain)->first();
 
-                $transactionService->transferBetweenWallets(
-                    fromUserId: $this->bitexroomUserId,
-                    toUserId: $request->user,
-                    amount: $request->amount,
-                    transactionHash: $request->transaction_hash,
-                    currency: $currency,
-                    currencyChain: $currencyChain,
-                    type: TransactionTypeEnum::DEPOSIT->value,
-                    adminId: Auth::user()->id,
-                    description: 'Manual transfer by admin #' . $admin->id,
-                    admin_description: $request->admin_description
-                );
+                if (!in_array($request->chain, $validChains)) {
+                    return redirect()->back()->withErrors(['chain' => 'شبکه انتخاب شده با ارز مطابقت ندارد.']);
+                }
 
-                Toast::message('واریز اعتبار با موفقیت انجام شد.')->success()->notify();
-                return redirect()->route('admin.wallet.index', ['user' => $request->user]);
+                if ($request->user == $this->exchangeUserId) {
+                    $transactionService->increaseDecreaseAdminWalletCredit(
+                        userId: $this->exchangeUserId,
+                        amount: $request->amount,
+                        currency: $currency,
+                        currencyChain: $currencyChain,
+                        type: TransactionTypeEnum::DEPOSIT->value,
+                        transactionHash: $request->transaction_hash,
+                        adminId: $admin->id,
+                        description: 'Manual credit increase by admin #' . $admin->id,
+                        admin_description: $request->admin_description
+                    );
+                } else {
+                    $transactionService->transferBetweenWallets(
+                        fromUserId: $this->exchangeUserId,
+                        toUserId: $request->user,
+                        amount: $request->amount,
+                        transactionHash: $request->transaction_hash,
+                        currency: $currency,
+                        currencyChain: $currencyChain,
+                        type: TransactionTypeEnum::DEPOSIT->value,
+                        adminId: Auth::user()->id,
+                        description: 'Manual transfer by admin #' . $admin->id,
+                        admin_description: $request->admin_description
+                    );
+                }
             }
+
+            Toast::message('واریز اعتبار با موفقیت انجام شد.')->success()->notify();
+            return redirect()->route('admin.wallet.index', ['user' => $request->user]);
         } catch (\Throwable $exception) {
             report($exception);
-
             return redirect()->back()->withErrors(['general' => $exception->getMessage()]);
         }
     }
 
     public function decreaseCredit(IncreaseCreditRequest $request, TransactionService $transactionService)
     {
-
         try {
-            $admin = auth()->user(); // Assuming the admin is logged in.
+            $admin = auth()->user();
 
-            $currency = Currency::where('symbol', $request->currency)->first();
-            $currencyChain = CurrencyChain::where('chain', $request->chain)->first();
+            $currency = Currency::find($request->currency_id);
 
             if (!$currency) {
-                return redirect()->back()->withErrors(['currency' => 'ارز انتخاب شده معتبر نیست.']);
+                return redirect()->back()->withErrors(['currency_id' => 'ارز انتخاب شده معتبر نیست.']);
             }
 
-            // Retrieve valid chains for this currency
             $validChains = $currency->chains()->pluck('chain')->map(fn($chain) => $chain->value)->toArray();
-            // Check if the selected chain is valid
-            if (!in_array($request->chain, $validChains)) {
-                return redirect()->back()->withErrors(['chain' => 'شبکه انتخاب شده با ارز مطابقت ندارد.']);
-            }
+            $isChainless = empty($validChains);
 
+            if ($isChainless) {
+                if ($request->user != $this->exchangeUserId && !$this->isBotUser((int) $request->user)) {
+                    return redirect()->back()->withErrors(['currency_id' => 'برداشت دستی برای این ارز فقط برای کاربر صرافی و کاربران بات مجاز است.']);
+                }
 
-            if ($request->user == $this->bitexroomUserId) {
-
-                $transactionService->increaseDecreaseAdminWalletCredit(
-                    userId: $this->bitexroomUserId,
+                $transactionService->directWalletCredit(
+                    userId: $request->user,
                     amount: $request->amount,
                     currency: $currency,
-                    currencyChain: $currencyChain,
                     type: TransactionTypeEnum::WITHDRAWAL->value,
-                    transactionHash: $request->transaction_hash,
                     adminId: $admin->id,
-                    description: 'Manual credit increase by admin #' . $admin->id,
-                    admin_description: $request->admin_description
+                    adminDescription: $request->admin_description
                 );
-
-                Toast::message('برداشت اعتبار با موفقیت انجام شد.')->success()->notify();
-                return redirect()->route('admin.wallet.index', ['user' => $this->bitexroomUserId]);
             } else {
-                // Check if the wallet for the specified currency exists
-                $fromUserId = $request->user;
-                $toUserId = $this->bitexroomUserId;
+                $currencyChain = CurrencyChain::where('chain', $request->chain)->first();
 
-                $transactionService->transferBetweenWallets(
-                    fromUserId: $request->user,
-                    toUserId: $this->bitexroomUserId,
-                    amount: $request->amount,
-                    transactionHash: $request->transaction_hash,
-                    currency: $currency,
-                    currencyChain: $currencyChain,
-                    type: TransactionTypeEnum::WITHDRAWAL->value,
-                    adminId: Auth::user()->id,
-                    description: 'Manual transfer by admin #' . $admin->id,
-                    admin_description: $request->admin_description
-                );
-                Toast::message('برداشت اعتبار با موفقیت انجام شد.')->success()->notify();
-                return redirect()->route('admin.wallet.index', ['user' => $request->user]);
+                if (!in_array($request->chain, $validChains)) {
+                    return redirect()->back()->withErrors(['chain' => 'شبکه انتخاب شده با ارز مطابقت ندارد.']);
+                }
+
+                if ($request->user == $this->exchangeUserId) {
+                    $transactionService->increaseDecreaseAdminWalletCredit(
+                        userId: $this->exchangeUserId,
+                        amount: $request->amount,
+                        currency: $currency,
+                        currencyChain: $currencyChain,
+                        type: TransactionTypeEnum::WITHDRAWAL->value,
+                        transactionHash: $request->transaction_hash,
+                        adminId: $admin->id,
+                        description: 'Manual credit decrease by admin #' . $admin->id,
+                        admin_description: $request->admin_description
+                    );
+                } else {
+                    $transactionService->transferBetweenWallets(
+                        fromUserId: $request->user,
+                        toUserId: $this->exchangeUserId,
+                        amount: $request->amount,
+                        transactionHash: $request->transaction_hash,
+                        currency: $currency,
+                        currencyChain: $currencyChain,
+                        type: TransactionTypeEnum::WITHDRAWAL->value,
+                        adminId: Auth::user()->id,
+                        description: 'Manual transfer by admin #' . $admin->id,
+                        admin_description: $request->admin_description
+                    );
+                }
             }
+
+            Toast::message('برداشت اعتبار با موفقیت انجام شد.')->success()->notify();
+            return redirect()->route('admin.wallet.index', ['user' => $request->user]);
         } catch (\Throwable $exception) {
             report($exception);
-
             return redirect()->back()->withErrors(['general' => $exception->getMessage()]);
         }
     }

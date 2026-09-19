@@ -76,7 +76,7 @@ class SendAdminWithdrawalToHDWallet implements ShouldQueue
                     ->setAmount($receivedAmount)
                     ->setWithdrawalId($withdrawal->id)
                     ->setWithdrawAddress($withdrawal->address)
-                    ->setBlockchain($withdrawal->currencyChain->blockchain_name->value)
+                    ->setBlockchain($withdrawal->currencyChain->blockchain_name)
                     ->setUserId($withdrawal->user_id)
                     ->setCurrencySymbol($withdrawal->currency_symbol)
             );
@@ -166,13 +166,11 @@ class SendAdminWithdrawalToHDWallet implements ShouldQueue
             ->first();
 
         if ($wallet) {
-            // Prevent locked_balance from going negative
+            // Release locked funds (balance was never deducted, only locked)
             $amountToUnlock = min($wallet->locked_balance, $withdrawal->amount);
             if ($amountToUnlock > 0) {
                 $wallet->decrement('locked_balance', $amountToUnlock);
             }
-            // Restore balance that was deducted during withdrawal creation
-            $wallet->increment('balance', $withdrawal->amount);
         }
     }
 }

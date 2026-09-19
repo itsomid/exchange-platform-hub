@@ -19,7 +19,8 @@ class WithdrawalMail extends Mailable
     public function __construct(
         protected string $currencySymbol,
         protected string $amount,
-        protected string $network
+        protected string $network,
+        protected string $userEmail
     ) {}
 
     /**
@@ -28,6 +29,7 @@ class WithdrawalMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
+            to: [$this->userEmail],
             subject: 'برداشت موفق',
         );
     }

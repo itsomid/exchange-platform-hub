@@ -167,16 +167,16 @@ class WithdrawalService
 
             // Get the appropriate wallet for HD Wallet Fee (parent coin wallet if exists, otherwise current coin wallet)
             $hdWalletFeeSymbol = $parentCoin ? $parentCoin->symbol : $withdrawal->currency_symbol;
-            $bitexroomWallet = $this->walletRepository->getBitexroomWalletWithLock($hdWalletFeeSymbol);
+            $exchangeWallet = $this->walletRepository->getExchangeWalletWithLock($hdWalletFeeSymbol);
 
             //HD Wallet Fee
             $this->transactionRepository->create(
                 resolve(CreateTransactionRequestDTO::class)
                     ->setUserId(config('bitexroom.user_id'))
-                    ->setWalletId($bitexroomWallet->id)
+                    ->setWalletId($exchangeWallet->id)
                     ->setWithdrawalId($withdrawal->id)
                     ->setAmount(-$hdWalletNetworkFee)
-                    ->setBalance($bitexroomWallet->balance)
+                    ->setBalance($exchangeWallet->balance)
                     ->setCoinPrice($networkFeeCoinPrice)
                     ->setType(TransactionTypeEnum::FEE)
                     ->setSubtype(TransactionSubTypeEnum::HD_WALLET_FEE)
@@ -185,7 +185,7 @@ class WithdrawalService
             );
 
             if ($withdrawal->exchange_fee > 0 || $withdrawal->network_fee > 0) {
-                $this->createExchangeWithdrawalFee($withdrawal, $hdWalletNetworkFee, $bitexroomWallet);
+                $this->createExchangeWithdrawalFee($withdrawal, $hdWalletNetworkFee, $exchangeWallet);
             }
 
             DB::commit();
@@ -197,30 +197,30 @@ class WithdrawalService
         }
     }
 
-    private function createExchangeWithdrawalFee($withdrawal, $hdWalletNetworkFee, $bitexroomWallet): void
+    private function createExchangeWithdrawalFee($withdrawal, $hdWalletNetworkFee, $exchangeWallet): void
     {
 
         $exchangeWithdrawalTotalFee = $withdrawal->total_fee;
 
         // Get the appropriate wallet for Exchange Withdrawal Fee (based on the actual withdrawal coin)
-        $exchangeFeeBitexroomWallet = $this->walletRepository->getBitexroomWalletWithLock($withdrawal->currency_symbol);
+        $exchangeFeeWallet = $this->walletRepository->getExchangeWalletWithLock($withdrawal->currency_symbol);
 
         if ($exchangeWithdrawalTotalFee > 0) {
             $this->transactionRepository->create(
                 resolve(CreateTransactionRequestDTO::class)
                     ->setUserId(config('bitexroom.user_id'))
-                    ->setWalletId($exchangeFeeBitexroomWallet->id)
+                    ->setWalletId($exchangeFeeWallet->id)
                     ->setWithdrawalId($withdrawal->id)
                     ->setAmount($exchangeWithdrawalTotalFee)
-                    ->setBalance($exchangeFeeBitexroomWallet->balance)
+                    ->setBalance($exchangeFeeWallet->balance)
                     ->setCoinPrice($withdrawal->currency->exchangePrice)
                     ->setType(TransactionTypeEnum::FEE)
                     ->setSubtype(TransactionSubTypeEnum::EXCHANGE_WITHDRAWAL_FEE)
                     ->setStatus(TransactionStatusEnum::SUCCESS)
-                    ->setDescription("کارمزد برداشت صرافی  {$exchangeFeeBitexroomWallet->currency_symbol} کاربر  " . "(#{$withdrawal->user->id}) " . $withdrawal->user->username . " حاصل فی برداشت صرافی بعلاوه فی برداشت در صرافی مرجع")
+                    ->setDescription("کارمزد برداشت صرافی  {$exchangeFeeWallet->currency_symbol} کاربر  " . "(#{$withdrawal->user->id}) " . $withdrawal->user->username . " حاصل فی برداشت صرافی بعلاوه فی برداشت در صرافی مرجع")
             );
 
-            $exchangeFeeBitexroomWallet->increment('balance', $exchangeWithdrawalTotalFee);
+            $exchangeFeeWallet->increment('balance', $exchangeWithdrawalTotalFee);
         }
     }
 

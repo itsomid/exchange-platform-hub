@@ -61,7 +61,7 @@ class CheckWithdrawalStatus implements ShouldQueue
             $responseDTO = $hdWalletService->getWithdrawalStatus(
                 resolve(GetWithdrawalStatusRequestDTO::class)
                     ->setWithdrawalId($withdrawal->id)
-                    ->setBlockchain($withdrawal->currencyChain->blockchain_name->value)
+                    ->setBlockchain($withdrawal->currencyChain->blockchain_name)
                     ->setCurrencySymbol($withdrawal->currency_symbol)
             );
 
@@ -138,11 +138,12 @@ class CheckWithdrawalStatus implements ShouldQueue
 
             DB::commit();
 
-            // Send admin notification
-            AdminNotification::sendHotWalletNotEnoughBalance(
+            // Send admin notification with actual failure reason
+            AdminNotification::sendWithdrawalFailed(
                 $responseDTO->getCurrencySymbol(),
                 $responseDTO->getAmount(),
-                $withdrawal->user
+                $withdrawal->user,
+                $responseDTO->getDescription() ?? 'Withdrawal failed'
             );
         } catch (Throwable $e) {
             DB::rollBack();

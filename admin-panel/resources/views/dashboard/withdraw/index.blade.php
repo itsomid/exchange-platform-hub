@@ -1,5 +1,43 @@
 @extends('dashboard.layout.master')
 @section('title', 'مدیریت برداشت ها')
+
+@section('vendor-style')
+    @vite(['resources/assets/vendor/libs/select2/select2.scss'])
+    <style>
+        .table-responsive {
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .sticky-column {
+            position: sticky;
+            left: 0;
+            background-color: #fff !important;
+            z-index: 1;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .table thead .sticky-column {
+            background-color: #fff !important;
+            z-index: 2;
+        }
+
+        body.modal-open .sticky-column {
+            z-index: auto !important;
+            box-shadow: none !important;
+        }
+
+        .table tbody tr:hover .sticky-column {
+            background-color: #f8f9fa !important;
+        }
+    </style>
+@endsection
+
 @section('content')
     <div class="row g-4 mb-4">
         <div class="col-sm-12 col-xl-3">
@@ -114,30 +152,15 @@
             </div>
         </div>
     </div>
-    <div class="card mb-3">
-        <div class="card-body">
-            <h5 class="card-title">خروجی اکسل</h5>
-            <form class="row mt-3 d-flex align-items-end"
-                action="{{ route('admin.withdrawal.excel-export', request()->query()) }}" method="POST">
-                @csrf
-                <div class="col-md-2 user_role">
-                    <label class="form-label" for="UserRole">از آیدی :</label>
-                    <input type="number" class="form-control" placeholder="آیدی کاربر">
-                </div>
-                <div class="col-md-2 user_role">
-                    <label class="form-label" for="UserRole">تا آیدی :</label>
-                    <input type="number" class="form-control" placeholder="آیدی کاربر">
-                </div>
-                <div class="col-md-2 mt-2">
-                    <button class="btn btn-success class ">دانلود خروجی اکسل</button>
-                </div>
-            </form>
-        </div>
-    </div>
     <div class="card mb-4">
         <div class="card-body">
             <div class="card-title header-elements">
                 <h5 class="m-0 me-2">فیلتر پیشرفته برداشت‌ها</h5>
+                <div class="card-title-elements ms-auto">
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="toggleAdvancedFilter">
+                        <i class="fas fa-chevron-down me-1"></i> نمایش فیلترهای پیشرفته
+                    </button>
+                </div>
             </div>
             <form action="{{ route('admin.withdrawal.index') }}" method="get" id="filterForm">
                 <!-- Basic Filters Row -->
@@ -148,56 +171,56 @@
                             <option value="">همه</option>
                             @foreach (\App\Enums\WithdrawalStatusEnum::cases() as $case)
                                 <option value="{{ $case->value }}"
-                                    {{ request()->has('status') && request()->input('status') == $case->value ? 'selected' : '' }}>
+                                    {{ request()->input('status') == $case->value ? 'selected' : '' }}>
                                     {{ $case->label() }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
-
                     <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
                         <label class="form-label" for="currency">کوین:</label>
-                        <select name="currency" class="form-select" id="currency">
-                            <option value="">همه کوین‌ها</option>
-                            @foreach ($currencies as $currency)
-                                <option value="{{ $currency->symbol }}"
-                                    {{ request()->has('currency') && request()->input('currency') == $currency->symbol ? 'selected' : '' }}>
-                                    {{ $currency->symbol }} - {{ $currency->name }}
-                                </option>
-                            @endforeach
-                        </select>
+                        <x-currency-select
+                            name="currency"
+                            id="currency"
+                            :currencies="$currencies"
+                            :selected="$currencies->firstWhere('symbol', request()->input('currency'))?->id ?? ''"
+                            :required="false"
+                            error="currency"
+                            placeholder="همه کوین‌ها"
+                        />
                     </div>
-
                     <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
                         <label class="form-label" for="currencyChain">شبکه:</label>
                         <select name="currencyChain" class="form-select" id="currencyChain">
                             <option value="">همه شبکه‌ها</option>
                             @foreach ($chains as $chain)
                                 <option value="{{ $chain->value }}"
-                                    {{ request()->has('currencyChain') && request()->input('currencyChain') == $chain->value ? 'selected' : '' }}>
+                                    {{ request()->input('currencyChain') == $chain->value ? 'selected' : '' }}>
                                     {{ $chain->chain_name() }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
-
-                    <div class="col-lg-3 col-md-12 col-12 mb-2">
-                        <label class="form-label d-none d-lg-block">&nbsp;</label>
-                        <div class="d-flex flex-wrap gap-1 justify-content-start">
-                            <button class="btn btn-success btn-sm flex-fill" type="submit" style="min-width: 70px;">
-                                <i class="fas fa-search me-1"></i>جستجو
-                            </button>
-                            <button class="btn btn-outline-secondary btn-sm flex-fill" type="button" id="clearFilters"
-                                style="min-width: 70px;">
-                                <i class="fas fa-times me-1"></i>پاک کردن
-                            </button>
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-2 d-flex align-items-end">
+                        <div class="d-flex flex-column gap-2">
+                            <label class="switch switch-sm mb-0">
+                                <input type="checkbox" class="switch-input" name="show_exchange_user_withdrawals" value="1"
+                                    {{ request()->boolean('show_exchange_user_withdrawals') ? 'checked' : '' }} />
+                                <span class="switch-toggle-slider"></span>
+                                <span class="switch-label">نمایش برداشت‌های یوزر صرافی</span>
+                            </label>
+                            <label class="switch switch-sm mb-0">
+                                <input type="checkbox" class="switch-input" name="only_real_network_withdrawals" value="1"
+                                    {{ request()->boolean('only_real_network_withdrawals') ? 'checked' : '' }} />
+                                <span class="switch-toggle-slider"></span>
+                                <span class="switch-label">فقط برداشت‌های واقعی شبکه (دارای TxID)</span>
+                            </label>
                         </div>
                     </div>
                 </div>
-
-                <!-- Second Row for User and Search Filters -->
+                <!-- User and Buttons Row -->
                 <div class="row mb-3">
-                    <div class="col-lg-6 col-md-6 col-sm-12 mb-2">
+                    <div class="col-lg-6 col-md-8 col-sm-12 mb-2">
                         <label class="form-label" for="user">کاربر:</label>
                         <x-user-selection-component input-name="user" multiple="0"
                             selected="{{ request()->filled('user') && $withdraws->isNotEmpty() && $withdraws[0]->user ? $withdraws[0]->user->id : '' }}"
@@ -205,13 +228,27 @@
                                 ? '(' . $withdraws[0]->user->id . '#) ' . $withdraws[0]->user->fullname() . ' | ' . $withdraws[0]->user->email
                                 : '' }}"></x-user-selection-component>
                     </div>
-
+                    <div class="col-lg-6 col-md-4 col-sm-12 mb-2 d-flex align-items-end">
+                        <div class="d-flex flex-wrap gap-1">
+                            <button class="btn btn-success btn-sm" type="submit">
+                                <i class="fas fa-search me-1"></i> اعمال فیلتر
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="clearFilters">
+                                <i class="fas fa-times me-1"></i> حذف فیلترها
+                            </button>
+                            <button type="button" class="btn btn-outline-info btn-sm" id="exportFiltered">
+                                <i class="fas fa-file-excel me-1"></i> خروجی اکسل
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Advanced Filters (hidden by default) -->
+                <div class="row mb-3" id="advancedFilters" style="display: none;">
                     <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
                         <label class="form-label" for="address">آدرس برداشت:</label>
                         <input type="text" name="address" id="address" class="form-control font-monospace"
                             placeholder="آدرس کیف پول..." value="{{ request()->input('address') }}">
                     </div>
-
                     <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
                         <label class="form-label" for="transactionHash">هش تراکنش (TxID):</label>
                         <input type="text" name="transactionHash" id="transactionHash"
@@ -219,67 +256,48 @@
                             value="{{ request()->input('transactionHash') }}">
                     </div>
                 </div>
-
-                <!-- Filter Summary (Show active filters) -->
-                @if (request()->hasAny(['status', 'currency', 'currencyChain', 'user', 'address', 'transactionHash']))
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="alert alert-info d-flex align-items-center">
-                                <i class="fas fa-info-circle me-2"></i>
-                                <span class="me-2">فیلترهای فعال:</span>
-                                <div class="d-flex flex-wrap gap-1">
-                                    @if (request()->filled('status'))
-                                        @php
-                                            $selectedStatus = \App\Enums\WithdrawalStatusEnum::tryFrom(
-                                                request()->input('status'),
-                                            );
-                                        @endphp
-                                        <span class="badge bg-primary">وضعیت:
-                                            {{ $selectedStatus?->label() ?? request()->input('status') }}</span>
-                                    @endif
-                                    @if (request()->filled('currency'))
-                                        @php
-                                            $selectedCurrency = $currencies->firstWhere(
-                                                'symbol',
-                                                request()->input('currency'),
-                                            );
-                                        @endphp
-                                        <span class="badge bg-primary">کوین:
-                                            {{ $selectedCurrency ? $selectedCurrency->symbol . ' - ' . $selectedCurrency->name : request()->input('currency') }}</span>
-                                    @endif
-                                    @if (request()->filled('currencyChain'))
-                                        @php
-                                            $selectedChain = \App\Enums\CurrencyChainEnum::tryFrom(
-                                                request()->input('currencyChain'),
-                                            );
-                                        @endphp
-                                        <span class="badge bg-primary">شبکه:
-                                            {{ $selectedChain?->chain_name() ?? request()->input('currencyChain') }}</span>
-                                    @endif
-                                    @if (request()->filled('user'))
-                                        @php
-                                            $selectedUser =
-                                                $withdraws->isNotEmpty() && $withdraws[0]->user
-                                                    ? $withdraws[0]->user
-                                                    : \App\Models\User::find(request()->input('user'));
-                                        @endphp
-                                        @if ($selectedUser)
-                                            <span class="badge bg-primary">کاربر: (#{{ $selectedUser->id }})
-                                                {{ $selectedUser->fullname() }} - {{ $selectedUser->email }}</span>
-                                        @else
-                                            <span class="badge bg-primary">کاربر: #{{ request()->input('user') }}</span>
-                                        @endif
-                                    @endif
-                                    @if (request()->filled('address'))
-                                        <span class="badge bg-success">آدرس:
-                                            {{ Str::limit(request()->input('address'), 20) }}</span>
-                                    @endif
-                                    @if (request()->filled('transactionHash'))
-                                        <span class="badge bg-warning">TxID:
-                                            {{ Str::limit(request()->input('transactionHash'), 20) }}</span>
-                                    @endif
-                                </div>
-                            </div>
+                <!-- Active filter summary -->
+                @if (request()->hasAny(['status', 'currency', 'currencyChain', 'user', 'address', 'transactionHash', 'show_exchange_user_withdrawals', 'only_real_network_withdrawals']))
+                    <div class="alert alert-info d-flex align-items-center flex-wrap">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <span class="me-2">فیلترهای فعال:</span>
+                        <div class="d-flex flex-wrap gap-1">
+                            @if (request()->filled('status'))
+                                @php $selectedStatus = \App\Enums\WithdrawalStatusEnum::tryFrom(request()->input('status')); @endphp
+                                <span class="badge bg-primary">وضعیت: {{ $selectedStatus?->label() ?? request()->input('status') }}</span>
+                            @endif
+                            @if (request()->filled('currency'))
+                                @php $selectedCurrency = $currencies->firstWhere('symbol', request()->input('currency')); @endphp
+                                <span class="badge bg-primary">کوین: {{ $selectedCurrency ? $selectedCurrency->symbol . ' - ' . $selectedCurrency->name : request()->input('currency') }}</span>
+                            @endif
+                            @if (request()->filled('currencyChain'))
+                                @php $selectedChain = \App\Enums\CurrencyChainEnum::tryFrom(request()->input('currencyChain')); @endphp
+                                <span class="badge bg-primary">شبکه: {{ $selectedChain?->chain_name() ?? request()->input('currencyChain') }}</span>
+                            @endif
+                            @if (request()->filled('user'))
+                                @php
+                                    $selectedUser = $withdraws->isNotEmpty() && $withdraws[0]->user
+                                        ? $withdraws[0]->user
+                                        : \App\Models\User::find(request()->input('user'));
+                                @endphp
+                                @if ($selectedUser)
+                                    <span class="badge bg-primary">کاربر: (#{{ $selectedUser->id }}) {{ $selectedUser->fullname() }} - {{ $selectedUser->email }}</span>
+                                @else
+                                    <span class="badge bg-primary">کاربر: #{{ request()->input('user') }}</span>
+                                @endif
+                            @endif
+                            @if (request()->filled('address'))
+                                <span class="badge bg-primary">آدرس: {{ Str::limit(request()->input('address'), 20) }}</span>
+                            @endif
+                            @if (request()->filled('transactionHash'))
+                                <span class="badge bg-primary">TxID: {{ Str::limit(request()->input('transactionHash'), 20) }}</span>
+                            @endif
+                            @if (request()->boolean('show_exchange_user_withdrawals'))
+                                <span class="badge bg-warning">نمایش برداشت‌های یوزر صرافی: فعال</span>
+                            @endif
+                            @if (request()->boolean('only_real_network_withdrawals'))
+                                <span class="badge bg-success">فقط برداشت‌های واقعی شبکه: فعال</span>
+                            @endif
                         </div>
                     </div>
                 @endif
@@ -384,7 +402,7 @@
                             </a>
                         </th>
                         <th>وضعیت</th>
-                        <th>عملیات</th>
+                        <th class="sticky-column">عملیات</th>
                     </tr>
                 </thead>
                 <tbody class="table-border-bottom-0">
@@ -485,7 +503,7 @@
                                     <span
                                         class="badge bg-label-{{ $withdraw->status->color() }}">{{ $withdraw->status->label() }}</span>
                                 </td>
-                                <td>
+                                <td class="sticky-column">
 
                                     <a href="#" class="btn btn-icon btn-text-secondary" data-bs-toggle="modal"
                                         data-bs-target="#withdraw-modal-{{ $withdraw->id }}">
@@ -556,15 +574,15 @@
                                     @endif
                                     @if ($withdraw->status === \App\Enums\WithdrawalStatusEnum::AWAITING_APPROVAL)
                                         {{-- Confirm Withdrawal Button --}}
-                                        <button type="button" class="btn btn-icon btn-success me-2" 
+                                        <button type="button" class="btn btn-icon btn-success me-2 btn-sm" 
                                             data-bs-toggle="modal" data-bs-target="#confirmWithdrawModal-{{ $withdraw->id }}">
-                                            <i class="fa-regular fa-badge-check fa-lg"></i>
+                                            <i class="fa-regular fa-badge-check fa-xl"></i>
                                         </button>
 
                                         {{-- Reject Withdrawal Button --}}
-                                        <button type="button" class="btn btn-icon btn-danger" 
+                                        <button type="button" class="btn btn-icon btn-danger btn-sm" 
                                             data-bs-toggle="modal" data-bs-target="#rejectWithdrawModal-{{ $withdraw->id }}">
-                                            <i class="fa-regular fa-xmark fa-lg"></i>
+                                            <i class="fa-regular fa-xmark fa-xl"></i>
                                         </button>
 
                                         {{-- Confirm Withdrawal Modal --}}
@@ -698,7 +716,6 @@
                 {{ $withdraws->appends(request()->all())->links() }}
             </div>
         </div>
-
     </div>
 
 @endsection
@@ -706,6 +723,10 @@
     <script>
         $(document).ready(function() {
             $('[data-bs-toggle="tooltip"]').tooltip();
+
+            $('.table-responsive .modal').each(function() {
+                $(this).appendTo('body');
+            });
 
             // Handle copy functionality
             $('.clipboard-btn').on('click', function(e) {
@@ -732,6 +753,38 @@
             $('#clearFilters').on('click', function() {
                 window.location.href = "{{ route('admin.withdrawal.index') }}";
             });
+
+            // Export filtered button
+            $('#exportFiltered').on('click', function() {
+                const params = new URLSearchParams(window.location.search);
+                window.location.href = "{{ route('admin.withdrawal.excel-export') }}?" + params.toString();
+            });
+
+            // Toggle advanced filters
+            $('#toggleAdvancedFilter').on('click', function() {
+                const $section = $('#advancedFilters');
+                const $btn = $(this);
+                const $icon = $btn.find('i');
+                if ($section.is(':visible')) {
+                    $section.slideUp();
+                    $icon.removeClass('fa-chevron-up').addClass('fa-chevron-down');
+                    $btn.html('<i class="fas fa-chevron-down me-1"></i> نمایش فیلترهای پیشرفته');
+                } else {
+                    $section.slideDown();
+                    $btn.html('<i class="fas fa-chevron-up me-1"></i> پنهان کردن فیلترهای پیشرفته');
+                }
+            });
+
+            // Auto-show advanced section if any advanced input has a value
+            const advancedInputs = ['address', 'transactionHash'];
+            const hasAdvancedFilter = advancedInputs.some(function(name) {
+                const el = document.querySelector('#advancedFilters [name="' + name + '"]');
+                return el && el.value.trim() !== '';
+            });
+            if (hasAdvancedFilter) {
+                $('#advancedFilters').show();
+                $('#toggleAdvancedFilter').html('<i class="fas fa-chevron-up me-1"></i> پنهان کردن فیلترهای پیشرفته');
+            }
         });
     </script>
 @endsection

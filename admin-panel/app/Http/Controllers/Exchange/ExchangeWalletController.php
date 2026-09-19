@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Exchange;
 
 use App\Http\Controllers\Controller;
 use App\Models\Currency;
+use App\Models\CurrencyChain;
+use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WalletChain;
+use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Services\NodeProviders\BlockchairService;
-use App\Services\NodeProviders\BscScanService;
 use App\Services\NodeProviders\CryptoAPIService;
 use App\Services\NodeProviders\EtherScanService;
 use App\Services\NodeProviders\TronScanService;
@@ -17,34 +19,32 @@ use Illuminate\Support\Facades\Cache;
 
 class ExchangeWalletController extends Controller
 {
+    private const HOT_WALLET_BALANCES_CACHE_KEY = 'wallet_balances_v2';
+
     protected $walletService;
+    protected WalletRepositoryInterface $walletRepository;
 
     protected $cryptoApi;
     protected $blockchair;
-    protected $bscScan;
     protected $tronScan;
     protected $etherScan;
-    protected $bitexroomUserId;
+    protected $exchangeUserId;
 
     public function __construct(
-        WalletService     $walletService,
+        WalletService $walletService,
+        WalletRepositoryInterface $walletRepository,
         CryptoAPIService  $cryptoApi,
         BlockchairService $blockchair,
-        BscScanService    $bscScan,
         TronScanService   $tronScan,
         EtherScanService  $etherScan,
-
     ) {
         $this->walletService = $walletService;
+        $this->walletRepository = $walletRepository;
         $this->cryptoApi = $cryptoApi;
         $this->blockchair = $blockchair;
-        $this->bscScan = $bscScan;
         $this->tronScan = $tronScan;
         $this->etherScan = $etherScan;
-
-        // Fetch and cache the balance for one hour
-        $this->cacheBalances();
-        $this->bitexroomUserId = config('bitexroom.user_id', 1);
+        $this->exchangeUserId = config('bitexroom.user_id', 1);
     }
 
     /**
@@ -61,54 +61,143 @@ class ExchangeWalletController extends Controller
         if (empty($address)) {
             return ['amount' => '0'];
         }
-        if ($chain === 'ERC20') {
-            return $this->etherScan->getBalance($currency, $address);
-        } elseif ($chain === 'TRC20') {
+        $normalizedChain = strtoupper($chain);
+
+        if ($normalizedChain === 'TRC20') {
             return $this->tronScan->getBalance($currency, $address);
-        } elseif ($chain === 'BSC') {
-            return $this->bscScan->getBalance($currency, $address);
-        } elseif ($chain === 'DOGE' || $chain === 'BTC') {
-            return $this->blockchair->getBalance($currency, $address);
-        } else {
-            return $this->cryptoApi->getBalance($currency, $address);
         }
+
+        if (in_array($normalizedChain, ['BTC', 'DOGE', 'LTC', 'DASH'])) {
+            return $this->blockchair->getBalance($currency, $address);
+        }
+
+        $chainId = match ($normalizedChain) {
+            'ERC20'     => 1,
+            'BSC'       => 56,
+            'POLYGON'   => 137,
+            'ARBITRUM'  => 42161,
+            'OPTIMISM'  => 10,
+            'AVALANCHE' => 43114,
+            'SONIC'     => 146,
+            default     => null,
+        };
+
+        if ($chainId !== null) {
+            return $this->etherScan->getBalance($currency, $address, $chainId);
+        }
+
+        return $this->cryptoApi->getBalance($currency, $address, 'mainnet', null);
 
     }
 
-    protected function cacheBalances()
+    protected function cacheBalances(?WalletChain $walletChain = null, bool $forceRefresh = false): array
     {
-        // Check if the balances are already cached
-        $cachedBalances = Cache::get('wallet_balances', []);
+        $balances = Cache::get(self::HOT_WALLET_BALANCES_CACHE_KEY, []);
 
-        if (!empty($cachedBalances)) {
-            return;
+        // If no target wallet chain is provided, just return current cache snapshot.
+        if (!$walletChain) {
+            return [
+                'balances' => $balances,
+            ];
         }
 
-        $walletChains = $this->walletService->getExchangeAllWalletChain();
-        $balances = [];
+        $walletChain->loadMissing('wallet');
 
-        foreach ($walletChains as $walletChain) {
-            $chain = $walletChain->currency_chain;
-            $currency = $walletChain->wallet->currency_symbol;
-            $address = $walletChain->address;
+        $chain = $walletChain->currency_chain;
+        $currency = $walletChain->wallet->currency_symbol;
 
-            $balanceData = $this->fetchBalanceData($currency, $chain, $address);
-
-            if (!isset($balanceData['error'])) {
-                $balances[$currency][$chain] = $balanceData['amount'];
-            }
+        if (!$forceRefresh && isset($balances[$currency]) && array_key_exists($chain, $balances[$currency])) {
+            return [
+                'balances' => $balances,
+                'amount' => $balances[$currency][$chain],
+                'from_cache' => true,
+            ];
         }
 
-        // Cache the balances for one hour
-        Cache::put('wallet_balances', $balances, 3600);
+        $balanceData = $this->fetchBalanceData($currency, $chain, $walletChain->address);
+        if (isset($balanceData['error'])) {
+            return [
+                'balances' => $balances,
+                'error' => $balanceData['error'],
+                'details' => $balanceData['details'] ?? null,
+            ];
+        }
+
+        $formattedAmount = formatNumberTrimZeros($balanceData['amount'] ?? 0);
+
+        if (!isset($balances[$currency])) {
+            $balances[$currency] = [];
+        }
+
+        $balances[$currency][$chain] = $formattedAmount;
+        Cache::put(self::HOT_WALLET_BALANCES_CACHE_KEY, $balances, 3600);
+
+        return [
+            'balances' => $balances,
+            'amount' => $formattedAmount,
+            'from_cache' => false,
+        ];
     }
 
 
     public function localWallets()
     {
-        $exchangeWallets = $this->walletService->getExchangeAllWallet();
+        $exchangeWallets = $this->walletRepository->getExchangeAllWallets()->load('currency');
+
+        $exchangeUser = User::find($this->exchangeUserId);
+
+        // Match user wallets behavior: compute and attach per-wallet asset value.
+        $exchangeWallets = $exchangeWallets->map(function ($wallet) use ($exchangeUser) {
+            $wallet->assetValue = $exchangeUser
+                ? $this->walletService->specificAssetValue($exchangeUser, $wallet->currency_symbol)
+                : 0;
+
+            return $wallet;
+        })->values();
+
+        $symbols = $exchangeWallets
+            ->pluck('currency_symbol')
+            ->filter()
+            ->map(fn($symbol) => strtoupper((string) $symbol))
+            ->unique()
+            ->values();
+
+        $currenciesBySymbol = Currency::whereIn('symbol', $symbols)
+            ->get()
+            ->keyBy(fn($currency) => strtoupper((string) $currency->symbol));
+
+        $currencyIds = $currenciesBySymbol->pluck('id')->values();
+
+        $baseChainsByCurrencyId = CurrencyChain::with('currency')
+            ->whereIn('currency_id', $currencyIds)
+            ->where('is_base_coin', true)
+            ->get()
+            ->groupBy('currency_id')
+            ->map(fn($group) => $group->first());
+
+
+
+        $walletRows = $exchangeWallets
+            ->map(function ($wallet) use ($currenciesBySymbol, $baseChainsByCurrencyId) {
+                $symbol = strtoupper((string) ($wallet->currency_symbol ?? ''));
+                $currency = $currenciesBySymbol->get($symbol);
+                $baseChain = $currency ? $baseChainsByCurrencyId->get($currency->id) : null;
+                $chainKey = strtoupper((string) ($baseChain?->chain?->value ?? $baseChain?->chain ?? 'OTHER'));
+
+                return [
+                    'wallet' => $wallet,
+                    'symbol' => $symbol,
+                    'chain' => $chainKey,
+                ];
+            })
+            ->sortByDesc(function ($row) {
+                return (float) ($row['wallet']->balance ?? 0);
+            })
+            ->values();
+
         return view('dashboard.exchange.wallet.exchange-local-wallets', [
             'exchangeWallets' => $exchangeWallets,
+            'walletRows' => $walletRows,
         ]);
     }
 
@@ -116,27 +205,56 @@ class ExchangeWalletController extends Controller
     public function hotWallets()
     {
 
-        $exchangeWalletChains = $this->walletService->getExchangeAllWalletChain();
+        $exchangeWalletChains = $this->walletRepository->getExchangeAllWalletChains();
+        $chains = $exchangeWalletChains
+            ->pluck('currency_chain')
+            ->filter()
+            ->map(fn($chain) => strtoupper((string) $chain))
+            ->unique()
+            ->values();
 
-        $balances = Cache::get('wallet_balances', []);
-        $formattedBalances = [];
+        $chainLogoMap = CurrencyChain::with('currency')
+            ->whereIn('chain', $chains)
+            ->where('is_base_coin', true)
+            ->get()
+            ->mapWithKeys(function ($currencyChain) {
+                $chainKey = strtoupper($currencyChain->chain?->value ?? (string) $currencyChain->chain);
 
-        foreach ($exchangeWalletChains as $walletChain) {
-            $currency = $walletChain->wallet->currency_symbol;
-            $chain = $walletChain->currency_chain;
-
-            // Check if the currency exists in the balances array
-            if (isset($balances[$currency]) && isset($balances[$currency][$chain])) {
-                $formattedBalances[$currency][$chain] = $balances[$currency][$chain];
-            } else {
-                // Handle the case where the currency or chain does not exist
-                $formattedBalances[$currency][$chain] = '0'; // or any default value you prefer
-            }
-        }
+                return [$chainKey => $currencyChain->currency?->coinLogo()];
+            })
+            ->filter()
+            ->all();
 
         return view('dashboard.exchange.wallet.exchange-hot-wallets', [
             'exchangeWalletChains' => $exchangeWalletChains,
-            'balances' => $formattedBalances,
+            'chainLogoMap' => $chainLogoMap,
+        ]);
+    }
+
+    public function hotWalletBalance(Request $request, WalletChain $walletChain)
+    {
+        $walletChain->loadMissing('wallet');
+
+        $chain = $walletChain->currency_chain;
+        $currency = $walletChain->wallet->currency_symbol;
+        $forceRefresh = $request->boolean('force_refresh');
+        $cacheResult = $this->cacheBalances($walletChain, $forceRefresh);
+
+        if (isset($cacheResult['error'])) {
+            return response()->json([
+                'error' => $cacheResult['error'],
+                'details' => $cacheResult['details'] ?? null,
+            ], 500);
+        }
+
+        $formattedAmount = $cacheResult['amount'] ?? '0';
+
+        return response()->json([
+            'wallet_chain_id' => $walletChain->id,
+            'currency' => $currency,
+            'chain' => $chain,
+            'amount' => $formattedAmount,
+            'status' => !empty($cacheResult['from_cache']) ? 'cached' : 'updated',
         ]);
     }
 
@@ -148,57 +266,33 @@ class ExchangeWalletController extends Controller
         // Fetch the wallet chain from the database
         $walletChain = WalletChain::findOrFail($walletChainId);
 
-        // Extract currency symbol, address, and assume network is 'mainnet'
+        $walletChain->loadMissing('wallet');
+
+        // Force a fresh fetch on manual refresh by clearing this row from cache first.
         $chain = $walletChain->currency_chain;
         $currency = $walletChain->wallet->currency_symbol;
-        $address = $walletChain->address;
-
-        // Fetch the latest balance
-        $balanceData = $this->fetchBalanceData($currency, $chain, $address);
-
-        // Check for errors in the API response
-        if (isset($balanceData['error'])) {
-            return response()->json(['error' => $balanceData['error']], 500);
+        $balances = Cache::get(self::HOT_WALLET_BALANCES_CACHE_KEY, []);
+        if (isset($balances[$currency]) && array_key_exists($chain, $balances[$currency])) {
+            unset($balances[$currency][$chain]);
+            if (empty($balances[$currency])) {
+                unset($balances[$currency]);
+            }
+            Cache::put(self::HOT_WALLET_BALANCES_CACHE_KEY, $balances, 3600);
         }
 
-        // Update the cache with the new balance
-        $balances = Cache::get('wallet_balances', []);
-
-        // Check if the currency exists in the balances array
-        if (!isset($balances[$currency])) {
-            $balances[$currency] = [];
+        $cacheResult = $this->cacheBalances($walletChain);
+        if (isset($cacheResult['error'])) {
+            return response()->json([
+                'error' => $cacheResult['error'],
+                'details' => $cacheResult['details'] ?? null,
+            ], 500);
         }
-
-        // Update the balance for the specific chain
-
-        $balances[$currency][$chain] = formatNumberTrimZeros($balanceData['amount']);
-        //        return $balances;
-        Cache::put('wallet_balances', $balances, 3600);
 
         // Return the balance data as JSON
         return response()->json([
-            'amount' => formatNumberTrimZeros($balanceData['amount'])
+            'amount' => $cacheResult['amount'] ?? '0',
+            'status' => !empty($cacheResult['from_cache']) ? 'cached' : 'updated',
         ]);
     }
 
-    public function assetsGatheringToColdWallet(Request $request)
-    {
-        if ($request->has('currency_symbol')) {
-            $currency_symbol = $request->currency_symbol;
-        } else {
-            $currency_symbol = 'USDT';
-        }
-        $currency = Currency::whereSymbol($currency_symbol)->first();
-
-        $currencyChains = $currency->chains;
-        $wallet = Wallet::where('user_id',$this->bitexroomUserId)->where('currency_symbol', $currency->symbol)->first();
-
-        $walletChains = $wallet->walletChains;
-
-        return view('dashboard.exchange.wallet.assets-gathering-to-cold-wallet-form', [
-            'currency' => $currency,
-            'currencyChains' => $currencyChains,
-            'walletChains' => $walletChains,
-        ]);
-    }
 }

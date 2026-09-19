@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Enums\DepositStatusEnum;
+use App\Enums\DepositTypeEnum;
 use App\Models\Deposit;
 use App\Repositories\DTO\Deposit\CreateOrUpdatePendingDepositRequestDTO;
 use App\Repositories\Interfaces\DepositRepositoryInterface;
@@ -11,6 +12,13 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class DepositRepository implements DepositRepositoryInterface
 {
+    public function findByTransactionHash(string $transactionHash): ?Deposit
+    {
+        return Deposit::query()
+            ->where('transaction_hash', $transactionHash)
+            ->first();
+    }
+
     public function createOrUpdateDeposit(CreateOrUpdatePendingDepositRequestDTO $requestDTO): void
     {
         Deposit::query()
@@ -22,6 +30,7 @@ class DepositRepository implements DepositRepositoryInterface
                 'user_id' => $requestDTO->getUserId(),
                 'amount' => $requestDTO->getAmount(),
                 'status' => $requestDTO->getStatus(),
+                'type' => DepositTypeEnum::USER_INITIATED,
                 'currency_symbol' => $requestDTO->getCurrencySymbol(),
                 'currency_chain' => $requestDTO->getCurrencyChain(),
                 'address' => $requestDTO->getPublicKey(),
@@ -51,6 +60,7 @@ class DepositRepository implements DepositRepositoryInterface
                 'confirmed_at' => $requestDTO->getConfirmedAt(),
                 'expiration_date' => $requestDTO->getExpirationDate(),
                 'status' => $requestDTO->getStatus(),
+                'type' => DepositTypeEnum::USER_INITIATED,
                 'usdt_value' => $requestDTO->getUsdtValue(),
             ]);
     }

@@ -9,15 +9,16 @@ use App\Filters\Filterable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Sanctum\HasApiTokens;
 
 class OTCOrder extends Model
 {
-    use Filterable, HasApiTokens, HasFactory;
+    use Filterable, HasApiTokens, HasFactory, SoftDeletes;
     public $filterNameSpace = 'App\Filters\OTCOrderFilter';
 
     protected $table = 'otc_orders';
-    protected $fillable = ['user_id','market_id','quantity','price','fee','type','status','ref_exchange_sell_status','ref_exchange_description'];
+    protected $fillable = ['user_id','market_id','quantity','price','fee','type','status','ref_exchange_sell_status','ref_exchange_description','notes'];
 
     protected $casts = [
         'type' => OTCOrderTypeEnum::class,

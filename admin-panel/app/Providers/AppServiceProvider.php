@@ -4,9 +4,11 @@ namespace App\Providers;
 
 use App\Models\Admin;
 use App\Repositories\ExchangeRepository;
+use App\Repositories\LockedBalanceRepository;
 use App\Repositories\WalletRepository;
 use App\Repositories\MarketRepository;
 use App\Repositories\Interfaces\ExchangeRepositoryInterface;
+use App\Repositories\Interfaces\LockedBalanceRepositoryInterface;
 use App\Repositories\Interfaces\MarketRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use Illuminate\Pagination\Paginator;
@@ -23,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(MarketRepositoryInterface::class, MarketRepository::class);
         $this->app->bind(ExchangeRepositoryInterface::class, ExchangeRepository::class);
         $this->app->bind(WalletRepositoryInterface::class, WalletRepository::class);
+        $this->app->bind(LockedBalanceRepositoryInterface::class, LockedBalanceRepository::class);
     }
 
     public function boot(): void

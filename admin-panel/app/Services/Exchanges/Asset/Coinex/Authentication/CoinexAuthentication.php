@@ -4,14 +4,32 @@ namespace App\Services\Exchanges\Asset\Coinex\Authentication;
 
 class CoinexAuthentication
 {
-    public static function getSigned(MethodEnum $method, string $path, int $timestamp, ?array $data = null): string
+    /**
+     * CoinEx v2: method + request_path[+?query] + body(optional) + timestamp
+     *
+     * @see https://docs.coinex.com/api/v2/authorization
+     * @see https://github.com/coinexcom/coinex_api_demo/blob/feat-api-v2/python/api.py
+     */
+    public static function getSigned(MethodEnum $method, string $requestPath, int|string $timestamp, string $body = ''): string
     {
-        if (count($data)) {
-            $path .= json_encode($data);
-        }
-        $preparedStr = $method->value.$path.$timestamp;
-//dd($preparedStr);
-        //signed_str = hmac.new(bytes(secret_key, 'latin-1'), msg=bytes(prepared_str, 'latin-1'), digestmod=hashlib.sha256).hexdigest().lower()
+        $preparedStr = $method->value . $requestPath . $body . $timestamp;
+
         return strtolower(hash_hmac('sha256', $preparedStr, config('exchanges.coinex.secret_key')));
+    }
+
+    /**
+     * Build a stable query string (same encoding Guzzle/CoinEx demos expect).
+     */
+    public static function buildQueryString(array $params): string
+    {
+        $filtered = [];
+        foreach ($params as $key => $value) {
+            if ($value === null) {
+                continue;
+            }
+            $filtered[$key] = is_bool($value) ? ($value ? '1' : '0') : (string) $value;
+        }
+
+        return http_build_query($filtered, '', '&', PHP_QUERY_RFC3986);
     }
 }

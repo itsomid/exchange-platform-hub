@@ -9,7 +9,6 @@ use App\Models\CurrencyChain;
 use App\Models\Deposit;
 use App\Models\HdWalletOutgoingTransaction;
 use App\Services\NodeProviders\BlockchairService;
-use App\Services\NodeProviders\BscScanService;
 use App\Services\NodeProviders\EtherScanService;
 use App\Services\NodeProviders\TronScanService;
 use Illuminate\Bus\Queueable;
@@ -32,16 +31,18 @@ class SyncHdWalletOutgoingTransactionsJob implements ShouldQueue
     protected string $currencySymbol;
     protected int $currencyChainId;
     protected int $apiDelay;
+    protected array $indices;
 
     /**
      * Create a new job instance.
      */
-    public function __construct(string $syncId, string $currencySymbol, int $currencyChainId, int $apiDelay = 500)
+    public function __construct(string $syncId, string $currencySymbol, int $currencyChainId, int $apiDelay = 500, array $indices = [])
     {
         $this->syncId = $syncId;
         $this->currencySymbol = $currencySymbol;
         $this->currencyChainId = $currencyChainId;
         $this->apiDelay = $apiDelay;
+        $this->indices = $indices;
         $this->onQueue('hd-wallet-sync');
     }
     /**
@@ -50,7 +51,6 @@ class SyncHdWalletOutgoingTransactionsJob implements ShouldQueue
     public function handle(
         TronScanService $tronScanService,
         EtherScanService $etherScanService,
-        BscScanService $bscScanService,
         BlockchairService $blockchairService
     ): void {
         try {
@@ -114,7 +114,6 @@ class SyncHdWalletOutgoingTransactionsJob implements ShouldQueue
                         $currency,
                         $tronScanService,
                         $etherScanService,
-                        $bscScanService,
                         $blockchairService
                     );
 
@@ -198,6 +197,11 @@ class SyncHdWalletOutgoingTransactionsJob implements ShouldQueue
             $query->where('currency_symbol', $currency->symbol);
         }
 
+        // Filter to selected indices only when provided
+        if (!empty($this->indices)) {
+            $query->whereIn('user_id', $this->indices);
+        }
+
         return $query->select([
             'address',
             'user_id',
@@ -214,7 +218,6 @@ class SyncHdWalletOutgoingTransactionsJob implements ShouldQueue
         $currency,
         TronScanService $tronScanService,
         EtherScanService $etherScanService,
-        BscScanService $bscScanService,
         BlockchairService $blockchairService
     ): int {
         $chainEnum = $chain->chain;
@@ -236,7 +239,6 @@ class SyncHdWalletOutgoingTransactionsJob implements ShouldQueue
             $latestBlockNumber,
             $tronScanService,
             $etherScanService,
-            $bscScanService,
             $blockchairService
         );
 
@@ -248,6 +250,11 @@ class SyncHdWalletOutgoingTransactionsJob implements ShouldQueue
         $newCount = 0;
 
         foreach ($transactions as $tx) {
+            // Skip zero-amount transactions (common phishing/dust transactions)
+            if (!isset($tx['amount']) || bccomp((string) $tx['amount'], '0', 18) <= 0) {
+                continue;
+            }
+
             // Skip if already exists
             if (HdWalletOutgoingTransaction::where('transaction_hash', $tx['transaction_hash'])->exists()) {
                 continue;
@@ -301,16 +308,21 @@ class SyncHdWalletOutgoingTransactionsJob implements ShouldQueue
         ?int $afterBlock,
         TronScanService $tronScanService,
         EtherScanService $etherScanService,
-        BscScanService $bscScanService,
         BlockchairService $blockchairService
     ): array {
         return match ($chain) {
-            CurrencyChainEnum::TRC20 => $tronScanService->getOutgoingTransactions($currencySymbol, $address, $afterBlock),
-            CurrencyChainEnum::ERC20 => $etherScanService->getOutgoingTransactions($currencySymbol, $address, $afterBlock),
-            CurrencyChainEnum::BSC => $bscScanService->getOutgoingTransactions($currencySymbol, $address, $afterBlock),
-            CurrencyChainEnum::BTC => $blockchairService->getOutgoingTransactions('BTC', $address, $afterBlock),
-            CurrencyChainEnum::DOGE => $blockchairService->getOutgoingTransactions('DOGE', $address, $afterBlock),
-            CurrencyChainEnum::LTC => $blockchairService->getOutgoingTransactions('LTC', $address, $afterBlock),
+            // EtherScan and TronScan use sort=desc + limit=200 internally, so always fetch
+            // the most recent transactions without a startblock filter. New transactions are
+            // at the top of the result; the duplicate hash check handles skipping old ones.
+            CurrencyChainEnum::TRC20 => $tronScanService->getOutgoingTransactions($currencySymbol, $address, null),
+            CurrencyChainEnum::ERC20 => $etherScanService->getOutgoingTransactions($currencySymbol, $address, null),
+            CurrencyChainEnum::BSC   => $etherScanService->getOutgoingTransactions($currencySymbol, $address, null, 56),
+            // Blockchair fetches all tx hashes then calls detail endpoints per batch, so
+            // passing afterBlock avoids redundant API calls for already-synced transactions.
+            CurrencyChainEnum::BTC   => $blockchairService->getOutgoingTransactions('BTC', $address, $afterBlock),
+            CurrencyChainEnum::DOGE  => $blockchairService->getOutgoingTransactions('DOGE', $address, $afterBlock),
+            CurrencyChainEnum::LTC   => $blockchairService->getOutgoingTransactions('LTC', $address, $afterBlock),
+            CurrencyChainEnum::DASH  => $blockchairService->getOutgoingTransactions('DASH', $address, $afterBlock),
             default => ['error' => 'Unsupported chain', 'transactions' => []],
         };
     }
@@ -327,6 +339,7 @@ class SyncHdWalletOutgoingTransactionsJob implements ShouldQueue
             CurrencyChainEnum::BTC => 'BTC',
             CurrencyChainEnum::DOGE => 'DOGE',
             CurrencyChainEnum::LTC => 'LTC',
+            CurrencyChainEnum::DASH => 'DASH',
             default => null,
         };
 

@@ -11,9 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Columns were later back-filled into create_stocks_table, so a fresh
+        // migrate (e.g. sqlite :memory: in tests) already has them.
         Schema::table('stocks', function (Blueprint $table) {
-            $table->decimal('initial_quantity', 18, 3)->default(0)->after('value')->comment('تعداد کل سهام اولیه');
-            $table->decimal('available_quantity', 18, 3)->default(0)->after('initial_quantity')->comment('تعداد سهام موجود');
+            if (! Schema::hasColumn('stocks', 'initial_quantity')) {
+                $table->decimal('initial_quantity', 18, 3)->default(0)->after('value')->comment('تعداد کل سهام اولیه');
+            }
+            if (! Schema::hasColumn('stocks', 'available_quantity')) {
+                $table->decimal('available_quantity', 18, 3)->default(0)->after('initial_quantity')->comment('تعداد سهام موجود');
+            }
         });
     }
 

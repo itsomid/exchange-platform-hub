@@ -35,8 +35,9 @@ class PortfolioService
 
             // Calculate the portfolio value for the current day
             foreach ($wallets as $wallet) {
-                //USDT has not market
+                // Assets without a market (e.g. USDT) are counted at face value
                 if (is_null($wallet->market)) {
+                    $totalBalance = Math::add($totalBalance, $wallet->balance);
                     continue;
                 }
                 $marketHistory = $this->marketHistoryRepository->getByMarketIdWithDate($wallet->market->id, $date);
@@ -82,24 +83,25 @@ class PortfolioService
         $portfolioReports = [];
         $previousTotalBalance = null;
 
-        // Define the date range (last 24 hours)
-        $endDateTime = Carbon::now();
+        // Define the date range as 24 hourly buckets aligned to the clock.
+        $endDateTime = Carbon::now()->startOfHour();
         $startDateTime = $endDateTime->copy()->subHours(23);
 
         // Loop through each hour in the range
         for ($hour = $startDateTime->copy(); $hour <= $endDateTime; $hour->addHour()) {
+            $hourPoint = $hour->copy();
             $totalBalance = 0;
 
             // Calculate the portfolio value for the current hour
             foreach ($wallets as $wallet) {
-                // USDT or any asset without a market should be skipped
+                // Assets without a market (e.g. USDT) are counted at face value.
                 if (is_null($wallet->market)) {
-                    $totalBalance = Math::add($totalBalance, $wallet->balance, 8);
+                    $totalBalance = Math::add($totalBalance, $wallet->balance);
 
                     continue;
                 }
 
-                $marketHistory = $this->marketHistoryRepository->getByMarketIdWithDateTime($wallet->market->id, $hour);
+                $marketHistory = $this->marketHistoryRepository->getByMarketIdWithDateTime($wallet->market->id, $hourPoint);
 
                 if ($marketHistory) {
                     $totalBalance = Math::add(
@@ -123,7 +125,7 @@ class PortfolioService
             // Save the data for this hour
             $portfolioReports[] = resolve(PortfolioLast24HoursResponseDTO::class)
                 ->setTotalProfit($totalProfit)
-                ->setReportDate($hour->copy()) // Include hour in the date
+                ->setReportDate($hourPoint)
                 ->setTotalBalance($totalBalance)
                 ->setTotalProfitPercentage($totalProfitPercentage);
 

@@ -6,15 +6,17 @@ use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Filters\Filterable;
+use App\Models\Bot\BotWalletTransfer;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Sanctum\HasApiTokens;
 
 class Transaction extends Model
 {
-    use Filterable, HasApiTokens, HasFactory;
+    use Filterable, HasApiTokens, HasFactory, SoftDeletes;
 
     public $filterNameSpace = 'App\Filters\TransactionFilter';
 
@@ -26,6 +28,8 @@ class Transaction extends Model
         'deposit_id',
         'withdrawal_id',
         'otc_order_id',
+        'bot_wallet_transfer_id',
+        'sweeper_tx_id',
         'amount',
         'balance',
         'coin_price',
@@ -34,7 +38,8 @@ class Transaction extends Model
         'subtype',
         'description',
         'admin_description',
-        'status'
+        'status',
+        'notes',
     ];
 
     protected function casts(): array
@@ -89,5 +94,15 @@ class Transaction extends Model
     public function stockContract()
     {
         return $this->belongsTo(StockContract::class, 'stock_contract_id');
+    }
+
+    public function botWalletTransfer(): BelongsTo
+    {
+        return $this->belongsTo(BotWalletTransfer::class);
+    }
+
+    public function sweeperTransactionLog(): BelongsTo
+    {
+        return $this->belongsTo(SweeperTransactionLog::class, 'sweeper_tx_id');
     }
 }

@@ -1,0 +1,155 @@
+@extends('dashboard.layout.master')
+
+@section('title', 'سفارشات ربات معاملاتی')
+
+@section('content')
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">کاربران دارای سفارش ربات</h4>
+                </div>
+
+                <div class="card-body">
+                    {{-- Filters --}}
+                    <form method="GET" class="mb-4">
+                        <input type="hidden" name="sort" value="{{ $sort }}">
+                        <input type="hidden" name="dir" value="{{ $dir }}">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-3">
+                                <label class="form-label" for="currency_id">کوین</label>
+                                <x-currency-select
+                                    name="currency_id"
+                                    :currencies="$currencies"
+                                    :selected="old('currency_id', request('currency_id'))"
+                                    placeholder="همه کوین‌ها..."
+                                />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" for="search">کاربر</label>
+                                <input type="text" name="search" id="search" class="form-control"
+                                    placeholder="جستجوی کاربر بر اساس ایمیل، موبایل یا نام کاربری..."
+                                    value="{{ request('search') }}">
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-secondary">
+                                    <i class="fas fa-search me-1"></i> جستجو
+                                </button>
+                                <a href="{{ route('admin.bot.order.index') }}"
+                                    class="btn btn-outline-secondary ms-1">پاک‌کردن</a>
+                            </div>
+                        </div>
+                    </form>
+
+                    {{-- Table --}}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>کاربر</th>
+                                    @foreach ([
+                                        'orders_count' => 'تعداد سفارش',
+                                        'total_allocated' => 'مجموع تخصیص (USDT)',
+                                        'locked_balance' => 'مقدار قفل شده (USDT)',
+                                        'free_balance' => 'موجودی آزاد (USDT)',
+                                        'profit_balance' => 'سود کلی (USDT)',
+                                        'auto_trade' => 'وضعیت ربات',
+                                        'last_order_at' => 'آخرین سفارش',
+                                    ] as $column => $label)
+                                        @php
+                                            $isActive = $sort === $column;
+                                            $nextDir = $isActive && $dir === 'desc' ? 'asc' : 'desc';
+                                            $href = route(
+                                                'admin.bot.order.index',
+                                                array_merge(request()->except(['page', 'sort', 'dir']), [
+                                                    'sort' => $column,
+                                                    'dir' => $nextDir,
+                                                ]),
+                                            );
+                                        @endphp
+                                        <th>
+                                            <a href="{{ $href }}" class="text-body text-nowrap text-decoration-none">
+                                                {{ $label }}
+                                                @if ($isActive)
+                                                    <i
+                                                        class="fas {{ $dir === 'asc' ? 'fa-arrow-up' : 'fa-arrow-down' }} text-primary fa-xs"></i>
+                                                @else
+                                                    <i class="fas fa-sort text-muted fa-xs"></i>
+                                                @endif
+                                            </a>
+                                        </th>
+                                    @endforeach
+                                    <th>عملیات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($rows as $row)
+                                    @php
+                                        $lockedBalance = (float) $row->locked_balance;
+                                        $freeBalance = (float) $row->free_balance;
+                                        $profitBalance = (float) $row->profit_balance;
+                                        $autoOn = (bool) $row->auto_trade_enabled;
+                                    @endphp
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex flex-column">
+                                                <a href="{{ route('admin.inquiry.user-details', ['user' => $row->user_id]) }}"
+                                                    class="text-heading text-truncate">
+                                                    <span class="fw-medium">{{ $row->email }}</span>
+                                                </a>
+                                                <small>{{ $row->username }}</small>
+                                            </div>
+                                        </td>
+                                        <td><span class="badge bg-secondary">{{ $row->orders_count }}</span></td>
+                                        <td class="font-number">
+                                            {{ formatNumberTrimZeros((float) $row->total_allocated, 4) }}</td>
+                                        <td class="font-number">{{ formatNumberTrimZeros($lockedBalance, 4) }}</td>
+                                        <td class="font-number text-success">
+                                            {{ formatNumberTrimZeros($freeBalance, 4) }}</td>
+                                        <td
+                                            class="font-number {{ $profitBalance > 0 ? 'text-success' : ($profitBalance < 0 ? 'text-danger' : '') }}">
+                                            {{ formatNumberTrimZeros($profitBalance, 4) }}
+                                        </td>
+                                        <td>
+                                            @if ($autoOn)
+                                                <span class="badge bg-success">روشن</span>
+                                            @else
+                                                <span class="badge bg-secondary">خاموش</span>
+                                            @endif
+                                        </td>
+                                        <td dir="ltr">
+                                            <small>{{ $row->last_order_at ? \Illuminate\Support\Carbon::parse($row->last_order_at)->format('Y-m-d H:i') : '—' }}</small>
+                                            @if ($row->last_order_at)
+                                                <div>
+                                                    <small class="text-muted">
+                                                        {{ \App\Helpers\DateFormatter::convertToPersianDate($row->last_order_at, '%Y/%m/%d H:i:s') }}
+                                                    </small>
+                                                </div>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <a href="{{ route('admin.bot.order.user', $row->user_id) }}"
+                                                class="btn btn-sm btn-outline-primary" title="مشاهده وضعیت">
+                                                <i class="fas fa-eye me-1"></i> مشاهده
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="9" class="text-center text-muted py-4">
+                                            هیچ کاربری با سفارش ربات یافت نشد.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {{ $rows->links() }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+@endsection

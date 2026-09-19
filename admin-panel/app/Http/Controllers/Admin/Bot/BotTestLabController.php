@@ -1,0 +1,148 @@
+<?php
+
+namespace App\Http\Controllers\Admin\Bot;
+
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Services\Bot\BotTestApiClient;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
+
+/**
+ * UI + AJAX proxy for the Bot Test Lab. All real work happens on the
+ * api-service side; this controller just shapes requests and re-emits
+ * responses to the browser.
+ */
+class BotTestLabController extends Controller
+{
+    public function __construct(private readonly BotTestApiClient $api)
+    {
+    }
+
+    public function index(Request $request): View
+    {
+        $defaultUserId = (int) config('smart-bot.test_user_id', 2);
+        $userId = (int) $request->input('user_id', $defaultUserId);
+        $selectedUser = User::find($userId);
+        $selectedLabel = $selectedUser
+            ? '(' . $selectedUser->id . '#) ' . $selectedUser->fullname() . ' | ' . $selectedUser->email
+            : '';
+
+        return view('dashboard.bot.test-lab.index', [
+            'userId'         => $userId,
+            'selectedLabel'  => $selectedLabel,
+            'labEnabled'     => ! app()->environment('production'),
+        ]);
+    }
+
+    public function status(Request $request): JsonResponse
+    {
+        if ($denied = $this->denyIfProduction()) {
+            return $denied;
+        }
+
+        $userId = (int) $request->input('user_id', config('smart-bot.test_user_id', 2));
+
+        return $this->forward($this->api->status($userId));
+    }
+
+    public function start(Request $request): JsonResponse
+    {
+        if ($denied = $this->denyIfProduction()) {
+            return $denied;
+        }
+
+        $data = $request->validate([
+            'user_id'                     => 'required|integer',
+            'capital_usdt'                => 'required|numeric|min:1',
+            'main_balance'                => 'nullable|numeric|min:0',
+            'simulate_sell_place_failure' => 'sometimes|boolean',
+        ]);
+        return $this->forward($this->api->start(
+            (int) $data['user_id'],
+            (float) $data['capital_usdt'],
+            isset($data['main_balance']) ? (float) $data['main_balance'] : null,
+            (bool) ($data['simulate_sell_place_failure'] ?? false),
+        ));
+    }
+
+    public function bumpPrice(Request $request): JsonResponse
+    {
+        if ($denied = $this->denyIfProduction()) {
+            return $denied;
+        }
+
+        $data = $request->validate([
+            'symbol'    => 'required|string',
+            'direction' => 'required|in:up,down',
+            'step'      => 'required|numeric|min:0.0001',
+            'mode'      => 'nullable|in:percent,absolute',
+        ]);
+        return $this->forward($this->api->bumpPrice(
+            $data['symbol'],
+            $data['direction'],
+            (float) $data['step'],
+            $data['mode'] ?? 'percent',
+        ));
+    }
+
+    public function setPrice(Request $request): JsonResponse
+    {
+        if ($denied = $this->denyIfProduction()) {
+            return $denied;
+        }
+
+        $data = $request->validate(['symbol' => 'required|string', 'price' => 'required|numeric|min:0.00000001']);
+        return $this->forward($this->api->setPrice($data['symbol'], (float) $data['price']));
+    }
+
+    public function sync(): JsonResponse
+    {
+        if ($denied = $this->denyIfProduction()) {
+            return $denied;
+        }
+
+        return $this->forward($this->api->sync());
+    }
+
+    public function reset(Request $request): JsonResponse
+    {
+        if ($denied = $this->denyIfProduction()) {
+            return $denied;
+        }
+
+        $data = $request->validate([
+            'user_id'      => 'required|integer',
+            'main_balance' => 'nullable|numeric|min:0',
+        ]);
+        return $this->forward($this->api->reset(
+            (int) $data['user_id'],
+            isset($data['main_balance']) ? (float) $data['main_balance'] : null,
+        ));
+    }
+
+    private function denyIfProduction(): ?JsonResponse
+    {
+        if (! app()->environment('production')) {
+            return null;
+        }
+
+        return response()->json([
+            'error' => 'این ویژگی فقط در محیط تست قابل استفاده است.',
+        ], 403);
+    }
+
+    private function forward(\Illuminate\Http\Client\Response $response): JsonResponse
+    {
+        $payload = $response->json();
+        if ($payload === null) {
+            return response()->json([
+                'ok'    => false,
+                'error' => 'Empty/invalid response from api-service.',
+                'body'  => (string) $response->body(),
+            ], $response->status() ?: 502);
+        }
+        return response()->json($payload, $response->status());
+    }
+}

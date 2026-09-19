@@ -71,6 +71,40 @@
             <div class="card">
                 <div class="card-body">
                     <div class="card-title header-elements">
+                        <h5 class="m-0 me-2">تنظیمات برداشت
+                            <span
+                                class="text-{{ $withdrawalEnabled && $withdrawalEnabled->value ? 'success' : 'danger' }}">({{ $withdrawalEnabled && $withdrawalEnabled->value ? 'فعال' : 'غیرفعال' }})</span>
+                        </h5>
+                    </div>
+                    <form action="{{ route('admin.setting.int.update-withdrawal-settings') }}" method="post">
+                        @csrf
+                        <div class="row mt-3">
+                            <div class="col-xl-12">
+                                <label class="switch switch-lg">
+                                    <input type="checkbox" class="switch-input" name="withdrawal_enabled" value="1"
+                                        {{ $withdrawalEnabled && $withdrawalEnabled->value ? 'checked' : '' }} />
+                                    <span class="switch-toggle-slider"></span>
+                                    <span class="switch-label">فعال‌سازی برداشت</span>
+                                </label>
+                                <small class="text-muted d-block mt-2">در صورت غیرفعال بودن، کاربران قادر به انجام برداشت
+                                    نخواهند بود و پیغام «برداشت موقتاً غیرفعال است» نمایش داده می‌شود.</small>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-start mt-4">
+                            <button class="btn btn-primary">
+                                <i class="fa fa-save mx-2"></i>
+                                ذخیره تنظیمات
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title header-elements">
                         <h5 class="m-0 me-2">تنظیمات اسپات</h5>
                     </div>
                     <form action="{{ route('admin.setting.int.update-spot-settings') }}" method="post">
@@ -87,16 +121,7 @@
                                     صورت غیرفعال بودن، هیچ معامله یا سفارشی توسط کاربران جز بات امکان‌پذیر نخواهد
                                     بود</small>
                             </div>
-                            <div class="col-xl-6 mt-3">
-                                <label class="switch switch-lg">
-                                    <input type="checkbox" class="switch-input" name="spot_ticker_enabled" value="1"
-                                        {{ $spotTickerEnabled && $spotTickerEnabled->value ? 'checked' : '' }} />
-                                    <span class="switch-toggle-slider"></span>
-                                    <span class="switch-label">فعال‌سازی Spot Ticker</span>
-                                </label>
-                                <small class="text-muted d-block mt-2">این گزینه نمایش قیمت‌های لحظه‌ای را کنترل
-                                    می‌کند</small>
-                            </div>
+
                             <div class="col-xl-6 mt-3">
                                 <label class="switch switch-lg">
                                     <input type="checkbox" class="switch-input" name="order_matching_enabled" value="1"

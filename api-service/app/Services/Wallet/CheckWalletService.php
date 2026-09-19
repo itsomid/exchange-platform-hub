@@ -80,7 +80,7 @@ class CheckWalletService
                 resolve(GetDepositListsRequestDTO::class)
                     ->setCurrencySymbol($wallet->currency_symbol)
                     ->setWalletAddress($walletChain->address)
-                    ->setBlockchain($currencyChain->blockchain_name->value)
+                    ->setBlockchain($currencyChain->blockchain_name)
                     ->setContractAddress($currencyChain->contract_address ?? null)
             );
             
@@ -113,21 +113,21 @@ class CheckWalletService
                             ->setUsdtValue($usdtValue)
                     );
 
-                    $this->transactionRepository->create(
-                        resolve(CreateTransactionRequestDTO::class)
-                            ->setUserId($requestDTO->getUserId())
-                            ->setDepositId($deposit->id)
-                            ->setWalletId($wallet->id)
-                            ->setBalance($wallet->balance)
-                            ->setAmount($transaction->getAmount())
-                            ->setCoinPrice($currency->exchangePrice)
-                            ->setExchangeId(null)
-                            ->setType(TransactionTypeEnum::DEPOSIT)
-                            ->setSubtype(TransactionSubTypeEnum::USER_INITIATED)
-                            ->setStatus(TransactionStatusEnum::SUCCESS)
-                            ->setDescription('واریز به آدرس: ' . $deposit->address . ' هش تراکنش: ' . $transactionHash)
-                    );
                     if ($depositStatus === DepositStatusEnum::CONFIRMED) {
+                        $this->transactionRepository->create(
+                            resolve(CreateTransactionRequestDTO::class)
+                                ->setUserId($requestDTO->getUserId())
+                                ->setDepositId($deposit->id)
+                                ->setWalletId($wallet->id)
+                                ->setBalance($wallet->balance)
+                                ->setAmount($transaction->getAmount())
+                                ->setCoinPrice($currency->exchangePrice)
+                                ->setExchangeId(null)
+                                ->setType(TransactionTypeEnum::DEPOSIT)
+                                ->setSubtype(TransactionSubTypeEnum::USER_INITIATED)
+                                ->setStatus(TransactionStatusEnum::SUCCESS)
+                                ->setDescription('واریز به آدرس: ' . $deposit->address . ' هش تراکنش: ' . $transactionHash)
+                        );
                         $wallet->increment('balance', $transaction->getAmount());
                         $user->notify(new DepositSuccessful($transaction->getCryptocurrency(), $transaction->getAmount(), $user->name));
 

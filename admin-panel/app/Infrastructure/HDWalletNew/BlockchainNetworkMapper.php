@@ -21,6 +21,13 @@ class BlockchainNetworkMapper
         'BITCOIN' => 'bitcoin',
         'TRON' => 'tron',
         'ETHEREUM' => 'ethereum',
+        'POLYGON' => 'polygon',
+        'ARBITRUM' => 'arbitrum',
+        'OPTIMISM' => 'optimism',
+        'AVALANCHE' => 'avalanche',
+        'SONIC' => 'sonic',
+        'LITECOIN' => 'litecoin',
+        'DASH' => 'dash',
     ];
 
     /**
@@ -32,6 +39,13 @@ class BlockchainNetworkMapper
         'bitcoin' => 'BITCOIN',
         'tron' => 'TRON',
         'ethereum' => 'ETHEREUM',
+        'polygon' => 'POLYGON',
+        'arbitrum' => 'ARBITRUM',
+        'optimism' => 'OPTIMISM',
+        'avalanche' => 'AVALANCHE',
+        'sonic' => 'SONIC',
+        'litecoin' => 'LITECOIN',
+        'dash' => 'DASH',
     ];
 
     /**

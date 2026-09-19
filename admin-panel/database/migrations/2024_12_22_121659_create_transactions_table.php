@@ -29,6 +29,7 @@ return new class extends Migration
 
             $table->text('description')->nullable(); // Optional description
             $table->text('admin_description')->nullable(); // Optional description
+            $table->text('notes')->nullable(); // Optional notes
             $table->unsignedBigInteger('journal_entry_number')->nullable();
             $table->timestamps();
 
@@ -41,6 +42,8 @@ return new class extends Migration
             $table->foreign('otc_order_id')->references('id')->on('otc_orders')->onDelete('set null');
             $table->foreign('spot_trade_id')->references('id')->on('spot_trades')->onDelete('set null');
             $table->foreign('stock_contract_id')->references('id')->on('stock_contracts')->onDelete('set null');
+
+            $table->softDeletes();
         });
     }
 

@@ -3,6 +3,7 @@
 namespace App\Services\Exchanges;
 
 use App\Enums\OTCRefExchangeWithdrawalStatusEnum;
+use App\Enums\SpotOrderSourceEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
@@ -45,6 +46,7 @@ class ExchangeService
         $market = $this->marketRepository->getMarketById($requestDTO->getMarketId());
         $exchangeName = $market->exchangePrice->exchange->slug;
         $asset = AssetFactory::make($exchangeName);
+        $otcOrder = $this->otcOrderRepository->getOneById($requestDTO->getOtcId());
 
         $response = $asset->placeOrder(
             resolve(BuyDTORequest::class)
@@ -54,10 +56,12 @@ class ExchangeService
                 ->setQuantity($requestDTO->getQuantity())
                 ->setOrderType('market')
                 ->setCurrency($market->base_currency)
+                ->setTradeType('otc')
+                ->setUserId($otcOrder->user_id)
+                ->setOrderId($otcOrder->id)
         );
 
         if ($response->isDone()) {
-            $otcOrder = $this->otcOrderRepository->getOneById($requestDTO->getOtcId());
             $otcOrder->refExchangeTransactions()->create([
                 'order_id' => $response->getOrderId(),
                 'exchange_id' => $market->exchangePrice->exchange->id,
@@ -180,6 +184,7 @@ class ExchangeService
         $market = $this->marketRepository->getMarketById($requestDTO->getMarketId());
         $exchangeName = $market->exchangePrice->exchange->slug;
         $asset = AssetFactory::make($exchangeName);
+        $otcOrder = $this->otcOrderRepository->getOneById($requestDTO->getOtcId());
 
         $response = $asset->placeOrder(
             resolve(BuyDTORequest::class)
@@ -189,10 +194,12 @@ class ExchangeService
                 ->setQuantity($requestDTO->getQuantity())
                 ->setOrderType('market')
                 ->setCurrency($market->base_currency)
+                ->setTradeType('otc')
+                ->setUserId($otcOrder->user_id)
+                ->setOrderId($otcOrder->id)
         );
 
         if ($response->isDone()) {
-            $otcOrder = $this->otcOrderRepository->getOneById($requestDTO->getOtcId());
             $otcOrder->refExchangeTransactions()->create([
                 'order_id' => $response->getOrderId(),
                 'exchange_id' => $market->exchangePrice->exchange->id,
@@ -315,6 +322,8 @@ class ExchangeService
         $market = $this->marketRepository->getMarketById($requestDTO->getMarketId());
         $exchangeName = $market->exchangePrice->exchange->slug;
         $asset = AssetFactory::make($exchangeName);
+        $spotTrade = SpotTrade::with(['makerOrder', 'takerOrder'])->find($requestDTO->getSpotTradeId());
+        $userId = $this->resolveSpotTradeUserId($spotTrade);
 
         $response = $asset->placeOrder(
             resolve(BuyDTORequest::class)
@@ -324,11 +333,12 @@ class ExchangeService
                 ->setQuantity($requestDTO->getQuantity())
                 ->setOrderType('market')
                 ->setCurrency($market->base_currency)
+                ->setTradeType('spot')
+                ->setUserId($userId)
+                ->setOrderId($requestDTO->getSpotTradeId())
         );
 
         if ($response->isDone()) {
-            $spotTrade = SpotTrade::find($requestDTO->getSpotTradeId());
-
             if ($spotTrade) {
                 $spotTrade->refExchangeTransaction()->create([
                     'order_id' => $response->getOrderId(),
@@ -451,22 +461,22 @@ class ExchangeService
         try {
             $asset = AssetFactory::make('coinex');
 
-            $bitexroomWallet = $this->walletRepository->getBitexroomWallet('USDT');
-            $chain = $this->chainRepository->createOrGetChain($bitexroomWallet->id, $requestDTO->getCurrencyChain());
+            $exchangeWallet = $this->walletRepository->getExchangeWallet('USDT');
+            $chain = $this->chainRepository->createOrGetChain($exchangeWallet->id, $requestDTO->getCurrencyChain());
             $response = $asset->withdraw(
                 resolve(WithdrawRequestDTO::class)
                     ->setAddress($chain->address)
                     ->setChain($requestDTO->getCurrencyChain())
                     ->setAmount($requestDTO->getQuantity())
                     ->setWithdrawMethod(WithdrawMethodEnum::ON_CHAIN)
-                    ->setCurrency($bitexroomWallet->currency_symbol)
+                    ->setCurrency($exchangeWallet->currency_symbol)
             );
 
             ExchangeAssetsWithdrawal::query()
                 ->create([
                     'withdrawal_id' => $response->getWithdrawId(),
                     'exchange' => $cetMarket->exchangePrice->exchange->slug,
-                    'currency_symbol' => $bitexroomWallet->currency_symbol,
+                    'currency_symbol' => $exchangeWallet->currency_symbol,
                     'currency_chain' => $requestDTO->getCurrencyChain(),
                     'fee_currency' => $response->getCurrencyFee(),
                     'fee' => $response->getFee(),
@@ -541,5 +551,25 @@ class ExchangeService
     private function getFeeCurrencyForExchange(string $exchangeName): string
     {
         return config("exchanges.{$exchangeName}.fee_currency", 'USDT');
+    }
+
+    private function resolveSpotTradeUserId(?SpotTrade $spotTrade): ?int
+    {
+        if (! $spotTrade) {
+            return null;
+        }
+
+        $makerOrder = $spotTrade->makerOrder;
+        $takerOrder = $spotTrade->takerOrder;
+
+        if ($makerOrder && $makerOrder->source !== SpotOrderSourceEnum::BOT) {
+            return $makerOrder->user_id;
+        }
+
+        if ($takerOrder && $takerOrder->source !== SpotOrderSourceEnum::BOT) {
+            return $takerOrder->user_id;
+        }
+
+        return $makerOrder?->user_id ?? $takerOrder?->user_id;
     }
 }

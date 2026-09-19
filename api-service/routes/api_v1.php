@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\V1\Stock\StockContractController;
 use App\Http\Controllers\V1\Stock\StockTradeController;
 use App\Http\Controllers\V1\Stock\StockController;
+use App\Http\Controllers\V1\Market\MarketController;
+use App\Http\Controllers\V1\Market\MarketOverviewController;
 use App\Http\Middleware\FinancialWithdrawalBlockMiddleware;
 use App\Http\Middleware\FinancialTradeBlockMiddleware;
 
@@ -34,6 +36,7 @@ Route::prefix('/referral-codes')->group(function () {
 Route::prefix('/currencies')->group(function () {
     Route::get('/deposit-withdraw-config', [ConfigController::class, 'depositWithdrawConfig'])->name('currencies.deposit-withdraw-config');
     Route::get('/all-deposit-withdraw-config', [ConfigController::class, 'allDepositWithdrawConfig'])->name('currencies.all-deposit-withdraw-config');
+    Route::get('/list', [\App\Http\Controllers\V1\Currency\CurrencyListController::class, '__invoke'])->name('currencies.list')->withoutMiddleware(['auth:sanctum', 'verified']);
 });
 
 // Wallet
@@ -64,13 +67,18 @@ Route::prefix('/portfolio')->group(function () {
     Route::get('/last-week', [\App\Http\Controllers\V1\Wallet\PortfolioController::class, 'getPortfolioLastWeek'])->name('portfolio.get-portfolio-last-week');
     Route::get('/last-24-hours', [\App\Http\Controllers\V1\Wallet\PortfolioController::class, 'getPortfolio24Hours'])->name('portfolio.get-portfolio-24-hours');
 });
+
+Route::prefix('/markets')->group(function () {
+    Route::get('/', [MarketController::class, 'lists'])->name('markets.list')->withoutMiddleware(['auth:sanctum', 'verified']);
+    Route::get('/prices/{marketId}', [MarketController::class, 'prices'])->withoutMiddleware(['auth:sanctum', 'verified']);
+    Route::get('/top-traded', [MarketController::class, 'topTraded'])->withoutMiddleware(['auth:sanctum', 'verified']);
+    Route::get('/state/{marketId}', [MarketController::class, 'getState']);
+    Route::get('/home', [\App\Http\Controllers\V1\Market\HomeMarketController::class, 'index'])->withoutMiddleware(['auth:sanctum', 'verified']);
+    Route::get('/overview', MarketOverviewController::class)->withoutMiddleware(['auth:sanctum', 'verified']);
+});
+
 // OTC
 Route::prefix('/otc')->group(function () {
-    // get-markets
-    Route::get('/markets', [\App\Http\Controllers\V1\OTC\MarketController::class, 'lists'])->name('otc.markets')->withoutMiddleware(['auth:sanctum', 'verified']);
-    Route::get('/markets/prices/{marketId}', [\App\Http\Controllers\V1\OTC\MarketController::class, 'prices'])->withoutMiddleware(['auth:sanctum', 'verified']);
-    Route::get('/markets/top-traded', [\App\Http\Controllers\V1\OTC\MarketController::class, 'topTraded'])->withoutMiddleware(['auth:sanctum', 'verified']);
-
     Route::post('/buy', [\App\Http\Controllers\V1\OTC\BuyController::class, 'create'])->name('otc.buy')->middleware(['throttle:' . config('bitexroom.otc.buy_attempts.max_attempts') . ',' . config('bitexroom.otc.buy_attempts.minutes'), FinancialTradeBlockMiddleware::class]);
     Route::post('/sell', [\App\Http\Controllers\V1\OTC\SellController::class, 'create'])->name('otc.sell')->middleware(['throttle:' . config('bitexroom.otc.sell_attempts.max_attempts') . ',' . config('bitexroom.otc.sell_attempts.minutes'), FinancialTradeBlockMiddleware::class]);
 
@@ -102,10 +110,8 @@ Route::prefix('/tickets')->group(function () {
 
 // Spot
 Route::prefix('/spot')->group(function () {
-    // get-markets
-    Route::get('/markets', [\App\Http\Controllers\V1\Spot\MarketController::class, 'lists'])->name('spot.markets')->withoutMiddleware(['auth:sanctum', 'verified']);
+    Route::get('/fee', [\App\Http\Controllers\V1\Spot\FeeController::class, '__invoke'])->name('spot.fee')->withoutMiddleware(['auth:sanctum', 'verified']);
 
-    Route::get('/markets/state/{marketId}', [\App\Http\Controllers\V1\Spot\MarketController::class, 'getState']);
     Route::prefix('/orders')->group(function () {
         Route::post('/', [\App\Http\Controllers\V1\Spot\OrderController::class, 'store'])->middleware([FinancialTradeBlockMiddleware::class]);
         Route::get('/', [\App\Http\Controllers\V1\Spot\OrderController::class, 'lists']);
@@ -115,6 +121,28 @@ Route::prefix('/spot')->group(function () {
     Route::get('/order-books/{marketId}', [\App\Http\Controllers\V1\Spot\OrderController::class, 'getOrderBooks'])->name('spot.order-books');
 
     Route::get('/trades/{marketId}/latest', [\App\Http\Controllers\V1\Spot\TradeController::class, 'getLatestMatched']);
+});
+
+// Auto-Trade Bot
+Route::prefix('/bot')->name('bot.')->group(function () {
+    Route::get('/onboarding', [\App\Http\Controllers\Bot\V1\OnboardingController::class, 'show'])->name('onboarding.show');
+    Route::post('/accept-terms', [\App\Http\Controllers\Bot\V1\OnboardingController::class, 'accept'])->name('onboarding.accept');
+
+    Route::get('/wallet', [\App\Http\Controllers\Bot\V1\WalletController::class, 'show'])->name('wallet.show');
+    Route::post('/transfer-in', [\App\Http\Controllers\Bot\V1\WalletController::class, 'transferIn'])->name('wallet.transfer-in');
+    Route::post('/transfer-out', [\App\Http\Controllers\Bot\V1\WalletController::class, 'transferOut'])->name('wallet.transfer-out');
+    Route::get('/wallet/fee', [\App\Http\Controllers\Bot\V1\WalletController::class, 'fee'])->name('wallet.fee');
+
+    Route::get('/settings', [\App\Http\Controllers\Bot\V1\SettingsController::class, 'show'])->name('settings.show');
+    Route::patch('/settings', [\App\Http\Controllers\Bot\V1\SettingsController::class, 'update'])->name('settings.update');
+
+    Route::get('/reports/summary',  [\App\Http\Controllers\Bot\V1\ReportController::class, 'summary'])->name('reports.summary');
+    Route::get('/reports/per-coin', [\App\Http\Controllers\Bot\V1\ReportController::class, 'perCoin'])->name('reports.per-coin');
+
+    Route::get('/activation-status',            [\App\Http\Controllers\Bot\V1\BotOrderController::class, 'activationStatus'])->name('activation-status');
+    Route::get('/allocations',                  [\App\Http\Controllers\Bot\V1\BotOrderController::class, 'allocations'])->name('allocations.index');
+    Route::post('/orders/{id}/cancel-preview', [\App\Http\Controllers\Bot\V1\BotOrderController::class, 'cancelPreview'])->name('orders.cancel-preview');
+    Route::post('/orders/{id}/cancel',         [\App\Http\Controllers\Bot\V1\BotOrderController::class, 'cancel'])->name('orders.cancel');
 });
 
 // Stock Trading

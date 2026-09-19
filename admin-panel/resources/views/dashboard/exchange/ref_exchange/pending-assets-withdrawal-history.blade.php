@@ -1,6 +1,21 @@
 @extends('dashboard.layout.master')
 @section('title', 'مدیریت کیف پول ها')
 @section('content')
+    @if(session('operation_errors'))
+        <div class="alert alert-{{ session('operation_success_count', 0) > 0 ? 'warning' : 'danger' }} alert-dismissible fade show mb-4" role="alert">
+            <div class="fw-semibold mb-2">جزئیات خطای عملیات</div>
+            @if(session('operation_success_count', 0) > 0)
+                <div class="mb-2 small">{{ session('operation_success_count') }} ارز با موفقیت پردازش شد، اما خطاهای زیر رخ داد:</div>
+            @endif
+            <ul class="mb-0 ps-3">
+                @foreach(session('operation_errors', []) as $operationError)
+                    <li>{{ $operationError }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <div class="row mb-4">
         <div class="col-sm-12 col-xl-4">
             <div class="card">

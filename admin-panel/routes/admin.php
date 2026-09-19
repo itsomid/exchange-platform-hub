@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Controllers\Admin\AdminRoleController;
 use App\Http\Controllers\Admin\AdminSecurityController;
+use App\Http\Controllers\Admin\FinancialDashboardController;
 use App\Http\Controllers\Admin\HomeController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ReferralCodeController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\Exchange\MarketController;
 use App\Http\Controllers\Exchange\NodeProviderController;
 use App\Http\Controllers\Exchange\RefExchangeController;
 use App\Http\Controllers\Exchange\RefExchangeAssetsWithdrawalController;
+use App\Http\Controllers\Exchange\CoinexSpotOrderController;
 use App\Http\Controllers\OTCOrder\OTCOrderController;
 use App\Http\Controllers\SpotTrade\SpotTradeController;
 use App\Http\Controllers\SpotOrder\SpotOrderController;
@@ -47,6 +49,12 @@ use App\Http\Controllers\ApiSystem\ApiSystemController;
 use App\Http\Controllers\ApiSystem\ApiSystemTokenController;
 use App\Http\Controllers\Report\HdWalletIndexReportController;
 use App\Http\Controllers\Report\HdWalletCurrencyController;
+use App\Http\Controllers\Report\SweeperTransactionLogController;
+use App\Http\Controllers\Admin\Bot\BotSettingsController;
+use App\Http\Controllers\Admin\Bot\BotSignalController;use App\Http\Controllers\Admin\Bot\BotOrderController;
+use App\Http\Controllers\Admin\Bot\BotReportController;
+use App\Http\Controllers\Admin\Bot\BotTestLabController;
+use App\Http\Controllers\Admin\Bot\BotWalletTransferController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -73,6 +81,22 @@ Route::prefix('dashboard/ajax')->name('dashboard.ajax.')->group(function () {
     Route::get('/trading-stats', [HomeController::class, 'getTradingStats'])->name('trading-stats');
     Route::get('/recent-activities', [HomeController::class, 'getRecentActivities'])->name('recent-activities');
     Route::get('/top-trading-pairs', [HomeController::class, 'getTopTradingPairs'])->name('top-trading-pairs');
+});
+
+// Financial Dashboard
+Route::get('/financial-dashboard', [FinancialDashboardController::class, 'index'])->name('financial-dashboard');
+
+// Financial Dashboard AJAX endpoints
+Route::prefix('financial-dashboard/ajax')->name('financial-dashboard.ajax.')->group(function () {
+    Route::get('/trade-stats', [FinancialDashboardController::class, 'getTradeStats'])->name('trade-stats');
+    Route::get('/revenue-stats', [FinancialDashboardController::class, 'getRevenueStats'])->name('revenue-stats');
+    Route::get('/asset-stats', [FinancialDashboardController::class, 'getAssetStats'])->name('asset-stats');
+    Route::get('/liability-stats', [FinancialDashboardController::class, 'getLiabilityStats'])->name('liability-stats');
+    Route::get('/cash-flow-stats', [FinancialDashboardController::class, 'getCashFlowStats'])->name('cash-flow-stats');
+    Route::get('/expense-stats', [FinancialDashboardController::class, 'getExpenseStats'])->name('expense-stats');
+    Route::get('/profit-loss-stats', [FinancialDashboardController::class, 'getProfitLossStats'])->name('profit-loss-stats');
+    Route::get('/stock-purchase-stats', [FinancialDashboardController::class, 'getStockPurchaseStats'])->name('stock-purchase-stats');
+    Route::get('/stock-purchase-export', [FinancialDashboardController::class, 'exportStockPurchases'])->name('stock-purchase-export');
 });
 
 // All other admin routes require 2FA
@@ -120,6 +144,7 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::patch('/{user}/update', [UserController::class, 'update'])->name('user.update')->can('user.edit');
         Route::patch('/{user}/toggle-status', [UserController::class, 'suspendUser'])->name('user.toggle-status')->can('user.index');
         Route::patch('/{user}/active-user', [UserController::class, 'activeUser'])->name('user.active-user')->can('user.index');
+        Route::patch('/{user}/verify-email', [UserController::class, 'verifyEmail'])->name('user.verify-email')->can('user.index');
 
         Route::post('excel_export', [UserController::class, 'exportExcel'])->name('user.excel-export')->can('user.index');
 
@@ -194,13 +219,14 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::post('/markets', [MarketController::class, 'store'])->name('market.store')->can('market');
         Route::get('/markets/{market}/edit', [MarketController::class, 'edit'])->name('market.edit')->can('market');
         Route::patch('/markets/{market}', [MarketController::class, 'update'])->name('market.update')->can('market');
+        Route::patch('/markets/{market}/toggle-home', [MarketController::class, 'toggleHome'])->name('market.toggle-home')->can('market');
         Route::get('/markets/{market}/coinex-min-otc', [MarketController::class, 'getCoinexMinOtcAmount'])->name('market.coinex-min-otc')->can('market');
 
         Route::get('/wallets/localWallets', [ExchangeWalletController::class, 'localWallets'])->name('exchange.local-wallet');
 
         Route::get('/wallets/hotWallets', [ExchangeWalletController::class, 'hotWallets'])->name('exchange.hot-wallet');
+        Route::get('/wallets/hotWallets/{walletChain}/balance', [ExchangeWalletController::class, 'hotWalletBalance'])->name('exchange.hot-wallet.balance');
         Route::post('/wallets/refresh-hot-wallet-balance', [ExchangeWalletController::class, 'refreshHotWalletBalance'])->name('refresh.balance');
-        Route::get('/wallets/hotWallets/assets-gathering-to-cold-wallet', [ExchangeWalletController::class, 'assetsGatheringToColdWallet'])->name('wallet.assets-gathering-to-cold-wallet');
     });
 
     Route::prefix('ref-exchanges')->group(function () {
@@ -218,23 +244,33 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::patch('/currency/{currencyId}/withdrawal-settings', [RefExchangeAssetsWithdrawalController::class, 'updateCurrencyWithdrawalSettings'])->name('ref-exchange.currency.withdrawal-settings.update');
         Route::post('/currency/withdrawal-settings/bulk', [RefExchangeAssetsWithdrawalController::class, 'bulkUpdateCurrencyWithdrawalSettings'])->name('ref-exchange.currency.withdrawal-settings.bulk-update');
         Route::post('/currency/{currencyId}/toggle-withdrawal', [RefExchangeAssetsWithdrawalController::class, 'toggleCurrencyWithdrawalStatus'])->name('ref-exchange.currency.toggle-withdrawal');
+
+        // CoinEx spot orders (pending / finished / cancel)
+        Route::get('/coinex-spot-orders', [CoinexSpotOrderController::class, 'index'])->name('ref-exchange.coinex-spot-orders.index')->can('ref-exchanges');
+        Route::get('/coinex-spot-orders/lookup', [CoinexSpotOrderController::class, 'lookup'])->name('ref-exchange.coinex-spot-orders.lookup')->can('ref-exchanges');
+        Route::post('/coinex-spot-orders/cancel', [CoinexSpotOrderController::class, 'cancel'])->name('ref-exchange.coinex-spot-orders.cancel')->can('ref-exchanges');
     });
 
     Route::prefix('transactions')->group(function () {
         Route::get('/', [TransactionController::class, 'index'])->name('transaction.index')->can('transaction');
-        Route::post('/excel-export', [TransactionController::class, 'excelExport'])->name('transaction.excel-export')->can('transaction');
+        Route::get('/excel-export', [TransactionController::class, 'excelExport'])->name('transaction.excel-export')->can('transaction');
+        Route::post('/{transaction}/notes', [TransactionController::class, 'updateNote'])->name('transaction.notes.update');
     });
 
     Route::prefix('otc_orders')->group(function () {
         Route::get('/', [OTCOrderController::class, 'index'])->name('otc_orders.index')->can('otc_order');
-        Route::post('/excel-export', [OTCOrderController::class, 'excelExport'])->name('otc_orders.excel-export')->can('otc_order');
+        Route::get('/excel-export', [OTCOrderController::class, 'excelExport'])->name('otc_orders.excel-export')->can('otc_order');
         Route::post('/{otcOrderId}/trigger-ref-exchange-sell', [OTCOrderController::class, 'triggerRefExchangeSell'])->name('otc_orders.trigger-ref-exchange-sell')->can('otc_order');
         Route::post('/{otcOrderId}/reset-ref-exchange-sell', [OTCOrderController::class, 'resetRefExchangeSellStatus'])->name('otc_orders.reset-ref-exchange-sell')->can('otc_order');
+        Route::post('/{otcOrder}/notes', [OTCOrderController::class, 'updateNote'])->name('otc_orders.notes.update');
     });
 
     Route::prefix('spot')->group(function () {
         Route::get('/trades', [SpotTradeController::class, 'index'])->name('spot_trades.index')->can('spot');
         Route::post('/trades/excel-export', [SpotTradeController::class, 'excelExport'])->name('spot_trade.excel-export')->can('spot');
+        Route::post('/trades/{spotTrade}/notes', [SpotTradeController::class, 'updateNote'])->name('spot_trades.notes.update');
+        Route::post('/trades/{spotTradeId}/trigger-ref-exchange-sell', [SpotTradeController::class, 'triggerRefExchangeSell'])->name('spot_trades.trigger-ref-exchange-sell');
+        Route::post('/trades/{spotTradeId}/reset-ref-exchange-sell', [SpotTradeController::class, 'resetRefExchangeSellStatus'])->name('spot_trades.reset-ref-exchange-sell');
 
         Route::get('/orders', [SpotOrderController::class, 'index'])->name('spot_orders.index')->can('spot');
         Route::post('/orders/excel-export', [SpotOrderController::class, 'excelExport'])->name('spot_orders.excel-export')->can('spot');
@@ -253,7 +289,7 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::get('/check-withdrawal/{withdrawal}', [WithdrawalController::class, 'checkWithdrawal'])->name('withdrawal.check-withdrawal')->can('withdrawal');
         Route::get('/{withdraw}/confirm', [WithdrawalController::class, 'confirmWithdrawal'])->name('withdrawal.confirm-withdrawal')->can('withdrawal');
         Route::get('/{withdraw}/cancel', [WithdrawalController::class, 'cancelWithdrawal'])->name('withdrawal.cancel-withdrawal')->can('withdrawal');
-        Route::post('/excel-export', [WithdrawalController::class, 'excelExport'])->name('withdrawal.excel-export')->can('withdrawal');
+        Route::get('/excel-export', [WithdrawalController::class, 'excelExport'])->name('withdrawal.excel-export')->can('withdrawal');
         Route::post('/{withdrawal}/redispatch-job', [WithdrawalController::class, 'redispatchWithdrawalJob'])->name('withdrawal.redispatch-job')->can('withdrawal');
         Route::post('/{withdrawal}/cancel-queued', [WithdrawalController::class, 'cancelQueuedWithdrawal'])->name('withdrawal.cancel-queued')->can('withdrawal');
     });
@@ -267,6 +303,7 @@ Route::middleware(['admin.2fa'])->group(function () {
     Route::post('/internal-settings/update-exchange-withdrawal-setting', [InternalSettingController::class, 'updateExchangeWithdrawalSetting'])->name('setting.int.update-exchange-withdrawal-setting')->can('setting.int.index');
     Route::post('/internal-settings/update-spot-settings', [InternalSettingController::class, 'updateSpotSettings'])->name('setting.int.update-spot-settings')->can('setting.int.index');
     Route::post('/internal-settings/update-otc-settings', [InternalSettingController::class, 'updateOtcSettings'])->name('setting.int.update-otc-settings')->can('setting.int.index');
+    Route::post('/internal-settings/update-withdrawal-settings', [InternalSettingController::class, 'updateWithdrawalSettings'])->name('setting.int.update-withdrawal-settings')->can('setting.int.index');
 
     Route::get('/external-settings', [ExternalSettingController::class, 'index'])->name('external-setting.index')->can('setting.ext.index');
     Route::post('/external-settings/update-ref-address', [ExternalSettingController::class, 'updateRefAddress'])->name('setting.ext.update-ref-address')->can('setting.ext.index');
@@ -324,6 +361,11 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::post('currencies/create', [HdWalletCurrencyController::class, 'create'])->name('hd-wallet.currencies.create')->can('hd_wallet');
         Route::post('currencies/update', [HdWalletCurrencyController::class, 'update'])->name('hd-wallet.currencies.update')->can('hd_wallet');
         Route::post('currencies/delete', [HdWalletCurrencyController::class, 'destroy'])->name('hd-wallet.currencies.delete')->can('hd_wallet');
+
+        Route::get('sweeper-transactions', [SweeperTransactionLogController::class, 'index'])->name('hd-wallet.sweeper-transactions')->can('hd_wallet');
+        Route::post('sweeper-transactions/sync', [SweeperTransactionLogController::class, 'sync'])->name('hd-wallet.sweeper-transactions.sync')->can('hd_wallet');
+        Route::post('sweeper-transactions/create-accounting', [SweeperTransactionLogController::class, 'createAccountingTransactions'])->name('hd-wallet.sweeper-transactions.create-accounting')->can('hd_wallet');
+        Route::post('sweeper-transactions/{sweeperTransaction}/create-accounting', [SweeperTransactionLogController::class, 'createAccountingTransaction'])->name('hd-wallet.sweeper-transactions.create-accounting-one')->can('hd_wallet');
     });
 
 
@@ -362,8 +404,7 @@ Route::middleware(['admin.2fa'])->group(function () {
     });
 
     //     *********API SYSTEMS*********//
-    Route::prefix('api-systems')->group(function () {
-        Route::get('/', [ApiSystemController::class, 'index'])->name('api-system.index')->can('api-system');
+    Route::prefix('api-systems')->group(function () {        Route::get('/', [ApiSystemController::class, 'index'])->name('api-system.index')->can('api-system');
         Route::get('/create', [ApiSystemController::class, 'create'])->name('api-system.create')->can('api-system');
         Route::post('/', [ApiSystemController::class, 'store'])->name('api-system.store')->can('api-system');
         Route::get('/{system}', [ApiSystemController::class, 'show'])->name('api-system.show')->can('api-system');
@@ -385,6 +426,58 @@ Route::middleware(['admin.2fa'])->group(function () {
             Route::post('/{token}/regenerate', [ApiSystemTokenController::class, 'regenerate'])->name('api-system.tokens.regenerate')->can('api-system');
             Route::delete('/{token}', [ApiSystemTokenController::class, 'destroy'])->name('api-system.tokens.destroy')->can('api-system');
             Route::get('/{token}/usage-stats', [ApiSystemTokenController::class, 'getUsageStats'])->name('api-system.tokens.usage-stats')->can('api-system');
+        });
+    });
+
+    // *********AUTO-TRADE BOT*********//
+    Route::prefix('auto-trade')->name('bot.')->can('bot-management')->group(function () {
+        // Settings (singleton)
+        Route::get('/settings', [BotSettingsController::class, 'index'])->name('settings.index');
+        Route::patch('/settings', [BotSettingsController::class, 'update'])->name('settings.update');
+
+        // Signals CRUD
+        Route::get('/signals', [BotSignalController::class, 'index'])->name('signal.index');
+        Route::post('/signals/reorder', [BotSignalController::class, 'reorder'])->name('signal.reorder');
+        Route::get('/signals/create', [BotSignalController::class, 'create'])->name('signal.create');
+        Route::post('/signals', [BotSignalController::class, 'store'])->name('signal.store');
+        Route::get('/signals/{botSignal}/edit', [BotSignalController::class, 'edit'])->name('signal.edit');
+        Route::patch('/signals/{botSignal}', [BotSignalController::class, 'update'])->name('signal.update');
+        Route::patch('/signals/{botSignal}/quick-update', [BotSignalController::class, 'quickUpdate'])->name('signal.quick-update');
+        Route::delete('/signals/{botSignal}', [BotSignalController::class, 'destroy'])->name('signal.destroy');
+        Route::patch('/signals/{botSignal}/toggle-status', [BotSignalController::class, 'toggleStatus'])->name('signal.toggle-status');
+
+        // Orders (read-only)
+        Route::get('/orders', [BotOrderController::class, 'index'])->name('order.index');
+        Route::get('/orders/user/{user}', [BotOrderController::class, 'userShow'])->name('order.user');
+        Route::post('/orders/user/{user}/toggle-auto-trade', [BotOrderController::class, 'toggleAutoTrade'])->name('order.user.toggle');
+        Route::post('/orders/user/{user}/cancel-all-preview', [BotOrderController::class, 'cancelAllPreview'])->name('order.user.cancel-all-preview');
+        Route::post('/orders/user/{user}/cancel-all', [BotOrderController::class, 'cancelAll'])->name('order.user.cancel-all');
+        Route::post('/orders/user/{user}/buy-preview', [BotOrderController::class, 'buyPreview'])->name('order.user.buy-preview');
+        Route::post('/orders/user/{user}/buy', [BotOrderController::class, 'buy'])->name('order.user.buy');
+        Route::get('/orders/user/{user}/buy-attempts', [BotOrderController::class, 'buyAttempts'])->name('order.user.buy-attempts');
+        Route::get('/orders/{botOrder}', [BotOrderController::class, 'show'])->name('order.show');
+        Route::patch('/orders/{botOrder}/description', [BotOrderController::class, 'updateDescription'])->name('order.update-description');
+        Route::post('/orders/{botOrder}/cancel-preview', [BotOrderController::class, 'cancelPreview'])->name('order.cancel-preview');
+        Route::post('/orders/{botOrder}/cancel', [BotOrderController::class, 'cancel'])->name('order.cancel');
+
+        // Wallet Transfers (deposits/withdrawals between main wallet and bot wallet)
+        Route::get('/wallet-transfers', [BotWalletTransferController::class, 'index'])->name('wallet-transfer.index');
+
+        // Reports
+        Route::get('/reports', [BotReportController::class, 'index'])->name('report.index');
+        Route::get('/reports/export/orders', [BotReportController::class, 'exportOrders'])->name('report.export.orders');
+        Route::get('/reports/export/executions', [BotReportController::class, 'exportExecutions'])->name('report.export.executions');
+        Route::get('/reports/export/settlements', [BotReportController::class, 'exportSettlements'])->name('report.export.settlements');
+
+        // Test Lab (admin-only dev/QA harness)
+        Route::prefix('test-lab')->name('test-lab.')->group(function () {
+            Route::get('/',              [BotTestLabController::class, 'index'])->name('index');
+            Route::get('/status',        [BotTestLabController::class, 'status'])->name('status');
+            Route::post('/start',        [BotTestLabController::class, 'start'])->name('start');
+            Route::post('/bump-price',   [BotTestLabController::class, 'bumpPrice'])->name('bump-price');
+            Route::post('/set-price',    [BotTestLabController::class, 'setPrice'])->name('set-price');
+            Route::post('/sync',         [BotTestLabController::class, 'sync'])->name('sync');
+            Route::post('/reset',        [BotTestLabController::class, 'reset'])->name('reset');
         });
     });
 });

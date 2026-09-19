@@ -11,6 +11,7 @@ enum TransactionTypeEnum: string
     case REFERRAL = 'referral';
     case FEE = 'fee';
     case REF_EXCHANGE = 'ref_exchange';
+    case BOT = 'bot';
 
     const array TYPE_LABEL = [
         self::BUY->value => 'دریافت',
@@ -20,7 +21,7 @@ enum TransactionTypeEnum: string
         self::REFERRAL->value => 'دعوت از دوستان',
         self::FEE->value => 'کارمزد',
         self::REF_EXCHANGE->value => 'صرافی مرجع',
-        //        self::ADMIN_CREDIT->value => 'اعتبار ادمین',
+        self::BOT->value => 'ربات معاملاتی',
     ];
 
     const array TYPE_COLOR = [
@@ -31,7 +32,7 @@ enum TransactionTypeEnum: string
         self::REFERRAL->value => 'primary',
         self::FEE->value => 'info',
         self::REF_EXCHANGE->value => 'info',
-        //        self::ADMIN_CREDIT->value => 'info',
+        self::BOT->value => 'warning',
     ];
 
     const array TYPE_ICON = [
@@ -42,8 +43,7 @@ enum TransactionTypeEnum: string
         self::REFERRAL->value => 'user-tag',
         self::FEE->value => 'hand-holding-dollar',
         self::REF_EXCHANGE->value => 'hand-holding-dollar',
-
-        //        self::ADMIN_CREDIT->value => 'user-tie-hair',
+        self::BOT->value => 'robot',
     ];
 
     public function label(): string

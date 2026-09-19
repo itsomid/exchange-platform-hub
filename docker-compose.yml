@@ -145,7 +145,7 @@ services:
     depends_on:
       - database
     working_dir: /var/www/html
-    entrypoint: /bin/sh -c "while true; do php artisan schedule:run >> /dev/null 2>&1; sleep 60; done"
+    entrypoint: /bin/sh -c "while true; do php artisan schedule:run --verbose; sleep 60; done"
     networks:
       - laravel
     extra_hosts:
@@ -161,21 +161,14 @@ services:
         - GID=${GID:-1000}
         - USER=${USER:-laraveluser}
     container_name: admin-queue
+    restart: unless-stopped
     volumes:
       - "./admin-panel:/var/www/html:delegated"
       - "./env/admin_panel.env:/var/www/html/.env"
     depends_on:
       - database
     working_dir: /var/www/html
-    entrypoint:
-      [
-        "php",
-        "/var/www/html/artisan",
-        "queue:work",
-        "--tries=20",
-        "--timeout=60",
-        "--queue=default,admin-email,hd-wallet-sync,admin-withdrawal,admin-withdrawal-check",
-      ]
+    entrypoint: [ "php", "/var/www/html/artisan", "queue:work", "--tries=20", "--timeout=3700", "--queue=default,admin-email,hd-wallet-sync,admin-withdrawal,admin-withdrawal-check" ]
     networks:
       - laravel
     extra_hosts:
@@ -196,15 +189,7 @@ services:
     depends_on:
       - database
     working_dir: /var/www/html
-    entrypoint:
-      [
-        "php",
-        "/var/www/html/artisan",
-        "queue:work",
-        "--tries=20",
-        "--timeout=60",
-        "--queue=api-service,api-email,api-withdrawal,api-withdrawal-check",
-      ]
+    entrypoint: [ "php", "/var/www/html/artisan", "queue:work", "--tries=20", "--timeout=60", "--queue=api-service,api-email,api-withdrawal,api-withdrawal-check,bot-buy,bot-sell,bot-settlement,default" ]
     networks:
       - laravel
     extra_hosts:
@@ -227,7 +212,7 @@ services:
       - database
       - redis
     working_dir: /var/www/html
-    entrypoint: ["php", "/var/www/html/artisan", "exchange:listen"]
+    entrypoint: [ "php", "/var/www/html/artisan", "exchange:listen" ]
     networks:
       - laravel
     restart: always
@@ -248,7 +233,7 @@ services:
       - database
       - redis
     working_dir: /var/www/html
-    entrypoint: ["php", "/var/www/html/artisan", "reverb:start"]
+    entrypoint: [ "php", "/var/www/html/artisan", "reverb:start" ]
     ports:
       - 8081:8080
     networks:
@@ -271,8 +256,8 @@ services:
     working_dir: /var/www/html
     depends_on:
       - php-admin
-    profiles: ["composer"]
-    entrypoint: ["composer", "--ignore-platform-reqs"]
+    profiles: [ "composer" ]
+    entrypoint: [ "composer", "--ignore-platform-reqs" ]
     networks:
       - laravel
 
@@ -292,8 +277,8 @@ services:
     working_dir: /var/www/html
     depends_on:
       - php-api
-    profiles: ["composer"]
-    entrypoint: ["composer", "--ignore-platform-reqs"]
+    profiles: [ "composer" ]
+    entrypoint: [ "composer", "--ignore-platform-reqs" ]
 
   artisan-admin:
     build:
@@ -308,7 +293,7 @@ services:
       - ./admin-panel:/var/www/html:delegated
       - ./env/admin_panel.env:/var/www/html/.env
     working_dir: /var/www/html
-    entrypoint: ["php", "/var/www/html/artisan"]
+    entrypoint: [ "php", "/var/www/html/artisan" ]
     networks:
       - laravel
     depends_on:
@@ -327,7 +312,7 @@ services:
       - ./api-service:/var/www/html:delegated
       - ./env/api_service.env:/var/www/html/.env
     working_dir: /var/www/html
-    entrypoint: ["php", "/var/www/html/artisan"]
+    entrypoint: [ "php", "/var/www/html/artisan" ]
     networks:
       - laravel
     depends_on:
@@ -344,8 +329,8 @@ services:
       - 3000:3000
       - 3001:3001
     working_dir: /var/www/html
-    profiles: ["npm"]
-    entrypoint: ["npm"]
+    profiles: [ "npm" ]
+    entrypoint: [ "npm" ]
     networks:
       - laravel
 

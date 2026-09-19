@@ -38,6 +38,8 @@ class MarketResponseDTO
 
     private string $currencyLogo;
 
+    private ?string $quoteCurrencyLogo = null;
+
     public function setBaseCurrency(string $baseCurrency): self
     {
         $this->baseCurrency = $baseCurrency;
@@ -240,5 +242,17 @@ class MarketResponseDTO
     public function getCurrencyLogo(): string
     {
         return $this->currencyLogo;
+    }
+
+    public function setQuoteCurrencyLogo(?string $quoteCurrencyLogo): MarketResponseDTO
+    {
+        $this->quoteCurrencyLogo = $quoteCurrencyLogo;
+
+        return $this;
+    }
+
+    public function getQuoteCurrencyLogo(): ?string
+    {
+        return $this->quoteCurrencyLogo;
     }
 }

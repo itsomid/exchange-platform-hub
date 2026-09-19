@@ -10,7 +10,7 @@ use App\Models\Deposit;
 use App\Models\HdWalletOutgoingTransaction;
 
 use App\Services\NodeProviders\BlockchairService;
-use App\Services\NodeProviders\BscScanService;
+
 use App\Services\NodeProviders\EtherScanService;
 use App\Services\NodeProviders\TronScanService;
 use Illuminate\Console\Command;
@@ -43,19 +43,16 @@ class SyncHdWalletOutgoingTransactions extends Command
      */
     protected TronScanService $tronScanService;
     protected EtherScanService $etherScanService;
-    protected BscScanService $bscScanService;
     protected BlockchairService $blockchairService;
 
     public function __construct(
         TronScanService $tronScanService,
         EtherScanService $etherScanService,
-        BscScanService $bscScanService,
         BlockchairService $blockchairService
     ) {
         parent::__construct();
         $this->tronScanService = $tronScanService;
         $this->etherScanService = $etherScanService;
-        $this->bscScanService = $bscScanService;
         $this->blockchairService = $blockchairService;
     }
 
@@ -293,10 +290,11 @@ class SyncHdWalletOutgoingTransactions extends Command
         return match ($chain) {
             CurrencyChainEnum::TRC20 => $this->tronScanService->getOutgoingTransactions($currencySymbol, $address, $afterBlock),
             CurrencyChainEnum::ERC20 => $this->etherScanService->getOutgoingTransactions($currencySymbol, $address, $afterBlock),
-            CurrencyChainEnum::BSC => $this->bscScanService->getOutgoingTransactions($currencySymbol, $address, $afterBlock),
+            CurrencyChainEnum::BSC => $this->etherScanService->getOutgoingTransactions($currencySymbol, $address, $afterBlock, 56),
             CurrencyChainEnum::BTC => $this->blockchairService->getOutgoingTransactions('BTC', $address, $afterBlock),
             CurrencyChainEnum::DOGE => $this->blockchairService->getOutgoingTransactions('DOGE', $address, $afterBlock),
             CurrencyChainEnum::LTC => $this->blockchairService->getOutgoingTransactions('LTC', $address, $afterBlock),
+            CurrencyChainEnum::DASH => $this->blockchairService->getOutgoingTransactions('DASH', $address, $afterBlock),
             default => ['error' => 'Unsupported chain', 'transactions' => []],
         };
     }
@@ -313,6 +311,7 @@ class SyncHdWalletOutgoingTransactions extends Command
             CurrencyChainEnum::BTC => 'BTC',
             CurrencyChainEnum::DOGE => 'DOGE',
             CurrencyChainEnum::LTC => 'LTC',
+            CurrencyChainEnum::DASH => 'DASH',
             default => null,
         };
 

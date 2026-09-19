@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\SpotOrderSourceEnum;
 use App\Models\Market;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
@@ -16,7 +17,7 @@ return new class extends Migration
         Schema::create('spot_orders', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(User::class)->constrained();
-            $table->string('source')->default(SpotOrderSourceEnum::USER->value)->after('user_id');
+            $table->string('source')->default(SpotOrderSourceEnum::USER->value);
             $table->foreignIdFor(Market::class)->constrained();
             $table->string('side'); //buy, sell
             $table->string('type'); //market, limit
@@ -38,6 +39,9 @@ return new class extends Migration
 
             $table->foreign('maker_order_id')->references('id')->on('spot_orders')->onDelete('cascade');
             $table->foreign('taker_order_id')->references('id')->on('spot_orders')->onDelete('cascade');
+
+            $table->text('notes')->nullable();
+            $table->softDeletes();
 
             $table->unique(['maker_order_id', 'taker_order_id']);
             $table->timestamps();

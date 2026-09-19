@@ -27,5 +27,33 @@ return [
             'type' => 'evm',
             'chain' => 'binance-smart-chain'
         ],
+        'POL' => [
+            'type' => 'evm',
+            'chain' => 'polygon'
+        ],
+        'ARB' => [
+            'type' => 'evm',
+            'chain' => 'arbitrum'
+        ],
+        'OP' => [
+            'type' => 'evm',
+            'chain' => 'optimism'
+        ],
+        'AVAX' => [
+            'type' => 'evm',
+            'chain' => 'avalanche'
+        ],
+        'S' => [
+            'type' => 'evm',
+            'chain' => 'sonic'
+        ],
+        'LTC' => [
+            'type' => 'utxo',
+            'chain' => 'litecoin'
+        ],
+        'DASH' => [
+            'type' => 'utxo',
+            'chain' => 'dash'
+        ]
     ]
 ];

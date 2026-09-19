@@ -6,18 +6,19 @@ use App\Data\PermissionList;
 use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
-use App\Services\Wallet\WalletService;
+use App\Repositories\Interfaces\WalletRepositoryInterface;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 
 class InternalSettingController extends Controller
 {
-    protected $walletService;
-    protected $bitexroomUserId;
-    public function __construct(WalletService $walletService)
+    protected WalletRepositoryInterface $walletRepository;
+    protected $exchangeUserId;
+
+    public function __construct(WalletRepositoryInterface $walletRepository)
     {
-        $this->bitexroomUserId = config('bitexroom.user_id', 1);
-        $this->walletService = $walletService;
+        $this->exchangeUserId = config('bitexroom.user_id', 1);
+        $this->walletRepository = $walletRepository;
     }
     public function index()
     {
@@ -33,12 +34,13 @@ class InternalSettingController extends Controller
         $exchangeWithdrawalPeriodBuy = Setting::where('key', 'exchange_withdrawal_period_buy')->first();
         $exchangeWithdrawalType = Setting::where('key', 'exchange_withdrawal_type')->first();
         $exchangeWithdrawalStatus = Setting::where('key', 'exchange_withdrawal_status')->first();
-        $spotTickerEnabled = Setting::where('key', 'spot_ticker_enabled')->first();
+
         $orderMatchingEnabled = Setting::where('key', 'order_matching_enabled')->first();
         $spotTradingEnabled = Setting::where('key', 'spot_trading_enabled')->first();
         $otcTradingEnabled = Setting::where('key', 'otc_trading_enabled')->first();
+        $withdrawalEnabled = Setting::where('key', 'withdrawal_enabled')->first();
 
-        $exchangeWalletChains = $this->walletService->getExchangeAllWalletChain();
+        $exchangeWalletChains = $this->walletRepository->getExchangeAllWalletChains();
 
         return view('dashboard.setting.internal.index', [
             'last3permissions' => $last3permissions,
@@ -53,10 +55,10 @@ class InternalSettingController extends Controller
             'exchangeWithdrawalPeriodBuy' => $exchangeWithdrawalPeriodBuy,
             'exchangeWithdrawalType' => $exchangeWithdrawalType,
             'exchangeWithdrawalStatus' => $exchangeWithdrawalStatus,
-            'spotTickerEnabled' => $spotTickerEnabled,
             'orderMatchingEnabled' => $orderMatchingEnabled,
             'spotTradingEnabled' => $spotTradingEnabled,
             'otcTradingEnabled' => $otcTradingEnabled,
+            'withdrawalEnabled' => $withdrawalEnabled,
             'exchangeWalletChains' => $exchangeWalletChains,
 
         ]);
@@ -224,15 +226,7 @@ class InternalSettingController extends Controller
             ]
         );
 
-        // Update spot ticker enabled status
-        Setting::updateOrCreate(
-            ['key' => 'spot_ticker_enabled'],
-            [
-                'value' => $request->has('spot_ticker_enabled') ? $request->input('spot_ticker_enabled') : false,
-                'name' => 'وضعیت فعال‌سازی Spot Ticker',
-                'type' => 'boolean'
-            ]
-        );
+    
 
         // Update order matching enabled status
         Setting::updateOrCreate(
@@ -246,6 +240,21 @@ class InternalSettingController extends Controller
 
         Toast::message('تنظیمات اسپات با موفقیت ذخیره شد')->success()->notify();
         // Redirect with success message
+        return redirect()->back();
+    }
+
+    public function updateWithdrawalSettings(Request $request)
+    {
+        Setting::updateOrCreate(
+            ['key' => 'withdrawal_enabled'],
+            [
+                'value' => $request->has('withdrawal_enabled') ? $request->input('withdrawal_enabled') : false,
+                'name' => 'وضعیت فعال‌سازی برداشت',
+                'type' => 'boolean'
+            ]
+        );
+
+        Toast::message('تنظیمات برداشت با موفقیت ذخیره شد')->success()->notify();
         return redirect()->back();
     }
 

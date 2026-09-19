@@ -10,6 +10,7 @@ use App\Enums\TransactionTypeEnum;
 use App\Exceptions\Exchange\CoinexWithdrawalException;
 use App\Models\ExchangeAssetsWithdrawal;
 use App\Models\OTCOrder;
+use App\Models\SpotTrade;
 use App\Models\Transaction;
 use App\Models\Wallet;
 use App\Models\WalletChain;
@@ -23,14 +24,12 @@ use App\Services\Exchanges\Asset\Enum\WithdrawMethodEnum;
 use App\Services\Exchanges\DTO\ChargeCurrencyRequestDTO;
 use App\Services\Exchanges\DTO\ChargeCurrencyResponseDTO;
 use App\Services\Exchanges\DTO\TriggerRefExchangeSellResponseDTO;
-use App\Services\Wallet\WalletService;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class ExchangeService
 {
     public function __construct(
-        private readonly WalletService $walletService,
         private readonly MarketRepositoryInterface $marketRepository,
         private readonly ExchangeRepository $exchangeRepository,
         private readonly WalletRepositoryInterface $walletRepository,
@@ -48,12 +47,12 @@ class ExchangeService
 
             $asset = AssetFactory::make($exchange->slug);
 
-            $bitexroomWallet = $this->walletService->getExchangeWallet($requestDTO->getCurrency());
+            $exchangeWallet = $this->walletRepository->getExchangeWallet($requestDTO->getCurrency());
 
             $chain = WalletChain::query()
                 ->firstOrCreate(
                     [
-                        'wallet_id' => $bitexroomWallet->id,
+                        'wallet_id' => $exchangeWallet->id,
                         'currency_chain' => $requestDTO->getCurrencyChain(),
                     ]
                 );
@@ -64,7 +63,7 @@ class ExchangeService
                     ->setChain($requestDTO->getCurrencyChain())
                     ->setAmount($requestDTO->getQuantity())
                     ->setWithdrawMethod(WithdrawMethodEnum::ON_CHAIN)
-                    ->setCurrency($bitexroomWallet->currency_symbol)
+                    ->setCurrency($exchangeWallet->currency_symbol)
             );
 
             // Continue with successful withdrawal processing
@@ -72,7 +71,7 @@ class ExchangeService
                 ->create([
                     'withdrawal_id' => $response->getWithdrawId(),
                     'exchange' => $exchange->slug,
-                    'currency_symbol' => $bitexroomWallet->currency_symbol,
+                    'currency_symbol' => $exchangeWallet->currency_symbol,
                     'currency_chain' => $requestDTO->getCurrencyChain(),
                     'fee_currency' => $response->getCurrencyFee(),
                     'fee' => $response->getFee(),
@@ -85,9 +84,9 @@ class ExchangeService
 
 
             $feeCurrency = $response->getCurrencyFee();
-            $baseCurrency = $bitexroomWallet->currency_symbol;
+            $baseCurrency = $exchangeWallet->currency_symbol;
 
-            $feeCurrencyWallet = $this->walletService->getExchangeWallet($feeCurrency);
+            $feeCurrencyWallet = $this->walletRepository->getExchangeWallet($feeCurrency);
 
             $baseMarket = $this->marketRepository->getMarketBySymbol($baseCurrency, 'USDT');
             $feeMarket = $this->marketRepository->getMarketBySymbol($feeCurrency, 'USDT');
@@ -97,7 +96,7 @@ class ExchangeService
             //Base Currency
             Transaction::query()->create([
                 'user_id' => config('bitexroom.user_id'),
-                'wallet_id' => $bitexroomWallet->id,
+                'wallet_id' => $exchangeWallet->id,
                 'amount' => $response->getAmount(),
                 'coin_price' =>  $baseMarket ? $baseMarket->activeExchangePrice->price : 1,
                 'exchange_id' => $exchange->id,
@@ -347,6 +346,188 @@ class ExchangeService
             $otcOrder->update([
                 'ref_exchange_sell_status' => RefExchangeSellStatusEnum::FAILED,
                 'ref_exchange_description' => $exception->getMessage(),
+            ]);
+
+            return resolve(TriggerRefExchangeSellResponseDTO::class)
+                ->setSuccess(false)
+                ->setMessage('خطا در ارتباط با صرافی مرجع: ' . $exception->getMessage());
+        }
+    }
+
+    /**
+     * Trigger a sell order in the reference exchange for a spot trade
+     * that was completed without reference exchange sell
+     */
+    public function triggerRefExchangeSellForSpotTrade(int $spotTradeId): TriggerRefExchangeSellResponseDTO
+    {
+        $spotTrade = SpotTrade::with(['market.activeExchangePrice.exchange'])->findOrFail($spotTradeId);
+
+        if ($spotTrade->ref_exchange_sell_status !== RefExchangeSellStatusEnum::PENDING) {
+            return resolve(TriggerRefExchangeSellResponseDTO::class)
+                ->setSuccess(false)
+                ->setMessage('این معامله در وضعیت مناسب برای فروش در صرافی مرجع نیست.');
+        }
+
+        $market = $spotTrade->market;
+        $exchange = $market->activeExchangePrice?->exchange;
+
+        if (!$exchange) {
+            return resolve(TriggerRefExchangeSellResponseDTO::class)
+                ->setSuccess(false)
+                ->setMessage('صرافی مرجع برای این بازار یافت نشد.');
+        }
+
+        try {
+            $asset = AssetFactory::make($exchange->slug);
+
+            $response = $asset->placeOrder(
+                resolve(BuyDTORequest::class)
+                    ->setSide('sell')
+                    ->setMarket($market->base_currency . $market->quote_currency)
+                    ->setMarketType('SPOT')
+                    ->setQuantity($spotTrade->quantity)
+                    ->setOrderType('market')
+                    ->setCurrency($market->base_currency)
+            );
+
+            if ($response->isDone()) {
+                $spotTrade->update([
+                    'ref_exchange_sell_status' => RefExchangeSellStatusEnum::COMPLETED,
+                ]);
+
+                $spotTrade->refExchangeTransaction()->create([
+                    'order_id' => $response->getOrderId(),
+                    'exchange_id' => $exchange->id,
+                    'market' => $response->getMarket(),
+                    'currency_symbol' => $response->getCurrencySymbol(),
+                    'amount' => $response->getAmount(),
+                    'fee' => $response->getDiscountFee(),
+                    'filled_amount' => $response->getFilledAmount(),
+                    'side' => 'sell',
+                    'response' => json_encode($response->getResponseBody()),
+                ]);
+
+                $systemUserId = config('bitexroom.user_id');
+                $feeCurrency = $this->getFeeCurrencyForExchange($exchange->slug);
+
+                $feeWallet = Wallet::firstOrCreate(
+                    ['user_id' => $systemUserId, 'currency_symbol' => $feeCurrency],
+                    ['balance' => 0, 'available_balance' => 0]
+                );
+                $quoteCurrencyWallet = Wallet::firstOrCreate(
+                    ['user_id' => $systemUserId, 'currency_symbol' => $market->quote_currency],
+                    ['balance' => 0, 'available_balance' => 0]
+                );
+                $baseCurrencyWallet = Wallet::firstOrCreate(
+                    ['user_id' => $systemUserId, 'currency_symbol' => $market->base_currency],
+                    ['balance' => 0, 'available_balance' => 0]
+                );
+
+                $feeMarket = $this->marketRepository->getMarketBySymbol($feeCurrency, 'USDT');
+                $feePrice = $feeMarket ? $feeMarket->activeExchangePrice->price : 0;
+
+                if ((float)$response->getDiscountFee() > 0) {
+                    Transaction::create([
+                        'user_id' => $systemUserId,
+                        'wallet_id' => $feeWallet->id,
+                        'spot_trade_id' => $spotTrade->id,
+                        'amount' => -$response->getDiscountFee(),
+                        'balance' => $feeWallet->balance - $response->getDiscountFee(),
+                        'coin_price' => $feeCurrency === 'USDT' ? "1" : $feePrice,
+                        'exchange_id' => $exchange->id,
+                        'type' => TransactionTypeEnum::REF_EXCHANGE,
+                        'subtype' => TransactionSubTypeEnum::REF_EXCHANGE_SELL_FEE,
+                        'status' => TransactionStatusEnum::SUCCESS,
+                        'description' => sprintf(
+                            'کارمزد فروش اسپات %s به مقدار %s در صرافی مرجع (%s) - دستی توسط ادمین',
+                            $feeCurrency,
+                            formatNumberTrimZeros((float)$response->getDiscountFee()),
+                            $exchange->name
+                        ),
+                    ]);
+                }
+
+                $quoteAmount = $response->getFilledValue();
+                if ($feeCurrency === $market->quote_currency && (float)$response->getDiscountFee() > 0) {
+                    $quoteAmount = bcsub($quoteAmount, $response->getDiscountFee(), 8);
+                }
+
+                $quoteCoinPrice = "1";
+                if ($market->quote_currency !== 'USDT') {
+                    $quoteMarket = $this->marketRepository->getMarketBySymbol($market->quote_currency, 'USDT');
+                    $quoteCoinPrice = $quoteMarket ? $quoteMarket->activeExchangePrice->price : "0";
+                }
+
+                Transaction::create([
+                    'user_id' => $systemUserId,
+                    'wallet_id' => $quoteCurrencyWallet->id,
+                    'spot_trade_id' => $spotTrade->id,
+                    'amount' => $quoteAmount,
+                    'balance' => $quoteCurrencyWallet->balance + (float)$quoteAmount,
+                    'coin_price' => $quoteCoinPrice,
+                    'exchange_id' => $exchange->id,
+                    'type' => TransactionTypeEnum::REF_EXCHANGE,
+                    'subtype' => TransactionSubTypeEnum::REF_EXCHANGE_SELL,
+                    'status' => TransactionStatusEnum::SUCCESS,
+                    'description' => sprintf(
+                        'دریافت %s به مقدار %s از فروش اسپات دستی در صرافی مرجع (%s)',
+                        $market->quote_currency,
+                        formatNumberTrimZeros((float)$quoteAmount),
+                        $exchange->name
+                    ),
+                ]);
+                $quoteCurrencyWallet->increment('balance', (float)$quoteAmount);
+
+                Transaction::create([
+                    'user_id' => $systemUserId,
+                    'wallet_id' => $baseCurrencyWallet->id,
+                    'spot_trade_id' => $spotTrade->id,
+                    'amount' => -$response->getFilledAmount(),
+                    'balance' => $baseCurrencyWallet->balance - (float)$response->getFilledAmount(),
+                    'coin_price' => $market->activeExchangePrice->price ?? "0",
+                    'exchange_id' => $exchange->id,
+                    'type' => TransactionTypeEnum::REF_EXCHANGE,
+                    'subtype' => TransactionSubTypeEnum::REF_EXCHANGE_SELL,
+                    'status' => TransactionStatusEnum::SUCCESS,
+                    'description' => sprintf(
+                        'فروش اسپات دستی %s به مقدار %s در صرافی مرجع (%s)',
+                        $market->base_currency,
+                        formatNumberTrimZeros((float)$response->getFilledAmount()),
+                        $exchange->name
+                    ),
+                ]);
+                $baseCurrencyWallet->decrement('balance', (float)$response->getFilledAmount());
+
+                return resolve(TriggerRefExchangeSellResponseDTO::class)
+                    ->setSuccess(true)
+                    ->setMessage(sprintf(
+                        'فروش %s %s در صرافی %s با موفقیت انجام شد.',
+                        formatNumberTrimZeros((float)$spotTrade->quantity),
+                        $market->base_currency,
+                        $exchange->name
+                    ));
+            } else {
+                $errorMessage = match ($response->getSpotStatus()) {
+                    SpotStatusEnum::NotEnoughBalance => 'موجودی کافی در صرافی مرجع وجود ندارد.',
+                    SpotStatusEnum::AmountTooSmall => 'مقدار سفارش کمتر از حداقل مجاز است.',
+                    SpotStatusEnum::PriceDifferenceTooLarge => 'اختلاف قیمت بیش از حد مجاز است.',
+                    SpotStatusEnum::ConnectionLosses => 'خطا در اتصال به صرافی مرجع.',
+                    default => $response->getErrorMessage() ?? 'خطا در ثبت سفارش فروش.',
+                };
+
+                $spotTrade->update([
+                    'ref_exchange_sell_status' => RefExchangeSellStatusEnum::FAILED,
+                ]);
+
+                return resolve(TriggerRefExchangeSellResponseDTO::class)
+                    ->setSuccess(false)
+                    ->setMessage($errorMessage);
+            }
+        } catch (Throwable $exception) {
+            report($exception);
+
+            $spotTrade->update([
+                'ref_exchange_sell_status' => RefExchangeSellStatusEnum::FAILED,
             ]);
 
             return resolve(TriggerRefExchangeSellResponseDTO::class)

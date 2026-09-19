@@ -54,10 +54,18 @@
                 <li class="mt-3 d-flex justify-content-between">
                     <span class="h6">محدودیت‌های حساب:</span>
 
-                    @if ($user->activeFinancialBlocks->isEmpty())
+                    @php
+                        $hasFinancialBlocks = $user->activeFinancialBlocks->isNotEmpty();
+                        $emailUnverified = is_null($user->email_verified_at);
+                    @endphp
+
+                    @if (!$hasFinancialBlocks && !$emailUnverified)
                         <span class="badge bg-label-success align-self-baseline">بدون محدودیت</span>
                     @else
                         <div class="text-end">
+                            @if ($emailUnverified)
+                                <span class="badge bg-label-warning ms-1 align-self-baseline">ایمیل تایید نشده</span>
+                            @endif
                             @foreach ($user->activeFinancialBlocks as $block)
                                 <span
                                     class="badge bg-label-danger ms-1 align-self-baseline">{{ $block->action->label() }}</span>
@@ -109,7 +117,7 @@
 
 
             </ul>
-            <div class="d-flex justify-content-center">
+            <div class="d-flex justify-content-center align-items-center gap-2 flex-wrap">
                 @if ($user->status === \App\Enums\UserStatusEnum::INACTIVE)
                     <div class="text-center">
                         <form action="{{ route('admin.user.active-user', $user->id) }}" method="POST">
@@ -120,7 +128,7 @@
                                 فعالسازی کاربر
                             </button>
                         </form>
-                        <p class="mt-3 text-danger">کاربر ایمیل خود را تایید نکرده است</p>
+                        <p class="mt-3 text-danger mb-0">کاربر ایمیل خود را تایید نکرده است</p>
                     </div>
                 @else
                     <form action="{{ route('admin.user.toggle-status', $user->id) }}" method="POST">
@@ -132,6 +140,16 @@
                             {{ $user->status === \App\Enums\UserStatusEnum::SUSPEND ? 'فعالسازی کاربر' : 'تعلیق کاربر' }}
                         </button>
                     </form>
+                    @if ($emailUnverified)
+                        <form action="{{ route('admin.user.verify-email', $user->id) }}" method="POST">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" class="btn btn-warning"
+                                onclick="return confirm('آیا از تایید ایمیل این کاربر مطمئن هستید؟')">
+                                تایید ایمیل
+                            </button>
+                        </form>
+                    @endif
                 @endif
             </div>
         </div>

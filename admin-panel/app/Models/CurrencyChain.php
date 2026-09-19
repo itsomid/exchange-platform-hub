@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\CurrencyBlockChainNameEnum;
 use App\Enums\CurrencyChainEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -33,16 +32,16 @@ class CurrencyChain extends Model
     ];
 
     protected $casts = [
-        'network_fee' => 'float',
-        'exchange_withdrawal_fee' => 'float',
-        'min_deposit_amount' => 'float',
-        'min_withdraw_amount' => 'float',
+        'network_fee' => 'decimal:8',
+        'exchange_withdrawal_fee' => 'decimal:8',
+        'min_deposit_amount' => 'decimal:8',
+        'min_withdraw_amount' => 'decimal:8',
         'deposit_enabled' => 'boolean',
         'withdraw_enabled' => 'boolean',
         'is_memo_required_for_deposit' => 'boolean',
         'is_base_coin' => 'boolean',
         'chain' => CurrencyChainEnum::class,
-        'blockchain_name' => CurrencyBlockChainNameEnum::class,
+        'blockchain_name' => 'string',
     ];
 
     protected $appends = ['total_withdrawal_fee'];

@@ -7,41 +7,89 @@ use App\Models\User;
 use App\Notifications\CoinexPriceDifferenceTooLarge;
 use App\Notifications\CoinexHasError;
 use App\Notifications\CoinexSpotTradingIsTooSmall;
-use App\Notifications\HotWalletNotEnoughBalance;
+use App\Notifications\OTCSellFailed;
+use App\Notifications\WalletChainNotFound;
+use App\Notifications\WithdrawalFailed;
 
 class AdminNotification
 {
-    public static function sendHotWalletNotEnoughBalance(string $currencyName, string $amount, User $user): void
+    public static function sendWithdrawalFailed(string $currencyName, string $amount, User $user, string $description): void
     {
-        Admin::query()->role('super_admin')->get()->unique('id')->each(function ($admin) use ($currencyName, $amount, $user) {
-            $admin->notify(new HotWalletNotEnoughBalance($currencyName, $amount, $user));
+        Admin::query()->where('is_active', true)->role('tech_developers')->get()->unique('id')->each(function ($admin) use ($currencyName, $amount, $user, $description) {
+            $admin->notify(new WithdrawalFailed($currencyName, $amount, $user, $description));
         });
     }
 
     public static function sendSpotTradingIsTooSmall(string $marketName, string $amount): void
     {
-        Admin::query()->role(['super_admin', 'admin'])->get()->unique('id')->each(function ($admin) use ($marketName, $amount) {
+        Admin::query()->where('is_active', true)->role(['super_admin', 'admin'])->get()->unique('id')->each(function ($admin) use ($marketName, $amount) {
             $admin->notify(new CoinexSpotTradingIsTooSmall($marketName, $amount));
         });
     }
 
     public static function sendPriceDifferenceTooLarge(string $marketName, string $amount, string $message): void
     {
-        Admin::query()->role(['super_admin', 'admin'])->get()->unique('id')->each(function ($admin) use ($marketName, $amount,$message) {
+        Admin::query()->where('is_active', true)->role(['super_admin', 'admin'])->get()->unique('id')->each(function ($admin) use ($marketName, $amount,$message) {
             $admin->notify(new CoinexPriceDifferenceTooLarge($marketName, $amount,$message));
         });
     }
-    public static function logError(string $marketName, string $amount, string $errorMessage): void
-    {
-        Admin::query()->role(['super_admin', 'admin'])->get()->unique('id')->each(function ($admin) use ($marketName, $amount, $errorMessage) {
-            $admin->notify(new CoinexHasError($marketName, $amount, $errorMessage));
-        });
+    public static function logError(
+        string $marketName,
+        string $amount,
+        string $errorMessage,
+        ?string $tradeType = null,
+        ?int $userId = null,
+        ?int $orderId = null,
+    ): void {
+        Admin::query()->where('is_active', true)->role(['super_admin', 'admin'])->get()->unique('id')->each(
+            function ($admin) use ($marketName, $amount, $errorMessage, $tradeType, $userId, $orderId) {
+                $admin->notify(new CoinexHasError($marketName, $amount, $errorMessage, $tradeType, $userId, $orderId));
+            }
+        );
     }
 
     public static function sendRefExchangeNotEnoughBalance(string $exchangeName, string $marketName, string $amount, string $orderType = 'sell'): void
     {
-        Admin::query()->role(['tech_developers'])->get()->unique('id')->each(function ($admin) use ($exchangeName, $marketName, $amount, $orderType) {
+        Admin::query()->where('is_active', true)->role(['super_admin','tech_developers'])->get()->unique('id')->each(function ($admin) use ($exchangeName, $marketName, $amount, $orderType) {
             $admin->notify(new \App\Notifications\RefExchangeNotEnoughBalance($exchangeName, $marketName, $amount, $orderType));
         });
+    }
+
+    public static function sendWalletChainNotFound(
+        int $userId,
+        string $currencySymbol,
+        string $chainSymbol,
+        string $availableChains,
+        int $walletChainId,
+    ): void {
+        Admin::query()->where('is_active', true)->role(['super_admin', 'tech_developers'])->get()->unique('id')->each(
+            function ($admin) use ($userId, $currencySymbol, $chainSymbol, $availableChains, $walletChainId) {
+                $admin->notify(new WalletChainNotFound($userId, $currencySymbol, $chainSymbol, $availableChains, $walletChainId));
+            }
+        );
+    }
+
+    public static function sendSellFailed(
+        int    $otcOrderId,
+        int    $userId,
+        string $marketName,
+        string $sellAmount,
+        string $receivedAmount,
+        string $buyerQuoteWalletBalance,
+        string $reason,
+    ): void {
+        Admin::query()->where('is_active', true)->role(['super_admin', 'admin'])->get()->unique('id')->each(
+            function ($admin) use ($otcOrderId, $userId, $marketName, $sellAmount, $receivedAmount, $buyerQuoteWalletBalance, $reason) {
+                $admin->notify(new OTCSellFailed(
+                    $otcOrderId,
+                    $userId,
+                    $marketName,
+                    $sellAmount,
+                    $receivedAmount,
+                    $buyerQuoteWalletBalance,
+                    $reason,
+                ));
+            }
+        );
     }
 }

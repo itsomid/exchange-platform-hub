@@ -1,14 +1,16 @@
 <div>
     <select name="{{ $inputName }}"
             {{$multiple ? 'multiple' : ''}}
-            id="selectUser"
-            class="select2 form-control"
+            id="{{ $selectId }}"
+            class="select2 form-control js-user-select"
             data-selected="{{$selected}}"
             src="{{route('admin.users.select.index')}}"
             {{$required ? 'required' : ''}}
             {{$disabled ? 'disabled' : ''}}
     >
-        <option value="{{ $selected }}" selected>{{ $selectedLabel }}</option>
+        @if ($selected !== '' && $selected !== null)
+            <option value="{{ $selected }}" selected>{{ $selectedLabel }}</option>
+        @endif
     </select>
 </div>
 
@@ -22,5 +24,3 @@
 @section('vendor-style')
     @vite(['resources/assets/vendor/libs/select2/select2.scss'])
 @endsection
-
-

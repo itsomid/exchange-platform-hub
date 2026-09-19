@@ -74,7 +74,16 @@ class SpotService
 
         if ($side === SpotOrderSideEnum::BUY) {
             if ($type === SpotOrderTypeEnum::MARKET) {
-                $tradeAmount = Math::mul($quantity, $market->exchangePrice->price);
+                // Use the actual best ask from the order book, not the external exchange rate.
+                // The external exchange rate can differ significantly from local order book prices
+                // and would allow orders through that cannot be funded at the real execution price.
+
+                $bestAskPrice = $this->getBestOppositePrice($requestDTO->getMarketId(), $side);
+             
+                if ($bestAskPrice === null) {
+                    throw new InvalidArgumentException('...');
+                }
+                $tradeAmount = Math::mul($quantity, $bestAskPrice);
             } else {
                 $tradeAmount = Math::mul($quantity, $price);
             }
@@ -294,7 +303,6 @@ class SpotService
 
         // Safety check: if LockedBalanceDetail doesn't exist (data inconsistency), log error and return
         if (!$lockedDetail) {
-            \Illuminate\Support\Facades\Log::channel('spot-order-matching')->error("LockedBalanceDetail not found for order {$order->id} during cancellation. Possible data inconsistency.");
             throw new InvalidArgumentException('خطا در لغو سفارش: اطلاعات قفل موجودی یافت نشد.');
         }
 

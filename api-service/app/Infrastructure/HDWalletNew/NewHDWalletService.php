@@ -342,8 +342,31 @@ class NewHDWalletService
     public function unwatchDeposit(string $userId, string $network, string $currencySymbol): void
     {
         try {
-            $this->httpClient()
+            $response = $this->httpClient()
                 ->delete($this->baseUrl() . "/api/deposits/watch/{$userId}/{$network}/{$currencySymbol}");
+
+            if ($response->status() === 404) {
+                // Record already expired/removed on the HD wallet side — expected on TTL
+                Log::channel('hd-wallet')->debug('HD Wallet New - Unwatch Deposit: record already gone (404)', [
+                    'user_id' => $userId,
+                    'network' => $network,
+                    'currency_symbol' => $currencySymbol,
+                ]);
+            } elseif ($response->status() === 429) {
+                Log::channel('hd-wallet')->warning('HD Wallet New - Unwatch Deposit rate limited (429):', [
+                    'user_id' => $userId,
+                    'network' => $network,
+                    'currency_symbol' => $currencySymbol,
+                ]);
+            } elseif (! $response->successful()) {
+                Log::channel('hd-wallet')->error('HD Wallet New - Unwatch Deposit Failed:', [
+                    'user_id' => $userId,
+                    'network' => $network,
+                    'currency_symbol' => $currencySymbol,
+                    'response_status' => $response->status(),
+                    'response_body' => $response->body(),
+                ]);
+            }
         } catch (ConnectionException $exception) {
             Log::channel('hd-wallet')->warning('HD Wallet New - Unwatch Deposit Connection Failed:', [
                 'user_id' => $userId,

@@ -68,7 +68,7 @@ class SendWithdrawalToHDWallet implements ShouldQueue
                     ->setAmount($receivedAmount)
                     ->setWithdrawalId($withdrawal->id)
                     ->setWithdrawAddress($withdrawal->address)
-                    ->setBlockchain($withdrawal->currencyChain->blockchain_name->value)
+                    ->setBlockchain($withdrawal->currencyChain->blockchain_name)
                     ->setUserId($withdrawal->user_id)
                     ->setCurrencySymbol($withdrawal->currency_symbol)
             );

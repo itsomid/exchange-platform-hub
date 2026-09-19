@@ -6,6 +6,7 @@ use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Exports\TransactionExport;
 use App\Http\Controllers\Controller;
+use App\Models\Currency;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
@@ -15,8 +16,10 @@ class TransactionController extends Controller
 {
     public function index()
     {
+        $this->normalizeCurrencyFilter();
+
         $transactions = Transaction::with(['user', 'wallet', 'admin', 'wallet.currency', 'deposit', 'withdrawal'])->filterBy(request()->all())->paginate(100);
-        $referralTransactionsCount = Transaction::where('type', TransactionTypeEnum::REFERRAL)->count();
+
 
         $OTCFeeTransactionsCount = Transaction::where('type', TransactionTypeEnum::FEE)
             ->where('subtype', TransactionSubTypeEnum::OTC)->count();
@@ -46,9 +49,11 @@ class TransactionController extends Controller
                     : 0;
             });
 
+        $currencies = Currency::query()->where('is_active', true)->get();
+
         return view('dashboard.transaction.index', [
             'transactions' => $transactions,
-            'referralTransactionsCount' => $referralTransactionsCount,
+            'currencies' => $currencies,
             'OTCFeeTransactionsCount' => $OTCFeeTransactionsCount,
             'withdrawalFeeTransactionsCount' => $withdrawalFeeTransactionsCount,
             'OTCFeeTransactionsSum' => $OTCFeeTransactionsSum,
@@ -58,47 +63,24 @@ class TransactionController extends Controller
 
     public function excelExport(Request $request)
     {
-        // Validate request
-        $request->validate([
-            'from_id' => 'nullable|integer|min:1',
-            'to_id' => 'nullable|integer|min:1|gte:from_id',
-        ]);
+        $this->normalizeCurrencyFilter();
 
         $from = $request->get('from_id');
         $to = $request->get('to_id');
-        
-        // Build filename
-        $filename = 'transactions';
-        if ($from && $to) {
-            $filename .= '_' . $from . '_to_' . $to;
-        } else {
-            $filename .= '_' . date('Y-m-d_His');
-        }
+        $filename = 'transactions_' . ($from && $to ? $from . '_' . $to : now()->format('Y-m-d_H-i-s'));
 
         // Build query with filters
         $transactionQuery = Transaction::query()
             ->with(['user:id,email,username', 'wallet:id,currency_symbol', 'admin:id,first_name,last_name'])
             ->orderBy('id')
-            ->filterBy($request->all());
-
-        // Apply ID range if provided
-        if ($request->filled('from_id') && $request->filled('to_id')) {
-            $transactionQuery->whereBetween('id', [$request->from_id, $request->to_id]);
-        } elseif ($request->filled('from_id')) {
-            $transactionQuery->where('id', '>=', $request->from_id);
-        } elseif ($request->filled('to_id')) {
-            $transactionQuery->where('id', '<=', $request->to_id);
-        }
+            ->filterBy(request()->all());
 
         // Check total records to prevent memory issues
         $totalRecords = $transactionQuery->count();
         
         // Set a reasonable limit (100,000 records max)
         if ($totalRecords > 100000) {
-            return response()->json([
-                'success' => false,
-                'message' => 'تعداد رکوردها بیش از حد مجاز است (' . number_format($totalRecords) . ' رکورد). لطفاً بازه کوچکتری انتخاب کنید یا فیلترهای بیشتری اعمال کنید. (حداکثر: 100,000 رکورد)'
-            ], 422);
+            return redirect()->back()->with('error', 'تعداد رکوردها بیش از حد مجاز است (' . number_format($totalRecords) . ' رکورد). لطفاً فیلترهای بیشتری اعمال کنید. (حداکثر: 100,000 رکورد)');
         }
 
         // Use chunk to process data efficiently and prevent memory overflow
@@ -124,5 +106,23 @@ class TransactionController extends Controller
         });
 
         return Excel::download(new TransactionExport($transactions), $filename . '.xlsx');
+    }
+
+    public function updateNote(Request $request, Transaction $transaction)
+    {
+        $request->validate(['notes' => 'nullable|string|max:5000']);
+        $transaction->update(['notes' => $request->input('notes')]);
+
+        return response()->json(['success' => true, 'message' => 'نوت با موفقیت ذخیره شد.']);
+    }
+
+    private function normalizeCurrencyFilter(): void
+    {
+        if (request()->filled('currency') && ctype_digit((string) request('currency'))) {
+            $selectedCurrency = Currency::query()->find((int) request('currency'));
+            if ($selectedCurrency) {
+                request()->merge(['currency' => $selectedCurrency->symbol]);
+            }
+        }
     }
 }

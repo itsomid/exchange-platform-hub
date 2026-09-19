@@ -13,17 +13,18 @@ use App\Models\ReferralCodeUsage;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
-use App\Services\Wallet\WalletService;
+use App\Repositories\Interfaces\WalletRepositoryInterface;
 
 class ReferralCommissionService
 {
 
-    protected $walletService;
-    protected int $bitexroomUserId;
-    public function __construct(WalletService $walletService)
+    protected WalletRepositoryInterface $walletRepository;
+    protected int $exchangeUserId;
+
+    public function __construct(WalletRepositoryInterface $walletRepository)
     {
-        $this->walletService = $walletService;
-        $this->bitexroomUserId = config('bitexroom.user_id');
+        $this->walletRepository = $walletRepository;
+        $this->exchangeUserId = config('bitexroom.user_id');
     }
     public function processReferralCommission(OTCOrder $otcOrder, float $exchangeFee)
     {
@@ -113,12 +114,12 @@ class ReferralCommissionService
             'used_at' => now(),
         ]);
 
-        $exchangeWallet = $this->walletService->getExchangeWallet('USDT');
+        $exchangeWallet = $this->walletRepository->getExchangeWallet('USDT');
         if ($exchangeWallet) {
             $exchangeWallet->decrement('balance', $amount);
 
             Transaction::create([
-                'user_id' =>  $this->bitexroomUserId, // Admin or exchange user ID
+                'user_id' =>  $this->exchangeUserId, // Admin or exchange user ID
                 'wallet_id' => $exchangeWallet->id,
                 'otc_order_id' => $otcOrder->id,
                 'balance' => $exchangeWallet->balance,

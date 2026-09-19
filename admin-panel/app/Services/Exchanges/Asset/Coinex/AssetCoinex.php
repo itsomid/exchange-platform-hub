@@ -133,13 +133,13 @@ class AssetCoinex implements AssetInterface
             'fee_ccy' => 'CET',
         ];
         if ($requestDTO->getChain()) {
-            $requestBody['chain'] = $requestDTO->getChain();
+            $requestBody['chain'] = $this->mapChainToCoinexNetwork($requestDTO->getChain());
         }
         try {
             $response = CoinexRequest::send(MethodEnum::POST, '/v2/assets/withdraw', $requestBody);
         } catch (ConnectionException | Throwable $exception) {
             report($exception);
-            throw new CantResolveCoinexException("Can't Resolve https://api.coinex.com");
+            throw new CantResolveCoinexException($exception->getMessage(), (int) $exception->getCode(), $exception);
         }
 
         if ($response->json('code') !== 0) {
@@ -176,5 +176,19 @@ class AssetCoinex implements AssetInterface
             ->setStatus($data['status'])
             ->setFee($data['tx_fee'] > 0 ? $data['tx_fee'] : $data['fee_amount'])
             ->setCurrencyFee($data['fee_ccy']);
+    }
+
+    /**
+     * CoinEx chain names that differ from CurrencyChainEnum.
+     * AVAX C-Chain is AVA_C; X-Chain is AVA and must not be used for EVM HD wallets.
+     */
+    private function mapChainToCoinexNetwork(string $chain): string
+    {
+        $chainMapping = [
+            'AVALANCHE' => 'AVA_C',
+            'POLYGON' => 'MATIC',
+        ];
+
+        return $chainMapping[$chain] ?? $chain;
     }
 }

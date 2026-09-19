@@ -1,9 +1,6 @@
-import './vue.conf'
+import "./vue.conf";
+import "./echo";
 
-import * as bootstrap from 'bootstrap'
+import * as bootstrap from "bootstrap";
 
-window.bootstrap = bootstrap
-
-
-
-
+window.bootstrap = bootstrap;
