@@ -223,6 +223,18 @@
                                 : '' }}"></x-user-selection-component>
                     </div>
                     
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
+                        <label class="form-label" for="from_id">از آیدی:</label>
+                        <input type="number" name="from_id" class="form-control font-number" id="from_id"
+                            placeholder="از آیدی" min="1" value="{{ request()->input('from_id') }}">
+                    </div>
+
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
+                        <label class="form-label" for="to_id">تا آیدی:</label>
+                        <input type="number" name="to_id" class="form-control font-number" id="to_id"
+                            placeholder="تا آیدی" min="1" value="{{ request()->input('to_id') }}">
+                    </div>
+                    
                     <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
                         <label class="form-label" for="address">آدرس واریز:</label>
                         <input type="text" name="address" id="address" class="form-control font-monospace" 
@@ -239,7 +251,7 @@
                 </div>
 
                 <!-- Filter Summary (Show active filters) -->
-                @if (request()->hasAny(['status', 'currency', 'currencyChain', 'user', 'address', 'transactionHash']))
+                @if (request()->hasAny(['status', 'currency', 'currencyChain', 'user', 'from_id', 'to_id', 'address', 'transactionHash']))
                     <div class="row">
                         <div class="col-12">
                             <div class="alert alert-info d-flex align-items-center">
@@ -281,6 +293,12 @@
                                         @else
                                             <span class="badge bg-primary">کاربر: #{{ request()->input('user') }}</span>
                                         @endif
+                                    @endif
+                                    @if (request()->filled('from_id'))
+                                        <span class="badge bg-primary">از آیدی: {{ request()->input('from_id') }}</span>
+                                    @endif
+                                    @if (request()->filled('to_id'))
+                                        <span class="badge bg-primary">تا آیدی: {{ request()->input('to_id') }}</span>
                                     @endif
                                     @if (request()->filled('address'))
                                         <span class="badge bg-success">آدرس: {{ Str::limit(request()->input('address'), 20) }}</span>
