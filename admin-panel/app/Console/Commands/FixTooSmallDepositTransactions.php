@@ -131,14 +131,14 @@ class FixTooSmallDepositTransactions extends Command
 
             $updated = 0;
             if ($approval->isNotEmpty()) {
-                $updated = $this->approvalTransactionQuery()
+                $updated = Transaction::query()
                     ->whereIn('id', $approval->pluck('id'))
                     ->update(['subtype' => TransactionSubTypeEnum::USER_INITIATED->value]);
             }
 
             $deleted = 0;
             if ($premature->isNotEmpty()) {
-                $deleted = $this->prematureTransactionQuery()
+                $deleted = Transaction::query()
                     ->whereIn('id', $premature->pluck('id'))
                     ->delete();
             }
