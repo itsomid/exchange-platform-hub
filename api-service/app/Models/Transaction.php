@@ -9,6 +9,7 @@ use App\Models\Bot\BotWalletTransfer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property int                   $id
@@ -18,6 +19,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  */
 class Transaction extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'user_id',
         'admin_id',
