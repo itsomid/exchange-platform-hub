@@ -399,6 +399,7 @@ class SettlementService
             'bot_buy_execution_id' => $execution->id,
             'balance'              => $wallet->balance,
             'amount'               => $fee,
+            'coin_price'           => '1',
             'type'                 => TransactionTypeEnum::REFERRAL,
             'subtype'              => TransactionSubTypeEnum::BOT_REFERRAL_COMMISSION,
             'status'               => TransactionStatusEnum::SUCCESS,
@@ -432,6 +433,7 @@ class SettlementService
             'bot_order_id'         => $execution->bot_order_id,
             'bot_buy_execution_id' => $execution->id,
             'balance'              => $wallet?->balance,
+            'coin_price'           => '1',
             'type'                 => TransactionTypeEnum::BOT,
             'status'               => TransactionStatusEnum::SUCCESS,
         ];
@@ -491,6 +493,9 @@ class SettlementService
             'bot_buy_execution_id' => $execution->id,
             'amount'               => bcmul($feeAmount, '-1', self::SCALE),
             'balance'              => $exchangeWallet->balance,
+            'coin_price'           => $feeCurrency === 'USDT'
+                ? '1'
+                : (string) ($execution->avg_buy_price ?? '0'),
             'type'                 => TransactionTypeEnum::BOT,
             'subtype'              => TransactionSubTypeEnum::BOT_EXCHANGE_FEE,
             'status'               => TransactionStatusEnum::SUCCESS,
@@ -529,6 +534,7 @@ class SettlementService
             'bot_buy_execution_id' => $execution->id,
             'amount'               => $performanceFee,
             'balance'              => $balanceBefore,
+            'coin_price'           => '1',
             'type'                 => TransactionTypeEnum::BOT,
             'subtype'              => TransactionSubTypeEnum::BOT_PERFORMANCE_FEE,
             'status'               => TransactionStatusEnum::SUCCESS,

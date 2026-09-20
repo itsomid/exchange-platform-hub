@@ -321,6 +321,7 @@ class ReconcilePhantomOrdersCommand extends Command
                 'bot_order_id' => $order->id,
                 'amount'       => $netPnl,
                 'balance'      => $balanceBefore,
+                'coin_price'   => '1',
                 'type'         => TransactionTypeEnum::BOT,
                 'subtype'      => TransactionSubTypeEnum::MANUAL_ADMIN,
                 'status'       => TransactionStatusEnum::SUCCESS,
