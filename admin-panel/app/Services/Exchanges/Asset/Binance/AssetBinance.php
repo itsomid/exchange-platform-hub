@@ -158,13 +158,35 @@ class AssetBinance implements AssetInterface
         $json = $response->json();
 
         if (!$response->ok() || !isset($json['id'])) {
+            $errorCode = $json['code'] ?? null;
             $errorMsg = $json['msg'] ?? ($json['message'] ?? $response->body());
+            $hint = $this->resolveBinanceErrorHint($errorCode, $errorMsg);
 
             Log::channel('ref-exchange')->error('Binance withdraw failed', [
-                'response' => $json,
+                'http_status' => $response->status(),
+                'error_code' => $errorCode,
+                'error_msg' => $errorMsg,
+                'hint' => $hint,
+                'endpoint' => '/sapi/v1/capital/withdraw/apply',
+                'coin' => $params['coin'] ?? null,
+                'network' => $params['network'] ?? null,
+                'amount' => $params['amount'] ?? null,
+                'address' => $this->maskAddress($params['address'] ?? ''),
+                'api_key_configured' => filled(config('exchanges.binance.api_key')),
+                'api_key_prefix' => substr((string) config('exchanges.binance.api_key'), 0, 8),
+                'base_url' => config('exchanges.binance.base_url'),
+                'response_body' => $response->body(),
+                'response_json' => $json,
             ]);
 
-            throw new CoinexHasProblemException($errorMsg);
+            $exceptionMessage = trim(sprintf(
+                'Binance withdraw failed [%s]: %s%s',
+                $errorCode !== null ? "code={$errorCode}" : "http={$response->status()}",
+                $errorMsg,
+                $hint ? " | Hint: {$hint}" : ''
+            ));
+
+            throw new CoinexHasProblemException($exceptionMessage);
         }
 
         $withdrawId = $json['id'];
@@ -259,6 +281,47 @@ class AssetBinance implements AssetInterface
             6 => 'success',
             default => 'unknown',
         };
+    }
+
+    private function resolveBinanceErrorHint(mixed $errorCode, string $errorMsg): ?string
+    {
+        $code = is_numeric($errorCode) ? (int) $errorCode : null;
+        $normalizedMsg = strtolower($errorMsg);
+
+        if ($code === -1002 || str_contains($normalizedMsg, 'not authorized')) {
+            return 'API key lacks Enable Withdrawals, or request IP is not in the API key whitelist. Check Binance API Management.';
+        }
+
+        if ($code === -2015) {
+            return 'Invalid API-key, IP, or permissions for action.';
+        }
+
+        if ($code === -1021) {
+            return 'Timestamp outside recvWindow — check server clock sync.';
+        }
+
+        if ($code === -1022) {
+            return 'Invalid signature — check EXCHANGES_BINANCE_SECRET_KEY.';
+        }
+
+        if ($code === -4026 || str_contains($normalizedMsg, 'insufficient')) {
+            return 'Insufficient balance for this withdrawal.';
+        }
+
+        return null;
+    }
+
+    private function maskAddress(string $address): string
+    {
+        if ($address === '') {
+            return '';
+        }
+
+        if (strlen($address) <= 10) {
+            return str_repeat('*', strlen($address));
+        }
+
+        return substr($address, 0, 6) . '...' . substr($address, -4);
     }
 
     private function mapChainToBinanceNetwork(string $chain): string
