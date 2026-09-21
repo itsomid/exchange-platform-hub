@@ -64,6 +64,8 @@ class PermissionList
             ['viewTelescope', 'لاراول تلسکوپ'],
             ['viewPulse', 'لاراول پالس'],
 
+            ['accounting.login', 'ورود به پنل حسابداری'],
+
         ];
 
         return array_map(fn($permission) => [$permission[0], $permission[1]], $permissions);

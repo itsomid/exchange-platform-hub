@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AccountingSsoController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Controllers\Admin\AdminRoleController;
@@ -101,6 +102,10 @@ Route::prefix('financial-dashboard/ajax')->name('financial-dashboard.ajax.')->gr
 
 // All other admin routes require 2FA
 Route::middleware(['admin.2fa'])->group(function () {
+    Route::get('/accounting/sso', [AccountingSsoController::class, 'login'])
+        ->name('accounting.sso')
+        ->can('accounting.login');
+
     // *********ADMIN*********//
     Route::prefix('admins')->group(function () {
         Route::get('/', [AdminController::class, 'index'])->name('admin.index')->can('admin.index');

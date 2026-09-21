@@ -27,6 +27,14 @@
                 <div>داشبورد مالی</div>
             </a>
         </li>
+        @can('accounting.login')
+            <li class="menu-item">
+                <a href="{{ route('admin.accounting.sso') }}" class="menu-link">
+                    <i class="menu-icon fa-regular fa-calculator fa-sm"></i>
+                    <div>پنل حسابداری</div>
+                </a>
+            </li>
+        @endcan
         <li class="menu-header small text-uppercase">
             <span class="menu-header-text">افراد و دپارتمان ها</span>
         </li>
@@ -217,6 +225,12 @@
                             </a>
                         </li>
                     @endcan
+                    <li class="menu-item @if (request()->is('admin/ref-exchanges/wallets/binance*')) active @endif">
+                        <a href="{{ route('admin.exchange.wallet', ['exchange' => 'binance']) }}" class="menu-link">
+                            <i class="menu-icon fa-light fa-user fa-sm"></i>
+                            <div>صرافی مرجع (Binance)</div>
+                        </a>
+                    </li>
                     <li class="menu-item @if (request()->is('admin/ref-exchanges/wallets/coinex*')) active @endif">
                         <a href="{{ route('admin.exchange.wallet', ['exchange' => 'coinex']) }}" class="menu-link">
                             <i class="menu-icon fa-light fa-user fa-sm"></i>
@@ -229,12 +243,7 @@
                             <div>صرافی مرجع (Mexc)</div>
                         </a>
                     </li>
-                    <li class="menu-item @if (request()->is('admin/ref-exchanges/wallets/binance*')) active @endif">
-                        <a href="{{ route('admin.exchange.wallet', ['exchange' => 'binance']) }}" class="menu-link">
-                            <i class="menu-icon fa-light fa-user fa-sm"></i>
-                            <div>صرافی مرجع (Binance)</div>
-                        </a>
-                    </li>
+
 
                 </ul>
             </li>
