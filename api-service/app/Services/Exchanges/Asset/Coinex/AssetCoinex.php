@@ -3,16 +3,12 @@
 namespace App\Services\Exchanges\Asset\Coinex;
 
 use App\Enums\SpotStatusEnum;
-use App\Exceptions\Exchange\CantResolveCoinexException;
-use App\Exceptions\Exchange\CoinexHasProblemException;
 use App\Services\Exchanges\AdminNotification;
 use App\Services\Exchanges\Asset\Coinex\Authentication\MethodEnum;
 use App\Services\Exchanges\Asset\Contract\AssetInterface;
 use App\Services\Exchanges\Asset\DTO\BalanceResponseDTO;
 use App\Services\Exchanges\Asset\DTO\BuyDTORequest;
 use App\Services\Exchanges\Asset\DTO\BuyDTOResponse;
-use App\Services\Exchanges\Asset\DTO\WithdrawRequestDTO;
-use App\Services\Exchanges\Asset\DTO\WithdrawResponseDTO;
 use Carbon\Carbon;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Log;
@@ -131,67 +127,5 @@ class AssetCoinex implements AssetInterface
             ->setLastFillPrice($data['last_fill_price'])
             ->setCreatedAt(Carbon::createFromTimestampMs($data['created_at']))
             ->setResponseBody($response->body());
-    }
-
-    public function withdraw(WithdrawRequestDTO $requestDTO): WithdrawResponseDTO
-    {
-        $requestBody = [
-            'ccy' => $requestDTO->getCurrency(),
-            'to_address' => $requestDTO->getAddress(),
-            'withdraw_method' => $requestDTO->getWithdrawMethod()->value,
-            'amount' => $requestDTO->getAmount(),
-            'fee_ccy' => 'CET',
-        ];
-        if ($requestDTO->getChain()) {
-            $requestBody['chain'] = $this->mapChainToCoinexNetwork($requestDTO->getChain());
-        }
-        try {
-            $response = CoinexRequest::send(MethodEnum::POST, '/v2/assets/withdraw', $requestBody);
-        } catch (ConnectionException | Throwable $exception) {
-            report($exception);
-            throw new CantResolveCoinexException("Can't Resolve https://api.coinex.com");
-        }
-
-        //Balance Not Enough
-        if ($response->json('code') === 3109) {
-            Log::channel('ref-exchange')->warning('Coinex Balance Not Enough In USDT');
-            AdminNotification::sendRefExchangeNotEnoughBalance('coinex', 'USDT', $requestDTO->getAmount(), 'withdraw');
-        }
-        if (! $response->successful() || $response->json('code') !== 0) {
-            Log::channel('ref-exchange')->warning($response->body());
-            throw new CoinexHasProblemException;
-        }
-        Log::channel('ref-exchange')->info($response->json('data'));
-        $data = $response->json('data');
-
-        return resolve(WithdrawResponseDTO::class)
-            ->setWithdrawId($data['withdraw_id'])
-            ->setExchange('coinex')
-            ->setCreatedAt($data['created_at'])
-            ->setCurrency($data['ccy'])
-            ->setChain($data['chain'])
-            ->setAmount($data['amount'])
-            ->setActualAmount($data['actual_amount'])
-            ->setWithdrawMethod($data['withdraw_method'])
-            ->setAddress($data['to_address'])
-            ->setConfirmationCount($data['confirmations'])
-            ->setExploreAddress($data['explorer_address_url'])
-            ->setStatus($data['status'])
-            ->setFee($data['tx_fee'] > 0 ? $data['tx_fee'] : $data['fee_amount'])
-            ->setCurrencyFee($data['fee_ccy']);
-    }
-
-    /**
-     * CoinEx chain names that differ from CurrencyChainEnum.
-     * AVAX C-Chain is AVA_C; X-Chain is AVA and must not be used for EVM HD wallets.
-     */
-    private function mapChainToCoinexNetwork(string $chain): string
-    {
-        $chainMapping = [
-            'AVALANCHE' => 'AVA_C',
-            'POLYGON' => 'MATIC',
-        ];
-
-        return $chainMapping[$chain] ?? $chain;
     }
 }

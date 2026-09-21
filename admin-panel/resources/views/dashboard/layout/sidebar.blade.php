@@ -177,7 +177,7 @@
 
         @canany(['currency', 'market', 'ref-exchanges', 'ref-exchanges-coinex-spot-orders'])
             <li class="menu-header small text-uppercase">
-                <span class="menu-header-text">مدیریت Exchange</span>
+                <span class="menu-header-text">مدیریت صرافی</span>
             </li>
             <li class="menu-item @if (request()->is('admin/exchange/currencies*')) active @endif">
                 <a href="{{ route('admin.currency.index') }}" class="menu-link">
@@ -191,20 +191,54 @@
                     <div>Market</div>
                 </a>
             </li>
-            <li class="menu-item @if (request()->is('admin/ref-exchanges') && !request()->is('admin/ref-exchanges/*')) active @endif">
-                <a href="{{ route('admin.exchange.index') }}" class="menu-link">
-                    <i class="menu-icon fa-regular fa-display-chart-up-circle-dollar"></i>
-                    <div>مدیریت صرافی های مرجع</div>
+            <li class="menu-item @if (request()->is('admin/ref-exchange*')) active open @endif">
+                <a href="javascript:void(0);" class="menu-link menu-toggle">
+                    <div class="d-inline-flex position-relative">
+
+                        <i class="menu-icon fa-regular fa-display-chart-up-circle-dollar"></i>
+                    </div>
+
+                    <div>صرافی های مرجع</div>
+
                 </a>
+                <ul class="menu-sub">
+                    <li class="menu-item @if (request()->is('admin/ref-exchanges') && !request()->is('admin/ref-exchanges/*')) active @endif">
+                        <a href="{{ route('admin.exchange.index') }}" class="menu-link">
+                            <i class="menu-icon fa-regular fa-display-chart-up-circle-dollar"></i>
+                            <div>مدیریت صرافی های مرجع</div>
+                        </a>
+                    </li>
+
+                    @can('ref-exchanges-coinex-spot-orders')
+                        <li class="menu-item @if (request()->is('admin/ref-exchanges/coinex-spot-orders*')) active @endif">
+                            <a href="{{ route('admin.ref-exchange.coinex-spot-orders.index') }}" class="menu-link">
+                                <i class="menu-icon fa-regular fa-book-open-cover"></i>
+                                <div>سفارش‌های اسپات CoinEx</div>
+                            </a>
+                        </li>
+                    @endcan
+                    <li class="menu-item @if (request()->is('admin/ref-exchanges/wallets/coinex*')) active @endif">
+                        <a href="{{ route('admin.exchange.wallet', ['exchange' => 'coinex']) }}" class="menu-link">
+                            <i class="menu-icon fa-light fa-user fa-sm"></i>
+                            <div>صرافی مرجع (Coinex)</div>
+                        </a>
+                    </li>
+                    <li class="menu-item @if (request()->is('admin/ref-exchanges/wallets/mexc*')) active @endif">
+                        <a href="{{ route('admin.exchange.wallet', ['exchange' => 'mexc']) }}" class="menu-link">
+                            <i class="menu-icon fa-light fa-user fa-sm"></i>
+                            <div>صرافی مرجع (Mexc)</div>
+                        </a>
+                    </li>
+                    <li class="menu-item @if (request()->is('admin/ref-exchanges/wallets/binance*')) active @endif">
+                        <a href="{{ route('admin.exchange.wallet', ['exchange' => 'binance']) }}" class="menu-link">
+                            <i class="menu-icon fa-light fa-user fa-sm"></i>
+                            <div>صرافی مرجع (Binance)</div>
+                        </a>
+                    </li>
+
+                </ul>
             </li>
-            @can('ref-exchanges-coinex-spot-orders')
-                <li class="menu-item @if (request()->is('admin/ref-exchanges/coinex-spot-orders*')) active @endif">
-                    <a href="{{ route('admin.ref-exchange.coinex-spot-orders.index') }}" class="menu-link">
-                        <i class="menu-icon fa-regular fa-book-open-cover"></i>
-                        <div>سفارش‌های اسپات CoinEx</div>
-                    </a>
-                </li>
-            @endcan
+
         @endcanany
         @can(['support'])
             <li class="menu-header small text-uppercase">
@@ -263,13 +297,13 @@
             <li class="menu-item @if (request()->is('admin/exchange/wallets*')) active open @endif">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">
                     <i class="menu-icon fa-regular fa-wallet"></i>
-                    <div>کیف پول های صرافی</div>
+                    <div>کیف پول‌های صرافی</div>
                 </a>
                 <ul class="menu-sub">
                     <li class="menu-item @if (request()->is('admin/exchange/wallets/hotWallets*')) active @endif">
                         <a href="{{ route('admin.exchange.hot-wallet') }}" class="menu-link">
                             <i class="menu-icon fa-light fa-key fa-sm"></i>
-                            <div>HD Wallet</div>
+                            <div>Hot Wallet</div>
                         </a>
                     </li>
                     <li class="menu-item @if (request()->is('admin/exchange/wallets/localWallets')) active @endif">
@@ -278,18 +312,7 @@
                             <div>داخلی</div>
                         </a>
                     </li>
-                    <li class="menu-item @if (request()->is('admin/ref-exchanges/wallets/coinex*')) active @endif">
-                        <a href="{{ route('admin.exchange.wallet', ['exchange' => 'coinex']) }}" class="menu-link">
-                            <i class="menu-icon fa-light fa-user fa-sm"></i>
-                            <div>صرافی مرجع (Coinex)</div>
-                        </a>
-                    </li>
-                    <li class="menu-item @if (request()->is('admin/ref-exchanges/wallets/mexc*')) active @endif">
-                        <a href="{{ route('admin.exchange.wallet', ['exchange' => 'mexc']) }}" class="menu-link">
-                            <i class="menu-icon fa-light fa-user fa-sm"></i>
-                            <div>صرافی مرجع (Mexc)</div>
-                        </a>
-                    </li>
+
                 </ul>
 
             </li>

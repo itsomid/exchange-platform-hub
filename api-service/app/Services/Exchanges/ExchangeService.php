@@ -7,7 +7,6 @@ use App\Enums\SpotOrderSourceEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
-use App\Models\ExchangeAssetsWithdrawal;
 use App\Models\SpotTrade;
 use App\Repositories\DTO\OTCRefExchangeWithdrawal\CreateOTCRefExchangeWithdrawalRequestDTO;
 use App\Repositories\DTO\Transaction\CreateTransactionRequestDTO;
@@ -15,15 +14,9 @@ use App\Repositories\Interfaces\MarketRepositoryInterface;
 use App\Repositories\Interfaces\OTCOrderRepositoryInterface;
 use App\Repositories\Interfaces\OTCRefExchangeWithdrawalInterface;
 use App\Repositories\Interfaces\TransactionRepositoryInterface;
-use App\Repositories\Interfaces\WalletChainRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Services\Exchanges\Asset\AssetFactory;
 use App\Services\Exchanges\Asset\DTO\BuyDTORequest;
-use App\Services\Exchanges\Asset\DTO\WithdrawRequestDTO;
-use App\Services\Exchanges\Asset\Enum\WithdrawMethodEnum;
-use App\Services\Exchanges\Asset\Enum\WithdrawStatusEnum;
-use App\Services\Exchanges\DTO\ChargeUSDTRequestDTO;
-use App\Services\Exchanges\DTO\ChargeUSDTResponse;
 use App\Services\Exchanges\DTO\ExchangeBuyRequestDTO;
 use App\Services\Exchanges\DTO\ExchangeBuyResponseDTO;
 use App\Services\Exchanges\DTO\ExchangeSellRequestDTO;
@@ -37,7 +30,6 @@ class ExchangeService
         private readonly TransactionRepositoryInterface    $transactionRepository,
         private readonly OTCOrderRepositoryInterface       $otcOrderRepository,
         private readonly WalletRepositoryInterface         $walletRepository,
-        private readonly WalletChainRepositoryInterface    $chainRepository,
         private readonly OTCRefExchangeWithdrawalInterface $refExchangeWithdrawalRepository,
     ) {}
 
@@ -453,97 +445,6 @@ class ExchangeService
             ->setErrorCode($response->getErrorCode())
             ->setSpotStatus($response->getSpotStatus());
     }
-
-
-    public function chargeUSDT(ChargeUSDTRequestDTO $requestDTO): ChargeUSDTResponse
-    {
-        $cetMarket = $this->marketRepository->getMarketBySymbol('CET', 'USDT');
-        try {
-            $asset = AssetFactory::make('coinex');
-
-            $exchangeWallet = $this->walletRepository->getExchangeWallet('USDT');
-            $chain = $this->chainRepository->createOrGetChain($exchangeWallet->id, $requestDTO->getCurrencyChain());
-            $response = $asset->withdraw(
-                resolve(WithdrawRequestDTO::class)
-                    ->setAddress($chain->address)
-                    ->setChain($requestDTO->getCurrencyChain())
-                    ->setAmount($requestDTO->getQuantity())
-                    ->setWithdrawMethod(WithdrawMethodEnum::ON_CHAIN)
-                    ->setCurrency($exchangeWallet->currency_symbol)
-            );
-
-            ExchangeAssetsWithdrawal::query()
-                ->create([
-                    'withdrawal_id' => $response->getWithdrawId(),
-                    'exchange' => $cetMarket->exchangePrice->exchange->slug,
-                    'currency_symbol' => $exchangeWallet->currency_symbol,
-                    'currency_chain' => $requestDTO->getCurrencyChain(),
-                    'fee_currency' => $response->getCurrencyFee(),
-                    'fee' => $response->getFee(),
-                    'amount' => $response->getAmount(),
-                    'actual_amount' => $response->getActualAmount(),
-                    'hd_wallet_address' => $response->getAddress(),
-                    'withdrawal_date' => $response->getCreatedAt(),
-                    'explore_address_url' => $response->getExploreAddress(),
-                ]);
-
-            $cetWallet = $this->walletRepository
-                ->getOrCreateWallet(
-                    config('bitexroom.user_id'),
-                    'CET'
-                );
-            $exchangeUSDTWallet = $this->walletRepository
-                ->getOrCreateWallet(
-                    config('bitexroom.user_id'),
-                    'USDT'
-                );
-
-
-            $cetPrice = $cetMarket ? $cetMarket->exchangePrice->price : 0;
-            //CET
-            $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
-                ->setUserId(config('bitexroom.user_id'))
-                ->setWalletId($cetWallet->id)
-                ->setAmount(-$response->getFee())
-                ->setCoinPrice($cetPrice)
-                ->setExchangeId($cetMarket->exchangePrice->exchange->id)
-                ->setType(TransactionTypeEnum::REF_EXCHANGE)
-                ->setSubtype(TransactionSubTypeEnum::REF_EXCHANGE_BUY_FEE)
-                ->setStatus(TransactionStatusEnum::SUCCESS)
-                ->setDescription(
-                    sprintf(
-                        'استفاده CET به مقدار %s',
-                        formatNumberTrimZeros((float)$response->getFee())
-                    )
-                ));
-            //USDT
-            $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
-                ->setUserId(config('bitexroom.user_id'))
-                ->setWalletId($exchangeUSDTWallet->id)
-                ->setAmount(-$response->getActualAmount())
-                ->setCoinPrice("1")
-                ->setExchangeId($cetMarket->exchangePrice->exchange->id)
-                ->setType(TransactionTypeEnum::REF_EXCHANGE)
-                ->setSubtype(TransactionSubTypeEnum::REF_EXCHANGE_BUY)
-                ->setStatus(TransactionStatusEnum::SUCCESS)
-                ->setDescription(
-                    sprintf(
-                        'استفاده USDT به مقدار %s',
-                        formatNumberTrimZeros((float)$response->getActualAmount())
-                    )
-                ));
-            $exchangeUSDTWallet->increment('balance', (float)$response->getActualAmount());
-        } catch (Throwable $exception) {
-            report($exception);
-
-            return resolve(ChargeUSDTResponse::class)
-                ->setWithdrawStatus(WithdrawStatusEnum::FAILED);
-        }
-
-        return resolve(ChargeUSDTResponse::class)
-            ->setWithdrawStatus($response->getStatus());
-    }
-
 
     /**
      * Get fee currency for different exchanges

@@ -3,21 +3,14 @@
 namespace App\Services\Exchanges\Asset\Mexc;
 
 use App\Enums\SpotStatusEnum;
-use App\Exceptions\Exchange\CantResolveCoinexException;
-use App\Exceptions\Exchange\CoinexHasProblemException;
 use App\Repositories\CurrencyRepository;
-use App\Services\Exchanges\AdminNotification;
-use App\Services\Exchanges\Asset\Coinex\Authentication\MethodEnum;
 use App\Services\Exchanges\Asset\Contract\AssetInterface;
 use App\Services\Exchanges\Asset\DTO\BalanceResponseDTO;
 use App\Services\Exchanges\Asset\DTO\BuyDTORequest;
 use App\Services\Exchanges\Asset\DTO\BuyDTOResponse;
-use App\Services\Exchanges\Asset\DTO\WithdrawRequestDTO;
-use App\Services\Exchanges\Asset\DTO\WithdrawResponseDTO;
 use Carbon\Carbon;
 
 use Illuminate\Support\Facades\Log;
-use Throwable;
 use Illuminate\Support\Facades\Http;
 
 class AssetMexc implements AssetInterface
@@ -219,55 +212,6 @@ class AssetMexc implements AssetInterface
         
         return $currency;
     }
-
-    public function withdraw(WithdrawRequestDTO $requestDTO): WithdrawResponseDTO
-    {
-        
-        $params = [
-            'coin' => $requestDTO->getCurrency(),
-            'address' => $requestDTO->getAddress(),
-            'amount' => (string)$requestDTO->getAmount(),
-        ];
-
-        if ($requestDTO->getChain()) {
-            $params['network'] = $requestDTO->getChain();
-        }
-        // No getMemo() in WithdrawRequestDTO, so skip memo
-        try {
-            // Use JSON content type for withdrawal API
-            $response = MexcRequest::send('POST', '/api/v3/capital/withdraw', $params, true);
-        } catch (\Throwable $exception) {
-            report($exception);
-            throw new CantResolveCoinexException("Can't Resolve https://api.mexc.com");
-        }
-        $json = $response->json();
-        if (!$response->ok() || !isset($json['id'])) {
-            $errorCode = $json['code'] ?? 0;
-            $errorMsg = $json['msg'] ?? ($json['message'] ?? $response->body());
-            $errorEnum = null;
-            if (is_int($errorCode) && \App\Services\Exchanges\Asset\Mexc\MexcError::tryFrom($errorCode)) {
-                $errorEnum = \App\Services\Exchanges\Asset\Mexc\MexcError::tryFrom($errorCode);
-                $errorMsg = \App\Services\Exchanges\Asset\Mexc\MexcError::mapErrorToResponse($errorEnum);
-            }
-            throw new CoinexHasProblemException($errorMsg);
-        }
-        return resolve(WithdrawResponseDTO::class)
-            ->setWithdrawId($json['id'])
-            ->setExchange('mexc')
-            ->setCreatedAt(time()) // Use timestamp as int
-            ->setCurrency($requestDTO->getCurrency()) // Keep original currency (USDT)
-            ->setChain($requestDTO->getChain() ?? '')
-            ->setAmount($requestDTO->getAmount())
-            ->setActualAmount($requestDTO->getAmount())
-            ->setWithdrawMethod('')
-            ->setAddress($requestDTO->getAddress())
-            ->setConfirmationCount(0)
-            ->setExploreAddress('')
-            ->setStatus('submitted')
-            ->setFee('0')
-            ->setCurrencyFee('');
-    }
-
 
      /**
      * Check if MX Deduct is enabled for spot commission fee

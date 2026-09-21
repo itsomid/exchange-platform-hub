@@ -13,4 +13,11 @@ return [
         'secret_key' => env('EXCHANGES_MEXC_SECRET_KEY', ''),
         'fee_currency' => 'USDT',
     ],
+    'binance' => [
+        'base_url' => env('EXCHANGES_BINANCE_BASE_URL', 'https://api.binance.com'),
+        'api_key' => env('EXCHANGES_BINANCE_API_KEY', ''),
+        'secret_key' => env('EXCHANGES_BINANCE_SECRET_KEY', ''),
+        'fee_currency' => 'USDT',
+        'market_fee_rate' => 0.001,
+    ],
 ];

@@ -2,6 +2,7 @@
 
 namespace App\Services\Exchanges\Asset;
 
+use App\Services\Exchanges\Asset\Binance\AssetBinance;
 use App\Services\Exchanges\Asset\Coinex\AssetCoinex;
 use App\Services\Exchanges\Asset\Contract\AssetInterface;
 use App\Services\Exchanges\Asset\Mexc\AssetMexc;
@@ -14,7 +15,7 @@ class AssetFactory
         return match ($exchange) {
             'coinex' => new AssetCoinex(),
             'mexc' => new AssetMexc(),
-            // Add other exchanges like 'kucoin', 'binance', etc.
+            'binance' => new AssetBinance(),
             default => throw new InvalidArgumentException("Exchange [{$exchange}] is not supported."),
         };
     }
