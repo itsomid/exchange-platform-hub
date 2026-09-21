@@ -20,7 +20,6 @@ use App\Notifications\OTCBuyCreated;
 use App\Notifications\OTCSellCreated;
 use App\Repositories\DTO\OTCOrder\CreateOTCOrderRequestDTO;
 use App\Repositories\DTO\Transaction\CreateTransactionRequestDTO;
-use App\Repositories\Interfaces\ExchangeRepositoryInterface;
 use App\Repositories\Interfaces\MarketRepositoryInterface;
 use App\Repositories\Interfaces\OTCOrderRepositoryInterface;
 use App\Repositories\Interfaces\OTCRefExchangeWithdrawalInterface;
@@ -46,7 +45,6 @@ class OTCService
 {
     public function __construct(
         private readonly MarketRepositoryInterface         $marketRepository,
-        private readonly ExchangeRepositoryInterface       $exchangeRepository,
         private readonly WalletRepositoryInterface         $walletRepository,
         private readonly TransactionRepositoryInterface    $transactionRepository,
         private readonly OTCOrderRepositoryInterface       $otcOrderRepository,
@@ -386,7 +384,7 @@ class OTCService
             DB::beginTransaction();
             // Find Market
             $market = $this->marketRepository->getMarketById($requestDTO->getMarketId());
-            $activeExchange = $this->exchangeRepository->getActiveExchange();
+            $activeExchange = $market->exchangePrice->exchange;
             $sellerWallet = $this->walletRepository
                 ->getOneOrCreateByCurrencyWithLock(
                     $market->base_currency,
