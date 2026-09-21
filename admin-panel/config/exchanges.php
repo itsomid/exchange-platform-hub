@@ -13,4 +13,11 @@ return [
         'fee_currency' => 'USDT',
         'market_fee_rate' => 0.001, // MEXC market order fee rate (0.1%)
     ],
+    'binance' => [
+        'base_url' => env('EXCHANGES_BINANCE_BASE_URL', 'https://api.binance.com'),
+        'api_key' => env('EXCHANGES_BINANCE_API_KEY', ''),
+        'secret_key' => env('EXCHANGES_BINANCE_SECRET_KEY', ''),
+        'fee_currency' => 'USDT',
+        'market_fee_rate' => 0.001, // Binance market order fee rate (0.1%)
+    ],
 ];

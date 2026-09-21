@@ -82,13 +82,19 @@
         <div class="card-body">
             <div class="card-title header-elements">
                 <h5 class="m-0 me-2">لیست بازارها ({{ $activeExchange->name }})</h5>
-                <div class="card-title-elements ms-auto">
+                <div class="card-title-elements ms-auto d-flex gap-2">
+                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal"
+                        data-bs-target="#bulkExchangeModal">
+                        <i class="fa fa-exchange mx-2"></i>
+                        تغییر صرافی مرجع همه بازارها
+                    </button>
                     <a href="{{ route('admin.market.create') }}" class="btn btn-primary">
                         <i class="fa fa-plus mx-2"></i>
                         افزودن بازار جدید
                     </a>
                 </div>
             </div>
+
             <div class="table-responsive text-nowrap">
                 <table class="table">
                     <thead>
@@ -145,7 +151,8 @@
                                     </div>
                                 </td>
                                 <td class="font-number text-heading">
-                                    <div class="badge rounded bg-label-secondary me-3" data-role="profit-sell" dir="ltr"
+                                    <div class="badge rounded bg-label-secondary me-3" data-role="profit-sell"
+                                        dir="ltr"
                                         data-value="{{ $market->activeExchangePrice->exchange_profit_sell }}">
                                         {{ $market->activeExchangePrice->exchange_profit_sell > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->exchange_profit_sell) }}
                                         %
@@ -156,7 +163,8 @@
 
                                 </td>
                                 <td class="font-number text-heading ">
-                                    <div class="badge rounded bg-label-secondary me-3" data-role="profit-buy" dir="ltr"
+                                    <div class="badge rounded bg-label-secondary me-3" data-role="profit-buy"
+                                        dir="ltr"
                                         data-value="{{ $market->activeExchangePrice->exchange_profit_buy }}">
                                         {{ $market->activeExchangePrice->exchange_profit_buy > 0 ? '+' : '' }}{{ formatNumber($market->activeExchangePrice->exchange_profit_buy) }}
                                         %
@@ -165,7 +173,7 @@
                                         data-role="buy-price">{{ formatNumberTrimZeros($market->activeExchangePrice->exchange_buy_price) }}</span>
                                     <small class="text-muted">USDT</small>
                                 </td>
-                                <td class="fw-bold">
+                                <td class="fw-bold" data-role="exchange-name">
                                     {{ $market->activeExchangePrice->exchange->name }}
                                 </td>
                                 <td class="font-number ">
@@ -192,8 +200,8 @@
                                             href="{{ route('admin.market.edit', ['market' => $market->id]) }}">
                                             <i class="fa-light fa-pen-to-square fa-lg"></i>
                                         </a>
-                                        <a class="p-0 toggle-home-btn" style="cursor: pointer;" data-market-id="{{ $market->id }}"
-                                            data-bs-toggle="tooltip"
+                                        <a class="p-0 toggle-home-btn" style="cursor: pointer;"
+                                            data-market-id="{{ $market->id }}" data-bs-toggle="tooltip"
                                             data-url="{{ route('admin.market.toggle-home', ['market' => $market->id]) }}"
                                             title="{{ $market->show_in_home ? 'حذف از صفحه اصلی' : 'نمایش در صفحه اصلی' }}">
                                             <i
@@ -209,17 +217,143 @@
         </div>
     </div>
 
+    <div class="modal fade" id="bulkExchangeModal" tabindex="-1" aria-labelledby="bulkExchangeModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bulkExchangeModalLabel">تغییر صرافی مرجع همه بازارها</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-3">
+                        صرافی مرجع قیمت‌گیری برای تمام {{ $markets->count() }} بازار یکجا تغییر می‌کند.
+                    </p>
+                    <label class="form-label" for="bulk-exchange-id">صرافی مرجع</label>
+                    <select id="bulk-exchange-id" class="form-select">
+                        <option value="">انتخاب صرافی...</option>
+                        @foreach ($exchanges as $exchange)
+                            <option value="{{ $exchange->id }}">{{ $exchange->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
+                    <button type="button" id="bulk-exchange-apply" class="btn btn-primary" disabled>
+                        اعمال روی همه بازارها
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @endsection
 
 @section('vendor-script')
     <script>
-        $(document).ready(function () {
+        $(document).ready(function() {
             $('[data-bs-toggle="tooltip"]').tooltip();
         });
     </script>
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const showToast = (text, isError = false) => {
+                if (typeof Toastify === 'undefined') {
+                    alert(text);
+                    return;
+                }
 
-        document.addEventListener('DOMContentLoaded', function () {
+                Toastify({
+                    text,
+                    duration: isError ? 5000 : 3000,
+                    close: true,
+                    gravity: 'top',
+                    position: 'right',
+                    stopOnFocus: true,
+                    style: {
+                        background: isError ? '#EA5455' : '#28C76F',
+                    },
+                }).showToast();
+            };
+
+            const modalEl = document.getElementById('bulkExchangeModal');
+            const bulkExchangeSelect = document.getElementById('bulk-exchange-id');
+            const bulkApplyBtn = document.getElementById('bulk-exchange-apply');
+            const bulkExchangeUrl = @json(route('admin.market.bulk-exchange'));
+            const defaultApplyLabel = 'اعمال روی همه بازارها';
+
+            const syncApplyButton = () => {
+                bulkApplyBtn.disabled = !bulkExchangeSelect.value;
+            };
+
+            bulkExchangeSelect?.addEventListener('change', syncApplyButton);
+
+            modalEl?.addEventListener('hidden.bs.modal', function() {
+                bulkExchangeSelect.value = '';
+                bulkApplyBtn.textContent = defaultApplyLabel;
+                syncApplyButton();
+            });
+
+            bulkApplyBtn?.addEventListener('click', function() {
+                const exchangeId = bulkExchangeSelect.value;
+                if (!exchangeId) {
+                    showToast('صرافی مرجع را انتخاب کنید.', true);
+                    return;
+                }
+
+                const exchangeName = bulkExchangeSelect.options[bulkExchangeSelect.selectedIndex]?.text || '';
+                if (!window.confirm(`صرافی مرجع همه بازارها به «${exchangeName}» تغییر کند؟`)) {
+                    return;
+                }
+
+                bulkApplyBtn.disabled = true;
+                bulkApplyBtn.textContent = 'در حال اعمال...';
+
+                fetch(bulkExchangeUrl, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        },
+                        body: JSON.stringify({
+                            exchange_id: Number(exchangeId),
+                        }),
+                    })
+                    .then(async (res) => {
+                        const data = await res.json().catch(() => ({}));
+                        if (!res.ok || !data.success) {
+                            const message = data.message
+                                || (data.errors ? Object.values(data.errors).flat().join(' ') : null)
+                                || 'خطا در تغییر صرافی مرجع.';
+                            throw new Error(message);
+                        }
+                        return data;
+                    })
+                    .then((data) => {
+                        document.querySelectorAll('[data-role="exchange-name"]').forEach((cell) => {
+                            if (data.exchange?.name) {
+                                cell.textContent = data.exchange.name;
+                            }
+                        });
+
+                        const modal = bootstrap.Modal.getInstance(modalEl);
+                        modal?.hide();
+                        showToast(data.message || 'صرافی مرجع همه بازارها با موفقیت تغییر کرد.');
+                    })
+                    .catch((error) => {
+                        showToast(error.message || 'خطا در تغییر صرافی مرجع.', true);
+                        syncApplyButton();
+                    })
+                    .finally(() => {
+                        bulkApplyBtn.textContent = defaultApplyLabel;
+                        syncApplyButton();
+                    });
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
             if (typeof window.Echo === 'undefined') {
                 console.warn('Echo is not initialized. Check VITE_REVERB/VITE_PUSHER env vars and frontend build.');
                 return;
@@ -411,17 +545,18 @@
             });
             // Star toggle
             document.querySelectorAll('.toggle-home-btn').forEach((btn) => {
-                btn.addEventListener('click', function () {
+                btn.addEventListener('click', function() {
                     const url = this.dataset.url;
                     const icon = this.querySelector('i');
 
                     fetch(url, {
-                        method: 'PATCH',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            'Accept': 'application/json',
-                        },
-                    })
+                            method: 'PATCH',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector(
+                                    'meta[name="csrf-token"]').content,
+                                'Accept': 'application/json',
+                            },
+                        })
                         .then((res) => res.json())
                         .then((data) => {
                             if (data.show_in_home) {

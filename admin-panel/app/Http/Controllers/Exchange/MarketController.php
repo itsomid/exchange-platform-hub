@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Exchange;
 
 use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Market\BulkUpdateExchangeRequest;
 use App\Http\Requests\Market\StoreMarketRequest;
 use App\Http\Requests\Market\UpdateMarketRequest;
 use App\Models\Currency;
@@ -20,11 +21,13 @@ class MarketController extends Controller
     public function index()
     {
         $activeExchange = Exchange::query()->active()->first();
+        $exchanges = Exchange::query()->orderBy('priority')->get();
         $markets = Market::with(['baseCurrency', 'quoteCurrency', 'activeExchangePrice.exchange'])->get();
-        //        return $markets[0]->activeExchangePrices->price;
+
         return view('dashboard.exchange.market.index', [
             'markets' => $markets,
-            'activeExchange' => $activeExchange
+            'activeExchange' => $activeExchange,
+            'exchanges' => $exchanges,
         ]);
     }
 
@@ -132,6 +135,23 @@ class MarketController extends Controller
         $market->save();
 
         return response()->json(['show_in_home' => $market->show_in_home]);
+    }
+
+    public function bulkUpdateExchange(BulkUpdateExchangeRequest $request): JsonResponse
+    {
+        $exchange = Exchange::query()->findOrFail($request->exchange_id);
+
+        $updated = ExchangePrice::query()->update(['exchange_id' => $exchange->id]);
+
+        return response()->json([
+            'success' => true,
+            'updated' => $updated,
+            'exchange' => [
+                'id' => $exchange->id,
+                'name' => $exchange->name,
+            ],
+            'message' => "صرافی مرجع همه بازارها ({$updated} مورد) به {$exchange->name} تغییر کرد.",
+        ]);
     }
 
     /**

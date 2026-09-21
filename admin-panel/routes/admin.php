@@ -217,6 +217,7 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::get('/markets', [MarketController::class, 'index'])->name('market.index')->can('market');
         Route::get('/markets/create', [MarketController::class, 'create'])->name('market.create')->can('market');
         Route::post('/markets', [MarketController::class, 'store'])->name('market.store')->can('market');
+        Route::patch('/markets/bulk-exchange', [MarketController::class, 'bulkUpdateExchange'])->name('market.bulk-exchange')->can('market');
         Route::get('/markets/{market}/edit', [MarketController::class, 'edit'])->name('market.edit')->can('market');
         Route::patch('/markets/{market}', [MarketController::class, 'update'])->name('market.update')->can('market');
         Route::patch('/markets/{market}/toggle-home', [MarketController::class, 'toggleHome'])->name('market.toggle-home')->can('market');
