@@ -87,10 +87,6 @@ class RefExchangeController extends Controller
             return 'امکان ارتباط با صرافی مرجع نیست: ' . $e->getMessage();
         }
 
-        if (empty($balances)) {
-            return [];
-        }
-
         // Convert DTO objects to array format for processing
         $data = collect($balances)->map(function ($balanceDTO) {
             return [

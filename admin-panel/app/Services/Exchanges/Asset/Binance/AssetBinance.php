@@ -20,11 +20,37 @@ class AssetBinance implements AssetInterface
 {
     public function getBalance(): array
     {
-        $response = BinanceRequest::sendRequest('GET', '/api/v3/account');
+        try {
+            $response = BinanceRequest::sendRequest('GET', '/api/v3/account');
+        } catch (\Throwable $exception) {
+            report($exception);
+            throw new CantResolveCoinexException("Can't Resolve " . config('exchanges.binance.base_url'));
+        }
+
         $json = $response->json();
 
         if (!$response->ok() || !isset($json['balances']) || !is_array($json['balances'])) {
-            return [];
+            $errorCode = $json['code'] ?? null;
+            $errorMsg = $json['msg'] ?? ($json['message'] ?? $response->body());
+            $hint = $this->resolveBinanceErrorHint($errorCode, (string) $errorMsg);
+
+            Log::channel('ref-exchange')->error('Binance getBalance failed', [
+                'http_status' => $response->status(),
+                'error_code' => $errorCode,
+                'error_msg' => $errorMsg,
+                'hint' => $hint,
+                'api_key_configured' => filled(config('exchanges.binance.api_key')),
+                'api_key_prefix' => substr((string) config('exchanges.binance.api_key'), 0, 8),
+                'base_url' => config('exchanges.binance.base_url'),
+                'response_body' => $response->body(),
+            ]);
+
+            throw new CoinexHasProblemException(trim(sprintf(
+                'Binance getBalance failed [%s]: %s%s',
+                $errorCode !== null ? "code={$errorCode}" : "http={$response->status()}",
+                $errorMsg,
+                $hint ? " | Hint: {$hint}" : ''
+            )));
         }
 
         $balances = array_filter($json['balances'], function ($item) {
