@@ -9,7 +9,8 @@ class AccountingSsoController extends Controller
 {
     public function login(): RedirectResponse
     {
-        $email = auth('admin')->user()?->email;
+        $admin = auth('admin')->user();
+        $email = $admin?->email;
 
         abort_unless($email, 403, 'ایمیل ادمین برای ورود به پنل حسابداری ثبت نشده است.');
 
@@ -23,6 +24,8 @@ class AccountingSsoController extends Controller
         $path = '/'.ltrim((string) config('accounting.login_path', '/sso/login'), '/');
 
         $url = $baseUrl.$path.'?'.http_build_query([
+            'id' => $admin->id,
+            'name' => base64_encode(trim($admin->fullname())),
             'email' => $email,
             'time' => $time,
             'hash' => $hash,
