@@ -106,6 +106,11 @@ class FakeExchange implements ExchangeContract
         $this->cancels[] = compact('market', 'exchangeOrderId');
     }
 
+    public function name(): string
+    {
+        return 'fake';
+    }
+
     public function setStatus(string $exchangeOrderId, ExchangeOrderResult $result): void
     {
         $this->statusOverrides[$exchangeOrderId] = $result;

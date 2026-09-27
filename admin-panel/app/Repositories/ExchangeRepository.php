@@ -8,7 +8,7 @@ use App\Repositories\Interfaces\ExchangeRepositoryInterface;
 
 class ExchangeRepository implements ExchangeRepositoryInterface
 {
-    public function getActiveExchange(): Exchange
+    public function getActiveExchange(): ?Exchange
     {
         return Exchange::query()
             ->where('is_active', true)

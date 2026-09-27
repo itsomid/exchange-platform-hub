@@ -8,6 +8,7 @@ use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Exceptions\Exchange\CoinexWithdrawalException;
+use App\Models\Exchange;
 use App\Models\ExchangeAssetsWithdrawal;
 use App\Models\OTCOrder;
 use App\Models\SpotTrade;
@@ -19,6 +20,7 @@ use App\Repositories\Interfaces\MarketRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Services\Exchanges\Asset\AssetFactory;
 use App\Services\Exchanges\Asset\DTO\BuyDTORequest;
+use App\Services\Exchanges\Asset\DTO\BuyDTOResponse;
 use App\Services\Exchanges\Asset\DTO\WithdrawRequestDTO;
 use App\Services\Exchanges\Asset\Enum\WithdrawMethodEnum;
 use App\Services\Exchanges\DTO\ChargeCurrencyRequestDTO;
@@ -169,7 +171,7 @@ class ExchangeService
         }
 
         $market = $otcOrder->market;
-        $exchange = $otcOrder->exchange;
+        $exchange = $this->exchangeRepository->getActiveExchange();
 
         if (!$exchange) {
             return resolve(TriggerRefExchangeSellResponseDTO::class)
@@ -217,7 +219,7 @@ class ExchangeService
 
                 // Create wallet transactions like api-service does
                 $systemUserId = config('bitexroom.user_id');
-                $feeCurrency = $this->getFeeCurrencyForExchange($exchange->slug);
+                $feeCurrency = $response->getFeeCurrency() ?? $this->getFeeCurrencyForExchange($exchange->slug);
 
                 // Get or create wallets
                 $feeWallet = Wallet::firstOrCreate(
@@ -321,14 +323,7 @@ class ExchangeService
                         $exchange->name
                     ));
             } else {
-                // Determine error message first
-                $errorMessage = match ($response->getSpotStatus()) {
-                    SpotStatusEnum::NotEnoughBalance => 'موجودی کافی در صرافی مرجع وجود ندارد.',
-                    SpotStatusEnum::AmountTooSmall => 'مقدار سفارش کمتر از حداقل مجاز است.',
-                    SpotStatusEnum::PriceDifferenceTooLarge => 'اختلاف قیمت بیش از حد مجاز است.',
-                    SpotStatusEnum::ConnectionLosses => 'خطا در اتصال به صرافی مرجع.',
-                    default => $response->getErrorMessage() ?? 'خطا در ثبت سفارش فروش.',
-                };
+                $errorMessage = $this->refExchangeErrorMessage($response, $exchange);
 
                 // Update status to failed with the error message
                 $otcOrder->update([
@@ -369,7 +364,7 @@ class ExchangeService
         }
 
         $market = $spotTrade->market;
-        $exchange = $market->activeExchangePrice?->exchange;
+        $exchange = $this->exchangeRepository->getActiveExchange();
 
         if (!$exchange) {
             return resolve(TriggerRefExchangeSellResponseDTO::class)
@@ -408,7 +403,7 @@ class ExchangeService
                 ]);
 
                 $systemUserId = config('bitexroom.user_id');
-                $feeCurrency = $this->getFeeCurrencyForExchange($exchange->slug);
+                $feeCurrency = $response->getFeeCurrency() ?? $this->getFeeCurrencyForExchange($exchange->slug);
 
                 $feeWallet = Wallet::firstOrCreate(
                     ['user_id' => $systemUserId, 'currency_symbol' => $feeCurrency],
@@ -507,13 +502,7 @@ class ExchangeService
                         $exchange->name
                     ));
             } else {
-                $errorMessage = match ($response->getSpotStatus()) {
-                    SpotStatusEnum::NotEnoughBalance => 'موجودی کافی در صرافی مرجع وجود ندارد.',
-                    SpotStatusEnum::AmountTooSmall => 'مقدار سفارش کمتر از حداقل مجاز است.',
-                    SpotStatusEnum::PriceDifferenceTooLarge => 'اختلاف قیمت بیش از حد مجاز است.',
-                    SpotStatusEnum::ConnectionLosses => 'خطا در اتصال به صرافی مرجع.',
-                    default => $response->getErrorMessage() ?? 'خطا در ثبت سفارش فروش.',
-                };
+                $errorMessage = $this->refExchangeErrorMessage($response, $exchange);
 
                 $spotTrade->update([
                     'ref_exchange_sell_status' => RefExchangeSellStatusEnum::FAILED,
@@ -534,6 +523,26 @@ class ExchangeService
                 ->setSuccess(false)
                 ->setMessage('خطا در ارتباط با صرافی مرجع: ' . $exception->getMessage());
         }
+    }
+
+    private function refExchangeErrorMessage(BuyDTOResponse $response, Exchange $exchange): string
+    {
+        $message = match ($response->getSpotStatus()) {
+            SpotStatusEnum::NotEnoughBalance => "موجودی کافی در صرافی مرجع ({$exchange->name}) وجود ندارد.",
+            SpotStatusEnum::AmountTooSmall => "مقدار سفارش کمتر از حداقل مجاز صرافی مرجع ({$exchange->name}) است.",
+            SpotStatusEnum::PriceDifferenceTooLarge => "اختلاف قیمت در صرافی مرجع ({$exchange->name}) بیش از حد مجاز است.",
+            SpotStatusEnum::ConnectionLosses => "خطا در اتصال به صرافی مرجع ({$exchange->name}).",
+            default => "ثبت سفارش فروش در صرافی مرجع ({$exchange->name}) ناموفق بود.",
+        };
+
+        $detail = trim((string) $response->getErrorMessage());
+        if ($detail !== '') {
+            // Not every exchange adapter sets an error code on failure.
+            $code = (int) rescue(fn () => $response->getErrorCode(), 0, false);
+            $message .= ' پیام صرافی: ' . $detail . ($code !== 0 ? " (کد {$code})" : '');
+        }
+
+        return $message;
     }
 
     /**

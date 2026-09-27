@@ -12,7 +12,7 @@ class ExchangeRepository implements ExchangeRepositoryInterface
     {
         return Exchange::query()
             ->where('is_active', true)
-            ->first();
+            ->firstOrFail();
     }
 
 }

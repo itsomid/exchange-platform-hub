@@ -54,6 +54,8 @@ class BuyDTOResponse
 
     private ?string $errorMessage = null;
 
+    private ?string $feeCurrency = null;
+
     public function setMarket(string $market): BuyDTOResponse
     {
         $this->market = $market;
@@ -323,5 +325,20 @@ class BuyDTOResponse
     public function getErrorMessage(): ?string
     {
         return $this->errorMessage;
+    }
+
+    public function setFeeCurrency(?string $feeCurrency): BuyDTOResponse
+    {
+        $this->feeCurrency = $feeCurrency;
+
+        return $this;
+    }
+
+    /**
+     * Asset the exchange actually charged the fee in, when it reports one.
+     */
+    public function getFeeCurrency(): ?string
+    {
+        return $this->feeCurrency;
     }
 }

@@ -4,47 +4,61 @@ namespace App\Console\Commands;
 
 use App\Models\Currency;
 use App\Models\CurrencyChain;
-use App\Services\Exchanges\WithdrawalFee\ExchangeFactory;
-use Exception;
+use App\Repositories\ExchangeRepository;
+use App\Services\Exchanges\ExchangeData\ExchangeDataFactory;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class FetchDepositWithdrawalConfig extends Command
 {
-    protected $signature = 'exchange:fetch-deposit-withdrawal-config {exchange}';
+    protected $signature = 'exchange:fetch-deposit-withdrawal-config';
 
-    protected $description = 'Fetch withdrawal fee from a specific exchange';
+    protected $description = 'Fetch withdrawal fee from the active exchange';
+
+    public function __construct(
+        protected ExchangeRepository $exchangeRepository
+    ) {
+        parent::__construct();
+    }
 
     public function handle(): void
     {
-        $exchange = $this->argument('exchange');
+        $activeExchange = $this->exchangeRepository->getActiveExchange();
+        if (!$activeExchange) {
+            $this->warn('No active exchange found.');
+            return;
+        }
 
-        try {
-            $service = ExchangeFactory::make($exchange);
+        $service = ExchangeDataFactory::make($activeExchange->slug);
 
-            $currencies = Currency::query()
-                ->with(['chains' => function ($query) {
-                    $query->where('withdraw_enabled', true);
-                }])
-                ->whereHas('chains', function ($query) {
-                    $query->where('withdraw_enabled', true);
-                })
-                ->where('is_active', true)
-                ->get();
+        $currencies = Currency::query()
+            ->with(['chains' => function ($query) {
+                $query->where('withdraw_enabled', true);
+            }])
+            ->whereHas('chains', function ($query) {
+                $query->where('withdraw_enabled', true);
+            })
+            ->where('is_active', true)
+            ->get();
 
-            foreach ($currencies as $currency) {
-
+        foreach ($currencies as $currency) {
+            try {
                 $feeData = $service->fetchWithdrawalFee($currency->symbol);
+            } catch (Throwable $e) {
+                $this->skip("Skipped {$currency->symbol}: {$e->getMessage()}");
+                continue;
+            }
 
-                foreach ($currency->chains as $chain) {
-
+            foreach ($currency->chains as $chain) {
+                try {
                     if ($this->saveWithdrawalFee($feeData, $chain)) {
                         $this->info("Updated withdrawal fee #{$currency->symbol} On {$chain->chain->value} network | network_fee: {$chain->network_fee}");
                     }
+                } catch (Throwable $e) {
+                    $this->skip("Skipped {$currency->symbol} on {$chain->chain->value}: {$e->getMessage()}");
                 }
             }
-        } catch (Exception $e) {
-            report($e);
-            $this->error($e->getMessage());
         }
     }
 
@@ -56,12 +70,12 @@ class FetchDepositWithdrawalConfig extends Command
             return $value['network'] === $chainSymbol;
         }));
         if (!count($matchedNetwork)) {
-            report("Can not fetch withdrawal fee for currency {$feeData['currency']} with network {$chainSymbol}: network not returned by exchange");
+            $this->skip("Skipped {$feeData['currency']} on {$chainSymbol}: network not supported by exchange");
             return false;
         }
 
         if (!$matchedNetwork[0]['withdraw_enabled']) {
-            report("Can not fetch withdrawal fee for currency {$feeData['currency']} with network {$chainSymbol}: withdraw is disabled on exchange");
+            $this->skip("Skipped {$feeData['currency']} on {$chainSymbol}: withdraw is disabled on exchange");
             return false;
         }
 
@@ -78,5 +92,11 @@ class FetchDepositWithdrawalConfig extends Command
         }
 
         return false;
+    }
+
+    private function skip(string $message): void
+    {
+        $this->warn($message);
+        Log::warning("Withdrawal config: {$message}");
     }
 }

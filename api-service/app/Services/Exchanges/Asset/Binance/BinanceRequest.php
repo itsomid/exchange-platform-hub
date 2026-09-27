@@ -2,6 +2,7 @@
 
 namespace App\Services\Exchanges\Asset\Binance;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -48,5 +49,40 @@ class BinanceRequest
         return Http::withHeaders([
             'X-MBX-APIKEY' => $apiKey,
         ])->send(strtoupper($method), $url);
+    }
+
+    /**
+     * @return array<string, string> LOT_SIZE / MARKET_LOT_SIZE / PRICE_FILTER values for the symbol
+     */
+    public static function symbolFilters(string $symbol): array
+    {
+        return Cache::remember('binance:symbol-filters:' . $symbol, now()->addHour(), function () use ($symbol) {
+            $response = Http::timeout(10)->get(config('exchanges.binance.base_url') . '/api/v3/exchangeInfo', [
+                'symbol' => $symbol,
+            ]);
+
+            if (! $response->ok()) {
+                throw new \RuntimeException("Binance exchangeInfo failed for {$symbol}: " . $response->body());
+            }
+
+            $filters = [];
+            foreach ($response->json('symbols.0.filters') ?? [] as $filter) {
+                switch ($filter['filterType'] ?? null) {
+                    case 'LOT_SIZE':
+                        $filters['stepSize'] = (string) $filter['stepSize'];
+                        $filters['minQty'] = (string) $filter['minQty'];
+                        break;
+                    case 'MARKET_LOT_SIZE':
+                        $filters['marketStepSize'] = (string) $filter['stepSize'];
+                        $filters['marketMinQty'] = (string) $filter['minQty'];
+                        break;
+                    case 'PRICE_FILTER':
+                        $filters['tickSize'] = (string) $filter['tickSize'];
+                        break;
+                }
+            }
+
+            return $filters;
+        });
     }
 }

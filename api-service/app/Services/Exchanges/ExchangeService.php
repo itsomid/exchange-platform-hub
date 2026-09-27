@@ -10,6 +10,7 @@ use App\Enums\TransactionTypeEnum;
 use App\Models\SpotTrade;
 use App\Repositories\DTO\OTCRefExchangeWithdrawal\CreateOTCRefExchangeWithdrawalRequestDTO;
 use App\Repositories\DTO\Transaction\CreateTransactionRequestDTO;
+use App\Repositories\Interfaces\ExchangeRepositoryInterface;
 use App\Repositories\Interfaces\MarketRepositoryInterface;
 use App\Repositories\Interfaces\OTCOrderRepositoryInterface;
 use App\Repositories\Interfaces\OTCRefExchangeWithdrawalInterface;
@@ -17,6 +18,7 @@ use App\Repositories\Interfaces\TransactionRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Services\Exchanges\Asset\AssetFactory;
 use App\Services\Exchanges\Asset\DTO\BuyDTORequest;
+use App\Services\Exchanges\Asset\DTO\BuyDTOResponse;
 use App\Services\Exchanges\DTO\ExchangeBuyRequestDTO;
 use App\Services\Exchanges\DTO\ExchangeBuyResponseDTO;
 use App\Services\Exchanges\DTO\ExchangeSellRequestDTO;
@@ -31,12 +33,14 @@ class ExchangeService
         private readonly OTCOrderRepositoryInterface       $otcOrderRepository,
         private readonly WalletRepositoryInterface         $walletRepository,
         private readonly OTCRefExchangeWithdrawalInterface $refExchangeWithdrawalRepository,
+        private readonly ExchangeRepositoryInterface       $exchangeRepository,
     ) {}
 
     public function buy(ExchangeBuyRequestDTO $requestDTO): ExchangeBuyResponseDTO
     {
         $market = $this->marketRepository->getMarketById($requestDTO->getMarketId());
-        $exchangeName = $market->exchangePrice->exchange->slug;
+        $exchange = $this->exchangeRepository->getActiveExchange();
+        $exchangeName = $exchange->slug;
         $asset = AssetFactory::make($exchangeName);
         $otcOrder = $this->otcOrderRepository->getOneById($requestDTO->getOtcId());
 
@@ -56,7 +60,7 @@ class ExchangeService
         if ($response->isDone()) {
             $otcOrder->refExchangeTransactions()->create([
                 'order_id' => $response->getOrderId(),
-                'exchange_id' => $market->exchangePrice->exchange->id,
+                'exchange_id' => $exchange->id,
                 'market' => $response->getMarket(),
                 'currency_symbol' => $response->getCurrencySymbol(),
                 'amount' => $response->getAmount(),
@@ -67,7 +71,7 @@ class ExchangeService
             ]);
 
             // Get fee currency based on exchange type
-            $feeCurrency = $this->getFeeCurrencyForExchange($exchangeName);
+            $feeCurrency = $this->resolveFeeCurrency($exchangeName, $response);
 
             $feeWallet = $this->walletRepository
                 ->getOrCreateWallet(
@@ -97,7 +101,7 @@ class ExchangeService
                     ->setOtcOrderId($otcOrder->id)
                     ->setAmount(-$response->getDiscountFee())
                     ->setCoinPrice($feeCurrency === 'USDT' ? "1" : $feePrice)
-                    ->setExchangeId($market->exchangePrice->exchange->id)
+                    ->setExchangeId($exchange->id)
                     ->setType(TransactionTypeEnum::REF_EXCHANGE)
                     ->setSubtype(TransactionSubTypeEnum::REF_EXCHANGE_BUY_FEE)
                     ->setStatus(TransactionStatusEnum::SUCCESS)
@@ -106,7 +110,7 @@ class ExchangeService
                             'استفاده %s به مقدار %s برای فی خرید از صرافی مرجع (%s)',
                             $feeCurrency,
                             formatNumberTrimZeros((float)$response->getDiscountFee()),
-                            $market->exchangePrice->exchange->name
+                            $exchange->name
                         ),
                     ));
             }
@@ -124,7 +128,7 @@ class ExchangeService
                 ->setOtcOrderId($otcOrder->id)
                 ->setAmount(-$usdtAmount)
                 ->setCoinPrice("1")
-                ->setExchangeId($market->exchangePrice->exchange->id)
+                ->setExchangeId($exchange->id)
                 ->setType(TransactionTypeEnum::REF_EXCHANGE)
                 ->setSubtype(TransactionSubTypeEnum::REF_EXCHANGE_BUY)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
@@ -132,17 +136,22 @@ class ExchangeService
                     sprintf(
                         'استفاده USDT به مقدار %s در خرید از صرافی مرجع (%s)',
                         formatNumberTrimZeros((float)$usdtAmount),
-                        $market->exchangePrice->exchange->name
+                        $exchange->name
                     ),
                 ));
-            //BASE Currency
+            //BASE Currency - Binance takes the buy commission out of the received coins
+            $receivedBase = $response->getFilledAmount();
+            if ($feeCurrency === $market->base_currency && (float)$response->getDiscountFee() > 0) {
+                $receivedBase = bcsub($receivedBase, $response->getDiscountFee(), 8);
+            }
+
             $baseCurrencyTransaction = $this->transactionRepository->create(resolve(CreateTransactionRequestDTO::class)
                 ->setUserId(config('bitexroom.user_id'))
                 ->setWalletId($baseCurrencyWallet->id)
                 ->setOtcOrderId($otcOrder->id)
-                ->setAmount($response->getFilledAmount())
+                ->setAmount($receivedBase)
                 ->setCoinPrice($market->exchangePrice->price)
-                ->setExchangeId($market->exchangePrice->exchange->id)
+                ->setExchangeId($exchange->id)
                 ->setType(TransactionTypeEnum::REF_EXCHANGE)
                 ->setSubtype(TransactionSubTypeEnum::REF_EXCHANGE_BUY)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
@@ -150,11 +159,11 @@ class ExchangeService
                     sprintf(
                         'خرید %s به مقدار %s از صرافی مرجع (%s)',
                         $market->base_currency,
-                        formatNumberTrimZeros((float)$response->getAmount()),
-                        $market->exchangePrice->exchange->name
+                        formatNumberTrimZeros((float)$receivedBase),
+                        $exchange->name
                     ),
                 ));
-            $baseCurrencyWallet->increment('balance', (float)$response->getAmount());
+            $baseCurrencyWallet->increment('balance', (float)$receivedBase);
 
             $this->refExchangeWithdrawalRepository->create(
                 resolve(CreateOTCRefExchangeWithdrawalRequestDTO::class)
@@ -174,7 +183,8 @@ class ExchangeService
     public function sell(ExchangeSellRequestDTO $requestDTO): ExchangeBuyResponseDTO
     {
         $market = $this->marketRepository->getMarketById($requestDTO->getMarketId());
-        $exchangeName = $market->exchangePrice->exchange->slug;
+        $exchange = $this->exchangeRepository->getActiveExchange();
+        $exchangeName = $exchange->slug;
         $asset = AssetFactory::make($exchangeName);
         $otcOrder = $this->otcOrderRepository->getOneById($requestDTO->getOtcId());
 
@@ -194,7 +204,7 @@ class ExchangeService
         if ($response->isDone()) {
             $otcOrder->refExchangeTransactions()->create([
                 'order_id' => $response->getOrderId(),
-                'exchange_id' => $market->exchangePrice->exchange->id,
+                'exchange_id' => $exchange->id,
                 'market' => $response->getMarket(),
                 'currency_symbol' => $response->getCurrencySymbol(),
                 'amount' => $response->getAmount(),
@@ -204,7 +214,7 @@ class ExchangeService
                 'response' => $response->getResponseBody(),
             ]);
 
-            $feeCurrency = $this->getFeeCurrencyForExchange($exchangeName);
+            $feeCurrency = $this->resolveFeeCurrency($exchangeName, $response);
 
             $feeWallet = $this->walletRepository
                 ->getOrCreateWallet(
@@ -232,7 +242,7 @@ class ExchangeService
                     ->setOtcOrderId($otcOrder->id)
                     ->setAmount(-$response->getDiscountFee())
                     ->setCoinPrice($feeCurrency === 'USDT' ? "1" : $feePrice)
-                    ->setExchangeId($market->exchangePrice->exchange->id)
+                    ->setExchangeId($exchange->id)
                     ->setType(TransactionTypeEnum::REF_EXCHANGE)
                     ->setSubtype(TransactionSubTypeEnum::REF_EXCHANGE_SELL_FEE)
                     ->setStatus(TransactionStatusEnum::SUCCESS)
@@ -241,7 +251,7 @@ class ExchangeService
                             'استفاده %s به مقدار %s برای فی فروش در صرافی مرجع (%s)',
                             $feeCurrency,
                             formatNumberTrimZeros((float)$response->getDiscountFee()),
-                            $market->exchangePrice->exchange->name
+                            $exchange->name
                         ),
                     ));
             }
@@ -263,7 +273,7 @@ class ExchangeService
                 ->setOtcOrderId($otcOrder->id)
                 ->setAmount($quoteAmount)
                 ->setCoinPrice($quoteCoinPrice)
-                ->setExchangeId($market->exchangePrice->exchange->id)
+                ->setExchangeId($exchange->id)
                 ->setType(TransactionTypeEnum::REF_EXCHANGE)
                 ->setSubtype(TransactionSubTypeEnum::REF_EXCHANGE_SELL)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
@@ -272,7 +282,7 @@ class ExchangeService
                         'دریافت %s به مقدار %s از فروش در صرافی مرجع (%s)',
                         $market->quote_currency,
                         formatNumberTrimZeros((float)$quoteAmount),
-                        $market->exchangePrice->exchange->name
+                        $exchange->name
                     ),
                 ));
             $quoteCurrencyWallet->increment('balance', (float)$quoteAmount);
@@ -283,7 +293,7 @@ class ExchangeService
                 ->setOtcOrderId($otcOrder->id)
                 ->setAmount((string)(-$response->getFilledAmount()))
                 ->setCoinPrice($market->exchangePrice->price)
-                ->setExchangeId($market->exchangePrice->exchange->id)
+                ->setExchangeId($exchange->id)
                 ->setType(TransactionTypeEnum::REF_EXCHANGE)
                 ->setSubtype(TransactionSubTypeEnum::REF_EXCHANGE_SELL)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
@@ -292,7 +302,7 @@ class ExchangeService
                         'فروش %s به مقدار %s در صرافی مرجع (%s)',
                         $market->base_currency,
                         formatNumberTrimZeros((float)$response->getFilledAmount()),
-                        $market->exchangePrice->exchange->name
+                        $exchange->name
                     ),
                 ));
             $baseCurrencyWallet->decrement('balance', (float)$response->getFilledAmount());
@@ -312,7 +322,8 @@ class ExchangeService
     public function sellForSpot(SpotRefExchangeSellRequestDTO $requestDTO): ExchangeBuyResponseDTO
     {
         $market = $this->marketRepository->getMarketById($requestDTO->getMarketId());
-        $exchangeName = $market->exchangePrice->exchange->slug;
+        $exchange = $this->exchangeRepository->getActiveExchange();
+        $exchangeName = $exchange->slug;
         $asset = AssetFactory::make($exchangeName);
         $spotTrade = SpotTrade::with(['makerOrder', 'takerOrder'])->find($requestDTO->getSpotTradeId());
         $userId = $this->resolveSpotTradeUserId($spotTrade);
@@ -334,7 +345,7 @@ class ExchangeService
             if ($spotTrade) {
                 $spotTrade->refExchangeTransaction()->create([
                     'order_id' => $response->getOrderId(),
-                    'exchange_id' => $market->exchangePrice->exchange->id,
+                    'exchange_id' => $exchange->id,
                     'market' => $response->getMarket(),
                     'currency_symbol' => $response->getCurrencySymbol(),
                     'amount' => $response->getAmount(),
@@ -345,7 +356,7 @@ class ExchangeService
                 ]);
             }
 
-            $feeCurrency = $this->getFeeCurrencyForExchange($exchangeName);
+            $feeCurrency = $this->resolveFeeCurrency($exchangeName, $response);
 
             $feeWallet = $this->walletRepository
                 ->getOrCreateWallet(
@@ -373,7 +384,7 @@ class ExchangeService
                     ->setSpotTradeId($requestDTO->getSpotTradeId())
                     ->setAmount(-$response->getDiscountFee())
                     ->setCoinPrice($feeCurrency === 'USDT' ? "1" : $feePrice)
-                    ->setExchangeId($market->exchangePrice->exchange->id)
+                    ->setExchangeId($exchange->id)
                     ->setType(TransactionTypeEnum::REF_EXCHANGE)
                     ->setSubtype(TransactionSubTypeEnum::REF_EXCHANGE_SELL_FEE)
                     ->setStatus(TransactionStatusEnum::SUCCESS)
@@ -382,7 +393,7 @@ class ExchangeService
                             'کارمزد فروش اسپات %s به مقدار %s در صرافی مرجع (%s)',
                             $feeCurrency,
                             formatNumberTrimZeros((float)$response->getDiscountFee()),
-                            $market->exchangePrice->exchange->name
+                            $exchange->name
                         ),
                     ));
             }
@@ -404,7 +415,7 @@ class ExchangeService
                 ->setSpotTradeId($requestDTO->getSpotTradeId())
                 ->setAmount($quoteAmount)
                 ->setCoinPrice($quoteCoinPrice)
-                ->setExchangeId($market->exchangePrice->exchange->id)
+                ->setExchangeId($exchange->id)
                 ->setType(TransactionTypeEnum::REF_EXCHANGE)
                 ->setSubtype(TransactionSubTypeEnum::REF_EXCHANGE_SELL)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
@@ -413,7 +424,7 @@ class ExchangeService
                         'دریافت %s به مقدار %s از فروش اسپات در صرافی مرجع (%s)',
                         $market->quote_currency,
                         formatNumberTrimZeros((float)$quoteAmount),
-                        $market->exchangePrice->exchange->name
+                        $exchange->name
                     ),
                 ));
             $quoteCurrencyWallet->increment('balance', (float)$quoteAmount);
@@ -424,7 +435,7 @@ class ExchangeService
                 ->setSpotTradeId($requestDTO->getSpotTradeId())
                 ->setAmount((string)(-$response->getFilledAmount()))
                 ->setCoinPrice($market->exchangePrice->price)
-                ->setExchangeId($market->exchangePrice->exchange->id)
+                ->setExchangeId($exchange->id)
                 ->setType(TransactionTypeEnum::REF_EXCHANGE)
                 ->setSubtype(TransactionSubTypeEnum::REF_EXCHANGE_SELL)
                 ->setStatus(TransactionStatusEnum::SUCCESS)
@@ -433,7 +444,7 @@ class ExchangeService
                         'فروش اسپات %s به مقدار %s در صرافی مرجع (%s)',
                         $market->base_currency,
                         formatNumberTrimZeros((float)$response->getFilledAmount()),
-                        $market->exchangePrice->exchange->name
+                        $exchange->name
                     ),
                 ));
             $baseCurrencyWallet->decrement('balance', (float)$response->getFilledAmount());
@@ -452,6 +463,11 @@ class ExchangeService
     private function getFeeCurrencyForExchange(string $exchangeName): string
     {
         return config("exchanges.{$exchangeName}.fee_currency", 'USDT');
+    }
+
+    private function resolveFeeCurrency(string $exchangeName, BuyDTOResponse $response): string
+    {
+        return $response->getFeeCurrency() ?? $this->getFeeCurrencyForExchange($exchangeName);
     }
 
     private function resolveSpotTradeUserId(?SpotTrade $spotTrade): ?int

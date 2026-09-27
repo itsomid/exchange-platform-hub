@@ -14,7 +14,10 @@ use App\Services\Exchanges\Asset\DTO\WithdrawRequestDTO;
 use App\Services\Exchanges\Asset\DTO\WithdrawResponseDTO;
 use App\Services\Exchanges\Asset\Enum\WithdrawMethodEnum;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class AssetBinance implements AssetInterface
 {
@@ -70,32 +73,39 @@ class AssetBinance implements AssetInterface
 
     public function placeOrder(BuyDTORequest $request): BuyDTOResponse
     {
-        try {
-            $symbol = $request->getMarket();
-            $orderType = strtoupper($request->getOrderType());
-            $side = strtoupper($request->getSide());
+        $symbol = BinanceOrderFormatter::normalizeSymbol($request->getMarket());
+        $orderType = strtoupper($request->getOrderType());
+        $side = strtoupper($request->getSide());
 
+        try {
+            $filters = $this->symbolFilters($symbol);
             $currency = Currency::where('symbol', $request->getCurrency())->first();
-            $amountPrecision = $currency?->amount_precision;
+            $quantity = BinanceOrderFormatter::formatQuantity(
+                $request->getQuantity(),
+                BinanceOrderFormatter::stepFor($orderType, $filters),
+                $currency?->amount_precision ?? 8
+            );
+
+            $minQty = BinanceOrderFormatter::minQtyFor($orderType, $filters) ?? '0';
+            if (bccomp($quantity, '0', 18) !== 1 || bccomp($quantity, $minQty, 18) === -1) {
+                return $this->failedOrder(SpotStatusEnum::AmountTooSmall, -1013, 'مقدار سفارش کمتر از حداقل مجاز بایننس است.');
+            }
 
             $params = [
                 'symbol' => $symbol,
                 'side' => $side,
                 'type' => $orderType,
-                'quantity' => formatNumberTrimZeros($request->getQuantity(), $amountPrecision ?? 8),
+                'quantity' => $quantity,
+                'newOrderRespType' => 'FULL',
             ];
 
             if ($orderType === 'LIMIT') {
                 $price = $request->getPrice();
                 if (empty($price)) {
-                    return resolve(BuyDTOResponse::class)
-                        ->setSpotStatus(SpotStatusEnum::BuyOrderFailed)
-                        ->setErrorCode(0)
-                        ->setErrorMessage('Price is required for LIMIT orders')
-                        ->setIsDone(false);
+                    return $this->failedOrder(SpotStatusEnum::BuyOrderFailed, 0, 'Price is required for LIMIT orders');
                 }
 
-                $params['price'] = (string) $price;
+                $params['price'] = BinanceOrderFormatter::formatQuantity($price, $filters['tickSize'] ?? null);
                 $params['timeInForce'] = 'GTC';
             }
 
@@ -103,55 +113,57 @@ class AssetBinance implements AssetInterface
         } catch (\Throwable $exception) {
             report($exception);
 
-            return resolve(BuyDTOResponse::class)
-                ->setSpotStatus(SpotStatusEnum::ConnectionLosses)
-                ->setErrorCode(0)
-                ->setIsDone(false);
+            // Keep only the cURL reason; the rest of the message is the signed request URL.
+            return $this->failedOrder(SpotStatusEnum::ConnectionLosses, 0, Str::before($exception->getMessage(), ' (see '));
         }
 
         $json = $response->json();
+        if (! is_array($json)) {
+            $json = [];
+        }
 
-        if (!$response->ok() || (isset($json['code']) && $json['code'] !== 0)) {
-            $errorCode = $json['code'] ?? 0;
-            $errorMsg = $json['msg'] ?? ($json['message'] ?? $response->body());
+        if (! $response->ok() || (isset($json['code']) && (int) $json['code'] !== 0)) {
+            $errorCode = (int) ($json['code'] ?? 0);
+            $errorMsg = (string) ($json['msg'] ?? ($json['message'] ?? $response->body()));
 
             Log::channel('ref-exchange')->error('Binance placeOrder failed', [
-                'response' => $json,
+                'symbol' => $symbol,
+                'side' => $side,
+                'quantity' => $quantity,
+                'response' => $json ?: $response->body(),
             ]);
 
-            return resolve(BuyDTOResponse::class)
-                ->setSpotStatus(SpotStatusEnum::BuyOrderFailed)
-                ->setErrorCode((int) $errorCode)
-                ->setErrorMessage($errorMsg)
-                ->setIsDone(false);
+            return $this->failedOrder(BinanceOrderFormatter::mapError($errorCode, $errorMsg), $errorCode, $errorMsg);
         }
 
-        $filledAmount = $json['executedQty'] ?? ($json['origQty'] ?? '0');
-        $filledValue = $json['cummulativeQuoteQty'] ?? '0';
-        $price = $json['price'] ?? '0';
+        // A MARKET order that finds no liquidity comes back EXPIRED with nothing executed.
+        $filledAmount = BinanceOrderFormatter::plainDecimal((string) ($json['executedQty'] ?? '0'));
+        if (bccomp($filledAmount, '0', 18) !== 1) {
+            Log::channel('ref-exchange')->error('Binance order returned without execution', ['response' => $json]);
 
-        if ((float) $price <= 0 && (float) $filledAmount > 0 && (float) $filledValue > 0) {
-            $price = bcdiv((string) $filledValue, (string) $filledAmount, 8);
+            return $this->failedOrder(SpotStatusEnum::BuyOrderFailed, 0, 'سفارش در بایننس اجرا نشد.');
         }
 
-        $commission = '0';
-        if (!empty($json['fills']) && is_array($json['fills'])) {
-            foreach ($json['fills'] as $fill) {
-                $commission = bcadd($commission, (string) ($fill['commission'] ?? '0'), 8);
-            }
-        }
+        $filledValue = BinanceOrderFormatter::plainDecimal((string) ($json['cummulativeQuoteQty'] ?? '0'));
+        $baseAsset = strtoupper($request->getCurrency());
+        $quoteAsset = substr($symbol, strlen($baseAsset));
+        $commission = BinanceOrderFormatter::commission(
+            is_array($json['fills'] ?? null) ? $json['fills'] : [],
+            $side === 'BUY' ? [$baseAsset, $quoteAsset] : [$quoteAsset, $baseAsset]
+        );
 
         return resolve(BuyDTOResponse::class)
             ->setIsDone(true)
             ->setErrorCode(0)
             ->setSpotStatus(SpotStatusEnum::BuyOrderSubmitted)
-            ->setOrderId($json['orderId'] ?? null)
-            ->setMarket($json['symbol'] ?? $request->getMarket())
+            ->setOrderId((string) ($json['orderId'] ?? ''))
+            ->setMarket($json['symbol'] ?? $symbol)
             ->setCurrencySymbol($request->getCurrency())
-            ->setSide($json['side'] ?? $side)
-            ->setAmount($json['origQty'] ?? $request->getQuantity())
-            ->setPrice($price)
-            ->setDiscountFee($commission)
+            ->setSide(strtolower($json['side'] ?? $side))
+            ->setAmount(BinanceOrderFormatter::plainDecimal((string) ($json['origQty'] ?? $quantity)))
+            ->setPrice(bcdiv($filledValue, $filledAmount, 8))
+            ->setDiscountFee($commission['amount'])
+            ->setFeeCurrency($commission['currency'])
             ->setFilledAmount($filledAmount)
             ->setFilledValue($filledValue)
             ->setCreatedAt(
@@ -160,6 +172,50 @@ class AssetBinance implements AssetInterface
                     : Carbon::now()
             )
             ->setResponseBody($response->body());
+    }
+
+    /**
+     * @return array<string, string> LOT_SIZE / MARKET_LOT_SIZE / PRICE_FILTER values for the symbol
+     */
+    private function symbolFilters(string $symbol): array
+    {
+        return Cache::remember('binance:symbol-filters:' . $symbol, now()->addHour(), function () use ($symbol) {
+            $response = Http::timeout(10)->get(config('exchanges.binance.base_url') . '/api/v3/exchangeInfo', [
+                'symbol' => $symbol,
+            ]);
+
+            if (! $response->ok()) {
+                throw new \RuntimeException("Binance exchangeInfo failed for {$symbol}: " . $response->body());
+            }
+
+            $filters = [];
+            foreach ($response->json('symbols.0.filters') ?? [] as $filter) {
+                switch ($filter['filterType'] ?? null) {
+                    case 'LOT_SIZE':
+                        $filters['stepSize'] = (string) $filter['stepSize'];
+                        $filters['minQty'] = (string) $filter['minQty'];
+                        break;
+                    case 'MARKET_LOT_SIZE':
+                        $filters['marketStepSize'] = (string) $filter['stepSize'];
+                        $filters['marketMinQty'] = (string) $filter['minQty'];
+                        break;
+                    case 'PRICE_FILTER':
+                        $filters['tickSize'] = (string) $filter['tickSize'];
+                        break;
+                }
+            }
+
+            return $filters;
+        });
+    }
+
+    private function failedOrder(SpotStatusEnum $status, int $errorCode, string $errorMessage): BuyDTOResponse
+    {
+        return resolve(BuyDTOResponse::class)
+            ->setSpotStatus($status)
+            ->setErrorCode($errorCode)
+            ->setErrorMessage($errorMessage)
+            ->setIsDone(false);
     }
 
     public function withdraw(WithdrawRequestDTO $requestDTO): WithdrawResponseDTO

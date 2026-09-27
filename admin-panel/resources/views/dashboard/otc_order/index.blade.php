@@ -817,11 +817,9 @@
                                             confirmButton: 'btn btn-primary'
                                         },
                                         buttonsStyling: false
+                                    }).then(() => {
+                                        location.reload();
                                     });
-                                    location.reload();
-                                    button.prop('disabled', false);
-                                    button.find('i').removeClass('fa-spinner fa-spin')
-                                        .addClass('fa-arrow-right-arrow-left');
                                 }
                             },
                             error: function(xhr) {
@@ -837,11 +835,9 @@
                                         confirmButton: 'btn btn-primary'
                                     },
                                     buttonsStyling: false
+                                }).then(() => {
+                                    location.reload();
                                 });
-                                location.reload();
-                                button.prop('disabled', false);
-                                button.find('i').removeClass('fa-spinner fa-spin')
-                                    .addClass('fa-arrow-right-arrow-left');
                             }
                         });
                     }
