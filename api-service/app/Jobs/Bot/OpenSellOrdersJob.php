@@ -142,7 +142,7 @@ class OpenSellOrdersJob implements ShouldQueue
                             'execution_id' => $execution->id,
                             'order_id'     => $earlierId,
                             'error'        => $e->getMessage(),
-                            'access_id'    => config('exchanges.coinex.access_id'),
+                            'exchange'     => $exchange->name(),
                             'host'         => gethostname() ?: null,
                             'pid'          => getmypid() ?: null,
                         ]);
@@ -160,7 +160,8 @@ class OpenSellOrdersJob implements ShouldQueue
                 $this->markFailed(
                     $execution,
                     sprintf(
-                        'coinex.sell.place_failed market=%s code=%s msg=%s',
+                        '%s.sell.place_failed market=%s code=%s msg=%s',
+                        $exchange->name(),
                         $market,
                         $res->errorCode ?? 'n/a',
                         $res->errorMessage ?? 'no error message',
@@ -242,7 +243,7 @@ class OpenSellOrdersJob implements ShouldQueue
                 'execution_id' => $execution->id,
                 'reason'       => $reason,
                 'stranded'     => false,
-                'access_id'    => config('exchanges.coinex.access_id'),
+                'exchange'     => $exchange->name(),
                 'host'         => gethostname() ?: null,
                 'pid'          => getmypid() ?: null,
             ]);
@@ -281,7 +282,7 @@ class OpenSellOrdersJob implements ShouldQueue
                 'reason'        => $reason,
                 'dispose_error' => $disposeRes->errorMessage,
                 'dispose_code'  => $disposeRes->errorCode,
-                'access_id'     => config('exchanges.coinex.access_id'),
+                'exchange'      => $exchange->name(),
                 'host'          => gethostname() ?: null,
                 'pid'           => getmypid() ?: null,
             ]);
@@ -306,7 +307,7 @@ class OpenSellOrdersJob implements ShouldQueue
             'dispose_amount'  => $disposeRes->filledAmount,
             'dispose_price'   => $disposeRes->avgPrice,
             'dispose_orderid' => $disposeRes->exchangeOrderId,
-            'access_id'       => config('exchanges.coinex.access_id'),
+            'exchange'        => $exchange->name(),
             'host'            => gethostname() ?: null,
             'pid'             => getmypid() ?: null,
         ]);

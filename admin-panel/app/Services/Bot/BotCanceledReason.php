@@ -322,7 +322,7 @@ class BotCanceledReason
         $primary = $segments[0] ?? $reason;
         $lines = [];
 
-        if (str_starts_with($primary, 'coinex.sell.place_failed')) {
+        if (preg_match('/^(coinex|binance)\.sell\.place_failed/', $primary)) {
             $lines[] = 'ثبت سفارش فروش لیمیت در صرافی مرجع شکست خورد.';
             if (preg_match('/market=([^\s]+)/', $primary, $m)) {
                 $lines[] = 'بازار: '.$m[1];

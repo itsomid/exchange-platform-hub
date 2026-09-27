@@ -35,6 +35,11 @@ final class TestLabFailingSellExchange implements ExchangeContract
         return $this->inner->placeMarketBuy($market, $quoteAmount);
     }
 
+    public function name(): string
+    {
+        return $this->inner->name();
+    }
+
     public function placeLimitSell(string $market, string $baseAmount, string $price): ExchangeOrderResult
     {
         $this->limitSellCalls++;

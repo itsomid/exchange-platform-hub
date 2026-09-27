@@ -14,12 +14,12 @@
         'notes' => [],
     ];
 
-    if (str_starts_with($primary, 'coinex.sell.place_failed')) {
+    if (preg_match('/^(coinex|binance)\.sell\.place_failed/', $primary)) {
         $parsed['title'] = 'ثبت پله فروش در صرافی مرجع ناموفق بود';
         if (preg_match('/market=([^\s]+)/', $primary, $m)) $parsed['market'] = $m[1];
         if (preg_match('/code=([^\s]+)/', $primary, $m)) $parsed['code'] = $m[1];
         if (preg_match('/msg=(.+)$/', $primary, $m)) $parsed['message'] = trim($m[1]);
-    } elseif (str_starts_with($primary, 'coinex.buy.')) {
+    } elseif (preg_match('/^(coinex|binance)\.buy\./', $primary)) {
         $parsed['title'] = 'خرید در صرافی مرجع ناموفق بود';
         if (preg_match('/market=([^\s]+)/', $primary, $m)) $parsed['market'] = $m[1];
         if (preg_match('/code=([^\s]+)/', $primary, $m)) $parsed['code'] = $m[1];

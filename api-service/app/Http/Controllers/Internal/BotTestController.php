@@ -22,7 +22,6 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Services\Bot\BotWalletService;
-use App\Services\Bot\ReferenceExchange\CoinExBotAdapter;
 use App\Services\Bot\ReferenceExchange\ExchangeContract;
 use App\Services\Bot\ReferenceExchange\ExchangePositionCloser;
 use App\Services\Bot\ReferenceExchange\FakeBotExchange;
@@ -367,7 +366,7 @@ class BotTestController extends Controller
 
         $inner = $this->isFakeDriver()
             ? new FakeBotExchange()
-            : new CoinExBotAdapter();
+            : app(ExchangeContract::class);
 
         // Fail the last placeLimitSell in each OpenSellOrdersJob batch (armed
         // via expectLimitSells) so earlier tiers place, then rollback + markFailed.

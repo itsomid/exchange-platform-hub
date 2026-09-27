@@ -43,4 +43,9 @@ interface ExchangeContract
      * errors and throw only on hard failures (auth, network).
      */
     public function cancelOrder(string $market, string $exchangeOrderId): void;
+
+    /**
+     * Exchange slug used to prefix log events and failure reasons (e.g. "binance").
+     */
+    public function name(): string;
 }

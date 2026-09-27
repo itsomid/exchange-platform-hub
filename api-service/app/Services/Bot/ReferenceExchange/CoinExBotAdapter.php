@@ -135,6 +135,11 @@ class CoinExBotAdapter implements ExchangeContract
         throw new RuntimeException('coinex.cancel.api_error: '.($body['message'] ?? "code {$code}"));
     }
 
+    public function name(): string
+    {
+        return 'coinex';
+    }
+
     /* ---------------------------------------------------------------------- */
 
     private function placeOrder(array $payload): ExchangeOrderResult

@@ -150,6 +150,11 @@ class FakeBotExchange implements ExchangeContract
         return new ExchangeOrderResult($exchangeOrderId, ExchangeOrderStatus::OPEN);
     }
 
+    public function name(): string
+    {
+        return 'fake';
+    }
+
     public function cancelOrder(string $market, string $exchangeOrderId): void
     {
         $key   = self::CACHE_PREFIX.$exchangeOrderId;

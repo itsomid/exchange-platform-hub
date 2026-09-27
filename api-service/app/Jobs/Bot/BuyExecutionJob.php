@@ -68,10 +68,14 @@ class BuyExecutionJob implements ShouldQueue
     public int $tries = 12;
     public array $backoff = [5, 10, 15, 30, 45, 60];
 
+    private ?string $exchangeName = null;
+
     public function __construct(public readonly int $executionId) {}
 
     public function handle(ExchangeContract $exchange): void
     {
+        $this->exchangeName = $exchange->name();
+
         $execution = BotBuyExecution::with('currency')->find($this->executionId);
         if (! $execution) {
             return;
@@ -187,18 +191,18 @@ class BuyExecutionJob implements ShouldQueue
         // (if not already) and let the queue retry — the resumed attempt at
         // the top of handle() will only re-check it, never re-buy.
         if ($result->status === ExchangeOrderStatus::OPEN && $result->exchangeOrderId !== null) {
-            $reason = sprintf('coinex.buy.awaiting_fill market=%s order=%s', $market, $result->exchangeOrderId);
+            $reason = sprintf('%s.buy.awaiting_fill market=%s order=%s', $this->exchangeName(), $market, $result->exchangeOrderId);
 
             $execution->update([
                 'exchange_order_id' => $result->exchangeOrderId,
                 'failure_reason'    => mb_substr($reason, 0, 250),
             ]);
 
-            Log::channel('smart-bot')->warning('coinex.buy.awaiting_fill', [
+            Log::channel('smart-bot')->warning($this->exchangeName().'.buy.awaiting_fill', [
                 'execution_id'      => $execution->id,
                 'market'            => $market,
                 'exchange_order_id' => $result->exchangeOrderId,
-                'access_id'         => config('exchanges.coinex.access_id'),
+                'exchange'          => $this->exchangeName(),
                 'host'              => gethostname() ?: null,
                 'pid'               => getmypid() ?: null,
             ]);
@@ -212,7 +216,8 @@ class BuyExecutionJob implements ShouldQueue
         // scratch instead of failing the execution outright.
         if ($result->status === ExchangeOrderStatus::FAILED && $result->errorCode === 'TRANSPORT') {
             $reason = sprintf(
-                'coinex.buy.transport_error market=%s msg=%s',
+                '%s.buy.transport_error market=%s msg=%s',
+                $this->exchangeName(),
                 $market,
                 $result->errorMessage ?? 'unknown transport error',
             );
@@ -222,11 +227,11 @@ class BuyExecutionJob implements ShouldQueue
             // this is an automatic retry after a temporary issue.
             $execution->update(['failure_reason' => mb_substr($reason, 0, 250)]);
 
-            Log::channel('smart-bot')->warning('coinex.buy.transport_retry', [
+            Log::channel('smart-bot')->warning($this->exchangeName().'.buy.transport_retry', [
                 'execution_id' => $execution->id,
                 'market'       => $market,
                 'error'        => $result->errorMessage,
-                'access_id'    => config('exchanges.coinex.access_id'),
+                'exchange'     => $this->exchangeName(),
                 'host'         => gethostname() ?: null,
                 'pid'          => getmypid() ?: null,
             ]);
@@ -236,14 +241,16 @@ class BuyExecutionJob implements ShouldQueue
 
         $reason = $isTerminalFillStatus
             ? sprintf(
-                'coinex.buy.invalid_fill market=%s status=%s filled=%s price=%s',
+                '%s.buy.invalid_fill market=%s status=%s filled=%s price=%s',
+                $this->exchangeName(),
                 $market,
                 $result->status->value,
                 $result->filledAmount,
                 $result->avgPrice,
             )
             : sprintf(
-                'coinex.buy.failed market=%s code=%s msg=%s',
+                '%s.buy.failed market=%s code=%s msg=%s',
+                $this->exchangeName(),
                 $market,
                 $result->errorCode ?? 'n/a',
                 $result->errorMessage ?? 'no error message',
@@ -255,7 +262,7 @@ class BuyExecutionJob implements ShouldQueue
             'status'            => $result->status->value,
             'error_code'        => $result->errorCode,
             'error_message'     => $result->errorMessage,
-            'access_id'         => config('exchanges.coinex.access_id'),
+            'exchange'          => $this->exchangeName(),
             'host'              => gethostname() ?: null,
             'pid'               => getmypid() ?: null,
         ]);
@@ -268,12 +275,20 @@ class BuyExecutionJob implements ShouldQueue
         Log::channel('smart-bot')->error('bot.buy.execution.failed_hook', [
             'execution_id' => $this->executionId,
             'error'        => $exception->getMessage(),
-            'access_id'    => config('exchanges.coinex.access_id'),
+            'exchange'     => $this->exchangeName(),
             'host'         => gethostname() ?: null,
             'pid'          => getmypid() ?: null,
         ]);
 
         $this->releaseAndFail($this->executionId, $exception->getMessage(), null);
+    }
+
+    /**
+     * The failed() hook runs on a fresh instance where handle() never set the name.
+     */
+    private function exchangeName(): string
+    {
+        return $this->exchangeName ??= app(ExchangeContract::class)->name();
     }
 
     /**
@@ -318,7 +333,7 @@ class BuyExecutionJob implements ShouldQueue
                 'reason'            => $reason,
                 'exchange_order_id' => $exchangeOrderId ?? $execution->exchange_order_id,
                 'allocated_usdt'    => $execution->allocated_usdt,
-                'access_id'         => config('exchanges.coinex.access_id'),
+                'exchange'          => $this->exchangeName(),
                 'host'              => gethostname() ?: null,
                 'pid'               => getmypid() ?: null,
             ]);

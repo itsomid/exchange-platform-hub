@@ -23,7 +23,7 @@
             'notes' => [],
         ];
 
-        if (str_starts_with($primary, 'coinex.sell.place_failed')) {
+        if (preg_match('/^(coinex|binance)\.sell\.place_failed/', $primary)) {
             $parsed['kind'] = 'sell_place_failed';
             $parsed['title'] = 'ثبت پله فروش در صرافی مرجع ناموفق بود';
             if (preg_match('/market=([^\s]+)/', $primary, $m)) {
@@ -35,7 +35,7 @@
             if (preg_match('/msg=(.+)$/', $primary, $m)) {
                 $parsed['message'] = trim($m[1]);
             }
-        } elseif (str_starts_with($primary, 'coinex.buy.')) {
+        } elseif (preg_match('/^(coinex|binance)\.buy\./', $primary)) {
             $parsed['kind'] = 'buy_failed';
             $parsed['title'] = 'خرید در صرافی مرجع ناموفق بود';
             if (preg_match('/market=([^\s]+)/', $primary, $m)) {

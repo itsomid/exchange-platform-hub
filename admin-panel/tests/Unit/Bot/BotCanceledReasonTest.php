@@ -87,6 +87,26 @@ class BotCanceledReasonTest extends TestCase
         $this->assertStringContainsString('نقد شد', implode("\n", $result['lines']));
     }
 
+    public function test_parses_binance_place_failure_reason(): void
+    {
+        $sell = $this->sell(['status' => 'CANCELED', 'exchange_order_id' => null]);
+        $sell->setRelation('settlement', null);
+
+        $result = BotCanceledReason::forSellOrder(
+            $sell,
+            $this->execution([
+                'status'         => 'FAILED',
+                'failure_reason' => 'binance.sell.place_failed market=CCCUSDT code=-2010 msg=Account has insufficient balance',
+            ]),
+            $this->order(['status' => 'FAILED']),
+        );
+
+        $lines = implode("\n", $result['lines']);
+        $this->assertStringContainsString('ثبت سفارش فروش لیمیت در صرافی مرجع شکست خورد', $lines);
+        $this->assertStringContainsString('CCCUSDT', $lines);
+        $this->assertStringContainsString('-2010', $lines);
+    }
+
     public function test_explains_rollback_of_already_placed_tier(): void
     {
         $sell = $this->sell(['status' => 'CANCELED', 'exchange_order_id' => 'ex-9']);
