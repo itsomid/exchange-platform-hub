@@ -5,11 +5,12 @@ namespace Tests\Feature\Exchange;
 use App\Models\Admin;
 use App\Models\Currency;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
-class CoinexSpotOrderLookupTest extends TestCase
+class RefExchangeSpotOrderTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -26,7 +27,7 @@ class CoinexSpotOrderLookupTest extends TestCase
             ['persian_name' => 'مدیریت صرافی های مرجع']
         );
 
-        $this->admin = Admin::factory()->create();
+        $this->admin = Admin::factory()->create(['is_active' => true])->fresh();
         $this->admin->givePermissionTo('ref-exchanges');
 
         $this->currency = Currency::factory()->create([
@@ -35,49 +36,100 @@ class CoinexSpotOrderLookupTest extends TestCase
             'persian_name' => 'کاردانو',
             'is_active' => true,
         ]);
+
+        foreach (['coinex' => 'CoinEx', 'binance' => 'Binance', 'mexc' => 'MEXC'] as $slug => $name) {
+            DB::table('exchanges')->updateOrInsert(
+                ['slug' => $slug],
+                ['name' => $name, 'is_active' => false, 'priority' => 1, 'created_at' => now(), 'updated_at' => now()]
+            );
+        }
     }
 
     public function test_guest_cannot_lookup_order(): void
     {
-        $this->getJson(route('admin.ref-exchange.coinex-spot-orders.lookup', [
+        $this->getJson(route('admin.ref-exchange.spot-orders.lookup', [
+            'exchange' => 'coinex',
             'currency_id' => $this->currency->id,
             'order_id' => 13400,
-        ]))->assertRedirect();
+        ]))->assertUnauthorized();
     }
 
     public function test_admin_without_permission_cannot_lookup_order(): void
     {
-        $other = Admin::factory()->create();
+        $other = Admin::factory()->create(['is_active' => true]);
 
         $this->actingAs($other, 'admin')
-            ->getJson(route('admin.ref-exchange.coinex-spot-orders.lookup', [
+            ->getJson(route('admin.ref-exchange.spot-orders.lookup', [
+                'exchange' => 'coinex',
                 'currency_id' => $this->currency->id,
                 'order_id' => 13400,
             ]))
             ->assertForbidden();
     }
 
-    public function test_index_shows_order_id_search_box(): void
+    public function test_index_asks_for_reference_exchange_first(): void
     {
         $this->actingAs($this->admin, 'admin')
-            ->get(route('admin.ref-exchange.coinex-spot-orders.index'))
+            ->get(route('admin.ref-exchange.spot-orders.index'))
             ->assertOk()
-            ->assertSee('جستجو بر اساس شناسه سفارش CoinEx')
-            ->assertSee('lookup_order_id', false);
+            ->assertSee('انتخاب صرافی مرجع')
+            ->assertSee('CoinEx')
+            ->assertSee('Binance')
+            ->assertDontSee('MEXC')
+            ->assertDontSee('lookup_order_id', false);
     }
 
-    public function test_lookup_requires_order_id(): void
+    public function test_selected_exchange_is_remembered_between_visits(): void
     {
         $this->actingAs($this->admin, 'admin')
-            ->getJson(route('admin.ref-exchange.coinex-spot-orders.lookup'))
+            ->get(route('admin.ref-exchange.spot-orders.index', ['exchange' => 'binance']))
+            ->assertOk()
+            ->assertSee('جستجو بر اساس شناسه سفارش Binance')
+            ->assertSee('lookup_order_id', false);
+
+        $this->actingAs($this->admin, 'admin')
+            ->get(route('admin.ref-exchange.spot-orders.index'))
+            ->assertOk()
+            ->assertSee('جستجو بر اساس شناسه سفارش Binance');
+
+        $this->actingAs($this->admin, 'admin')
+            ->get(route('admin.ref-exchange.spot-orders.index', ['exchange' => 'coinex']))
+            ->assertOk()
+            ->assertSee('جستجو بر اساس شناسه سفارش CoinEx');
+    }
+
+    public function test_unsupported_exchange_is_not_selectable(): void
+    {
+        $this->actingAs($this->admin, 'admin')
+            ->get(route('admin.ref-exchange.spot-orders.index', ['exchange' => 'mexc']))
+            ->assertOk()
+            ->assertSee('انتخاب صرافی مرجع');
+    }
+
+    public function test_lookup_requires_order_id_and_exchange(): void
+    {
+        $this->actingAs($this->admin, 'admin')
+            ->getJson(route('admin.ref-exchange.spot-orders.lookup'))
             ->assertStatus(422)
-            ->assertJsonValidationErrors(['order_id']);
+            ->assertJsonValidationErrors(['order_id', 'exchange']);
+    }
+
+    public function test_lookup_rejects_unsupported_exchange(): void
+    {
+        $this->actingAs($this->admin, 'admin')
+            ->getJson(route('admin.ref-exchange.spot-orders.lookup', [
+                'exchange' => 'mexc',
+                'order_id' => 13400,
+            ]))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['exchange']);
     }
 
     public function test_lookup_rejects_invalid_currency(): void
     {
         $this->actingAs($this->admin, 'admin')
-            ->getJson(route('admin.ref-exchange.coinex-spot-orders.lookup', [
+            ->getJson(route('admin.ref-exchange.spot-orders.lookup', [
+                'exchange' => 'coinex',
                 'currency_id' => 999999,
                 'order_id' => 13400,
             ]))
@@ -96,7 +148,8 @@ class CoinexSpotOrderLookupTest extends TestCase
         ]);
 
         $this->actingAs($this->admin, 'admin')
-            ->getJson(route('admin.ref-exchange.coinex-spot-orders.lookup', [
+            ->getJson(route('admin.ref-exchange.spot-orders.lookup', [
+                'exchange' => 'coinex',
                 'currency_id' => $this->currency->id,
                 'order_id' => 13400,
             ]))
@@ -114,6 +167,67 @@ class CoinexSpotOrderLookupTest extends TestCase
             ->assertJsonPath('deals.0.deal_id', 3514376759);
     }
 
+    public function test_lookup_returns_binance_order_in_common_shape(): void
+    {
+        Http::fake([
+            '*/api/v3/time*' => Http::response(['serverTime' => 1700000000000], 200),
+            '*/api/v3/order*' => Http::response([
+                'symbol' => 'ADAUSDT',
+                'orderId' => 555,
+                'clientOrderId' => 'abc',
+                'price' => '0.50000000',
+                'origQty' => '100.00000000',
+                'executedQty' => '60.00000000',
+                'cummulativeQuoteQty' => '30.00000000',
+                'status' => 'PARTIALLY_FILLED',
+                'type' => 'LIMIT',
+                'side' => 'BUY',
+                'time' => 1700000000000,
+                'updateTime' => 1700000001000,
+            ], 200),
+            '*/api/v3/myTrades*' => Http::response([[
+                'symbol' => 'ADAUSDT',
+                'id' => 9001,
+                'orderId' => 555,
+                'price' => '0.50000000',
+                'qty' => '60.00000000',
+                'commission' => '0.06000000',
+                'commissionAsset' => 'ADA',
+                'time' => 1700000001000,
+                'isBuyer' => true,
+                'isMaker' => false,
+            ]], 200),
+        ]);
+
+        $this->actingAs($this->admin, 'admin')
+            ->getJson(route('admin.ref-exchange.spot-orders.lookup', [
+                'exchange' => 'binance',
+                'currency_id' => $this->currency->id,
+                'order_id' => 555,
+            ]))
+            ->assertOk()
+            ->assertJson([
+                'success' => true,
+                'market' => 'ADAUSDT',
+                'order' => [
+                    'order_id' => 555,
+                    'side' => 'buy',
+                    'type' => 'limit',
+                    'amount' => '100',
+                    'filled_amount' => '60',
+                    'unfilled_amount' => '40',
+                    'status' => 'part_deal',
+                ],
+                'deals' => [[
+                    'deal_id' => 9001,
+                    'side' => 'buy',
+                    'role' => 'taker',
+                    'fee' => '0.06',
+                    'fee_ccy' => 'ADA',
+                ]],
+            ]);
+    }
+
     public function test_lookup_still_returns_order_when_deals_fail(): void
     {
         Http::fake([
@@ -126,7 +240,8 @@ class CoinexSpotOrderLookupTest extends TestCase
         ]);
 
         $this->actingAs($this->admin, 'admin')
-            ->getJson(route('admin.ref-exchange.coinex-spot-orders.lookup', [
+            ->getJson(route('admin.ref-exchange.spot-orders.lookup', [
+                'exchange' => 'coinex',
                 'currency_id' => $this->currency->id,
                 'order_id' => 13400,
             ]))
@@ -149,7 +264,8 @@ class CoinexSpotOrderLookupTest extends TestCase
         ]);
 
         $this->actingAs($this->admin, 'admin')
-            ->getJson(route('admin.ref-exchange.coinex-spot-orders.lookup', [
+            ->getJson(route('admin.ref-exchange.spot-orders.lookup', [
+                'exchange' => 'coinex',
                 'order_id' => '173390586784',
             ]))
             ->assertOk()
@@ -170,7 +286,8 @@ class CoinexSpotOrderLookupTest extends TestCase
         ]);
 
         $this->actingAs($this->admin, 'admin')
-            ->getJson(route('admin.ref-exchange.coinex-spot-orders.lookup', [
+            ->getJson(route('admin.ref-exchange.spot-orders.lookup', [
+                'exchange' => 'coinex',
                 'currency_id' => $this->currency->id,
                 'order_id' => 13400,
             ]))

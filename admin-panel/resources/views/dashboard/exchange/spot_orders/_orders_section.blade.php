@@ -3,7 +3,7 @@
     $orders = $orders ?? [];
     $pagination = $pagination ?? [];
 
-    // CoinEx market orders return price "0"; use avg fill (filled_value / filled_amount).
+    // Market orders return price "0"; use avg fill (filled_value / filled_amount).
     $resolveOrderPrice = function (array $order): ?string {
         $type = strtolower((string) ($order['type'] ?? ''));
         $rawPrice = $order['price'] ?? null;
@@ -76,7 +76,8 @@
                                 $quoteFee = $order['quote_fee'] ?? '0';
                                 $discountFee = $order['discount_fee'] ?? '0';
                                 $displayPrice = $resolveOrderPrice($order);
-                                $modalId = 'coinex-order-' . ($cancellable ? 'p' : 'f') . '-' . ($order['side'] ?? 'x') . '-' . $orderId;
+                                $hasFees = array_key_exists('base_fee', $order) || array_key_exists('quote_fee', $order);
+                                $modalId = 'spot-order-' . ($cancellable ? 'p' : 'f') . '-' . ($order['side'] ?? 'x') . '-' . $orderId;
                             @endphp
                             <tr>
                                 <td class="fw-semibold">#{{ $orderId }}</td>
@@ -113,10 +114,14 @@
                                 <td>{{ $fmt($order['unfilled_amount'] ?? 0) }}</td>
                                 <td>{{ $fmt($order['filled_value'] ?? 0) }}</td>
                                 <td>
-                                    <div class="small">Base: {{ $fmt($baseFee) }}</div>
-                                    <div class="small">Quote: {{ $fmt($quoteFee) }}</div>
-                                    @if ((float) $discountFee > 0)
-                                        <div class="small text-success">Discount: {{ $fmt($discountFee) }}</div>
+                                    @if ($hasFees)
+                                        <div class="small">Base: {{ $fmt($baseFee) }}</div>
+                                        <div class="small">Quote: {{ $fmt($quoteFee) }}</div>
+                                        @if ((float) $discountFee > 0)
+                                            <div class="small text-success">Discount: {{ $fmt($discountFee) }}</div>
+                                        @endif
+                                    @else
+                                        <span class="text-muted">—</span>
                                     @endif
                                 </td>
                                 <td>
@@ -131,7 +136,7 @@
                                         </button>
                                         @if ($cancellable)
                                             <button type="button"
-                                                class="btn btn-sm btn-icon btn-danger cancel-coinex-order"
+                                                class="btn btn-sm btn-icon btn-danger cancel-spot-order"
                                                 data-order-id="{{ $orderId }}"
                                                 data-market="{{ $order['market'] ?? $market }}"
                                                 title="لغو سفارش">
@@ -201,7 +206,7 @@
                                                 @if ($cancellable)
                                                     <div class="modal-footer">
                                                         <button type="button"
-                                                            class="btn btn-danger cancel-coinex-order"
+                                                            class="btn btn-danger cancel-spot-order"
                                                             data-order-id="{{ $orderId }}"
                                                             data-market="{{ $order['market'] ?? $market }}"
                                                             data-bs-dismiss="modal">

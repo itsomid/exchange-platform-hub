@@ -4,11 +4,12 @@ namespace App\Services\Exchanges\Asset\Coinex;
 
 use App\Exceptions\Exchange\CantResolveCoinexException;
 use App\Services\Exchanges\Asset\Coinex\Authentication\MethodEnum;
+use App\Services\Exchanges\Asset\Contract\SpotOrderServiceInterface;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
-class CoinexSpotOrderService
+class CoinexSpotOrderService implements SpotOrderServiceInterface
 {
     public function getPendingOrders(string $market, ?string $side = null, int $page = 1, int $limit = 50): array
     {

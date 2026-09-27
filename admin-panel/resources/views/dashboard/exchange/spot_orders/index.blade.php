@@ -1,18 +1,18 @@
 @extends('dashboard.layout.master')
 
-@section('title', 'سفارش‌های اسپات CoinEx')
+@section('title', 'سفارش‌های اسپات صرافی مرجع')
 
 @section('vendor-style')
     @vite(['resources/assets/vendor/libs/select2/select2.scss'])
     <style>
-        .coinex-orders-page .stat-card {
+        .spot-orders-page .stat-card {
             border: 0;
             border-radius: 1rem;
             overflow: hidden;
             position: relative;
         }
 
-        .coinex-orders-page .stat-card::before {
+        .spot-orders-page .stat-card::before {
             content: '';
             position: absolute;
             inset: 0;
@@ -21,42 +21,42 @@
             pointer-events: none;
         }
 
-        .coinex-orders-page .stat-buy {
+        .spot-orders-page .stat-buy {
             background: linear-gradient(135deg, #28c76f 0%, #1f9d57 100%);
             color: #fff;
         }
 
-        .coinex-orders-page .stat-sell {
+        .spot-orders-page .stat-sell {
             background: linear-gradient(135deg, #ea5455 0%, #c73e3f 100%);
             color: #fff;
         }
 
-        .coinex-orders-page .stat-pending {
+        .spot-orders-page .stat-pending {
             background: linear-gradient(135deg, #ff9f43 0%, #e07b1f 100%);
             color: #fff;
         }
 
-        .coinex-orders-page .stat-finished {
+        .spot-orders-page .stat-finished {
             background: linear-gradient(135deg, #7367f0 0%, #5a52d6 100%);
             color: #fff;
         }
 
-        .coinex-orders-page .stat-balance-base {
+        .spot-orders-page .stat-balance-base {
             background: linear-gradient(135deg, #00cfe8 0%, #1a9bb0 100%);
             color: #fff;
         }
 
-        .coinex-orders-page .stat-balance-usdt {
+        .spot-orders-page .stat-balance-usdt {
             background: linear-gradient(135deg, #28c76f 0%, #198754 100%);
             color: #fff;
         }
 
-        .coinex-orders-page .balance-meta {
+        .spot-orders-page .balance-meta {
             font-size: 0.78rem;
             opacity: 0.9;
         }
 
-        .coinex-orders-page .market-pill {
+        .spot-orders-page .market-pill {
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
@@ -67,56 +67,56 @@
             font-weight: 700;
         }
 
-        .coinex-orders-page .side-badge-buy {
+        .spot-orders-page .side-badge-buy {
             background: rgba(40, 199, 111, 0.12);
             color: #28c76f;
         }
 
-        .coinex-orders-page .side-badge-sell {
+        .spot-orders-page .side-badge-sell {
             background: rgba(234, 84, 85, 0.12);
             color: #ea5455;
         }
 
-        .coinex-orders-page .order-section-title {
+        .spot-orders-page .order-section-title {
             display: flex;
             align-items: center;
             gap: 0.5rem;
             margin-bottom: 1rem;
         }
 
-        .coinex-orders-page .order-section-title .dot {
+        .spot-orders-page .order-section-title .dot {
             width: 10px;
             height: 10px;
             border-radius: 50%;
         }
 
-        .coinex-orders-page .order-section-title .dot-buy {
+        .spot-orders-page .order-section-title .dot-buy {
             background: #28c76f;
         }
 
-        .coinex-orders-page .order-section-title .dot-sell {
+        .spot-orders-page .order-section-title .dot-sell {
             background: #ea5455;
         }
 
-        .coinex-orders-page .table thead th {
+        .spot-orders-page .table thead th {
             white-space: nowrap;
             font-size: 0.78rem;
             text-transform: none;
             letter-spacing: 0;
         }
 
-        .coinex-orders-page .table td {
+        .spot-orders-page .table td {
             vertical-align: middle;
             font-variant-numeric: tabular-nums;
         }
 
-        .coinex-orders-page .empty-state {
+        .spot-orders-page .empty-state {
             padding: 2.5rem 1rem;
             text-align: center;
             color: #6c757d;
         }
 
-        .coinex-orders-page .nav-pills .nav-link {
+        .spot-orders-page .nav-pills .nav-link {
             border-radius: 999px;
             font-weight: 600;
             color: #6c757d;
@@ -124,73 +124,73 @@
             border: 1px solid #dee2e6;
         }
 
-        .coinex-orders-page .nav-pills .nav-link.active {
+        .spot-orders-page .nav-pills .nav-link.active {
             color: #fff;
             border-color: transparent;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             box-shadow: 0 8px 20px rgba(102, 126, 234, 0.28);
         }
 
-        .coinex-orders-page .detail-grid {
+        .spot-orders-page .detail-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
             gap: 0.75rem;
         }
 
-        .coinex-orders-page .detail-item {
+        .spot-orders-page .detail-item {
             background: #f8f9fa;
             border-radius: 0.75rem;
             padding: 0.75rem 0.9rem;
         }
 
-        .coinex-orders-page .detail-item .label {
+        .spot-orders-page .detail-item .label {
             display: block;
             font-size: 0.72rem;
             color: #6c757d;
             margin-bottom: 0.2rem;
         }
 
-        .coinex-orders-page .detail-item .value {
+        .spot-orders-page .detail-item .value {
             font-weight: 600;
             word-break: break-all;
         }
 
-        .coinex-orders-page .lookup-panel {
+        .spot-orders-page .lookup-panel {
             margin-top: 1.25rem;
             padding-top: 1.25rem;
             border-top: 1px dashed #d9dee3;
         }
 
-        .coinex-orders-page .lookup-panel .lookup-title {
+        .spot-orders-page .lookup-panel .lookup-title {
             font-weight: 700;
             margin-bottom: 0.15rem;
         }
 
-        .coinex-order-lookup-modal .modal-content {
+        .spot-order-lookup-modal .modal-content {
             border: 0;
             border-radius: 1rem;
             overflow: hidden;
         }
 
-        .coinex-order-lookup-modal .modal-header {
+        .spot-order-lookup-modal .modal-header {
             border-bottom: 0;
             color: #fff;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
-        .coinex-order-lookup-modal .modal-header.is-buy {
+        .spot-order-lookup-modal .modal-header.is-buy {
             background: linear-gradient(135deg, #28c76f 0%, #1f9d57 100%);
         }
 
-        .coinex-order-lookup-modal .modal-header.is-sell {
+        .spot-order-lookup-modal .modal-header.is-sell {
             background: linear-gradient(135deg, #ea5455 0%, #c73e3f 100%);
         }
 
-        .coinex-order-lookup-modal .modal-header .btn-close {
+        .spot-order-lookup-modal .modal-header .btn-close {
             filter: invert(1) grayscale(100%) brightness(200%);
         }
 
-        .coinex-order-lookup-modal .status-pill {
+        .spot-order-lookup-modal .status-pill {
             display: inline-flex;
             align-items: center;
             gap: 0.35rem;
@@ -201,7 +201,7 @@
             font-weight: 700;
         }
 
-        .coinex-order-lookup-modal pre.raw-json {
+        .spot-order-lookup-modal pre.raw-json {
             background: #1e1e2d;
             color: #e4e6f1;
             border-radius: 0.75rem;
@@ -237,25 +237,39 @@
         $finishedTotal = (int) ($finishedBuy['pagination']['api_total'] ?? ($finishedBuyCount + $finishedSellCount));
     @endphp
 
-    <div class="coinex-orders-page">
+    <div class="spot-orders-page">
         <div class="card mb-4">
             <div class="card-body">
                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
                     <div>
-                        <h5 class="mb-1">سفارش‌های اسپات صرافی مرجع (CoinEx)</h5>
+                        <h5 class="mb-1">سفارش‌های اسپات صرافی مرجع ({{ $selectedExchange->name }})</h5>
                         <p class="text-muted mb-0 small">
-                            سفارش‌های باز و تکمیل‌شده خرید/فروش اسپات را بر اساس کوین از API نسخه ۲ کوینکس دریافت کنید.
+                            سفارش‌های باز و تکمیل‌شده خرید/فروش اسپات را بر اساس کوین از API صرافی {{ $selectedExchange->name }} دریافت کنید.
                         </p>
                     </div>
-                    @if ($market)
-                        <span class="market-pill">
-                            <i class="fa-light fa-chart-candlestick"></i>
-                            {{ $market }}
-                        </span>
-                    @endif
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        @if ($market)
+                            <span class="market-pill">
+                                <i class="fa-light fa-chart-candlestick"></i>
+                                {{ $market }}
+                            </span>
+                        @endif
+                        <form action="{{ route('admin.ref-exchange.spot-orders.index') }}" method="get" class="d-flex align-items-center gap-2">
+                            @if ($selectedCurrency)
+                                <input type="hidden" name="currency_id" value="{{ $selectedCurrency->id }}">
+                            @endif
+                            <input type="hidden" name="limit" value="{{ $limit }}">
+                            <label class="form-label mb-0 text-nowrap small" for="exchange-switcher">صرافی مرجع</label>
+                            <select name="exchange" id="exchange-switcher" class="form-select form-select-sm" onchange="this.form.submit()">
+                                @foreach ($exchanges as $exchange)
+                                    <option value="{{ $exchange->slug }}" @selected($exchange->slug === $selectedExchange->slug)>{{ $exchange->name }}</option>
+                                @endforeach
+                            </select>
+                        </form>
+                    </div>
                 </div>
 
-                <form action="{{ route('admin.ref-exchange.coinex-spot-orders.index') }}" method="get" class="row g-3 align-items-end">
+                <form action="{{ route('admin.ref-exchange.spot-orders.index') }}" method="get" class="row g-3 align-items-end">
                     <div class="col-lg-5 col-md-6">
                         <label class="form-label" for="currency_id">انتخاب کوین</label>
                         <x-currency-select
@@ -279,7 +293,7 @@
                             <i class="fas fa-search me-1"></i>
                             دریافت سفارش‌ها
                         </button>
-                        <a href="{{ route('admin.ref-exchange.coinex-spot-orders.index') }}" class="btn btn-outline-secondary">
+                        <a href="{{ route('admin.ref-exchange.spot-orders.index') }}" class="btn btn-outline-secondary">
                             <i class="fas fa-times me-1"></i>
                             پاک کردن
                         </a>
@@ -288,12 +302,12 @@
 
                 <div class="lookup-panel">
                     <div class="mb-2">
-                        <div class="lookup-title">جستجو بر اساس شناسه سفارش CoinEx</div>
+                        <div class="lookup-title">جستجو بر اساس شناسه سفارش {{ $selectedExchange->name }}</div>
                         <p class="text-muted small mb-0">
-                            شناسه سفارش CoinEx را وارد کنید. اگر کوین را هم انتخاب کنید جستجو سریع‌تر انجام می‌شود؛ در غیر این صورت در همه بازارهای فعال جستجو می‌شود.
+                            شناسه سفارش {{ $selectedExchange->name }} را وارد کنید. اگر کوین را هم انتخاب کنید جستجو سریع‌تر انجام می‌شود؛ در غیر این صورت در همه بازارهای فعال جستجو می‌شود.
                         </p>
                     </div>
-                    <div id="coinex-order-lookup-form" class="row g-3 align-items-end">
+                    <div id="spot-order-lookup-form" class="row g-3 align-items-end">
                         <div class="col-lg-8 col-md-8">
                             <label class="form-label" for="lookup_order_id">شناسه سفارش</label>
                             <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off"
@@ -302,7 +316,7 @@
                                 placeholder="مثال: 173390586784" required>
                         </div>
                         <div class="col-lg-4 col-md-4">
-                            <button type="button" class="btn btn-primary w-100" id="coinex-order-lookup-btn">
+                            <button type="button" class="btn btn-primary w-100" id="spot-order-lookup-btn">
                                 <i class="fas fa-search me-1"></i>
                                 جستجوی سفارش
                             </button>
@@ -324,7 +338,7 @@
                 <div class="empty-state">
                     <i class="fa-light fa-coins fa-3x mb-3 text-primary"></i>
                     <h5 class="mb-1">کوینی انتخاب نشده</h5>
-                    <p class="mb-0">برای مشاهده سفارش‌های خرید و فروش اسپات CoinEx، یک کوین انتخاب کنید.</p>
+                    <p class="mb-0">برای مشاهده سفارش‌های خرید و فروش اسپات {{ $selectedExchange->name }}، یک کوین انتخاب کنید.</p>
                 </div>
             </div>
         @elseif (!$error)
@@ -400,7 +414,7 @@
 
             <div class="card mb-4">
                 <div class="card-body p-3">
-                    <ul class="nav nav-pills nav-fill gap-2" id="coinexOrderTabs" role="tablist">
+                    <ul class="nav nav-pills nav-fill gap-2" id="spotOrderTabs" role="tablist">
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active w-100 d-flex align-items-center justify-content-center gap-2 py-3"
                                 id="pending-tab" data-bs-toggle="pill" data-bs-target="#pending-pane" type="button" role="tab">
@@ -423,7 +437,7 @@
 
             <div class="tab-content">
                 <div class="tab-pane fade show active" id="pending-pane" role="tabpanel">
-                    @include('dashboard.exchange.coinex_spot_orders._orders_section', [
+                    @include('dashboard.exchange.spot_orders._orders_section', [
                         'title' => 'سفارش‌های باز خرید',
                         'side' => 'buy',
                         'orders' => $pendingBuy['data'] ?? [],
@@ -434,7 +448,7 @@
                         'fmtTs' => $fmtTs,
                     ])
 
-                    @include('dashboard.exchange.coinex_spot_orders._orders_section', [
+                    @include('dashboard.exchange.spot_orders._orders_section', [
                         'title' => 'سفارش‌های باز فروش',
                         'side' => 'sell',
                         'orders' => $pendingSell['data'] ?? [],
@@ -447,7 +461,7 @@
                 </div>
 
                 <div class="tab-pane fade" id="finished-pane" role="tabpanel">
-                    @include('dashboard.exchange.coinex_spot_orders._orders_section', [
+                    @include('dashboard.exchange.spot_orders._orders_section', [
                         'title' => 'سفارش‌های تکمیل‌شده خرید',
                         'side' => 'buy',
                         'orders' => $finishedBuy['data'] ?? [],
@@ -458,7 +472,7 @@
                         'fmtTs' => $fmtTs,
                     ])
 
-                    @include('dashboard.exchange.coinex_spot_orders._orders_section', [
+                    @include('dashboard.exchange.spot_orders._orders_section', [
                         'title' => 'سفارش‌های تکمیل‌شده فروش',
                         'side' => 'sell',
                         'orders' => $finishedSell['data'] ?? [],
@@ -472,37 +486,37 @@
             </div>
         @endif
 
-        <div class="modal fade coinex-order-lookup-modal" id="coinex-order-lookup-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal fade spot-order-lookup-modal" id="spot-order-lookup-modal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-xl modal-dialog-scrollable">
                 <div class="modal-content">
-                    <div class="modal-header" id="coinex-lookup-modal-header">
+                    <div class="modal-header" id="spot-lookup-modal-header">
                         <div>
-                            <h5 class="modal-title mb-1" id="coinex-lookup-modal-title">جزئیات سفارش</h5>
-                            <div class="d-flex flex-wrap align-items-center gap-2" id="coinex-lookup-modal-meta"></div>
+                            <h5 class="modal-title mb-1" id="spot-lookup-modal-title">جزئیات سفارش</h5>
+                            <div class="d-flex flex-wrap align-items-center gap-2" id="spot-lookup-modal-meta"></div>
                         </div>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="detail-grid mb-4" id="coinex-lookup-detail-grid"></div>
+                        <div class="detail-grid mb-4" id="spot-lookup-detail-grid"></div>
 
                         <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
                             <h6 class="mb-0">معاملات این سفارش (Fills)</h6>
-                            <span class="badge bg-label-primary" id="coinex-lookup-deals-count">0</span>
+                            <span class="badge bg-label-primary" id="spot-lookup-deals-count">0</span>
                         </div>
-                        <div id="coinex-lookup-deals-wrap"></div>
+                        <div id="spot-lookup-deals-wrap"></div>
 
-                        <div class="accordion mt-4" id="coinex-lookup-raw-accordion">
+                        <div class="accordion mt-4" id="spot-lookup-raw-accordion">
                             <div class="accordion-item">
                                 <h2 class="accordion-header">
                                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                        data-bs-target="#coinex-lookup-raw-json">
-                                        پاسخ خام CoinEx (JSON)
+                                        data-bs-target="#spot-lookup-raw-json">
+                                        پاسخ خام {{ $selectedExchange->name }} (JSON)
                                     </button>
                                 </h2>
-                                <div id="coinex-lookup-raw-json" class="accordion-collapse collapse"
-                                    data-bs-parent="#coinex-lookup-raw-accordion">
+                                <div id="spot-lookup-raw-json" class="accordion-collapse collapse"
+                                    data-bs-parent="#spot-lookup-raw-accordion">
                                     <div class="accordion-body">
-                                        <pre class="raw-json" id="coinex-lookup-raw"></pre>
+                                        <pre class="raw-json" id="spot-lookup-raw"></pre>
                                     </div>
                                 </div>
                             </div>
@@ -524,9 +538,10 @@
 @push('scripts')
     <script>
         (function () {
-            function initCoinexOrderLookup() {
-            const cancelUrl = @json(route('admin.ref-exchange.coinex-spot-orders.cancel'));
-            const lookupUrl = @json(route('admin.ref-exchange.coinex-spot-orders.lookup'));
+            function initSpotOrderLookup() {
+            const cancelUrl = @json(route('admin.ref-exchange.spot-orders.cancel'));
+            const lookupUrl = @json(route('admin.ref-exchange.spot-orders.lookup'));
+            const exchangeSlug = @json($selectedExchange->slug);
             const csrfToken = @json(csrf_token());
             const initialOrderId = @json(request('order_id'));
 
@@ -571,6 +586,8 @@
                 cancelled: 'لغو شده',
                 finish: 'تکمیل‌شده',
                 pending: 'در انتظار',
+                expired: 'منقضی شده',
+                rejected: 'رد شده',
             };
 
             function toast(text, ok) {
@@ -664,7 +681,7 @@
             }
 
             function renderDetails(order) {
-                const grid = document.getElementById('coinex-lookup-detail-grid');
+                const grid = document.getElementById('spot-lookup-detail-grid');
                 const known = Object.keys(fieldLabels);
                 const keys = known.concat(Object.keys(order).filter((key) => known.indexOf(key) === -1));
                 let html = '';
@@ -686,8 +703,8 @@
             }
 
             function renderDeals(deals, dealsError) {
-                const wrap = document.getElementById('coinex-lookup-deals-wrap');
-                const countEl = document.getElementById('coinex-lookup-deals-count');
+                const wrap = document.getElementById('spot-lookup-deals-wrap');
+                const countEl = document.getElementById('spot-lookup-deals-count');
                 const list = Array.isArray(deals) ? deals : [];
                 countEl.textContent = String(list.length);
 
@@ -722,14 +739,14 @@
             function showLookupModal(payload) {
                 const order = payload.order || {};
                 const side = String(order.side || '').toLowerCase();
-                const header = document.getElementById('coinex-lookup-modal-header');
+                const header = document.getElementById('spot-lookup-modal-header');
                 header.classList.remove('is-buy', 'is-sell');
                 if (side === 'buy' || side === 'sell') {
                     header.classList.add('is-' + side);
                 }
 
-                document.getElementById('coinex-lookup-modal-title').textContent = 'جزئیات سفارش #' + (order.order_id || '');
-                document.getElementById('coinex-lookup-modal-meta').innerHTML =
+                document.getElementById('spot-lookup-modal-title').textContent = 'جزئیات سفارش #' + (order.order_id || '');
+                document.getElementById('spot-lookup-modal-meta').innerHTML =
                     '<span class="status-pill">' + escapeHtml(payload.market || order.market || '') + '</span>'
                     + '<span class="status-pill">' + escapeHtml(sideLabel(side)) + '</span>'
                     + '<span class="status-pill">' + escapeHtml(order.type || '—') + '</span>'
@@ -737,12 +754,12 @@
 
                 renderDetails(order);
                 renderDeals(payload.deals, payload.deals_error);
-                document.getElementById('coinex-lookup-raw').textContent = JSON.stringify({
+                document.getElementById('spot-lookup-raw').textContent = JSON.stringify({
                     order: order,
                     deals: payload.deals || [],
                 }, null, 2);
 
-                const modalEl = document.getElementById('coinex-order-lookup-modal');
+                const modalEl = document.getElementById('spot-order-lookup-modal');
                 if (!modalEl || typeof bootstrap === 'undefined') {
                     toast('امکان نمایش جزئیات سفارش وجود ندارد.', false);
                     return;
@@ -752,7 +769,7 @@
             }
 
             function runOrderLookup() {
-                const lookupBtn = document.getElementById('coinex-order-lookup-btn');
+                const lookupBtn = document.getElementById('spot-order-lookup-btn');
                 const lookupInput = document.getElementById('lookup_order_id');
                 const currencySelect = document.getElementById('currency_id');
 
@@ -773,7 +790,7 @@
                 lookupBtn.disabled = true;
                 lookupBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> در حال جستجو...';
 
-                const params = new URLSearchParams({ order_id: orderId });
+                const params = new URLSearchParams({ exchange: exchangeSlug, order_id: orderId });
                 if (currencyId) {
                     params.set('currency_id', currencyId);
                 }
@@ -801,14 +818,14 @@
             }
 
             document.addEventListener('click', function (e) {
-                const lookupBtn = e.target.closest('#coinex-order-lookup-btn');
+                const lookupBtn = e.target.closest('#spot-order-lookup-btn');
                 if (lookupBtn) {
                     e.preventDefault();
                     runOrderLookup();
                     return;
                 }
 
-                const btn = e.target.closest('.cancel-coinex-order');
+                const btn = e.target.closest('.cancel-spot-order');
                 if (!btn) return;
 
                 const orderId = btn.dataset.orderId;
@@ -830,6 +847,7 @@
                         'X-CSRF-TOKEN': csrfToken,
                     },
                     body: JSON.stringify({
+                        exchange: exchangeSlug,
                         market: market,
                         order_id: Number(orderId),
                     }),
@@ -873,9 +891,9 @@
             }
 
             if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', initCoinexOrderLookup);
+                document.addEventListener('DOMContentLoaded', initSpotOrderLookup);
             } else {
-                initCoinexOrderLookup();
+                initSpotOrderLookup();
             }
         })();
     </script>

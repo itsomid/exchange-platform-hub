@@ -42,7 +42,7 @@ class PermissionList
             ['currency', 'مدیریت کوین ها'],
             ['market', 'مدیریت بازار'],
             ['ref-exchanges', 'مدیریت صرافی های مرجع'],
-            ['ref-exchanges-coinex-spot-orders', 'مدیریت سفارش های اسپات CoinEx'],
+            ['ref-exchanges-spot-orders', 'مدیریت سفارش های اسپات در صرافی مرجع'],
             ['wallet', 'مدیریت کیف پول ها'],
             ['hd_wallet', 'مدیریت hd-wallet'],
 

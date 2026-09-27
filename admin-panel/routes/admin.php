@@ -20,7 +20,7 @@ use App\Http\Controllers\Exchange\MarketController;
 use App\Http\Controllers\Exchange\NodeProviderController;
 use App\Http\Controllers\Exchange\RefExchangeController;
 use App\Http\Controllers\Exchange\RefExchangeAssetsWithdrawalController;
-use App\Http\Controllers\Exchange\CoinexSpotOrderController;
+use App\Http\Controllers\Exchange\RefExchangeSpotOrderController;
 use App\Http\Controllers\OTCOrder\OTCOrderController;
 use App\Http\Controllers\SpotTrade\SpotTradeController;
 use App\Http\Controllers\SpotOrder\SpotOrderController;
@@ -226,7 +226,7 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::get('/markets/{market}/edit', [MarketController::class, 'edit'])->name('market.edit')->can('market');
         Route::patch('/markets/{market}', [MarketController::class, 'update'])->name('market.update')->can('market');
         Route::patch('/markets/{market}/toggle-home', [MarketController::class, 'toggleHome'])->name('market.toggle-home')->can('market');
-        Route::get('/markets/{market}/coinex-min-otc', [MarketController::class, 'getCoinexMinOtcAmount'])->name('market.coinex-min-otc')->can('market');
+        Route::get('/markets/{market}/min-otc', [MarketController::class, 'getMinOtcAmount'])->name('market.min-otc')->can('market');
 
         Route::get('/wallets/localWallets', [ExchangeWalletController::class, 'localWallets'])->name('exchange.local-wallet');
 
@@ -251,10 +251,10 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::post('/currency/withdrawal-settings/bulk', [RefExchangeAssetsWithdrawalController::class, 'bulkUpdateCurrencyWithdrawalSettings'])->name('ref-exchange.currency.withdrawal-settings.bulk-update');
         Route::post('/currency/{currencyId}/toggle-withdrawal', [RefExchangeAssetsWithdrawalController::class, 'toggleCurrencyWithdrawalStatus'])->name('ref-exchange.currency.toggle-withdrawal');
 
-        // CoinEx spot orders (pending / finished / cancel)
-        Route::get('/coinex-spot-orders', [CoinexSpotOrderController::class, 'index'])->name('ref-exchange.coinex-spot-orders.index')->can('ref-exchanges');
-        Route::get('/coinex-spot-orders/lookup', [CoinexSpotOrderController::class, 'lookup'])->name('ref-exchange.coinex-spot-orders.lookup')->can('ref-exchanges');
-        Route::post('/coinex-spot-orders/cancel', [CoinexSpotOrderController::class, 'cancel'])->name('ref-exchange.coinex-spot-orders.cancel')->can('ref-exchanges');
+        // Reference exchange spot orders (pending / finished / cancel)
+        Route::get('/spot-orders', [RefExchangeSpotOrderController::class, 'index'])->name('ref-exchange.spot-orders.index')->can('ref-exchanges');
+        Route::get('/spot-orders/lookup', [RefExchangeSpotOrderController::class, 'lookup'])->name('ref-exchange.spot-orders.lookup')->can('ref-exchanges');
+        Route::post('/spot-orders/cancel', [RefExchangeSpotOrderController::class, 'cancel'])->name('ref-exchange.spot-orders.cancel')->can('ref-exchanges');
     });
 
     Route::prefix('transactions')->group(function () {

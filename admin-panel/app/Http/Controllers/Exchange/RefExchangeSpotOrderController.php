@@ -5,19 +5,36 @@ namespace App\Http\Controllers\Exchange;
 use App\Exceptions\Exchange\CantResolveCoinexException;
 use App\Http\Controllers\Controller;
 use App\Models\Currency;
-use App\Services\Exchanges\Asset\Coinex\CoinexSpotOrderService;
+use App\Models\Exchange;
+use App\Services\Exchanges\Asset\SpotOrderServiceFactory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
-class CoinexSpotOrderController extends Controller
+class RefExchangeSpotOrderController extends Controller
 {
-    public function __construct(
-        private readonly CoinexSpotOrderService $coinexSpotOrderService
-    ) {}
-
     public function index(Request $request): View
     {
+        $exchanges = $this->supportedExchanges();
+
+        $requestedSlug = $request->input('exchange');
+        if ($requestedSlug && $exchanges->contains('slug', $requestedSlug)) {
+            Cache::forever($this->selectedExchangeCacheKey($request), $requestedSlug);
+        }
+
+        $selectedExchange = $exchanges->firstWhere('slug', Cache::get($this->selectedExchangeCacheKey($request)));
+
+        if (!$selectedExchange) {
+            return view('dashboard.exchange.spot_orders.select_exchange', [
+                'exchanges' => $exchanges,
+            ]);
+        }
+
+        $spotOrderService = SpotOrderServiceFactory::make($selectedExchange->slug);
+
         $currencies = Currency::query()
             ->where('is_active', true)
             ->where('symbol', '!=', 'USDT')
@@ -43,27 +60,29 @@ class CoinexSpotOrderController extends Controller
                 $limit = min(100, max(1, (int) $request->input('limit', 50)));
 
                 try {
-                    $balances = $this->coinexSpotOrderService->getMarketBalances($selectedCurrency->symbol);
-                    $pending = $this->coinexSpotOrderService->getPendingOrders($market, null, $page, $limit);
-                    $finished = $this->coinexSpotOrderService->getFinishedOrders($market, null, $page, $limit);
+                    $balances = $spotOrderService->getMarketBalances($selectedCurrency->symbol);
+                    $pending = $spotOrderService->getPendingOrders($market, null, $page, $limit);
+                    $finished = $spotOrderService->getFinishedOrders($market, null, $page, $limit);
 
                     $pendingBuy = $this->splitBySide($pending, 'buy');
                     $pendingSell = $this->splitBySide($pending, 'sell');
                     $finishedBuy = $this->splitBySide($finished, 'buy');
                     $finishedSell = $this->splitBySide($finished, 'sell');
 
-                    // Preserve CoinEx totals for summary cards
+                    // Preserve exchange totals for summary cards
                     $pendingBuy['pagination']['api_total'] = (int) ($pending['pagination']['total'] ?? 0);
                     $finishedBuy['pagination']['api_total'] = (int) ($finished['pagination']['total'] ?? 0);
                 } catch (CantResolveCoinexException $e) {
-                    $error = $e->getMessage() ?: 'خطا در برقراری ارتباط با CoinEx';
+                    $error = $e->getMessage() ?: 'خطا در برقراری ارتباط با ' . $selectedExchange->name;
                 }
             } else {
                 $error = 'کوین انتخاب‌شده معتبر نیست.';
             }
         }
 
-        return view('dashboard.exchange.coinex_spot_orders.index', [
+        return view('dashboard.exchange.spot_orders.index', [
+            'exchanges' => $exchanges,
+            'selectedExchange' => $selectedExchange,
             'currencies' => $currencies,
             'selectedCurrency' => $selectedCurrency,
             'market' => $market,
@@ -81,12 +100,13 @@ class CoinexSpotOrderController extends Controller
     public function cancel(Request $request): JsonResponse
     {
         $validated = $request->validate([
+            'exchange' => ['required', Rule::in(SpotOrderServiceFactory::SUPPORTED)],
             'market' => ['required', 'string', 'max:32'],
             'order_id' => ['required', 'integer'],
         ]);
 
         try {
-            $data = $this->coinexSpotOrderService->cancelOrder(
+            $data = SpotOrderServiceFactory::make($validated['exchange'])->cancelOrder(
                 $validated['market'],
                 $validated['order_id']
             );
@@ -107,11 +127,13 @@ class CoinexSpotOrderController extends Controller
     public function lookup(Request $request): JsonResponse
     {
         $validated = $request->validate([
+            'exchange' => ['required', Rule::in(SpotOrderServiceFactory::SUPPORTED)],
             'order_id' => ['required', 'regex:/^\d+$/', 'max:32'],
             'currency_id' => ['nullable', 'integer'],
             'market' => ['nullable', 'string', 'max:32'],
         ]);
 
+        $spotOrderService = SpotOrderServiceFactory::make($validated['exchange']);
         $orderId = (string) $validated['order_id'];
         $market = isset($validated['market']) ? strtoupper(trim($validated['market'])) : null;
 
@@ -143,11 +165,11 @@ class CoinexSpotOrderController extends Controller
         }
 
         try {
-            $found = $this->coinexSpotOrderService->findOrderById($orderId, $market, $markets);
+            $found = $spotOrderService->findOrderById($orderId, $market, $markets);
         } catch (CantResolveCoinexException $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage() ?: 'خطا در دریافت سفارش از CoinEx',
+                'message' => $e->getMessage() ?: 'خطا در دریافت سفارش از صرافی مرجع',
             ], 422);
         }
 
@@ -158,7 +180,7 @@ class CoinexSpotOrderController extends Controller
         $dealsError = null;
 
         try {
-            $deals = $this->coinexSpotOrderService->getOrderDeals($resolvedMarket, $orderId)['data'] ?? [];
+            $deals = $spotOrderService->getOrderDeals($resolvedMarket, $orderId)['data'] ?? [];
         } catch (CantResolveCoinexException $e) {
             $dealsError = $e->getMessage() ?: 'خطا در دریافت معاملات سفارش';
         }
@@ -170,6 +192,22 @@ class CoinexSpotOrderController extends Controller
             'deals' => $deals,
             'deals_error' => $dealsError,
         ]);
+    }
+
+    /**
+     * @return Collection<int, Exchange>
+     */
+    private function supportedExchanges(): Collection
+    {
+        return Exchange::query()
+            ->whereIn('slug', SpotOrderServiceFactory::SUPPORTED)
+            ->orderBy('priority')
+            ->get();
+    }
+
+    private function selectedExchangeCacheKey(Request $request): string
+    {
+        return 'ref-exchange-spot-orders:selected-exchange:' . $request->user()->getAuthIdentifier();
     }
 
     private function splitBySide(array $result, string $side): array

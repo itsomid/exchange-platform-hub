@@ -183,7 +183,7 @@
             </li>
         @endcan
 
-        @canany(['currency', 'market', 'ref-exchanges', 'ref-exchanges-coinex-spot-orders'])
+        @canany(['currency', 'market', 'ref-exchanges', 'ref-exchanges-spot-orders'])
             <li class="menu-header small text-uppercase">
                 <span class="menu-header-text">مدیریت صرافی</span>
             </li>
@@ -217,11 +217,11 @@
                         </a>
                     </li>
 
-                    @can('ref-exchanges-coinex-spot-orders')
-                        <li class="menu-item @if (request()->is('admin/ref-exchanges/coinex-spot-orders*')) active @endif">
-                            <a href="{{ route('admin.ref-exchange.coinex-spot-orders.index') }}" class="menu-link">
+                    @can('ref-exchanges-spot-orders')
+                        <li class="menu-item @if (request()->is('admin/ref-exchanges/spot-orders*')) active @endif">
+                            <a href="{{ route('admin.ref-exchange.spot-orders.index') }}" class="menu-link">
                                 <i class="menu-icon fa-regular fa-book-open-cover"></i>
-                                <div>سفارش‌های اسپات CoinEx</div>
+                                <div>سفارش‌های اسپات صرافی مرجع</div>
                             </a>
                         </li>
                     @endcan
