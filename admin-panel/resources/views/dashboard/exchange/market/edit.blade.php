@@ -3,6 +3,7 @@
 @section('content')
 
     <div class="row g-6">
+
         <div class="col-xl-4 col-sm-6">
             <div class="card h-100">
                 <div class="card-header pb-0">
@@ -121,41 +122,23 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between">
-                    <div>
-                        بازار {{ $market->baseCurrency->symbol }}/{{ $market->quoteCurrency->symbol }}
-                    </div>
-
-                    <div class="form-group">
-                        <div class="card border-info">
-                            <div class="card-body p-3">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <div>
-                                        <small class="text-muted">حداقل مقدار معامله
-                                            {{ $market->baseCurrency->symbol }}/{{ $market->quoteCurrency->symbol }}
-                                            بر روی صرافی مرجع</small>
-                                        <div class="h6 mb-0 font-number" id="coinex-min-amount">
-                                            <span class="spinner-border spinner-border-sm" role="status"></span>
-                                            <span> در حال بارگیری...</span>
-                                        </div>
-                                    </div>
-                                    <button type="button" class="btn btn-sm btn-outline-info" id="refresh-coinex-min"
-                                        title="بروزرسانی">
-                                        <i class="fa fa-refresh"></i>
-                                    </button>
-                                </div>
-
-                                <small class="text-info mt-2 d-block">
-                                    <i class="fa fa-info-circle"></i>
-                                    توجه داشته باشید که حتما حداقل مقدار معامله را برابر یا بزرگتر از صرافی مرجع قرار دهید
-
-                                </small>
-
-                            </div>
+        <div class="col-12" id="reference-support">
+            <div class="card ref-support-card is-pending mb-0" role="status">
+                <div class="card-body d-flex align-items-center gap-3 py-3">
+                    <div class="flex-grow-1">
+                        <div class="h6 mb-1">{{ $market->base_currency }}/{{ $market->quote_currency }}</div>
+                        <div class="text-muted small mb-0">
+                            <span class="spinner-border spinner-border-sm" role="status"></span>
+                            در حال بررسی پشتیبانی این بازار روی صرافی مرجع...
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    بازار {{ $market->baseCurrency->symbol }}/{{ $market->quoteCurrency->symbol }}
                 </div>
                 <div class="card-body">
 
@@ -289,34 +272,45 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-md-6 mt-5">
+                            <div class="col-md-8 mt-5">
                                 <label class="switch  switch-lg">
                                     <input type="checkbox" class="switch-input" name="is_active" value="1"
                                         {{ $market->is_active ? 'checked' : '' }} />
                                     <span class="switch-toggle-slider"></span>
-                                    <span class="switch-label">وضعیت بازار (فعال/غیرفعال)</span>
+                                    <span class="switch-label">وضعیت بازار
+                                        @include('dashboard.exchange.market.partials.switch-state', [
+                                            'on' => $market->is_active,
+                                        ])
+                                    </span>
                                 </label>
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-md-6 mt-5">
+                            <div class="col-md-8 mt-5">
                                 <label class="switch  switch-lg">
                                     <input type="checkbox" class="switch-input" name="ref_exchange_sell_enabled"
                                         value="1" {{ $market->ref_exchange_sell_enabled ? 'checked' : '' }} />
                                     <span class="switch-toggle-slider"></span>
-                                    <span class="switch-label">وضعیت فروش در صرافی مرجع در هر معامله OTC/SPOT (فعال/غیرفعال)</span>
+                                    <span class="switch-label">وضعیت فروش در صرافی مرجع در هر معامله OTC/SPOT
+                                        @include('dashboard.exchange.market.partials.switch-state', [
+                                            'on' => $market->ref_exchange_sell_enabled,
+                                        ])
+                                    </span>
                                 </label>
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-md-6 mt-5">
+                            <div class="col-md-12 mt-5">
                                 <label class="switch switch-lg">
                                     <input type="checkbox" class="switch-input" name="price_update_enabled"
                                         value="1" {{ $market->price_update_enabled ? 'checked' : '' }} />
                                     <span class="switch-toggle-slider"></span>
-                                    <span class="switch-label">بارگیری قیمت از صرافی مرجع (فعال/غیرفعال)
+                                    <span class="switch-label">بارگیری قیمت از صرافی مرجع
+                                        @include('dashboard.exchange.market.partials.switch-state', [
+                                            'on' => $market->price_update_enabled,
+                                        ])
 
-                                        <small class="text-muted">
+                                        <small class="text-muted d-block">
                                             با فعال کردن این گزینه، قیمت بازار بعد از یک دقیقه شروع به بارگیری از صرافی
                                             مرجع
                                             می کند.
@@ -349,6 +343,67 @@
 
 @section('vendor-style')
     @vite(['resources/assets/vendor/libs/apex-charts/apex-charts.scss', 'resources/assets/vendor/libs/select2/select2.scss'])
+    <style>
+        .ref-support-card {
+            border: 1px solid rgba(67, 89, 113, .12);
+            border-inline-start: 3px solid #c5c9d4;
+            box-shadow: none;
+        }
+
+        .ref-support-card.is-ok {
+            border-inline-start-color: #28c76f;
+            background: linear-gradient(to left, rgba(40, 199, 111, .08), #fff 46%);
+        }
+
+        .ref-support-card.is-bad {
+            border-inline-start-color: #ea5455;
+            background: linear-gradient(to left, rgba(234, 84, 85, .08), #fff 46%);
+        }
+
+        .ref-support-card.is-warn {
+            border-inline-start-color: #ff9f43;
+            background: linear-gradient(to left, rgba(255, 159, 67, .1), #fff 46%);
+        }
+
+        .switch-state {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            margin-inline-start: .5rem;
+            padding: .1rem .55rem;
+            border-radius: 50rem;
+            font-size: .8125rem;
+            font-weight: 500;
+            vertical-align: middle;
+        }
+
+        .switch-state-dot {
+            width: .5rem;
+            height: .5rem;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .switch-state.is-on {
+            color: #28c76f;
+            background: rgba(40, 199, 111, .12);
+        }
+
+        .switch-state.is-off {
+            color: #ea5455;
+            background: rgba(234, 84, 85, .12);
+        }
+
+        .ref-support-card .ref-support-refresh {
+            width: 2.25rem;
+            height: 2.25rem;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+    </style>
 @endsection
 
 @push('scripts')
@@ -366,61 +421,222 @@
         window.priceChangePercentage = {{ $market->activeExchangePrice->price_change_percentage ?? 0 }};
 
         $(document).ready(function() {
-            const marketId = {{ $market->id }};
-            const coinexMinAmountElement = $('#coinex-min-amount');
-            const refreshButton = $('#refresh-coinex-min');
+            const supportUrl = @json(route('admin.market.min-otc', ['market' => $market->id]));
+            const supportBox = $('#reference-support');
+            const pairLabel = @json($market->base_currency . '/' . $market->quote_currency);
+            const baseSymbol = @json($market->base_currency);
 
-            // Function to fetch CoinEx min OTC amount
-            function fetchCoinexMinAmount() {
-                coinexMinAmountElement.html(
-                    '<span class="spinner-border spinner-border-sm" role="status"></span> در حال بارگیری...');
-                refreshButton.prop('disabled', true);
-
-                $.ajax({
-                    url: `{{ route('admin.market.coinex-min-otc', ['market' => ':marketId']) }}`.replace(
-                        ':marketId', marketId),
-                    method: 'GET',
-                    success: function(response) {
-                        if (response.success) {
-                            coinexMinAmountElement.html(`
-                        <span class="text-success">
-                            <i class="fa fa-check-circle me-1"></i>
-                            ${response.formatted_amount}
-                        </span>
-                    `);
-                        } else {
-                            coinexMinAmountElement.html(`
-                        <span class="text-warning">
-                            <i class="fa fa-exclamation-triangle me-1"></i>
-                            ${response.message}
-                        </span>
-                    `);
-                        }
-                    },
-                    error: function(xhr) {
-                        let errorMessage = 'خطا در دریافت اطلاعات';
-                        if (xhr.responseJSON && xhr.responseJSON.message) {
-                            errorMessage = xhr.responseJSON.message;
-                        }
-                        coinexMinAmountElement.html(`
-                    <span class="text-danger">
-                        <i class="fa fa-times-circle me-1"></i>
-                        ${errorMessage}
-                    </span>
-                `);
-                    },
-                    complete: function() {
-                        refreshButton.prop('disabled', false);
-                    }
+            function refreshButton(tone) {
+                return $('<button>', {
+                    type: 'button',
+                    class: 'btn btn-sm btn-outline-' + tone + ' ref-support-refresh flex-shrink-0',
+                    id: 'refresh-exchange-min',
+                    title: 'بررسی دوباره',
+                    html: '<i class="fa fa-refresh"></i>',
                 });
             }
 
-            // Initial load
-            fetchCoinexMinAmount();
+            function supportCard(tone, role) {
+                return $('<div>', {
+                    class: 'card ref-support-card ' + tone + ' mb-0',
+                    role: role,
+                });
+            }
 
-            // Refresh button click handler
-            refreshButton.on('click', function() {
-                fetchCoinexMinAmount();
+            function renderLoading() {
+                const card = supportCard('is-pending', 'status');
+                const body = $('<div>', {
+                    class: 'card-body d-flex align-items-center gap-3 py-3'
+                });
+                const meta = $('<div>', {
+                    class: 'flex-grow-1'
+                });
+                meta.append($('<div>', {
+                    class: 'h6 mb-1',
+                    text: pairLabel
+                }));
+                meta.append(
+                    $('<div>', {
+                        class: 'text-muted small mb-0'
+                    }).append(
+                        '<span class="spinner-border spinner-border-sm" role="status"></span> ',
+                        document.createTextNode('در حال بررسی پشتیبانی این بازار روی صرافی مرجع...')
+                    )
+                );
+                body.append(meta);
+                card.append(body);
+                supportBox.empty().append(card);
+            }
+
+            function renderSupported(response) {
+                const card = supportCard('is-ok', 'status');
+                const body = $('<div>', {
+                    class: 'card-body d-flex align-items-center gap-3 py-3'
+                });
+                const meta = $('<div>', {
+                    class: 'flex-grow-1'
+                });
+                const title = $('<div>', {
+                    class: 'd-flex align-items-center flex-wrap gap-2 mb-1'
+                });
+                title.append(
+                    $('<span>', {
+                        class: 'h6 mb-0',
+                        text: pairLabel
+                    }),
+                    $('<span>', {
+                        class: 'badge bg-label-primary',
+                        text: response.exchange || 'صرافی مرجع'
+                    }),
+                    $('<span>', {
+                        class: 'badge bg-label-success',
+                        text: 'پشتیبانی می‌شود'
+                    })
+                );
+                meta.append(
+                    title,
+                    $('<div>', {
+                        class: 'text-muted small mb-0',
+                        text: 'حداقل مقدار معامله این بازار را برابر یا بزرگ‌تر از عدد صرافی مرجع بگذارید.',
+                    })
+                );
+                const amount = $('<div>', {
+                    class: 'text-end flex-shrink-0'
+                });
+                amount.append(
+                    $('<div>', {
+                        class: 'text-muted small',
+                        text: 'حداقل معامله'
+                    }),
+                    $('<div>', {
+                        class: 'h4 mb-0 font-number',
+                        dir: 'ltr'
+                    }).append(
+                        document.createTextNode((response.formatted_amount || '') + ' '),
+                        $('<small>', {
+                            class: 'text-muted fs-6',
+                            text: baseSymbol
+                        })
+                    )
+                );
+                body.append(meta, amount, refreshButton('success'));
+                card.append(body);
+                supportBox.empty().append(card);
+            }
+
+            function renderUnsupported(response) {
+                const card = supportCard('is-bad', 'alert');
+                const body = $('<div>', {
+                    class: 'card-body d-flex align-items-center gap-3 py-3'
+                });
+                const meta = $('<div>', {
+                    class: 'flex-grow-1'
+                });
+                const title = $('<div>', {
+                    class: 'd-flex align-items-center flex-wrap gap-2 mb-1'
+                });
+                title.append(
+                    $('<span>', {
+                        class: 'h6 mb-0',
+                        text: pairLabel
+                    }),
+                    $('<span>', {
+                        class: 'badge bg-label-primary',
+                        text: response.exchange || 'صرافی مرجع'
+                    }),
+                    $('<span>', {
+                        class: 'badge bg-label-danger',
+                        text: 'پشتیبانی نمی‌شود'
+                    })
+                );
+                meta.append(
+                    title,
+                    $('<div>', {
+                        class: 'text-muted small mb-0',
+                        text: 'این جفت‌ارز در صرافی مرجع وجود ندارد. قیمت، حداقل مقدار معامله و سایر اطلاعات از این صرافی دریافت نمی‌شود. صرافی مرجع را عوض کنید، یا بارگیری قیمت را خاموش کنید.',
+                    })
+                );
+                body.append(meta, refreshButton('danger'));
+                card.append(body);
+                supportBox.empty().append(card);
+            }
+
+            function renderWarning(message) {
+                const card = supportCard('is-warn', 'alert');
+                const body = $('<div>', {
+                    class: 'card-body d-flex align-items-center gap-3 py-3'
+                });
+                const meta = $('<div>', {
+                    class: 'flex-grow-1'
+                });
+                const title = $('<div>', {
+                    class: 'd-flex align-items-center flex-wrap gap-2 mb-1'
+                });
+                title.append(
+                    $('<span>', {
+                        class: 'h6 mb-0',
+                        text: pairLabel
+                    }),
+                    $('<span>', {
+                        class: 'badge bg-label-warning',
+                        text: 'بررسی نشد'
+                    })
+                );
+                meta.append(
+                    title,
+                    $('<div>', {
+                        class: 'text-muted small mb-0',
+                        text: message || 'خطا در دریافت اطلاعات از صرافی مرجع',
+                    })
+                );
+                body.append(meta, refreshButton('warning'));
+                card.append(body);
+                supportBox.empty().append(card);
+            }
+
+            function fetchExchangeSupport() {
+                renderLoading();
+
+                $.ajax({
+                    url: supportUrl,
+                    method: 'GET',
+                    data: {
+                        exchange_id: $('#exchange').val()
+                    },
+                    success: function(response) {
+                        if (response.supported === true) {
+                            renderSupported(response);
+                            return;
+                        }
+                        if (response.supported === false) {
+                            renderUnsupported(response);
+                            return;
+                        }
+                        renderWarning(response.message);
+                    },
+                    error: function(xhr) {
+                        const message = xhr.responseJSON && xhr.responseJSON.message ?
+                            xhr.responseJSON.message :
+                            'خطا در دریافت اطلاعات از صرافی مرجع';
+                        renderWarning(message);
+                    },
+                });
+            }
+
+            fetchExchangeSupport();
+
+            $(document).on('click', '#refresh-exchange-min', function() {
+                fetchExchangeSupport();
+            });
+
+            $('#exchange').on('change', function() {
+                fetchExchangeSupport();
+            });
+
+            $('.switch-input').on('change', function() {
+                const state = $(this).closest('.switch').find('.switch-state');
+                state.toggleClass('is-on', this.checked).toggleClass('is-off', !this.checked);
+                state.find('.switch-state-text').text(this.checked ? 'فعال' : 'غیرفعال');
             });
         });
     </script>

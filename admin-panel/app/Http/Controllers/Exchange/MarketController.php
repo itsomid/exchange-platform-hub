@@ -12,22 +12,26 @@ use App\Models\Currency;
 use App\Models\Exchange;
 use App\Models\ExchangePrice;
 use App\Models\Market;
-use App\Services\Exchanges\WithdrawalFee\ExchangeFactory;
+use App\Services\Exchanges\ExchangeData\ReferenceMarketSupport;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class MarketController extends Controller
 {
-    public function index()
+    public function index(ReferenceMarketSupport $support)
     {
         $activeExchange = Exchange::query()->active()->first();
         $exchanges = Exchange::query()->orderBy('priority')->get();
         $markets = Market::with(['baseCurrency', 'quoteCurrency', 'activeExchangePrice.exchange'])->get();
+        $unsupportedMarkets = $support->unsupported($markets)
+            ->keyBy(fn (array $row) => $row['market']->id);
 
         return view('dashboard.exchange.market.index', [
             'markets' => $markets,
             'activeExchange' => $activeExchange,
             'exchanges' => $exchanges,
+            'unsupportedMarkets' => $unsupportedMarkets,
+            'referenceSupportFailed' => $support->checkFailed,
         ]);
     }
 
@@ -155,33 +159,72 @@ class MarketController extends Controller
     }
 
     /**
-     * Get CoinEx min OTC amount for a specific market
+     * Whether the selected reference exchange lists this market, and its min trade size.
      */
-    public function getCoinexMinOtcAmount(Market $market): JsonResponse
+    public function getMinOtcAmount(Request $request, Market $market, ReferenceMarketSupport $support): JsonResponse
     {
-        try {
-            $service = ExchangeFactory::make('coinex');
-            $fetchMarkets = collect($service->fetchMinTrade())->keyBy('base_ccy');
+        $exchange = $this->referenceExchange($request, $market);
+        if (!$exchange) {
+            return response()->json([
+                'success' => false,
+                'supported' => null,
+                'message' => 'صرافی مرجعی برای این بازار انتخاب نشده است',
+            ], 404);
+        }
 
-            $minAmount = $fetchMarkets[$market->base_currency]['min_amount'] ?? null;
+        $listed = $support->tradingMarkets($exchange->slug);
+        $pair = $market->base_currency . '/' . $market->quote_currency;
 
-            if ($minAmount === null) {
+        if ($listed === null) {
+            if ($support->checkFailed) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'حداقل مقدار معامله برای این بازار در CoinEx یافت نشد'
-                ], 404);
+                    'supported' => null,
+                    'exchange' => $exchange->name,
+                    'symbol' => $pair,
+                    'message' => 'خطا در دریافت اطلاعات از صرافی مرجع',
+                ], 500);
             }
 
             return response()->json([
-                'success' => true,
-                'min_amount' => $minAmount,
-                'formatted_amount' => formatNumberTrimZeros($minAmount)
+                'success' => false,
+                'supported' => null,
+                'exchange' => $exchange->name,
+                'symbol' => $pair,
+                'message' => 'بررسی پشتیبانی برای این صرافی در دسترس نیست',
             ]);
-        } catch (\Exception $e) {
+        }
+
+        $row = $listed[strtoupper($market->base_currency . $market->quote_currency)] ?? null;
+        if ($row === null) {
             return response()->json([
                 'success' => false,
-                'message' => 'خطا در دریافت اطلاعات از CoinEx: ' . $e->getMessage()
-            ], 500);
+                'supported' => false,
+                'exchange' => $exchange->name,
+                'symbol' => $pair,
+                'message' => "بازار {$pair} روی صرافی مرجع {$exchange->name} پشتیبانی نمی‌شود.",
+            ]);
         }
+
+        return response()->json([
+            'success' => true,
+            'supported' => true,
+            'exchange' => $exchange->name,
+            'symbol' => $pair,
+            'min_amount' => $row['min_amount'],
+            'formatted_amount' => formatNumberTrimZeros($row['min_amount']),
+        ]);
+    }
+
+    private function referenceExchange(Request $request, Market $market): ?Exchange
+    {
+        if ($request->filled('exchange_id')) {
+            return Exchange::query()->find($request->integer('exchange_id'));
+        }
+
+        $market->loadMissing('activeExchangePrice.exchange');
+
+        return $market->activeExchangePrice?->exchange
+            ?? Exchange::query()->active()->first();
     }
 }

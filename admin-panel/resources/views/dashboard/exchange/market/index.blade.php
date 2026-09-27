@@ -3,7 +3,7 @@
 @section('content')
 
     <div class="row g-4 mb-4">
-        <div class="col-sm-12 col-xl-4">
+        <div class="col-sm-6 col-xl-3">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
@@ -20,7 +20,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-12 col-xl-4">
+        <div class="col-sm-6 col-xl-3">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
@@ -37,7 +37,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-12 col-xl-4">
+        <div class="col-sm-6 col-xl-3">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
@@ -54,7 +54,61 @@
                 </div>
             </div>
         </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                            <span>بدون پشتیبانی صرافی</span>
+                            <div class="d-flex align-items-center my-1">
+                                <h4 class="mb-0 me-2">
+                                    @if ($referenceSupportFailed && $unsupportedMarkets->isEmpty())
+                                        —
+                                    @else
+                                        {{ $unsupportedMarkets->count() }}
+                                    @endif
+                                </h4>
+                            </div>
+                        </div>
+                        <span class="badge bg-label-{{ $unsupportedMarkets->isNotEmpty() ? 'danger' : ($referenceSupportFailed ? 'warning' : 'success') }} rounded p-2">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    @if ($unsupportedMarkets->isNotEmpty())
+        <div class="alert alert-danger mb-4" role="alert">
+            <div class="d-flex align-items-start gap-3">
+                <span class="badge bg-danger rounded p-2">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </span>
+                <div>
+                    <h6 class="alert-heading mb-1">
+                        {{ $unsupportedMarkets->count() }} بازار روی صرافی مرجع پشتیبانی نمی‌شود
+                    </h6>
+                    <p class="mb-2">
+                        این بازارها در صرافی مرجعی که برایشان انتخاب شده وجود ندارند.
+                        قیمت، حداقل مقدار معامله و بقیه اطلاعات از آن صرافی دریافت نمی‌شود.
+                    </p>
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach ($unsupportedMarkets as $unsupported)
+                            <a href="{{ route('admin.market.edit', ['market' => $unsupported['market']->id]) }}"
+                                class="badge bg-label-danger">
+                                {{ $unsupported['symbol'] }} — {{ $unsupported['exchange']->name }}
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+    @elseif ($referenceSupportFailed)
+        <div class="alert alert-warning mb-4" role="alert">
+            بررسی پشتیبانی بازارها روی صرافی مرجع انجام نشد. فهرست بازارهای صرافی در دسترس نبود.
+        </div>
+    @endif
 
 
     <div class="card mb-3">
@@ -81,7 +135,12 @@
     <div class="card">
         <div class="card-body">
             <div class="card-title header-elements">
-                <h5 class="m-0 me-2">لیست بازارها ({{ $activeExchange->name }})</h5>
+                <h5 class="m-0 me-2">
+                    لیست بازارها ({{ $activeExchange->name }})
+                    @if ($unsupportedMarkets->isNotEmpty())
+                        <span class="badge bg-danger ms-2">{{ $unsupportedMarkets->count() }} بدون پشتیبانی</span>
+                    @endif
+                </h5>
                 <div class="card-title-elements ms-auto d-flex gap-2">
                     <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal"
                         data-bs-target="#bulkExchangeModal">
@@ -114,7 +173,8 @@
                     </thead>
                     <tbody class="table-border-bottom-0">
                         @foreach ($markets as $market)
-                            <tr data-market-id="{{ $market->id }}">
+                            @php $unsupported = $unsupportedMarkets->get($market->id); @endphp
+                            <tr data-market-id="{{ $market->id }}" @class(['market-unsupported' => (bool) $unsupported])>
                                 <td class="">{{ $market->id }}</td>
                                 <td class="text-heading fw-medium">
                                     <div class="d-flex justify-content-start align-items-center">
@@ -129,7 +189,11 @@
                                                     class="rounded-circle  ">
                                             </div>
                                         </div>
-                                        <div class="ms-3">{{ $market->base_currency }}/{{ $market->quote_currency }}
+                                        <div class="ms-3">
+                                            <div>{{ $market->base_currency }}/{{ $market->quote_currency }}</div>
+                                            @if ($unsupported)
+                                                <span class="badge bg-label-danger mt-1">پشتیبانی نمی‌شود</span>
+                                            @endif
                                         </div>
                                     </div>
                                 </td>
@@ -187,6 +251,11 @@
                                         <span class="badge bg-label-{{ $market->is_active ? 'success' : 'danger' }} me-1">
                                             {{ $market->is_active ? 'فعال' : 'غیرفعال' }}
                                         </span>
+                                        @if ($unsupported)
+                                            <span class="badge bg-label-danger me-1">
+                                                پشتیبانی نمی‌شود
+                                            </span>
+                                        @endif
                                         @if (!$market->price_update_enabled)
                                             <span class="badge bg-label-danger me-1">
                                                 عدم بروزرسانی قیمت
@@ -602,6 +671,28 @@
 
         .table tbody tr:hover .sticky-column {
             background-color: #f8f9fa !important;
+        }
+
+        .table tbody tr.market-unsupported > td {
+            background-color: #fff1f2 !important;
+            border-inline-start-color: transparent;
+        }
+
+        .table tbody tr.market-unsupported > td:first-child {
+            box-shadow: inset -3px 0 0 #ea5455;
+        }
+
+        .table tbody tr.market-unsupported > td:nth-child(2) {
+            white-space: normal;
+        }
+
+        .table tbody tr.market-unsupported .sticky-column {
+            background-color: #fff1f2 !important;
+        }
+
+        .table tbody tr.market-unsupported:hover > td,
+        .table tbody tr.market-unsupported:hover .sticky-column {
+            background-color: #ffe4e6 !important;
         }
 
         [data-role="last-price"],
