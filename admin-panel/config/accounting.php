@@ -12,7 +12,7 @@ return [
     |
     */
 
-    'url' => env('ACCOUNTING_SSO_URL', 'https://acct.bitexroom.com'),
+    'url' => env('ACCOUNTING_SSO_URL', 'https://acc.bitexroom.com'),
 
     'login_path' => env('ACCOUNTING_SSO_LOGIN_PATH', '/sso/login'),
 

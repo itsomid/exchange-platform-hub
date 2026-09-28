@@ -7,7 +7,7 @@ use App\Enums\SpotStatusEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
-use App\Exceptions\Exchange\CoinexWithdrawalException;
+use App\Exceptions\Exchange\RefExchangeWithdrawalException;
 use App\Models\Exchange;
 use App\Models\ExchangeAssetsWithdrawal;
 use App\Models\OTCOrder;
@@ -143,7 +143,7 @@ class ExchangeService
                     ),
                 ]);
             }
-        } catch (CoinexWithdrawalException $exception) {
+        } catch (RefExchangeWithdrawalException $exception) {
             throw $exception;
         } catch (Throwable $exception) {
             report($exception);

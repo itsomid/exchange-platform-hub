@@ -17,7 +17,7 @@
                 <textarea id="botOrderDescriptionInput" class="form-control" rows="6"
                     placeholder="یادداشت شخصی ادمین برای این سفارش…"></textarea>
                 <div class="form-text">
-                    توضیحات سیستمی (خطاهای CoinEx و …) به‌صورت خودکار ثبت می‌شوند و قابل ویرایش نیستند.
+                    توضیحات سیستمی (خطاهای صرافی مرجع و …) به‌صورت خودکار ثبت می‌شوند و قابل ویرایش نیستند.
                 </div>
             </div>
             <div class="modal-footer">

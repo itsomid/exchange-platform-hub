@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Exchange;
 
-use App\Exceptions\Exchange\CantResolveCoinexException;
+use App\Exceptions\Exchange\RefExchangeRequestException;
 use App\Http\Controllers\Controller;
 use App\Models\Currency;
 use App\Models\Exchange;
@@ -72,7 +72,7 @@ class RefExchangeSpotOrderController extends Controller
                     // Preserve exchange totals for summary cards
                     $pendingBuy['pagination']['api_total'] = (int) ($pending['pagination']['total'] ?? 0);
                     $finishedBuy['pagination']['api_total'] = (int) ($finished['pagination']['total'] ?? 0);
-                } catch (CantResolveCoinexException $e) {
+                } catch (RefExchangeRequestException $e) {
                     $error = $e->getMessage() ?: 'خطا در برقراری ارتباط با ' . $selectedExchange->name;
                 }
             } else {
@@ -116,7 +116,7 @@ class RefExchangeSpotOrderController extends Controller
                 'message' => 'سفارش با موفقیت لغو شد.',
                 'data' => $data,
             ]);
-        } catch (CantResolveCoinexException $e) {
+        } catch (RefExchangeRequestException $e) {
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage() ?: 'خطا در لغو سفارش',
@@ -166,7 +166,7 @@ class RefExchangeSpotOrderController extends Controller
 
         try {
             $found = $spotOrderService->findOrderById($orderId, $market, $markets);
-        } catch (CantResolveCoinexException $e) {
+        } catch (RefExchangeRequestException $e) {
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage() ?: 'خطا در دریافت سفارش از صرافی مرجع',
@@ -181,7 +181,7 @@ class RefExchangeSpotOrderController extends Controller
 
         try {
             $deals = $spotOrderService->getOrderDeals($resolvedMarket, $orderId)['data'] ?? [];
-        } catch (CantResolveCoinexException $e) {
+        } catch (RefExchangeRequestException $e) {
             $dealsError = $e->getMessage() ?: 'خطا در دریافت معاملات سفارش';
         }
 

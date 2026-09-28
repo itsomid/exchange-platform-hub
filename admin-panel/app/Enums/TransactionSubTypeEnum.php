@@ -11,7 +11,7 @@ enum TransactionSubTypeEnum: string
     case STOCK = 'stock';
     case REFERRAL_INTRODUCER = 'introducer';
     case REFERRAL_FRIEND = 'friend';
-    case COINEX = 'coinex';
+    case REF_EXCHANGE = 'ref_exchange';
     case HOT_WALLET = 'hot_wallet';
     case COLD_WALLET = 'cold_wallet';
     case HD_WALLET_FEE = 'hd_wallet_fee';
@@ -43,7 +43,7 @@ enum TransactionSubTypeEnum: string
         self::SPOT->value => 'اسپات',
         self::REFERRAL_INTRODUCER->value => 'کارمزد معرفی کننده',
         self::REFERRAL_FRIEND->value => 'کارمزد معرفی شونده',
-        self::COINEX->value => 'کوینکس',
+        self::REF_EXCHANGE->value => 'صرافی مرجع',
         self::HOT_WALLET->value => 'هات ولت',
         self::COLD_WALLET->value => 'کلد ولت',
         self::HD_WALLET_FEE->value => 'کارمزد اچ دی ولت',
@@ -77,7 +77,7 @@ enum TransactionSubTypeEnum: string
         self::SPOT->value => 'dribble',
         self::REFERRAL_INTRODUCER->value => 'info',
         self::REFERRAL_FRIEND->value => 'info',
-        self::COINEX->value => 'info',
+        self::REF_EXCHANGE->value => 'info',
         self::HOT_WALLET->value => 'info',
         self::COLD_WALLET->value => 'info',
         self::HD_WALLET_FEE->value => 'info',

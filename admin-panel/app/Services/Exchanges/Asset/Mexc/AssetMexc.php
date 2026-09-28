@@ -3,8 +3,8 @@
 namespace App\Services\Exchanges\Asset\Mexc;
 
 use App\Enums\SpotStatusEnum;
-use App\Exceptions\Exchange\CantResolveCoinexException;
-use App\Exceptions\Exchange\CoinexHasProblemException;
+use App\Exceptions\Exchange\RefExchangeRequestException;
+use App\Exceptions\Exchange\RefExchangeWithdrawalException;
 use App\Models\Currency;
 use App\Services\Exchanges\Asset\Contract\AssetInterface;
 use App\Services\Exchanges\Asset\DTO\BalanceResponseDTO;
@@ -232,7 +232,7 @@ class AssetMexc implements AssetInterface
             $response = MexcRequest::sendWithdrawal('POST', '/api/v3/capital/withdraw', $params);
         } catch (\Throwable $exception) {
             report($exception);
-            throw new CantResolveCoinexException("Can't Resolve https://api.mexc.com");
+            throw new RefExchangeRequestException("Can't Resolve https://api.mexc.com");
         }
         $json = $response->json();
         if (!$response->ok() || !isset($json['id'])) {
@@ -241,7 +241,7 @@ class AssetMexc implements AssetInterface
 
             Log::channel('ref-exchange')->error($response->json());
 
-            throw new CoinexHasProblemException($errorMsg);
+            throw new RefExchangeWithdrawalException($errorMsg);
         }
 
         $withdrawId = $json['id'];

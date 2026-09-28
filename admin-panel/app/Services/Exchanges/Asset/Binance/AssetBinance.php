@@ -3,8 +3,8 @@
 namespace App\Services\Exchanges\Asset\Binance;
 
 use App\Enums\SpotStatusEnum;
-use App\Exceptions\Exchange\CantResolveCoinexException;
-use App\Exceptions\Exchange\CoinexHasProblemException;
+use App\Exceptions\Exchange\RefExchangeRequestException;
+use App\Exceptions\Exchange\RefExchangeWithdrawalException;
 use App\Models\Currency;
 use App\Services\Exchanges\Asset\Contract\AssetInterface;
 use App\Services\Exchanges\Asset\DTO\BalanceResponseDTO;
@@ -27,7 +27,7 @@ class AssetBinance implements AssetInterface
             $response = BinanceRequest::sendRequest('GET', '/api/v3/account');
         } catch (\Throwable $exception) {
             report($exception);
-            throw new CantResolveCoinexException("Can't Resolve " . config('exchanges.binance.base_url'));
+            throw new RefExchangeRequestException("Can't Resolve " . config('exchanges.binance.base_url'));
         }
 
         $json = $response->json();
@@ -48,7 +48,7 @@ class AssetBinance implements AssetInterface
                 'response_body' => $response->body(),
             ]);
 
-            throw new CoinexHasProblemException(trim(sprintf(
+            throw new RefExchangeRequestException(trim(sprintf(
                 'Binance getBalance failed [%s]: %s%s',
                 $errorCode !== null ? "code={$errorCode}" : "http={$response->status()}",
                 $errorMsg,
@@ -234,7 +234,7 @@ class AssetBinance implements AssetInterface
             $response = BinanceRequest::sendRequest('POST', '/sapi/v1/capital/withdraw/apply', $params);
         } catch (\Throwable $exception) {
             report($exception);
-            throw new CantResolveCoinexException("Can't Resolve " . config('exchanges.binance.base_url'));
+            throw new RefExchangeRequestException("Can't Resolve " . config('exchanges.binance.base_url'));
         }
 
         $json = $response->json();
@@ -268,7 +268,7 @@ class AssetBinance implements AssetInterface
                 $hint ? " | Hint: {$hint}" : ''
             ));
 
-            throw new CoinexHasProblemException($exceptionMessage);
+            throw new RefExchangeWithdrawalException($exceptionMessage);
         }
 
         $withdrawId = $json['id'];

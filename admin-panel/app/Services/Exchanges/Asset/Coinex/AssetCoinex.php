@@ -3,8 +3,8 @@
 namespace App\Services\Exchanges\Asset\Coinex;
 
 use App\Enums\SpotStatusEnum;
-use App\Exceptions\Exchange\CantResolveCoinexException;
-use App\Exceptions\Exchange\CoinexWithdrawalException;
+use App\Exceptions\Exchange\RefExchangeRequestException;
+use App\Exceptions\Exchange\RefExchangeWithdrawalException;
 use App\Models\Currency;
 use App\Services\Exchanges\Asset\Coinex\Authentication\MethodEnum;
 use App\Services\Exchanges\Asset\Contract\AssetInterface;
@@ -138,7 +138,7 @@ class AssetCoinex implements AssetInterface
             $response = CoinexRequest::send(MethodEnum::POST, '/v2/assets/withdraw', $requestBody);
         } catch (ConnectionException | Throwable $exception) {
             report($exception);
-            throw new CantResolveCoinexException($exception->getMessage(), (int) $exception->getCode(), $exception);
+            throw new RefExchangeRequestException($exception->getMessage(), (int) $exception->getCode(), $exception);
         }
 
         if ($response->json('code') !== 0) {
@@ -146,7 +146,7 @@ class AssetCoinex implements AssetInterface
 
             $mappedError = CoinexWithdrawalError::tryFrom($response->json('code'));
 
-            throw new CoinexWithdrawalException(
+            throw new RefExchangeWithdrawalException(
                 $mappedError
                     ? CoinexWithdrawalError::mapErrorToResponse($mappedError)
                     : "Coinex withdrawal failed with code: {$response->json('code')}, message: {$response->json('message')}"

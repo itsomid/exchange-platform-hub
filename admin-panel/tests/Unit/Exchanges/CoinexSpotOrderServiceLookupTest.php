@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Exchanges;
 
-use App\Exceptions\Exchange\CantResolveCoinexException;
+use App\Exceptions\Exchange\RefExchangeRequestException;
 use App\Services\Exchanges\Asset\Coinex\CoinexSpotOrderService;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -73,7 +73,7 @@ class CoinexSpotOrderServiceLookupTest extends TestCase
             ], 200),
         ]);
 
-        $this->expectException(CantResolveCoinexException::class);
+        $this->expectException(RefExchangeRequestException::class);
 
         (new CoinexSpotOrderService())->getOrderStatus('ADAUSDT', 1);
     }

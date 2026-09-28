@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Exchange;
 
 use App\Enums\OTCRefExchangeWithdrawalStatusEnum;
-use App\Exceptions\Exchange\CantResolveCoinexException;
-use App\Exceptions\Exchange\CoinexWithdrawalException;
+use App\Exceptions\Exchange\RefExchangeRequestException;
+use App\Exceptions\Exchange\RefExchangeWithdrawalException;
 use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
 use App\Models\Currency;
@@ -33,11 +33,15 @@ class RefExchangeAssetsWithdrawalController extends Controller
     {
         $withdraws = ExchangeAssetsWithdrawal::with('currency')->orderBy('id', 'desc')->get();
 
-        $withdrawalFeeSum = ExchangeAssetsWithdrawal::sum('fee');
+        $withdrawalFeeSums = ExchangeAssetsWithdrawal::query()
+            ->whereNotNull('fee_currency')
+            ->groupBy('fee_currency')
+            ->selectRaw('fee_currency, SUM(fee) as total')
+            ->pluck('total', 'fee_currency');
 
         return view('dashboard.exchange.ref_exchange.assets-withdrawal-history', [
             'withdraws' => $withdraws,
-            'withdrawalFeeSum' => $withdrawalFeeSum,
+            'withdrawalFeeSums' => $withdrawalFeeSums,
         ]);
     }
 
@@ -50,12 +54,11 @@ class RefExchangeAssetsWithdrawalController extends Controller
         } else {
             $currency_symbol = 'USDT';
         }
-        if ($request->has('exchange')) {
-            $exchange = Exchange::where('slug', $request->exchange)->first();
-            $exchangeName = $exchange->name;
-        } else {
-            $exchangeName = 'coinex';
-        }
+        $exchange = $request->has('exchange')
+            ? Exchange::where('slug', $request->exchange)->first()
+            : $this->exchangeRepository->getActiveExchange();
+        $exchangeName = $exchange->name;
+        $exchangeSlug = $exchange->slug;
         $currency = Currency::whereSymbol($currency_symbol)->first();
 
         $currencyChains = $currency->chains;
@@ -68,7 +71,6 @@ class RefExchangeAssetsWithdrawalController extends Controller
         // Get balance from exchange using AssetFactory
         $exchangeBalance = null;
         try {
-            $exchangeSlug = $request->exchange ?? 'coinex';
             $assetService = AssetFactory::make($exchangeSlug);
             $balances = $assetService->getBalance();
 
@@ -86,7 +88,7 @@ class RefExchangeAssetsWithdrawalController extends Controller
 
         // Get all exchanges for selection
         $exchanges = Exchange::all();
-        $selectedExchange = $request->exchange ?? 'coinex';
+        $selectedExchange = $exchangeSlug;
 
         return view('dashboard.exchange.ref_exchange.assets-withdrawal-request-form', [
             'currency' => $currency,
@@ -136,15 +138,15 @@ class RefExchangeAssetsWithdrawalController extends Controller
                 ->notify();
 
             return redirect()->route('admin.ref-exchange.assets-gathering-to-hd-wallet.index');
-        } catch (CantResolveCoinexException $e) {
+        } catch (RefExchangeRequestException $e) {
             report($e);
             Toast::message('عملیات با شکست مواجه شد.')
                 ->danger()
                 ->notify();
             return redirect()->back()->withInput()->with('operation_errors', [
-                trim($e->getMessage()) !== '' ? $e->getMessage() : 'خطا در برقراری ارتباط با Coinex',
+                trim($e->getMessage()) !== '' ? $e->getMessage() : 'خطا در برقراری ارتباط با صرافی مرجع',
             ]);
-        } catch (CoinexWithdrawalException $e) {
+        } catch (RefExchangeWithdrawalException $e) {
             report($e);
             Toast::message('عملیات با شکست مواجه شد.')
                 ->danger()
@@ -345,11 +347,11 @@ class RefExchangeAssetsWithdrawalController extends Controller
 
                 $successCount++;
 
-            } catch (CantResolveCoinexException $e) {
+            } catch (RefExchangeRequestException $e) {
                 report($e);
                 $failedCurrencies[] = $currencyData['symbol'] . ': ' . (trim($e->getMessage()) !== ''
                     ? $e->getMessage()
-                    : 'خطا در برقراری ارتباط با Coinex');
+                    : 'خطا در برقراری ارتباط با صرافی مرجع');
             } catch (\Throwable $e) {
                 report($e);
                 $failedCurrencies[] = $currencyData['symbol'] . ': ' . (trim($e->getMessage()) !== ''

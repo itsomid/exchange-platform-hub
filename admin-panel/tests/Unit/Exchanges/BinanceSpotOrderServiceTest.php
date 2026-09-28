@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Exchanges;
 
-use App\Exceptions\Exchange\CantResolveCoinexException;
+use App\Exceptions\Exchange\RefExchangeRequestException;
 use App\Services\Exchanges\Asset\Binance\BinanceSpotOrderService;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -55,7 +55,7 @@ class BinanceSpotOrderServiceTest extends TestCase
             '*/api/v3/order*' => Http::response(['code' => -2013, 'msg' => 'Order does not exist.'], 400),
         ]);
 
-        $this->expectException(CantResolveCoinexException::class);
+        $this->expectException(RefExchangeRequestException::class);
 
         (new BinanceSpotOrderService())->findOrderById(555, 'ADAUSDT');
     }
@@ -89,8 +89,8 @@ class BinanceSpotOrderServiceTest extends TestCase
 
         try {
             (new BinanceSpotOrderService())->cancelOrder('ADAUSDT', 555);
-            $this->fail('Expected CantResolveCoinexException');
-        } catch (CantResolveCoinexException $e) {
+            $this->fail('Expected RefExchangeRequestException');
+        } catch (RefExchangeRequestException $e) {
             $this->assertSame('Unknown order sent.', $e->getMessage());
         }
 

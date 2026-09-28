@@ -70,7 +70,8 @@
                                 </h4>
                             </div>
                         </div>
-                        <span class="badge bg-label-{{ $unsupportedMarkets->isNotEmpty() ? 'danger' : ($referenceSupportFailed ? 'warning' : 'success') }} rounded p-2">
+                        <span
+                            class="badge bg-label-{{ $unsupportedMarkets->isNotEmpty() ? 'danger' : ($referenceSupportFailed ? 'warning' : 'success') }} rounded p-2">
                             <i class="fa-solid fa-triangle-exclamation"></i>
                         </span>
                     </div>
@@ -87,7 +88,9 @@
                 </span>
                 <div>
                     <h6 class="alert-heading mb-1">
-                        {{ $unsupportedMarkets->count() }} بازار روی صرافی مرجع پشتیبانی نمی‌شود
+                        {{ $unsupportedMarkets->count() }} بازار روی صرافی مرجع ({{ $referenceExchange->name ?? 'نامشخص' }})
+                        پشتیبانی نمی‌شود
+
                     </h6>
                     <p class="mb-2">
                         این بازارها در صرافی مرجعی که برایشان انتخاب شده وجود ندارند.
@@ -370,7 +373,8 @@
                     return;
                 }
 
-                const exchangeName = bulkExchangeSelect.options[bulkExchangeSelect.selectedIndex]?.text || '';
+                const exchangeName = bulkExchangeSelect.options[bulkExchangeSelect.selectedIndex]?.text ||
+                    '';
                 if (!window.confirm(`صرافی مرجع همه بازارها به «${exchangeName}» تغییر کند؟`)) {
                     return;
                 }
@@ -392,9 +396,10 @@
                     .then(async (res) => {
                         const data = await res.json().catch(() => ({}));
                         if (!res.ok || !data.success) {
-                            const message = data.message
-                                || (data.errors ? Object.values(data.errors).flat().join(' ') : null)
-                                || 'خطا در تغییر صرافی مرجع.';
+                            const message = data.message ||
+                                (data.errors ? Object.values(data.errors).flat().join(' ') :
+                                null) ||
+                                'خطا در تغییر صرافی مرجع.';
                             throw new Error(message);
                         }
                         return data;
@@ -673,16 +678,16 @@
             background-color: #f8f9fa !important;
         }
 
-        .table tbody tr.market-unsupported > td {
+        .table tbody tr.market-unsupported>td {
             background-color: #fff1f2 !important;
             border-inline-start-color: transparent;
         }
 
-        .table tbody tr.market-unsupported > td:first-child {
+        .table tbody tr.market-unsupported>td:first-child {
             box-shadow: inset -3px 0 0 #ea5455;
         }
 
-        .table tbody tr.market-unsupported > td:nth-child(2) {
+        .table tbody tr.market-unsupported>td:nth-child(2) {
             white-space: normal;
         }
 
@@ -690,7 +695,7 @@
             background-color: #fff1f2 !important;
         }
 
-        .table tbody tr.market-unsupported:hover > td,
+        .table tbody tr.market-unsupported:hover>td,
         .table tbody tr.market-unsupported:hover .sticky-column {
             background-color: #ffe4e6 !important;
         }

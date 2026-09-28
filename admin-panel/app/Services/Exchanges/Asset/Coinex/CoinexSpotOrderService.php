@@ -2,7 +2,7 @@
 
 namespace App\Services\Exchanges\Asset\Coinex;
 
-use App\Exceptions\Exchange\CantResolveCoinexException;
+use App\Exceptions\Exchange\RefExchangeRequestException;
 use App\Services\Exchanges\Asset\Coinex\Authentication\MethodEnum;
 use App\Services\Exchanges\Asset\Contract\SpotOrderServiceInterface;
 use Illuminate\Http\Client\ConnectionException;
@@ -34,7 +34,7 @@ class CoinexSpotOrderService implements SpotOrderServiceInterface
             $response = CoinexRequest::send(MethodEnum::GET, '/v2/assets/spot/balance');
         } catch (ConnectionException|Throwable $exception) {
             report($exception);
-            throw new CantResolveCoinexException($exception->getMessage(), (int) $exception->getCode(), $exception);
+            throw new RefExchangeRequestException($exception->getMessage(), (int) $exception->getCode(), $exception);
         }
 
         if (!$response->ok() || $response->json('code') !== 0) {
@@ -48,7 +48,7 @@ class CoinexSpotOrderService implements SpotOrderServiceInterface
                 $message = CoinexError::mapErrorToResponse($mapped);
             }
 
-            throw new CantResolveCoinexException($message, (int) $response->json('code'));
+            throw new RefExchangeRequestException($message, (int) $response->json('code'));
         }
 
         $byCcy = [];
@@ -78,7 +78,7 @@ class CoinexSpotOrderService implements SpotOrderServiceInterface
             $response = CoinexRequest::send(MethodEnum::POST, '/v2/spot/cancel-order', $payload);
         } catch (ConnectionException|Throwable $exception) {
             report($exception);
-            throw new CantResolveCoinexException($exception->getMessage(), (int) $exception->getCode(), $exception);
+            throw new RefExchangeRequestException($exception->getMessage(), (int) $exception->getCode(), $exception);
         }
 
         if (!$response->ok() || $response->json('code') !== 0) {
@@ -93,7 +93,7 @@ class CoinexSpotOrderService implements SpotOrderServiceInterface
                 $message = CoinexError::mapErrorToResponse($mapped);
             }
 
-            throw new CantResolveCoinexException($message, (int) $response->json('code'));
+            throw new RefExchangeRequestException($message, (int) $response->json('code'));
         }
 
         return $response->json('data') ?? [];
@@ -104,7 +104,7 @@ class CoinexSpotOrderService implements SpotOrderServiceInterface
         $order = $this->fetchOrderStatus($market, $orderId);
 
         if ($order === null) {
-            throw new CantResolveCoinexException('سفارشی با این شناسه در بازار '.$market.' یافت نشد.');
+            throw new RefExchangeRequestException('سفارشی با این شناسه در بازار '.$market.' یافت نشد.');
         }
 
         return $order;
@@ -121,7 +121,7 @@ class CoinexSpotOrderService implements SpotOrderServiceInterface
             : array_values(array_unique(array_map('strtoupper', $markets)));
 
         if ($targets === []) {
-            throw new CantResolveCoinexException('بازاری برای جستجوی سفارش مشخص نشده است.');
+            throw new RefExchangeRequestException('بازاری برای جستجوی سفارش مشخص نشده است.');
         }
 
         $lastError = null;
@@ -129,7 +129,7 @@ class CoinexSpotOrderService implements SpotOrderServiceInterface
         foreach ($targets as $targetMarket) {
             try {
                 $order = $this->fetchOrderStatus($targetMarket, $orderId);
-            } catch (CantResolveCoinexException $e) {
+            } catch (RefExchangeRequestException $e) {
                 $lastError = $e;
                 continue;
             }
@@ -142,7 +142,7 @@ class CoinexSpotOrderService implements SpotOrderServiceInterface
             }
         }
 
-        throw $lastError ?? new CantResolveCoinexException('سفارشی با این شناسه یافت نشد.');
+        throw $lastError ?? new RefExchangeRequestException('سفارشی با این شناسه یافت نشد.');
     }
 
     public function getOrderDeals(string $market, int|string $orderId, int $page = 1, int $limit = 100): array
@@ -176,7 +176,7 @@ class CoinexSpotOrderService implements SpotOrderServiceInterface
             $response = CoinexRequest::send(MethodEnum::GET, $path, $query);
         } catch (ConnectionException|Throwable $exception) {
             report($exception);
-            throw new CantResolveCoinexException($exception->getMessage(), (int) $exception->getCode(), $exception);
+            throw new RefExchangeRequestException($exception->getMessage(), (int) $exception->getCode(), $exception);
         }
 
         if (!$response->ok() || $response->json('code') !== 0) {
@@ -192,7 +192,7 @@ class CoinexSpotOrderService implements SpotOrderServiceInterface
                 $message = CoinexError::mapErrorToResponse($mapped);
             }
 
-            throw new CantResolveCoinexException($message, (int) $response->json('code'));
+            throw new RefExchangeRequestException($message, (int) $response->json('code'));
         }
 
         return $response;
@@ -209,7 +209,7 @@ class CoinexSpotOrderService implements SpotOrderServiceInterface
             $response = CoinexRequest::send(MethodEnum::GET, '/v2/spot/order-status', $query);
         } catch (ConnectionException|Throwable $exception) {
             report($exception);
-            throw new CantResolveCoinexException($exception->getMessage(), (int) $exception->getCode(), $exception);
+            throw new RefExchangeRequestException($exception->getMessage(), (int) $exception->getCode(), $exception);
         }
 
         if ($response->ok() && $response->json('code') === 0) {
@@ -237,7 +237,7 @@ class CoinexSpotOrderService implements SpotOrderServiceInterface
             $message = CoinexError::mapErrorToResponse($mapped);
         }
 
-        throw new CantResolveCoinexException($message, $code);
+        throw new RefExchangeRequestException($message, $code);
     }
 
     private function normalizeBalance(string $ccy, ?array $item): array
@@ -270,7 +270,7 @@ class CoinexSpotOrderService implements SpotOrderServiceInterface
             $response = CoinexRequest::send(MethodEnum::GET, $path, $query);
         } catch (ConnectionException|Throwable $exception) {
             report($exception);
-            throw new CantResolveCoinexException($exception->getMessage(), (int) $exception->getCode(), $exception);
+            throw new RefExchangeRequestException($exception->getMessage(), (int) $exception->getCode(), $exception);
         }
 
         if (!$response->ok() || $response->json('code') !== 0) {
@@ -286,7 +286,7 @@ class CoinexSpotOrderService implements SpotOrderServiceInterface
                 $message = CoinexError::mapErrorToResponse($mapped);
             }
 
-            throw new CantResolveCoinexException($message, (int) $response->json('code'));
+            throw new RefExchangeRequestException($message, (int) $response->json('code'));
         }
 
         return [

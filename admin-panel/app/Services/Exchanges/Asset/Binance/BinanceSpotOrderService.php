@@ -2,7 +2,7 @@
 
 namespace App\Services\Exchanges\Asset\Binance;
 
-use App\Exceptions\Exchange\CantResolveCoinexException;
+use App\Exceptions\Exchange\RefExchangeRequestException;
 use App\Services\Exchanges\Asset\Contract\SpotOrderServiceInterface;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -86,7 +86,7 @@ class BinanceSpotOrderService implements SpotOrderServiceInterface
             : array_values(array_unique(array_map([BinanceOrderFormatter::class, 'normalizeSymbol'], $markets)));
 
         if ($targets === []) {
-            throw new CantResolveCoinexException('بازاری برای جستجوی سفارش مشخص نشده است.');
+            throw new RefExchangeRequestException('بازاری برای جستجوی سفارش مشخص نشده است.');
         }
 
         foreach ($targets as $targetMarket) {
@@ -100,7 +100,7 @@ class BinanceSpotOrderService implements SpotOrderServiceInterface
             }
         }
 
-        throw new CantResolveCoinexException('سفارشی با این شناسه یافت نشد.');
+        throw new RefExchangeRequestException('سفارشی با این شناسه یافت نشد.');
     }
 
     public function getOrderDeals(string $market, int|string $orderId, int $page = 1, int $limit = 100): array
@@ -138,7 +138,7 @@ class BinanceSpotOrderService implements SpotOrderServiceInterface
                 'symbol' => $symbol,
                 'orderId' => $orderId,
             ], 'خطا در دریافت وضعیت سفارش از Binance');
-        } catch (CantResolveCoinexException $e) {
+        } catch (RefExchangeRequestException $e) {
             if (in_array($e->getCode(), self::ORDER_MISS_CODES, true)) {
                 return null;
             }
@@ -157,7 +157,7 @@ class BinanceSpotOrderService implements SpotOrderServiceInterface
             report($exception);
 
             // Keep only the cURL reason; the rest of the message is the signed request URL.
-            throw new CantResolveCoinexException(Str::before($exception->getMessage(), ' (see '), 0, $exception);
+            throw new RefExchangeRequestException(Str::before($exception->getMessage(), ' (see '), 0, $exception);
         }
 
         $json = $response->json();
@@ -171,7 +171,7 @@ class BinanceSpotOrderService implements SpotOrderServiceInterface
                 'body' => $response->body(),
             ]);
 
-            throw new CantResolveCoinexException(
+            throw new RefExchangeRequestException(
                 (string) (is_array($json) ? ($json['msg'] ?? $fallbackMessage) : $fallbackMessage),
                 is_array($json) ? (int) ($json['code'] ?? 0) : 0
             );

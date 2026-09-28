@@ -13,7 +13,7 @@ enum TransactionSubTypeEnum: string
     case EXCHANGE_WITHDRAWAL_FEE = 'exchange_withdrawal_fee';
     case NETWORK_WITHDRAWAL_FEE = 'network_withdrawal_fee';
     case HD_WALLET_FEE = 'hd_wallet_fee';
-    case COINEX = 'coinex';
+    case REF_EXCHANGE = 'ref_exchange';
     case REF_EXCHANGE_BUY = 'ref_exchange_buy';
     case REF_EXCHANGE_BUY_FEE = 'ref_exchange_buy_fee';
     case REF_EXCHANGE_SELL = 'ref_exchange_sell';

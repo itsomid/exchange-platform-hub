@@ -26,12 +26,18 @@
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
-                            <span>مجموع کارمزد پرداخت شده به صرافی مرجع (Coinex)</span>
-                            <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{formatNumberTrimZeros($withdrawalFeeSum)}}
-                                    <small>CET</small>
-                                </h4>
-                            </div>
+                            <span>مجموع کارمزد پرداخت شده به صرافی مرجع</span>
+                            @forelse ($withdrawalFeeSums as $feeCurrency => $feeSum)
+                                <div class="d-flex align-items-center my-1">
+                                    <h4 class="mb-0 me-2">{{formatNumberTrimZeros($feeSum)}}
+                                        <small>{{ $feeCurrency }}</small>
+                                    </h4>
+                                </div>
+                            @empty
+                                <div class="d-flex align-items-center my-1">
+                                    <h4 class="mb-0 me-2">0</h4>
+                                </div>
+                            @endforelse
                         </div>
                         <span class="badge bg-label-info rounded p-2">
                             <i class="fa-solid fa-hand-holding-dollar"></i>
