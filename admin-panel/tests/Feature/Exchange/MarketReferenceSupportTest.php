@@ -108,6 +108,32 @@ class MarketReferenceSupportTest extends TestCase
             ->assertJsonPath('exchange', 'Binance');
     }
 
+    public function test_min_otc_covers_the_binance_minimum_order_value(): void
+    {
+        Http::fake([
+            '*/api/v3/exchangeInfo' => Http::response([
+                'symbols' => [[
+                    'symbol' => 'BNBUSDT',
+                    'status' => 'TRADING',
+                    'baseAsset' => 'BNB',
+                    'quoteAsset' => 'USDT',
+                    'filters' => [
+                        ['filterType' => 'LOT_SIZE', 'minQty' => '0.00100000', 'stepSize' => '0.00100000'],
+                        ['filterType' => 'NOTIONAL', 'minNotional' => '5.00000000', 'applyMinToMarket' => true],
+                    ],
+                ]],
+            ]),
+            '*/api/v3/ticker/price' => Http::response([['symbol' => 'BNBUSDT', 'price' => '766.20000000']]),
+        ]);
+        $bnb = $this->makeMarket('BNB');
+
+        // 5 USDT × 1.1 / 766.2 = 0.00718 → rounded up to the 0.001 step.
+        $this->actingAs($this->admin, 'admin')
+            ->getJson(route('admin.market.min-otc', ['market' => $bnb, 'exchange_id' => $this->binance->id]))
+            ->assertOk()
+            ->assertJsonPath('min_amount', '0.008');
+    }
+
     public function test_edit_page_reserves_a_support_notice(): void
     {
         $market = $this->makeMarket('UTK');
@@ -132,6 +158,7 @@ class MarketReferenceSupportTest extends TestCase
                     ],
                 ], $symbols),
             ]),
+            '*/api/v3/ticker/price' => Http::response([]),
         ]);
     }
 

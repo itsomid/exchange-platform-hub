@@ -52,7 +52,7 @@ class BinanceRequest
     }
 
     /**
-     * @return array<string, string> LOT_SIZE / MARKET_LOT_SIZE / PRICE_FILTER values for the symbol
+     * @return array<string, string> LOT_SIZE / MARKET_LOT_SIZE / PRICE_FILTER / NOTIONAL values for the symbol
      */
     public static function symbolFilters(string $symbol): array
     {
@@ -79,10 +79,31 @@ class BinanceRequest
                     case 'PRICE_FILTER':
                         $filters['tickSize'] = (string) $filter['tickSize'];
                         break;
+                    case 'NOTIONAL':
+                    case 'MIN_NOTIONAL':
+                        $filters['minNotional'] = (string) $filter['minNotional'];
+                        $filters['minNotionalAppliesToMarket'] = ($filter['applyMinToMarket'] ?? $filter['applyToMarket'] ?? true) ? '1' : '0';
+                        break;
                 }
             }
 
             return $filters;
         });
+    }
+
+    /**
+     * Binance checks the NOTIONAL filter of MARKET orders against this price, not the last trade.
+     */
+    public static function averagePrice(string $symbol): string
+    {
+        $response = Http::timeout(10)->get(config('exchanges.binance.base_url') . '/api/v3/avgPrice', [
+            'symbol' => $symbol,
+        ]);
+
+        if (! $response->ok() || ! is_numeric($response->json('price'))) {
+            throw new \RuntimeException("Binance avgPrice failed for {$symbol}: " . $response->body());
+        }
+
+        return (string) $response->json('price');
     }
 }

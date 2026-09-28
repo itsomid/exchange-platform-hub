@@ -2,6 +2,7 @@
 
 namespace App\Services\Exchanges\ExchangeData;
 
+use App\Services\Exchanges\Asset\Binance\BinanceOrderFormatter;
 use App\Services\Exchanges\Asset\Binance\BinanceRequest;
 use Exception;
 use Illuminate\Http\Client\Response;
@@ -9,6 +10,8 @@ use Illuminate\Support\Facades\Http;
 
 class BinanceExchangeData implements ExchangeDataInterface
 {
+    private const MIN_NOTIONAL_MARGIN = '1.1';
+
     private const NETWORK_ALIASES = [
         'ETH' => 'ERC20',
         'TRX' => 'TRC20',
@@ -98,6 +101,12 @@ class BinanceExchangeData implements ExchangeDataInterface
 
         $symbols = $response->json('symbols') ?? [];
 
+        $pricesResponse = Http::get(config('exchanges.binance.base_url') . '/api/v3/ticker/price');
+        if (!$pricesResponse->successful()) {
+            throw $this->failure($pricesResponse, 'ticker prices');
+        }
+        $prices = collect($pricesResponse->json() ?? [])->pluck('price', 'symbol');
+
         $result = [];
         foreach ($symbols as $symbol) {
             if (($symbol['status'] ?? '') !== 'TRADING') {
@@ -105,10 +114,18 @@ class BinanceExchangeData implements ExchangeDataInterface
             }
 
             $minQty = null;
+            $stepSize = null;
+            $minNotional = null;
             foreach ($symbol['filters'] ?? [] as $filter) {
-                if (($filter['filterType'] ?? '') === 'LOT_SIZE') {
-                    $minQty = $filter['minQty'];
-                    break;
+                switch ($filter['filterType'] ?? '') {
+                    case 'LOT_SIZE':
+                        $minQty = $filter['minQty'];
+                        $stepSize = $filter['stepSize'] ?? null;
+                        break;
+                    case 'NOTIONAL':
+                    case 'MIN_NOTIONAL':
+                        $minNotional = $filter['minNotional'] ?? null;
+                        break;
                 }
             }
 
@@ -118,13 +135,43 @@ class BinanceExchangeData implements ExchangeDataInterface
 
             $result[] = [
                 'market' => $symbol['symbol'],
-                'min_amount' => $minQty,
+                'min_amount' => $this->minAmount($minQty, $stepSize, $minNotional, $prices[$symbol['symbol']] ?? null),
                 'base_ccy' => $symbol['baseAsset'],
                 'quote_ccy' => $symbol['quoteAsset'],
             ];
         }
 
         return $result;
+    }
+
+    /**
+     * Binance rejects an order below LOT_SIZE.minQty and also below NOTIONAL.minNotional
+     * (quantity × price), so the minimum is whichever needs more coins. The notional side
+     * gets a margin because the price can drop before the next sync.
+     */
+    private function minAmount(string $minQty, ?string $stepSize, ?string $minNotional, ?string $price): string
+    {
+        $minNotional = BinanceOrderFormatter::plainDecimal((string) $minNotional);
+        $price = BinanceOrderFormatter::plainDecimal((string) $price);
+
+        if (bccomp($minNotional, '0', 18) !== 1 || bccomp($price, '0', 18) !== 1) {
+            return $minQty;
+        }
+
+        $notionalQty = bcdiv(bcmul($minNotional, self::MIN_NOTIONAL_MARGIN, 18), $price, 18);
+
+        $stepSize = BinanceOrderFormatter::plainDecimal((string) $stepSize);
+        if (bccomp($stepSize, '0', 18) === 1) {
+            $steps = bcdiv($notionalQty, $stepSize, 0);
+            if (bccomp(bcmul($steps, $stepSize, 18), $notionalQty, 18) === -1) {
+                $steps = bcadd($steps, '1', 0);
+            }
+            $notionalQty = bcmul($steps, $stepSize, 18);
+        }
+
+        return bccomp($notionalQty, BinanceOrderFormatter::plainDecimal($minQty), 18) === 1
+            ? BinanceOrderFormatter::plainDecimal($notionalQty)
+            : $minQty;
     }
 
     private function failure(Response $response, string $context): Exception

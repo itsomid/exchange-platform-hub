@@ -78,6 +78,16 @@ class AssetBinance implements AssetInterface
                 $params['timeInForce'] = 'GTC';
             }
 
+            $minNotional = BinanceOrderFormatter::minNotionalFor($orderType, $filters);
+            if ($minNotional !== null) {
+                $notionalPrice = $params['price'] ?? BinanceOrderFormatter::plainDecimal(BinanceRequest::averagePrice($symbol));
+                if (bccomp(bcmul($quantity, $notionalPrice, 18), $minNotional, 18) === -1) {
+                    AdminNotification::sendSpotTradingIsTooSmall($symbol, $request->getQuantity());
+
+                    return $this->failedOrder(SpotStatusEnum::AmountTooSmall, -1013, 'ارزش سفارش کمتر از حداقل مجاز بایننس است.');
+                }
+            }
+
             $response = BinanceRequest::sendRequest('POST', '/api/v3/order', $params);
         } catch (\Throwable $exception) {
             report($exception);

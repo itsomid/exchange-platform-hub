@@ -55,6 +55,25 @@ class BinanceOrderFormatter
         return self::isPositive($filters['minQty'] ?? null) ? self::plainDecimal($filters['minQty']) : null;
     }
 
+    /**
+     * Minimum quantity × price (in the quote asset), or null when the symbol has no
+     * NOTIONAL filter or it does not apply to MARKET orders.
+     *
+     * @param  array<string, string>  $filters
+     */
+    public static function minNotionalFor(string $orderType, array $filters): ?string
+    {
+        if (! self::isPositive($filters['minNotional'] ?? null)) {
+            return null;
+        }
+
+        if ($orderType === 'MARKET' && ($filters['minNotionalAppliesToMarket'] ?? '1') !== '1') {
+            return null;
+        }
+
+        return self::plainDecimal($filters['minNotional']);
+    }
+
     public static function mapError(int $code, string $message): SpotStatusEnum
     {
         $message = strtolower($message);

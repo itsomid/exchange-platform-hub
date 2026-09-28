@@ -29,6 +29,15 @@ it('uses MARKET_LOT_SIZE for market orders when it is set', function () {
     expect(BinanceOrderFormatter::stepFor('LIMIT', $filters))->toBe('0.01');
 });
 
+it('reads the minimum order value and skips it where binance does not apply it', function () {
+    $filters = ['minNotional' => '5.00000000', 'minNotionalAppliesToMarket' => '1'];
+
+    expect(BinanceOrderFormatter::minNotionalFor('MARKET', $filters))->toBe('5');
+    expect(BinanceOrderFormatter::minNotionalFor('MARKET', ['minNotionalAppliesToMarket' => '0'] + $filters))->toBeNull();
+    expect(BinanceOrderFormatter::minNotionalFor('LIMIT', ['minNotionalAppliesToMarket' => '0'] + $filters))->toBe('5');
+    expect(BinanceOrderFormatter::minNotionalFor('MARKET', []))->toBeNull();
+});
+
 it('maps binance rejections onto the statuses the OTC and spot flows react to', function () {
     expect(BinanceOrderFormatter::mapError(-2010, 'Account has insufficient balance for requested action.'))
         ->toBe(SpotStatusEnum::NotEnoughBalance);
