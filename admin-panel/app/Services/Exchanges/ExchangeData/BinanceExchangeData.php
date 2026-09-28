@@ -133,9 +133,17 @@ class BinanceExchangeData implements ExchangeDataInterface
                 continue;
             }
 
+            $price = $prices[$symbol['symbol']] ?? null;
+            $minAmount = $this->minAmount($minQty, $stepSize, $minNotional, $price);
+
             $result[] = [
                 'market' => $symbol['symbol'],
-                'min_amount' => $this->minAmount($minQty, $stepSize, $minNotional, $prices[$symbol['symbol']] ?? null),
+                'min_amount' => $minAmount,
+                'min_qty' => $minQty,
+                'min_notional' => $minNotional,
+                'min_notional_margin_percent' => bcmul(bcsub(self::MIN_NOTIONAL_MARGIN, '1', 4), '100', 0),
+                'price' => $price,
+                'limited_by' => $minAmount === $minQty ? 'min_qty' : 'min_notional',
                 'base_ccy' => $symbol['baseAsset'],
                 'quote_ccy' => $symbol['quoteAsset'],
             ];

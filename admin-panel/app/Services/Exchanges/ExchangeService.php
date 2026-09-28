@@ -18,6 +18,7 @@ use App\Models\WalletChain;
 use App\Repositories\ExchangeRepository;
 use App\Repositories\Interfaces\MarketRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
+use App\Services\Exchanges\Asset\AdminNotification;
 use App\Services\Exchanges\Asset\AssetFactory;
 use App\Services\Exchanges\Asset\DTO\BuyDTORequest;
 use App\Services\Exchanges\Asset\DTO\BuyDTOResponse;
@@ -59,14 +60,25 @@ class ExchangeService
                     ]
                 );
 
-            $response = $asset->withdraw(
-                resolve(WithdrawRequestDTO::class)
-                    ->setAddress($chain->address)
-                    ->setChain($requestDTO->getCurrencyChain())
-                    ->setAmount($requestDTO->getQuantity())
-                    ->setWithdrawMethod(WithdrawMethodEnum::ON_CHAIN)
-                    ->setCurrency($exchangeWallet->currency_symbol)
-            );
+            try {
+                $response = $asset->withdraw(
+                    resolve(WithdrawRequestDTO::class)
+                        ->setAddress($chain->address)
+                        ->setChain($requestDTO->getCurrencyChain())
+                        ->setAmount($requestDTO->getQuantity())
+                        ->setWithdrawMethod(WithdrawMethodEnum::ON_CHAIN)
+                        ->setCurrency($exchangeWallet->currency_symbol)
+                );
+            } catch (Throwable $exception) {
+                AdminNotification::sendRefExchangeWithdrawalFailed(
+                    $exchange->name,
+                    $exchangeWallet->currency_symbol,
+                    (string) $requestDTO->getQuantity(),
+                    $exception->getMessage()
+                );
+
+                throw $exception;
+            }
 
             // Continue with successful withdrawal processing
             ExchangeAssetsWithdrawal::query()

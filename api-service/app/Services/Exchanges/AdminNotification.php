@@ -4,10 +4,8 @@ namespace App\Services\Exchanges;
 
 use App\Models\Admin;
 use App\Models\User;
-use App\Notifications\CoinexPriceDifferenceTooLarge;
-use App\Notifications\CoinexHasError;
-use App\Notifications\CoinexSpotTradingIsTooSmall;
 use App\Notifications\OTCSellFailed;
+use App\Notifications\RefExchangeOrderFailed;
 use App\Notifications\WalletChainNotFound;
 use App\Notifications\WithdrawalFailed;
 
@@ -20,31 +18,10 @@ class AdminNotification
         });
     }
 
-    public static function sendSpotTradingIsTooSmall(string $marketName, string $amount): void
+    public static function sendRefExchangeOrderFailed(RefExchangeOrderFailed $notification): void
     {
-        Admin::query()->where('is_active', true)->role(['super_admin', 'admin'])->get()->unique('id')->each(function ($admin) use ($marketName, $amount) {
-            $admin->notify(new CoinexSpotTradingIsTooSmall($marketName, $amount));
-        });
-    }
-
-    public static function sendPriceDifferenceTooLarge(string $marketName, string $amount, string $message): void
-    {
-        Admin::query()->where('is_active', true)->role(['super_admin', 'admin'])->get()->unique('id')->each(function ($admin) use ($marketName, $amount,$message) {
-            $admin->notify(new CoinexPriceDifferenceTooLarge($marketName, $amount,$message));
-        });
-    }
-    public static function logError(
-        string $marketName,
-        string $amount,
-        string $errorMessage,
-        ?string $tradeType = null,
-        ?int $userId = null,
-        ?int $orderId = null,
-    ): void {
         Admin::query()->where('is_active', true)->role(['super_admin', 'admin'])->get()->unique('id')->each(
-            function ($admin) use ($marketName, $amount, $errorMessage, $tradeType, $userId, $orderId) {
-                $admin->notify(new CoinexHasError($marketName, $amount, $errorMessage, $tradeType, $userId, $orderId));
-            }
+            fn ($admin) => $admin->notify($notification)
         );
     }
 

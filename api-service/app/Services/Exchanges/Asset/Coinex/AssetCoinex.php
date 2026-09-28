@@ -3,7 +3,6 @@
 namespace App\Services\Exchanges\Asset\Coinex;
 
 use App\Enums\SpotStatusEnum;
-use App\Services\Exchanges\AdminNotification;
 use App\Services\Exchanges\Asset\Coinex\Authentication\MethodEnum;
 use App\Services\Exchanges\Asset\Contract\AssetInterface;
 use App\Services\Exchanges\Asset\DTO\BalanceResponseDTO;
@@ -51,7 +50,6 @@ class AssetCoinex implements AssetInterface
         //Balance Not Enough
         if ($response->json('code') === 3109) {
             Log::channel('ref-exchange')->info('Coinex Balance Not Enough In USDT');
-            // Notification will be sent by the caller (OTCService) with complete context
 
             return resolve(BuyDTOResponse::class)
                 ->setSpotStatus(SpotStatusEnum::NotEnoughBalance)
@@ -61,7 +59,6 @@ class AssetCoinex implements AssetInterface
         }
         if ($response->json('code') === 3127) {
             Log::channel('ref-exchange')->info('Coinex SPOT is too small');
-            AdminNotification::sendSpotTradingIsTooSmall($request->getMarket(), $request->getQuantity());
 
             return resolve(BuyDTOResponse::class)
                 ->setSpotStatus(SpotStatusEnum::AmountTooSmall)
@@ -71,7 +68,6 @@ class AssetCoinex implements AssetInterface
         }
         if ($response->json('code') === 3606) {
             Log::channel('ref-exchange')->info('Order price and the latest price deviation is too large');
-            AdminNotification::sendPriceDifferenceTooLarge($request->getMarket(), $request->getQuantity(), $response->json('message'));
 
             return resolve(BuyDTOResponse::class)
                 ->setSpotStatus(SpotStatusEnum::PriceDifferenceTooLarge)
@@ -81,14 +77,6 @@ class AssetCoinex implements AssetInterface
         }
         if (! $response->ok() || $response->json('code') !== 0) {
             Log::channel('ref-exchange')->info($response->body());
-            AdminNotification::logError(
-                $request->getMarket(),
-                $request->getQuantity(),
-                $response->body(),
-                $request->getTradeType(),
-                $request->getUserId(),
-                $request->getOrderId(),
-            );
 
             return resolve(BuyDTOResponse::class)
                 ->setSpotStatus(SpotStatusEnum::BuyOrderFailed)

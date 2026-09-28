@@ -6,7 +6,6 @@ use App\Enums\SpotStatusEnum;
 use App\Exceptions\Exchange\CantResolveCoinexException;
 use App\Exceptions\Exchange\CoinexWithdrawalException;
 use App\Models\Currency;
-use App\Services\Exchanges\Asset\AdminNotification;
 use App\Services\Exchanges\Asset\Coinex\Authentication\MethodEnum;
 use App\Services\Exchanges\Asset\Contract\AssetInterface;
 use App\Services\Exchanges\Asset\DTO\BalanceResponseDTO;
@@ -145,18 +144,12 @@ class AssetCoinex implements AssetInterface
         if ($response->json('code') !== 0) {
             Log::channel('ref-exchange')->error('Coinex withdrawal failed with code: ' . $response->json('code') . ', message: ' . $response->json('message') . ', response: ' . $response->body());
 
-            $errorCode = $response->json('code');
-            $mappedError = CoinexWithdrawalError::tryFrom($errorCode);
-            $errorResponse = CoinexWithdrawalError::mapErrorToResponse($mappedError);
-
-            AdminNotification::dispatchCoinexHasProblem(
-                $errorResponse,
-                $requestDTO->getCurrency(),
-                $requestDTO->getAmount()
-            );
+            $mappedError = CoinexWithdrawalError::tryFrom($response->json('code'));
 
             throw new CoinexWithdrawalException(
-                "Coinex withdrawal failed with code: {$response->json('code')}, message: {$response->json('message')}"
+                $mappedError
+                    ? CoinexWithdrawalError::mapErrorToResponse($mappedError)
+                    : "Coinex withdrawal failed with code: {$response->json('code')}, message: {$response->json('message')}"
             );
         }
 

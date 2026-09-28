@@ -4,7 +4,6 @@ namespace App\Services\Exchanges\Asset\Binance;
 
 use App\Enums\SpotStatusEnum;
 use App\Repositories\CurrencyRepository;
-use App\Services\Exchanges\AdminNotification;
 use App\Services\Exchanges\Asset\Contract\AssetInterface;
 use App\Services\Exchanges\Asset\DTO\BalanceResponseDTO;
 use App\Services\Exchanges\Asset\DTO\BuyDTORequest;
@@ -55,8 +54,6 @@ class AssetBinance implements AssetInterface
 
             $minQty = BinanceOrderFormatter::minQtyFor($orderType, $filters) ?? '0';
             if (bccomp($quantity, '0', 18) !== 1 || bccomp($quantity, $minQty, 18) === -1) {
-                AdminNotification::sendSpotTradingIsTooSmall($symbol, $request->getQuantity());
-
                 return $this->failedOrder(SpotStatusEnum::AmountTooSmall, -1013, 'مقدار سفارش کمتر از حداقل مجاز بایننس است.');
             }
 
@@ -82,8 +79,6 @@ class AssetBinance implements AssetInterface
             if ($minNotional !== null) {
                 $notionalPrice = $params['price'] ?? BinanceOrderFormatter::plainDecimal(BinanceRequest::averagePrice($symbol));
                 if (bccomp(bcmul($quantity, $notionalPrice, 18), $minNotional, 18) === -1) {
-                    AdminNotification::sendSpotTradingIsTooSmall($symbol, $request->getQuantity());
-
                     return $this->failedOrder(SpotStatusEnum::AmountTooSmall, -1013, 'ارزش سفارش کمتر از حداقل مجاز بایننس است.');
                 }
             }
@@ -103,8 +98,6 @@ class AssetBinance implements AssetInterface
         if (! $response->ok() || (isset($json['code']) && (int) $json['code'] !== 0)) {
             $errorCode = (int) ($json['code'] ?? 0);
             $errorMsg = (string) ($json['msg'] ?? ($json['message'] ?? $response->body()));
-            $status = BinanceOrderFormatter::mapError($errorCode, $errorMsg);
-
             Log::channel('ref-exchange')->error('Binance placeOrder failed', [
                 'symbol' => $symbol,
                 'side' => $side,
@@ -112,22 +105,7 @@ class AssetBinance implements AssetInterface
                 'response' => $json ?: $response->body(),
             ]);
 
-            // Not-enough-balance is reported by the caller (OTCService) with full context.
-            match ($status) {
-                SpotStatusEnum::AmountTooSmall => AdminNotification::sendSpotTradingIsTooSmall($symbol, $request->getQuantity()),
-                SpotStatusEnum::PriceDifferenceTooLarge => AdminNotification::sendPriceDifferenceTooLarge($symbol, $request->getQuantity(), $errorMsg),
-                SpotStatusEnum::NotEnoughBalance => null,
-                default => AdminNotification::logError(
-                    $symbol,
-                    $request->getQuantity(),
-                    $response->body(),
-                    $request->getTradeType(),
-                    $request->getUserId(),
-                    $request->getOrderId(),
-                ),
-            };
-
-            return $this->failedOrder($status, $errorCode, $errorMsg);
+            return $this->failedOrder(BinanceOrderFormatter::mapError($errorCode, $errorMsg), $errorCode, $errorMsg);
         }
 
         // A MARKET order that finds no liquidity comes back EXPIRED with nothing executed.

@@ -4,10 +4,12 @@ namespace App\Services\Exchanges;
 
 use App\Enums\OTCRefExchangeWithdrawalStatusEnum;
 use App\Enums\SpotOrderSourceEnum;
+use App\Enums\SpotStatusEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Models\SpotTrade;
+use App\Notifications\RefExchangeOrderFailed;
 use App\Repositories\DTO\OTCRefExchangeWithdrawal\CreateOTCRefExchangeWithdrawalRequestDTO;
 use App\Repositories\DTO\Transaction\CreateTransactionRequestDTO;
 use App\Repositories\Interfaces\ExchangeRepositoryInterface;
@@ -17,6 +19,7 @@ use App\Repositories\Interfaces\OTCRefExchangeWithdrawalInterface;
 use App\Repositories\Interfaces\TransactionRepositoryInterface;
 use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Services\Exchanges\Asset\AssetFactory;
+use App\Services\Exchanges\Asset\Contract\AssetInterface;
 use App\Services\Exchanges\Asset\DTO\BuyDTORequest;
 use App\Services\Exchanges\Asset\DTO\BuyDTOResponse;
 use App\Services\Exchanges\DTO\ExchangeBuyRequestDTO;
@@ -44,7 +47,9 @@ class ExchangeService
         $asset = AssetFactory::make($exchangeName);
         $otcOrder = $this->otcOrderRepository->getOneById($requestDTO->getOtcId());
 
-        $response = $asset->placeOrder(
+        $response = $this->placeOrder(
+            $asset,
+            $exchange->name,
             resolve(BuyDTORequest::class)
                 ->setSide('buy')
                 ->setMarket($market->base_currency . $market->quote_currency)
@@ -188,7 +193,9 @@ class ExchangeService
         $asset = AssetFactory::make($exchangeName);
         $otcOrder = $this->otcOrderRepository->getOneById($requestDTO->getOtcId());
 
-        $response = $asset->placeOrder(
+        $response = $this->placeOrder(
+            $asset,
+            $exchange->name,
             resolve(BuyDTORequest::class)
                 ->setSide('sell')
                 ->setMarket($market->base_currency . $market->quote_currency)
@@ -328,7 +335,9 @@ class ExchangeService
         $spotTrade = SpotTrade::with(['makerOrder', 'takerOrder'])->find($requestDTO->getSpotTradeId());
         $userId = $this->resolveSpotTradeUserId($spotTrade);
 
-        $response = $asset->placeOrder(
+        $response = $this->placeOrder(
+            $asset,
+            $exchange->name,
             resolve(BuyDTORequest::class)
                 ->setSide('sell')
                 ->setMarket($market->base_currency . $market->quote_currency)
@@ -455,6 +464,39 @@ class ExchangeService
             ->setErrorMessage($response->getErrorMessage())
             ->setErrorCode($response->getErrorCode())
             ->setSpotStatus($response->getSpotStatus());
+    }
+
+    /**
+     * Adapters only translate their exchange's error codes into SpotStatusEnum;
+     * admins are notified here so every reference exchange reports failures the same way.
+     */
+    private function placeOrder(AssetInterface $asset, string $exchangeName, BuyDTORequest $request): BuyDTOResponse
+    {
+        $response = $asset->placeOrder($request);
+
+        // NotEnoughBalance is reported by OTCService with the wallet context it needs.
+        $shouldNotify = in_array($response->getSpotStatus(), [
+            SpotStatusEnum::AmountTooSmall,
+            SpotStatusEnum::PriceDifferenceTooLarge,
+            SpotStatusEnum::BuyOrderFailed,
+        ], true);
+
+        if ($shouldNotify) {
+            AdminNotification::sendRefExchangeOrderFailed(new RefExchangeOrderFailed(
+                exchangeName: $exchangeName,
+                reason: $response->getSpotStatus(),
+                marketName: $request->getMarket(),
+                amount: $request->getQuantity(),
+                side: $request->getSide(),
+                errorMessage: $response->getErrorMessage(),
+                errorCode: $response->getErrorCode(),
+                tradeType: $request->getTradeType(),
+                userId: $request->getUserId(),
+                orderId: $request->getOrderId(),
+            ));
+        }
+
+        return $response;
     }
 
     /**

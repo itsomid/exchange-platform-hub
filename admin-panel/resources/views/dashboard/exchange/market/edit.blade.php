@@ -425,6 +425,7 @@
             const supportBox = $('#reference-support');
             const pairLabel = @json($market->base_currency . '/' . $market->quote_currency);
             const baseSymbol = @json($market->base_currency);
+            const quoteSymbol = @json($market->quote_currency);
 
             function refreshButton(tone) {
                 return $('<button>', {
@@ -500,13 +501,51 @@
                         text: 'حداقل مقدار معامله این بازار را برابر یا بزرگ‌تر از عدد صرافی مرجع بگذارید.',
                     })
                 );
+
+                const details = $('<div>', {
+                    class: 'd-flex flex-wrap gap-4 small mt-2'
+                });
+                [
+                    ['حداقل مقدار هر سفارش', response.formatted_min_qty, baseSymbol],
+                    ['حداقل ارزش هر سفارش', response.formatted_min_notional, quoteSymbol],
+                    ['قیمت فعلی', response.formatted_price, quoteSymbol],
+                ].forEach(function([label, value, unit]) {
+                    if (!value) {
+                        return;
+                    }
+                    details.append($('<div>').append(
+                        $('<span>', {
+                            class: 'text-muted',
+                            text: label + ': '
+                        }),
+                        $('<span>', {
+                            class: 'fw-semibold font-number',
+                            dir: 'ltr',
+                            text: value + ' ' + unit
+                        })
+                    ));
+                });
+                if (details.children().length) {
+                    meta.append(details);
+                }
+
+                if (response.limited_by === 'min_notional') {
+                    meta.append($('<div>', {
+                        class: 'small text-warning mt-2',
+                        text: 'صرافی مرجع سفارش با ارزش کمتر از ' + response.formatted_min_notional + ' ' + quoteSymbol +
+                            ' را رد می‌کند، پس ' + response.formatted_min_qty + ' ' + baseSymbol + ' کافی نیست. عدد پیشنهادی = (' +
+                            response.formatted_min_notional + ' ' + quoteSymbol + ' + ' + response.min_notional_margin_percent +
+                            '٪ حاشیه برای نوسان قیمت) ÷ ' + response.formatted_price + ' که به گام مقدار صرافی به بالا گرد شده است.',
+                    }));
+                }
+
                 const amount = $('<div>', {
                     class: 'text-end flex-shrink-0'
                 });
                 amount.append(
                     $('<div>', {
                         class: 'text-muted small',
-                        text: 'حداقل معامله'
+                        text: response.limited_by === 'min_notional' ? 'حداقل معامله پیشنهادی' : 'حداقل معامله'
                     }),
                     $('<div>', {
                         class: 'h4 mb-0 font-number',

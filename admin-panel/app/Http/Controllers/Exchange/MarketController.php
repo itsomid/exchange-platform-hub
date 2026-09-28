@@ -213,6 +213,11 @@ class MarketController extends Controller
             'symbol' => $pair,
             'min_amount' => $row['min_amount'],
             'formatted_amount' => formatNumberTrimZeros($row['min_amount']),
+            'formatted_min_qty' => isset($row['min_qty']) ? formatNumberTrimZeros($row['min_qty']) : null,
+            'formatted_min_notional' => isset($row['min_notional']) ? formatNumberTrimZeros($row['min_notional']) : null,
+            'formatted_price' => isset($row['price']) ? formatNumberTrimZeros($row['price']) : null,
+            'min_notional_margin_percent' => $row['min_notional_margin_percent'] ?? null,
+            'limited_by' => $row['limited_by'] ?? null,
         ]);
     }
 

@@ -105,6 +105,7 @@ class MarketReferenceSupportTest extends TestCase
             ->assertOk()
             ->assertJsonPath('supported', true)
             ->assertJsonPath('min_amount', '0.00001000')
+            ->assertJsonPath('limited_by', 'min_qty')
             ->assertJsonPath('exchange', 'Binance');
     }
 
@@ -131,7 +132,12 @@ class MarketReferenceSupportTest extends TestCase
         $this->actingAs($this->admin, 'admin')
             ->getJson(route('admin.market.min-otc', ['market' => $bnb, 'exchange_id' => $this->binance->id]))
             ->assertOk()
-            ->assertJsonPath('min_amount', '0.008');
+            ->assertJsonPath('min_amount', '0.008')
+            ->assertJsonPath('formatted_min_qty', '0.001')
+            ->assertJsonPath('formatted_min_notional', '5')
+            ->assertJsonPath('formatted_price', '766.2')
+            ->assertJsonPath('min_notional_margin_percent', '10')
+            ->assertJsonPath('limited_by', 'min_notional');
     }
 
     public function test_edit_page_reserves_a_support_notice(): void
