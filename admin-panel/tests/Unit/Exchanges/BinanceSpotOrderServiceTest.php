@@ -29,6 +29,44 @@ class BinanceSpotOrderServiceTest extends TestCase
         $this->assertFalse($result['pagination']['has_next']);
     }
 
+    public function test_finished_orders_carry_fees_summed_from_trades(): void
+    {
+        Http::fake([
+            '*/api/v3/time*' => Http::response(['serverTime' => 1700000000000], 200),
+            '*/api/v3/allOrders*' => Http::response([
+                ['executedQty' => '0.012'] + $this->order(1, 'FILLED', 1000),
+                ['executedQty' => '0.01', 'side' => 'SELL'] + $this->order(2, 'FILLED', 2000),
+                ['executedQty' => '0.01'] + $this->order(3, 'FILLED', 3000),
+            ], 200),
+            '*/api/v3/myTrades*' => Http::response([
+                ['orderId' => 1, 'commission' => '0.00000700', 'commissionAsset' => 'ADA'],
+                ['orderId' => 1, 'commission' => '0.00000500', 'commissionAsset' => 'ADA'],
+                ['orderId' => 2, 'commission' => '0.00773000', 'commissionAsset' => 'USDT'],
+                ['orderId' => 3, 'commission' => '0.00001000', 'commissionAsset' => 'BNB'],
+            ], 200),
+        ]);
+
+        $orders = collect((new BinanceSpotOrderService())->getFinishedOrders('ADAUSDT')['data'])->keyBy('order_id');
+
+        $this->assertSame('0.000012', $orders[1]['base_fee']);
+        $this->assertSame('0', $orders[1]['quote_fee']);
+        $this->assertSame('0.00773', $orders[2]['quote_fee']);
+        $this->assertSame('0.00001', $orders[3]['discount_fee']);
+    }
+
+    public function test_fees_are_not_requested_when_nothing_was_filled(): void
+    {
+        Http::fake([
+            '*/api/v3/time*' => Http::response(['serverTime' => 1700000000000], 200),
+            '*/api/v3/allOrders*' => Http::response([$this->order(1, 'CANCELED', 1000)], 200),
+        ]);
+
+        $result = (new BinanceSpotOrderService())->getFinishedOrders('ADAUSDT');
+
+        $this->assertArrayNotHasKey('base_fee', $result['data'][0]);
+        Http::assertNotSent(fn ($request) => str_contains($request->url(), '/api/v3/myTrades'));
+    }
+
     public function test_find_order_by_id_skips_markets_where_order_is_missing(): void
     {
         Http::fake([

@@ -30,18 +30,24 @@ class BinanceSpotOrderService implements SpotOrderServiceInterface
 
     public function getPendingOrders(string $market, ?string $side = null, int $page = 1, int $limit = 50): array
     {
+         $symbol = BinanceOrderFormatter::normalizeSymbol($market);
         $orders = $this->send('GET', '/api/v3/openOrders', [
-            'symbol' => BinanceOrderFormatter::normalizeSymbol($market),
+            'symbol' => $symbol,
         ], 'خطا در دریافت سفارش‌های باز از Binance');
 
-        return $this->paginate($orders, $side, $page, $limit);
+        $result = $this->paginate($orders, $side, $page, $limit);
+        $result['data'] = $this->attachFees($symbol, $result['data']);
+
+        return $result;
     }
 
     public function getFinishedOrders(string $market, ?string $side = null, int $page = 1, int $limit = 50): array
     {
+        $symbol = BinanceOrderFormatter::normalizeSymbol($market);
+
         // Binance has no "finished orders" endpoint; allOrders returns the latest 1000 of every status.
         $orders = $this->send('GET', '/api/v3/allOrders', [
-            'symbol' => BinanceOrderFormatter::normalizeSymbol($market),
+            'symbol' => $symbol,
             'limit' => 1000,
         ], 'خطا در دریافت سفارش‌های تکمیل‌شده از Binance');
 
@@ -50,7 +56,10 @@ class BinanceSpotOrderService implements SpotOrderServiceInterface
             fn (array $order) => !in_array($order['status'] ?? '', self::OPEN_STATUSES, true)
         );
 
-        return $this->paginate($finished, $side, $page, $limit);
+        $result = $this->paginate($finished, $side, $page, $limit);
+        $result['data'] = $this->attachFees($symbol, $result['data']);
+
+        return $result;
     }
 
     public function getMarketBalances(string $baseSymbol): array
@@ -199,6 +208,60 @@ class BinanceSpotOrderService implements SpotOrderServiceInterface
                 'has_next' => count($orders) > $offset + $limit,
             ],
         ];
+    }
+
+    /**
+     * Order endpoints carry no commission, so it is summed from the account's latest
+     * 1000 trades of the market. Orders older than that window keep no fee keys.
+     */
+    private function attachFees(string $symbol, array $orders): array
+    {
+        $hasFills = array_filter($orders, fn (array $order) => bccomp($order['filled_amount'], '0', 8) === 1);
+        if ($hasFills === []) {
+            return $orders;
+        }
+
+        try {
+            $trades = $this->send('GET', '/api/v3/myTrades', [
+                'symbol' => $symbol,
+                'limit' => 1000,
+            ], 'خطا در دریافت معاملات از Binance');
+        } catch (RefExchangeRequestException) {
+            return $orders;
+        }
+
+        $fees = [];
+        foreach ($trades as $trade) {
+            $asset = strtoupper((string) ($trade['commissionAsset'] ?? ''));
+            if ($asset === '') {
+                continue;
+            }
+
+            $key = match (true) {
+                str_starts_with($symbol, $asset) => 'base_fee',
+                str_ends_with($symbol, $asset) => 'quote_fee',
+                default => 'discount_fee',
+            };
+            $orderId = (string) ($trade['orderId'] ?? '');
+            $fees[$orderId][$key] = bcadd(
+                $fees[$orderId][$key] ?? '0',
+                BinanceOrderFormatter::plainDecimal((string) ($trade['commission'] ?? '0')),
+                8
+            );
+        }
+
+        return array_map(function (array $order) use ($fees) {
+            $orderFees = $fees[(string) $order['order_id']] ?? null;
+            if ($orderFees === null) {
+                return $order;
+            }
+
+            return $order + [
+                'base_fee' => BinanceOrderFormatter::plainDecimal($orderFees['base_fee'] ?? '0'),
+                'quote_fee' => BinanceOrderFormatter::plainDecimal($orderFees['quote_fee'] ?? '0'),
+                'discount_fee' => BinanceOrderFormatter::plainDecimal($orderFees['discount_fee'] ?? '0'),
+            ];
+        }, $orders);
     }
 
     private function normalizeOrder(array $order): array
