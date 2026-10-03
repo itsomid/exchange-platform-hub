@@ -86,10 +86,8 @@
                 height: '22px',
                 borderRadius: '50%',
                 objectFit: 'contain',
-                background: '#fff',
-                border: '1px solid rgba(67, 89, 113, 0.15)',
                 flexShrink: '0',
-                marginInlineStart: overlap ? '-8px' : '0'
+                marginInlineStart: overlap ?  '0' : '-12px' 
             });
         }
 
@@ -97,18 +95,17 @@
             display: 'inline-flex',
             alignItems: 'center'
         });
-        if (baseLogo) {
-            $logos.append(coinImg(baseLogo, false));
-        }
+   
         if (quoteLogo) {
             $logos.append(coinImg(quoteLogo, !!baseLogo));
         }
-
+        if (baseLogo) {
+            $logos.append(coinImg(baseLogo, false));
+        }
         return $('<span></span>').css({
             display: 'inline-flex',
             alignItems: 'center',
             gap: '8px',
-            direction: 'ltr'
         }).append($logos).append($('<span></span>').text(option.text));
     }
 
