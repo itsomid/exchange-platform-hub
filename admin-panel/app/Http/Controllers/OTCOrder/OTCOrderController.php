@@ -70,7 +70,11 @@ class OTCOrderController extends Controller
             ->take(5);
 
 
-        $markets = Market::where('is_active', true)->get(['id', 'base_currency', 'quote_currency']);
+        $markets = Market::query()
+            ->where('is_active', true)
+            ->with(['baseCurrency', 'quoteCurrency'])
+            ->orderBy('base_currency')
+            ->get(['id', 'base_currency', 'quote_currency']);
 
         return view('dashboard.otc_order.index', [
             'otcOrders' => $otcOrders,

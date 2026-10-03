@@ -212,21 +212,17 @@
 
                 <!-- Basic Filters Row -->
                 <div class="row mb-3">
-                    <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
+                    <div class="col-md-4 col-sm-6 mb-2">
                         <label class="form-label" for="market">بازار:</label>
-                        <select name="market" class="form-select" id="market">
-                            <option value="">همه بازارها</option>
-                            @if (isset($markets))
-                                @foreach ($markets as $market)
-                                    <option value="{{ $market->id }}"
-                                        {{ request()->input('market') == $market->id ? 'selected' : '' }}>
-                                        {{ $market->base_currency }}/{{ $market->quote_currency }}
-                                    </option>
-                                @endforeach
-                            @endif
-                        </select>
+                        <x-market-select
+                            name="market"
+                            id="market"
+                            :markets="$markets ?? collect()"
+                            :selected="request()->input('market', '')"
+                            empty-label="همه بازارها"
+                        />
                     </div>
-                    <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
+                    <div class="col-md-4 col-sm-6 mb-2">
                         <label class="form-label" for="type">نوع معامله:</label>
                         <select name="type" class="form-control" id="type">
                             <option value="">همه</option>
@@ -238,7 +234,7 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
+                    <div class="col-md-4 col-sm-6 mb-2">
                         <label class="form-label" for="status">وضعیت:</label>
                         <select name="status" class="form-control" id="status">
                             <option value="">همه</option>
