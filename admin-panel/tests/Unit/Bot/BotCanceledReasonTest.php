@@ -3,6 +3,7 @@
 namespace Tests\Unit\Bot;
 
 use App\Models\Bot\BotBuyExecution;
+use App\Models\Bot\BotCurrencyCancellation;
 use App\Models\Bot\BotOrder;
 use App\Models\Bot\BotSellOrder;
 use App\Models\Bot\BotTradeSettlement;
@@ -220,6 +221,51 @@ class BotCanceledReasonTest extends TestCase
 
         $this->assertStringContainsString('از پنل ادمین', implode("\n", $result['lines']));
         $this->assertStringContainsString('اجراهای بسته‌شده پس از لغو: 1', implode("\n", $result['lines']));
+    }
+
+    public function test_explains_admin_currency_cancel_with_reason(): void
+    {
+        $sell = $this->sell(['status' => 'CANCELED', 'cancel_reason' => BotSellOrder::CANCEL_ADMIN_CURRENCY]);
+        $sell->setRelation('settlement', null);
+        $sell->setRelation('currencyCancellation', $this->currencyCancellation());
+
+        $result = BotCanceledReason::forSellOrder(
+            $sell,
+            $this->execution(['status' => 'CLOSED']),
+            $this->order(['status' => 'CANCELED']),
+        );
+
+        $lines = implode("\n", $result['lines']);
+        $this->assertSame(BotSellOrder::CANCEL_ADMIN_CURRENCY, $result['kind']);
+        $this->assertStringContainsString('delisted', $lines);
+        $this->assertStringContainsString('بدون ارتباط با صرافی مرجع', $lines);
+    }
+
+    public function test_closed_execution_after_currency_cancel_shows_the_run(): void
+    {
+        $sell = $this->sell(['status' => 'CANCELED', 'cancel_reason' => BotSellOrder::CANCEL_ADMIN_CURRENCY]);
+        $sell->setRelation('currencyCancellation', $this->currencyCancellation());
+        $execution = $this->execution(['status' => 'CLOSED']);
+        $execution->setRelation('sellOrders', new Collection([$sell]));
+
+        $result = BotCanceledReason::forBuyExecution($execution, $this->order(['status' => 'CANCELED']));
+
+        $this->assertSame(BotSellOrder::CANCEL_ADMIN_CURRENCY, $result['kind']);
+        $this->assertStringContainsString('delisted', implode("\n", $result['lines']));
+    }
+
+    private function currencyCancellation(): BotCurrencyCancellation
+    {
+        $model = new BotCurrencyCancellation();
+        $model->setRawAttributes([
+            'id'                 => 5,
+            'reason'             => 'delisted',
+            'cancel_on_exchange' => 0,
+            'sell_on_exchange'   => 0,
+            'settlement_price'   => '2.5',
+        ], true);
+
+        return $model;
     }
 
     private function sell(array $attrs): BotSellOrder

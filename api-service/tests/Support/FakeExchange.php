@@ -36,6 +36,7 @@ class FakeExchange implements ExchangeContract
     public bool   $failNextMarketBuy     = false;
     public bool   $failNextLimitSell     = false;
     public bool   $failNextMarketSell    = false;
+    public string $marketSellAvgPrice    = '1';
     public ?int   $failLimitSellAt       = null;
     private int   $limitSellCalls        = 0;
 
@@ -88,7 +89,7 @@ class FakeExchange implements ExchangeContract
             exchangeOrderId: (string) $this->nextOrderId++,
             status:          ExchangeOrderStatus::FILLED,
             filledAmount:    $baseAmount,
-            avgPrice:        '1',
+            avgPrice:        $this->marketSellAvgPrice,
             exchangeFee:     '0',
             feeCurrency:     'USDT',
         );

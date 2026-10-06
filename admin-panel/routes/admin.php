@@ -53,6 +53,7 @@ use App\Http\Controllers\Report\HdWalletCurrencyController;
 use App\Http\Controllers\Report\SweeperTransactionLogController;
 use App\Http\Controllers\Admin\Bot\BotSettingsController;
 use App\Http\Controllers\Admin\Bot\BotSignalController;use App\Http\Controllers\Admin\Bot\BotOrderController;
+use App\Http\Controllers\Admin\Bot\BotCurrencyController;
 use App\Http\Controllers\Admin\Bot\BotReportController;
 use App\Http\Controllers\Admin\Bot\BotTestLabController;
 use App\Http\Controllers\Admin\Bot\BotWalletTransferController;
@@ -465,6 +466,12 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::patch('/orders/{botOrder}/description', [BotOrderController::class, 'updateDescription'])->name('order.update-description');
         Route::post('/orders/{botOrder}/cancel-preview', [BotOrderController::class, 'cancelPreview'])->name('order.cancel-preview');
         Route::post('/orders/{botOrder}/cancel', [BotOrderController::class, 'cancel'])->name('order.cancel');
+
+        // Cancel by coin (across every user's bot orders)
+        Route::get('/currencies', [BotCurrencyController::class, 'index'])->name('currency.index');
+        Route::get('/currencies/cancellations/{cancellation}', [BotCurrencyController::class, 'cancellationStatus'])->name('currency.cancellation.status');
+        Route::post('/currencies/{currency}/cancel-preview', [BotOrderController::class, 'currencyCancelPreview'])->name('currency.cancel-preview');
+        Route::post('/currencies/{currency}/cancel', [BotOrderController::class, 'currencyCancel'])->name('currency.cancel');
 
         // Wallet Transfers (deposits/withdrawals between main wallet and bot wallet)
         Route::get('/wallet-transfers', [BotWalletTransferController::class, 'index'])->name('wallet-transfer.index');

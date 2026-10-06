@@ -271,6 +271,95 @@ class SettlementService
     }
 
     /**
+     * Refund math for an admin "cancel this coin" run (no network / exchange /
+     * cancel fees, no referral):
+     *   - in profit: refund = principal + profit − performance_fee
+     *   - otherwise: refund = principal (the loss is not passed to the user)
+     * principal = this tier's share of the locked allocated_usdt.
+     *
+     * @return array{cost_basis:string, current_value:string, gross_pnl:string, performance_fee:string, net_pnl:string, principal:string, refund:string, gross_revenue:string}
+     */
+    public function currencyCancelBreakdown(BotBuyExecution $execution, string $amount, string $price, string $perfFeePercent): array
+    {
+        $costBasis    = bcmul($amount, (string) $execution->avg_buy_price, self::SCALE);
+        $currentValue = bcmul($amount, $price, self::SCALE);
+        $grossPnl     = bcsub($currentValue, $costBasis, self::SCALE);
+        $inProfit     = bccomp($grossPnl, '0', self::SCALE) > 0;
+
+        $perfFee = $inProfit
+            ? bcdiv(bcmul($grossPnl, $perfFeePercent, self::SCALE), '100', self::SCALE)
+            : '0';
+        $netPnl    = $inProfit ? bcsub($grossPnl, $perfFee, self::SCALE) : '0';
+        $principal = $this->lockedReleaseFor($execution, $amount, $costBasis);
+
+        return [
+            'cost_basis'      => $costBasis,
+            'current_value'   => $currentValue,
+            'gross_pnl'       => $grossPnl,
+            'performance_fee' => $perfFee,
+            'net_pnl'         => $netPnl,
+            'principal'       => $principal,
+            'refund'          => bcadd($principal, $netPnl, self::SCALE),
+            // A loss is absorbed, so the row is recorded as if sold at cost.
+            'gross_revenue'   => $inProfit ? $currentValue : $costBasis,
+        ];
+    }
+
+    /**
+     * Settle one OPEN tier canceled by an admin "cancel this coin" run.
+     * See currencyCancelBreakdown() for the refund rule.
+     *
+     * @return array{cost_basis:string, current_value:string, gross_pnl:string, performance_fee:string, net_pnl:string, principal:string, refund:string, gross_revenue:string}
+     */
+    public function settleCurrencyCancel(
+        BotSellOrder $sellOrder,
+        string $price,
+        string $perfFeePercent,
+        int $cancellationId,
+    ): array {
+        return DB::transaction(function () use ($sellOrder, $price, $perfFeePercent, $cancellationId) {
+            $sellOrder = BotSellOrder::whereKey($sellOrder->id)->lockForUpdate()->firstOrFail();
+            if ($sellOrder->status !== BotSellOrder::STATUS_OPEN) {
+                throw new \RuntimeException("Sell order #{$sellOrder->id} is no longer OPEN ({$sellOrder->status}).");
+            }
+
+            $execution = $sellOrder->botBuyExecution()->lockForUpdate()->firstOrFail();
+            $userId    = $execution->botOrder->user_id;
+            $amount    = (string) $sellOrder->amount_to_sell;
+
+            $b = $this->currencyCancelBreakdown($execution, $amount, $price, $perfFeePercent);
+
+            BotTradeSettlement::create([
+                'user_id'              => $userId,
+                'bot_buy_execution_id' => $execution->id,
+                'bot_sell_order_id'    => $sellOrder->id,
+                'gross_revenue'        => $b['gross_revenue'],
+                'cost_basis'           => $b['cost_basis'],
+                'network_fee'          => '0',
+                'exchange_fee'         => '0',
+                'performance_fee'      => $b['performance_fee'],
+                'referral_fee'         => '0',
+                'referral_user_id'     => null,
+                'cancel_fee'           => '0',
+                'net_pnl'              => $b['net_pnl'],
+                'settled_at'           => now(),
+            ]);
+
+            $sellOrder->update([
+                'status'                       => BotSellOrder::STATUS_CANCELED,
+                'cancel_reason'                => BotSellOrder::CANCEL_ADMIN_CURRENCY,
+                'bot_currency_cancellation_id' => $cancellationId,
+                'filled_at'                    => null,
+            ]);
+
+            $this->updateWallet($userId, $execution, $b['principal'], $b['net_pnl']);
+            $this->writeTxns($userId, $execution, '0', '0', $b['performance_fee'], null);
+
+            return $b;
+        });
+    }
+
+    /**
      * Wallet update rules:
      *   - Release the settled tier's share of the locked principal from
      *     `locked_balance` (it was reserved as allocated_usdt at buy time).

@@ -467,6 +467,10 @@
                                 'execution' => $execution,
                             ])
 
+                            @include('dashboard.bot.orders.partials.currency-cancel-note', [
+                                'execution' => $execution,
+                            ])
+
                             {{-- Sell orders --}}
                             @if ($execution->sellOrders->isNotEmpty())
                                 <div class="mt-3">

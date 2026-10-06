@@ -330,6 +330,7 @@ class BotOrderController extends Controller
             'user.introducerReferral.user',
             'buyExecutions.currency',
             'buyExecutions.sellOrders.settlement',
+            'buyExecutions.sellOrders.currencyCancellation',
         ]);
 
         $settlements = \App\Models\Bot\BotTradeSettlement::query()
@@ -421,6 +422,29 @@ class BotOrderController extends Controller
     public function cancelAll(User $user): JsonResponse
     {
         return $this->forwardBotApi(fn () => $this->botApi->cancelAll($user->id));
+    }
+
+    public function currencyCancelPreview(Currency $currency): JsonResponse
+    {
+        return $this->forwardBotApi(fn () => $this->botApi->currencyCancelPreview($currency->id));
+    }
+
+    public function currencyCancel(Request $request, Currency $currency): JsonResponse
+    {
+        $data = $request->validate([
+            'cancel_on_exchange' => ['required', 'boolean'],
+            'sell_on_exchange'   => ['required', 'boolean'],
+            'reason'             => ['required', 'string', 'min:3', 'max:2000'],
+        ], [
+            'reason.required' => 'نوشتن دلیل لغو الزامی است.',
+            'reason.min'      => 'دلیل لغو باید حداقل ۳ کاراکتر باشد.',
+        ]);
+
+        return $this->forwardBotApi(fn () => $this->botApi->currencyCancel($currency->id, [
+            'cancel_on_exchange' => (bool) $data['cancel_on_exchange'],
+            'sell_on_exchange'   => (bool) $data['sell_on_exchange'],
+            'reason'             => trim($data['reason']),
+        ]));
     }
 
     /* ── Admin-triggered buy from the user's free bot balance. Sizing, gating

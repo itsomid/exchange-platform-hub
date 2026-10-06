@@ -16,6 +16,7 @@ class BotSellOrder extends Model
     public const CANCEL_EXCHANGE_SYNC  = 'exchange_sync';
     public const CANCEL_PLACE_FAILED   = 'sell_place_failed';
     public const CANCEL_PLACE_ROLLBACK = 'sell_place_rollback';
+    public const CANCEL_ADMIN_CURRENCY = 'admin_currency_cancel';
 
     protected $fillable = [
         'bot_buy_execution_id',
@@ -27,6 +28,7 @@ class BotSellOrder extends Model
         'sell_ref_exchange_fee',
         'status',
         'cancel_reason',
+        'bot_currency_cancellation_id',
         'filled_at',
     ];
 

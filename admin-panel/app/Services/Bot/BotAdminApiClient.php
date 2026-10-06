@@ -60,6 +60,19 @@ class BotAdminApiClient
         return $this->http()->post("/users/{$userId}/buy");
     }
 
+    public function currencyCancelPreview(int $currencyId): Response
+    {
+        return $this->http()->post("/currencies/{$currencyId}/cancel-preview");
+    }
+
+    /**
+     * @param array{cancel_on_exchange:bool, sell_on_exchange:bool, reason:string} $payload
+     */
+    public function currencyCancel(int $currencyId, array $payload): Response
+    {
+        return $this->http()->post("/currencies/{$currencyId}/cancel", $payload);
+    }
+
     /**
      * @return array<string, string>
      */

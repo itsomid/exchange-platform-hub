@@ -30,7 +30,7 @@ class BotCanceledReason
         $settlement ??= $sell->settlement;
         $stored = trim((string) ($sell->cancel_reason ?? ''));
         if ($stored !== '') {
-            return self::fromStored($stored, $execution, $order, $settlement);
+            return self::fromStored($stored, $sell, $execution, $order, $settlement);
         }
 
         return self::inferSellOrder($sell, $execution, $order, $settlement);
@@ -43,6 +43,13 @@ class BotCanceledReason
     {
         if ($execution->status !== 'CLOSED') {
             return null;
+        }
+
+        $currencyCancel = $execution->relationLoaded('sellOrders')
+            ? $execution->sellOrders->firstWhere('cancel_reason', BotSellOrder::CANCEL_ADMIN_CURRENCY)
+            : null;
+        if ($currencyCancel) {
+            return self::currencyCancelExplain($currencyCancel);
         }
 
         $who = match ($order->cancel_source) {
@@ -60,8 +67,28 @@ class BotCanceledReason
     /**
      * @return array{kind: string, title: string, lines: list<string>, html: string}
      */
+    private static function currencyCancelExplain(BotSellOrder $sell): array
+    {
+        $run = $sell->currencyCancellation;
+        $lines = ['همه پله‌های فروش باز این ارز در سفارش‌های کاربران توسط ادمین لغو شد و موجودی به کیف پول ربات برگشت.'];
+
+        if ($run) {
+            $lines[] = 'دلیل: '.$run->reason;
+            $lines[] = 'صرافی مرجع: '.$run->exchangeModeLabel();
+            if ($run->settlement_price !== null) {
+                $lines[] = 'قیمت تسویه: '.formatNumberTrimZeros($run->settlement_price).' USDT';
+            }
+        }
+
+        return self::make(BotSellOrder::CANCEL_ADMIN_CURRENCY, 'لغو ارز توسط ادمین', $lines);
+    }
+
+    /**
+     * @return array{kind: string, title: string, lines: list<string>, html: string}
+     */
     private static function fromStored(
         string $reason,
+        BotSellOrder $sell,
         BotBuyExecution $execution,
         BotOrder $order,
         ?BotTradeSettlement $settlement,
@@ -69,6 +96,7 @@ class BotCanceledReason
         $failure = trim((string) ($execution->failure_reason ?? ''));
 
         return match ($reason) {
+            BotSellOrder::CANCEL_ADMIN_CURRENCY => self::currencyCancelExplain($sell),
             BotSellOrder::CANCEL_ADMIN => self::manualCancelExplain('admin', $order, $settlement),
             BotSellOrder::CANCEL_USER => self::manualCancelExplain('user', $order, $settlement),
             BotSellOrder::CANCEL_PLACE_FAILED => self::make(
