@@ -86,13 +86,15 @@ class ReferralCommissionService
 
         $wallet->increment('balance', $commissionAmount);
 
+        $quoteCoinPrice = $otcOrder->market->quoteCurrency->exchangePrice;
+
         $transaction = Transaction::query()->create([
             'user_id' => $user->id,
             'wallet_id' => $wallet->id,
             'otc_order_id' => $otcOrder->id,
             'balance' => $wallet->balance,
             'amount' => $commissionAmount,
-            'coin_price' => $otcOrder->price,
+            'coin_price' => $quoteCoinPrice,
             'type' => TransactionTypeEnum::REFERRAL,
             'subtype' => $role === 'introducer' ? TransactionSubTypeEnum::REFERRAL_INTRODUCER : TransactionSubTypeEnum::REFERRAL_FRIEND,
             'status' => TransactionStatusEnum::SUCCESS,
@@ -117,7 +119,7 @@ class ReferralCommissionService
                 'otc_order_id' => $otcOrder->id,
                 'balance' => $exchangeWallet->balance,
                 'amount' => -$commissionAmount,
-                'coin_price' => $otcOrder->price,
+                'coin_price' => $quoteCoinPrice,
                 'type' => TransactionTypeEnum::REFERRAL,
                 'subtype' => $role === 'introducer' ? TransactionSubTypeEnum::REFERRAL_INTRODUCER : TransactionSubTypeEnum::REFERRAL_FRIEND,
                 'status' => TransactionStatusEnum::SUCCESS,
