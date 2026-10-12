@@ -55,6 +55,7 @@ use App\Http\Controllers\Admin\Bot\BotSettingsController;
 use App\Http\Controllers\Admin\Bot\BotSignalController;use App\Http\Controllers\Admin\Bot\BotOrderController;
 use App\Http\Controllers\Admin\Bot\BotCurrencyController;
 use App\Http\Controllers\Admin\Bot\BotReportController;
+use App\Http\Controllers\Admin\Bot\BotSellMigrationController;
 use App\Http\Controllers\Admin\Bot\BotTestLabController;
 use App\Http\Controllers\Admin\Bot\BotWalletTransferController;
 
@@ -472,6 +473,12 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::get('/currencies/cancellations/{cancellation}', [BotCurrencyController::class, 'cancellationStatus'])->name('currency.cancellation.status');
         Route::post('/currencies/{currency}/cancel-preview', [BotOrderController::class, 'currencyCancelPreview'])->name('currency.cancel-preview');
         Route::post('/currencies/{currency}/cancel', [BotOrderController::class, 'currencyCancel'])->name('currency.cancel');
+
+        // Move sell tiers from CoinEx to Binance (reference-exchange switch)
+        Route::get('/sell-migration', [BotSellMigrationController::class, 'index'])->name('sell-migration.index');
+        Route::get('/sell-migration/runs/{migration}', [BotSellMigrationController::class, 'status'])->name('sell-migration.status');
+        Route::post('/sell-migration/{currency}/preview', [BotOrderController::class, 'sellMigrationPreview'])->name('sell-migration.preview');
+        Route::post('/sell-migration/{currency}/start', [BotOrderController::class, 'sellMigrationStart'])->name('sell-migration.start');
 
         // Wallet Transfers (deposits/withdrawals between main wallet and bot wallet)
         Route::get('/wallet-transfers', [BotWalletTransferController::class, 'index'])->name('wallet-transfer.index');

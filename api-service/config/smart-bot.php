@@ -7,10 +7,10 @@ return [
     | Reference exchange driver
     |--------------------------------------------------------------------------
     | Which implementation of ExchangeContract the smart trading bot uses.
-    |   - "coinex" → real omnibus CoinEx account (production)
-    |   - "fake"   → in-memory FakeBotExchange for the admin Test Lab harness
+    |   - "binance" → real omnibus Binance account (production)
+    |   - "fake"    → in-memory FakeBotExchange for the admin Test Lab harness
     */
-    'exchange_driver' => env('BOT_EXCHANGE_DRIVER', 'coinex'),
+    'exchange_driver' => env('BOT_EXCHANGE_DRIVER', 'binance'),
 
     /*
     |--------------------------------------------------------------------------

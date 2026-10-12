@@ -16,7 +16,7 @@ use RuntimeException;
  *
  * `GET /api/v3/order` does not report commissions, so for executed orders the
  * fee is read from `/api/v3/myTrades`. `exchangeFee` is always expressed in the
- * quote asset (USDT), like the CoinEx adapter.
+ * quote asset (USDT).
  */
 class BinanceBotAdapter implements ExchangeContract
 {

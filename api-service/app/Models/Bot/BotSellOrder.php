@@ -18,9 +18,14 @@ class BotSellOrder extends Model
     public const CANCEL_PLACE_ROLLBACK = 'sell_place_rollback';
     public const CANCEL_ADMIN_CURRENCY = 'admin_currency_cancel';
 
+    public const EXCHANGE_COINEX  = 'coinex';
+    public const EXCHANGE_BINANCE = 'binance';
+
     protected $fillable = [
         'bot_buy_execution_id',
         'exchange_order_id',
+        'exchange',
+        'previous_exchange_order_id',
         'target_type',
         'target_value',
         'share_percent',
@@ -30,6 +35,7 @@ class BotSellOrder extends Model
         'cancel_reason',
         'bot_currency_cancellation_id',
         'filled_at',
+        'migrated_at',
     ];
 
     protected function casts(): array
@@ -40,7 +46,9 @@ class BotSellOrder extends Model
             'amount_to_sell'        => 'decimal:8',
             'sell_ref_exchange_fee' => 'decimal:8',
             'exchange_order_id'     => 'string',
+            'previous_exchange_order_id' => 'string',
             'filled_at'             => 'datetime',
+            'migrated_at'           => 'datetime',
         ];
     }
 

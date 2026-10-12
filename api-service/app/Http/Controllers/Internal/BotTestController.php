@@ -46,11 +46,11 @@ use Throwable;
  *   - `reset`       : wipe everything and restore baseline
  *
  * Behaviour depends on `BOT_EXCHANGE_DRIVER` / config('smart-bot.exchange_driver'):
- *   - "fake"   → force FakeBotExchange, credit bot wallet directly, call
- *                orchestrator with TRIGGER_MANUAL (current lab harness).
- *   - "coinex" → keep the real CoinEx adapter; fund the main wallet, run a
- *                real transferIn, then toggle auto-trade ON — same path a
- *                live user takes when depositing and enabling the bot.
+ *   - "fake"    → force FakeBotExchange, credit bot wallet directly, call
+ *                 orchestrator with TRIGGER_MANUAL (current lab harness).
+ *   - "binance" → keep the real Binance adapter; fund the main wallet, run a
+ *                 real transferIn, then toggle auto-trade ON — same path a
+ *                 live user takes when depositing and enabling the bot.
  *
  * Both modes force the sync queue for the duration of each request so jobs
  * execute inline (no worker needed for the lab itself).
@@ -133,7 +133,7 @@ class BotTestController extends Controller
     }
 
     /**
-     * Live (CoinEx) path: mirror a real user — fund main wallet, transferIn
+     * Live (Binance) path: mirror a real user — fund main wallet, transferIn
      * to bot wallet, then flip auto_trade OFF→ON so HandleBotAutoTradeToggled
      * runs the orchestrator with TRIGGER_TOGGLE_ON against the real exchange.
      */
@@ -332,7 +332,7 @@ class BotTestController extends Controller
 
     private function exchangeDriver(): string
     {
-        return (string) config('smart-bot.exchange_driver', 'coinex');
+        return (string) config('smart-bot.exchange_driver', 'binance');
     }
 
     private function isFakeDriver(): bool
@@ -414,7 +414,7 @@ class BotTestController extends Controller
     }
 
     /**
-     * On live CoinEx lab reset: cancel OPEN limit sells, then market-sell the
+     * On live Binance lab reset: cancel OPEN limit sells, then market-sell the
      * residual base inventory so the omnibus account is not left holding coins
      * from the cancelled buy cycle. Market buys are already filled (nothing to
      * "cancel"); the leftover is the bought base position.

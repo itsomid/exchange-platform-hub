@@ -12,8 +12,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Polls the reference exchange (CoinEx) for the status of every OPEN bot sell
- * order that has an exchange_order_id and reacts to fills / cancellations.
+ * Polls the reference exchange (Binance) for the status of every OPEN bot sell
+ * order placed on it (`exchange` = adapter name) and reacts to fills / cancellations.
  *
  * - FILLED  → dispatch BotSellOrderFilled with the realized fill data so
  *             HandleBotSellOrderFilled runs the settlement on bot-settlement queue.
@@ -44,7 +44,7 @@ class SyncSellOrdersCommand extends Command
 
         $this->info('bot:sync-sell-orders starting limit='.$limit);
 
-        $orders = $this->nextBatch($limit);
+        $orders = $this->nextBatch($limit, $exchange->name());
         $batchStartId = $orders->isEmpty() ? null : $orders->first()->id;
         $batchEndId = $orders->isEmpty() ? null : $orders->last()->id;
 
@@ -138,11 +138,12 @@ class SyncSellOrdersCommand extends Command
      *
      * @return \Illuminate\Database\Eloquent\Collection<int, BotSellOrder>
      */
-    private function nextBatch(int $limit)
+    private function nextBatch(int $limit, string $exchangeName)
     {
         $base = fn () => BotSellOrder::query()
             ->where('status', BotSellOrder::STATUS_OPEN)
             ->whereNotNull('exchange_order_id')
+            ->where('exchange', $exchangeName)
             ->with(['botBuyExecution', 'botBuyExecution.currency'])
             ->orderBy('id');
 

@@ -73,6 +73,16 @@ class BotAdminApiClient
         return $this->http()->post("/currencies/{$currencyId}/cancel", $payload);
     }
 
+    public function sellMigrationPreview(int $currencyId): Response
+    {
+        return $this->http()->post("/currencies/{$currencyId}/sell-migration-preview");
+    }
+
+    public function sellMigrationStart(int $currencyId): Response
+    {
+        return $this->http()->post("/currencies/{$currencyId}/sell-migration");
+    }
+
     /**
      * @return array<string, string>
      */

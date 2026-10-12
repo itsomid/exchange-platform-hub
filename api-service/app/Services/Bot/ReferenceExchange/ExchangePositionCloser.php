@@ -7,7 +7,7 @@ use App\Models\Bot\BotBuyExecution;
 /**
  * Best-effort market-sell of a base position on the reference exchange.
  *
- * When the buy fee was charged in the base coin, CoinEx's available balance is
+ * When the buy fee was charged in the base coin, the exchange's available balance is
  * gross_fill − base_fee. If a caller still passes a gross amount (legacy rows,
  * or amount_to_sell sized before fee netting), the first sell fails and we
  * retry once with the base fee subtracted.

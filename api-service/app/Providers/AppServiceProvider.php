@@ -3,11 +3,9 @@
 namespace App\Providers;
 
 use App\Mail\EmailVerificationMail;
-use App\Models\Exchange;
 use App\Models\SpotOrder;
 use App\Models\User;
 use App\Services\Bot\ReferenceExchange\BinanceBotAdapter;
-use App\Services\Bot\ReferenceExchange\CoinExBotAdapter;
 use App\Services\Bot\ReferenceExchange\ExchangeContract;
 use App\Services\Bot\ReferenceExchange\FakeBotExchange;
 use Illuminate\Auth\Notifications\VerifyEmail;
@@ -26,9 +24,7 @@ class AppServiceProvider extends ServiceProvider
                 return new FakeBotExchange();
             }
 
-            return Exchange::query()->where('is_active', true)->value('slug') === 'binance'
-                ? new BinanceBotAdapter()
-                : new CoinExBotAdapter();
+            return new BinanceBotAdapter();
         });
     }
 

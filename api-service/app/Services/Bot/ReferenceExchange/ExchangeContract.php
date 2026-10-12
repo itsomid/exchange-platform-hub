@@ -3,11 +3,11 @@
 namespace App\Services\Bot\ReferenceExchange;
 
 /**
- * Contract for the reference exchange (CoinEx) used by the auto-trade bot.
+ * Contract for the reference exchange (Binance) used by the auto-trade bot.
  * Implementations target the omnibus model: a single API key for the platform,
  * not per-user keys.
  *
- * All `$market` values are CoinEx-style upper-case pair symbols, e.g. "BTCUSDT".
+ * All `$market` values are upper-case pair symbols, e.g. "BTCUSDT".
  * All numeric strings are BCMath-friendly (scale 8).
  */
 interface ExchangeContract
@@ -20,7 +20,7 @@ interface ExchangeContract
 
     /**
      * Place a spot LIMIT SELL of $baseAmount of the base currency at exact $price.
-     * Returns OPEN on success; the order sits in CoinEx orderbook until filled.
+     * Returns OPEN on success; the order sits in the exchange orderbook until filled.
      */
     public function placeLimitSell(string $market, string $baseAmount, string $price): ExchangeOrderResult;
 

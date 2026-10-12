@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Internal\BotAdminController;
 use App\Http\Controllers\Internal\BotCurrencyCancelController;
+use App\Http\Controllers\Internal\BotSellMigrationController;
 use App\Http\Controllers\Internal\BotTestController;
 use Illuminate\Support\Facades\Route;
 
@@ -33,4 +34,6 @@ Route::prefix('bot-admin')->middleware('bot-admin-auth')->group(function () {
     Route::post('users/{user}/buy',                [BotAdminController::class, 'buy']);
     Route::post('currencies/{currency}/cancel-preview', [BotCurrencyCancelController::class, 'preview']);
     Route::post('currencies/{currency}/cancel',         [BotCurrencyCancelController::class, 'cancel']);
+    Route::post('currencies/{currency}/sell-migration-preview', [BotSellMigrationController::class, 'preview']);
+    Route::post('currencies/{currency}/sell-migration',         [BotSellMigrationController::class, 'start']);
 });

@@ -441,6 +441,12 @@
                             <div>لیست ارزها</div>
                         </a>
                     </li>
+                    <li class="menu-item @if (request()->is('admin/auto-trade/sell-migration*')) active @endif">
+                        <a href="{{ route('admin.bot.sell-migration.index') }}" class="menu-link">
+                            <i class="menu-icon fa-light fa-arrow-right-arrow-left fa-sm"></i>
+                            <div>انتقال پله‌های فروش</div>
+                        </a>
+                    </li>
                     <li class="menu-item @if (request()->is('admin/auto-trade/wallet-transfers*')) active @endif">
                         <a href="{{ route('admin.bot.wallet-transfer.index') }}" class="menu-link">
                             <i class="menu-icon fa-light fa-right-left fa-sm"></i>

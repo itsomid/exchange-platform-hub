@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 
 /**
  * In-process fake of {@see ExchangeContract} used by the admin Test Lab
- * harness. Behaves like CoinEx but never talks to the network:
+ * harness. Behaves like Binance but never talks to the network:
  *
  *   - placeMarketBuy: prices the buy off the current `exchange_prices` row
  *     for the matching USDT market, returns FILLED immediately.
@@ -27,7 +27,7 @@ class FakeBotExchange implements ExchangeContract
     private const CACHE_PREFIX = 'bot:fake_ex:';
     private const TTL_SECONDS  = 60 * 60 * 24 * 30; // 30 days
     private const SCALE        = 8;
-    private const FEE_RATE     = '0.001';            // 0.1% taker — match CoinEx default
+    private const FEE_RATE     = '0.001';            // 0.1% taker — match Binance default
 
     public function placeMarketBuy(string $market, string $quoteAmount): ExchangeOrderResult
     {

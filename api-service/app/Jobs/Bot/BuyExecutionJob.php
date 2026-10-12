@@ -21,13 +21,13 @@ use Throwable;
 
 /**
  * Executes a single bot_buy_execution as a MARKET BUY on the reference exchange
- * (CoinEx, omnibus account). On a successful (full or partial) fill the
+ * (Binance, omnibus account). On a successful (full or partial) fill the
  * execution moves to BOUGHT and an OpenSellOrdersJob is dispatched to fan out
  * the limit sells. Market orders never rest on the book, so a PARTIAL result
  * is itself a terminal fill (the unfilled remainder was auto-canceled by the
  * exchange) and is treated the same as FILLED.
  *
- * CoinEx's place-order response can race its own matching engine: a market
+ * The exchange's place-order response can race its own matching engine: a market
  * order that in fact filled a moment later can still come back as `open` in
  * that very first response. We poll the authoritative order-status endpoint
  * briefly before giving up, and if it's still unresolved we let the queue
@@ -36,7 +36,7 @@ use Throwable;
  * second market buy.
  *
  * A pure transport failure (DNS/connection/timeout — the request never
- * reached CoinEx, so no exchange_order_id ever came back) is different: no
+ * reached the exchange, so no exchange_order_id ever came back) is different: no
  * order could possibly have been created, so it IS safe to retry the buy
  * itself from scratch. The queue retries this exactly like a fresh attempt.
  *
@@ -83,7 +83,7 @@ class BuyExecutionJob implements ShouldQueue
 
 
         // Resumed attempt: a previous run already placed a real order on
-        // CoinEx but couldn't confirm a terminal fill in time. Only re-check
+        // the exchange but couldn't confirm a terminal fill in time. Only re-check
         // that same order — never place a second market buy.
         if ($execution->status === BotBuyExecution::STATUS_BUYING && $execution->exchange_order_id) {
             $market = strtoupper((string) $execution->currency->symbol).'USDT';
@@ -210,7 +210,7 @@ class BuyExecutionJob implements ShouldQueue
             throw new RuntimeException($reason);
         }
 
-        // Pure transport failure — the request never reached CoinEx (DNS
+        // Pure transport failure — the request never reached the exchange (DNS
         // failure, connection timeout, etc.), so no order could have been
         // created. Safe, and desirable, to retry the buy itself from
         // scratch instead of failing the execution outright.

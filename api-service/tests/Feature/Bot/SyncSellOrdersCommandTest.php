@@ -16,7 +16,7 @@ use Tests\Support\FakeExchange;
 
 uses(RefreshDatabase::class);
 
-function makeOpenSellOrder(string $exchangeOrderId, string $symbol = 'eth'): BotSellOrder
+function makeOpenSellOrder(string $exchangeOrderId, string $symbol = 'eth', string $exchange = 'fake'): BotSellOrder
 {
     $user     = User::factory()->create();
     $currency = Currency::forceCreate([
@@ -49,6 +49,7 @@ function makeOpenSellOrder(string $exchangeOrderId, string $symbol = 'eth'): Bot
     return BotSellOrder::create([
         'bot_buy_execution_id' => $execution->id,
         'exchange_order_id'    => $exchangeOrderId,
+        'exchange'             => $exchange,
         'target_type'          => 'percent',
         'target_value'         => '5',
         'share_percent'        => '100',
@@ -57,7 +58,7 @@ function makeOpenSellOrder(string $exchangeOrderId, string $symbol = 'eth'): Bot
     ]);
 }
 
-it('dispatches BotSellOrderFilled when CoinEx reports the order as FILLED', function () {
+it('dispatches BotSellOrderFilled when the exchange reports the order as FILLED', function () {
     Event::fake([BotSellOrderFilled::class]);
     $sellOrder = makeOpenSellOrder('99999');
 
@@ -85,7 +86,7 @@ it('dispatches BotSellOrderFilled when CoinEx reports the order as FILLED', func
     });
 });
 
-it('flips local row to CANCELED when CoinEx reports CANCELED', function () {
+it('flips local row to CANCELED when the exchange reports CANCELED', function () {
     $sellOrder = makeOpenSellOrder('77777');
 
     $fake = new FakeExchange();
@@ -135,4 +136,18 @@ it('skips orders without exchange_order_id', function () {
 
     expect($fake->statusQueries)->toBeEmpty();
     Event::assertNotDispatched(BotSellOrderFilled::class);
+});
+
+it('skips tiers still pointing at another exchange (not yet migrated)', function () {
+    Event::fake([BotSellOrderFilled::class]);
+
+    makeOpenSellOrder('17914920817113505', 'eth', BotSellOrder::EXCHANGE_COINEX);
+    makeOpenSellOrder('2002', 'btc');
+
+    $fake = new FakeExchange();
+    $this->app->instance(ExchangeContract::class, $fake);
+
+    $this->artisan('bot:sync-sell-orders')->assertExitCode(0);
+
+    expect(array_column($fake->statusQueries, 'exchangeOrderId'))->toBe(['2002']);
 });

@@ -29,7 +29,7 @@ class BotTestApiClient
 
     public function start(int $userId, float $capitalUsdt, ?float $mainBalance = null, bool $simulateSellPlaceFailure = false): Response
     {
-        // Live CoinEx buys (market buy + sell fan-out) can exceed the default 60s.
+        // Live Binance buys (market buy + sell fan-out) can exceed the default 60s.
         return $this->http()->timeout(180)->post('/start', array_filter([
             'user_id'                     => $userId,
             'capital_usdt'                => $capitalUsdt,

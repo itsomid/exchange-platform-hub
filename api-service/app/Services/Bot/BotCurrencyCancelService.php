@@ -7,6 +7,7 @@ use App\Models\Bot\BotBuyExecution;
 use App\Models\Bot\BotCurrencyCancellation;
 use App\Models\Bot\BotGlobalSettings;
 use App\Models\Bot\BotOrder;
+use App\Models\Bot\BotSellMigration;
 use App\Models\Bot\BotSellOrder;
 use App\Models\Bot\BotSignal;
 use App\Models\Currency;
@@ -123,6 +124,13 @@ class BotCurrencyCancelService
 
             if ($running = $this->runningCancellation($currency->id)) {
                 throw new \DomainException("لغو دیگری برای این ارز (#{$running->id}) در حال اجراست.");
+            }
+
+            $migration = BotSellMigration::where('currency_id', $currency->id)
+                ->whereIn('status', [BotSellMigration::STATUS_PENDING, BotSellMigration::STATUS_RUNNING])
+                ->first();
+            if ($migration) {
+                throw new \DomainException("انتقال پله‌های فروش این ارز به Binance (#{$migration->id}) در حال اجراست.");
             }
 
             $inFlight = $this->inFlight($currency->id);

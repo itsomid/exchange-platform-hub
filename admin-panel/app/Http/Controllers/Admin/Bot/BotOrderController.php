@@ -447,6 +447,18 @@ class BotOrderController extends Controller
         ]));
     }
 
+    /* ── Re-place a coin's CoinEx sell tiers on Binance (BotSellMigrationController page). ── */
+
+    public function sellMigrationPreview(Currency $currency): JsonResponse
+    {
+        return $this->forwardBotApi(fn () => $this->botApi->sellMigrationPreview($currency->id), 'sell_migration');
+    }
+
+    public function sellMigrationStart(Currency $currency): JsonResponse
+    {
+        return $this->forwardBotApi(fn () => $this->botApi->sellMigrationStart($currency->id), 'sell_migration');
+    }
+
     /* ── Admin-triggered buy from the user's free bot balance. Sizing, gating
        and the wallet lock all live in api-service's BotBuyOrchestrator; the
        panel only previews and confirms. ── */

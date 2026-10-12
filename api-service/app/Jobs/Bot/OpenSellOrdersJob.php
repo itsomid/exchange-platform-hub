@@ -25,8 +25,8 @@ use Illuminate\Support\Facades\Log;
  * For a successfully-bought bot_buy_execution, splits the filled amount into
  * the configured sell targets, applies D14 smart collapse, creates one
  * bot_sell_orders row per final target and immediately places a matching
- * LIMIT SELL on the reference exchange (CoinEx). The order id returned by
- * CoinEx is persisted in `exchange_order_id` so the polling sync command can
+ * LIMIT SELL on the reference exchange (Binance). The order id returned by
+ * Binance is persisted in `exchange_order_id` so the polling sync command can
  * detect fills.
  */
 class OpenSellOrdersJob implements ShouldQueue
@@ -129,7 +129,7 @@ class OpenSellOrdersJob implements ShouldQueue
         foreach ($result['final_targets'] as $index => $target) {
             $type     = $target['type'] ?? $defaultMode;
             $trigger  = (string) $target['trigger'];
-            $price    = $this->resolveAbsolutePrice($type, $trigger, (string) $execution->avg_buy_price);
+            $price    = self::resolveAbsolutePrice($type, $trigger, (string) $execution->avg_buy_price);
             $amount   = (string) $target['amount'];
 
             $res = $exchange->placeLimitSell($market, $amount, $price);
@@ -156,6 +156,7 @@ class OpenSellOrdersJob implements ShouldQueue
                     $execution,
                     array_slice($result['final_targets'], $index),
                     $defaultMode,
+                    $exchange->name(),
                 );
                 $this->markFailed(
                     $execution,
@@ -176,6 +177,7 @@ class OpenSellOrdersJob implements ShouldQueue
             BotSellOrder::create([
                 'bot_buy_execution_id' => $execution->id,
                 'exchange_order_id'    => $res->exchangeOrderId,
+                'exchange'             => $exchange->name(),
                 'target_type'          => $type,
                 'target_value'         => $trigger,
                 'share_percent'        => $target['share'],
@@ -187,7 +189,7 @@ class OpenSellOrdersJob implements ShouldQueue
     
     }
 
-    private function resolveAbsolutePrice(string $type, string $trigger, string $avgBuyPrice): string
+    public static function resolveAbsolutePrice(string $type, string $trigger, string $avgBuyPrice): string
     {
         if ($type === 'price') {
             return $trigger;
@@ -341,7 +343,7 @@ class OpenSellOrdersJob implements ShouldQueue
     }
 
     /**
-     * Append a human-readable cancellation/failure note (including the CoinEx
+     * Append a human-readable cancellation/failure note (including the exchange
      * error and any liquidation exchange order id) to the parent order's
      * `description`. Appended (not overwritten) so a multi-coin order keeps a
      * note per affected execution.
@@ -359,12 +361,13 @@ class OpenSellOrdersJob implements ShouldQueue
      *
      * @param array<int,array<string,mixed>> $targets
      */
-    private function persistCanceledTargets(BotBuyExecution $execution, array $targets, string $defaultMode): void
+    private function persistCanceledTargets(BotBuyExecution $execution, array $targets, string $defaultMode, string $exchangeName): void
     {
         foreach ($targets as $target) {
             BotSellOrder::create([
                 'bot_buy_execution_id' => $execution->id,
                 'exchange_order_id'    => null,
+                'exchange'             => $exchangeName,
                 'target_type'          => $target['type'] ?? $defaultMode,
                 'target_value'         => (string) $target['trigger'],
                 'share_percent'        => $target['share'],
