@@ -42,15 +42,20 @@ class FetchMinOTCAmount extends Command
             return;
         }
 
+        $markets = Market::where('is_active', true)->get();
+        $symbols = $markets
+            ->map(fn (Market $market) => strtoupper($market->base_currency . $market->quote_currency))
+            ->unique()
+            ->values()
+            ->all();
+
         $service = ExchangeDataFactory::make($activeExchange->slug);
         try {
-            $fetchMarkets = collect($service->fetchMinTrade())->keyBy('market');
+            $fetchMarkets = collect($service->fetchMinTrade($symbols))->keyBy('market');
         } catch (Throwable $e) {
             $this->skip("Min trade sync aborted: {$e->getMessage()}");
             return;
         }
-
-        $markets = Market::where('is_active', true)->get();
 
         foreach ($markets as $market) {
             $symbol = $market->base_currency . $market->quote_currency;

@@ -8,5 +8,8 @@ interface ExchangeDataInterface
 
     public function fetchWithdrawalFee(string $currency): array;
 
-    public function fetchMinTrade(): array;
+    /**
+     * @param  list<string>|null  $symbols  Pairs to load, e.g. BTCUSDT. Null loads the full catalog.
+     */
+    public function fetchMinTrade(?array $symbols = null): array;
 }

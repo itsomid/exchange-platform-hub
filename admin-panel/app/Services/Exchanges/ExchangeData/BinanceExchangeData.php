@@ -6,6 +6,7 @@ use App\Services\Exchanges\Asset\Binance\BinanceOrderFormatter;
 use App\Services\Exchanges\Asset\Binance\BinanceRequest;
 use Exception;
 use Illuminate\Http\Client\Response;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 
 class BinanceExchangeData implements ExchangeDataInterface
@@ -91,24 +92,92 @@ class BinanceExchangeData implements ExchangeDataInterface
         ];
     }
 
-    public function fetchMinTrade(): array
+    public function fetchMinTrade(?array $symbols = null): array
     {
-        $response = Http::get(config('exchanges.binance.base_url') . '/api/v3/exchangeInfo');
+        if ($symbols === null) {
+            return $this->fetchMinTradeBatch(null);
+        }
+
+        $symbols = array_values(array_unique(array_filter(array_map(
+            fn ($symbol) => strtoupper(trim((string) $symbol)),
+            $symbols
+        ))));
+
+        if ($symbols === []) {
+            return [];
+        }
+
+        return $this->fetchMinTradeFor($symbols);
+    }
+
+    /**
+     * The unfiltered exchangeInfo payload is large enough to exhaust the web
+     * memory limit once Laravel decodes it. Callers that already know the pairs
+     * must pass them so only those rows are downloaded.
+     *
+     * @param  list<string>  $symbols
+     */
+    private function fetchMinTradeFor(array $symbols): array
+    {
+        if (count($symbols) > 40) {
+            $rows = [];
+            foreach (array_chunk($symbols, 40) as $chunk) {
+                $rows = array_merge($rows, $this->fetchMinTradeFor($chunk));
+            }
+
+            return $rows;
+        }
+
+        try {
+            return $this->fetchMinTradeBatch($symbols);
+        } catch (InvalidExchangeSymbol) {
+            if (count($symbols) === 1) {
+                return [];
+            }
+
+            $mid = intdiv(count($symbols), 2);
+
+            return array_merge(
+                $this->fetchMinTradeFor(array_slice($symbols, 0, $mid)),
+                $this->fetchMinTradeFor(array_slice($symbols, $mid)),
+            );
+        }
+    }
+
+    /**
+     * @param  list<string>|null  $symbols
+     */
+    private function fetchMinTradeBatch(?array $symbols): array
+    {
+        $query = [];
+        if ($symbols !== null) {
+            $query['symbols'] = json_encode(array_values($symbols));
+        }
+
+        $response = $this->binance()->get('/api/v3/exchangeInfo', $query);
 
         if (!$response->successful()) {
             throw $this->failure($response, 'exchangeInfo');
         }
 
-        $symbols = $response->json('symbols') ?? [];
+        $symbolRows = $response->json('symbols') ?? [];
+        unset($response);
 
-        $pricesResponse = Http::get(config('exchanges.binance.base_url') . '/api/v3/ticker/price');
+        $pricesResponse = $this->binance()->get('/api/v3/ticker/price', $query);
         if (!$pricesResponse->successful()) {
             throw $this->failure($pricesResponse, 'ticker prices');
         }
-        $prices = collect($pricesResponse->json() ?? [])->pluck('price', 'symbol');
+
+        $prices = [];
+        foreach ($pricesResponse->json() ?? [] as $row) {
+            if (isset($row['symbol'])) {
+                $prices[$row['symbol']] = $row['price'];
+            }
+        }
+        unset($pricesResponse);
 
         $result = [];
-        foreach ($symbols as $symbol) {
+        foreach ($symbolRows as $symbol) {
             if (($symbol['status'] ?? '') !== 'TRADING') {
                 continue;
             }
@@ -182,10 +251,22 @@ class BinanceExchangeData implements ExchangeDataInterface
             : $minQty;
     }
 
+    private function binance(): PendingRequest
+    {
+        return Http::timeout(8)
+            ->connectTimeout(3)
+            ->acceptJson()
+            ->baseUrl(rtrim((string) config('exchanges.binance.base_url'), '/'));
+    }
+
     private function failure(Response $response, string $context): Exception
     {
         $code = $response->json('code');
         $message = $response->json('msg') ?? "HTTP {$response->status()} {$response->reason()}";
+
+        if ((int) $code === -1121) {
+            return new InvalidExchangeSymbol("Binance {$context}: {$message}");
+        }
 
         return new Exception("Binance {$context}: {$message}" . ($code !== null ? " (code {$code})" : ''));
     }
@@ -194,4 +275,8 @@ class BinanceExchangeData implements ExchangeDataInterface
     {
         return self::NETWORK_ALIASES[$network] ?? $network;
     }
+}
+
+class InvalidExchangeSymbol extends Exception
+{
 }

@@ -25,12 +25,15 @@ class MarketController extends Controller
         $markets = Market::with(['baseCurrency', 'quoteCurrency', 'activeExchangePrice.exchange'])->get();
         $unsupportedMarkets = $support->unsupported($markets)
             ->keyBy(fn (array $row) => $row['market']->id);
+        $unreachableMarkets = $support->unreachable
+            ->keyBy(fn (array $row) => $row['market']->id);
 
         return view('dashboard.exchange.market.index', [
             'markets' => $markets,
             'activeExchange' => $activeExchange,
             'exchanges' => $exchanges,
             'unsupportedMarkets' => $unsupportedMarkets,
+            'unreachableMarkets' => $unreachableMarkets,
             'referenceSupportFailed' => $support->checkFailed,
         ]);
     }
@@ -172,8 +175,10 @@ class MarketController extends Controller
             ], 404);
         }
 
-        $listed = $support->tradingMarkets($exchange->slug);
         $pair = $market->base_currency . '/' . $market->quote_currency;
+        $listed = $support->tradingMarkets($exchange->slug, [
+            strtoupper($market->base_currency . $market->quote_currency),
+        ]);
 
         if ($listed === null) {
             if ($support->checkFailed) {
