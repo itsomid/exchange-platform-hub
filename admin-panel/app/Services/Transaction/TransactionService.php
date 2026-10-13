@@ -94,7 +94,7 @@ class TransactionService
                     adminId: $adminId,
                     coinPrice: $currency->exchangePrice,
                     withdrawalId: $withdraw->id, // No deposit ID for admin direct actions
-                    description: 'Exchange Wallet credit decrease by',
+                    description: 'Exchange Wallet credit decrease by admin: (#' . $adminId . ') ' . Admin::find($adminId)->fullname(),
                     admin_description: $admin_description
                 );
 

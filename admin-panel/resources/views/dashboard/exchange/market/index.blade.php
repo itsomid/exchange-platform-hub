@@ -88,9 +88,7 @@
                 </span>
                 <div>
                     <h6 class="alert-heading mb-1">
-                        {{ $unsupportedMarkets->count() }} بازار روی صرافی مرجع ({{ $referenceExchange->name ?? 'نامشخص' }})
-                        پشتیبانی نمی‌شود
-
+                        {{ $unsupportedMarkets->count() }} بازار روی صرافی مرجع پشتیبانی نمی‌شود
                     </h6>
                     <p class="mb-2">
                         این بازارها در صرافی مرجعی که برایشان انتخاب شده وجود ندارند.
@@ -101,6 +99,32 @@
                             <a href="{{ route('admin.market.edit', ['market' => $unsupported['market']->id]) }}"
                                 class="badge bg-label-danger">
                                 {{ $unsupported['symbol'] }} — {{ $unsupported['exchange']->name }}
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if ($unreachableMarkets->isNotEmpty())
+        <div class="alert alert-warning mb-4" role="alert">
+            <div class="d-flex align-items-start gap-3">
+                <span class="badge bg-warning rounded p-2">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </span>
+                <div>
+                    <h6 class="alert-heading mb-1">
+                        بررسی پشتیبانی {{ $unreachableMarkets->count() }} بازار انجام نشد
+                    </h6>
+                    <p class="mb-2">
+                        بررسی پشتیبانی بازارها روی صرافی مرجع انجام نشد. فهرست بازارهای صرافی در دسترس نبود.
+                    </p>
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach ($unreachableMarkets as $unreachable)
+                            <a href="{{ route('admin.market.edit', ['market' => $unreachable['market']->id]) }}"
+                                class="badge bg-label-warning">
+                                {{ $unreachable['symbol'] }} — {{ $unreachable['exchange']->name }} — اتصال برقرار نشد
                             </a>
                         @endforeach
                     </div>
@@ -176,8 +200,14 @@
                     </thead>
                     <tbody class="table-border-bottom-0">
                         @foreach ($markets as $market)
-                            @php $unsupported = $unsupportedMarkets->get($market->id); @endphp
-                            <tr data-market-id="{{ $market->id }}" @class(['market-unsupported' => (bool) $unsupported])>
+                            @php
+                                $unsupported = $unsupportedMarkets->get($market->id);
+                                $unreachable = $unreachableMarkets->get($market->id);
+                            @endphp
+                            <tr data-market-id="{{ $market->id }}" @class([
+                                'market-unsupported' => (bool) $unsupported,
+                                'market-support-unknown' => (bool) $unreachable,
+                            ])>
                                 <td class="">{{ $market->id }}</td>
                                 <td class="text-heading fw-medium">
                                     <div class="d-flex justify-content-start align-items-center">
@@ -196,6 +226,8 @@
                                             <div>{{ $market->base_currency }}/{{ $market->quote_currency }}</div>
                                             @if ($unsupported)
                                                 <span class="badge bg-label-danger mt-1">پشتیبانی نمی‌شود</span>
+                                            @elseif ($unreachable)
+                                                <span class="badge bg-label-warning mt-1">اتصال برقرار نشد</span>
                                             @endif
                                         </div>
                                     </div>
@@ -257,6 +289,10 @@
                                         @if ($unsupported)
                                             <span class="badge bg-label-danger me-1">
                                                 پشتیبانی نمی‌شود
+                                            </span>
+                                        @elseif ($unreachable)
+                                            <span class="badge bg-label-warning me-1">
+                                                اتصال برقرار نشد
                                             </span>
                                         @endif
                                         @if (!$market->price_update_enabled)
@@ -698,6 +734,28 @@
         .table tbody tr.market-unsupported:hover>td,
         .table tbody tr.market-unsupported:hover .sticky-column {
             background-color: #ffe4e6 !important;
+        }
+
+        .table tbody tr.market-support-unknown>td {
+            background-color: #fff8eb !important;
+            border-inline-start-color: transparent;
+        }
+
+        .table tbody tr.market-support-unknown>td:first-child {
+            box-shadow: inset -3px 0 0 #ff9f43;
+        }
+
+        .table tbody tr.market-support-unknown>td:nth-child(2) {
+            white-space: normal;
+        }
+
+        .table tbody tr.market-support-unknown .sticky-column {
+            background-color: #fff8eb !important;
+        }
+
+        .table tbody tr.market-support-unknown:hover>td,
+        .table tbody tr.market-support-unknown:hover .sticky-column {
+            background-color: #fff1d6 !important;
         }
 
         [data-role="last-price"],

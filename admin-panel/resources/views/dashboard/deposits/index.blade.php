@@ -2,7 +2,7 @@
 @section('title', 'مدیریت واریزی ها')
 @section('content')
     <div class="row g-4 mb-4">
-        <div class="col-sm-12 col-md-4 col-xxl-3">
+        <div class="col-sm-12 col-xl-3">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
@@ -20,26 +20,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-12 col-xl-4">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
-                        <div class="content-left">
-                            <span>ارزش واریزی ها</span>
-                            <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{ formatNumberTrimZeros($totalDepositsValue) }}
-                                    <small>USDT</small>
-                                </h4>
-                            </div>
-                        </div>
-                        <span class="badge bg-label-success rounded p-2">
-                            <i class="fa-light fa-money-bill-wave fa-lg"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-12 col-xl-4">
+        <div class="col-sm-12 col-xl-3">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
@@ -58,7 +39,27 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-12 col-xl-4">
+        <div class="col-sm-12 col-xl-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div class="content-left">
+                            <span>ارزش واریزی ها</span>
+                            <div class="d-flex align-items-center my-1">
+                                <h5 class="mb-0 me-2">{{ formatNumberTrimZeros($totalDepositsValue) }}
+                                    <small>USDT</small>
+                                </h5>
+                            </div>
+                        </div>
+                        <span class="badge bg-label-success rounded p-2">
+                            <i class="fa-light fa-money-bill-wave fa-lg"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-12 col-xl-3">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-start justify-content-between">
@@ -78,7 +79,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-12 col-xl-5">
+        <div class="col-sm-12 col-xl-6">
             <div class="card">
                 <div class="card-body bg-success">
                     <div class="d-flex align-items-start justify-content-between">
@@ -138,15 +139,15 @@
             <form class="row mt-3 d-flex align-items-end"
                 action="{{ route('admin.deposit.excel-export', request()->query()) }}" method="POST">
                 @csrf
-                <div class="col-md-2 user_role">
+                <div class="col-md-3 user_role">
                     <label class="form-label" for="UserRole">از آیدی :</label>
                     <input type="number" class="form-control" placeholder="آیدی کاربر">
                 </div>
-                <div class="col-md-2 user_role">
+                <div class="col-md-3 user_role">
                     <label class="form-label" for="UserRole">تا آیدی :</label>
                     <input type="number" class="form-control" placeholder="آیدی کاربر">
                 </div>
-                <div class="col-md-2 mt-2">
+                <div class="col-md-3 mt-2">
                     <button class="btn btn-success class ">دانلود خروجی اکسل</button>
                 </div>
             </form>

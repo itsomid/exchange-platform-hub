@@ -41,6 +41,7 @@ class MarketReferenceSupportTest extends TestCase
         ])->save();
 
         Cache::flush();
+        Http::preventStrayRequests();
     }
 
     public function test_index_flags_markets_missing_from_the_reference_exchange(): void
@@ -58,6 +59,15 @@ class MarketReferenceSupportTest extends TestCase
         $response->assertSee('1 بازار روی صرافی مرجع پشتیبانی نمی‌شود');
         $response->assertSee('UTK/USDT — Binance');
         $response->assertSee('پشتیبانی نمی‌شود');
+        Http::assertSent(function ($request) {
+            if (!str_contains($request->url(), 'exchangeInfo')) {
+                return false;
+            }
+
+            $symbols = $request->data()['symbols'] ?? '';
+
+            return str_contains($symbols, 'UTKUSDT') && str_contains($symbols, 'BTCUSDT');
+        });
         $this->assertMatchesRegularExpression(
             '/data-market-id="' . $utk->id . '"[^>]*market-unsupported/',
             $html
@@ -71,15 +81,56 @@ class MarketReferenceSupportTest extends TestCase
     public function test_index_stays_up_when_the_reference_exchange_cannot_be_read(): void
     {
         Http::fake([
-            '*/api/v3/exchangeInfo' => Http::response(['msg' => 'down'], 500),
+            '*/api/v3/exchangeInfo*' => Http::response(['msg' => 'down'], 500),
         ]);
         $this->makeMarket('UTK');
 
-        $this->actingAs($this->admin, 'admin')
-            ->get(route('admin.market.index'))
-            ->assertOk()
+        $response = $this->actingAs($this->admin, 'admin')
+            ->get(route('admin.market.index'));
+
+        $response->assertOk()
             ->assertSee('بررسی پشتیبانی بازارها روی صرافی مرجع انجام نشد')
+            ->assertSee('UTK/USDT — Binance — اتصال برقرار نشد')
+            ->assertSee('اتصال برقرار نشد')
             ->assertDontSee('class="market-unsupported"', false);
+
+        $this->assertMatchesRegularExpression(
+            '/data-market-id="\d+"[^>]*market-support-unknown/',
+            $response->getContent()
+        );
+    }
+
+    public function test_index_flags_each_market_when_the_reference_exchange_is_unreachable(): void
+    {
+        Http::fake(function () {
+            throw new \Illuminate\Http\Client\ConnectionException('timed out');
+        });
+        $utk = $this->makeMarket('UTK');
+        $btc = $this->makeMarket('BTC');
+
+        $response = $this->actingAs($this->admin, 'admin')
+            ->get(route('admin.market.index'));
+
+        $response->assertOk();
+        $html = $response->getContent();
+        $response->assertSee('UTK/USDT — Binance — اتصال برقرار نشد');
+        $response->assertSee('BTC/USDT — Binance — اتصال برقرار نشد');
+        $this->assertMatchesRegularExpression(
+            '/data-market-id="' . $utk->id . '"[^>]*market-support-unknown/',
+            $html
+        );
+        $this->assertMatchesRegularExpression(
+            '/data-market-id="' . $btc->id . '"[^>]*market-support-unknown/',
+            $html
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/data-market-id="' . $utk->id . '"[^>]*market-unsupported/',
+            $html
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/data-market-id="' . $btc->id . '"[^>]*market-unsupported/',
+            $html
+        );
     }
 
     public function test_min_otc_reports_an_unsupported_market(): void
@@ -112,7 +163,7 @@ class MarketReferenceSupportTest extends TestCase
     public function test_min_otc_covers_the_binance_minimum_order_value(): void
     {
         Http::fake([
-            '*/api/v3/exchangeInfo' => Http::response([
+            '*/api/v3/exchangeInfo*' => Http::response([
                 'symbols' => [[
                     'symbol' => 'BNBUSDT',
                     'status' => 'TRADING',
@@ -124,7 +175,7 @@ class MarketReferenceSupportTest extends TestCase
                     ],
                 ]],
             ]),
-            '*/api/v3/ticker/price' => Http::response([['symbol' => 'BNBUSDT', 'price' => '766.20000000']]),
+            '*/api/v3/ticker/price*' => Http::response([['symbol' => 'BNBUSDT', 'price' => '766.20000000']]),
         ]);
         $bnb = $this->makeMarket('BNB');
 
@@ -153,7 +204,7 @@ class MarketReferenceSupportTest extends TestCase
     private function fakeExchangeInfo(array $symbols): void
     {
         Http::fake([
-            '*/api/v3/exchangeInfo' => Http::response([
+            '*/api/v3/exchangeInfo*' => Http::response([
                 'symbols' => array_map(fn (string $symbol) => [
                     'symbol' => $symbol,
                     'status' => 'TRADING',
@@ -164,7 +215,7 @@ class MarketReferenceSupportTest extends TestCase
                     ],
                 ], $symbols),
             ]),
-            '*/api/v3/ticker/price' => Http::response([]),
+            '*/api/v3/ticker/price*' => Http::response([]),
         ]);
     }
 
