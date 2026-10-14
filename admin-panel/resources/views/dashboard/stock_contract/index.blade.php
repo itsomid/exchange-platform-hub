@@ -159,6 +159,13 @@
                         </x-user-selection-component>
                     </div>
                     <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
+                        <label class="form-label" for="contract_number">شماره قرارداد:</label>
+                        <input type="text" name="contract_number" id="contract_number"
+                            class="form-control font-number" dir="ltr"
+                            value="{{ request()->input('contract_number') }}"
+                            placeholder="مثال: SH-14040101-0001">
+                    </div>
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
                         <label class="form-label" for="status">وضعیت قرارداد:</label>
                         <select name="status" id="status" class="form-select">
                             <option value="">همه وضعیت‌ها</option>
@@ -196,13 +203,16 @@
                     </div>
                 </div>
 
-                @if (request()->hasAny(['user', 'status', 'stock_type']))
+                @if (request()->hasAny(['user', 'status', 'stock_type', 'contract_number']))
                     <div class="row">
                         <div class="col-12">
                             <div class="alert alert-info d-flex align-items-center">
                                 <i class="fas fa-info-circle me-2"></i>
                                 <span class="me-2">فیلترهای فعال:</span>
                                 <div class="d-flex flex-wrap gap-1">
+                                    @if (request()->filled('contract_number'))
+                                        <span class="badge bg-primary">شماره قرارداد: {{ request()->input('contract_number') }}</span>
+                                    @endif
                                     @if (request()->filled('user'))
                                         @php $selectedUser = \App\Models\User::find(request()->input('user')); @endphp
                                         @if ($selectedUser)
