@@ -291,6 +291,16 @@
                             value="{{ request()->input('date_to') }}" placeholder="1403/12/29" autocomplete="off">
                     </div>
                     <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
+                        <label class="form-label" for="from_id">از آیدی:</label>
+                        <input type="number" name="from_id" class="form-control" id="from_id"
+                            value="{{ request()->input('from_id') }}" placeholder="0">
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
+                        <label class="form-label" for="to_id">تا آیدی:</label>
+                        <input type="number" name="to_id" class="form-control" id="to_id"
+                            value="{{ request()->input('to_id') }}" placeholder="0">
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
                         <label class="form-label" for="quantity_min">مقدار (از):</label>
                         <input type="number" name="quantity_min" class="form-control" id="quantity_min" step="any"
                             value="{{ request()->input('quantity_min') }}" placeholder="0">
@@ -318,6 +328,8 @@
                         'type',
                         'status',
                         'user',
+                        'from_id',
+                        'to_id',
                         'date_from',
                         'date_to',
                         'quantity_min',
@@ -352,6 +364,12 @@
                                 @else
                                     <span class="badge bg-primary">کاربر: #{{ request()->input('user') }}</span>
                                 @endif
+                            @endif
+                            @if (request()->filled('from_id'))
+                                <span class="badge bg-primary">آیدی ≥ {{ request()->input('from_id') }}</span>
+                            @endif
+                            @if (request()->filled('to_id'))
+                                <span class="badge bg-primary">آیدی ≤ {{ request()->input('to_id') }}</span>
                             @endif
                             @if (request()->filled('date_from'))
                                 <span class="badge bg-primary">از: {{ request()->input('date_from') }}</span>
