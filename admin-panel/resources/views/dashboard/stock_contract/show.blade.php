@@ -47,22 +47,27 @@
                             </div>
                             <div class="d-flex justify-content-between">
                                 <span class="text-muted">تاریخ ایجاد:</span>
-                                <span>{{ \App\Helpers\DateFormatter::convertToPersianDate($stockContract->created_at, 'H:i:s - %d %B %Y') }}</span>
+                                <span>
+                                    <small class="text-muted ">({{ $stockContract->created_at->format('Y/m/d') }})</small>
+                                    {{ \App\Helpers\DateFormatter::convertToPersianDate($stockContract->created_at, 'H:i:s - %d %B %Y') }}
+                                </span>
                             </div>
                             @if ($stockContract->sold_at)
                                 <div class="d-flex justify-content-between">
                                     <span class="text-muted">تاریخ فروش:</span>
-                                    <span>{{ \App\Helpers\DateFormatter::convertToPersianDate($stockContract->sold_at, 'H:i:s - %d %B %Y') }}
+                                    <span>
                                         <small class="text-muted ">({{ $stockContract->sold_at->format('Y/m/d') }})</small>
+                                        {{ \App\Helpers\DateFormatter::convertToPersianDate($stockContract->sold_at, 'H:i:s - %d %B %Y') }}
                                     </span>
                                 </div>
                             @endif
                             @if ($stockContract->cancelled_at)
                                 <div class="d-flex justify-content-between">
                                     <span class="text-muted">تاریخ ابطال:</span>
-                                    <span>{{ \App\Helpers\DateFormatter::convertToPersianDate($stockContract->cancelled_at, 'H:i:s - %d %B %Y') }}
+                                    <span>
                                         <small
                                             class="text-muted ">({{ $stockContract->cancelled_at->format('Y/m/d') }})</small>
+                                        {{ \App\Helpers\DateFormatter::convertToPersianDate($stockContract->cancelled_at, 'H:i:s - %d %B %Y') }}
                                     </span>
                                 </div>
                             @endif
