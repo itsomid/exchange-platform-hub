@@ -108,11 +108,7 @@ class HDWalletFacade
     public function getDepositLists(OldGetDepositListsRequestDTO $requestDTO): array
     {
         if ($this->isNewSystem()) {
-            Log::channel('hd-wallet')->info('HD Wallet Facade - Using new system for deposit lists', [
-                'wallet_address' => $requestDTO->getAddress(),
-                'network' => $requestDTO->getNetwork(),
-                'currency' => $requestDTO->getTokenSymbol(),
-            ]);
+    
 
             // The new system uses userId-based deposit retrieval
             // We need to find userId from wallet address
