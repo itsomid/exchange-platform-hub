@@ -19,7 +19,7 @@ return new class extends Migration
             $table->decimal('high', 18, 8);
             $table->decimal('low', 18, 8);
             $table->decimal('close', 18, 8);
-            $table->decimal('volume', 18, 8);
+            $table->decimal('volume', 30, 8);
             $table->timestamp('timestamp');
 
             $table->unique(['market_id', 'timestamp']);
