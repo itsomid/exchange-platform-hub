@@ -16,6 +16,8 @@ class StockContract extends Model
 
     protected $casts = [
         'contract_status' => StockContractStatusEnum::class,
+        'cancelled_at' => 'datetime',
+        'sold_at' => 'datetime',
     ];
 
     protected $fillable = [
