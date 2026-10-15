@@ -53,8 +53,9 @@ class BotCurrencyCancelService
         $price   = $this->livePrice($currency);
         $sells   = $this->openSells($currency->id);
 
-        $users  = [];
-        $totals = $this->emptyTotals();
+        $users       = [];
+        $totals      = $this->emptyTotals();
+        $profitTiers = 0;
 
         foreach ($sells as $sell) {
             $execution = $sell->botBuyExecution;
@@ -75,6 +76,9 @@ class BotCurrencyCancelService
             $users[$userId]['tiers']++;
             $this->accumulate($users[$userId], $amount, $b);
             $this->accumulate($totals, $amount, $b);
+            if (bccomp($b['gross_pnl'], '0', self::SCALE) > 0) {
+                $profitTiers++;
+            }
         }
 
         $users = array_values(array_map(function (array $u) {
@@ -99,6 +103,7 @@ class BotCurrencyCancelService
                 'users'        => count($users),
                 'orders'       => $sells->pluck('botBuyExecution.bot_order_id')->unique()->count(),
                 'sell_orders'  => $sells->count(),
+                'profit_tiers' => $profitTiers,
             ],
             'users' => $users,
         ];
@@ -114,12 +119,13 @@ class BotCurrencyCancelService
         string $reason,
         ?int $adminId,
         ?string $adminLabel,
+        bool $payProfit = true,
     ): BotCurrencyCancellation {
         if ($sellOnExchange && ! $cancelOnExchange) {
             throw new \DomainException('فروش ارز در صرافی مرجع فقط بعد از لغو پله‌های فروش در صرافی مرجع ممکن است.');
         }
 
-        $cancellation = DB::transaction(function () use ($currency, $cancelOnExchange, $sellOnExchange, $reason, $adminId, $adminLabel) {
+        $cancellation = DB::transaction(function () use ($currency, $cancelOnExchange, $sellOnExchange, $reason, $adminId, $adminLabel, $payProfit) {
             Currency::whereKey($currency->id)->lockForUpdate()->first();
 
             if ($running = $this->runningCancellation($currency->id)) {
@@ -151,6 +157,7 @@ class BotCurrencyCancelService
                 'admin_label'        => $adminLabel,
                 'cancel_on_exchange' => $cancelOnExchange,
                 'sell_on_exchange'   => $sellOnExchange,
+                'pay_profit'         => $payProfit,
                 'reason'             => $reason,
                 'status'             => BotCurrencyCancellation::STATUS_PENDING,
             ]);
@@ -161,6 +168,7 @@ class BotCurrencyCancelService
             'currency'           => $currency->symbol,
             'cancel_on_exchange' => $cancelOnExchange,
             'sell_on_exchange'   => $sellOnExchange,
+            'pay_profit'         => $payProfit,
             'admin_id'           => $adminId,
         ]);
 
@@ -287,7 +295,7 @@ class BotCurrencyCancelService
         $settled    = 0;
         foreach ($toSettle as $sell) {
             try {
-                $b = $this->settlement->settleCurrencyCancel($sell, $price, $perfPct, $cancellation->id);
+                $b = $this->settlement->settleCurrencyCancel($sell, $price, $perfPct, $cancellation->id, $cancellation->pay_profit);
             } catch (\Throwable $e) {
                 $details['errors'][] = ['sell_order_id' => $sell->id, 'error' => $e->getMessage()];
                 Log::channel('smart-bot')->error('bot.currency_cancel.settle_failed', [

@@ -5,11 +5,16 @@ use App\Models\Bot\BotBuyExecution;
 use App\Models\Bot\BotOrder;
 use App\Models\Bot\BotSellMigration;
 use App\Models\Bot\BotSellOrder;
+use App\Models\Bot\BotTradeSettlement;
+use App\Models\Bot\BotWallet;
 use App\Models\Currency;
 use App\Models\User;
+use App\Models\Wallet;
 use App\Services\Bot\BotSellMigrationService;
 use App\Services\Bot\ReferenceExchange\ExchangeContract;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
@@ -18,6 +23,20 @@ use Tests\Support\FakeExchange;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    // transactions.coin_price exists in the real schema but no migration creates it.
+    if (! Schema::hasColumn('transactions', 'coin_price')) {
+        Schema::table('transactions', fn (Blueprint $t) => $t->decimal('coin_price', 30, 8)->nullable());
+    }
+
+    $exchangeUser = User::factory()->create();
+    config(['bitexroom.user_id' => $exchangeUser->id]);
+    Wallet::create([
+        'user_id'         => $exchangeUser->id,
+        'currency_symbol' => 'USDT',
+        'balance'         => '0',
+        'locked_balance'  => '0',
+    ]);
+
     $this->fake = new FakeExchange();
     $this->app->instance(ExchangeContract::class, $this->fake);
     Event::fake([BotSellOrderFilled::class]);
@@ -49,6 +68,13 @@ function smFakeBinance(string $asset, string $free): void
 function smPosition(Currency $currency, string $avg, array $tiers): array
 {
     $user  = User::factory()->create();
+    BotWallet::create([
+        'user_id'           => $user->id,
+        'balance'           => '100',
+        'principal_balance' => '100',
+        'profit_balance'    => '0',
+        'locked_balance'    => '100',
+    ]);
     $order = BotOrder::create([
         'user_id'           => $user->id,
         'batch_uuid'        => (string) \Illuminate\Support\Str::uuid(),
@@ -179,6 +205,119 @@ it('refuses to start when the free Binance balance is below what the tiers need'
 
     expect(BotSellMigration::count())->toBe(0)
         ->and($this->fake->limitSells)->toBeEmpty();
+});
+
+it('merges a below-minimum tier into the lower-target sibling of the same buy', function () {
+    $avax = smCurrency();
+    [$low, $small] = smPosition($avax, '10', [
+        ['10', '5', BotSellOrder::STATUS_OPEN],
+        ['20', '0.3', BotSellOrder::STATUS_OPEN], // 0.3 × 12 = 3.6 USDT < 5 minNotional
+    ]);
+    Cache::put('market:price:AVAXUSDT', '10.5');
+    smFakeBinance('AVAX', '20');
+
+    $preview = app(BotSellMigrationService::class)->preview($avax);
+    $byId    = collect($preview['tiers'])->keyBy('sell_order_id');
+    expect($byId[$small->id]['action'])->toBe('merge')
+        ->and($byId[$small->id]['merge_into'])->toBe($low->id)
+        ->and($byId[$low->id]['action'])->toBe('limit')
+        ->and((float) $byId[$low->id]['merged_amount'])->toBe(5.3)
+        ->and($preview['totals']['merge_tiers'])->toBe(1)
+        ->and($preview['close'])->toBeNull();
+
+    $migration = app(BotSellMigrationService::class)->start($avax, 1, 'admin@test')->fresh();
+
+    expect($migration->merged_count)->toBe(1)
+        ->and($migration->placed_count)->toBe(1)
+        ->and($migration->failed_count)->toBe(0);
+
+    expect($this->fake->limitSells)->toHaveCount(1)
+        ->and((float) $this->fake->limitSells[0]['baseAmount'])->toBe(5.3)
+        ->and((float) $this->fake->limitSells[0]['price'])->toBe(11.0);
+
+    $low->refresh();
+    $small->refresh();
+    expect((float) $low->amount_to_sell)->toBe(5.3)
+        ->and((float) $low->share_percent)->toBe(100.0)
+        ->and($low->exchange)->toBe('fake')
+        ->and($small->status)->toBe(BotSellOrder::STATUS_CANCELED)
+        ->and($small->cancel_reason)->toBe(BotSellOrder::CANCEL_MIGRATION_MERGED)
+        ->and(BotTradeSettlement::count())->toBe(0);
+});
+
+it('sells unmergeable below-minimum tiers in one market order and refunds with the currency-cancel rule', function () {
+    $avax = smCurrency();
+    [$a] = smPosition($avax, '10', [['20', '0.3', BotSellOrder::STATUS_OPEN]]);
+    [$b] = smPosition($avax, '10', [['20', '0.3', BotSellOrder::STATUS_OPEN]]);
+    Cache::put('market:price:AVAXUSDT', '10.5');
+    $this->fake->marketSellAvgPrice = '10.5';
+    smFakeBinance('AVAX', '20');
+
+    $preview = app(BotSellMigrationService::class)->preview($avax);
+    expect($preview['totals']['close_tiers'])->toBe(2)
+        ->and($preview['close']['sellable'])->toBeTrue()
+        ->and((float) $preview['tiers'][0]['estimated_refund'])->toBe(3.117);
+
+    $migration = app(BotSellMigrationService::class)->start($avax, 1, 'admin@test')->fresh();
+    expect($migration->closed_count)->toBe(2)
+        ->and($migration->details['close']['price_source'])->toBe('market_sell')
+        ->and($this->fake->marketSells)->toHaveCount(1)
+        ->and((float) $this->fake->marketSells[0]['baseAmount'])->toBe(0.6)
+        ->and($this->fake->limitSells)->toBeEmpty();
+
+    foreach ([$a, $b] as $tier) {
+        $tier->refresh();
+        $wallet = BotWallet::where('user_id', $tier->botBuyExecution->botOrder->user_id)->first();
+        // cost 3, value 3.15, profit 0.15 − 22% fee = 0.117; principal 3 unlocked.
+        expect($tier->status)->toBe(BotSellOrder::STATUS_CANCELED)
+            ->and($tier->cancel_reason)->toBe(BotSellOrder::CANCEL_MIGRATION_BELOW_MIN)
+            ->and($tier->bot_currency_cancellation_id)->toBeNull()
+            ->and((float) $wallet->balance)->toBe(100.117)
+            ->and((float) $wallet->locked_balance)->toBe(97.0);
+    }
+    expect(BotTradeSettlement::count())->toBe(2);
+    Event::assertNotDispatched(BotSellOrderFilled::class);
+});
+
+it('settles dust at the live price without selling when even the aggregated total is below the minimum', function () {
+    $avax = smCurrency();
+    [$tier] = smPosition($avax, '12', [['50', '0.2', BotSellOrder::STATUS_OPEN]]); // 0.2 × 18 = 3.6 USDT
+    Cache::put('market:price:AVAXUSDT', '10.5'); // in loss: refund = principal only
+    smFakeBinance('AVAX', '20');
+
+    expect(app(BotSellMigrationService::class)->preview($avax)['close']['sellable'])->toBeFalse();
+
+    $migration = app(BotSellMigrationService::class)->start($avax, 1, 'admin@test')->fresh();
+
+    expect($migration->closed_count)->toBe(1)
+        ->and($migration->details['close']['price_source'])->toBe('live')
+        ->and($this->fake->marketSells)->toBeEmpty();
+
+    $tier->refresh();
+    $wallet = BotWallet::where('user_id', $tier->botBuyExecution->botOrder->user_id)->first();
+    expect($tier->status)->toBe(BotSellOrder::STATUS_CANCELED)
+        ->and((float) $wallet->balance)->toBe(100.0)
+        ->and((float) $wallet->locked_balance)->toBe(98.0);
+});
+
+it('settles below-minimum tiers at the live price when the aggregated market sell fails', function () {
+    $avax = smCurrency();
+    [$a] = smPosition($avax, '10', [['20', '0.3', BotSellOrder::STATUS_OPEN]]);
+    smPosition($avax, '10', [['20', '0.3', BotSellOrder::STATUS_OPEN]]);
+    Cache::put('market:price:AVAXUSDT', '10.5');
+    smFakeBinance('AVAX', '20');
+    $this->fake->failNextMarketSell = true;
+
+    $migration = app(BotSellMigrationService::class)->start($avax, 1, 'admin@test')->fresh();
+
+    expect($migration->failed_count)->toBe(0)
+        ->and($migration->closed_count)->toBe(2)
+        ->and($migration->details['close']['price_source'])->toBe('live')
+        ->and($migration->details['close']['sell_error'])->toContain('forced failure')
+        ->and($this->fake->marketSells)->toHaveCount(1)
+        ->and($a->fresh()->status)->toBe(BotSellOrder::STATUS_CANCELED)
+        ->and($a->fresh()->cancel_reason)->toBe(BotSellOrder::CANCEL_MIGRATION_BELOW_MIN)
+        ->and(BotTradeSettlement::count())->toBe(2);
 });
 
 it('leaves a tier untouched when Binance rejects it and does nothing on a second run', function () {

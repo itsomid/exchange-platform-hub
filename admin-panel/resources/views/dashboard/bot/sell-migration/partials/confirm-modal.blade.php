@@ -122,12 +122,26 @@
             html += '<div class="row g-2 text-center mb-3">' +
                 stat('ثبت Limit در Binance', fmt(t.limit_tiers, 0) + ' پله · ' + fmt(t.limit_amount) + ' ' + sym, 'border-info') +
                 stat('تارگت خورده → فروش Market و تسویه', fmt(t.market_tiers, 0) + ' پله · ' + fmt(t.market_amount) + ' ' + sym, 'border-warning') +
+                stat('ادغام با پله مجاور', fmt(t.merge_tiers, 0) + ' پله · ' + fmt(t.merge_amount) + ' ' + sym, 'border-secondary') +
+                stat('بستن و برگشت به کیف پول', fmt(t.close_tiers, 0) + ' پله · ' + fmt(t.close_amount) + ' ' + sym, 'border-danger') +
                 '</div>';
 
-            if ((t.below_min || 0) > 0) {
+            if ((t.merge_tiers || 0) > 0 || (t.close_tiers || 0) > 0) {
+                var close = d.close || null;
                 html += '<div class="alert alert-warning py-2 small"><i class="fas fa-exclamation-triangle me-1"></i>' +
-                    t.below_min + ' پله کمتر از حداقل مقدار/ارزش سفارش Binance است و احتمالاً ثبت نمی‌شود؛ ' +
-                    'این پله‌ها دست‌نخورده باقی می‌مانند.</div>';
+                    'پله‌هایی که مقدار یا ارزش‌شان کمتر از حداقل سفارش Binance است (فیلترهای LOT_SIZE / NOTIONAL خود Binance) ' +
+                    'ابتدا با پله مجاور همان خرید ادغام می‌شوند (پله با تارگت پایین‌تر باقی می‌ماند و مقدار و سهم دو پله جمع می‌شود).';
+                if ((t.close_tiers || 0) > 0) {
+                    html += ' پله‌هایی که ادغام‌شان ممکن نیست، همه با هم در یک سفارش Market فروخته و با قاعده «لغو ارز» تسویه می‌شوند: ' +
+                        'در سود، اصل سرمایه + سود منهای کارمزد عملکرد (' + fmt(d.performance_fee_percent, 2) + '٪)؛ در ضرر، فقط اصل سرمایه. ' +
+                        'اگر فروش Market در Binance ناموفق باشد، تسویه با قیمت لحظه‌ای انجام می‌شود و کوین روی حساب پلتفرم می‌ماند.';
+                    if (close && !close.sellable) {
+                        html += ' <strong>مجموع این پله‌ها (' + fmt(close.amount) + ' ' + sym + ' ≈ ' + fmt(close.value, 2) +
+                            ' USDT) هم کمتر از حداقل Binance است؛ چیزی فروخته نمی‌شود، تسویه با قیمت لحظه‌ای انجام می‌شود ' +
+                            'و این مقدار کوین روی حساب پلتفرم باقی می‌ماند.</strong>';
+                    }
+                }
+                html += '</div>';
             }
 
             var tiers = d.tiers || [];
@@ -140,11 +154,22 @@
                     var target = r.target_type === 'percent'
                         ? fmt(r.target_value, 4) + '٪ <small class="text-muted">(خرید ' + fmt(r.avg_buy_price) + ')</small>'
                         : fmt(r.target_value);
-                    var action = r.action === 'market'
-                        ? '<span class="badge bg-label-warning">Market + تسویه</span>'
-                        : '<span class="badge bg-label-info">Limit</span>';
-                    if (r.below_min) action += ' <span class="badge bg-label-danger" title="کمتر از حداقل Binance">حداقل</span>';
-                    html += '<tr class="' + (r.action === 'market' ? 'table-warning' : '') + '">' +
+                    var action = {
+                        market: '<span class="badge bg-label-warning">Market + تسویه</span>',
+                        limit: '<span class="badge bg-label-info">Limit</span>',
+                        merge: '<span class="badge bg-label-secondary">ادغام در #' + r.merge_into + '</span>',
+                        close: '<span class="badge bg-label-danger">بستن + برگشت</span>',
+                    }[r.action] || esc(r.action);
+                    if (r.merged_amount) {
+                        action += '<div><small class="text-muted">پس از ادغام: <span class="font-number">' + fmt(r.merged_amount) +
+                            '</span> · ' + fmt(r.merged_share, 2) + '٪</small></div>';
+                    }
+                    if (r.estimated_refund) {
+                        action += '<div><small class="text-muted">برگشت تقریبی: <span class="font-number">' + fmt(r.estimated_refund, 4) +
+                            '</span> USDT</small></div>';
+                    }
+                    var rowClass = { market: 'table-warning', merge: 'table-secondary', close: 'table-danger' }[r.action] || '';
+                    html += '<tr class="' + rowClass + '">' +
                         '<td class="font-number">#' + r.sell_order_id + '<div><small class="text-muted">' + fmt(r.share_percent, 2) + '٪</small></div></td>' +
                         '<td><small>' + esc(r.user_email || r.user_mobile || ('#' + r.user_id)) + '</small>' +
                         '<div><small class="text-muted font-number">سفارش #' + r.bot_order_id + '</small></div></td>' +
@@ -183,8 +208,22 @@
                     stat('پله‌ها', fmt(m.tiers_count, 0)) +
                     stat('ثبت Limit در Binance', fmt(m.placed_count, 0), 'border-info') +
                     stat('تکمیل با Market', fmt(m.completed_count, 0), 'border-warning') +
+                    stat('ادغام‌شده', fmt(m.merged_count, 0), 'border-secondary') +
+                    stat('بسته و برگشت به کیف پول', fmt(m.closed_count, 0), 'border-danger') +
                     stat('ناموفق', fmt(m.failed_count, 0), m.failed_count ? 'border-danger' : '') +
                     '</div>';
+
+                var close = (m.details || {}).close || null;
+                if (close && m.closed_count) {
+                    html += '<div class="alert alert-info small mt-3 mb-0">بستن پله‌های زیر حداقل: ' + fmt(close.amount) + ' ' +
+                        esc(m.currency_symbol) + ' با قیمت ' + fmt(close.price) + ' USDT ' +
+                        (close.price_source === 'market_sell'
+                            ? '(فروش Market، سفارش ' + esc(close.exchange_order_id) + ')'
+                            : (close.sell_error
+                                ? '(قیمت لحظه‌ای؛ فروش Market در Binance ناموفق بود: ' + esc(close.sell_error) + ' — کوین روی حساب پلتفرم ماند)'
+                                : '(قیمت لحظه‌ای؛ مجموع کمتر از حداقل Binance بود و فروخته نشد)')) +
+                        '</div>';
+                }
 
                 var failed = ((m.details || {}).tiers || []).filter(function(r) { return r.outcome === 'failed'; });
                 if (failed.length) {

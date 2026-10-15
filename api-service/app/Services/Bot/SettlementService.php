@@ -275,16 +275,18 @@ class SettlementService
      * cancel fees, no referral):
      *   - in profit: refund = principal + profit − performance_fee
      *   - otherwise: refund = principal (the loss is not passed to the user)
+     * With $payProfit = false a tier in profit is treated like the loss case:
+     * only the principal is refunded and no performance fee is taken.
      * principal = this tier's share of the locked allocated_usdt.
      *
      * @return array{cost_basis:string, current_value:string, gross_pnl:string, performance_fee:string, net_pnl:string, principal:string, refund:string, gross_revenue:string}
      */
-    public function currencyCancelBreakdown(BotBuyExecution $execution, string $amount, string $price, string $perfFeePercent): array
+    public function currencyCancelBreakdown(BotBuyExecution $execution, string $amount, string $price, string $perfFeePercent, bool $payProfit = true): array
     {
         $costBasis    = bcmul($amount, (string) $execution->avg_buy_price, self::SCALE);
         $currentValue = bcmul($amount, $price, self::SCALE);
         $grossPnl     = bcsub($currentValue, $costBasis, self::SCALE);
-        $inProfit     = bccomp($grossPnl, '0', self::SCALE) > 0;
+        $inProfit     = $payProfit && bccomp($grossPnl, '0', self::SCALE) > 0;
 
         $perfFee = $inProfit
             ? bcdiv(bcmul($grossPnl, $perfFeePercent, self::SCALE), '100', self::SCALE)
@@ -300,7 +302,7 @@ class SettlementService
             'net_pnl'         => $netPnl,
             'principal'       => $principal,
             'refund'          => bcadd($principal, $netPnl, self::SCALE),
-            // A loss is absorbed, so the row is recorded as if sold at cost.
+            // A loss (or an unpaid profit) is absorbed, so the row is recorded as if sold at cost.
             'gross_revenue'   => $inProfit ? $currentValue : $costBasis,
         ];
     }
@@ -315,9 +317,11 @@ class SettlementService
         BotSellOrder $sellOrder,
         string $price,
         string $perfFeePercent,
-        int $cancellationId,
+        ?int $cancellationId,
+        bool $payProfit = true,
+        string $cancelReason = BotSellOrder::CANCEL_ADMIN_CURRENCY,
     ): array {
-        return DB::transaction(function () use ($sellOrder, $price, $perfFeePercent, $cancellationId) {
+        return DB::transaction(function () use ($sellOrder, $price, $perfFeePercent, $cancellationId, $payProfit, $cancelReason) {
             $sellOrder = BotSellOrder::whereKey($sellOrder->id)->lockForUpdate()->firstOrFail();
             if ($sellOrder->status !== BotSellOrder::STATUS_OPEN) {
                 throw new \RuntimeException("Sell order #{$sellOrder->id} is no longer OPEN ({$sellOrder->status}).");
@@ -327,7 +331,7 @@ class SettlementService
             $userId    = $execution->botOrder->user_id;
             $amount    = (string) $sellOrder->amount_to_sell;
 
-            $b = $this->currencyCancelBreakdown($execution, $amount, $price, $perfFeePercent);
+            $b = $this->currencyCancelBreakdown($execution, $amount, $price, $perfFeePercent, $payProfit);
 
             BotTradeSettlement::create([
                 'user_id'              => $userId,
@@ -347,7 +351,7 @@ class SettlementService
 
             $sellOrder->update([
                 'status'                       => BotSellOrder::STATUS_CANCELED,
-                'cancel_reason'                => BotSellOrder::CANCEL_ADMIN_CURRENCY,
+                'cancel_reason'                => $cancelReason,
                 'bot_currency_cancellation_id' => $cancellationId,
                 'filled_at'                    => null,
             ]);

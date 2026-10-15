@@ -434,6 +434,7 @@ class BotOrderController extends Controller
         $data = $request->validate([
             'cancel_on_exchange' => ['required', 'boolean'],
             'sell_on_exchange'   => ['required', 'boolean'],
+            'pay_profit'         => ['required', 'boolean'],
             'reason'             => ['required', 'string', 'min:3', 'max:2000'],
         ], [
             'reason.required' => 'نوشتن دلیل لغو الزامی است.',
@@ -443,6 +444,7 @@ class BotOrderController extends Controller
         return $this->forwardBotApi(fn () => $this->botApi->currencyCancel($currency->id, [
             'cancel_on_exchange' => (bool) $data['cancel_on_exchange'],
             'sell_on_exchange'   => (bool) $data['sell_on_exchange'],
+            'pay_profit'         => (bool) $data['pay_profit'],
             'reason'             => trim($data['reason']),
         ]));
     }

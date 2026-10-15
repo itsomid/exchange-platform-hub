@@ -18,6 +18,8 @@ class BotSellOrder extends Model
     public const CANCEL_PLACE_FAILED   = 'sell_place_failed';
     public const CANCEL_PLACE_ROLLBACK = 'sell_place_rollback';
     public const CANCEL_ADMIN_CURRENCY = 'admin_currency_cancel';
+    public const CANCEL_MIGRATION_MERGED    = 'migration_merged';
+    public const CANCEL_MIGRATION_BELOW_MIN = 'migration_below_min';
 
     public const EXCHANGE_COINEX  = 'coinex';
     public const EXCHANGE_BINANCE = 'binance';

@@ -75,12 +75,32 @@ class BotCanceledReason
         if ($run) {
             $lines[] = 'دلیل: '.$run->reason;
             $lines[] = 'صرافی مرجع: '.$run->exchangeModeLabel();
+            $lines[] = 'سود: '.$run->profitModeLabel();
             if ($run->settlement_price !== null) {
                 $lines[] = 'قیمت تسویه: '.formatNumberTrimZeros($run->settlement_price).' USDT';
             }
         }
 
         return self::make(BotSellOrder::CANCEL_ADMIN_CURRENCY, 'لغو ارز توسط ادمین', $lines);
+    }
+
+    /**
+     * @return array{kind: string, title: string, lines: list<string>, html: string}
+     */
+    private static function belowMinCloseExplain(?BotTradeSettlement $settlement): array
+    {
+        $lines = [
+            'هنگام انتقال به Binance مقدار این پله کمتر از حداقل سفارش Binance بود و امکان ادغام با پله دیگری از همین خرید نبود.',
+            'پله با قاعده «لغو ارز» تسویه شد: در سود، اصل سرمایه + سود منهای کارمزد عملکرد؛ در ضرر، فقط اصل سرمایه.',
+        ];
+        if ($settlement && self::isPositive($settlement->gross_revenue)) {
+            $lines[] = 'ارزش تسویه: '.formatNumberTrimZeros($settlement->gross_revenue).' USDT';
+        }
+        if ($settlement && self::isPositive($settlement->net_pnl)) {
+            $lines[] = 'سود خالص: '.formatNumberTrimZeros($settlement->net_pnl).' USDT';
+        }
+
+        return self::make(BotSellOrder::CANCEL_MIGRATION_BELOW_MIN, 'بسته شد: کمتر از حداقل سفارش Binance', $lines);
     }
 
     /**
@@ -97,6 +117,15 @@ class BotCanceledReason
 
         return match ($reason) {
             BotSellOrder::CANCEL_ADMIN_CURRENCY => self::currencyCancelExplain($sell),
+            BotSellOrder::CANCEL_MIGRATION_MERGED => self::make(
+                BotSellOrder::CANCEL_MIGRATION_MERGED,
+                'ادغام با پله دیگر هنگام انتقال به Binance',
+                [
+                    'مقدار این پله کمتر از حداقل سفارش Binance بود و به پله مجاور همین خرید (با تارگت پایین‌تر) اضافه شد.',
+                    'برای این ردیف تسویه‌ای ثبت نمی‌شود؛ کوین آن همراه پله مقصد فروخته و تسویه می‌شود.',
+                ],
+            ),
+            BotSellOrder::CANCEL_MIGRATION_BELOW_MIN => self::belowMinCloseExplain($settlement),
             BotSellOrder::CANCEL_ADMIN => self::manualCancelExplain('admin', $order, $settlement),
             BotSellOrder::CANCEL_USER => self::manualCancelExplain('user', $order, $settlement),
             BotSellOrder::CANCEL_PLACE_FAILED => self::make(

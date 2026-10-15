@@ -5,12 +5,15 @@ namespace App\Services\Bot;
 use App\Events\Bot\BotSellOrderFilled;
 use App\Jobs\Bot\MigrateSellOrdersJob;
 use App\Jobs\Bot\OpenSellOrdersJob;
+use App\Models\Bot\BotBuyExecution;
 use App\Models\Bot\BotCurrencyCancellation;
+use App\Models\Bot\BotGlobalSettings;
 use App\Models\Bot\BotSellMigration;
 use App\Models\Bot\BotSellOrder;
 use App\Models\Currency;
 use App\Services\Bot\ReferenceExchange\ExchangeContract;
 use App\Services\Bot\ReferenceExchange\ExchangeOrderResult;
+use App\Services\Bot\ReferenceExchange\ExchangePositionCloser;
 use App\Services\Exchanges\Asset\AssetFactory;
 use App\Services\Exchanges\Asset\Binance\BinanceOrderFormatter;
 use App\Services\Exchanges\Asset\Binance\BinanceRequest;
@@ -25,6 +28,9 @@ use Illuminate\Support\Facades\Log;
  *   - target not reached yet → LIMIT SELL at the tier's target price;
  *   - target already reached → MARKET SELL, then the regular fill path
  *     (BotSellOrderFilled → settlement + reinvest) at the real fill.
+ * Tiers below Binance's minimum order size are merged into an adjacent tier of
+ * the same buy; whatever is still too small is sold in one aggregated market
+ * order and settled with the currency-cancel refund rule.
  * FILLED / CANCELED tiers are never touched. A run refuses to start when the
  * coin's free Binance balance cannot cover every remaining tier.
  */
@@ -34,6 +40,8 @@ class BotSellMigrationService
 
     public function __construct(
         private readonly ExchangeContract $exchange,
+        private readonly ExchangePositionCloser $closer,
+        private readonly SettlementService $settlement,
         private readonly PriceFeed $priceFeed,
         private readonly BotOrderDescriptionService $descriptions,
     ) {}
@@ -49,30 +57,33 @@ class BotSellMigrationService
         $filters   = $this->filters($market);
         $sells     = $this->pendingSells($currency->id);
         $balance   = $this->binanceBalance($symbol);
+        $perfPct   = $this->num(BotGlobalSettings::current()->performance_fee_percent);
 
+        $plan   = $this->plan($sells, $livePrice, $filters);
         $tiers  = [];
         $totals = [
             'tiers'         => 0,
             'limit_tiers'   => 0,
             'market_tiers'  => 0,
-            'below_min'     => 0,
+            'merge_tiers'   => 0,
+            'close_tiers'   => 0,
             'limit_amount'  => '0',
             'market_amount' => '0',
+            'merge_amount'  => '0',
+            'close_amount'  => '0',
         ];
         $required = '0';
         $users    = [];
         $orders   = [];
 
         foreach ($sells as $sell) {
-            $execution   = $sell->botBuyExecution;
-            $amount      = $this->num($sell->amount_to_sell);
-            $targetPrice = $this->targetPrice($sell);
-            $action      = $this->isHit($livePrice, $targetPrice) ? 'market' : 'limit';
-            $orderType   = $action === 'market' ? 'MARKET' : 'LIMIT';
-            $quantity    = $filters !== null
-                ? BinanceOrderFormatter::formatQuantity($amount, BinanceOrderFormatter::stepFor($orderType, $filters))
-                : $amount;
-            $belowMin = $filters !== null && $this->isBelowMin($quantity, $action === 'market' ? $livePrice : $targetPrice, $orderType, $filters);
+            $execution = $sell->botBuyExecution;
+            $amount    = $this->num($sell->amount_to_sell);
+            $step      = $plan[$sell->id];
+            $action    = $step['action'];
+            $estimate  = $action === 'close' && bccomp($livePrice, '0', self::SCALE) > 0
+                ? $this->settlement->currencyCancelBreakdown($execution, $amount, $livePrice, $perfPct)
+                : null;
 
             $tiers[] = [
                 'sell_order_id'     => $sell->id,
@@ -85,17 +96,20 @@ class BotSellMigrationService
                 'target_value'      => $this->num($sell->target_value),
                 'share_percent'     => $this->num($sell->share_percent),
                 'avg_buy_price'     => $this->num($execution->avg_buy_price),
-                'target_price'      => $targetPrice,
+                'target_price'      => $step['target_price'],
                 'amount'            => $amount,
-                'binance_quantity'  => $quantity,
                 'action'            => $action,
-                'below_min'         => $belowMin,
+                'merge_into'        => $step['merge_into'],
+                'merged_amount'     => $step['merged_amount'],
+                'merged_share'      => $step['merged_share'],
+                'binance_quantity'  => $step['quantity'],
+                'estimated_refund'  => $estimate['refund'] ?? null,
+                'estimated_net_pnl' => $estimate['net_pnl'] ?? null,
             ];
 
             $totals['tiers']++;
             $totals[$action.'_tiers']++;
             $totals[$action.'_amount'] = bcadd($totals[$action.'_amount'], $amount, self::SCALE);
-            $totals['below_min'] += $belowMin ? 1 : 0;
             $required = bcadd($required, $amount, self::SCALE);
             $users[$execution->botOrder?->user_id]  = true;
             $orders[$execution->bot_order_id]       = true;
@@ -127,6 +141,7 @@ class BotSellMigrationService
             ],
             'market'           => $market,
             'live_price'       => $livePrice,
+            'performance_fee_percent' => $perfPct,
             'balance'          => $balance,
             'required_amount'  => $required,
             'shortfall'        => $shortfall,
@@ -137,6 +152,7 @@ class BotSellMigrationService
                 'orders' => count($orders),
             ],
             'tiers'            => $tiers,
+            'close'            => $this->closePreview($totals['close_amount'], $livePrice, $filters),
             'can_start'        => $blockReason === null,
             'block_reason'     => $blockReason,
         ];
@@ -237,17 +253,76 @@ class BotSellMigrationService
             ));
         }
 
+        $filters    = $this->filters($market);
+        $plan       = $this->plan($sells, $livePrice, $filters);
         $results    = [];
-        $counts     = ['placed' => 0, 'completed' => 0, 'failed' => 0];
+        $counts     = ['placed' => 0, 'completed' => 0, 'merged' => 0, 'closed' => 0, 'failed' => 0];
         $executions = [];
-
-        foreach ($sells as $sell) {
-            $result = $this->migrateTier($sell, $market, $livePrice, $migration->id);
+        $record     = function (BotSellOrder $sell, array $result) use (&$results, &$counts, &$executions) {
             $results[] = $result;
             $counts[$result['outcome']]++;
-
             if ($result['outcome'] !== 'failed') {
                 $executions[$sell->bot_buy_execution_id] = $sell->botBuyExecution;
+            }
+        };
+
+        // 1) Fold below-minimum tiers into their surviving sibling tier.
+        $absorbedBy = [];
+        foreach ($sells as $sell) {
+            if ($plan[$sell->id]['action'] === 'merge') {
+                $absorbedBy[$plan[$sell->id]['merge_into']][] = $sell->id;
+            }
+        }
+        $blocked = [];
+        foreach ($absorbedBy as $survivorId => $absorbedIds) {
+            $error = $this->mergeTiers($survivorId, $absorbedIds);
+            if ($error !== null) {
+                $blocked[$survivorId] = true;
+            }
+            foreach ($absorbedIds as $id) {
+                $sell = $sells->firstWhere('id', $id);
+                $record($sell, [
+                    'sell_order_id'         => $id,
+                    'old_exchange_order_id' => $sell->exchange_order_id,
+                    'action'                => 'merge',
+                    'merge_into'            => $survivorId,
+                    'amount'                => $this->num($sell->amount_to_sell),
+                    'outcome'               => $error === null ? 'merged' : 'failed',
+                ] + ($error === null ? [] : ['error' => $error]));
+            }
+        }
+
+        // 2) Re-place every surviving tier on the reference exchange.
+        $toClose = [];
+        foreach ($sells as $sell) {
+            $action = $plan[$sell->id]['action'];
+            if ($action === 'merge') {
+                continue;
+            }
+            if ($action === 'close') {
+                $toClose[] = $sell;
+                continue;
+            }
+            if (isset($blocked[$sell->id])) {
+                $record($sell, [
+                    'sell_order_id' => $sell->id,
+                    'action'        => $action,
+                    'outcome'       => 'failed',
+                    'error'         => 'merge of sibling tiers failed',
+                ]);
+                continue;
+            }
+
+            $sell->refresh();
+            $record($sell, $this->migrateTier($sell, $market, $livePrice, $migration->id));
+        }
+
+        // 3) Tiers that are still too small: one aggregated market sell, then settle.
+        $close = null;
+        if ($toClose !== []) {
+            [$close, $closeResults] = $this->closeTiers($toClose, $market, $livePrice, $filters, $migration->id);
+            foreach ($toClose as $sell) {
+                $record($sell, $closeResults[$sell->id]);
             }
         }
 
@@ -263,9 +338,11 @@ class BotSellMigrationService
             'tiers_count'     => $sells->count(),
             'placed_count'    => $counts['placed'],
             'completed_count' => $counts['completed'],
+            'merged_count'    => $counts['merged'],
+            'closed_count'    => $counts['closed'],
             'failed_count'    => $counts['failed'],
             'required_amount' => $required,
-            'details'         => ['live_price' => $livePrice, 'tiers' => $results],
+            'details'         => ['live_price' => $livePrice, 'tiers' => $results, 'close' => $close],
             'finished_at'     => now(),
         ]);
 
@@ -368,6 +445,293 @@ class BotSellMigrationService
             'filled_amount'         => $this->num($res->filledAmount),
             'avg_price'             => $this->num($res->avgPrice),
             'exchange_fee'          => $this->num($res->exchangeFee),
+        ];
+    }
+
+    /**
+     * Decide what the run does with each OPEN CoinEx tier. Per buy execution,
+     * the smallest below-minimum tier is merged into its smaller adjacent tier
+     * (the lower-target one survives with summed amount/share, as in
+     * TargetCollapseService) until every tier clears the minimum or one is
+     * left; tiers still below the minimum are closed. Without Binance filters
+     * nothing is merged or closed.
+     *
+     * @param  Collection<int,BotSellOrder>  $sells
+     * @param  array<string,string>|null  $filters
+     * @return array<int,array{action:string, merge_into:?int, target_price:string, merged_amount:?string, merged_share:?string, quantity:?string}>
+     */
+    private function plan(Collection $sells, string $livePrice, ?array $filters): array
+    {
+        $plan = [];
+        foreach ($sells->groupBy('bot_buy_execution_id') as $group) {
+            $tiers = $group->map(fn (BotSellOrder $s) => [
+                'id'           => $s->id,
+                'target_price' => $this->targetPrice($s),
+                'amount'       => $this->num($s->amount_to_sell),
+                'share'        => $this->num($s->share_percent),
+            ])->values()->all();
+            usort($tiers, fn (array $a, array $b) => bccomp($a['target_price'], $b['target_price'], self::SCALE) ?: $a['id'] <=> $b['id']);
+            $targets = array_column($tiers, 'target_price', 'id');
+
+            $absorbed = [];
+            while (count($tiers) > 1 && ($i = $this->smallestBelowMin($tiers, $livePrice, $filters)) !== null) {
+                $last = count($tiers) - 1;
+                $j    = match (true) {
+                    $i === 0     => 1,
+                    $i === $last => $i - 1,
+                    default      => bccomp($tiers[$i - 1]['amount'], $tiers[$i + 1]['amount'], self::SCALE) <= 0 ? $i - 1 : $i + 1,
+                };
+                $keep   = min($i, $j);
+                $drop   = max($i, $j);
+                $keepId = $tiers[$keep]['id'];
+                $dropId = $tiers[$drop]['id'];
+
+                $tiers[$keep]['amount'] = bcadd($tiers[$keep]['amount'], $tiers[$drop]['amount'], self::SCALE);
+                $tiers[$keep]['share']  = bcadd($tiers[$keep]['share'], $tiers[$drop]['share'], self::SCALE);
+                foreach ($absorbed as $id => $into) {
+                    if ($into === $dropId) {
+                        $absorbed[$id] = $keepId;
+                    }
+                }
+                $absorbed[$dropId] = $keepId;
+                array_splice($tiers, $drop, 1);
+            }
+
+            foreach ($tiers as $t) {
+                $eval      = $this->evaluate($t, $livePrice, $filters);
+                $wasMerged = in_array($t['id'], $absorbed, true);
+                $plan[$t['id']] = [
+                    'action'        => $eval['below_min'] ? 'close' : ($eval['hit'] ? 'market' : 'limit'),
+                    'merge_into'    => null,
+                    'target_price'  => $t['target_price'],
+                    'merged_amount' => $wasMerged ? $t['amount'] : null,
+                    'merged_share'  => $wasMerged ? $t['share'] : null,
+                    'quantity'      => $eval['quantity'],
+                ];
+            }
+            foreach ($absorbed as $id => $into) {
+                $plan[$id] = [
+                    'action'        => 'merge',
+                    'merge_into'    => $into,
+                    'target_price'  => $targets[$id],
+                    'merged_amount' => null,
+                    'merged_share'  => null,
+                    'quantity'      => null,
+                ];
+            }
+        }
+
+        return $plan;
+    }
+
+    /**
+     * @param  list<array{id:int, target_price:string, amount:string, share:string}>  $tiers
+     * @param  array<string,string>|null  $filters
+     */
+    private function smallestBelowMin(array $tiers, string $livePrice, ?array $filters): ?int
+    {
+        $found = null;
+        foreach ($tiers as $i => $t) {
+            if (! $this->evaluate($t, $livePrice, $filters)['below_min']) {
+                continue;
+            }
+            if ($found === null || bccomp($t['amount'], $tiers[$found]['amount'], self::SCALE) < 0) {
+                $found = $i;
+            }
+        }
+
+        return $found;
+    }
+
+    /**
+     * @param  array{target_price:string, amount:string}  $tier
+     * @param  array<string,string>|null  $filters
+     * @return array{hit:bool, quantity:string, below_min:bool}
+     */
+    private function evaluate(array $tier, string $livePrice, ?array $filters): array
+    {
+        $hit = $this->isHit($livePrice, $tier['target_price']);
+        if ($filters === null) {
+            return ['hit' => $hit, 'quantity' => $tier['amount'], 'below_min' => false];
+        }
+
+        $type     = $hit ? 'MARKET' : 'LIMIT';
+        $quantity = BinanceOrderFormatter::formatQuantity($tier['amount'], BinanceOrderFormatter::stepFor($type, $filters));
+
+        return [
+            'hit'       => $hit,
+            'quantity'  => $quantity,
+            'below_min' => $this->isBelowMin($quantity, $hit ? $livePrice : $tier['target_price'], $type, $filters),
+        ];
+    }
+
+    /**
+     * Fold the absorbed tiers into the surviving one; absorbed rows are
+     * canceled without any settlement since their coin now sells via the survivor.
+     *
+     * @param  list<int>  $absorbedIds
+     * @return string|null error, or null on success
+     */
+    private function mergeTiers(int $survivorId, array $absorbedIds): ?string
+    {
+        try {
+            return DB::transaction(function () use ($survivorId, $absorbedIds) {
+                $rows = BotSellOrder::whereKey([$survivorId, ...$absorbedIds])->lockForUpdate()->get()->keyBy('id');
+                foreach ([$survivorId, ...$absorbedIds] as $id) {
+                    $row = $rows->get($id);
+                    if (! $row || $row->status !== BotSellOrder::STATUS_OPEN || $row->exchange !== BotSellOrder::EXCHANGE_COINEX) {
+                        return "tier #{$id} is no longer OPEN on CoinEx";
+                    }
+                }
+
+                $survivor = $rows->get($survivorId);
+                $amount   = $this->num($survivor->amount_to_sell);
+                $share    = $this->num($survivor->share_percent);
+                foreach ($absorbedIds as $id) {
+                    $row    = $rows->get($id);
+                    $amount = bcadd($amount, $this->num($row->amount_to_sell), self::SCALE);
+                    $share  = bcadd($share, $this->num($row->share_percent), self::SCALE);
+                    $row->update([
+                        'status'        => BotSellOrder::STATUS_CANCELED,
+                        'cancel_reason' => BotSellOrder::CANCEL_MIGRATION_MERGED,
+                        'filled_at'     => null,
+                    ]);
+                }
+                $survivor->update(['amount_to_sell' => $amount, 'share_percent' => $share]);
+
+                return null;
+            });
+        } catch (\Throwable $e) {
+            Log::channel('smart-bot')->error('bot.sell_migration.merge_failed', [
+                'survivor_id'  => $survivorId,
+                'absorbed_ids' => $absorbedIds,
+                'error'        => $e->getMessage(),
+            ]);
+
+            return $e->getMessage();
+        }
+    }
+
+    /**
+     * Sell all still-too-small tiers in one market order and settle each with
+     * the currency-cancel rule at the real fill price. When even the total is
+     * below Binance's minimum, or the market sell fails, tiers settle at the
+     * live price and the coin stays on the platform account.
+     *
+     * @param  list<BotSellOrder>  $sells
+     * @param  array<string,string>|null  $filters
+     * @return array{0: array<string,mixed>, 1: array<int,array<string,mixed>>}
+     */
+    private function closeTiers(array $sells, string $market, string $livePrice, ?array $filters, int $migrationId): array
+    {
+        $results = [];
+        $open    = [];
+        $amount  = '0';
+        foreach ($sells as $sell) {
+            $sell->refresh();
+            $base = [
+                'sell_order_id'         => $sell->id,
+                'old_exchange_order_id' => $sell->exchange_order_id,
+                'action'                => 'close',
+                'amount'                => $this->num($sell->amount_to_sell),
+            ];
+            if ($sell->status !== BotSellOrder::STATUS_OPEN || $sell->exchange !== BotSellOrder::EXCHANGE_COINEX) {
+                $results[$sell->id] = $base + ['outcome' => 'failed', 'error' => 'tier is no longer OPEN on CoinEx'];
+                continue;
+            }
+            $results[$sell->id] = $base;
+            $open[]             = $sell;
+            $amount             = bcadd($amount, $base['amount'], self::SCALE);
+        }
+
+        $close = $this->closePreview($amount, $livePrice, $filters) ?? ['amount' => $amount, 'sellable' => false];
+        $close += ['price' => $livePrice, 'price_source' => BotCurrencyCancellation::PRICE_LIVE];
+
+        if ($open !== [] && $close['sellable']) {
+            $baseFee = collect($open)
+                ->map(fn (BotSellOrder $s) => $s->botBuyExecution)
+                ->unique('id')
+                ->reduce(fn (string $sum, BotBuyExecution $e) => bcadd($sum, ExchangePositionCloser::baseFeeCoinFromExecution($e), self::SCALE), '0');
+
+            try {
+                $res = $this->closer->marketSell($market, $amount, $baseFee);
+            } catch (\Throwable $e) {
+                $res = null;
+                $close['sell_error'] = $e->getMessage();
+            }
+
+            if ($res && $res->isFilled() && bccomp($this->num($res->avgPrice), '0', self::SCALE) > 0) {
+                $close['price']        = $this->num($res->avgPrice);
+                $close['price_source'] = BotCurrencyCancellation::PRICE_MARKET_SELL;
+                $close += [
+                    'exchange_order_id' => $res->exchangeOrderId,
+                    'sold_amount'       => $this->num($res->filledAmount),
+                    'exchange_fee'      => $this->num($res->exchangeFee),
+                ];
+            } elseif ($res) {
+                $close['sell_error'] = trim(($res->errorCode ?? '').' '.($res->errorMessage ?? '')) ?: 'market sell not filled';
+            }
+
+            if (isset($close['sell_error'])) {
+                Log::channel('smart-bot')->error('bot.sell_migration.close_sell_failed', [
+                    'migration_id' => $migrationId,
+                    'market'       => $market,
+                    'amount'       => $amount,
+                    'error'        => $close['sell_error'],
+                ]);
+            }
+        }
+
+        $perfPct = $this->num(BotGlobalSettings::current()->performance_fee_percent);
+        foreach ($open as $sell) {
+            try {
+                $b = $this->settlement->settleCurrencyCancel(
+                    $sell,
+                    $close['price'],
+                    $perfPct,
+                    cancellationId: null,
+                    cancelReason: BotSellOrder::CANCEL_MIGRATION_BELOW_MIN,
+                );
+            } catch (\Throwable $e) {
+                Log::channel('smart-bot')->error('bot.sell_migration.close_settle_failed', [
+                    'migration_id'  => $migrationId,
+                    'sell_order_id' => $sell->id,
+                    'error'         => $e->getMessage(),
+                ]);
+                $results[$sell->id] += ['outcome' => 'failed', 'error' => $e->getMessage()];
+                continue;
+            }
+
+            $results[$sell->id] += [
+                'outcome' => 'closed',
+                'price'   => $close['price'],
+                'refund'  => $b['refund'],
+                'net_pnl' => $b['net_pnl'],
+            ];
+        }
+
+        return [$close, $results];
+    }
+
+    /**
+     * @param  array<string,string>|null  $filters
+     * @return array{amount:string, quantity:string, value:string, sellable:bool}|null
+     */
+    private function closePreview(string $amount, string $livePrice, ?array $filters): ?array
+    {
+        if (bccomp($amount, '0', self::SCALE) <= 0) {
+            return null;
+        }
+
+        $quantity = $filters !== null
+            ? BinanceOrderFormatter::formatQuantity($amount, BinanceOrderFormatter::stepFor('MARKET', $filters))
+            : $amount;
+
+        return [
+            'amount'   => $amount,
+            'quantity' => $quantity,
+            'value'    => bcmul($amount, $livePrice, self::SCALE),
+            'sellable' => $filters !== null && ! $this->isBelowMin($quantity, $livePrice, 'MARKET', $filters),
         ];
     }
 
