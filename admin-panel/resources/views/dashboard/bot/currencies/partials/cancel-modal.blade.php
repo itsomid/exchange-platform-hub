@@ -94,10 +94,27 @@
             confirmBtn.disabled = true;
         }
 
-        function stat(label, value, extraClass) {
+        function stat(label, value, extraClass, valueId) {
             return '<div class="col-6 col-md-3"><div class="p-2 border rounded h-100 ' + (extraClass || '') + '">' +
                 '<small class="text-muted d-block">' + label + '</small>' +
-                '<strong class="font-number">' + value + '</strong></div></div>';
+                '<strong class="font-number"' + (valueId ? ' id="' + valueId + '"' : '') + '>' + value + '</strong></div></div>';
+        }
+
+        var USDT = ' <small class="text-muted">USDT</small>';
+
+        // Without profit payout a tier in profit refunds only its principal (no performance fee).
+        function estimate(row, payProfit) {
+            var pnl = parseFloat(row.gross_pnl) || 0;
+            return payProfit
+                ? { pnl: fmt(pnl, 4), pnlClass: pnl >= 0 ? 'text-success' : 'text-danger', fee: row.performance_fee, refund: row.refund }
+                : {
+                    pnl: pnl > 0
+                        ? '<s class="text-muted" title="سود به کاربر پرداخت نمی‌شود">' + fmt(pnl, 4) + '</s> 0'
+                        : fmt(pnl, 4),
+                    pnlClass: pnl > 0 ? '' : 'text-danger',
+                    fee: 0,
+                    refund: row.principal,
+                };
         }
 
         function renderPreview(d) {
@@ -130,15 +147,12 @@
                 stat('قیمت لحظه‌ای', fmt(d.live_price) + ' <small class="text-muted">USDT</small>') +
                 stat('اصل سرمایه', fmt(t.principal, 4) + ' <small class="text-muted">USDT</small>') +
                 stat('ارزش لحظه‌ای', fmt(t.current_value, 4) + ' <small class="text-muted">USDT</small>') +
-                stat('کارمزد عملکرد (' + fmt(d.performance_fee_percent, 2) + '٪ از سود)', fmt(t.performance_fee, 4) +
-                    ' <small class="text-muted">USDT</small>', 'text-warning') +
-                stat('برگشتی برآوردی به کیف پول ربات', fmt(t.refund, 4) + ' <small class="text-muted">USDT</small>',
-                    'border-success') +
+                stat('کارمزد عملکرد (' + fmt(d.performance_fee_percent, 2) + '٪ از سود)', fmt(t.performance_fee, 4) + USDT,
+                    'text-warning', 'ccTotalFee') +
+                stat('برگشتی برآوردی به کیف پول ربات', fmt(t.refund, 4) + USDT, 'border-success', 'ccTotalRefund') +
                 '</div>';
 
-            html += '<div class="small text-muted mb-3"><i class="fas fa-calculator me-1"></i>' +
-                'برای هر کاربر: اگر ارز در سود باشد، اصل سرمایه + (سود − کارمزد عملکرد) برمی‌گردد؛ اگر در ضرر باشد، دقیقاً اصل سرمایه برمی‌گردد. ' +
-                'کارمزد شبکه و کارمزد صرافی مرجع از کاربر کسر نمی‌شود.</div>';
+            html += '<div class="small text-muted mb-3" id="ccFormulaHint"></div>';
 
             var users = d.users || [];
             if (users.length) {
@@ -146,17 +160,16 @@
                     '<table class="table table-sm table-bordered align-middle mb-0"><thead class="table-light"><tr>' +
                     '<th>کاربر</th><th>سفارش / پله</th><th>مقدار</th><th>اصل سرمایه</th><th>ارزش لحظه‌ای</th>' +
                     '<th>سود/زیان</th><th>کارمزد عملکرد</th><th>برگشتی برآوردی</th></tr></thead><tbody>';
-                users.forEach(function(u) {
-                    var pnl = parseFloat(u.gross_pnl) || 0;
+                users.forEach(function(u, i) {
                     html += '<tr>' +
                         '<td><small>' + esc(u.email || u.mobile || ('#' + u.user_id)) + '</small></td>' +
                         '<td class="font-number">' + u.orders_count + ' / ' + u.tiers + '</td>' +
                         '<td class="font-number">' + fmt(u.amount) + '</td>' +
                         '<td class="font-number">' + fmt(u.principal, 4) + '</td>' +
                         '<td class="font-number">' + fmt(u.current_value, 4) + '</td>' +
-                        '<td class="font-number ' + (pnl >= 0 ? 'text-success' : 'text-danger') + '">' + fmt(pnl, 4) + '</td>' +
-                        '<td class="font-number text-warning">' + fmt(u.performance_fee, 4) + '</td>' +
-                        '<td class="font-number text-success fw-bold">' + fmt(u.refund, 4) + '</td>' +
+                        '<td class="font-number" data-cc-pnl="' + i + '"></td>' +
+                        '<td class="font-number text-warning" data-cc-fee="' + i + '"></td>' +
+                        '<td class="font-number text-success fw-bold" data-cc-refund="' + i + '"></td>' +
                         '</tr>';
                 });
                 html += '</tbody></table></div>';
@@ -164,6 +177,15 @@
                 blocked = true;
                 html += '<div class="alert alert-secondary">برای این ارز پله فروش بازی در سفارش کاربران وجود ندارد.</div>';
             }
+
+            var profitTiers = parseInt(t.profit_tiers, 10) || 0;
+            html += '<div class="border rounded p-3 mb-3" style="background:rgba(0,0,0,.015)">' +
+                '<h6 class="mb-3"><i class="fas fa-hand-holding-usd me-1"></i> سود پله‌های در سود</h6>' +
+                '<div class="form-check form-switch mb-2">' +
+                '<input class="form-check-input" type="checkbox" id="ccPayProfit" checked' + (profitTiers ? '' : ' disabled') + '>' +
+                '<label class="form-check-label" for="ccPayProfit">پرداخت سود به کاربر (پس از کسر کارمزد عملکرد)</label></div>' +
+                '<div class="small mt-2" id="ccProfitHint"></div>' +
+                '</div>';
 
             html += '<div class="border rounded p-3 mb-3" style="background:rgba(0,0,0,.015)">' +
                 '<h6 class="mb-3"><i class="fas fa-exchange-alt me-1"></i> تعیین تکلیف ' + sym + ' در صرافی مرجع</h6>' +
@@ -214,6 +236,46 @@
             cancelSw.addEventListener('change', syncSwitches);
             sellSw.addEventListener('change', syncSwitches);
             syncSwitches();
+
+            var profitSw = document.getElementById('ccPayProfit');
+            var profitHint = document.getElementById('ccProfitHint');
+            var formulaHint = document.getElementById('ccFormulaHint');
+
+            function syncProfit() {
+                var pay = profitSw.checked;
+                users.forEach(function(u, i) {
+                    var e = estimate(u, pay);
+                    var pnlCell = bodyEl.querySelector('[data-cc-pnl="' + i + '"]');
+                    pnlCell.className = 'font-number ' + e.pnlClass;
+                    pnlCell.innerHTML = e.pnl;
+                    bodyEl.querySelector('[data-cc-fee="' + i + '"]').textContent = fmt(e.fee, 4);
+                    bodyEl.querySelector('[data-cc-refund="' + i + '"]').textContent = fmt(e.refund, 4);
+                });
+                var tot = estimate(t, pay);
+                document.getElementById('ccTotalFee').innerHTML = fmt(tot.fee, 4) + USDT;
+                document.getElementById('ccTotalRefund').innerHTML = fmt(tot.refund, 4) + USDT;
+
+                if (!profitTiers) {
+                    profitHint.className = 'small mt-2 text-muted';
+                    profitHint.innerHTML = '<i class="fas fa-info-circle me-1"></i>در حال حاضر هیچ پله‌ای از ' + sym +
+                        ' در سود نیست؛ این گزینه روی برگشتی اثری ندارد.';
+                } else if (pay) {
+                    profitHint.className = 'small mt-2 text-success';
+                    profitHint.innerHTML = '<i class="fas fa-info-circle me-1"></i>برای ' + profitTiers +
+                        ' پله در سود: کارمزد عملکرد از سود کسر و باقی سود همراه اصل سرمایه به کاربر برمی‌گردد.';
+                } else {
+                    profitHint.className = 'small mt-2 text-warning';
+                    profitHint.innerHTML = '<i class="fas fa-info-circle me-1"></i>برای ' + profitTiers +
+                        ' پله در سود: فقط اصل سرمایه به کاربر برمی‌گردد؛ سودی پرداخت و کارمزد عملکردی کسر نمی‌شود.';
+                }
+
+                formulaHint.innerHTML = '<i class="fas fa-calculator me-1"></i>' + (pay
+                    ? 'برای هر کاربر: اگر ارز در سود باشد، اصل سرمایه + (سود − کارمزد عملکرد) برمی‌گردد؛ اگر در ضرر باشد، دقیقاً اصل سرمایه برمی‌گردد. '
+                    : 'برای هر کاربر: چه ارز در سود باشد چه در ضرر، دقیقاً اصل سرمایه برمی‌گردد. ') +
+                    'کارمزد شبکه و کارمزد صرافی مرجع از کاربر کسر نمی‌شود.';
+            }
+            profitSw.addEventListener('change', syncProfit);
+            syncProfit();
 
             confirmBtn.disabled = blocked;
         }
@@ -302,6 +364,7 @@
             var payload = {
                 cancel_on_exchange: document.getElementById('ccCancelOnExchange').checked,
                 sell_on_exchange: document.getElementById('ccSellOnExchange').checked,
+                pay_profit: document.getElementById('ccPayProfit').checked,
                 reason: reason,
             };
 

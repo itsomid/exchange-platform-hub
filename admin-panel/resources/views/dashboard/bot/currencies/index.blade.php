@@ -352,6 +352,7 @@
                                 </td>
                                 <td>
                                     <small>{{ $c->exchangeModeLabel() }}</small>
+                                    <div><small class="{{ $c->pay_profit ? 'text-muted' : 'text-warning' }}">{{ $c->profitModeLabel() }}</small></div>
                                     @if ($c->sell_error)
                                         <div><small class="text-danger" title="{{ $c->sell_error }}">
                                                 <i class="fas fa-exclamation-triangle me-1"></i>فروش در صرافی مرجع

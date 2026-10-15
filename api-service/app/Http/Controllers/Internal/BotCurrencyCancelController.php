@@ -47,6 +47,7 @@ class BotCurrencyCancelController extends Controller
         $data = $request->validate([
             'cancel_on_exchange' => ['required', 'boolean'],
             'sell_on_exchange'   => ['required', 'boolean'],
+            'pay_profit'         => ['sometimes', 'boolean'],
             'reason'             => ['required', 'string', 'min:3', 'max:2000'],
         ]);
 
@@ -65,6 +66,7 @@ class BotCurrencyCancelController extends Controller
                 reason:           trim($data['reason']),
                 adminId:          $adminId !== null && $adminId !== '' ? (int) $adminId : null,
                 adminLabel:       $request->header('X-Admin-Label') ?: null,
+                payProfit:        (bool) ($data['pay_profit'] ?? true),
             );
         } catch (\DomainException $e) {
             return response()->json(['ok' => false, 'error' => $e->getMessage()], 409);

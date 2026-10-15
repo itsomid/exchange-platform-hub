@@ -185,6 +185,30 @@ it('refunds exactly the principal when the coin is at a loss', function () {
     expect((float) $wallet->locked_balance)->toBe(0.0);
 });
 
+it('refunds only the principal of a coin in profit when profit payout is off', function () {
+    $x = ccCurrency('XXX');
+    ['user' => $user, 'sell' => $sell] = ccPosition($x, '10', '2');
+    Cache::put('market:price:XXXUSDT', '2.5'); // 20 USDT → 25 USDT
+
+    $run = app(BotCurrencyCancelService::class)
+        ->start($x, false, false, 'delisted', 7, 'admin@test', payProfit: false)
+        ->fresh();
+
+    expect($run->status)->toBe(BotCurrencyCancellation::STATUS_DONE);
+    expect($run->pay_profit)->toBeFalse();
+    expect((float) $run->total_refund)->toBe(20.0);
+    expect((float) $run->total_performance_fee)->toBe(0.0);
+
+    $wallet = BotWallet::where('user_id', $user->id)->first();
+    expect((float) $wallet->balance)->toBe(100.0);
+    expect((float) $wallet->locked_balance)->toBe(0.0);
+
+    $settlement = BotTradeSettlement::where('bot_sell_order_id', $sell->id)->first();
+    expect((float) $settlement->net_pnl)->toBe(0.0);
+    expect((float) $settlement->performance_fee)->toBe(0.0);
+    expect((float) $settlement->gross_revenue)->toBe(20.0);
+});
+
 it('cancels tiers on the exchange and market-sells all users in one order at its fill price', function () {
     $x = ccCurrency('XXX');
     ['user' => $u1, 'sell' => $s1] = ccPosition($x, '10', '2');
@@ -283,5 +307,6 @@ it('previews the per-user refund at the live price', function () {
     expect($preview['totals']['users'])->toBe(2);
     expect($preview['totals']['sell_orders'])->toBe(2);
     expect((float) $preview['totals']['refund'])->toBe(36.0); // 24 + 12
+    expect($preview['totals']['profit_tiers'])->toBe(2);
     expect($preview['users'])->toHaveCount(2);
 });

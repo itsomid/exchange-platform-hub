@@ -43,6 +43,8 @@
                         @if ($netPnl > 0)
                             سود خالص برگشتی: <span class="font-number text-success">{{ formatNumberTrimZeros($netPnl, 8) }}</span> USDT
                             — کارمزد عملکرد: <span class="font-number">{{ formatNumberTrimZeros($perfFee, 8) }}</span> USDT
+                        @elseif (! $run->pay_profit)
+                            ادمین پرداخت سود را غیرفعال کرده بود؛ فقط اصل سرمایه به کاربر برگشت و کارمزد عملکردی کسر نشد.
                         @else
                             ارز در سود نبود؛ دقیقاً اصل سرمایه به کاربر برگشت.
                         @endif

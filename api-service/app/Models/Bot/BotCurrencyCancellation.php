@@ -22,6 +22,7 @@ class BotCurrencyCancellation extends Model
         'admin_label',
         'cancel_on_exchange',
         'sell_on_exchange',
+        'pay_profit',
         'reason',
         'status',
         'price_source',
@@ -50,6 +51,7 @@ class BotCurrencyCancellation extends Model
         return [
             'cancel_on_exchange'    => 'boolean',
             'sell_on_exchange'      => 'boolean',
+            'pay_profit'            => 'boolean',
             'settlement_price'      => 'decimal:8',
             'sold_amount'           => 'decimal:8',
             'sell_exchange_fee'     => 'decimal:8',

@@ -102,6 +102,7 @@ class BotCurrencyCancelPageTest extends TestCase
             ->postJson(route('admin.bot.currency.cancel', $this->currency->id), [
                 'cancel_on_exchange' => true,
                 'sell_on_exchange'   => true,
+                'pay_profit'         => false,
                 'reason'             => 'delisted',
             ])
             ->assertOk()
@@ -110,6 +111,7 @@ class BotCurrencyCancelPageTest extends TestCase
         Http::assertSent(fn (HttpRequest $r) => str_ends_with($r->url(), "/currencies/{$this->currency->id}/cancel")
             && $r['cancel_on_exchange'] === true
             && $r['sell_on_exchange'] === true
+            && $r['pay_profit'] === false
             && $r['reason'] === 'delisted');
     }
 

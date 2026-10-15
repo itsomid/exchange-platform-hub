@@ -28,6 +28,7 @@ class BotCurrencyCancellation extends Model
         return [
             'cancel_on_exchange'    => 'boolean',
             'sell_on_exchange'      => 'boolean',
+            'pay_profit'            => 'boolean',
             'settlement_price'      => 'decimal:8',
             'sold_amount'           => 'decimal:8',
             'sell_exchange_fee'     => 'decimal:8',
@@ -131,6 +132,13 @@ class BotCurrencyCancellation extends Model
             : 'بدون ارتباط با صرافی مرجع';
     }
 
+    public function profitModeLabel(): string
+    {
+        return $this->pay_profit
+            ? 'سود (پس از کسر کارمزد عملکرد) پرداخت می‌شود'
+            : 'فقط اصل سرمایه برمی‌گردد';
+    }
+
     /**
      * @return array<string,mixed>
      */
@@ -143,6 +151,8 @@ class BotCurrencyCancellation extends Model
             'finished'              => $this->isFinished(),
             'currency_symbol'       => strtoupper((string) $this->currency?->symbol),
             'exchange_mode'         => $this->exchangeModeLabel(),
+            'pay_profit'            => (bool) $this->pay_profit,
+            'profit_mode'           => $this->profitModeLabel(),
             'reason'                => $this->reason,
             'admin_label'           => $this->admin_label,
             'price_source'          => $this->price_source,
