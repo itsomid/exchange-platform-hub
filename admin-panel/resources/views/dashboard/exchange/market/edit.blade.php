@@ -532,10 +532,14 @@
                 if (response.limited_by === 'min_notional') {
                     meta.append($('<div>', {
                         class: 'small text-warning mt-2',
-                        text: 'صرافی مرجع سفارش با ارزش کمتر از ' + response.formatted_min_notional + ' ' + quoteSymbol +
-                            ' را رد می‌کند، پس ' + response.formatted_min_qty + ' ' + baseSymbol + ' کافی نیست. عدد پیشنهادی = (' +
-                            response.formatted_min_notional + ' ' + quoteSymbol + ' + ' + response.min_notional_margin_percent +
-                            '٪ حاشیه برای نوسان قیمت) ÷ ' + response.formatted_price + ' که به گام مقدار صرافی به بالا گرد شده است.',
+                        text: 'صرافی مرجع سفارش با ارزش کمتر از ' + response.formatted_min_notional +
+                            ' ' + quoteSymbol +
+                            ' را رد می‌کند، پس ' + response.formatted_min_qty + ' ' + baseSymbol +
+                            ' کافی نیست. عدد پیشنهادی = (' +
+                            response.formatted_min_notional + ' + ' + response
+                            .min_notional_margin_percent +
+                            '٪ حاشیه برای نوسان قیمت) ÷ ' + response.formatted_price +
+                            ' که به گام مقدار صرافی به بالا گرد شده است.',
                     }));
                 }
 
@@ -545,7 +549,8 @@
                 amount.append(
                     $('<div>', {
                         class: 'text-muted small',
-                        text: response.limited_by === 'min_notional' ? 'حداقل معامله پیشنهادی' : 'حداقل معامله'
+                        text: response.limited_by === 'min_notional' ? 'حداقل معامله پیشنهادی' :
+                            'حداقل معامله'
                     }),
                     $('<div>', {
                         class: 'h4 mb-0 font-number',
