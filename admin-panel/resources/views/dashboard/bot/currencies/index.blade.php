@@ -126,6 +126,10 @@
                     <button type="button" class="btn btn-outline-secondary" id="clearFilters">
                         <i class="fas fa-times me-1"></i> حذف فیلترها
                     </button>
+                    <a href="{{ route('admin.bot.currency.excel-export') }}" class="btn btn-outline-info"
+                        id="exportExcel">
+                        <i class="fas fa-file-excel me-1"></i> خروجی اکسل
+                    </a>
                 </div>
             </div>
             <div class="alert alert-info d-none align-items-center flex-wrap mt-3 mb-0" id="activeFilters">

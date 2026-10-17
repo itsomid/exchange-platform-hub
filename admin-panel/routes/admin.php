@@ -470,6 +470,7 @@ Route::middleware(['admin.2fa'])->group(function () {
 
         // Cancel by coin (across every user's bot orders)
         Route::get('/currencies', [BotCurrencyController::class, 'index'])->name('currency.index');
+        Route::get('/currencies/export', [BotCurrencyController::class, 'exportExcel'])->name('currency.excel-export');
         Route::get('/currencies/cancellations/{cancellation}', [BotCurrencyController::class, 'cancellationStatus'])->name('currency.cancellation.status');
         Route::post('/currencies/{currency}/cancel-preview', [BotOrderController::class, 'currencyCancelPreview'])->name('currency.cancel-preview');
         Route::post('/currencies/{currency}/cancel', [BotOrderController::class, 'currencyCancel'])->name('currency.cancel');

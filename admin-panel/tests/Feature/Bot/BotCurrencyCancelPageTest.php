@@ -76,7 +76,16 @@ class BotCurrencyCancelPageTest extends TestCase
             ->get(route('admin.bot.currency.index'))
             ->assertOk()
             ->assertSee('ZZZ')
-            ->assertSee(route('admin.bot.currency.cancel', $this->currency->id), false);
+            ->assertSee(route('admin.bot.currency.cancel', $this->currency->id), false)
+            ->assertSee(route('admin.bot.currency.excel-export'), false);
+    }
+
+    public function test_excel_export_downloads_all_currency_rows(): void
+    {
+        $this->actingAs($this->admin, 'admin')
+            ->get(route('admin.bot.currency.excel-export'))
+            ->assertOk()
+            ->assertDownload();
     }
 
     public function test_cancel_requires_a_reason(): void

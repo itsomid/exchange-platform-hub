@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin\Bot;
 
+use App\Exports\BotCurrencyExport;
 use App\Http\Controllers\Controller;
 use App\Models\Bot\BotBuyExecution;
 use App\Models\Bot\BotCurrencyCancellation;
@@ -10,7 +11,10 @@ use App\Models\Bot\BotSignal;
 use App\Models\Bot\BotTradeSettlement;
 use App\Models\Currency;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * "Cancel by coin" page: every coin ever bought in bot orders with its
@@ -20,6 +24,29 @@ use Illuminate\View\View;
 class BotCurrencyController extends Controller
 {
     public function index(): View
+    {
+        return view('dashboard.bot.currencies.index', [
+            'rows' => $this->buildCurrencyRows(),
+            'cancellations' => $this->recentCancellations(),
+        ]);
+    }
+
+    public function exportExcel(): BinaryFileResponse
+    {
+        $filename = 'bot_currencies_' . now()->format('Y-m-d_His') . '.xlsx';
+
+        return Excel::download(new BotCurrencyExport($this->buildCurrencyRows()), $filename);
+    }
+
+    public function cancellationStatus(BotCurrencyCancellation $cancellation): JsonResponse
+    {
+        $cancellation->failIfOrphaned();
+        $cancellation->load('currency');
+
+        return response()->json(['ok' => true, 'cancellation' => $cancellation->toAdminArray()]);
+    }
+
+    private function buildCurrencyRows(): Collection
     {
         $buys = BotBuyExecution::query()
             ->join('bot_orders', 'bot_orders.id', '=', 'bot_buy_executions.bot_order_id')
@@ -73,7 +100,7 @@ class BotCurrencyController extends Controller
             ->reject(fn (BotCurrencyCancellation $c) => $c->failIfOrphaned())
             ->keyBy('currency_id');
 
-        $rows = Currency::query()
+        return Currency::query()
             ->whereIn('id', $buys->keys())
             ->get()
             ->map(function (Currency $currency) use ($buys, $sells, $realized, $inFlight, $signals, $running) {
@@ -81,37 +108,37 @@ class BotCurrencyController extends Controller
                 $s = $sells[$currency->id] ?? null;
                 $r = $realized[$currency->id] ?? null;
 
-                $symbol      = strtoupper((string) $currency->symbol);
-                $price       = (float) (cache("market:price:{$symbol}USDT") ?? 0);
+                $symbol = strtoupper((string) $currency->symbol);
+                $price = (float) (cache("market:price:{$symbol}USDT") ?? 0);
                 $totalBought = (float) $b->total_bought;
-                $openAmount  = (float) ($s->open_amount ?? 0);
-                $openCost    = (float) ($s->open_cost ?? 0);
-                $openValue   = $price > 0 ? $openAmount * $price : null;
+                $openAmount = (float) ($s->open_amount ?? 0);
+                $openCost = (float) ($s->open_cost ?? 0);
+                $openValue = $price > 0 ? $openAmount * $price : null;
 
                 return (object) [
-                    'currency'        => $currency,
-                    'symbol'          => $symbol,
-                    'price'           => $price > 0 ? $price : null,
-                    'signal_active'   => $signals->has($currency->id) ? (bool) $signals[$currency->id] : null,
-                    'users_count'     => (int) $b->users_count,
-                    'orders_count'    => (int) $b->orders_count,
+                    'currency' => $currency,
+                    'symbol' => $symbol,
+                    'price' => $price > 0 ? $price : null,
+                    'signal_active' => $signals->has($currency->id) ? (bool) $signals[$currency->id] : null,
+                    'users_count' => (int) $b->users_count,
+                    'orders_count' => (int) $b->orders_count,
                     'total_allocated' => (float) $b->total_allocated,
-                    'total_bought'    => $totalBought,
-                    'avg_buy_price'   => $totalBought > 0 ? (float) $b->total_cost / $totalBought : null,
-                    'buy_fee'         => (float) $b->buy_fee,
-                    'open_tiers'      => (int) ($s->open_tiers ?? 0),
-                    'filled_tiers'    => (int) ($s->filled_tiers ?? 0),
-                    'canceled_tiers'  => (int) ($s->canceled_tiers ?? 0),
-                    'open_users'      => (int) ($s->open_users ?? 0),
-                    'open_orders'     => (int) ($s->open_orders ?? 0),
-                    'open_amount'     => $openAmount,
-                    'open_cost'       => $openCost,
-                    'open_value'      => $openValue,
-                    'unrealized_pnl'  => $openValue !== null ? $openValue - $openCost : null,
-                    'realized_pnl'    => (float) ($r->realized_pnl ?? 0),
+                    'total_bought' => $totalBought,
+                    'avg_buy_price' => $totalBought > 0 ? (float) $b->total_cost / $totalBought : null,
+                    'buy_fee' => (float) $b->buy_fee,
+                    'open_tiers' => (int) ($s->open_tiers ?? 0),
+                    'filled_tiers' => (int) ($s->filled_tiers ?? 0),
+                    'canceled_tiers' => (int) ($s->canceled_tiers ?? 0),
+                    'open_users' => (int) ($s->open_users ?? 0),
+                    'open_orders' => (int) ($s->open_orders ?? 0),
+                    'open_amount' => $openAmount,
+                    'open_cost' => $openCost,
+                    'open_value' => $openValue,
+                    'unrealized_pnl' => $openValue !== null ? $openValue - $openCost : null,
+                    'realized_pnl' => (float) ($r->realized_pnl ?? 0),
                     'performance_fee' => (float) ($r->performance_fee ?? 0),
-                    'in_flight'       => (int) ($inFlight[$currency->id] ?? 0),
-                    'running'         => $running[$currency->id] ?? null,
+                    'in_flight' => (int) ($inFlight[$currency->id] ?? 0),
+                    'running' => $running[$currency->id] ?? null,
                 ];
             })
             ->sortBy([
@@ -120,20 +147,13 @@ class BotCurrencyController extends Controller
                 fn ($a, $b) => $b->total_allocated <=> $a->total_allocated,
             ])
             ->values();
+    }
 
-        $cancellations = BotCurrencyCancellation::with('currency')
+    private function recentCancellations(): Collection
+    {
+        return BotCurrencyCancellation::with('currency')
             ->latest('id')
             ->limit(20)
             ->get();
-
-        return view('dashboard.bot.currencies.index', compact('rows', 'cancellations'));
-    }
-
-    public function cancellationStatus(BotCurrencyCancellation $cancellation): JsonResponse
-    {
-        $cancellation->failIfOrphaned();
-        $cancellation->load('currency');
-
-        return response()->json(['ok' => true, 'cancellation' => $cancellation->toAdminArray()]);
     }
 }
