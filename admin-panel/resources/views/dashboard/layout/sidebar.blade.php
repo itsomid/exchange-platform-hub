@@ -583,13 +583,6 @@
                 </li>
             @endif
 
-            <li class="menu-item @if (request()->is('/pulse*')) active @endif">
-                <a href="{{ url('./pulse') }}" class="menu-link">
-                    <i class="menu-icon fa-regular  fa-monitor-heart-rate fa-sm"></i>
-                    <div> Pulse</div>
-                </a>
-            </li>
-
             <li class="menu-item @if (request()->is('/log-viewer*')) active @endif">
                 <a href="{{ url('./log-viewer') }}" class="menu-link">
                     <i class="menu-icon  fa-regular  fa-circle-exclamation fa-sm"></i>
