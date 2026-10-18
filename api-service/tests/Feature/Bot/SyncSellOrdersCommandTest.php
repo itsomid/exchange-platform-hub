@@ -16,7 +16,7 @@ use Tests\Support\FakeExchange;
 
 uses(RefreshDatabase::class);
 
-function makeOpenSellOrder(string $exchangeOrderId, string $symbol = 'eth', string $exchange = 'fake'): BotSellOrder
+function makeOpenExchangeSellOrder(string $exchangeOrderId, string $symbol = 'eth', string $exchange = 'fake'): BotSellOrder
 {
     $user     = User::factory()->create();
     $currency = Currency::forceCreate([
@@ -60,7 +60,7 @@ function makeOpenSellOrder(string $exchangeOrderId, string $symbol = 'eth', stri
 
 it('dispatches BotSellOrderFilled when the exchange reports the order as FILLED', function () {
     Event::fake([BotSellOrderFilled::class]);
-    $sellOrder = makeOpenSellOrder('99999');
+    $sellOrder = makeOpenExchangeSellOrder('99999');
 
     $fake = new FakeExchange();
     $fake->setStatus('99999', new ExchangeOrderResult(
@@ -87,7 +87,7 @@ it('dispatches BotSellOrderFilled when the exchange reports the order as FILLED'
 });
 
 it('flips local row to CANCELED when the exchange reports CANCELED', function () {
-    $sellOrder = makeOpenSellOrder('77777');
+    $sellOrder = makeOpenExchangeSellOrder('77777');
 
     $fake = new FakeExchange();
     $fake->setStatus('77777', new ExchangeOrderResult(
@@ -107,9 +107,9 @@ it('flips local row to CANCELED when the exchange reports CANCELED', function ()
 it('rotates through the OPEN backlog across runs instead of re-polling the same head', function () {
     Event::fake([BotSellOrderFilled::class]);
 
-    makeOpenSellOrder('1001', 'eth');
-    makeOpenSellOrder('1002', 'btc');
-    makeOpenSellOrder('1003', 'sol');
+    makeOpenExchangeSellOrder('1001', 'eth');
+    makeOpenExchangeSellOrder('1002', 'btc');
+    makeOpenExchangeSellOrder('1003', 'sol');
 
     $fake = new FakeExchange(); // every getOrder returns OPEN by default
     $this->app->instance(ExchangeContract::class, $fake);
@@ -126,7 +126,7 @@ it('rotates through the OPEN backlog across runs instead of re-polling the same 
 it('skips orders without exchange_order_id', function () {
     Event::fake([BotSellOrderFilled::class]);
 
-    $sellOrder = makeOpenSellOrder('11111');
+    $sellOrder = makeOpenExchangeSellOrder('11111');
     $sellOrder->update(['exchange_order_id' => null]);
 
     $fake = new FakeExchange();
@@ -141,8 +141,8 @@ it('skips orders without exchange_order_id', function () {
 it('skips tiers still pointing at another exchange (not yet migrated)', function () {
     Event::fake([BotSellOrderFilled::class]);
 
-    makeOpenSellOrder('17914920817113505', 'eth', BotSellOrder::EXCHANGE_COINEX);
-    makeOpenSellOrder('2002', 'btc');
+    makeOpenExchangeSellOrder('17914920817113505', 'eth', BotSellOrder::EXCHANGE_COINEX);
+    makeOpenExchangeSellOrder('2002', 'btc');
 
     $fake = new FakeExchange();
     $this->app->instance(ExchangeContract::class, $fake);
