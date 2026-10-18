@@ -39,7 +39,7 @@ class RefExchangeController extends Controller
 
         $totalExchangeBoughtFee = ExchangeTransaction::sum('fee');
         $totalExchangeBoughtValue = ExchangeTransaction::all()->sum(function ($transaction) {
-            return (float) data_get($transaction, 'response.data.filled_value', 0);
+            return (float) ($transaction->response_data['filled_value'] ?? 0);
         });
 
 
