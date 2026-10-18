@@ -13,7 +13,7 @@
         "ext-curl": "*",
         "ext-zlib": "*",
         "enqueue/amqp-bunny": "^0.10.18",
-        "firebase/php-jwt": "^6.10",
+        "firebase/php-jwt": "^7.2.1",
         "guzzlehttp/guzzle": "^7.9.2",
         "jenssegers/agent": "^2.6",
         "kavenegar/laravel": "^1.3",
