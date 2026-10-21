@@ -478,6 +478,7 @@ Route::middleware(['admin.2fa'])->group(function () {
         // Move sell tiers from CoinEx to Binance (reference-exchange switch)
         Route::get('/sell-migration', [BotSellMigrationController::class, 'index'])->name('sell-migration.index');
         Route::get('/sell-migration/runs/{migration}', [BotSellMigrationController::class, 'status'])->name('sell-migration.status');
+        Route::get('/sell-migration/runs/{migration}/report', [BotSellMigrationController::class, 'report'])->name('sell-migration.report');
         Route::post('/sell-migration/{currency}/preview', [BotOrderController::class, 'sellMigrationPreview'])->name('sell-migration.preview');
         Route::post('/sell-migration/{currency}/start', [BotOrderController::class, 'sellMigrationStart'])->name('sell-migration.start');
 

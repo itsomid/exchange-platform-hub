@@ -2,13 +2,17 @@
 
 namespace App\Providers;
 
+use App\Listeners\PrepareMailDelivery;
 use App\Mail\EmailVerificationMail;
+use App\Mail\LoggingMailManager;
 use App\Models\SpotOrder;
 use App\Models\User;
 use App\Services\Bot\ReferenceExchange\BinanceBotAdapter;
 use App\Services\Bot\ReferenceExchange\ExchangeContract;
 use App\Services\Bot\ReferenceExchange\FakeBotExchange;
 use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Mail\Events\MessageSending;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -19,6 +23,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->extend('mail.manager', fn ($manager, $app) => new LoggingMailManager($app));
+
         $this->app->bind(ExchangeContract::class, function () {
             if (config('smart-bot.exchange_driver') === 'fake') {
                 return new FakeBotExchange();
@@ -35,6 +41,8 @@ class AppServiceProvider extends ServiceProvider
     {
 
         $this->loadMigrationsFrom(getcwd().'/../admin-panel/database/migrations');
+
+        Event::listen(MessageSending::class, PrepareMailDelivery::class);
 
         VerifyEmail::toMailUsing(function (User $notifiable, string $url) {
             $url = $notifiable->getUrlForEmailVerification(); // overwrite url

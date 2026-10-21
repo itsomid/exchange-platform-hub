@@ -125,6 +125,87 @@ class BotSellMigrationController extends Controller
     }
 
     /**
+     * Per-tier outcome of one run (as recorded by api-service) joined with the
+     * tier's current row, so the admin sees what was placed on the reference
+     * exchange or why it failed.
+     */
+    public function report(BotSellMigration $migration): JsonResponse
+    {
+        $migration->failIfOrphaned();
+        $migration->load('currency');
+
+        $results = collect($migration->details['tiers'] ?? []);
+        $sells   = BotSellOrder::with('buyExecution.botOrder.user')
+            ->whereIn('id', $results->pluck('sell_order_id')->filter()->unique())
+            ->get()
+            ->keyBy('id');
+
+        $rows = $results->map(function (array $r) use ($sells) {
+            $sell      = $sells->get($r['sell_order_id'] ?? null);
+            $execution = $sell?->buyExecution;
+            $user      = $execution?->botOrder?->user;
+
+            return $r + [
+                'error_hint'    => isset($r['error']) ? self::errorHint((string) $r['error']) : null,
+                'bot_order_id'  => $execution?->bot_order_id,
+                'bot_order_url' => $execution ? route('admin.bot.order.show', $execution->bot_order_id) : null,
+                'user_label'    => $user?->email ?: $user?->mobile ?: ($user ? '#' . $user->id : null),
+                'avg_buy_price' => $execution?->avg_buy_price !== null ? (string) $execution->avg_buy_price : null,
+                'target_type'   => $sell?->target_type,
+                'target_value'  => $sell?->target_value !== null ? (string) $sell->target_value : null,
+                'share_percent' => $sell?->share_percent !== null ? (string) $sell->share_percent : null,
+                'current'       => $sell ? [
+                    'status'            => $sell->status,
+                    'exchange'          => $sell->exchange,
+                    'exchange_order_id' => $sell->exchange_order_id !== null ? (string) $sell->exchange_order_id : null,
+                    'amount_to_sell'    => (string) $sell->amount_to_sell,
+                    'cancel_reason'     => $sell->cancel_reason,
+                    'migrated_at'       => $sell->migrated_at?->toIso8601String(),
+                ] : null,
+            ];
+        })->values();
+
+        $summary = $migration->toAdminArray();
+        unset($summary['details']);
+
+        return response()->json([
+            'ok'        => true,
+            'migration' => $summary + [
+                'live_price' => $migration->details['live_price'] ?? null,
+                'close'      => $migration->details['close'] ?? null,
+            ],
+            'rows'      => $rows,
+        ]);
+    }
+
+    /**
+     * Admin-facing explanation for the raw errors a run records.
+     */
+    private static function errorHint(string $error): ?string
+    {
+        return match (true) {
+            str_contains($error, 'PERCENT_PRICE_BY_SIDE'), str_contains($error, 'PERCENT_PRICE') =>
+                'قیمت این سفارش Limit خارج از محدوده مجاز Binance است. Binance سفارش فروش را فقط تا ضریب مشخصی (askMultiplierUp) '
+                . 'بالاتر از میانگین وزنی قیمت چند دقیقه اخیر می‌پذیرد؛ تارگت این پله نسبت به قیمت فعلی بیش از حد بالاست.',
+            str_contains($error, 'NOTIONAL') =>
+                'ارزش سفارش (مقدار × قیمت) کمتر از حداقل ارزش مجاز Binance برای این بازار است.',
+            str_contains($error, 'LOT_SIZE') =>
+                'مقدار سفارش با حداقل/گام مجاز مقدار در Binance (LOT_SIZE) سازگار نیست.',
+            str_contains($error, 'PRICE_FILTER') =>
+                'قیمت سفارش با حداقل/حداکثر یا گام قیمت مجاز Binance (PRICE_FILTER) سازگار نیست.',
+            str_contains($error, '-2010'), stripos($error, 'insufficient balance') !== false =>
+                'موجودی آزاد این ارز در حساب Binance برای ثبت سفارش کافی نبود.',
+            str_contains($error, '-1021') =>
+                'اختلاف ساعت سرور با Binance بیش از حد مجاز بود؛ درخواست رد شد.',
+            str_contains($error, 'no longer OPEN') =>
+                'وضعیت پله هنگام اجرا تغییر کرده بود (دیگر باز و در انتظار انتقال نبود)؛ کاری روی آن انجام نشد.',
+            str_contains($error, 'merge of sibling tiers failed') =>
+                'ادغام پله‌های کوچک همین خرید انجام نشد، بنابراین این پله هم ثبت نشد.',
+            default => null,
+        };
+    }
+
+    /**
      * @return array{0: array<string, array{available:string, frozen:string}>, 1: ?string}
      */
     private function binanceBalances(): array
