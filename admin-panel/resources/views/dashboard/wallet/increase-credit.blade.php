@@ -73,8 +73,10 @@
                         <input type="number"
                                name="amount"
                                step="0.0000001"
-                               id="" class="form-control"
-                               placeholder="میزان کوین مورد نظر را وارد کنید">
+                               min="0"
+                               id="amount" class="form-control"
+                               placeholder="میزان کوین مورد نظر را وارد کنید"
+                               value="{{ old('amount') }}">
                         @error('amount')<small class="text-danger">{{$message}}</small>@enderror
                     </div>
                     <div class="w-100"></div>
@@ -116,6 +118,21 @@
                 submitButton.disabled = true;
                 submitButton.classList.add('disabled');
             });
+
+            // Prevent negative amounts
+            var amountInput = document.getElementById('amount');
+            if (amountInput) {
+                amountInput.addEventListener('keydown', function (e) {
+                    if (['-', '+', 'e', 'E'].includes(e.key)) {
+                        e.preventDefault();
+                    }
+                });
+                amountInput.addEventListener('input', function () {
+                    if (this.value !== '' && Number(this.value) < 0) {
+                        this.value = Math.abs(Number(this.value));
+                    }
+                });
+            }
 
             // Reload page with selected currency to show its chains
             $(document).on('change', '#currency_select', function () {

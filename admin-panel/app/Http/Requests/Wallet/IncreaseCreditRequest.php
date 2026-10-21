@@ -23,7 +23,7 @@ class IncreaseCreditRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'amount' => ['required', 'numeric'],
+            'amount' => ['required', 'numeric', 'gt:0'],
             'user' => ['required', 'exists:users,id'],
             'currency_id' => ['required','integer','exists:currencies,id'],
             'chain' => ['nullable','string','max:10'],
@@ -43,6 +43,7 @@ class IncreaseCreditRequest extends FormRequest
             'chain.required' => 'انتخاب شبکه الزامی است',
             'amount.required' => 'مقدار الزامی است',
             'amount.numeric' => 'مقدار باید به صورت عددی باشد',
+            'amount.gt' => 'مقدار اعتبار باید بیشتر از صفر باشد',
         ];
     }
 }
