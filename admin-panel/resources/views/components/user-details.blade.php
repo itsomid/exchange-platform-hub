@@ -4,8 +4,19 @@
             <div class=" d-flex align-items-center flex-column">
                 <img class="img-fluid rounded mb-4" src="{{ asset('images/avatars/avatar.webp') }}" height="120"
                     width="120" alt="User avatar" />
-                <div class="user-info text-center">
-                    <h5>{{ $user->fullname() }}</h5>
+                <div class="user-info text-center w-100">
+                    <h5 class="mb-3">{{ $user->fullname() }}</h5>
+
+                    <div class="d-flex gap-2 justify-content-center">
+                        <a href="{{ route('admin.user.edit', $user->id) }}" class="btn btn-icon btn-primary"
+                            data-bs-toggle="tooltip" title="مدیریت پروفایل" aria-label="مدیریت پروفایل">
+                            <i class="fa-regular fa-user-pen fa-lg"></i>
+                        </a>
+                        <a href="{{ route('admin.user.security', $user->id) }}" class="btn btn-icon btn-label-primary"
+                            data-bs-toggle="tooltip" title="امنیت حساب" aria-label="امنیت حساب">
+                            <i class="fa-regular fa-shield-halved fa-lg"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -95,19 +106,23 @@
                     <span class="h6">مکان:</span>
                     @if ($user->latestActiveToken)
                         @php
-                            $locationData = $user->latestActiveToken->ip 
-                                ? App\Helpers\LocationFinder::getLocationData($user->latestActiveToken->ip) 
+                            $locationData = $user->latestActiveToken->ip
+                                ? App\Helpers\LocationFinder::getLocationData($user->latestActiveToken->ip)
                                 : ['country' => 'نامشخص', 'city' => '-', 'country_code' => ''];
                         @endphp
                         <div class="d-flex align-items-center">
-                   
+
                             <div class="text-end">
-                                <div class="fw-semibold">@if ($locationData['country_code'])
-                                <span class="fi fi-{{ $locationData['country_code'] }}" style="font-size: 0.8rem; margin-left: 8px;"></span>
-                            @endif{{ $locationData['country'] }}</div>
+                                <div class="fw-semibold">
+                                    @if ($locationData['country_code'])
+                                        <span class="fi fi-{{ $locationData['country_code'] }}"
+                                            style="font-size: 0.8rem; margin-left: 8px;"></span>
+                                    @endif{{ $locationData['country'] }}
+                                </div>
                                 <small class="text-muted">{{ $locationData['city'] }}</small>
                                 <br>
-                                <code class="text-primary" style="font-size: 0.75rem;">{{ $user->latestActiveToken->ip }}</code>
+                                <code class="text-primary"
+                                    style="font-size: 0.75rem;">{{ $user->latestActiveToken->ip }}</code>
                             </div>
                         </div>
                     @else
@@ -168,4 +183,3 @@
         });
     </script>
 @endsection
-

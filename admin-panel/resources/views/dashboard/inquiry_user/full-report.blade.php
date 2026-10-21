@@ -16,7 +16,7 @@
                             <div
                                 class="d-flex justify-content-between align-items-center card-widget-1 border-end pb-4 pb-sm-0">
                                 <div>
-                                    <h4 class="mb-0">{{ count($walletsWithAssetsValues) }}</h4>
+                                    <h5 class="mb-0">{{ count($walletsWithAssetsValues) }}</h5>
                                     <p class="mb-0">تعداد کیف پول</p>
                                 </div>
                                 <div class="avatar me-sm-6">
@@ -31,9 +31,9 @@
                             <div
                                 class="d-flex justify-content-between align-items-center card-widget-2 border-end pb-4 pb-sm-0">
                                 <div>
-                                    <h4 class="mb-0">{{ formatNumber($totalAssetsValue) }}
+                                    <h5 class="mb-0">{{ formatNumber($totalAssetsValue) }}
                                         <small class="text-muted">USDT</small>
-                                    </h4>
+                                    </h5>
                                     <p class="mb-0">ارزش کل موجودی ها</p>
                                 </div>
                                 <div class="avatar me-lg-6">
@@ -48,11 +48,11 @@
                             <div
                                 class="d-flex justify-content-between align-items-center border-end pb-4 pb-sm-0 card-widget-3">
                                 <div>
-                                    <h4 dir="ltr"
+                                    <h5 dir="ltr"
                                         class="mb-0 {{ $yesterdayProfitLoss['value'] >= 0 ? 'text-success' : 'text-danger' }}">
                                         <small class="text-muted">USDT</small>
                                         {{ formatNumber($yesterdayProfitLoss['value']) }}
-                                    </h4>
+                                    </h5>
                                     <p class="mb-0">سود و زیان دیروز</p>
                                     <small
                                         class="{{ $yesterdayProfitLoss['value'] >= 0 ? 'text-success' : 'text-danger' }}">
@@ -69,9 +69,9 @@
                         <div class="col-sm-6 col-lg-3">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h4 class="mb-0">{{ formatNumber($totalAvailableAssetsValue) }}
+                                    <h5 class="mb-0">{{ formatNumber($totalAvailableAssetsValue) }}
                                         <small class="text-muted">USDT</small>
-                                    </h4>
+                                    </h5>
                                     <p class="mb-0">موجودی در دسترس</p>
                                 </div>
                                 <div class="avatar">
@@ -130,8 +130,10 @@
                                                         class="fw-medium text-black">{{ $wallet->currency->persian_name }}</span>
                                                     <small>{{ $wallet->currency->name }}</small>
                                                 @else
-                                                    <span class="fw-medium text-danger">{{ $wallet->currency_symbol }}</span>
-                                                    <small class="text-danger">ارز در currencies یافت نشد (wallet #{{ $wallet->id }})</small>
+                                                    <span
+                                                        class="fw-medium text-danger">{{ $wallet->currency_symbol }}</span>
+                                                    <small class="text-danger">ارز در currencies یافت نشد (wallet
+                                                        #{{ $wallet->id }})</small>
                                                 @endif
                                             </div>
                                         </div>
@@ -185,14 +187,14 @@
 
                                                 @if ($walletChain && $walletChain->address)
                                                     <div class="d-flex align-items-center gap-2 mb-1">
-                                                        <a href="javascript:void(0);"
-                                                            class="copy-btn"
+                                                        <a href="javascript:void(0);" class="copy-btn"
                                                             data-copy-text="{{ $walletChain->address }}" title="کپی آدرس">
                                                             <i class="fa-regular fa-clone"></i>
                                                         </a>
                                                         <a href="{{ $walletChain->explorer_address_url }}" target="_blank"
                                                             class="text-decoration-none">
-                                                            <span class="font-number">{{ shorten_hash($walletChain->address) }}</span>
+                                                            <span
+                                                                class="font-number">{{ shorten_hash($walletChain->address) }}</span>
                                                         </a>
                                                         <span class="badge bg-label-secondary">{{ $chainValue }}</span>
                                                         <a href="{{ route('admin.wallet.refresh-by-chain', ['user' => $user->id, 'walletChain' => $walletChain->id]) }}"
@@ -204,7 +206,8 @@
                                                 @elseif ($walletChain && !$walletChain->address)
                                                     <div class="d-flex align-items-center mb-1">
                                                         <span class="text-danger me-2">آدرس شبکه
-                                                            ({{ $chainValue }}) ست نشده است</span>
+                                                            ({{ $chainValue }})
+                                                            ست نشده است</span>
                                                         <button type="button"
                                                             class="btn btn-success btn-xs generate-address-btn"
                                                             data-user-id="{{ $user->id }}"
@@ -216,11 +219,14 @@
                                                     </div>
                                                 @else
                                                     <div class="d-flex align-items-center mb-1">
-                                                        <span class="text-warning me-2">شبکه {{ $chainValue }} ایجاد نشده</span>
-                                                        <form method="POST" action="{{ route('admin.wallet.create-chains') }}"
+                                                        <span class="text-warning me-2">شبکه {{ $chainValue }} ایجاد
+                                                            نشده</span>
+                                                        <form method="POST"
+                                                            action="{{ route('admin.wallet.create-chains') }}"
                                                             class="d-inline">
                                                             @csrf
-                                                            <input type="hidden" name="user_id" value="{{ $user->id }}">
+                                                            <input type="hidden" name="user_id"
+                                                                value="{{ $user->id }}">
                                                             <input type="hidden" name="currency_symbol"
                                                                 value="{{ $wallet->currency_symbol }}">
                                                             <button type="submit" class="btn btn-primary btn-xs">
@@ -237,11 +243,34 @@
                                         @endif
                                     </th>
                                     <td>
-                                        <a class="btn btn-link p-0 text-secondary"
-                                            href="{{ route('admin.wallet.detail', ['user' => $user->id, 'wallet' => $wallet->id, 'type' => 'deposit']) }}"
-                                            title="مشاهده جزئیات">
-                                            <i class="fa-light fa-eye fa-lg"></i>
-                                        </a>
+                                        <div class="dropdown">
+                                            <button type="button" class="btn p-0 dropdown-toggle hide-arrow"
+                                                data-bs-toggle="dropdown">
+                                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                                            </button>
+                                            <div class="dropdown-menu">
+                                                <a class="dropdown-item"
+                                                    href="{{ route('admin.wallet.detail', ['user' => $user->id, 'wallet' => $wallet->id, 'type' => 'deposit']) }}">
+                                                    <i class="fa-light fa-eye"></i>
+                                                    مشاهده جزئیات
+                                                </a>
+                                                <a class="dropdown-item"
+                                                    href="{{ route('admin.wallet.increase-credit.form', ['currency' => $wallet->currency_symbol, 'user' => $user->id]) }}">
+                                                    <i class="fa-regular fa-arrow-down-left"></i>
+                                                    افزایش موجودی
+                                                </a>
+                                                <a class="dropdown-item"
+                                                    href="{{ route('admin.wallet.unblock-balance.form', ['wallet' => $wallet->id, 'user' => $user->id]) }}">
+                                                    <i class="fa-regular fa-lock-open"></i>
+                                                    آزادسازی موجودی
+                                                </a>
+                                                <a class="dropdown-item"
+                                                    href="{{ route('admin.wallet.block-balance.form', ['wallet' => $wallet->id, 'user' => $user->id]) }}">
+                                                    <i class="fa-regular fa-ban"></i>
+                                                    مسدودسازی موجودی
+                                                </a>
+                                            </div>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach
@@ -458,7 +487,8 @@
                                                         @if ($withdraw->explorer_address_url)
                                                             <button type="button"
                                                                 class="btn btn-sm btn-icon btn-text-secondary p-0 copy-btn me-1"
-                                                                data-copy-text="{{ $withdraw->address }}" title="کپی آدرس">
+                                                                data-copy-text="{{ $withdraw->address }}"
+                                                                title="کپی آدرس">
                                                                 <i class="fa-regular fa-clone"></i>
                                                             </button>
                                                             <a href="{{ $withdraw->explorer_address_url }}"
@@ -622,9 +652,9 @@
                                                 <td class="font-number">
                                                     <h6 class="mb-0">
                                                         @if ($deposit->explorer_address_url)
-                                                            <a href="javascript:void(0);"
-                                                                class="copy-btn me-1"
-                                                                data-copy-text="{{ $deposit->address }}" title="کپی آدرس">
+                                                            <a href="javascript:void(0);" class="copy-btn me-1"
+                                                                data-copy-text="{{ $deposit->address }}"
+                                                                title="کپی آدرس">
                                                                 <i class="fa-regular fa-clone"></i>
                                                             </a>
                                                             <a href="{{ $deposit->explorer_address_url }}"
@@ -641,8 +671,7 @@
 
                                                     <h6 class="mb-0">
                                                         @if ($deposit->explorer_tx_url && $deposit->transaction_hash)
-                                                            <a href="javascript:void(0);"
-                                                                class="copy-btn me-1"
+                                                            <a href="javascript:void(0);" class="copy-btn me-1"
                                                                 data-copy-text="{{ $deposit->transaction_hash }}"
                                                                 title="کپی شناسه تراکنش">
                                                                 <i class="fa-regular fa-clone"></i>
@@ -1081,7 +1110,7 @@
                 }
             });
 
-            document.addEventListener('click', function (event) {
+            document.addEventListener('click', function(event) {
                 const button = event.target.closest('.copy-btn');
                 if (!button) {
                     return;
@@ -1092,17 +1121,17 @@
                     return;
                 }
 
-                navigator.clipboard.writeText(textToCopy).then(function () {
+                navigator.clipboard.writeText(textToCopy).then(function() {
                     const icon = button.querySelector('i');
                     if (!icon) {
                         return;
                     }
 
                     icon.classList.replace('fa-clone', 'fa-check');
-                    setTimeout(function () {
+                    setTimeout(function() {
                         icon.classList.replace('fa-check', 'fa-clone');
                     }, 1500);
-                }).catch(function () {});
+                }).catch(function() {});
             });
         });
     </script>
