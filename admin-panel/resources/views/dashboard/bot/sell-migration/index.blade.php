@@ -266,7 +266,8 @@
                             <th>ادغام / بستن</th>
                             <th>ناموفق</th>
                             <th>مقدار موردنیاز</th>
-                            <th class="pe-4">ادمین / زمان</th>
+                            <th>ادمین / زمان</th>
+                            <th class="pe-4 text-center">عملیات</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -296,16 +297,24 @@
                                     @if ($m->failed_count) title="{{ collect($m->details['tiers'] ?? [])->where('outcome', 'failed')->map(fn($t) => '#' . $t['sell_order_id'] . ': ' . ($t['error'] ?? ''))->implode(' | ') }}" @endif>
                                     {{ $m->failed_count }}</td>
                                 <td class="font-number">{{ formatNumberTrimZeros($m->required_amount, 8) }}</td>
-                                <td class="pe-4">
+                                <td>
                                     <small>{{ $m->admin_label ?: '—' }}</small>
                                     <div><small
                                             class="text-muted">{{ \App\Helpers\DateFormatter::convertToPersianDate($m->created_at, '%Y/%m/%d H:i') }}</small>
                                     </div>
                                 </td>
+                                <td class="pe-4 text-center">
+                                    <button type="button" class="btn btn-sm btn-outline-primary text-nowrap js-migration-report"
+                                        data-report-url="{{ route('admin.bot.sell-migration.report', $m->id) }}"
+                                        data-title="گزارش انتقال #{{ $m->id }} — {{ strtoupper((string) $m->currency?->symbol) }}"
+                                        @disabled(!$m->isFinished())>
+                                        <i class="fa-light fa-file-lines me-1"></i> گزارش کامل
+                                    </button>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="10" class="text-center text-muted py-4">
+                                <td colspan="11" class="text-center text-muted py-4">
                                     <i class="fa-light fa-inbox fa-lg d-block mb-2 opacity-50"></i>
                                     هنوز انتقالی انجام نشده است.
                                 </td>
@@ -318,6 +327,7 @@
     </div>
 
     @include('dashboard.bot.sell-migration.partials.confirm-modal')
+    @include('dashboard.bot.sell-migration.partials.report-modal')
 @endsection
 
 @push('scripts')
