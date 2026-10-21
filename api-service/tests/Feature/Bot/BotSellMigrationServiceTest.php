@@ -51,7 +51,9 @@ function smFakeBinance(string $asset, string $free): void
             ['filterType' => 'LOT_SIZE', 'stepSize' => '0.01', 'minQty' => '0.01'],
             ['filterType' => 'PRICE_FILTER', 'tickSize' => '0.001'],
             ['filterType' => 'NOTIONAL', 'minNotional' => '5', 'applyMinToMarket' => true],
+            ['filterType' => 'PERCENT_PRICE_BY_SIDE', 'askMultiplierUp' => '5', 'askMultiplierDown' => '0.2', 'avgPriceMins' => 5],
         ]]]]),
+        '*/api/v3/avgPrice*'     => Http::response(['mins' => 5, 'price' => '10']),
         '*/api/v3/account*'      => Http::response(['balances' => [
             ['asset' => $asset, 'free' => $free, 'locked' => '0'],
         ]]),
@@ -205,6 +207,29 @@ it('refuses to start when the free Binance balance is below what the tiers need'
 
     expect(BotSellMigration::count())->toBe(0)
         ->and($this->fake->limitSells)->toBeEmpty();
+});
+
+it('flags limit tiers priced above Binance\'s sell ceiling in the preview', function () {
+    $avax = smCurrency();
+    [$near, $far] = smPosition($avax, '10', [
+        ['20', '5', BotSellOrder::STATUS_OPEN],   // 12 USDT, under 10 × 5
+        ['1000', '5', BotSellOrder::STATUS_OPEN], // 110 USDT, over the 50 USDT ceiling
+    ]);
+    Cache::put('market:price:AVAXUSDT', '10.5');
+    smFakeBinance('AVAX', '20');
+
+    $preview = app(BotSellMigrationService::class)->preview($avax);
+    $byId    = collect($preview['tiers'])->keyBy('sell_order_id');
+
+    expect($preview['price_limit']['multiplier_up'])->toBe('5')
+        ->and($preview['price_limit']['reference'])->toBe('avg')
+        ->and((float) $preview['price_limit']['max_price'])->toBe(50.0)
+        ->and($preview['price_limit']['max_percent_above'])->toBe('400.00')
+        ->and($preview['totals']['price_limit_tiers'])->toBe(1)
+        ->and($byId[$near->id]['price_limit_exceeded'])->toBeFalse()
+        ->and($byId[$far->id]['price_limit_exceeded'])->toBeTrue()
+        ->and($byId[$far->id]['over_max_percent'])->toBe('120.00')
+        ->and($byId[$far->id]['above_live_percent'])->toBe('947.61');
 });
 
 it('merges a below-minimum tier into the lower-target sibling of the same buy', function () {

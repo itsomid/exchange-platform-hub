@@ -37,6 +37,20 @@
         var active = null;
         var pollTimer = null;
         var reloadOnClose = false;
+        var tooltips = [];
+
+        function setBody(html) {
+            tooltips.forEach(function(t) { t.dispose(); });
+            bodyEl.innerHTML = html;
+            tooltips = Array.prototype.map.call(bodyEl.querySelectorAll('[data-bs-toggle="tooltip"]'), function(el) {
+                return new bootstrap.Tooltip(el, { container: modalEl });
+            });
+        }
+
+        function pct(v) {
+            var n = parseFloat(v);
+            return '<span class="font-number" dir="ltr">' + (n >= 0 ? '+' : '') + fmt(n, 2) + '٪</span>';
+        }
 
         function toast(text, ok) {
             Toastify({
@@ -85,8 +99,8 @@
         }
 
         function renderError(message) {
-            bodyEl.innerHTML = '<div class="alert alert-danger mb-0"><i class="fas fa-exclamation-triangle me-1"></i>' +
-                esc(message) + '</div>';
+            setBody('<div class="alert alert-danger mb-0"><i class="fas fa-exclamation-triangle me-1"></i>' +
+                esc(message) + '</div>');
             confirmBtn.disabled = true;
         }
 
@@ -124,7 +138,36 @@
                 stat('تارگت خورده → فروش Market و تسویه', fmt(t.market_tiers, 0) + ' پله · ' + fmt(t.market_amount) + ' ' + sym, 'border-warning') +
                 stat('ادغام با پله مجاور', fmt(t.merge_tiers, 0) + ' پله · ' + fmt(t.merge_amount) + ' ' + sym, 'border-secondary') +
                 stat('بستن و برگشت به کیف پول', fmt(t.close_tiers, 0) + ' پله · ' + fmt(t.close_amount) + ' ' + sym, 'border-danger') +
+                stat('احتمال رد به‌خاطر سقف قیمت', fmt(t.price_limit_tiers, 0) + ' پله · ' + fmt(t.price_limit_amount) + ' ' + sym,
+                    t.price_limit_tiers ? 'border-danger text-danger' : '') +
                 '</div>';
+
+            var limit = d.price_limit || null;
+            if (limit) {
+                var over = (d.tiers || []).filter(function(r) { return r.price_limit_exceeded; })
+                    .map(function(r) { return parseFloat(r.over_max_percent); });
+                html += '<div class="alert ' + (over.length ? 'alert-danger' : 'alert-info') + ' py-2 small">' +
+                    '<div class="mb-1"><i class="fas fa-info-circle me-1"></i><strong>سقف قیمت فروش در Binance برای ' + sym + ':</strong> ' +
+                    'Binance سفارش فروش Limit را حداکثر تا <span class="font-number">' + fmt(limit.multiplier_up, 4) + '</span> برابر ' +
+                    'میانگین قیمت ' + (limit.avg_price_mins ? '<span class="font-number">' + limit.avg_price_mins + '</span> دقیقه اخیر' : 'اخیر') +
+                    ' قبول می‌کند؛ یعنی حداکثر ' + pct(limit.max_percent_above) + ' بالاتر از قیمت بازار.</div>' +
+                    '<div class="mb-1">' + (limit.reference === 'avg'
+                        ? 'با میانگین فعلی <span class="font-number">' + fmt(limit.reference_price) + '</span> USDT'
+                        : 'میانگین Binance دریافت نشد؛ با قیمت لحظه‌ای <span class="font-number">' + fmt(limit.reference_price) + '</span> USDT تخمین زده شد و') +
+                    '، بالاترین قیمت فروش قابل ثبت الان <strong class="font-number">' + fmt(limit.max_price) + '</strong> USDT است.</div>';
+                if (over.length) {
+                    html += '<div><strong><span class="font-number">' + over.length + '</span> پله (' + fmt(t.price_limit_amount) + ' ' + sym + ')</strong> ' +
+                        'قیمت فروششان بین ' + pct(Math.min.apply(null, over)) + ' تا ' + pct(Math.max.apply(null, over)) +
+                        ' بالاتر از این سقف است و Binance احتمالاً آن‌ها را رد می‌کند. این پله‌ها دست‌نخورده می‌مانند و ' +
+                        'وقتی قیمت بازار به اندازه کافی نزدیک شد، با اجرای دوباره قابل ثبت‌اند. چون میانگین قیمت مدام تغییر می‌کند، این عدد تخمینی است.</div>';
+                } else {
+                    html += '<div>همه پله‌های Limit زیر این سقف‌اند.</div>';
+                }
+                html += '</div>';
+            } else if ((t.limit_tiers || 0) > 0) {
+                html += '<div class="alert alert-secondary py-2 small"><i class="fas fa-info-circle me-1"></i>' +
+                    'سقف قیمت فروش Binance برای این ارز دریافت نشد؛ پله‌ها از نظر فاصله با قیمت بازار بررسی نشدند.</div>';
+            }
 
             if ((t.merge_tiers || 0) > 0 || (t.close_tiers || 0) > 0) {
                 var close = d.close || null;
@@ -168,13 +211,28 @@
                         action += '<div><small class="text-muted">برگشت تقریبی: <span class="font-number">' + fmt(r.estimated_refund, 4) +
                             '</span> USDT</small></div>';
                     }
-                    var rowClass = { market: 'table-warning', merge: 'table-secondary', close: 'table-danger' }[r.action] || '';
+                    if (r.price_limit_exceeded && limit) {
+                        var tip = 'قیمت فروش این پله ' + fmt(r.target_price) + ' USDT است، یعنی ' + fmt(r.above_live_percent, 2) +
+                            '٪ بالاتر از قیمت فعلی بازار. Binance برای فروش ' + d.currency.symbol + ' حداکثر تا ' + fmt(limit.max_price) +
+                            ' USDT (' + fmt(limit.multiplier_up, 4) + ' برابر میانگین قیمت اخیر، +' + fmt(limit.max_percent_above, 2) +
+                            '٪) سفارش قبول می‌کند. این پله ' + fmt(r.over_max_percent, 2) + '٪ بالاتر از این سقف است، پس Binance احتمالاً ' +
+                            'آن را رد می‌کند و پله دست‌نخورده می‌ماند تا قیمت بازار نزدیک‌تر شود.';
+                        action += '<div class="mt-1"><span class="badge bg-label-danger">احتمال رد: سقف قیمت</span> ' +
+                            '<i class="fas fa-info-circle text-danger" role="button" data-bs-toggle="tooltip" data-bs-placement="left" title="' +
+                            esc(tip).replace(/"/g, '&quot;') + '"></i></div>';
+                    }
+                    var rowClass = { market: 'table-warning', merge: 'table-secondary', close: 'table-danger' }[r.action] ||
+                        (r.price_limit_exceeded ? 'table-danger' : '');
                     html += '<tr class="' + rowClass + '">' +
                         '<td class="font-number">#' + r.sell_order_id + '<div><small class="text-muted">' + fmt(r.share_percent, 2) + '٪</small></div></td>' +
                         '<td><small>' + esc(r.user_email || r.user_mobile || ('#' + r.user_id)) + '</small>' +
                         '<div><small class="text-muted font-number">سفارش #' + r.bot_order_id + '</small></div></td>' +
                         '<td class="font-number">' + target + '</td>' +
-                        '<td class="font-number">' + fmt(r.target_price) + '</td>' +
+                        '<td class="font-number">' + fmt(r.target_price) +
+                            (r.above_live_percent !== null && r.above_live_percent !== undefined
+                                ? '<div><small class="' + (r.price_limit_exceeded ? 'text-danger fw-semibold' : 'text-muted') + '">' +
+                                    pct(r.above_live_percent) + ' نسبت به بازار</small></div>'
+                                : '') + '</td>' +
                         '<td class="font-number">' + fmt(r.amount) + '</td>' +
                         '<td class="font-number">' + fmt(r.binance_quantity) + '</td>' +
                         '<td class="font-number"><small>' + esc(r.exchange_order_id || '—') + '</small></td>' +
@@ -190,7 +248,7 @@
                 'سفارش Market فروخته و پله با قیمت واقعی فروش، مثل یک پله پرشده، تسویه می‌شود. وضعیت تارگت هنگام اجرا با قیمت همان ' +
                 'لحظه دوباره بررسی می‌شود. مقدار در Binance به گام مجاز همان بازار گرد می‌شود.</div>';
 
-            bodyEl.innerHTML = html;
+            setBody(html);
             confirmBtn.disabled = !d.can_start;
         }
 
@@ -232,7 +290,7 @@
                         '</ul></div>';
                 }
             }
-            bodyEl.innerHTML = html;
+            setBody(html);
         }
 
         function poll(id) {
@@ -259,7 +317,7 @@
                 confirmBtn.classList.remove('d-none');
                 confirmBtn.disabled = true;
                 closeBtn.textContent = 'انصراف';
-                bodyEl.innerHTML = spinner('در حال دریافت اطلاعات پله‌ها و موجودی Binance…');
+                setBody(spinner('در حال دریافت اطلاعات پله‌ها و موجودی Binance…'));
                 modal.show();
 
                 request('POST', btn.dataset.previewUrl).then(function(d) {
@@ -288,7 +346,7 @@
                 toast(d.message || 'انتقال در صف اجرا قرار گرفت.', true);
                 reloadOnClose = true;
                 confirmBtn.classList.add('d-none');
-                bodyEl.innerHTML = spinner('انتقال در صف اجرا قرار گرفت…');
+                setBody(spinner('انتقال در صف اجرا قرار گرفت…'));
                 poll(d.migration_id);
                 pollTimer = setInterval(function() { poll(d.migration_id); }, 3000);
             }).catch(function(err) {

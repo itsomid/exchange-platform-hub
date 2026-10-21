@@ -52,11 +52,11 @@ class BinanceRequest
     }
 
     /**
-     * @return array<string, string> LOT_SIZE / MARKET_LOT_SIZE / PRICE_FILTER / NOTIONAL values for the symbol
+     * @return array<string, string> LOT_SIZE / MARKET_LOT_SIZE / PRICE_FILTER / NOTIONAL / PERCENT_PRICE(_BY_SIDE) sell-side values for the symbol
      */
     public static function symbolFilters(string $symbol): array
     {
-        return Cache::remember('binance:symbol-filters:' . $symbol, now()->addHour(), function () use ($symbol) {
+        return Cache::remember('binance:symbol-filters:v2:' . $symbol, now()->addHour(), function () use ($symbol) {
             $response = Http::timeout(10)->get(config('exchanges.binance.base_url') . '/api/v3/exchangeInfo', [
                 'symbol' => $symbol,
             ]);
@@ -83,6 +83,16 @@ class BinanceRequest
                     case 'MIN_NOTIONAL':
                         $filters['minNotional'] = (string) $filter['minNotional'];
                         $filters['minNotionalAppliesToMarket'] = ($filter['applyMinToMarket'] ?? $filter['applyToMarket'] ?? true) ? '1' : '0';
+                        break;
+                    case 'PERCENT_PRICE_BY_SIDE':
+                        $filters['askMultiplierUp'] = (string) $filter['askMultiplierUp'];
+                        $filters['askMultiplierDown'] = (string) $filter['askMultiplierDown'];
+                        $filters['avgPriceMins'] = (string) ($filter['avgPriceMins'] ?? '');
+                        break;
+                    case 'PERCENT_PRICE':
+                        $filters['askMultiplierUp'] ??= (string) $filter['multiplierUp'];
+                        $filters['askMultiplierDown'] ??= (string) $filter['multiplierDown'];
+                        $filters['avgPriceMins'] ??= (string) ($filter['avgPriceMins'] ?? '');
                         break;
                 }
             }

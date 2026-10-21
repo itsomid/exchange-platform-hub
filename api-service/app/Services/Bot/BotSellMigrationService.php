@@ -59,18 +59,21 @@ class BotSellMigrationService
         $balance   = $this->binanceBalance($symbol);
         $perfPct   = $this->num(BotGlobalSettings::current()->performance_fee_percent);
 
-        $plan   = $this->plan($sells, $livePrice, $filters);
-        $tiers  = [];
-        $totals = [
-            'tiers'         => 0,
-            'limit_tiers'   => 0,
-            'market_tiers'  => 0,
-            'merge_tiers'   => 0,
-            'close_tiers'   => 0,
-            'limit_amount'  => '0',
-            'market_amount' => '0',
-            'merge_amount'  => '0',
-            'close_amount'  => '0',
+        $plan       = $this->plan($sells, $livePrice, $filters);
+        $priceLimit = $this->sellPriceLimit($market, $livePrice, $filters);
+        $tiers      = [];
+        $totals     = [
+            'tiers'              => 0,
+            'limit_tiers'        => 0,
+            'market_tiers'       => 0,
+            'merge_tiers'        => 0,
+            'close_tiers'        => 0,
+            'limit_amount'       => '0',
+            'market_amount'      => '0',
+            'merge_amount'       => '0',
+            'close_amount'       => '0',
+            'price_limit_tiers'  => 0,
+            'price_limit_amount' => '0',
         ];
         $required = '0';
         $users    = [];
@@ -84,6 +87,8 @@ class BotSellMigrationService
             $estimate  = $action === 'close' && bccomp($livePrice, '0', self::SCALE) > 0
                 ? $this->settlement->currencyCancelBreakdown($execution, $amount, $livePrice, $perfPct)
                 : null;
+            $overLimit = $action === 'limit' && $priceLimit !== null
+                && bccomp($step['target_price'], $priceLimit['max_price'], self::SCALE) > 0;
 
             $tiers[] = [
                 'sell_order_id'     => $sell->id,
@@ -105,8 +110,15 @@ class BotSellMigrationService
                 'binance_quantity'  => $step['quantity'],
                 'estimated_refund'  => $estimate['refund'] ?? null,
                 'estimated_net_pnl' => $estimate['net_pnl'] ?? null,
+                'above_live_percent'   => $this->percentAbove($step['target_price'], $livePrice),
+                'price_limit_exceeded' => $overLimit,
+                'over_max_percent'     => $overLimit ? $this->percentAbove($step['target_price'], $priceLimit['max_price']) : null,
             ];
 
+            if ($overLimit) {
+                $totals['price_limit_tiers']++;
+                $totals['price_limit_amount'] = bcadd($totals['price_limit_amount'], $amount, self::SCALE);
+            }
             $totals['tiers']++;
             $totals[$action.'_tiers']++;
             $totals[$action.'_amount'] = bcadd($totals[$action.'_amount'], $amount, self::SCALE);
@@ -153,6 +165,7 @@ class BotSellMigrationService
             ],
             'tiers'            => $tiers,
             'close'            => $this->closePreview($totals['close_amount'], $livePrice, $filters),
+            'price_limit'      => $priceLimit,
             'can_start'        => $blockReason === null,
             'block_reason'     => $blockReason,
         ];
@@ -733,6 +746,59 @@ class BotSellMigrationService
             'value'    => bcmul($amount, $livePrice, self::SCALE),
             'sellable' => $filters !== null && ! $this->isBelowMin($quantity, $livePrice, 'MARKET', $filters),
         ];
+    }
+
+    /**
+     * Binance's PERCENT_PRICE(_BY_SIDE) ceiling for SELL limit orders:
+     * price ≤ weighted average of the last avgPriceMins minutes × askMultiplierUp.
+     * Falls back to the live price when the average cannot be fetched, so the
+     * result is an estimate either way; the average moves until the run.
+     *
+     * @param  array<string,string>|null  $filters
+     * @return array{multiplier_up:string, multiplier_down:?string, avg_price_mins:?int, reference_price:string, reference:string, max_price:string, max_percent_above:string}|null
+     */
+    private function sellPriceLimit(string $market, string $livePrice, ?array $filters): ?array
+    {
+        $up = $filters['askMultiplierUp'] ?? null;
+        if (! is_numeric($up) || bccomp($up, '0', self::SCALE) <= 0) {
+            return null;
+        }
+
+        $reference = 'avg';
+        try {
+            $refPrice = $this->num(BinanceRequest::averagePrice(BinanceOrderFormatter::normalizeSymbol($market)));
+        } catch (\Throwable $e) {
+            Log::channel('smart-bot')->warning('bot.sell_migration.avg_price_failed', ['market' => $market, 'error' => $e->getMessage()]);
+            $refPrice = '0';
+        }
+        if (bccomp($refPrice, '0', self::SCALE) <= 0) {
+            $reference = 'live';
+            $refPrice  = $livePrice;
+        }
+        if (bccomp($refPrice, '0', self::SCALE) <= 0) {
+            return null;
+        }
+
+        $mins = $filters['avgPriceMins'] ?? null;
+
+        return [
+            'multiplier_up'     => $up,
+            'multiplier_down'   => $filters['askMultiplierDown'] ?? null,
+            'avg_price_mins'    => is_numeric($mins) ? (int) $mins : null,
+            'reference_price'   => $refPrice,
+            'reference'         => $reference,
+            'max_price'         => bcmul($refPrice, $up, self::SCALE),
+            'max_percent_above' => bcmul(bcsub($up, '1', self::SCALE), '100', 2),
+        ];
+    }
+
+    private function percentAbove(string $price, string $reference): ?string
+    {
+        if (bccomp($reference, '0', self::SCALE) <= 0 || bccomp($price, '0', self::SCALE) <= 0) {
+            return null;
+        }
+
+        return bcmul(bcsub(bcdiv($price, $reference, self::SCALE), '1', self::SCALE), '100', 2);
     }
 
     private function targetPrice(BotSellOrder $sell): string
