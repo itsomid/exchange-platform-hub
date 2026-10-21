@@ -122,4 +122,44 @@ class BotSellMigrationPageTest extends TestCase
             ->assertJsonPath('migration.finished', true)
             ->assertJsonPath('migration.currency_symbol', 'ZZZ');
     }
+
+    public function test_report_lists_each_tier_with_its_outcome_and_failure_hint(): void
+    {
+        [$placed, $failed] = BotSellOrder::where('status', 'OPEN')->orderBy('id')->get()->all();
+        $placed->forceFill(['exchange' => 'binance', 'exchange_order_id' => 555])->save();
+
+        $run = BotSellMigration::create([
+            'currency_id'  => $this->currency->id,
+            'status'       => 'DONE',
+            'tiers_count'  => 2,
+            'placed_count' => 1,
+            'failed_count' => 1,
+            'details'      => ['live_price' => '2.1', 'close' => null, 'tiers' => [
+                ['sell_order_id' => $placed->id, 'action' => 'limit', 'outcome' => 'placed', 'target_price' => '2.4', 'amount' => '6', 'new_exchange_order_id' => '555'],
+                ['sell_order_id' => $failed->id, 'action' => 'limit', 'outcome' => 'failed', 'target_price' => '2.4', 'amount' => '4', 'error' => '-1013 Filter failure: PERCENT_PRICE_BY_SIDE'],
+            ]],
+        ]);
+
+        Http::fake([
+            '*/api/v3/exchangeInfo*' => Http::response(['symbols' => [['filters' => [
+                ['filterType' => 'PERCENT_PRICE_BY_SIDE', 'askMultiplierUp' => '5', 'askMultiplierDown' => '0.2', 'avgPriceMins' => 5],
+            ]]]]),
+            '*/api/v3/avgPrice*' => Http::response(['mins' => 5, 'price' => '2']),
+        ]);
+
+        $this->actingAs($this->admin, 'admin')
+            ->getJson(route('admin.bot.sell-migration.report', $run->id))
+            ->assertOk()
+            ->assertJsonPath('migration.live_price', '2.1')
+            ->assertJsonMissingPath('migration.details')
+            ->assertJsonPath('price_limit.max_percent_above', '400.00')
+            ->assertJsonPath('price_limit.max_price', '10.00000000')
+            ->assertJsonPath('rows.0.outcome', 'placed')
+            ->assertJsonPath('rows.0.current.exchange', 'binance')
+            ->assertJsonPath('rows.0.current.exchange_order_id', '555')
+            ->assertJsonPath('rows.1.outcome', 'failed')
+            ->assertJsonPath('rows.1.current.status', 'OPEN')
+            ->assertJsonPath('rows.1.above_live_percent', '14.28')
+            ->assertJsonPath('rows.1.error_hint', fn ($hint) => str_contains($hint, 'Binance'));
+    }
 }

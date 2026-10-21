@@ -120,13 +120,25 @@
                 '<strong class="font-number">' + value + '</strong></div></div>';
         }
 
+        function abovePercent(r) {
+            if (r.above_live_percent === null || r.above_live_percent === undefined) return '';
+            var p = parseFloat(r.above_live_percent);
+            var limit = report.price_limit;
+            var over = limit && p > parseFloat(limit.max_percent_above);
+            return '<div class="small ' + (over ? 'text-danger fw-semibold' : 'text-muted') + '">' +
+                '<span class="font-number" dir="ltr">' + (p >= 0 ? '+' : '') + fmt(p, 2) + '٪</span> ' +
+                (p >= 0 ? 'بالاتر' : 'پایین‌تر') + ' از قیمت لحظه‌ای هنگام اجرا' +
+                (limit ? ' (سقف Binance: <span class="font-number" dir="ltr">+' + fmt(limit.max_percent_above, 2) + '٪</span>)' : '') +
+                '</div>';
+        }
+
         function details(r) {
             var exchange = (r.current && r.current.exchange) || 'binance';
             switch (r.outcome) {
                 case 'placed':
                     return '<div class="fw-semibold mb-1">سفارش فروش Limit در ' + esc(exchange) + ' ثبت شد</div>' +
                         line('شماره سفارش', esc(r.new_exchange_order_id)) +
-                        line('قیمت', fmt(r.target_price) + ' USDT') +
+                        line('قیمت', fmt(r.target_price) + ' USDT') + abovePercent(r) +
                         line('مقدار', fmt(r.amount)) +
                         line('ارزش', fmt(parseFloat(r.amount) * parseFloat(r.target_price), 4) + ' USDT');
                 case 'completed':
@@ -150,11 +162,10 @@
                         line('مبلغ برگشتی', fmt(r.refund, 4) + ' USDT') +
                         line('سود خالص', fmt(r.net_pnl, 4) + ' USDT');
                 case 'failed':
-                    return '<div class="fw-semibold text-danger mb-1">' + esc(r.error || 'خطای نامشخص') + '</div>' +
-                        (r.error_hint ? '<div class="small mb-1">' + esc(r.error_hint) + '</div>' : '') +
-                        (r.target_price ? line('قیمت درخواستی', fmt(r.target_price) + ' USDT') : '') +
+                    return '<div class="fw-semibold text-danger mb-1">' + esc(r.error_hint || r.error || 'خطای نامشخص') + '</div>' +
+                        (r.target_price ? line('قیمت درخواستی', fmt(r.target_price) + ' USDT') + abovePercent(r) : '') +
                         (r.amount ? line('مقدار', fmt(r.amount)) : '') +
-                        '<small class="text-muted">پله دست‌نخورده ماند و با اجرای دوباره انتقال، دوباره امتحان می‌شود.</small>';
+                        (r.error_hint ? '<div><small class="text-muted" dir="ltr">' + esc(r.error) + '</small></div>' : '');
             }
             return '—';
         }
@@ -237,9 +248,34 @@
             if (keys.length) {
                 html += '<div class="alert alert-warning small"><strong>دلایل شکست:</strong><ul class="mb-0">' +
                     keys.map(function(k) {
-                        return '<li><span class="font-number">' + reasons[k].count + '</span> پله — <code>' + esc(k) + '</code>' +
-                            (reasons[k].hint ? '<div>' + esc(reasons[k].hint) + '</div>' : '') + '</li>';
+                        return '<li><span class="font-number">' + reasons[k].count + '</span> پله — ' +
+                            esc(reasons[k].hint || k) + (reasons[k].hint ? ' <code dir="ltr">' + esc(k) + '</code>' : '') + '</li>';
                     }).join('') + '</ul></div>';
+            }
+
+            var priceFailed = rows.filter(function(r) {
+                return r.outcome === 'failed' && (r.error || '').indexOf('PERCENT_PRICE') !== -1 && r.above_live_percent !== null;
+            }).map(function(r) { return parseFloat(r.above_live_percent); });
+            if (priceFailed.length) {
+                var limit = report.price_limit;
+                var sym = esc(m.currency_symbol);
+                html += '<div class="alert alert-info small">';
+                if (limit) {
+                    html += '<div class="mb-1"><strong>سقف قیمت فروش در Binance برای ' + sym + ':</strong> ' +
+                        'حداکثر <span class="font-number">' + fmt(limit.multiplier_up, 4) + '</span> برابر میانگین قیمت ' +
+                        (limit.avg_price_mins ? '<span class="font-number">' + limit.avg_price_mins + '</span> دقیقه اخیر' : 'اخیر') +
+                        '، یعنی سفارش فروش حداکثر <strong class="font-number" dir="ltr">+' + fmt(limit.max_percent_above, 2) + '٪</strong> ' +
+                        'بالاتر از قیمت بازار ثبت می‌شود.</div>';
+                    if (limit.max_price) {
+                        html += '<div class="mb-1">با میانگین فعلی <span class="font-number">' + fmt(limit.avg_price) + '</span> USDT، ' +
+                            'بالاترین قیمت فروش قابل ثبت الان <strong class="font-number">' + fmt(limit.max_price) + '</strong> USDT است.</div>';
+                    }
+                } else {
+                    html += '<div class="mb-1">سقف قیمت این ارز از Binance دریافت نشد.</div>';
+                }
+                html += '<div>پله‌های رد‌شده بین <span class="font-number" dir="ltr">+' + fmt(Math.min.apply(null, priceFailed), 2) +
+                    '٪</span> تا <span class="font-number" dir="ltr">+' + fmt(Math.max.apply(null, priceFailed), 2) +
+                    '٪</span> بالاتر از قیمت لحظه‌ای هنگام اجرا بودند.</div></div>';
             }
             summaryEl.innerHTML = html;
         }

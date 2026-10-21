@@ -8,6 +8,8 @@ use App\Models\Bot\BotSellOrder;
 use App\Models\Currency;
 use App\Services\Exchanges\Asset\AssetFactory;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
@@ -134,19 +136,24 @@ class BotSellMigrationController extends Controller
         $migration->failIfOrphaned();
         $migration->load('currency');
 
-        $results = collect($migration->details['tiers'] ?? []);
-        $sells   = BotSellOrder::with('buyExecution.botOrder.user')
+        $results   = collect($migration->details['tiers'] ?? []);
+        $livePrice = (string) ($migration->details['live_price'] ?? '0');
+        $sells     = BotSellOrder::with('buyExecution.botOrder.user')
             ->whereIn('id', $results->pluck('sell_order_id')->filter()->unique())
             ->get()
             ->keyBy('id');
 
-        $rows = $results->map(function (array $r) use ($sells) {
+        $rows = $results->map(function (array $r) use ($sells, $livePrice) {
             $sell      = $sells->get($r['sell_order_id'] ?? null);
             $execution = $sell?->buyExecution;
             $user      = $execution?->botOrder?->user;
+            $target    = (string) ($r['target_price'] ?? '0');
 
             return $r + [
-                'error_hint'    => isset($r['error']) ? self::errorHint((string) $r['error']) : null,
+                'error_hint'         => isset($r['error']) ? self::errorHint((string) $r['error']) : null,
+                'above_live_percent' => is_numeric($target) && is_numeric($livePrice) && bccomp($livePrice, '0', 8) > 0 && bccomp($target, '0', 8) > 0
+                    ? bcmul(bcsub(bcdiv($target, $livePrice, 8), '1', 8), '100', 2)
+                    : null,
                 'bot_order_id'  => $execution?->bot_order_id,
                 'bot_order_url' => $execution ? route('admin.bot.order.show', $execution->bot_order_id) : null,
                 'user_label'    => $user?->email ?: $user?->mobile ?: ($user ? '#' . $user->id : null),
@@ -168,14 +175,62 @@ class BotSellMigrationController extends Controller
         $summary = $migration->toAdminArray();
         unset($summary['details']);
 
+        $hasPriceRangeFailures = $results->contains(fn (array $r) => str_contains((string) ($r['error'] ?? ''), 'PERCENT_PRICE'));
+
         return response()->json([
-            'ok'        => true,
-            'migration' => $summary + [
+            'ok'          => true,
+            'migration'   => $summary + [
                 'live_price' => $migration->details['live_price'] ?? null,
                 'close'      => $migration->details['close'] ?? null,
             ],
-            'rows'      => $rows,
+            'price_limit' => $hasPriceRangeFailures && $summary['currency_symbol'] !== ''
+                ? $this->sellPriceLimit($summary['currency_symbol'] . 'USDT')
+                : null,
+            'rows'        => $rows,
         ]);
+    }
+
+    /**
+     * Binance's PERCENT_PRICE(_BY_SIDE) filter for SELL orders: a limit price is
+     * accepted only between avgPrice × askMultiplierDown and avgPrice × askMultiplierUp,
+     * where avgPrice is the weighted average of the last avgPriceMins minutes.
+     *
+     * @return array{multiplier_up:string, multiplier_down:string, max_percent_above:string, avg_price_mins:int, avg_price:?string, max_price:?string}|null
+     */
+    private function sellPriceLimit(string $market): ?array
+    {
+        try {
+            return Cache::remember("bot:sell-migration:price-limit:{$market}", now()->addMinutes(5), function () use ($market) {
+                $base = config('exchanges.binance.base_url');
+                $info = Http::timeout(10)->get($base . '/api/v3/exchangeInfo', ['symbol' => $market]);
+                if (! $info->ok()) {
+                    throw new \RuntimeException('exchangeInfo: ' . $info->body());
+                }
+
+                $filter = collect($info->json('symbols.0.filters') ?? [])
+                    ->first(fn ($f) => in_array($f['filterType'] ?? null, ['PERCENT_PRICE_BY_SIDE', 'PERCENT_PRICE'], true));
+                $up = (string) ($filter['askMultiplierUp'] ?? $filter['multiplierUp'] ?? '');
+                if (! is_numeric($up)) {
+                    return null;
+                }
+
+                $avg = Http::timeout(10)->get($base . '/api/v3/avgPrice', ['symbol' => $market])->json('price');
+                $avg = is_numeric($avg) ? (string) $avg : null;
+
+                return [
+                    'multiplier_up'     => $up,
+                    'multiplier_down'   => (string) ($filter['askMultiplierDown'] ?? $filter['multiplierDown'] ?? ''),
+                    'max_percent_above' => bcmul(bcsub($up, '1', 8), '100', 2),
+                    'avg_price_mins'    => (int) ($filter['avgPriceMins'] ?? 0),
+                    'avg_price'         => $avg,
+                    'max_price'         => $avg !== null ? bcmul($avg, $up, 8) : null,
+                ];
+            });
+        } catch (\Throwable $e) {
+            Log::warning('bot.sell_migration.price_limit_failed', ['market' => $market, 'error' => $e->getMessage()]);
+
+            return null;
+        }
     }
 
     /**
@@ -184,9 +239,8 @@ class BotSellMigrationController extends Controller
     private static function errorHint(string $error): ?string
     {
         return match (true) {
-            str_contains($error, 'PERCENT_PRICE_BY_SIDE'), str_contains($error, 'PERCENT_PRICE') =>
-                'قیمت این سفارش Limit خارج از محدوده مجاز Binance است. Binance سفارش فروش را فقط تا ضریب مشخصی (askMultiplierUp) '
-                . 'بالاتر از میانگین وزنی قیمت چند دقیقه اخیر می‌پذیرد؛ تارگت این پله نسبت به قیمت فعلی بیش از حد بالاست.',
+            str_contains($error, 'PERCENT_PRICE') =>
+                'قیمت فروش این پله خیلی بالاتر از قیمت فعلی بازار است و Binance فعلاً چنین سفارشی را قبول نمی‌کند.',
             str_contains($error, 'NOTIONAL') =>
                 'ارزش سفارش (مقدار × قیمت) کمتر از حداقل ارزش مجاز Binance برای این بازار است.',
             str_contains($error, 'LOT_SIZE') =>
