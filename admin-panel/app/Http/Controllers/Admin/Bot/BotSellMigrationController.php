@@ -249,7 +249,10 @@ class BotSellMigrationController extends Controller
                 'مقدار سفارش با حداقل/گام مجاز مقدار در Binance (LOT_SIZE) سازگار نیست.',
             str_contains($error, 'PRICE_FILTER') =>
                 'قیمت سفارش با حداقل/حداکثر یا گام قیمت مجاز Binance (PRICE_FILTER) سازگار نیست.',
-            str_contains($error, '-2010'), stripos($error, 'insufficient balance') !== false =>
+            // -2010 is Binance's generic NEW_ORDER_REJECTED; the message decides which case it is.
+            str_contains($error, 'MAX_NUM_ORDERS') =>
+                'تعداد سفارش‌های باز این بازار در حساب Binance به سقف مجاز رسیده است (معمولاً ۲۰۰ سفارش)؛ تا وقتی بخشی از سفارش‌های باز پر یا لغو نشوند، Binance سفارش جدید قبول نمی‌کند.',
+            stripos($error, 'insufficient') !== false =>
                 'موجودی آزاد این ارز در حساب Binance برای ثبت سفارش کافی نبود.',
             str_contains($error, '-1021') =>
                 'اختلاف ساعت سرور با Binance بیش از حد مجاز بود؛ درخواست رد شد.',
