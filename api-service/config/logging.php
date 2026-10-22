@@ -180,6 +180,13 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'mail-failures' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/mail-failures.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+
     ],
 
 ];
