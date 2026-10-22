@@ -3,6 +3,7 @@
 use App\Http\Controllers\Internal\BotAdminController;
 use App\Http\Controllers\Internal\BotCurrencyCancelController;
 use App\Http\Controllers\Internal\BotSellMigrationController;
+use App\Http\Controllers\Internal\BotWaitingSellsController;
 use App\Http\Controllers\Internal\BotTestController;
 use Illuminate\Support\Facades\Route;
 
@@ -36,4 +37,9 @@ Route::prefix('bot-admin')->middleware('bot-admin-auth')->group(function () {
     Route::post('currencies/{currency}/cancel',         [BotCurrencyCancelController::class, 'cancel']);
     Route::post('currencies/{currency}/sell-migration-preview', [BotSellMigrationController::class, 'preview']);
     Route::post('currencies/{currency}/sell-migration',         [BotSellMigrationController::class, 'start']);
+
+    Route::get('waiting-sells/last-run',                  [BotWaitingSellsController::class, 'lastRun']);
+    Route::get('waiting-sells/currencies/{currency}',     [BotWaitingSellsController::class, 'details']);
+    Route::post('waiting-sells/currencies/{currency}/place', [BotWaitingSellsController::class, 'placeCurrency']);
+    Route::post('waiting-sells/{sellOrder}/place',        [BotWaitingSellsController::class, 'placeTier']);
 });

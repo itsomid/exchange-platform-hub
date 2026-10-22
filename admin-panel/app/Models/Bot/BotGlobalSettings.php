@@ -20,6 +20,7 @@ class BotGlobalSettings extends Model
         'transfer_fee_tiers',
         'is_enabled',
         'cancel_sell_on_exchange_enabled',
+        'waiting_sells_auto_place',
     ];
 
     protected function casts(): array
@@ -34,6 +35,7 @@ class BotGlobalSettings extends Model
             'transfer_fee_tiers'              => 'array',
             'is_enabled'                      => 'boolean',
             'cancel_sell_on_exchange_enabled' => 'boolean',
+            'waiting_sells_auto_place'        => 'boolean',
         ];
     }
 
@@ -53,6 +55,7 @@ class BotGlobalSettings extends Model
             'transfer_fee_tiers'              => [],
             'is_enabled'                      => true,
             'cancel_sell_on_exchange_enabled' => true,
+            'waiting_sells_auto_place'        => true,
         ]);
     }
 }

@@ -264,6 +264,7 @@
                             <th>Limit ثبت‌شده</th>
                             <th>تکمیل با Market</th>
                             <th>ادغام / بستن</th>
+                            <th>در انتظار ثبت</th>
                             <th>ناموفق</th>
                             <th>مقدار موردنیاز</th>
                             <th>ادمین / زمان</th>
@@ -293,6 +294,7 @@
                                 <td class="font-number text-primary">{{ $m->placed_count }}</td>
                                 <td class="font-number text-warning">{{ $m->completed_count }}</td>
                                 <td class="font-number">{{ $m->merged_count }} / {{ $m->closed_count }}</td>
+                                <td class="font-number {{ $m->waiting_count ? 'text-info fw-semibold' : '' }}">{{ (int) $m->waiting_count }}</td>
                                 <td class="font-number {{ $m->failed_count ? 'text-danger fw-semibold' : '' }}"
                                     @if ($m->failed_count) title="{{ collect($m->details['tiers'] ?? [])->where('outcome', 'failed')->map(fn($t) => '#' . $t['sell_order_id'] . ': ' . ($t['error'] ?? ''))->implode(' | ') }}" @endif>
                                     {{ $m->failed_count }}</td>
@@ -314,7 +316,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="11" class="text-center text-muted py-4">
+                                <td colspan="12" class="text-center text-muted py-4">
                                     <i class="fa-light fa-inbox fa-lg d-block mb-2 opacity-50"></i>
                                     هنوز انتقالی انجام نشده است.
                                 </td>

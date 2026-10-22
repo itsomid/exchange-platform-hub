@@ -26,6 +26,7 @@
                             <option value="completed">تکمیل با Market</option>
                             <option value="merged">ادغام‌شده</option>
                             <option value="closed">بسته و برگشت</option>
+                            <option value="waiting">در انتظار ثبت</option>
                             <option value="failed">ناموفق</option>
                         </select>
                     </div>
@@ -82,13 +83,15 @@
                 completed: ['bg-label-warning', 'تکمیل با Market'],
                 merged: ['bg-label-secondary', 'ادغام‌شده'],
                 closed: ['bg-label-primary', 'بسته و برگشت'],
+                waiting: ['bg-label-dark', 'در انتظار ثبت'],
                 failed: ['bg-label-danger', 'ناموفق'],
             };
             var actions = {
                 limit: 'Limit',
                 market: 'Market',
                 merge: 'ادغام',
-                close: 'بستن'
+                close: 'بستن',
+                wait: 'انتظار'
             };
             var statuses = {
                 OPEN: 'bg-label-info',
@@ -179,6 +182,13 @@
                             line('مقدار', fmt(r.amount)) +
                             line('مبلغ برگشتی', fmt(r.refund, 4) + ' USDT') +
                             line('سود خالص', fmt(r.net_pnl, 4) + ' USDT');
+                    case 'waiting':
+                        return '<div class="fw-semibold mb-1">قیمتش بالاتر از سقف Binance بود؛ ثبت نشد و «در انتظار ثبت» ماند</div>' +
+                            line('قیمت فروش', fmt(r.target_price) + ' USDT') + abovePercent(r) +
+                            line('مقدار', fmt(r.amount)) +
+                            '<small class="text-muted">وقتی قیمت بازار به اندازه کافی بالا بیاید، خودکار در Binance ثبت می‌شود.</small>' +
+                            (r.error && r.error.indexOf('PERCENT_PRICE') !== -1 ?
+                                '<div><small class="text-muted" dir="ltr">' + esc(r.error) + '</small></div>' : '');
                     case 'failed':
                         return '<div class="small fw-semibold text-danger mb-1">' + esc(r.error_hint || r.error ||
                                 'خطای نامشخص') + '</div>' +
@@ -204,6 +214,8 @@
                 if (!c) return '<small class="text-muted">ردیف یافت نشد</small>';
                 return '<span class="badge ' + (statuses[c.status] || 'bg-label-secondary') + '">' + esc(c.status) +
                     '</span>' +
+                    (c.status === 'OPEN' && c.placement_status === 'WAITING' ?
+                        ' <span class="badge bg-label-dark">در انتظار ثبت</span>' : '') +
                     '<div><small class="text-muted">' + esc(c.exchange) + '</small></div>' +
                     (c.exchange_order_id ? '<div><small class="font-number">' + esc(c.exchange_order_id) +
                         '</small></div>' : '');
@@ -263,6 +275,7 @@
                     stat('تکمیل با Market', fmt(m.completed_count, 0), 'border-warning') +
                     stat('ادغام‌شده', fmt(m.merged_count, 0), 'border-secondary') +
                     stat('بسته و برگشت', fmt(m.closed_count, 0), 'border-primary') +
+                    stat('در انتظار ثبت', fmt(m.waiting_count, 0), 'border-dark') +
                     stat('ناموفق', fmt(m.failed_count, 0), m.failed_count ? 'border-danger' : '') +
                     '</div>';
                 if (m.live_price) {
@@ -294,8 +307,8 @@
                 }
 
                 var priceFailed = rows.filter(function(r) {
-                    return r.outcome === 'failed' && (r.error || '').indexOf('PERCENT_PRICE') !== -1 && r
-                        .above_live_percent !== null;
+                    return (r.outcome === 'waiting' || (r.outcome === 'failed' && (r.error || '').indexOf('PERCENT_PRICE') !== -1)) &&
+                        r.above_live_percent !== null;
                 }).map(function(r) {
                     return parseFloat(r.above_live_percent);
                 });
@@ -321,7 +334,7 @@
                     } else {
                         html += '<div class="mb-1">سقف قیمت این ارز از Binance دریافت نشد.</div>';
                     }
-                    html += '<div>پله‌های رد‌شده بین <span class="font-number" dir="ltr">+' + fmt(Math.min.apply(
+                    html += '<div>پله‌های بالای سقف (در انتظار ثبت یا ردشده) بین <span class="font-number" dir="ltr">+' + fmt(Math.min.apply(
                             null, priceFailed), 2) +
                         '٪</span> تا <span class="font-number" dir="ltr">+' + fmt(Math.max.apply(null, priceFailed),
                             2) +

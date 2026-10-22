@@ -163,6 +163,7 @@ class BotSellMigrationController extends Controller
                 'share_percent' => $sell?->share_percent !== null ? (string) $sell->share_percent : null,
                 'current'       => $sell ? [
                     'status'            => $sell->status,
+                    'placement_status'  => $sell->placement_status,
                     'exchange'          => $sell->exchange,
                     'exchange_order_id' => $sell->exchange_order_id !== null ? (string) $sell->exchange_order_id : null,
                     'amount_to_sell'    => (string) $sell->amount_to_sell,
@@ -175,7 +176,8 @@ class BotSellMigrationController extends Controller
         $summary = $migration->toAdminArray();
         unset($summary['details']);
 
-        $hasPriceRangeFailures = $results->contains(fn (array $r) => str_contains((string) ($r['error'] ?? ''), 'PERCENT_PRICE'));
+        $hasPriceRangeFailures = $results->contains(fn (array $r) => ($r['outcome'] ?? null) === 'waiting'
+            || str_contains((string) ($r['error'] ?? ''), 'PERCENT_PRICE'));
 
         return response()->json([
             'ok'          => true,

@@ -44,6 +44,7 @@ class BotSellMigrationService
         private readonly SettlementService $settlement,
         private readonly PriceFeed $priceFeed,
         private readonly BotOrderDescriptionService $descriptions,
+        private readonly SellTierPlacementService $placement,
     ) {}
 
     /**
@@ -59,8 +60,8 @@ class BotSellMigrationService
         $balance   = $this->binanceBalance($symbol);
         $perfPct   = $this->num(BotGlobalSettings::current()->performance_fee_percent);
 
-        $plan       = $this->plan($sells, $livePrice, $filters);
-        $priceLimit = $this->sellPriceLimit($market, $livePrice, $filters);
+        $priceLimit = $filters !== null ? $this->placement->ceiling($market, $livePrice) : null;
+        $plan       = $this->plan($sells, $livePrice, $filters, $priceLimit);
         $tiers      = [];
         $totals     = [
             'tiers'              => 0,
@@ -68,12 +69,12 @@ class BotSellMigrationService
             'market_tiers'       => 0,
             'merge_tiers'        => 0,
             'close_tiers'        => 0,
+            'wait_tiers'         => 0,
             'limit_amount'       => '0',
             'market_amount'      => '0',
             'merge_amount'       => '0',
             'close_amount'       => '0',
-            'price_limit_tiers'  => 0,
-            'price_limit_amount' => '0',
+            'wait_amount'        => '0',
         ];
         $required = '0';
         $users    = [];
@@ -87,7 +88,7 @@ class BotSellMigrationService
             $estimate  = $action === 'close' && bccomp($livePrice, '0', self::SCALE) > 0
                 ? $this->settlement->currencyCancelBreakdown($execution, $amount, $livePrice, $perfPct)
                 : null;
-            $overLimit = $action === 'limit' && $priceLimit !== null
+            $overMax = $action === 'wait'
                 && bccomp($step['target_price'], $priceLimit['max_price'], self::SCALE) > 0;
 
             $tiers[] = [
@@ -111,14 +112,10 @@ class BotSellMigrationService
                 'estimated_refund'  => $estimate['refund'] ?? null,
                 'estimated_net_pnl' => $estimate['net_pnl'] ?? null,
                 'above_live_percent'   => $this->percentAbove($step['target_price'], $livePrice),
-                'price_limit_exceeded' => $overLimit,
-                'over_max_percent'     => $overLimit ? $this->percentAbove($step['target_price'], $priceLimit['max_price']) : null,
+                'price_limit_exceeded' => $action === 'wait',
+                'over_max_percent'     => $overMax ? $this->percentAbove($step['target_price'], $priceLimit['max_price']) : null,
             ];
 
-            if ($overLimit) {
-                $totals['price_limit_tiers']++;
-                $totals['price_limit_amount'] = bcadd($totals['price_limit_amount'], $amount, self::SCALE);
-            }
             $totals['tiers']++;
             $totals[$action.'_tiers']++;
             $totals[$action.'_amount'] = bcadd($totals[$action.'_amount'], $amount, self::SCALE);
@@ -267,9 +264,10 @@ class BotSellMigrationService
         }
 
         $filters    = $this->filters($market);
-        $plan       = $this->plan($sells, $livePrice, $filters);
+        $ceiling    = $filters !== null ? $this->placement->ceiling($market, $livePrice) : null;
+        $plan       = $this->plan($sells, $livePrice, $filters, $ceiling);
         $results    = [];
-        $counts     = ['placed' => 0, 'completed' => 0, 'merged' => 0, 'closed' => 0, 'failed' => 0];
+        $counts     = ['placed' => 0, 'completed' => 0, 'merged' => 0, 'closed' => 0, 'waiting' => 0, 'failed' => 0];
         $executions = [];
         $record     = function (BotSellOrder $sell, array $result) use (&$results, &$counts, &$executions) {
             $results[] = $result;
@@ -327,7 +325,9 @@ class BotSellMigrationService
             }
 
             $sell->refresh();
-            $record($sell, $this->migrateTier($sell, $market, $livePrice, $migration->id));
+            $record($sell, $action === 'wait'
+                ? $this->waitTier($sell, $plan[$sell->id]['target_price'], $ceiling)
+                : $this->migrateTier($sell, $market, $livePrice, $migration->id));
         }
 
         // 3) Tiers that are still too small: one aggregated market sell, then settle.
@@ -353,9 +353,10 @@ class BotSellMigrationService
             'completed_count' => $counts['completed'],
             'merged_count'    => $counts['merged'],
             'closed_count'    => $counts['closed'],
+            'waiting_count'   => $counts['waiting'],
             'failed_count'    => $counts['failed'],
             'required_amount' => $required,
-            'details'         => ['live_price' => $livePrice, 'tiers' => $results, 'close' => $close],
+            'details'         => ['live_price' => $livePrice, 'tiers' => $results, 'close' => $close, 'ceiling' => $ceiling],
             'finished_at'     => now(),
         ]);
 
@@ -397,6 +398,15 @@ class BotSellMigrationService
                     ? $this->exchange->placeMarketSell($market, $amount)
                     : $this->exchange->placeLimitSell($market, $amount, $targetPrice);
 
+                if (! $isHit && $res->exchangeOrderId === null && $this->placement->isPriceRangeRejection($res)) {
+                    $fresh->update([
+                        'previous_exchange_order_id' => $fresh->exchange_order_id,
+                        'migrated_at'                => now(),
+                    ] + $this->placement->waitingAttributes(SellTierPlacementService::errorText($res)));
+
+                    return [$fresh, $res];
+                }
+
                 if ($res->exchangeOrderId === null || ($isHit && bccomp($this->num($res->filledAmount), '0', self::SCALE) <= 0)) {
                     return [$fresh, $res];
                 }
@@ -425,6 +435,10 @@ class BotSellMigrationService
 
         if ($fresh === null) {
             return $base + ['outcome' => 'failed', 'error' => 'tier is no longer OPEN on CoinEx'];
+        }
+
+        if ($fresh->placement_status === BotSellOrder::PLACEMENT_WAITING) {
+            return $base + ['action' => 'wait', 'outcome' => 'waiting', 'error' => SellTierPlacementService::errorText($res)];
         }
 
         if ($fresh->exchange === BotSellOrder::EXCHANGE_COINEX) {
@@ -462,18 +476,55 @@ class BotSellMigrationService
     }
 
     /**
+     * Tier priced above Binance's ceiling: leave it OPEN as WAITING (moved off
+     * CoinEx) for bot:place-waiting-sells instead of sending a doomed order.
+     *
+     * @return array<string,mixed>
+     */
+    private function waitTier(BotSellOrder $sell, string $targetPrice, ?array $ceiling): array
+    {
+        $reason = sprintf('price %s above Binance ceiling %s', $targetPrice, $ceiling['place_max_price'] ?? '?');
+        $base   = [
+            'sell_order_id'         => $sell->id,
+            'old_exchange_order_id' => $sell->exchange_order_id,
+            'action'                => 'wait',
+            'target_price'          => $targetPrice,
+            'amount'                => $this->num($sell->amount_to_sell),
+        ];
+
+        $updated = DB::transaction(function () use ($sell, $reason) {
+            $fresh = BotSellOrder::whereKey($sell->id)->lockForUpdate()->first();
+            if (! $fresh || $fresh->status !== BotSellOrder::STATUS_OPEN || $fresh->exchange !== BotSellOrder::EXCHANGE_COINEX) {
+                return false;
+            }
+            $fresh->update([
+                'previous_exchange_order_id' => $fresh->exchange_order_id,
+                'migrated_at'                => now(),
+            ] + $this->placement->waitingAttributes($reason));
+
+            return true;
+        });
+
+        return $updated
+            ? $base + ['outcome' => 'waiting']
+            : $base + ['outcome' => 'failed', 'error' => 'tier is no longer OPEN on CoinEx'];
+    }
+
+    /**
      * Decide what the run does with each OPEN CoinEx tier. Per buy execution,
      * the smallest below-minimum tier is merged into its smaller adjacent tier
      * (the lower-target one survives with summed amount/share, as in
      * TargetCollapseService) until every tier clears the minimum or one is
-     * left; tiers still below the minimum are closed. Without Binance filters
-     * nothing is merged or closed.
+     * left; tiers still below the minimum are closed. Limit tiers above
+     * Binance's sell-price ceiling wait. Without Binance filters nothing is
+     * merged, closed or kept waiting.
      *
      * @param  Collection<int,BotSellOrder>  $sells
      * @param  array<string,string>|null  $filters
+     * @param  array<string,mixed>|null  $ceiling  {@see SellTierPlacementService::ceiling()}
      * @return array<int,array{action:string, merge_into:?int, target_price:string, merged_amount:?string, merged_share:?string, quantity:?string}>
      */
-    private function plan(Collection $sells, string $livePrice, ?array $filters): array
+    private function plan(Collection $sells, string $livePrice, ?array $filters, ?array $ceiling = null): array
     {
         $plan = [];
         foreach ($sells->groupBy('bot_buy_execution_id') as $group) {
@@ -514,7 +565,12 @@ class BotSellMigrationService
                 $eval      = $this->evaluate($t, $livePrice, $filters);
                 $wasMerged = in_array($t['id'], $absorbed, true);
                 $plan[$t['id']] = [
-                    'action'        => $eval['below_min'] ? 'close' : ($eval['hit'] ? 'market' : 'limit'),
+                    'action'        => match (true) {
+                        $eval['below_min'] => 'close',
+                        $eval['hit']       => 'market',
+                        $this->placement->exceedsCeiling($t['target_price'], $ceiling) => 'wait',
+                        default            => 'limit',
+                    },
                     'merge_into'    => null,
                     'target_price'  => $t['target_price'],
                     'merged_amount' => $wasMerged ? $t['amount'] : null,
@@ -745,50 +801,6 @@ class BotSellMigrationService
             'quantity' => $quantity,
             'value'    => bcmul($amount, $livePrice, self::SCALE),
             'sellable' => $filters !== null && ! $this->isBelowMin($quantity, $livePrice, 'MARKET', $filters),
-        ];
-    }
-
-    /**
-     * Binance's PERCENT_PRICE(_BY_SIDE) ceiling for SELL limit orders:
-     * price ≤ weighted average of the last avgPriceMins minutes × askMultiplierUp.
-     * Falls back to the live price when the average cannot be fetched, so the
-     * result is an estimate either way; the average moves until the run.
-     *
-     * @param  array<string,string>|null  $filters
-     * @return array{multiplier_up:string, multiplier_down:?string, avg_price_mins:?int, reference_price:string, reference:string, max_price:string, max_percent_above:string}|null
-     */
-    private function sellPriceLimit(string $market, string $livePrice, ?array $filters): ?array
-    {
-        $up = $filters['askMultiplierUp'] ?? null;
-        if (! is_numeric($up) || bccomp($up, '0', self::SCALE) <= 0) {
-            return null;
-        }
-
-        $reference = 'avg';
-        try {
-            $refPrice = $this->num(BinanceRequest::averagePrice(BinanceOrderFormatter::normalizeSymbol($market)));
-        } catch (\Throwable $e) {
-            Log::channel('smart-bot')->warning('bot.sell_migration.avg_price_failed', ['market' => $market, 'error' => $e->getMessage()]);
-            $refPrice = '0';
-        }
-        if (bccomp($refPrice, '0', self::SCALE) <= 0) {
-            $reference = 'live';
-            $refPrice  = $livePrice;
-        }
-        if (bccomp($refPrice, '0', self::SCALE) <= 0) {
-            return null;
-        }
-
-        $mins = $filters['avgPriceMins'] ?? null;
-
-        return [
-            'multiplier_up'     => $up,
-            'multiplier_down'   => $filters['askMultiplierDown'] ?? null,
-            'avg_price_mins'    => is_numeric($mins) ? (int) $mins : null,
-            'reference_price'   => $refPrice,
-            'reference'         => $reference,
-            'max_price'         => bcmul($refPrice, $up, self::SCALE),
-            'max_percent_above' => bcmul(bcsub($up, '1', self::SCALE), '100', 2),
         ];
     }
 

@@ -203,7 +203,7 @@ class BotOrderCancelService
         $sellOnExch = (bool) $settings->cancel_sell_on_exchange_enabled;
 
         return DB::transaction(function () use ($order, $perfPct, $sellOnExch, $source, $cancelReason) {
-            [$openSells] = $this->collectOpen($order);
+            [$openSells] = $this->collectOpen($order, lock: true);
 
             $totalFee    = '0';
             $totalRefund = '0';
@@ -338,12 +338,15 @@ class BotOrderCancelService
     /**
      * @return array{0:\Illuminate\Support\Collection<int,BotSellOrder>, 1:string}
      */
-    private function collectOpen(BotOrder $order): array
+    private function collectOpen(BotOrder $order, bool $lock = false): array
     {
+        // Locked while canceling so a WAITING tier cannot be placed on the
+        // exchange (bot:place-waiting-sells) after we read its empty order id.
         $openSells = BotSellOrder::query()
             ->whereIn('bot_buy_execution_id', $order->buyExecutions()->pluck('id'))
             ->where('status', BotSellOrder::STATUS_OPEN)
             ->with(['botBuyExecution', 'botBuyExecution.currency'])
+            ->when($lock, fn ($q) => $q->lockForUpdate())
             ->get();
 
         $remaining = '0';

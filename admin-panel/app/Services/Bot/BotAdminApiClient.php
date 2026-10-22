@@ -83,6 +83,26 @@ class BotAdminApiClient
         return $this->http()->post("/currencies/{$currencyId}/sell-migration");
     }
 
+    public function waitingSellsLastRun(): Response
+    {
+        return $this->http()->timeout(5)->get('/waiting-sells/last-run');
+    }
+
+    public function waitingSellsDetails(int $currencyId): Response
+    {
+        return $this->http()->get("/waiting-sells/currencies/{$currencyId}");
+    }
+
+    public function waitingSellsPlaceCurrency(int $currencyId): Response
+    {
+        return $this->http()->post("/waiting-sells/currencies/{$currencyId}/place");
+    }
+
+    public function waitingSellsPlaceTier(int $sellOrderId): Response
+    {
+        return $this->http()->post("/waiting-sells/{$sellOrderId}/place");
+    }
+
     /**
      * @return array<string, string>
      */

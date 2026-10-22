@@ -112,6 +112,7 @@ class BotSellMigration extends Model
             'completed_count' => (int) $this->completed_count,
             'merged_count'    => (int) $this->merged_count,
             'closed_count'    => (int) $this->closed_count,
+            'waiting_count'   => (int) $this->waiting_count,
             'failed_count'    => (int) $this->failed_count,
             'required_amount' => (string) $this->required_amount,
             'details'         => $this->details,

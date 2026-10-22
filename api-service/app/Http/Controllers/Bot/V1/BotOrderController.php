@@ -89,7 +89,7 @@ class BotOrderController extends Controller
      *   data: {
      *     auto_trade_enabled, has_order, order_id, order_status, triggered_by,
      *     created_at, total, in_flight, retrying, bought, closed, skipped, failed,
-     *     sells_open, sells_pending, completed
+     *     sells_open, sells_waiting (OPEN tiers not yet on the exchange), sells_pending, completed
      *   }
      */
     public function activationStatus(): JsonResponse
@@ -118,6 +118,7 @@ class BotOrderController extends Controller
                     'skipped'            => 0,
                     'failed'             => 0,
                     'sells_open'         => 0,
+                    'sells_waiting'      => 0,
                     'sells_pending'      => 0,
                     'completed'          => false,
                 ],
@@ -159,11 +160,15 @@ class BotOrderController extends Controller
             ->whereDoesntHave('sellOrders')
             ->count();
 
-        $sellsOpen = BotSellOrder::query()
+        $openSells = BotSellOrder::query()
             ->join('bot_buy_executions', 'bot_buy_executions.id', '=', 'bot_sell_orders.bot_buy_execution_id')
             ->where('bot_buy_executions.bot_order_id', $order->id)
             ->where('bot_sell_orders.status', BotSellOrder::STATUS_OPEN)
-            ->count();
+            ->selectRaw('COUNT(*) as total')
+            ->selectRaw("SUM(CASE WHEN bot_sell_orders.placement_status = 'WAITING' THEN 1 ELSE 0 END) as waiting")
+            ->first();
+        $sellsOpen    = (int) ($openSells->total ?? 0);
+        $sellsWaiting = (int) ($openSells->waiting ?? 0);
 
         return response()->json([
             'data' => [
@@ -181,6 +186,7 @@ class BotOrderController extends Controller
                 'skipped'            => $skipped,
                 'failed'             => $failed,
                 'sells_open'         => $sellsOpen,
+                'sells_waiting'      => $sellsWaiting,
                 'sells_pending'      => $sellsPending,
                 'completed'          => $total > 0 && $inFlight === 0 && $sellsPending === 0,
             ],

@@ -23,6 +23,7 @@ class BotSellMigration extends Model
         'completed_count',
         'merged_count',
         'closed_count',
+        'waiting_count',
         'failed_count',
         'required_amount',
         'details',

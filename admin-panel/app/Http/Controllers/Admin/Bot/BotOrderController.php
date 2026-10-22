@@ -461,6 +461,23 @@ class BotOrderController extends Controller
         return $this->forwardBotApi(fn () => $this->botApi->sellMigrationStart($currency->id), 'sell_migration');
     }
 
+    /* ── Sell tiers waiting for Binance's price ceiling (BotWaitingSellsController page). ── */
+
+    public function waitingSellsDetails(Currency $currency): JsonResponse
+    {
+        return $this->forwardBotApi(fn () => $this->botApi->waitingSellsDetails($currency->id), 'waiting_sells');
+    }
+
+    public function waitingSellsPlaceCurrency(Currency $currency): JsonResponse
+    {
+        return $this->forwardBotApi(fn () => $this->botApi->waitingSellsPlaceCurrency($currency->id), 'waiting_sells');
+    }
+
+    public function waitingSellsPlaceTier(BotSellOrder $sellOrder): JsonResponse
+    {
+        return $this->forwardBotApi(fn () => $this->botApi->waitingSellsPlaceTier($sellOrder->id), 'waiting_sells');
+    }
+
     /* ── Admin-triggered buy from the user's free bot balance. Sizing, gating
        and the wallet lock all live in api-service's BotBuyOrchestrator; the
        panel only previews and confirms. ── */

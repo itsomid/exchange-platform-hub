@@ -12,6 +12,7 @@ use App\Services\Bot\BotOrderStatusService;
 use App\Services\Bot\ReferenceExchange\ExchangeContract;
 use App\Services\Bot\ReferenceExchange\ExchangePositionCloser;
 use App\Services\Bot\ReferenceExchange\TestLabFailingSellExchange;
+use App\Services\Bot\SellTierPlacementService;
 use App\Services\Bot\TargetCollapseService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -126,13 +127,29 @@ class OpenSellOrdersJob implements ShouldQueue
             $exchange->expectLimitSells(count($result['final_targets']));
         }
 
+        $placement = app()->make(SellTierPlacementService::class, ['exchange' => $exchange]);
+        $ceiling   = $placement->ceilingFor($market);
+
         foreach ($result['final_targets'] as $index => $target) {
             $type     = $target['type'] ?? $defaultMode;
             $trigger  = (string) $target['trigger'];
             $price    = self::resolveAbsolutePrice($type, $trigger, (string) $execution->avg_buy_price);
             $amount   = (string) $target['amount'];
 
+            // Above Binance's sell-price ceiling: keep the tier WAITING instead of
+            // failing the whole buy; bot:place-waiting-sells places it later.
+            if ($placement->exceedsCeiling($price, $ceiling)) {
+                $this->createWaitingTier($execution, $placement, $type, $trigger, $target, sprintf(
+                    'price %s above Binance ceiling %s', $price, $ceiling['place_max_price'],
+                ));
+                continue;
+            }
+
             $res = $exchange->placeLimitSell($market, $amount, $price);
+            if ($res->exchangeOrderId === null && $placement->isPriceRangeRejection($res)) {
+                $this->createWaitingTier($execution, $placement, $type, $trigger, $target, SellTierPlacementService::errorText($res));
+                continue;
+            }
             if ($res->exchangeOrderId === null) {
                 // Best-effort rollback of earlier placements before failing the execution.
                 foreach ($placedIds as $earlierId) {
@@ -187,6 +204,33 @@ class OpenSellOrdersJob implements ShouldQueue
         }
 
     
+    }
+
+    /**
+     * @param array<string,mixed> $target
+     */
+    private function createWaitingTier(
+        BotBuyExecution $execution,
+        SellTierPlacementService $placement,
+        string $type,
+        string $trigger,
+        array $target,
+        string $reason,
+    ): void {
+        $sell = BotSellOrder::create([
+            'bot_buy_execution_id' => $execution->id,
+            'target_type'          => $type,
+            'target_value'         => $trigger,
+            'share_percent'        => $target['share'],
+            'amount_to_sell'       => (string) $target['amount'],
+            'status'               => BotSellOrder::STATUS_OPEN,
+        ] + $placement->waitingAttributes($reason));
+
+        Log::channel('smart-bot')->info('bot.sell.open.waiting', [
+            'execution_id'  => $execution->id,
+            'sell_order_id' => $sell->id,
+            'reason'        => $reason,
+        ]);
     }
 
     public static function resolveAbsolutePrice(string $type, string $trigger, string $avgBuyPrice): string

@@ -56,6 +56,7 @@ use App\Http\Controllers\Admin\Bot\BotSignalController;use App\Http\Controllers\
 use App\Http\Controllers\Admin\Bot\BotCurrencyController;
 use App\Http\Controllers\Admin\Bot\BotReportController;
 use App\Http\Controllers\Admin\Bot\BotSellMigrationController;
+use App\Http\Controllers\Admin\Bot\BotWaitingSellsController;
 use App\Http\Controllers\Admin\Bot\BotTestLabController;
 use App\Http\Controllers\Admin\Bot\BotWalletTransferController;
 
@@ -481,6 +482,13 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::get('/sell-migration/runs/{migration}/report', [BotSellMigrationController::class, 'report'])->name('sell-migration.report');
         Route::post('/sell-migration/{currency}/preview', [BotOrderController::class, 'sellMigrationPreview'])->name('sell-migration.preview');
         Route::post('/sell-migration/{currency}/start', [BotOrderController::class, 'sellMigrationStart'])->name('sell-migration.start');
+
+        // Sell tiers waiting until Binance's price ceiling allows placing them
+        Route::get('/waiting-sells', [BotWaitingSellsController::class, 'index'])->name('waiting-sells.index');
+        Route::post('/waiting-sells/auto-place', [BotWaitingSellsController::class, 'toggleAutoPlace'])->name('waiting-sells.auto-place');
+        Route::get('/waiting-sells/currencies/{currency}', [BotOrderController::class, 'waitingSellsDetails'])->name('waiting-sells.details');
+        Route::post('/waiting-sells/currencies/{currency}/place', [BotOrderController::class, 'waitingSellsPlaceCurrency'])->name('waiting-sells.place-currency');
+        Route::post('/waiting-sells/tiers/{sellOrder}/place', [BotOrderController::class, 'waitingSellsPlaceTier'])->name('waiting-sells.place-tier');
 
         // Wallet Transfers (deposits/withdrawals between main wallet and bot wallet)
         Route::get('/wallet-transfers', [BotWalletTransferController::class, 'index'])->name('wallet-transfer.index');

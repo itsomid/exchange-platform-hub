@@ -27,3 +27,9 @@ Schedule::command('bot:scan-buy-triggers')
     // 5 min is far more than one scan+dispatch needs.
     ->withoutOverlapping(5)
     ->appendOutputTo('/proc/1/fd/1');
+
+// The command itself checks bot_global_settings.waiting_sells_auto_place.
+Schedule::command('bot:place-waiting-sells')
+    ->everyMinute()
+    ->withoutOverlapping(5)
+    ->appendOutputTo('/proc/1/fd/1');

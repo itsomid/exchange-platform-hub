@@ -209,7 +209,7 @@ it('refuses to start when the free Binance balance is below what the tiers need'
         ->and($this->fake->limitSells)->toBeEmpty();
 });
 
-it('flags limit tiers priced above Binance\'s sell ceiling in the preview', function () {
+it('keeps limit tiers priced above Binance\'s sell ceiling waiting instead of placing them', function () {
     $avax = smCurrency();
     [$near, $far] = smPosition($avax, '10', [
         ['20', '5', BotSellOrder::STATUS_OPEN],   // 12 USDT, under 10 × 5
@@ -225,11 +225,45 @@ it('flags limit tiers priced above Binance\'s sell ceiling in the preview', func
         ->and($preview['price_limit']['reference'])->toBe('avg')
         ->and((float) $preview['price_limit']['max_price'])->toBe(50.0)
         ->and($preview['price_limit']['max_percent_above'])->toBe('400.00')
-        ->and($preview['totals']['price_limit_tiers'])->toBe(1)
+        ->and($preview['totals']['wait_tiers'])->toBe(1)
+        ->and($byId[$near->id]['action'])->toBe('limit')
+        ->and($byId[$far->id]['action'])->toBe('wait')
         ->and($byId[$near->id]['price_limit_exceeded'])->toBeFalse()
         ->and($byId[$far->id]['price_limit_exceeded'])->toBeTrue()
         ->and($byId[$far->id]['over_max_percent'])->toBe('120.00')
         ->and($byId[$far->id]['above_live_percent'])->toBe('947.61');
+
+    $migration = app(BotSellMigrationService::class)->start($avax, 1, 'admin@test')->fresh();
+
+    expect($migration->placed_count)->toBe(1)
+        ->and($migration->waiting_count)->toBe(1)
+        ->and($migration->failed_count)->toBe(0)
+        ->and($this->fake->limitSells)->toHaveCount(1);
+
+    $far->refresh();
+    expect($far->status)->toBe(BotSellOrder::STATUS_OPEN)
+        ->and($far->placement_status)->toBe(BotSellOrder::PLACEMENT_WAITING)
+        ->and($far->exchange)->toBe('fake')
+        ->and($far->exchange_order_id)->toBeNull()
+        ->and($far->previous_exchange_order_id)->toBe('17914920817113506')
+        ->and($far->migrated_at)->not->toBeNull();
+});
+
+it('marks a tier waiting when Binance rejects it for PERCENT_PRICE during the run', function () {
+    $avax = smCurrency();
+    [$tier] = smPosition($avax, '10', [['10', '5', BotSellOrder::STATUS_OPEN]]);
+    Cache::put('market:price:AVAXUSDT', '10.5');
+    smFakeBinance('AVAX', '20');
+    $this->fake->failNextLimitSell = true;
+    $this->fake->limitSellError = ['-1013', 'Filter failure: PERCENT_PRICE_BY_SIDE'];
+
+    $migration = app(BotSellMigrationService::class)->start($avax, 1, 'admin@test')->fresh();
+
+    expect($migration->waiting_count)->toBe(1)
+        ->and($migration->failed_count)->toBe(0)
+        ->and($tier->fresh()->placement_status)->toBe(BotSellOrder::PLACEMENT_WAITING)
+        ->and($tier->fresh()->exchange)->toBe('fake')
+        ->and($tier->fresh()->last_placement_error)->toContain('PERCENT_PRICE');
 });
 
 it('merges a below-minimum tier into the lower-target sibling of the same buy', function () {

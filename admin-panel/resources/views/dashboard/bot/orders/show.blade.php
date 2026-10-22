@@ -610,6 +610,11 @@
                                                             @else
                                                                 <span
                                                                     class="badge {{ $sellBadge }}">{{ $sell->status }}</span>
+                                                                @if ($sell->isWaitingPlacement())
+                                                                    <span class="badge bg-label-dark d-block mt-1">در انتظار ثبت
+                                                                        <i class="fas fa-info-circle ms-1"
+                                                                            title="قیمت این پله بالاتر از سقف قیمت فروش Binance است و هنوز سفارشی در صرافی ندارد. وقتی قیمت بازار به اندازه کافی بالا بیاید، خودکار ثبت می‌شود.{{ $sell->last_placement_error ? ' آخرین خطا: ' . $sell->last_placement_error : '' }}"></i></span>
+                                                                @endif
                                                             @endif
                                                         </td>
                                                         <td class="text-center">

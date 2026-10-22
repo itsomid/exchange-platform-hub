@@ -39,6 +39,9 @@ class FakeExchange implements ExchangeContract
     public string $marketSellAvgPrice    = '1';
     public ?int   $failLimitSellAt       = null;
     private int   $limitSellCalls        = 0;
+    /** Error returned by failing limit sells: [code, message]. */
+    public array  $limitSellError        = ['TEST', 'forced failure'];
+    public string $exchangeName          = 'fake';
 
     /** @var array<int,array<string,mixed>> */
     public array $marketSells = [];
@@ -70,7 +73,7 @@ class FakeExchange implements ExchangeContract
             $this->failNextLimitSell = false;
         }
         if ($failThis) {
-            return new ExchangeOrderResult(null, ExchangeOrderStatus::FAILED, errorCode: 'TEST', errorMessage: 'forced failure');
+            return new ExchangeOrderResult(null, ExchangeOrderStatus::FAILED, errorCode: $this->limitSellError[0], errorMessage: $this->limitSellError[1]);
         }
         return new ExchangeOrderResult(
             exchangeOrderId: (string) $this->nextOrderId++,
@@ -109,7 +112,7 @@ class FakeExchange implements ExchangeContract
 
     public function name(): string
     {
-        return 'fake';
+        return $this->exchangeName;
     }
 
     public function setStatus(string $exchangeOrderId, ExchangeOrderResult $result): void

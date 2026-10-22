@@ -447,6 +447,12 @@
                             <div>انتقال پله‌های فروش</div>
                         </a>
                     </li>
+                    <li class="menu-item @if (request()->is('admin/auto-trade/waiting-sells*')) active @endif">
+                        <a href="{{ route('admin.bot.waiting-sells.index') }}" class="menu-link">
+                            <i class="menu-icon fa-light fa-hourglass-half fa-sm"></i>
+                            <div>پله‌های در انتظار ثبت</div>
+                        </a>
+                    </li>
                     <li class="menu-item @if (request()->is('admin/auto-trade/wallet-transfers*')) active @endif">
                         <a href="{{ route('admin.bot.wallet-transfer.index') }}" class="menu-link">
                             <i class="menu-icon fa-light fa-right-left fa-sm"></i>

@@ -24,6 +24,9 @@ class BotSellOrder extends Model
     public const EXCHANGE_COINEX  = 'coinex';
     public const EXCHANGE_BINANCE = 'binance';
 
+    public const PLACEMENT_PLACED  = 'PLACED';
+    public const PLACEMENT_WAITING = 'WAITING';
+
     protected $fillable = [
         'bot_buy_execution_id',
         'exchange_order_id',
@@ -39,6 +42,11 @@ class BotSellOrder extends Model
         'bot_currency_cancellation_id',
         'filled_at',
         'migrated_at',
+        'placement_status',
+        'waiting_since',
+        'placement_attempts',
+        'last_placement_error',
+        'last_placement_check_at',
     ];
 
     protected function casts(): array
@@ -50,7 +58,15 @@ class BotSellOrder extends Model
             'sell_ref_exchange_fee' => 'decimal:8',
             'filled_at'             => 'datetime',
             'migrated_at'           => 'datetime',
+            'waiting_since'         => 'datetime',
+            'placement_attempts'    => 'integer',
+            'last_placement_check_at' => 'datetime',
         ];
+    }
+
+    public function isWaitingPlacement(): bool
+    {
+        return $this->status === 'OPEN' && $this->placement_status === self::PLACEMENT_WAITING;
     }
 
     public function buyExecution(): BelongsTo
