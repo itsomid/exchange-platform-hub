@@ -288,6 +288,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" id="waitingDetailsBody"></div>
+                <div class="waiting-tiers-hbar d-none" id="waitingTiersHbar"><div></div></div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">بستن</button>
                     <button type="button" class="btn btn-primary" id="waitingDetailsPlace">
@@ -319,6 +320,39 @@
         .waiting-tiers-scroll {
             overflow-x: auto;
             max-width: 100%;
+            scrollbar-width: none;
+        }
+
+        .waiting-tiers-scroll::-webkit-scrollbar {
+            display: none;
+            height: 0;
+        }
+
+        .waiting-tiers-hbar {
+            overflow-x: scroll;
+            overflow-y: hidden;
+            margin: 0 var(--bs-modal-padding, 1.5rem) .25rem;
+            scrollbar-width: auto;
+            scrollbar-color: #696cff #eceef1;
+        }
+
+        .waiting-tiers-hbar::-webkit-scrollbar {
+            display: block;
+            height: 10px;
+        }
+
+        .waiting-tiers-hbar::-webkit-scrollbar-track {
+            background: #eceef1;
+            border-radius: 8px;
+        }
+
+        .waiting-tiers-hbar::-webkit-scrollbar-thumb {
+            background: #696cff;
+            border-radius: 8px;
+        }
+
+        .waiting-tiers-hbar > div {
+            height: 1px;
         }
 
         .waiting-tiers-table {
@@ -467,8 +501,50 @@
             var bodyEl = document.getElementById('waitingDetailsBody');
             var titleEl = document.getElementById('waitingDetailsTitle');
             var placeAllBtn = document.getElementById('waitingDetailsPlace');
+            var tiersHbar = document.getElementById('waitingTiersHbar');
+            var tiersHbarInner = tiersHbar.firstElementChild;
+            var tiersHbarLock = false;
             var active = null;
             var changed = false;
+
+            function tierScroller() {
+                return bodyEl.querySelector('.waiting-tiers-scroll');
+            }
+
+            function layoutTierHbar() {
+                var scroller = tierScroller();
+                if (!scroller) {
+                    tiersHbar.classList.add('d-none');
+                    return;
+                }
+                tiersHbar.classList.remove('d-none');
+                var overflow = scroller.scrollWidth - scroller.clientWidth;
+                if (overflow <= 1) {
+                    tiersHbar.classList.add('d-none');
+                    return;
+                }
+                tiersHbarInner.style.width = (tiersHbar.clientWidth + overflow) + 'px';
+                tiersHbarLock = true;
+                tiersHbar.scrollLeft = scroller.scrollLeft;
+                tiersHbarLock = false;
+            }
+
+            tiersHbar.addEventListener('scroll', function() {
+                var scroller = tierScroller();
+                if (!scroller || tiersHbarLock) return;
+                tiersHbarLock = true;
+                scroller.scrollLeft = tiersHbar.scrollLeft;
+                tiersHbarLock = false;
+            });
+
+            bodyEl.addEventListener('scroll', function(e) {
+                if (tiersHbarLock || !e.target.classList || !e.target.classList.contains('waiting-tiers-scroll')) return;
+                tiersHbarLock = true;
+                tiersHbar.scrollLeft = e.target.scrollLeft;
+                tiersHbarLock = false;
+            }, true);
+
+            window.addEventListener('resize', layoutTierHbar);
 
             function renderDetails(d) {
                 var sym = esc(d.currency.symbol);
@@ -582,6 +658,7 @@
                 if (!tiers.length) {
                     html += '<div class="text-center text-muted py-4">پله‌ای در انتظار ثبت نیست.</div>';
                     bodyEl.innerHTML = html;
+                    layoutTierHbar();
                     return;
                 }
 
@@ -705,6 +782,7 @@
                 html += '<div class="small text-muted mt-2">تعداد سطرها: <span class="font-number">' + tiers
                     .length + '</span> پله</div>';
                 bodyEl.innerHTML = html;
+                layoutTierHbar();
 
                 var reasonFilter = bodyEl.querySelector('#tierReasonFilter');
                 reasonFilter.querySelectorAll('button').forEach(function(btn) {
@@ -743,17 +821,20 @@
             }
 
             function load() {
+                tiersHbar.classList.add('d-none');
                 bodyEl.innerHTML =
                     '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
                 request('GET', active.detailsUrl).then(function(d) {
                     if (!d.ok) {
                         bodyEl.innerHTML = '<div class="alert alert-danger mb-0">' + esc(d.error ||
                             'خطا در دریافت جزئیات.') + '</div>';
+                        layoutTierHbar();
                         return;
                     }
                     renderDetails(d);
                 }).catch(function() {
                     bodyEl.innerHTML = '<div class="alert alert-danger mb-0">خطا در ارتباط با سرور.</div>';
+                    layoutTierHbar();
                 });
             }
 
@@ -774,6 +855,7 @@
                 if (active) placeCurrency(active.placeUrl, active.symbol, placeAllBtn);
             });
 
+            modalEl.addEventListener('shown.bs.modal', layoutTierHbar);
             modalEl.addEventListener('hidden.bs.modal', function() {
                 if (changed) window.location.reload();
             });
