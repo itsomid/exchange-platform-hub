@@ -246,18 +246,20 @@
                                     @endif
                                     <div><small class="text-muted">{{ $row->attempts }} تلاش</small></div>
                                 </td>
-                                <td class="pe-4 text-center text-nowrap">
-                                    <button type="button" class="btn btn-sm btn-outline-primary js-waiting-details"
-                                        data-symbol="{{ $row->symbol }}"
-                                        data-details-url="{{ route('admin.bot.waiting-sells.details', $row->currency->id) }}"
-                                        data-place-url="{{ route('admin.bot.waiting-sells.place-currency', $row->currency->id) }}">
-                                        <i class="fa-light fa-list me-1"></i> جزئیات
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-primary js-waiting-place-currency"
-                                        data-symbol="{{ $row->symbol }}"
-                                        data-place-url="{{ route('admin.bot.waiting-sells.place-currency', $row->currency->id) }}">
-                                        <i class="fa-light fa-paper-plane me-1"></i> بررسی و ثبت الان
-                                    </button>
+                                <td class="pe-4 text-center">
+                                    <div class="waiting-row-actions">
+                                        <button type="button" class="btn btn-sm btn-outline-primary js-waiting-details"
+                                            data-symbol="{{ $row->symbol }}"
+                                            data-details-url="{{ route('admin.bot.waiting-sells.details', $row->currency->id) }}"
+                                            data-place-url="{{ route('admin.bot.waiting-sells.place-currency', $row->currency->id) }}">
+                                            <i class="fa-light fa-list me-1"></i> جزئیات
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-primary js-waiting-place-currency"
+                                            data-symbol="{{ $row->symbol }}"
+                                            data-place-url="{{ route('admin.bot.waiting-sells.place-currency', $row->currency->id) }}">
+                                            <i class="fa-light fa-paper-plane me-1"></i> بررسی و ثبت الان
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -298,6 +300,46 @@
 @endsection
 
 @push('scripts')
+    <style>
+        .waiting-row-actions {
+            display: grid;
+            gap: .35rem;
+            width: 11.75rem;
+            margin-inline: auto;
+        }
+
+        .waiting-row-actions .btn {
+            width: 100%;
+        }
+
+        #waitingDetailsModal .modal-body {
+            overflow-x: hidden;
+        }
+
+        .waiting-tiers-scroll {
+            overflow-x: auto;
+            max-width: 100%;
+        }
+
+        .waiting-tiers-table {
+            width: max-content;
+            min-width: 100%;
+            font-size: .8125rem;
+        }
+
+        .waiting-tiers-table > :not(caption) > * > * {
+            padding: .3rem .5rem;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+
+        .waiting-tiers-table .col-forecast {
+            white-space: normal;
+            min-width: 13rem;
+            max-width: 16rem;
+            line-height: 1.45;
+        }
+    </style>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var csrf = '{{ csrf_token() }}';
@@ -598,7 +640,7 @@
                     '</div></div>';
 
                 html +=
-                    '<div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0">' +
+                    '<div class="waiting-tiers-scroll"><table class="table table-sm table-bordered align-middle mb-0 waiting-tiers-table">' +
                     '<thead class="table-light"><tr><th>پله</th><th>کاربر / سفارش</th><th>تارگت</th><th>قیمت فروش</th>' +
                     '<th>مقدار</th><th>دلیل انتظار</th><th>پیش‌بینی ثبت</th><th>در انتظار از / تلاش‌ها</th><th>عملیات</th></tr></thead><tbody>';
                 tiers.forEach(function(r) {
@@ -648,7 +690,7 @@
                         ' نسبت به بازار</small></div></td>' +
                         '<td class="font-number">' + fmt(r.amount) + '</td>' +
                         '<td>' + reason + '</td>' +
-                        '<td>' + forecast + '</td>' +
+                        '<td class="col-forecast">' + forecast + '</td>' +
                         '<td><small>' + when(r.waiting_since) + '</small><div><small class="text-muted">' +
                         r.placement_attempts +
                         ' تلاش</small>' + (r.last_placement_error ?
