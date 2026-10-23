@@ -9,8 +9,9 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Places WAITING sell tiers (priced above Binance's PERCENT_PRICE_BY_SIDE
- * ceiling when created) once the market price brings them in range, or
+ * Places WAITING sell tiers once they fit on Binance: their price is under
+ * the PERCENT_PRICE_BY_SIDE ceiling and an open-order slot is free (rotating
+ * out far bot orders when the MAX_NUM_ORDERS limit is used up), or
  * market-sells them when the price already passed the target.
  * Runs every minute via routes/console.php while
  * bot_global_settings.waiting_sells_auto_place is on.
@@ -19,7 +20,7 @@ class PlaceWaitingSellsCommand extends Command
 {
     protected $signature = 'bot:place-waiting-sells {--force : Run even when auto placement is turned off}';
 
-    protected $description = 'Place WAITING bot sell tiers on the reference exchange once their price is in range';
+    protected $description = 'Place WAITING bot sell tiers on the reference exchange once they fit';
 
     public function handle(WaitingSellTiersService $service): int
     {
@@ -32,9 +33,11 @@ class PlaceWaitingSellsCommand extends Command
             return self::SUCCESS;
         }
 
-        $budget = max(1, (int) config('smart-bot.waiting.max_per_run', 200));
-        $totals = ['currencies' => 0, 'waiting' => 0, 'placed' => 0, 'completed' => 0, 'rejected' => 0, 'still_waiting' => 0];
-        $coins  = [];
+        $budget    = max(1, (int) config('smart-bot.waiting.max_per_run', 200));
+        $rotations = max(0, (int) config('smart-bot.waiting.rotation_max_per_run', 30));
+        $keys      = ['waiting', 'placed', 'completed', 'rejected', 'rotated', 'still_waiting', 'price_waiting', 'slot_waiting'];
+        $totals    = ['currencies' => 0] + array_fill_keys($keys, 0);
+        $coins     = [];
 
         foreach ($service->currencyIds() as $currencyId) {
             $currency = Currency::find($currencyId);
@@ -43,19 +46,20 @@ class PlaceWaitingSellsCommand extends Command
             }
 
             try {
-                $summary = $service->placeCurrency($currency, $budget);
+                $summary = $service->placeCurrency($currency, $budget, $rotations);
             } catch (\Throwable $e) {
                 Log::channel('smart-bot')->error('bot.waiting.currency_exception', [
                     'currency' => $currency->symbol,
                     'error'    => $e->getMessage(),
                 ]);
-                $coins[] = ['symbol' => strtoupper((string) $currency->symbol), 'error' => $e->getMessage()];
+                $coins[] = ['currency_id' => $currency->id, 'symbol' => strtoupper((string) $currency->symbol), 'error' => $e->getMessage()];
                 continue;
             }
 
-            $budget -= $summary['attempts'];
+            $budget    -= $summary['attempts'];
+            $rotations  = max(0, $rotations - $summary['rotated']);
             $totals['currencies']++;
-            foreach (['waiting', 'placed', 'completed', 'rejected', 'still_waiting'] as $key) {
+            foreach ($keys as $key) {
                 $totals[$key] += $summary[$key];
             }
             unset($summary['results']);
@@ -75,11 +79,12 @@ class PlaceWaitingSellsCommand extends Command
         ]);
 
         $line = sprintf(
-            'bot:place-waiting-sells currencies=%d waiting=%d placed=%d completed=%d rejected=%d still_waiting=%d',
-            $totals['currencies'], $totals['waiting'], $totals['placed'], $totals['completed'], $totals['rejected'], $totals['still_waiting'],
+            'bot:place-waiting-sells currencies=%d waiting=%d placed=%d completed=%d rejected=%d rotated=%d still_waiting=%d price_waiting=%d slot_waiting=%d',
+            $totals['currencies'], $totals['waiting'], $totals['placed'], $totals['completed'], $totals['rejected'],
+            $totals['rotated'], $totals['still_waiting'], $totals['price_waiting'], $totals['slot_waiting'],
         );
         $this->info($line);
-        if ($totals['placed'] + $totals['completed'] + $totals['rejected'] > 0) {
+        if ($totals['placed'] + $totals['completed'] + $totals['rejected'] + $totals['rotated'] > 0) {
             Log::channel('smart-bot')->info('bot.waiting.run', $totals);
         }
 

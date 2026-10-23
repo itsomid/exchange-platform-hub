@@ -52,11 +52,11 @@ class BinanceRequest
     }
 
     /**
-     * @return array<string, string> LOT_SIZE / MARKET_LOT_SIZE / PRICE_FILTER / NOTIONAL / PERCENT_PRICE(_BY_SIDE) sell-side values for the symbol
+     * @return array<string, string> LOT_SIZE / MARKET_LOT_SIZE / PRICE_FILTER / NOTIONAL / PERCENT_PRICE(_BY_SIDE) / MAX_NUM_ORDERS sell-side values for the symbol
      */
     public static function symbolFilters(string $symbol): array
     {
-        return Cache::remember('binance:symbol-filters:v2:' . $symbol, now()->addHour(), function () use ($symbol) {
+        return Cache::remember('binance:symbol-filters:v3:' . $symbol, now()->addHour(), function () use ($symbol) {
             $response = Http::timeout(10)->get(config('exchanges.binance.base_url') . '/api/v3/exchangeInfo', [
                 'symbol' => $symbol,
             ]);
@@ -94,6 +94,9 @@ class BinanceRequest
                         $filters['askMultiplierDown'] ??= (string) $filter['multiplierDown'];
                         $filters['avgPriceMins'] ??= (string) ($filter['avgPriceMins'] ?? '');
                         break;
+                    case 'MAX_NUM_ORDERS':
+                        $filters['maxNumOrders'] = (string) $filter['maxNumOrders'];
+                        break;
                 }
             }
 
@@ -115,5 +118,22 @@ class BinanceRequest
         }
 
         return (string) $response->json('price');
+    }
+
+    /**
+     * Every open order of the (shared) account on the symbol.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public static function openOrders(string $symbol): array
+    {
+        $response = self::sendRequest('GET', '/api/v3/openOrders', ['symbol' => $symbol]);
+        $body     = $response->json();
+
+        if (! $response->successful() || ! is_array($body) || isset($body['code'])) {
+            throw new \RuntimeException("Binance openOrders failed for {$symbol}: " . $response->body());
+        }
+
+        return array_values($body);
     }
 }

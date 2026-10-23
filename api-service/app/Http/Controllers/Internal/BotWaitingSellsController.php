@@ -41,7 +41,11 @@ class BotWaitingSellsController extends Controller
             return response()->json(['ok' => false, 'error' => 'ارز یافت نشد.'], 404);
         }
 
-        $summary = $this->service->placeCurrency($currency, max(1, (int) config('smart-bot.waiting.max_per_run', 200)));
+        $summary = $this->service->placeCurrency(
+            $currency,
+            max(1, (int) config('smart-bot.waiting.max_per_run', 200)),
+            max(0, (int) config('smart-bot.waiting.rotation_max_per_run', 30)),
+        );
         if ($summary['skipped'] !== null) {
             return response()->json(['ok' => false, 'error' => $summary['skipped']], 409);
         }
@@ -49,13 +53,14 @@ class BotWaitingSellsController extends Controller
         Log::channel('smart-bot')->info('bot.waiting.admin_place_currency', [
             'currency' => $summary['symbol'],
             'admin_id' => $request->header('X-Admin-Id'),
-        ] + array_intersect_key($summary, array_flip(['waiting', 'placed', 'completed', 'rejected', 'still_waiting'])));
+        ] + array_intersect_key($summary, array_flip(['waiting', 'placed', 'completed', 'rejected', 'rotated', 'still_waiting'])));
 
         return response()->json([
             'ok'      => true,
             'message' => sprintf(
-                '%s: %d پله ثبت شد، %d پله با Market فروخته شد، %d پله رد شد و %d پله همچنان در انتظار است.',
-                $summary['symbol'], $summary['placed'], $summary['completed'], $summary['rejected'], $summary['still_waiting'],
+                '%s: %d پله ثبت شد، %d پله با Market فروخته شد، %d جابه‌جایی انجام شد، %d پله رد شد و %d پله همچنان در انتظار است (%d به‌خاطر سقف قیمت، %d به‌خاطر سقف تعداد سفارش).',
+                $summary['symbol'], $summary['placed'], $summary['completed'], $summary['rotated'], $summary['rejected'],
+                $summary['still_waiting'], $summary['price_waiting'], $summary['slot_waiting'],
             ),
             'summary' => $summary,
         ]);

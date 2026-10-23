@@ -183,6 +183,13 @@
                             line('مبلغ برگشتی', fmt(r.refund, 4) + ' USDT') +
                             line('سود خالص', fmt(r.net_pnl, 4) + ' USDT');
                     case 'waiting':
+                        if (isSlotWait(r)) {
+                            return '<div class="fw-semibold mb-1">سقف تعداد سفارش باز Binance پر بود؛ ثبت نشد و «در انتظار ثبت» ماند</div>' +
+                                line('قیمت فروش', fmt(r.target_price) + ' USDT') + abovePercent(r) +
+                                line('مقدار', fmt(r.amount)) +
+                                '<small class="text-muted">با خالی شدن جا (پر شدن سفارش‌ها) یا جابه‌جایی دورترین سفارش‌های ربات، خودکار در Binance ثبت می‌شود.</small>' +
+                                (r.error ? '<div><small class="text-muted" dir="ltr">' + esc(r.error) + '</small></div>' : '');
+                        }
                         return '<div class="fw-semibold mb-1">قیمتش بالاتر از سقف Binance بود؛ ثبت نشد و «در انتظار ثبت» ماند</div>' +
                             line('قیمت فروش', fmt(r.target_price) + ' USDT') + abovePercent(r) +
                             line('مقدار', fmt(r.amount)) +
@@ -201,6 +208,10 @@
                 return '—';
             }
 
+            function isSlotWait(r) {
+                return r.wait_reason === 'order_limit' || (r.error || '').indexOf('MAX_NUM_ORDERS') !== -1;
+            }
+
             function target(r) {
                 if (r.target_type === 'percent') {
                     return fmt(r.target_value, 4) + '٪ <small class="text-muted">(خرید ' + fmt(r.avg_buy_price) +
@@ -215,7 +226,8 @@
                 return '<span class="badge ' + (statuses[c.status] || 'bg-label-secondary') + '">' + esc(c.status) +
                     '</span>' +
                     (c.status === 'OPEN' && c.placement_status === 'WAITING' ?
-                        ' <span class="badge bg-label-dark">در انتظار ثبت</span>' : '') +
+                        ' <span class="badge bg-label-dark">در انتظار ثبت' + (c.waiting_reason === 'order_limit' ?
+                            ' (سقف تعداد)' : ' (سقف قیمت)') + '</span>' : '') +
                     '<div><small class="text-muted">' + esc(c.exchange) + '</small></div>' +
                     (c.exchange_order_id ? '<div><small class="font-number">' + esc(c.exchange_order_id) +
                         '</small></div>' : '');
@@ -307,7 +319,7 @@
                 }
 
                 var priceFailed = rows.filter(function(r) {
-                    return (r.outcome === 'waiting' || (r.outcome === 'failed' && (r.error || '').indexOf('PERCENT_PRICE') !== -1)) &&
+                    return ((r.outcome === 'waiting' && !isSlotWait(r)) || (r.outcome === 'failed' && (r.error || '').indexOf('PERCENT_PRICE') !== -1)) &&
                         r.above_live_percent !== null;
                 }).map(function(r) {
                     return parseFloat(r.above_live_percent);

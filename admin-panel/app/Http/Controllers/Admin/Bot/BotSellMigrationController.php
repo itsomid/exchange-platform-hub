@@ -164,6 +164,7 @@ class BotSellMigrationController extends Controller
                 'current'       => $sell ? [
                     'status'            => $sell->status,
                     'placement_status'  => $sell->placement_status,
+                    'waiting_reason'    => $sell->waiting_reason,
                     'exchange'          => $sell->exchange,
                     'exchange_order_id' => $sell->exchange_order_id !== null ? (string) $sell->exchange_order_id : null,
                     'amount_to_sell'    => (string) $sell->amount_to_sell,
@@ -176,7 +177,9 @@ class BotSellMigrationController extends Controller
         $summary = $migration->toAdminArray();
         unset($summary['details']);
 
-        $hasPriceRangeFailures = $results->contains(fn (array $r) => ($r['outcome'] ?? null) === 'waiting'
+        $hasPriceRangeFailures = $results->contains(fn (array $r) => (($r['outcome'] ?? null) === 'waiting'
+                && ($r['wait_reason'] ?? null) !== BotSellOrder::WAITING_ORDER_LIMIT
+                && ! str_contains((string) ($r['error'] ?? ''), 'MAX_NUM_ORDERS'))
             || str_contains((string) ($r['error'] ?? ''), 'PERCENT_PRICE'));
 
         return response()->json([

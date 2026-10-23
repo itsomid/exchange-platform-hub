@@ -13,9 +13,10 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 /**
- * "Waiting sell tiers" page: OPEN tiers kept off Binance because their price
- * is above its PERCENT_PRICE_BY_SIDE ceiling, grouped per coin. Details and
- * the "place now" actions are proxied to api-service
+ * "Waiting sell tiers" page: OPEN tiers kept off Binance, grouped per coin and
+ * split by why they wait: price above its PERCENT_PRICE_BY_SIDE ceiling, or
+ * the symbol's MAX_NUM_ORDERS open-order limit used up. Details (with the
+ * placement forecast) and the "place now" actions are proxied to api-service
  * (BotOrderController::waitingSells*); api-service's bot:place-waiting-sells
  * places them automatically while waiting_sells_auto_place is on.
  */
@@ -36,6 +37,7 @@ class BotWaitingSellsController extends Controller
                 'bot_sell_orders.target_type',
                 'bot_sell_orders.target_value',
                 'bot_sell_orders.amount_to_sell',
+                'bot_sell_orders.waiting_reason',
                 'bot_sell_orders.waiting_since',
                 'bot_sell_orders.last_placement_check_at',
                 'bot_sell_orders.last_placement_error',
@@ -43,10 +45,25 @@ class BotWaitingSellsController extends Controller
             ])
             ->groupBy('currency_id');
 
+        $placedCounts = BotSellOrder::query()
+            ->join('bot_buy_executions', 'bot_buy_executions.id', '=', 'bot_sell_orders.bot_buy_execution_id')
+            ->where('bot_sell_orders.status', 'OPEN')
+            ->where('bot_sell_orders.placement_status', BotSellOrder::PLACEMENT_PLACED)
+            ->where('bot_sell_orders.exchange', BotSellOrder::EXCHANGE_BINANCE)
+            ->whereNotNull('bot_sell_orders.exchange_order_id')
+            ->whereIn('bot_buy_executions.currency_id', $tiers->keys())
+            ->selectRaw('bot_buy_executions.currency_id, COUNT(*) as aggregate')
+            ->groupBy('bot_buy_executions.currency_id')
+            ->pluck('aggregate', 'currency_id');
+
+        $autoPlace = (bool) BotGlobalSettings::current()->waiting_sells_auto_place;
+        $lastRun   = $this->lastRun($botApi);
+        $runCoins  = collect($lastRun['currencies'] ?? [])->keyBy('currency_id');
+
         $rows = Currency::query()
             ->whereIn('id', $tiers->keys())
             ->get()
-            ->map(function (Currency $currency) use ($tiers) {
+            ->map(function (Currency $currency) use ($tiers, $placedCounts, $runCoins) {
                 $symbol  = strtoupper((string) $currency->symbol);
                 $waiting = $tiers[$currency->id];
                 $price   = (float) (cache("market:price:{$symbol}USDT") ?? 0);
@@ -54,6 +71,8 @@ class BotWaitingSellsController extends Controller
                     ? (float) $t->target_value
                     : (float) $t->avg_buy_price * (1 + (float) $t->target_value / 100));
                 $lowest  = $targets->min();
+                $slot    = $waiting->where('waiting_reason', BotSellOrder::WAITING_ORDER_LIMIT);
+                $byPrice = $waiting->where('waiting_reason', '!=', BotSellOrder::WAITING_ORDER_LIMIT);
 
                 return (object) [
                     'currency'      => $currency,
@@ -61,6 +80,12 @@ class BotWaitingSellsController extends Controller
                     'price'         => $price > 0 ? $price : null,
                     'tiers'         => $waiting->count(),
                     'amount'        => $waiting->sum(fn ($t) => (float) $t->amount_to_sell),
+                    'price_tiers'   => $byPrice->count(),
+                    'price_amount'  => $byPrice->sum(fn ($t) => (float) $t->amount_to_sell),
+                    'slot_tiers'    => $slot->count(),
+                    'slot_amount'   => $slot->sum(fn ($t) => (float) $t->amount_to_sell),
+                    'placed_tiers'  => (int) ($placedCounts[$currency->id] ?? 0),
+                    'slots'         => $runCoins[$currency->id]['slots'] ?? null,
                     'users'         => $waiting->pluck('user_id')->unique()->count(),
                     'orders'        => $waiting->pluck('bot_order_id')->unique()->count(),
                     'lowest_target' => $lowest,
@@ -73,9 +98,6 @@ class BotWaitingSellsController extends Controller
             })
             ->sortByDesc(fn ($r) => $r->amount * ($r->price ?? 0))
             ->values();
-
-        $autoPlace = (bool) BotGlobalSettings::current()->waiting_sells_auto_place;
-        $lastRun   = $this->lastRun($botApi);
 
         return view('dashboard.bot.waiting-sells.index', compact('rows', 'autoPlace', 'lastRun'));
     }

@@ -28,8 +28,13 @@ beforeEach(function () {
     Event::fake([BotSellOrderFilled::class]);
 });
 
-/** Binance allows sells up to 2 × the average price. */
-function wtFakeBinance(string $avgPrice): void
+/**
+ * Binance allows sells up to 2 × the average price; with the default reserve
+ * of 10, the bot may hold $maxNumOrders − 10 open orders on the symbol.
+ *
+ * @param list<array<string,string>> $openOrders
+ */
+function wtFakeBinance(string $avgPrice, array $openOrders = [], int $maxNumOrders = 200): void
 {
     Cache::flush();
     Http::preventStrayRequests();
@@ -38,8 +43,31 @@ function wtFakeBinance(string $avgPrice): void
             ['filterType' => 'LOT_SIZE', 'stepSize' => '0.01', 'minQty' => '0.01'],
             ['filterType' => 'PRICE_FILTER', 'tickSize' => '0.001'],
             ['filterType' => 'PERCENT_PRICE_BY_SIDE', 'askMultiplierUp' => '2', 'askMultiplierDown' => '0.2', 'avgPriceMins' => 5],
+            ['filterType' => 'MAX_NUM_ORDERS', 'maxNumOrders' => $maxNumOrders],
         ]]]]),
-        '*/api/v3/avgPrice*' => Http::response(['mins' => 5, 'price' => $avgPrice]),
+        '*/api/v3/avgPrice*'   => Http::response(['mins' => 5, 'price' => $avgPrice]),
+        '*/api/v3/time*'       => Http::response(['serverTime' => 1_700_000_000_000]),
+        '*/api/v3/openOrders*' => Http::response($openOrders),
+    ]);
+}
+
+function wtOpenOrder(string $orderId, string $executedQty = '0'): array
+{
+    return ['orderId' => $orderId, 'executedQty' => $executedQty];
+}
+
+function wtPlacedTier(BotBuyExecution $execution, string $percent, string $orderId): BotSellOrder
+{
+    return BotSellOrder::create([
+        'bot_buy_execution_id' => $execution->id,
+        'exchange'             => BotSellOrder::EXCHANGE_BINANCE,
+        'exchange_order_id'    => $orderId,
+        'target_type'          => 'percent',
+        'target_value'         => $percent,
+        'share_percent'        => '50',
+        'amount_to_sell'       => '10',
+        'status'               => BotSellOrder::STATUS_OPEN,
+        'placement_status'     => BotSellOrder::PLACEMENT_PLACED,
     ]);
 }
 
@@ -89,8 +117,12 @@ function wtExecution(Currency $currency, array $sellTargets = []): BotBuyExecuti
     ]);
 }
 
-function wtWaitingTier(BotBuyExecution $execution, string $percent, string $amount = '10'): BotSellOrder
-{
+function wtWaitingTier(
+    BotBuyExecution $execution,
+    string $percent,
+    string $amount = '10',
+    string $reason = BotSellOrder::WAITING_PRICE_CEILING,
+): BotSellOrder {
     return BotSellOrder::create([
         'bot_buy_execution_id' => $execution->id,
         'exchange'             => BotSellOrder::EXCHANGE_BINANCE,
@@ -100,6 +132,7 @@ function wtWaitingTier(BotBuyExecution $execution, string $percent, string $amou
         'amount_to_sell'       => $amount,
         'status'               => BotSellOrder::STATUS_OPEN,
         'placement_status'     => BotSellOrder::PLACEMENT_WAITING,
+        'waiting_reason'       => $reason,
         'waiting_since'        => now(),
     ]);
 }
@@ -260,4 +293,128 @@ it('places one tier on admin request through the internal endpoint', function ()
         ->assertJsonPath('result.outcome', 'placed');
 
     expect($tier->fresh()->placement_status)->toBe(BotSellOrder::PLACEMENT_PLACED);
+});
+
+it('keeps a new buy\'s tiers WAITING (order_limit) once Binance reports MAX_NUM_ORDERS', function () {
+    $this->fake->exchangeName = 'fake';
+    $this->fake->failLimitSellAt = 2;
+    $this->fake->limitSellError = ['-2010', 'Filter failure: MAX_NUM_ORDERS'];
+    $execution = wtExecution(wtCurrency(), [
+        ['trigger' => 20, 'share' => 40],
+        ['trigger' => 50, 'share' => 30],
+        ['trigger' => 80, 'share' => 30],
+    ]);
+
+    (new OpenSellOrdersJob($execution->id))->handle(new TargetCollapseService(), $this->fake);
+
+    $tiers = BotSellOrder::where('bot_buy_execution_id', $execution->id)->orderBy('id')->get();
+    expect($execution->fresh()->status)->toBe(BotBuyExecution::STATUS_BOUGHT)
+        ->and($this->fake->limitSells)->toHaveCount(2)
+        ->and($this->fake->cancels)->toBeEmpty()
+        ->and($tiers[0]->placement_status)->toBe(BotSellOrder::PLACEMENT_PLACED)
+        ->and($tiers[1]->placement_status)->toBe(BotSellOrder::PLACEMENT_WAITING)
+        ->and($tiers[1]->waiting_reason)->toBe(BotSellOrder::WAITING_ORDER_LIMIT)
+        ->and($tiers[2]->placement_status)->toBe(BotSellOrder::PLACEMENT_WAITING)
+        ->and($tiers[2]->waiting_reason)->toBe(BotSellOrder::WAITING_ORDER_LIMIT)
+        ->and($tiers[2]->last_placement_error)->toContain('MAX_NUM_ORDERS');
+});
+
+it('places waiting tiers only into the free open-order slots and marks the rest order_limit', function () {
+    $execution = wtExecution(wtCurrency());
+    $a = wtWaitingTier($execution, '110'); // 210
+    $b = wtWaitingTier($execution, '120'); // 220
+    $c = wtWaitingTier($execution, '130'); // 230
+    $d = wtWaitingTier($execution, '200'); // 300: above the ceiling
+    wtFakeBinance('130', [], maxNumOrders: 12); // 12 − 10 reserve = 2 free slots
+    Cache::put('market:price:IOSTUSDT', '130');
+
+    $this->artisan('bot:place-waiting-sells')->assertSuccessful();
+
+    expect($this->fake->limitSells)->toHaveCount(2)
+        ->and($a->fresh()->placement_status)->toBe(BotSellOrder::PLACEMENT_PLACED)
+        ->and($b->fresh()->placement_status)->toBe(BotSellOrder::PLACEMENT_PLACED)
+        ->and($c->fresh()->placement_status)->toBe(BotSellOrder::PLACEMENT_WAITING)
+        ->and($c->fresh()->waiting_reason)->toBe(BotSellOrder::WAITING_ORDER_LIMIT)
+        ->and($d->fresh()->waiting_reason)->toBe(BotSellOrder::WAITING_PRICE_CEILING);
+
+    $run = app(WaitingSellTiersService::class)->lastRun();
+    expect($run['totals']['slot_waiting'])->toBe(1)
+        ->and($run['totals']['price_waiting'])->toBe(1)
+        ->and($run['currencies'][0]['slots'])->toMatchArray(['max' => 12, 'reserve' => 10, 'open' => 0, 'free' => 2]);
+});
+
+it('rotates the farthest untouched bot order out to place a nearer waiting tier', function () {
+    $execution = wtExecution(wtCurrency());
+    $far  = wtPlacedTier($execution, '400', '5000'); // 500
+    $near = wtWaitingTier($execution, '150', reason: BotSellOrder::WAITING_ORDER_LIMIT); // 250
+    wtFakeBinance('130', [wtOpenOrder('5000'), wtOpenOrder('9999')], maxNumOrders: 12); // full
+    Cache::put('market:price:IOSTUSDT', '130');
+    $this->fake->setStatus('5000', new \App\Services\Bot\ReferenceExchange\ExchangeOrderResult('5000', \App\Services\Bot\ReferenceExchange\ExchangeOrderStatus::CANCELED));
+
+    $this->artisan('bot:place-waiting-sells')->assertSuccessful();
+
+    expect($this->fake->cancels)->toHaveCount(1)
+        ->and($this->fake->cancels[0]['exchangeOrderId'])->toBe('5000')
+        ->and($this->fake->limitSells)->toHaveCount(1)
+        ->and((float) $this->fake->limitSells[0]['price'])->toBe(250.0);
+
+    $far->refresh();
+    expect($far->status)->toBe(BotSellOrder::STATUS_OPEN)
+        ->and($far->placement_status)->toBe(BotSellOrder::PLACEMENT_WAITING)
+        ->and($far->waiting_reason)->toBe(BotSellOrder::WAITING_ORDER_LIMIT)
+        ->and($far->exchange_order_id)->toBeNull()
+        ->and($near->fresh()->placement_status)->toBe(BotSellOrder::PLACEMENT_PLACED)
+        ->and(app(WaitingSellTiersService::class)->lastRun()['totals']['rotated'])->toBe(1);
+});
+
+it('never rotates out a partly filled order or one too close to the waiting tier', function () {
+    $execution = wtExecution(wtCurrency());
+    $partial = wtPlacedTier($execution, '400', '5000'); // 500, partly filled
+    $close   = wtPlacedTier($execution, '160', '5001'); // 260: within the 10% gap of 250
+    $near    = wtWaitingTier($execution, '150', reason: BotSellOrder::WAITING_ORDER_LIMIT);
+    wtFakeBinance('130', [wtOpenOrder('5000', '1'), wtOpenOrder('5001')], maxNumOrders: 12);
+    Cache::put('market:price:IOSTUSDT', '130');
+
+    $this->artisan('bot:place-waiting-sells')->assertSuccessful();
+
+    expect($this->fake->cancels)->toBeEmpty()
+        ->and($this->fake->limitSells)->toBeEmpty()
+        ->and($partial->fresh()->placement_status)->toBe(BotSellOrder::PLACEMENT_PLACED)
+        ->and($close->fresh()->placement_status)->toBe(BotSellOrder::PLACEMENT_PLACED)
+        ->and($near->fresh()->waiting_reason)->toBe(BotSellOrder::WAITING_ORDER_LIMIT);
+});
+
+it('forecasts the price at which each waiting tier gets a slot or fits under the ceiling', function () {
+    $currency  = wtCurrency();
+    $execution = wtExecution($currency);
+    wtPlacedTier($execution, '20', '5000'); // 120
+    wtPlacedTier($execution, '30', '5001'); // 130
+    $now   = wtWaitingTier($execution, '40', reason: BotSellOrder::WAITING_ORDER_LIMIT);  // 140, rank 3
+    $slotA = wtWaitingTier($execution, '50', reason: BotSellOrder::WAITING_ORDER_LIMIT);  // 150, rank 4
+    $slotB = wtWaitingTier($execution, '60', reason: BotSellOrder::WAITING_ORDER_LIMIT);  // 160, rank 5
+    $price = wtWaitingTier($execution, '200');                                           // 300, rank 6
+    wtFakeBinance('100', [wtOpenOrder('5000'), wtOpenOrder('5001')], maxNumOrders: 13); // bot capacity 3
+    Cache::put('market:price:IOSTUSDT', '100');
+
+    $d     = app(WaitingSellTiersService::class)->details($currency);
+    $tiers = collect($d['tiers'])->keyBy('sell_order_id');
+
+    expect($d['slots'])->toMatchArray(['max' => 13, 'open' => 2, 'bot_placed' => 2, 'others' => 0, 'bot_capacity' => 3])
+        ->and($tiers[$now->id]['binding'])->toBe('now')
+        ->and($tiers[$slotA->id]['binding'])->toBe('slot')
+        ->and((float) $tiers[$slotA->id]['forecast_price'])->toBe(120.0)
+        ->and($tiers[$slotA->id]['lower_to_sell'])->toBe(1)
+        ->and((float) $tiers[$slotB->id]['forecast_price'])->toBe(130.0)
+        ->and($tiers[$price->id]['binding'])->toBe('ceiling')
+        ->and(round((float) $tiers[$price->id]['forecast_price'], 2))->toBe(153.06)
+        ->and($d['groups']['order_limit']['count'])->toBe(3)
+        ->and($d['groups']['order_limit']['placeable_now'])->toBe(1)
+        ->and((float) $d['groups']['order_limit']['last_price'])->toBe(130.0)
+        ->and($d['groups']['price_ceiling']['count'])->toBe(1);
+
+    $m = collect($d['milestones'])->keyBy('rise_percent');
+    expect($m[0]['total'])->toBe(1)
+        ->and($m[30]['order_limit'])->toBe(3)
+        ->and($m[30]['price_ceiling'])->toBe(0)
+        ->and($m[75]['total'])->toBe(4);
 });

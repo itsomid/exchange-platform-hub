@@ -61,7 +61,8 @@ class BotSellMigrationService
         $perfPct   = $this->num(BotGlobalSettings::current()->performance_fee_percent);
 
         $priceLimit = $filters !== null ? $this->placement->ceiling($market, $livePrice) : null;
-        $plan       = $this->plan($sells, $livePrice, $filters, $priceLimit);
+        $slots      = $filters !== null ? $this->placement->orderSlots($market, $this->placement->openOrders($market)) : null;
+        $plan       = $this->plan($sells, $livePrice, $filters, $priceLimit, $slots);
         $tiers      = [];
         $totals     = [
             'tiers'              => 0,
@@ -70,11 +71,15 @@ class BotSellMigrationService
             'merge_tiers'        => 0,
             'close_tiers'        => 0,
             'wait_tiers'         => 0,
+            'wait_price_tiers'   => 0,
+            'wait_slot_tiers'    => 0,
             'limit_amount'       => '0',
             'market_amount'      => '0',
             'merge_amount'       => '0',
             'close_amount'       => '0',
             'wait_amount'        => '0',
+            'wait_price_amount'  => '0',
+            'wait_slot_amount'   => '0',
         ];
         $required = '0';
         $users    = [];
@@ -88,7 +93,8 @@ class BotSellMigrationService
             $estimate  = $action === 'close' && bccomp($livePrice, '0', self::SCALE) > 0
                 ? $this->settlement->currencyCancelBreakdown($execution, $amount, $livePrice, $perfPct)
                 : null;
-            $overMax = $action === 'wait'
+            $priceWait = $action === 'wait' && $step['wait_reason'] === BotSellOrder::WAITING_PRICE_CEILING;
+            $overMax   = $priceWait
                 && bccomp($step['target_price'], $priceLimit['max_price'], self::SCALE) > 0;
 
             $tiers[] = [
@@ -112,13 +118,19 @@ class BotSellMigrationService
                 'estimated_refund'  => $estimate['refund'] ?? null,
                 'estimated_net_pnl' => $estimate['net_pnl'] ?? null,
                 'above_live_percent'   => $this->percentAbove($step['target_price'], $livePrice),
-                'price_limit_exceeded' => $action === 'wait',
+                'wait_reason'          => $step['wait_reason'],
+                'price_limit_exceeded' => $priceWait,
                 'over_max_percent'     => $overMax ? $this->percentAbove($step['target_price'], $priceLimit['max_price']) : null,
             ];
 
             $totals['tiers']++;
             $totals[$action.'_tiers']++;
             $totals[$action.'_amount'] = bcadd($totals[$action.'_amount'], $amount, self::SCALE);
+            if ($action === 'wait') {
+                $group = $priceWait ? 'wait_price' : 'wait_slot';
+                $totals[$group.'_tiers']++;
+                $totals[$group.'_amount'] = bcadd($totals[$group.'_amount'], $amount, self::SCALE);
+            }
             $required = bcadd($required, $amount, self::SCALE);
             $users[$execution->botOrder?->user_id]  = true;
             $orders[$execution->bot_order_id]       = true;
@@ -163,6 +175,7 @@ class BotSellMigrationService
             'tiers'            => $tiers,
             'close'            => $this->closePreview($totals['close_amount'], $livePrice, $filters),
             'price_limit'      => $priceLimit,
+            'order_slots'      => $slots,
             'can_start'        => $blockReason === null,
             'block_reason'     => $blockReason,
         ];
@@ -265,7 +278,8 @@ class BotSellMigrationService
 
         $filters    = $this->filters($market);
         $ceiling    = $filters !== null ? $this->placement->ceiling($market, $livePrice) : null;
-        $plan       = $this->plan($sells, $livePrice, $filters, $ceiling);
+        $slots      = $filters !== null ? $this->placement->orderSlots($market, $this->placement->openOrders($market, fresh: true)) : null;
+        $plan       = $this->plan($sells, $livePrice, $filters, $ceiling, $slots);
         $results    = [];
         $counts     = ['placed' => 0, 'completed' => 0, 'merged' => 0, 'closed' => 0, 'waiting' => 0, 'failed' => 0];
         $executions = [];
@@ -326,7 +340,7 @@ class BotSellMigrationService
 
             $sell->refresh();
             $record($sell, $action === 'wait'
-                ? $this->waitTier($sell, $plan[$sell->id]['target_price'], $ceiling)
+                ? $this->waitTier($sell, $plan[$sell->id]['target_price'], $plan[$sell->id]['wait_reason'], $ceiling, $slots)
                 : $this->migrateTier($sell, $market, $livePrice, $migration->id));
         }
 
@@ -356,7 +370,7 @@ class BotSellMigrationService
             'waiting_count'   => $counts['waiting'],
             'failed_count'    => $counts['failed'],
             'required_amount' => $required,
-            'details'         => ['live_price' => $livePrice, 'tiers' => $results, 'close' => $close, 'ceiling' => $ceiling],
+            'details'         => ['live_price' => $livePrice, 'tiers' => $results, 'close' => $close, 'ceiling' => $ceiling, 'order_slots' => $slots],
             'finished_at'     => now(),
         ]);
 
@@ -398,11 +412,12 @@ class BotSellMigrationService
                     ? $this->exchange->placeMarketSell($market, $amount)
                     : $this->exchange->placeLimitSell($market, $amount, $targetPrice);
 
-                if (! $isHit && $res->exchangeOrderId === null && $this->placement->isPriceRangeRejection($res)) {
+                $waitReason = ! $isHit && $res->exchangeOrderId === null ? $this->placement->waitReasonFor($res) : null;
+                if ($waitReason !== null) {
                     $fresh->update([
                         'previous_exchange_order_id' => $fresh->exchange_order_id,
                         'migrated_at'                => now(),
-                    ] + $this->placement->waitingAttributes(SellTierPlacementService::errorText($res)));
+                    ] + $this->placement->waitingAttributes(SellTierPlacementService::errorText($res), $waitReason));
 
                     return [$fresh, $res];
                 }
@@ -438,7 +453,12 @@ class BotSellMigrationService
         }
 
         if ($fresh->placement_status === BotSellOrder::PLACEMENT_WAITING) {
-            return $base + ['action' => 'wait', 'outcome' => 'waiting', 'error' => SellTierPlacementService::errorText($res)];
+            return $base + [
+                'action'      => 'wait',
+                'outcome'     => 'waiting',
+                'wait_reason' => $fresh->waiting_reason,
+                'error'       => SellTierPlacementService::errorText($res),
+            ];
         }
 
         if ($fresh->exchange === BotSellOrder::EXCHANGE_COINEX) {
@@ -476,23 +496,30 @@ class BotSellMigrationService
     }
 
     /**
-     * Tier priced above Binance's ceiling: leave it OPEN as WAITING (moved off
-     * CoinEx) for bot:place-waiting-sells instead of sending a doomed order.
+     * Tier priced above Binance's ceiling, or beyond the free open-order
+     * slots: leave it OPEN as WAITING (moved off CoinEx) for
+     * bot:place-waiting-sells instead of sending a doomed order.
      *
      * @return array<string,mixed>
      */
-    private function waitTier(BotSellOrder $sell, string $targetPrice, ?array $ceiling): array
+    private function waitTier(BotSellOrder $sell, string $targetPrice, string $waitReason, ?array $ceiling, ?array $slots): array
     {
-        $reason = sprintf('price %s above Binance ceiling %s', $targetPrice, $ceiling['place_max_price'] ?? '?');
-        $base   = [
+        $error = $waitReason === BotSellOrder::WAITING_ORDER_LIMIT
+            ? sprintf(
+                'MAX_NUM_ORDERS: no free Binance open-order slot (open %d of %d, reserve %d)',
+                $slots['open'] ?? 0, $slots['max'] ?? 0, $slots['reserve'] ?? 0,
+            )
+            : sprintf('price %s above Binance ceiling %s', $targetPrice, $ceiling['place_max_price'] ?? '?');
+        $base  = [
             'sell_order_id'         => $sell->id,
             'old_exchange_order_id' => $sell->exchange_order_id,
             'action'                => 'wait',
+            'wait_reason'           => $waitReason,
             'target_price'          => $targetPrice,
             'amount'                => $this->num($sell->amount_to_sell),
         ];
 
-        $updated = DB::transaction(function () use ($sell, $reason) {
+        $updated = DB::transaction(function () use ($sell, $error, $waitReason) {
             $fresh = BotSellOrder::whereKey($sell->id)->lockForUpdate()->first();
             if (! $fresh || $fresh->status !== BotSellOrder::STATUS_OPEN || $fresh->exchange !== BotSellOrder::EXCHANGE_COINEX) {
                 return false;
@@ -500,7 +527,7 @@ class BotSellMigrationService
             $fresh->update([
                 'previous_exchange_order_id' => $fresh->exchange_order_id,
                 'migrated_at'                => now(),
-            ] + $this->placement->waitingAttributes($reason));
+            ] + $this->placement->waitingAttributes($error, $waitReason));
 
             return true;
         });
@@ -516,15 +543,17 @@ class BotSellMigrationService
      * (the lower-target one survives with summed amount/share, as in
      * TargetCollapseService) until every tier clears the minimum or one is
      * left; tiers still below the minimum are closed. Limit tiers above
-     * Binance's sell-price ceiling wait. Without Binance filters nothing is
-     * merged, closed or kept waiting.
+     * Binance's sell-price ceiling wait, and so do the highest limit tiers
+     * that do not fit in the free open-order slots. Without Binance filters
+     * nothing is merged, closed or kept waiting.
      *
      * @param  Collection<int,BotSellOrder>  $sells
      * @param  array<string,string>|null  $filters
      * @param  array<string,mixed>|null  $ceiling  {@see SellTierPlacementService::ceiling()}
-     * @return array<int,array{action:string, merge_into:?int, target_price:string, merged_amount:?string, merged_share:?string, quantity:?string}>
+     * @param  array<string,int>|null  $slots  {@see SellTierPlacementService::orderSlots()}
+     * @return array<int,array{action:string, wait_reason:?string, merge_into:?int, target_price:string, merged_amount:?string, merged_share:?string, quantity:?string}>
      */
-    private function plan(Collection $sells, string $livePrice, ?array $filters, ?array $ceiling = null): array
+    private function plan(Collection $sells, string $livePrice, ?array $filters, ?array $ceiling = null, ?array $slots = null): array
     {
         $plan = [];
         foreach ($sells->groupBy('bot_buy_execution_id') as $group) {
@@ -564,13 +593,15 @@ class BotSellMigrationService
             foreach ($tiers as $t) {
                 $eval      = $this->evaluate($t, $livePrice, $filters);
                 $wasMerged = in_array($t['id'], $absorbed, true);
+                $action    = match (true) {
+                    $eval['below_min'] => 'close',
+                    $eval['hit']       => 'market',
+                    $this->placement->exceedsCeiling($t['target_price'], $ceiling) => 'wait',
+                    default            => 'limit',
+                };
                 $plan[$t['id']] = [
-                    'action'        => match (true) {
-                        $eval['below_min'] => 'close',
-                        $eval['hit']       => 'market',
-                        $this->placement->exceedsCeiling($t['target_price'], $ceiling) => 'wait',
-                        default            => 'limit',
-                    },
+                    'action'        => $action,
+                    'wait_reason'   => $action === 'wait' ? BotSellOrder::WAITING_PRICE_CEILING : null,
                     'merge_into'    => null,
                     'target_price'  => $t['target_price'],
                     'merged_amount' => $wasMerged ? $t['amount'] : null,
@@ -581,12 +612,23 @@ class BotSellMigrationService
             foreach ($absorbed as $id => $into) {
                 $plan[$id] = [
                     'action'        => 'merge',
+                    'wait_reason'   => null,
                     'merge_into'    => $into,
                     'target_price'  => $targets[$id],
                     'merged_amount' => null,
                     'merged_share'  => null,
                     'quantity'      => null,
                 ];
+            }
+        }
+
+        // Market sells take no slot; limit sells beyond the free slots wait, nearest targets first.
+        if ($slots !== null) {
+            $limitIds = array_keys(array_filter($plan, fn (array $step) => $step['action'] === 'limit'));
+            usort($limitIds, fn (int $a, int $b) => bccomp($plan[$a]['target_price'], $plan[$b]['target_price'], self::SCALE) ?: $a <=> $b);
+            foreach (array_slice($limitIds, $slots['free']) as $id) {
+                $plan[$id]['action']      = 'wait';
+                $plan[$id]['wait_reason'] = BotSellOrder::WAITING_ORDER_LIMIT;
             }
         }
 

@@ -141,9 +141,26 @@
                 stat('تارگت خورده → فروش Market و تسویه', fmt(t.market_tiers, 0) + ' پله · ' + fmt(t.market_amount) + ' ' + sym, 'border-warning') +
                 stat('ادغام با پله مجاور', fmt(t.merge_tiers, 0) + ' پله · ' + fmt(t.merge_amount) + ' ' + sym, 'border-secondary') +
                 stat('بستن و برگشت به کیف پول', fmt(t.close_tiers, 0) + ' پله · ' + fmt(t.close_amount) + ' ' + sym, 'border-danger') +
-                stat('در انتظار ثبت (سقف قیمت)', fmt(t.wait_tiers, 0) + ' پله · ' + fmt(t.wait_amount) + ' ' + sym,
-                    t.wait_tiers ? 'border-primary text-primary' : '') +
+                stat('در انتظار ثبت (سقف قیمت)', fmt(t.wait_price_tiers, 0) + ' پله · ' + fmt(t.wait_price_amount) + ' ' + sym,
+                    t.wait_price_tiers ? 'border-primary text-primary' : '') +
+                stat('در انتظار ثبت (سقف تعداد سفارش)', fmt(t.wait_slot_tiers, 0) + ' پله · ' + fmt(t.wait_slot_amount) + ' ' + sym,
+                    t.wait_slot_tiers ? 'border-info text-info' : '') +
                 '</div>';
+
+            var slots = d.order_slots || null;
+            if (slots) {
+                html += '<div class="alert ' + (t.wait_slot_tiers ? 'alert-warning' : 'alert-info') + ' py-2 small">' +
+                    '<i class="fas fa-layer-group me-1"></i><strong>سقف تعداد سفارش باز Binance برای ' + sym + ':</strong> ' +
+                    'حداکثر <span class="font-number">' + slots.max + '</span> سفارش باز برای کل حساب؛ الان <span class="font-number">' +
+                    slots.open + '</span> سفارش باز است و <span class="font-number">' + slots.reserve +
+                    '</span> جا برای بقیه حساب رزرو می‌ماند، پس <strong class="font-number">' + slots.free +
+                    '</strong> پله Limit جای ثبت دارد.' +
+                    (t.wait_slot_tiers
+                        ? ' <strong><span class="font-number">' + t.wait_slot_tiers + '</span> پله با بالاترین تارگت</strong> فعلاً «در انتظار ثبت» ' +
+                            'می‌مانند؛ سیستم هر دقیقه با خالی شدن جا (پر شدن سفارش‌ها) یا با جابه‌جایی دورترین سفارش‌های ربات ثبتشان می‌کند.'
+                        : '') +
+                    '</div>';
+            }
 
             var limit = d.price_limit || null;
             if (limit) {
@@ -160,7 +177,7 @@
                     '، بالاترین قیمت فروش قابل ثبت الان <strong class="font-number">' + fmt(limit.max_price) + '</strong> USDT است ' +
                     '(با حاشیه اطمینان، پله‌ها تا <span class="font-number">' + fmt(limit.place_max_price) + '</span> USDT ثبت می‌شوند).</div>';
                 if (over.length) {
-                    html += '<div><strong><span class="font-number">' + over.length + '</span> پله (' + fmt(t.wait_amount) + ' ' + sym + ')</strong> ' +
+                    html += '<div><strong><span class="font-number">' + over.length + '</span> پله (' + fmt(t.wait_price_amount) + ' ' + sym + ')</strong> ' +
                         'قیمت فروششان ' + pct(Math.min.apply(null, over)) + ' تا ' + pct(Math.max.apply(null, over)) +
                         ' بالاتر از قیمت بازار و بیشتر از این سقف است. این پله‌ها الان در Binance ثبت نمی‌شوند و «در انتظار ثبت» می‌مانند؛ ' +
                         'سیستم هر دقیقه بررسی می‌کند و وقتی قیمت به اندازه کافی بالا آمد، خودکار ثبتشان می‌کند. اگر قیمت در این مدت از ' +
@@ -207,7 +224,9 @@
                         limit: '<span class="badge bg-label-info">Limit</span>',
                         merge: '<span class="badge bg-label-secondary">ادغام در #' + r.merge_into + '</span>',
                         close: '<span class="badge bg-label-danger">بستن + برگشت</span>',
-                        wait: '<span class="badge bg-label-primary">در انتظار ثبت</span>',
+                        wait: r.wait_reason === 'order_limit'
+                            ? '<span class="badge bg-label-info">در انتظار ثبت (سقف تعداد)</span>'
+                            : '<span class="badge bg-label-primary">در انتظار ثبت (سقف قیمت)</span>',
                     }[r.action] || esc(r.action);
                     if (r.merged_amount) {
                         action += '<div><small class="text-muted">پس از ادغام: <span class="font-number">' + fmt(r.merged_amount) +
@@ -251,7 +270,7 @@
                 'روی همان رکورد پله ذخیره می‌شود (رکورد جدیدی ساخته نمی‌شود). اگر قیمت از تارگت عبور کرده باشد، همان مقدار با ' +
                 'سفارش Market فروخته و پله با قیمت واقعی فروش، مثل یک پله پرشده، تسویه می‌شود. وضعیت تارگت هنگام اجرا با قیمت همان ' +
                 'لحظه دوباره بررسی می‌شود. مقدار در Binance به گام مجاز همان بازار گرد می‌شود. اگر Binance پله‌ای را به‌خاطر ' +
-                'سقف قیمت رد کند، آن پله هم به‌جای ناموفق «در انتظار ثبت» می‌شود.</div>';
+                'سقف قیمت یا سقف تعداد سفارش باز رد کند، آن پله هم به‌جای ناموفق «در انتظار ثبت» می‌شود.</div>';
 
             setBody(html);
             if (tiers.length) {

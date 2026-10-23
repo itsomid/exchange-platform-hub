@@ -266,6 +266,59 @@ it('marks a tier waiting when Binance rejects it for PERCENT_PRICE during the ru
         ->and($tier->fresh()->last_placement_error)->toContain('PERCENT_PRICE');
 });
 
+it('keeps the highest limit tiers waiting (order_limit) when Binance has too few free order slots', function () {
+    $avax = smCurrency();
+    $this->fake->exchangeName = BotSellOrder::EXCHANGE_BINANCE;
+    [$a, $b, $c] = smPosition($avax, '10', [
+        ['10', '5', BotSellOrder::STATUS_OPEN], // 11
+        ['30', '5', BotSellOrder::STATUS_OPEN], // 13
+        ['20', '5', BotSellOrder::STATUS_OPEN], // 12
+    ]);
+    Cache::put('market:price:AVAXUSDT', '10.5');
+    smFakeBinance('AVAX', '20');
+    // 200 − 10 reserve − 189 open = 1 free slot
+    Http::fake(['*/api/v3/openOrders*' => Http::response(
+        array_map(fn (int $i) => ['orderId' => (string) $i, 'executedQty' => '0'], range(1, 189)),
+    )]);
+
+    $preview = app(BotSellMigrationService::class)->preview($avax);
+    $byId    = collect($preview['tiers'])->keyBy('sell_order_id');
+
+    expect($preview['order_slots'])->toMatchArray(['max' => 200, 'reserve' => 10, 'open' => 189, 'free' => 1])
+        ->and($preview['totals']['wait_slot_tiers'])->toBe(2)
+        ->and($preview['totals']['wait_price_tiers'])->toBe(0)
+        ->and($byId[$a->id]['action'])->toBe('limit')
+        ->and($byId[$c->id]['wait_reason'])->toBe(BotSellOrder::WAITING_ORDER_LIMIT)
+        ->and($byId[$b->id]['wait_reason'])->toBe(BotSellOrder::WAITING_ORDER_LIMIT)
+        ->and($byId[$b->id]['price_limit_exceeded'])->toBeFalse();
+
+    $migration = app(BotSellMigrationService::class)->start($avax, 1, 'admin@test')->fresh();
+
+    expect($migration->placed_count)->toBe(1)
+        ->and($migration->waiting_count)->toBe(2)
+        ->and($this->fake->limitSells)->toHaveCount(1)
+        ->and((float) $this->fake->limitSells[0]['price'])->toBe(11.0)
+        ->and($b->fresh()->placement_status)->toBe(BotSellOrder::PLACEMENT_WAITING)
+        ->and($b->fresh()->waiting_reason)->toBe(BotSellOrder::WAITING_ORDER_LIMIT)
+        ->and($b->fresh()->last_placement_error)->toContain('MAX_NUM_ORDERS');
+});
+
+it('marks a tier waiting (order_limit) when Binance rejects it for MAX_NUM_ORDERS during the run', function () {
+    $avax = smCurrency();
+    [$tier] = smPosition($avax, '10', [['10', '5', BotSellOrder::STATUS_OPEN]]);
+    Cache::put('market:price:AVAXUSDT', '10.5');
+    smFakeBinance('AVAX', '20');
+    $this->fake->failNextLimitSell = true;
+    $this->fake->limitSellError = ['-2010', 'Filter failure: MAX_NUM_ORDERS'];
+
+    $migration = app(BotSellMigrationService::class)->start($avax, 1, 'admin@test')->fresh();
+
+    expect($migration->waiting_count)->toBe(1)
+        ->and($migration->failed_count)->toBe(0)
+        ->and($tier->fresh()->placement_status)->toBe(BotSellOrder::PLACEMENT_WAITING)
+        ->and($tier->fresh()->waiting_reason)->toBe(BotSellOrder::WAITING_ORDER_LIMIT);
+});
+
 it('merges a below-minimum tier into the lower-target sibling of the same buy', function () {
     $avax = smCurrency();
     [$low, $small] = smPosition($avax, '10', [

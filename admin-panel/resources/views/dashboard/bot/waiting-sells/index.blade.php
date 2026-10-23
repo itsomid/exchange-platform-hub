@@ -11,12 +11,15 @@
     <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-4">
         <div>
             <h4 class="mb-1">پله‌های فروش در انتظار ثبت</h4>
-            <p class="text-muted mb-0" style="max-width: 56rem; line-height: 1.8;">
-                Binance سفارش فروش Limit را فقط تا چند برابر میانگین قیمت اخیر هر ارز قبول می‌کند (فیلتر
-                PERCENT_PRICE_BY_SIDE). پله‌هایی که قیمتشان بالاتر از این سقف است ثبت نمی‌شوند و اینجا «در انتظار ثبت»
-                می‌مانند. سیستم هر دقیقه بررسی می‌کند و هر پله‌ای که زیر سقف آمد را در Binance ثبت می‌کند؛ اگر قیمت در این
-                مدت
-                از تارگت پله بگذرد، پله با Market فروخته و مثل یک پله پرشده تسویه می‌شود.
+            <p class="text-muted mb-0" style="max-width: 60rem; line-height: 1.8;">
+                پله‌ها به دو دلیل ممکن است هنوز در Binance ثبت نشده باشند:
+                <strong>سقف قیمت</strong> — Binance فروش Limit را فقط تا چند برابر میانگین قیمت اخیر قبول می‌کند
+                (PERCENT_PRICE_BY_SIDE)؛
+                <strong>سقف تعداد سفارش</strong> — هر حساب روی هر بازار حداکثر تعداد مشخصی سفارش باز دارد (MAX_NUM_ORDERS،
+                معمولاً ۲۰۰).
+                سیستم هر دقیقه بررسی می‌کند: پله‌ای که زیر سقف قیمت آمد و جای خالی داشت ثبت می‌شود؛ وقتی جا پر است،
+                دورترین سفارش ربات که هیچ بخشی از آن پر نشده لغو و به صف برمی‌گردد تا پله نزدیک‌تر ثبت شود. اگر قیمت از
+                تارگت پله‌ای بگذرد، با Market فروخته و مثل پله پرشده تسویه می‌شود.
             </p>
         </div>
         <div class="card mb-0">
@@ -36,9 +39,10 @@
             <div class="card h-100">
                 <div class="card-body d-flex align-items-start justify-content-between">
                     <div>
-                        <span class="d-block text-muted mb-1">پله‌های در انتظار ثبت</span>
+                        <span class="d-block text-muted mb-1">کل پله‌های در انتظار ثبت</span>
                         <h4 class="mb-0 font-number">{{ $rows->sum('tiers') }}</h4>
-                        <small class="text-muted">{{ $rows->count() }} ارز</small>
+                        <small class="text-muted font-number">{{ $rows->count() }} ارز · {{ $rows->sum('users') }} کاربر ·
+                            {{ $rows->sum('orders') }} سفارش</small>
                     </div>
                     <span class="badge bg-label-primary rounded p-2"><i class="fa-light fa-hourglass-half fa-lg"></i></span>
                 </div>
@@ -48,11 +52,25 @@
             <div class="card h-100">
                 <div class="card-body d-flex align-items-start justify-content-between">
                     <div>
-                        <span class="d-block text-muted mb-1">کاربران / سفارش‌ها</span>
-                        <h4 class="mb-0 font-number">{{ $rows->sum('users') }} / {{ $rows->sum('orders') }}</h4>
-                        <small class="text-muted">درگیر پله‌های در انتظار</small>
+                        <span class="d-block text-muted mb-1">به‌خاطر سقف قیمت</span>
+                        <h4 class="mb-0 font-number text-warning">{{ $rows->sum('price_tiers') }}</h4>
+                        <small class="text-muted font-number">{{ $rows->where('price_tiers', '>', 0)->count() }} ارز ·
+                            منتظر بالا رفتن میانگین قیمت</small>
                     </div>
-                    <span class="badge bg-label-info rounded p-2"><i class="fa-light fa-users fa-lg"></i></span>
+                    <span class="badge bg-label-warning rounded p-2"><i class="fa-light fa-arrow-up-to-line fa-lg"></i></span>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card h-100">
+                <div class="card-body d-flex align-items-start justify-content-between">
+                    <div>
+                        <span class="d-block text-muted mb-1">به‌خاطر سقف تعداد سفارش</span>
+                        <h4 class="mb-0 font-number text-info">{{ $rows->sum('slot_tiers') }}</h4>
+                        <small class="text-muted font-number">{{ $rows->where('slot_tiers', '>', 0)->count() }} ارز ·
+                            منتظر خالی شدن جا در Binance</small>
+                    </div>
+                    <span class="badge bg-label-info rounded p-2"><i class="fa-light fa-layer-group fa-lg"></i></span>
                 </div>
             </div>
         </div>
@@ -65,34 +83,22 @@
                             <h6 class="mb-0 font-number">
                                 {{ \App\Helpers\DateFormatter::convertToPersianDate(\Illuminate\Support\Carbon::parse($lastRun['at']), '%Y/%m/%d H:i') }}
                             </h6>
-                            <small class="text-muted">
+                            <small class="text-muted font-number d-block">
                                 @if (!empty($lastRun['disabled']))
                                     ثبت خودکار خاموش بود
                                 @elseif ($totals)
-                                    ثبت {{ $totals['placed'] }} · Market {{ $totals['completed'] }} · رد
-                                    {{ $totals['rejected'] }}
+                                    ثبت {{ $totals['placed'] }} · Market {{ $totals['completed'] }} · جابه‌جایی {{ $totals['rotated'] ?? 0 }} · رد {{ $totals['rejected'] }}
                                 @endif
                             </small>
                         @else
                             <h6 class="mb-0 text-muted">—</h6>
-                            <small class="text-muted">اطلاعاتی از api-service دریافت نشد</small>
+                            <small class="text-muted d-block">اطلاعاتی از api-service دریافت نشد</small>
                         @endif
+                        <small>ثبت خودکار: <span class="fw-semibold {{ $autoPlace ? 'text-success' : 'text-danger' }}"
+                                id="autoPlaceState">{{ $autoPlace ? 'فعال' : 'غیرفعال' }}</span></small>
                     </div>
                     <span class="badge bg-label-success rounded p-2"><i
                             class="fa-light fa-clock-rotate-left fa-lg"></i></span>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-xl-3">
-            <div class="card h-100">
-                <div class="card-body d-flex align-items-start justify-content-between">
-                    <div>
-                        <span class="d-block text-muted mb-1">وضعیت ثبت خودکار</span>
-                        <h6 class="mb-0 {{ $autoPlace ? 'text-success' : 'text-danger' }}" id="autoPlaceState">
-                            {{ $autoPlace ? 'فعال' : 'غیرفعال' }}</h6>
-                        <small class="text-muted">دستی از دکمه‌های همین صفحه هم ممکن است</small>
-                    </div>
-                    <span class="badge bg-label-warning rounded p-2"><i class="fa-light fa-robot fa-lg"></i></span>
                 </div>
             </div>
         </div>
@@ -111,6 +117,14 @@
                     </div>
                 </div>
                 <div class="col-lg-3 col-md-6">
+                    <label class="form-label" for="reasonFilter">دلیل انتظار</label>
+                    <select id="reasonFilter" class="form-select">
+                        <option value="">همه دلایل</option>
+                        <option value="price">سقف قیمت</option>
+                        <option value="slot">سقف تعداد سفارش</option>
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-6">
                     <label class="form-label" for="stateFilter">وضعیت</label>
                     <select id="stateFilter" class="form-select">
                         <option value="">همه ارزها</option>
@@ -118,7 +132,7 @@
                         <option value="clean">بدون خطا</option>
                     </select>
                 </div>
-                <div class="col-lg-5 col-md-12 d-flex align-items-end justify-content-lg-end gap-2">
+                <div class="col-lg-3 col-md-6 d-flex align-items-end justify-content-lg-end gap-2">
                     <button type="button" class="btn btn-outline-secondary" id="clearFilters">
                         <i class="fas fa-times me-1"></i> حذف فیلترها
                     </button>
@@ -140,6 +154,8 @@
                             <th class="ps-4">ارز</th>
                             <th class="text-nowrap text-center">کاربران / سفارش‌ها</th>
                             <th class="text-nowrap">پله‌ها / مقدار</th>
+                            <th class="text-nowrap">به تفکیک دلیل</th>
+                            <th class="text-nowrap">سفارش‌های باز Binance</th>
                             <th class="text-nowrap">قیمت لحظه‌ای</th>
                             <th class="text-nowrap">نزدیک‌ترین تارگت</th>
                             <th class="text-nowrap">در انتظار از</th>
@@ -150,7 +166,8 @@
                     <tbody>
                         @forelse ($rows as $row)
                             <tr data-search="{{ strtolower($row->symbol . ' ' . $row->currency->name . ' ' . $row->currency->persian_name) }}"
-                                data-state="{{ $row->last_error ? 'error' : 'clean' }}">
+                                data-state="{{ $row->last_error ? 'error' : 'clean' }}"
+                                data-reasons="{{ trim(($row->price_tiers ? 'price ' : '') . ($row->slot_tiers ? 'slot' : '')) }}">
                                 <td class="ps-4">
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="avatar avatar-sm">
@@ -170,6 +187,37 @@
                                     <span class="badge bg-label-primary">{{ $row->tiers }} پله</span>
                                     <div><small>{{ formatNumberTrimZeros($row->amount, 8) }} {{ $row->symbol }}</small>
                                     </div>
+                                </td>
+                                <td class="font-number text-nowrap">
+                                    <div class="{{ $row->price_tiers ? '' : 'text-muted opacity-50' }}">
+                                        <span class="badge bg-label-warning" title="قیمت پله بالاتر از سقف قیمت Binance است">سقف قیمت</span>
+                                        <strong>{{ $row->price_tiers }}</strong>
+                                        <small class="text-muted">· {{ formatNumberTrimZeros($row->price_amount, 8) }}</small>
+                                    </div>
+                                    <div class="mt-1 {{ $row->slot_tiers ? '' : 'text-muted opacity-50' }}">
+                                        <span class="badge bg-label-info" title="سقف تعداد سفارش باز این بازار در Binance پر است">سقف تعداد</span>
+                                        <strong>{{ $row->slot_tiers }}</strong>
+                                        <small class="text-muted">· {{ formatNumberTrimZeros($row->slot_amount, 8) }}</small>
+                                    </div>
+                                </td>
+                                <td class="font-number text-nowrap">
+                                    @if ($row->slots)
+                                        @php
+                                            $usable = max(1, $row->slots['max'] - $row->slots['reserve']);
+                                            $usedPct = min(100, round($row->slots['open'] / $usable * 100));
+                                        @endphp
+                                        <strong>{{ $row->slots['open'] }}</strong><small class="text-muted"> از {{ $row->slots['max'] }}</small>
+                                        <div class="progress my-1" style="height: 4px; width: 7rem;">
+                                            <div class="progress-bar {{ $row->slots['free'] > 0 ? 'bg-success' : 'bg-danger' }}"
+                                                style="width: {{ $usedPct }}%"></div>
+                                        </div>
+                                        <small class="{{ $row->slots['free'] > 0 ? 'text-success' : 'text-danger' }}">
+                                            {{ $row->slots['free'] }} جای خالی</small>
+                                        <small class="text-muted">· {{ $row->slots['reserve'] }} رزرو</small>
+                                    @else
+                                        <span class="text-muted" title="در آخرین اجرای خودکار دریافت نشد">—</span>
+                                    @endif
+                                    <div><small class="text-muted">{{ $row->placed_tiers }} سفارش ربات</small></div>
                                 </td>
                                 <td class="font-number">
                                     @if ($row->price)
@@ -214,14 +262,14 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center text-muted py-5">
+                                <td colspan="10" class="text-center text-muted py-5">
                                     <i class="fa-light fa-circle-check fa-2x d-block mb-2 opacity-50"></i>
                                     هیچ پله فروشی در انتظار ثبت نیست.
                                 </td>
                             </tr>
                         @endforelse
                         <tr id="noFilterResult" class="d-none">
-                            <td colspan="8" class="text-center text-muted py-4">ارزی با این مشخصات پیدا نشد.</td>
+                            <td colspan="10" class="text-center text-muted py-4">ارزی با این مشخصات پیدا نشد.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -337,7 +385,7 @@
                         return;
                     }
                     toggleState.textContent = d.enabled ? 'فعال' : 'غیرفعال';
-                    toggleState.className = 'mb-0 ' + (d.enabled ? 'text-success' : 'text-danger');
+                    toggleState.className = 'fw-semibold ' + (d.enabled ? 'text-success' : 'text-danger');
                     toast(d.message, true);
                 }).catch(function() {
                     toggle.checked = !toggle.checked;
@@ -350,7 +398,8 @@
             /* ── Place now (per coin) ── */
             function placeCurrency(url, symbol, btn) {
                 if (!confirm('پله‌های در انتظار ' + symbol +
-                        ' بررسی و هر کدام که زیر سقف قیمت Binance است ثبت شود؟')) return;
+                        ' بررسی و هر کدام که زیر سقف قیمت Binance است و جا دارد (یا با جابه‌جایی جا پیدا می‌کند) ثبت شود؟'
+                    )) return;
                 busy(btn, true);
                 request('POST', url).then(function(d) {
                     toast(d.ok ? d.message : (d.error || 'ثبت انجام نشد.'), !!d.ok);
@@ -389,30 +438,102 @@
                         .block_reason) + '</div>';
                 }
 
-                html += '<div class="alert ' + (c ? 'alert-info' : 'alert-secondary') + ' py-2 small">';
+                var groups = d.groups || {};
+                var gp = groups.price_ceiling || {
+                    count: 0
+                };
+                var gs = groups.order_limit || {
+                    count: 0
+                };
+                var s = d.slots;
+
+                function forecastLine(grp, slotGroup) {
+                    if (!grp.count) {
+                        return '<div class="small text-muted mt-2">پله‌ای به این دلیل در انتظار نیست.</div>';
+                    }
+                    var parts = [];
+                    if (grp.placeable_now) {
+                        parts.push('<span class="font-number">' + grp.placeable_now +
+                            '</span> پله در اجرای بعدی (حداکثر یک دقیقه دیگر) ثبت یا با Market فروخته می‌شود');
+                    }
+                    if (grp.first_price !== null && grp.first_price !== undefined) {
+                        parts.push('بقیه از وقتی ' + (slotGroup ? 'قیمت' : 'میانگین قیمت') +
+                            ' به <strong class="font-number">' + fmt(grp.first_price) + '</strong> (' + pct(grp
+                                .first_rise) + ') برسد ثبت می‌شوند و آخرین پله با <strong class="font-number">' +
+                            fmt(grp.last_price) + '</strong> (' + pct(grp.last_rise) + ')');
+                    }
+                    var out = '<hr class="my-2"><div class="small"><i class="fas fa-chart-line me-1 text-primary"></i>' +
+                        '<strong>پیش‌بینی:</strong> ' + parts.join('؛ ') + '.';
+                    if (slotGroup && grp.max_lower_to_sell) {
+                        out += '<div class="text-muted mt-1">برای جا باز شدن برای آخرین پله، <span class="font-number">' +
+                            grp.max_lower_to_sell +
+                            '</span> پله پایین‌تر (سفارش‌های فعلی ربات و پله‌های جلوتر در صف) باید فروش بروند.</div>';
+                    }
+                    if (grp.by_ceiling && grp.by_slot) {
+                        out += '<div class="text-muted mt-1">از این گروه، <span class="font-number">' + grp.by_ceiling +
+                            '</span> پله را در عمل سقف قیمت و <span class="font-number">' + grp.by_slot +
+                            '</span> پله را سقف تعداد سفارش عقب نگه داشته است.</div>';
+                    }
+                    return out + '</div>';
+                }
+
+                function groupHeader(badgeCls, badge, caption, grp) {
+                    return '<div class="d-flex flex-wrap justify-content-between align-items-center gap-1 mb-2">' +
+                        '<h6 class="mb-0"><span class="badge ' + badgeCls + ' me-1">' + badge + '</span>' + caption +
+                        '</h6><span class="font-number fw-semibold">' + (grp.count || 0) + ' پله · ' + fmt(grp
+                            .amount || 0) + ' ' + sym + '</span></div>';
+                }
+
+                html += '<div class="small text-muted mb-2">قیمت لحظه‌ای ' + sym + ': <span class="font-number">' +
+                    fmt(d.live_price) + '</span> USDT</div>';
+                html += '<div class="row g-3 mb-3">';
+
+                html += '<div class="col-lg-6"><div class="border border-warning rounded h-100 p-3">' +
+                    groupHeader('bg-label-warning', 'سقف قیمت', 'منتظر بالا رفتن میانگین قیمت', gp) +
+                    '<div class="small" style="line-height: 1.9;">';
                 if (c) {
-                    html +=
-                        '<div class="mb-1"><i class="fas fa-info-circle me-1"></i><strong>سقف قیمت فروش در Binance برای ' +
-                        sym + ':</strong> ' +
-                        'حداکثر <span class="font-number">' + fmt(c.multiplier_up, 4) +
+                    html += 'Binance فروش Limit را تا <span class="font-number">' + fmt(c.multiplier_up, 4) +
                         '</span> برابر میانگین قیمت ' +
                         (c.avg_price_mins ? '<span class="font-number">' + c.avg_price_mins + '</span> دقیقه اخیر' :
                             'اخیر') +
-                        ' (حداکثر ' + pct(c.max_percent_above) + ' بالاتر از بازار).</div>' +
-                        '<div>' + (c.reference === 'avg' ? 'میانگین فعلی' :
-                            'قیمت لحظه‌ای (میانگین Binance دریافت نشد)') +
+                        ' قبول می‌کند (' + pct(c.max_percent_above) + ' بالاتر از بازار). ' +
+                        (c.reference === 'avg' ? 'میانگین فعلی' : 'قیمت لحظه‌ای (میانگین Binance دریافت نشد)') +
                         ' <span class="font-number">' + fmt(c.reference_price) +
-                        '</span> USDT؛ سقف الان <strong class="font-number">' +
-                        fmt(c.max_price) +
+                        '</span> USDT؛ سقف الان <strong class="font-number">' + fmt(c.max_price) +
                         '</strong> USDT و با حاشیه اطمینان، پله‌ها تا <strong class="font-number">' +
-                        fmt(c.place_max_price) +
-                        '</strong> USDT ثبت می‌شوند. قیمت لحظه‌ای: <span class="font-number">' +
-                        fmt(d.live_price) + '</span> USDT.</div>';
+                        fmt(c.place_max_price) + '</strong> USDT ثبت می‌شوند.';
                 } else {
-                    html +=
-                        '<i class="fas fa-info-circle me-1"></i>سقف قیمت Binance برای این ارز دریافت نشد؛ فقط پله‌هایی که ' +
-                        'قیمت از تارگتشان گذشته (فروش Market) قابل اقدام‌اند.';
+                    html += 'سقف قیمت Binance برای این ارز دریافت نشد؛ فقط پله‌هایی که قیمت از تارگتشان گذشته ' +
+                        '(فروش Market) قابل اقدام‌اند.';
                 }
+                html += '</div>' + forecastLine(gp, false) + '</div></div>';
+
+                html += '<div class="col-lg-6"><div class="border border-info rounded h-100 p-3">' +
+                    groupHeader('bg-label-info', 'سقف تعداد سفارش', 'منتظر خالی شدن جا در Binance', gs) +
+                    '<div class="small" style="line-height: 1.9;">';
+                if (s) {
+                    var usable = Math.max(1, s.max - s.reserve);
+                    html += 'Binance روی هر بازار برای کل حساب حداکثر <strong class="font-number">' + s.max +
+                        '</strong> سفارش باز قبول می‌کند. الان <strong class="font-number">' + s.open +
+                        '</strong> سفارش باز است: <span class="font-number">' + s.bot_placed +
+                        '</span> سفارش ربات و <span class="font-number">' + s.others +
+                        '</span> سفارش دیگر حساب. <span class="font-number">' + s.reserve +
+                        '</span> جا برای بقیه حساب رزرو است، پس ربات حداکثر <strong class="font-number">' + s
+                        .bot_capacity + '</strong> سفارش روی این بازار نگه می‌دارد. جای خالی الان: ' +
+                        '<strong class="font-number ' + (s.free > 0 ? 'text-success' : 'text-danger') + '">' + s.free +
+                        '</strong>.' +
+                        '<div class="progress my-2" style="height: 6px;"><div class="progress-bar ' + (s.free > 0 ?
+                            'bg-success' : 'bg-danger') + '" style="width: ' + Math.min(100, Math.round(s.open /
+                            usable * 100)) + '%"></div></div>';
+                    if (d.rotation && d.rotation.enabled) {
+                        html += '<div class="text-muted">وقتی جا پر است، دورترین سفارش ربات (اگر هیچ بخشی از آن پر ' +
+                            'نشده و تارگتش دست‌کم <span class="font-number">' + fmt(d.rotation.min_gap_percent, 2) +
+                            '٪</span> بالاتر باشد) لغو و به صف برمی‌گردد تا پله نزدیک‌تر جایش ثبت شود.</div>';
+                    }
+                } else {
+                    html += 'سفارش‌های باز Binance برای این ارز دریافت نشد؛ پیش‌بینی بر اساس ظرفیت ممکن نیست.';
+                }
+                html += '</div>' + forecastLine(gs, true) + '</div></div>';
                 html += '</div>';
 
                 var tiers = d.tiers || [];
@@ -422,20 +543,9 @@
                     return;
                 }
 
-                var placeable = 0,
-                    near = 0,
-                    far = 0,
-                    unknown = 0,
-                    minRise = null;
+                var soon = 0;
                 tiers.forEach(function(r) {
-                    var rise = parseFloat(r.rise_needed_percent);
-                    if (r.placeable_now) placeable++;
-                    else if (!isFinite(rise)) unknown++;
-                    else {
-                        if (rise <= NEAR_RISE_PERCENT) near++;
-                        else far++;
-                        if (minRise === null || rise < minRise) minRise = rise;
-                    }
+                    if (r.binding === 'now' || r.binding === 'hit') soon++;
                 });
 
                 function stat(label, value, cls) {
@@ -444,34 +554,88 @@
                         '<h5 class="mb-0 font-number ' + cls + '">' + value + '</h5></div></div>';
                 }
 
-                html += '<div class="row row-cols-2 row-cols-md-' + (unknown ? 6 : 5) + ' g-2 mb-3">' +
+                html += '<div class="row row-cols-2 row-cols-md-4 g-2 mb-3">' +
                     stat('کل پله‌های در انتظار', tiers.length, '') +
-                    stat('قابل ثبت همین الان', placeable, 'text-success') +
-                    stat('نزدیک به ثبت (تا ' + NEAR_RISE_PERCENT + '٪)', near, 'text-warning') +
-                    stat('دور از ثبت', far, 'text-danger') +
-                    (unknown ? stat('نامشخص', unknown, 'text-muted') : '') +
-                    stat('افزایش لازم برای پله بعدی', minRise === null ? '—' : pct(minRise), '') +
+                    stat('ثبت/فروش در اجرای بعدی', soon, 'text-success') +
+                    stat('به‌خاطر سقف قیمت', gp.count, 'text-warning') +
+                    stat('به‌خاطر سقف تعداد سفارش', gs.count, 'text-info') +
                     '</div>';
+
+                var ms = d.milestones || [];
+                if (ms.length) {
+                    html += '<h6 class="mb-2"><i class="fas fa-chart-line me-1 text-primary"></i>پیش‌بینی ثبت با بالا رفتن قیمت</h6>' +
+                        '<div class="table-responsive mb-2"><table class="table table-sm table-bordered text-center align-middle mb-0">' +
+                        '<thead class="table-light"><tr><th>اگر قیمت برسد به</th><th>ثبت‌شده از «سقف قیمت»</th>' +
+                        '<th>ثبت‌شده از «سقف تعداد سفارش»</th><th>جمع ثبت‌شده</th><th>هنوز در انتظار</th></tr></thead><tbody>';
+                    ms.forEach(function(m) {
+                        html += '<tr><td class="font-number">' + fmt(m.price) + ' <small class="text-muted">(' + (m
+                                .rise_percent ? pct(m.rise_percent) : 'قیمت فعلی') + ')</small></td>' +
+                            '<td class="font-number">' + m.price_ceiling + ' <small class="text-muted">از ' + gp.count +
+                            '</small></td>' +
+                            '<td class="font-number">' + m.order_limit + ' <small class="text-muted">از ' + gs.count +
+                            '</small></td>' +
+                            '<td class="font-number fw-semibold">' + m.total + '</td>' +
+                            '<td class="font-number ' + (m.remaining ? '' : 'text-success') + '">' + m.remaining +
+                            '</td></tr>';
+                    });
+                    html += '</tbody></table></div>' +
+                        '<div class="small text-muted mb-3" style="line-height: 1.8;">فرض پیش‌بینی: سفارش جدیدی اضافه نشود ' +
+                        'و پله‌های پایین‌تر با رسیدن قیمت به تارگتشان پر شوند. سقف قیمت با میانگین قیمت Binance (چند دقیقه اخیر) ' +
+                        'سنجیده می‌شود، پس بعد از جهش قیمت چند دقیقه طول می‌کشد تا پله‌ها ثبت شوند. زمان دقیق به حرکت بازار بستگی دارد.</div>';
+                }
+
+                function reasonBtn(reason, label, count) {
+                    return '<button type="button" class="btn btn-outline-primary' + (reason ? '' : ' active') +
+                        '" data-reason="' + reason + '">' + label + ' <span class="font-number">(' + count +
+                        ')</span></button>';
+                }
+
+                html += '<div class="d-flex flex-wrap align-items-center gap-2 mb-2"><span class="small text-muted">نمایش پله‌ها:</span>' +
+                    '<div class="btn-group btn-group-sm" role="group" id="tierReasonFilter">' +
+                    reasonBtn('', 'همه', tiers.length) +
+                    reasonBtn('price_ceiling', 'سقف قیمت', gp.count) +
+                    reasonBtn('order_limit', 'سقف تعداد سفارش', gs.count) +
+                    '</div></div>';
 
                 html +=
                     '<div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0">' +
                     '<thead class="table-light"><tr><th>پله</th><th>کاربر / سفارش</th><th>تارگت</th><th>قیمت فروش</th>' +
-                    '<th>مقدار</th><th>تا قابل ثبت شدن</th><th>در انتظار از / تلاش‌ها</th><th>عملیات</th></tr></thead><tbody>';
+                    '<th>مقدار</th><th>دلیل انتظار</th><th>پیش‌بینی ثبت</th><th>در انتظار از / تلاش‌ها</th><th>عملیات</th></tr></thead><tbody>';
                 tiers.forEach(function(r) {
                     var target = r.target_type === 'percent' ?
                         fmt(r.target_value, 4) + '٪ <small class="text-muted">(خرید ' + fmt(r
                         .avg_buy_price) + ')</small>' :
                         fmt(r.target_value);
-                    var isNear = !r.placeable_now && r.rise_needed_percent !== null &&
-                        parseFloat(r.rise_needed_percent) <= NEAR_RISE_PERCENT;
-                    var distance = r.placeable_now ?
-                        '<span class="badge bg-label-success">قابل ثبت</span>' :
-                        (r.rise_needed_percent !== null ?
-                            (isNear ? '<span class="badge bg-label-warning mb-1">نزدیک به ثبت</span><br>' : '') +
-                            '<small>میانگین قیمت باید ' + pct(r.rise_needed_percent) +
-                            ' بالا برود</small>' :
-                            '<small class="text-muted">نامشخص</small>');
-                    html += '<tr class="' + (r.placeable_now ? 'table-success' : (isNear ? 'table-warning' : '')) +
+                    var soonTier = r.binding === 'now' || r.binding === 'hit';
+                    var isNear = !soonTier && r.forecast_rise_percent !== null &&
+                        parseFloat(r.forecast_rise_percent) <= NEAR_RISE_PERCENT;
+                    var reason = r.waiting_reason === 'order_limit' ?
+                        '<span class="badge bg-label-info">سقف تعداد سفارش</span>' :
+                        '<span class="badge bg-label-warning">سقف قیمت</span>';
+                    var forecast;
+                    if (r.binding === 'hit') {
+                        forecast = '<span class="badge bg-label-success">قیمت از تارگت گذشته</span>' +
+                            '<div><small class="text-muted">در اجرای بعدی با Market فروخته می‌شود</small></div>';
+                    } else if (r.binding === 'now') {
+                        forecast = '<span class="badge bg-label-success">قابل ثبت</span><div><small class="text-muted">' +
+                            (r.waiting_reason === 'order_limit' ? 'در اجرای بعدی، با جای خالی یا جابه‌جایی' :
+                                'در اجرای بعدی') + '</small></div>';
+                    } else if (r.binding === 'ceiling') {
+                        forecast = '<strong class="font-number">' + fmt(r.forecast_price) + '</strong> ' + pct(r
+                                .forecast_rise_percent) +
+                            '<div><small class="text-muted">وقتی میانگین قیمت به این عدد برسد (سقف قیمت)</small></div>' +
+                            (r.slot_price ? '<div><small class="text-muted">جای خالی از قیمت <span class="font-number">' +
+                                fmt(r.slot_price) + '</span> فراهم است</small></div>' : '');
+                    } else if (r.binding === 'unknown') {
+                        forecast = '<small class="text-muted">نامشخص؛ سقف قیمت Binance دریافت نشد</small>';
+                    } else {
+                        forecast = '<strong class="font-number">' + fmt(r.forecast_price) + '</strong> ' + pct(r
+                                .forecast_rise_percent) +
+                            '<div><small class="text-muted">وقتی <span class="font-number">' + r.lower_to_sell +
+                            '</span> پله پایین‌تر فروش برود و جا خالی شود</small></div>';
+                    }
+                    html += '<tr data-reason="' + esc(r.waiting_reason) + '" class="' + (soonTier ? 'table-success' : (
+                            isNear ? 'table-warning' : '')) +
                         '">' +
                         '<td class="font-number">#' + r.sell_order_id + '<div><small class="text-muted">' +
                         fmt(r.share_percent, 2) + '٪</small></div></td>' +
@@ -483,7 +647,8 @@
                         '<div><small class="text-muted">' + pct(r.above_live_percent) +
                         ' نسبت به بازار</small></div></td>' +
                         '<td class="font-number">' + fmt(r.amount) + '</td>' +
-                        '<td>' + distance + '</td>' +
+                        '<td>' + reason + '</td>' +
+                        '<td>' + forecast + '</td>' +
                         '<td><small>' + when(r.waiting_since) + '</small><div><small class="text-muted">' +
                         r.placement_attempts +
                         ' تلاش</small>' + (r.last_placement_error ?
@@ -499,10 +664,23 @@
                     .length + '</span> پله</div>';
                 bodyEl.innerHTML = html;
 
+                var reasonFilter = bodyEl.querySelector('#tierReasonFilter');
+                reasonFilter.querySelectorAll('button').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        reasonFilter.querySelectorAll('button').forEach(function(b) {
+                            b.classList.toggle('active', b === btn);
+                        });
+                        bodyEl.querySelectorAll('tr[data-reason]').forEach(function(tr) {
+                            tr.classList.toggle('d-none', !!btn.dataset.reason && tr.dataset.reason !== btn
+                                .dataset.reason);
+                        });
+                    });
+                });
+
                 bodyEl.querySelectorAll('.js-place-tier').forEach(function(btn) {
                     btn.addEventListener('click', function() {
                         if (!confirm('پله #' + btn.dataset.id +
-                                ' همین الان در Binance ثبت شود؟ اگر قیمتش بالاتر از سقف باشد Binance آن را رد می‌کند و پله در انتظار می‌ماند.'
+                                ' همین الان در Binance ثبت شود؟ اگر قیمتش بالاتر از سقف باشد یا جای خالی نباشد، Binance آن را رد می‌کند و پله در انتظار می‌ماند.'
                                 )) return;
                         busy(btn, true);
                         request('POST', placeTierUrl.replace('__ID__', btn.dataset.id)).then(
@@ -561,6 +739,7 @@
             /* ── Filters ── */
             var searchEl = document.getElementById('currencySearch');
             var stateEl = document.getElementById('stateFilter');
+            var reasonEl = document.getElementById('reasonFilter');
             var rows = Array.prototype.slice.call(document.querySelectorAll('#waitingTable tbody tr[data-search]'));
             var noResult = document.getElementById('noFilterResult');
             var summary = document.getElementById('activeFilters');
@@ -570,11 +749,12 @@
             function applyFilters() {
                 var q = searchEl.value.trim().toLowerCase();
                 var state = stateEl.value;
+                var reason = reasonEl.value;
                 var visible = 0;
 
                 rows.forEach(function(tr) {
                     var match = (!q || tr.dataset.search.indexOf(q) !== -1) && (!state || tr.dataset
-                        .state === state);
+                        .state === state) && (!reason || tr.dataset.reasons.split(' ').indexOf(reason) !== -1);
                     tr.classList.toggle('d-none', !match);
                     if (match) visible++;
                 });
@@ -582,6 +762,7 @@
 
                 var badges = [];
                 if (q) badges.push('ارز: ' + searchEl.value.trim());
+                if (reason) badges.push('دلیل: ' + reasonEl.options[reasonEl.selectedIndex].text);
                 if (state) badges.push('وضعیت: ' + stateEl.options[stateEl.selectedIndex].text);
                 summaryList.innerHTML = badges.map(function(b) {
                     var span = document.createElement('span');
@@ -596,9 +777,11 @@
 
             searchEl.addEventListener('input', applyFilters);
             stateEl.addEventListener('change', applyFilters);
+            reasonEl.addEventListener('change', applyFilters);
             document.getElementById('clearFilters').addEventListener('click', function() {
                 searchEl.value = '';
                 stateEl.value = '';
+                reasonEl.value = '';
                 applyFilters();
             });
         });

@@ -97,7 +97,7 @@ class BotWaitingSellsPageTest extends TestCase
         Http::fake(['*/waiting-sells/last-run' => Http::response(['ok' => true, 'last_run' => [
             'at'       => now()->toIso8601String(),
             'disabled' => false,
-            'totals'   => ['placed' => 3, 'completed' => 1, 'rejected' => 0],
+            'totals'   => ['placed' => 3, 'completed' => 1, 'rejected' => 0, 'rotated' => 2],
         ]])]);
 
         $this->actingAs($this->admin, 'admin')
@@ -105,8 +105,45 @@ class BotWaitingSellsPageTest extends TestCase
             ->assertOk()
             ->assertSee('WWW')
             ->assertSee('1 پله')
-            ->assertSee('ثبت 3 · Market 1 · رد 0')
+            ->assertSee('ثبت 3 · Market 1 · جابه‌جایی 2 · رد 0')
             ->assertSee(route('admin.bot.waiting-sells.place-currency', $this->currency->id), false);
+    }
+
+    public function test_index_splits_waiting_tiers_by_reason_and_shows_order_slots(): void
+    {
+        BotSellOrder::forceCreate([
+            'bot_buy_execution_id' => $this->waiting->bot_buy_execution_id,
+            'exchange'             => 'binance',
+            'target_type'          => 'percent',
+            'target_value'         => 60,
+            'share_percent'        => 10,
+            'amount_to_sell'       => '1.5',
+            'status'               => 'OPEN',
+            'placement_status'     => BotSellOrder::PLACEMENT_WAITING,
+            'waiting_reason'       => BotSellOrder::WAITING_ORDER_LIMIT,
+            'waiting_since'        => now(),
+        ]);
+        Http::fake(['*/waiting-sells/last-run' => Http::response(['ok' => true, 'last_run' => [
+            'at'         => now()->toIso8601String(),
+            'disabled'   => false,
+            'totals'     => ['placed' => 0, 'completed' => 0, 'rejected' => 0, 'rotated' => 0],
+            'currencies' => [[
+                'currency_id' => $this->currency->id,
+                'slots'       => ['max' => 200, 'reserve' => 10, 'open' => 190, 'free' => 0],
+            ]],
+        ]])]);
+
+        $response = $this->actingAs($this->admin, 'admin')
+            ->get(route('admin.bot.waiting-sells.index'))
+            ->assertOk();
+
+        $rows = $response->viewData('rows');
+        $this->assertSame(1, $rows[0]->price_tiers);
+        $this->assertSame(1, $rows[0]->slot_tiers);
+        $this->assertSame(1.5, $rows[0]->slot_amount);
+        $this->assertSame(1, $rows[0]->placed_tiers);
+        $response->assertSee('data-reasons="price slot"', false)
+            ->assertSee('0 جای خالی');
     }
 
     public function test_index_still_renders_when_api_service_is_down(): void
@@ -127,7 +164,16 @@ class BotWaitingSellsPageTest extends TestCase
             ->get(route('admin.bot.order.show', $orderId))
             ->assertOk()
             ->assertSee('هنوز سفارشی در صرافی ندارد')
+            ->assertSee('(سقف قیمت)')
             ->assertSee('PERCENT_PRICE_BY_SIDE');
+
+        $this->waiting->forceFill(['waiting_reason' => BotSellOrder::WAITING_ORDER_LIMIT])->save();
+
+        $this->actingAs($this->admin, 'admin')
+            ->get(route('admin.bot.order.show', $orderId))
+            ->assertOk()
+            ->assertSee('(سقف تعداد سفارش)')
+            ->assertSee('سقف تعداد سفارش باز این بازار در Binance پر است');
     }
 
     public function test_auto_place_toggle_is_stored_in_global_settings(): void

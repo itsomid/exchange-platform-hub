@@ -27,6 +27,9 @@ class BotSellOrder extends Model
     public const PLACEMENT_PLACED  = 'PLACED';
     public const PLACEMENT_WAITING = 'WAITING';
 
+    public const WAITING_PRICE_CEILING = 'price_ceiling';
+    public const WAITING_ORDER_LIMIT   = 'order_limit';
+
     protected $fillable = [
         'bot_buy_execution_id',
         'exchange_order_id',
@@ -43,6 +46,7 @@ class BotSellOrder extends Model
         'filled_at',
         'migrated_at',
         'placement_status',
+        'waiting_reason',
         'waiting_since',
         'placement_attempts',
         'last_placement_error',

@@ -127,8 +127,9 @@ class OpenSellOrdersJob implements ShouldQueue
             $exchange->expectLimitSells(count($result['final_targets']));
         }
 
-        $placement = app()->make(SellTierPlacementService::class, ['exchange' => $exchange]);
-        $ceiling   = $placement->ceilingFor($market);
+        $placement  = app()->make(SellTierPlacementService::class, ['exchange' => $exchange]);
+        $ceiling    = $placement->ceilingFor($market);
+        $slotsError = null;
 
         foreach ($result['final_targets'] as $index => $target) {
             $type     = $target['type'] ?? $defaultMode;
@@ -141,13 +142,23 @@ class OpenSellOrdersJob implements ShouldQueue
             if ($placement->exceedsCeiling($price, $ceiling)) {
                 $this->createWaitingTier($execution, $placement, $type, $trigger, $target, sprintf(
                     'price %s above Binance ceiling %s', $price, $ceiling['place_max_price'],
-                ));
+                ), BotSellOrder::WAITING_PRICE_CEILING);
+                continue;
+            }
+            // The symbol's open-order limit is used up: no point asking again for this buy.
+            if ($slotsError !== null) {
+                $this->createWaitingTier($execution, $placement, $type, $trigger, $target, $slotsError, BotSellOrder::WAITING_ORDER_LIMIT);
                 continue;
             }
 
-            $res = $exchange->placeLimitSell($market, $amount, $price);
-            if ($res->exchangeOrderId === null && $placement->isPriceRangeRejection($res)) {
-                $this->createWaitingTier($execution, $placement, $type, $trigger, $target, SellTierPlacementService::errorText($res));
+            $res        = $exchange->placeLimitSell($market, $amount, $price);
+            $waitReason = $res->exchangeOrderId === null ? $placement->waitReasonFor($res) : null;
+            if ($waitReason !== null) {
+                $error = SellTierPlacementService::errorText($res);
+                if ($waitReason === BotSellOrder::WAITING_ORDER_LIMIT) {
+                    $slotsError = $error;
+                }
+                $this->createWaitingTier($execution, $placement, $type, $trigger, $target, $error, $waitReason);
                 continue;
             }
             if ($res->exchangeOrderId === null) {
@@ -215,6 +226,7 @@ class OpenSellOrdersJob implements ShouldQueue
         string $type,
         string $trigger,
         array $target,
+        string $error,
         string $reason,
     ): void {
         $sell = BotSellOrder::create([
@@ -224,12 +236,13 @@ class OpenSellOrdersJob implements ShouldQueue
             'share_percent'        => $target['share'],
             'amount_to_sell'       => (string) $target['amount'],
             'status'               => BotSellOrder::STATUS_OPEN,
-        ] + $placement->waitingAttributes($reason));
+        ] + $placement->waitingAttributes($error, $reason));
 
         Log::channel('smart-bot')->info('bot.sell.open.waiting', [
             'execution_id'  => $execution->id,
             'sell_order_id' => $sell->id,
             'reason'        => $reason,
+            'error'         => $error,
         ]);
     }
 

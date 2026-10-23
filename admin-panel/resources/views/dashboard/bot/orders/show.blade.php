@@ -611,9 +611,15 @@
                                                                 <span
                                                                     class="badge {{ $sellBadge }}">{{ $sell->status }}</span>
                                                                 @if ($sell->isWaitingPlacement())
+                                                                    @php
+                                                                        $slotWait = $sell->waiting_reason === \App\Models\Bot\BotSellOrder::WAITING_ORDER_LIMIT;
+                                                                    @endphp
                                                                     <span class="badge bg-label-dark d-block mt-1">در انتظار ثبت
+                                                                        ({{ $slotWait ? 'سقف تعداد سفارش' : 'سقف قیمت' }})
                                                                         <i class="fas fa-info-circle ms-1"
-                                                                            title="قیمت این پله بالاتر از سقف قیمت فروش Binance است و هنوز سفارشی در صرافی ندارد. وقتی قیمت بازار به اندازه کافی بالا بیاید، خودکار ثبت می‌شود.{{ $sell->last_placement_error ? ' آخرین خطا: ' . $sell->last_placement_error : '' }}"></i></span>
+                                                                            title="{{ $slotWait
+                                                                                ? 'سقف تعداد سفارش باز این بازار در Binance پر است و این پله هنوز سفارشی در صرافی ندارد. با خالی شدن جا یا جابه‌جایی دورترین سفارش‌های ربات، خودکار ثبت می‌شود.'
+                                                                                : 'قیمت این پله بالاتر از سقف قیمت فروش Binance است و هنوز سفارشی در صرافی ندارد. وقتی قیمت بازار به اندازه کافی بالا بیاید، خودکار ثبت می‌شود.' }}{{ $sell->last_placement_error ? ' آخرین خطا: ' . $sell->last_placement_error : '' }}"></i></span>
                                                                 @endif
                                                             @endif
                                                         </td>
