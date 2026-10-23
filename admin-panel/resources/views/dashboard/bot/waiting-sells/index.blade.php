@@ -14,7 +14,8 @@
             <p class="text-muted mb-0" style="max-width: 56rem; line-height: 1.8;">
                 Binance سفارش فروش Limit را فقط تا چند برابر میانگین قیمت اخیر هر ارز قبول می‌کند (فیلتر
                 PERCENT_PRICE_BY_SIDE). پله‌هایی که قیمتشان بالاتر از این سقف است ثبت نمی‌شوند و اینجا «در انتظار ثبت»
-                می‌مانند. سیستم هر دقیقه بررسی می‌کند و هر پله‌ای که زیر سقف آمد را در Binance ثبت می‌کند؛ اگر قیمت در این مدت
+                می‌مانند. سیستم هر دقیقه بررسی می‌کند و هر پله‌ای که زیر سقف آمد را در Binance ثبت می‌کند؛ اگر قیمت در این
+                مدت
                 از تارگت پله بگذرد، پله با Market فروخته و مثل یک پله پرشده تسویه می‌شود.
             </p>
         </div>
@@ -68,7 +69,8 @@
                                 @if (!empty($lastRun['disabled']))
                                     ثبت خودکار خاموش بود
                                 @elseif ($totals)
-                                    ثبت {{ $totals['placed'] }} · Market {{ $totals['completed'] }} · رد {{ $totals['rejected'] }}
+                                    ثبت {{ $totals['placed'] }} · Market {{ $totals['completed'] }} · رد
+                                    {{ $totals['rejected'] }}
                                 @endif
                             </small>
                         @else
@@ -76,7 +78,8 @@
                             <small class="text-muted">اطلاعاتی از api-service دریافت نشد</small>
                         @endif
                     </div>
-                    <span class="badge bg-label-success rounded p-2"><i class="fa-light fa-clock-rotate-left fa-lg"></i></span>
+                    <span class="badge bg-label-success rounded p-2"><i
+                            class="fa-light fa-clock-rotate-left fa-lg"></i></span>
                 </div>
             </div>
         </div>
@@ -151,8 +154,8 @@
                                 <td class="ps-4">
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="avatar avatar-sm">
-                                            <img src="{{ $row->currency->coinLogo() }}" alt="" class="rounded-circle"
-                                                width="32" height="32">
+                                            <img src="{{ $row->currency->coinLogo() }}" alt=""
+                                                class="rounded-circle" width="32" height="32">
                                         </div>
                                         <div>
                                             <strong class="lh-1">{{ $row->symbol }}</strong>
@@ -165,7 +168,8 @@
                                 <td class="font-number text-center">{{ $row->users }} / {{ $row->orders }}</td>
                                 <td class="font-number">
                                     <span class="badge bg-label-primary">{{ $row->tiers }} پله</span>
-                                    <div><small>{{ formatNumberTrimZeros($row->amount, 8) }} {{ $row->symbol }}</small></div>
+                                    <div><small>{{ formatNumberTrimZeros($row->amount, 8) }} {{ $row->symbol }}</small>
+                                    </div>
                                 </td>
                                 <td class="font-number">
                                     @if ($row->price)
@@ -177,8 +181,10 @@
                                 <td class="font-number">
                                     {{ formatNumberTrimZeros($row->lowest_target, 8) }}
                                     @if ($row->lowest_above !== null)
-                                        <div><small class="text-muted" dir="ltr">+{{ number_format($row->lowest_above, 2) }}٪</small>
-                                            <small class="text-muted">از بازار</small></div>
+                                        <div><small class="text-muted"
+                                                dir="ltr">+{{ number_format($row->lowest_above, 2) }}٪</small>
+                                            <small class="text-muted">از بازار</small>
+                                        </div>
                                     @endif
                                 </td>
                                 <td>
@@ -187,7 +193,8 @@
                                 <td>
                                     <small>{{ $row->last_check ? \App\Helpers\DateFormatter::convertToPersianDate($row->last_check, '%Y/%m/%d H:i') : '—' }}</small>
                                     @if ($row->last_error)
-                                        <i class="fas fa-exclamation-circle text-danger ms-1" title="{{ $row->last_error }}"></i>
+                                        <i class="fas fa-exclamation-circle text-danger ms-1"
+                                            title="{{ $row->last_error }}"></i>
                                     @endif
                                     <div><small class="text-muted">{{ $row->attempts }} تلاش</small></div>
                                 </td>
@@ -247,6 +254,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             var csrf = '{{ csrf_token() }}';
             var placeTierUrl = @json(route('admin.bot.waiting-sells.place-tier', ['sellOrder' => '__ID__']));
+            var NEAR_RISE_PERCENT = 10;
 
             function toast(text, ok) {
                 Toastify({
@@ -341,7 +349,8 @@
 
             /* ── Place now (per coin) ── */
             function placeCurrency(url, symbol, btn) {
-                if (!confirm('پله‌های در انتظار ' + symbol + ' بررسی و هر کدام که زیر سقف قیمت Binance است ثبت شود؟')) return;
+                if (!confirm('پله‌های در انتظار ' + symbol +
+                        ' بررسی و هر کدام که زیر سقف قیمت Binance است ثبت شود؟')) return;
                 busy(btn, true);
                 request('POST', url).then(function(d) {
                     toast(d.ok ? d.message : (d.error || 'ثبت انجام نشد.'), !!d.ok);
@@ -376,22 +385,32 @@
                 var html = '';
 
                 if (d.block_reason) {
-                    html += '<div class="alert alert-warning"><i class="fas fa-ban me-1"></i>' + esc(d.block_reason) + '</div>';
+                    html += '<div class="alert alert-warning"><i class="fas fa-ban me-1"></i>' + esc(d
+                        .block_reason) + '</div>';
                 }
 
                 html += '<div class="alert ' + (c ? 'alert-info' : 'alert-secondary') + ' py-2 small">';
                 if (c) {
-                    html += '<div class="mb-1"><i class="fas fa-info-circle me-1"></i><strong>سقف قیمت فروش در Binance برای ' + sym + ':</strong> ' +
-                        'حداکثر <span class="font-number">' + fmt(c.multiplier_up, 4) + '</span> برابر میانگین قیمت ' +
-                        (c.avg_price_mins ? '<span class="font-number">' + c.avg_price_mins + '</span> دقیقه اخیر' : 'اخیر') +
+                    html +=
+                        '<div class="mb-1"><i class="fas fa-info-circle me-1"></i><strong>سقف قیمت فروش در Binance برای ' +
+                        sym + ':</strong> ' +
+                        'حداکثر <span class="font-number">' + fmt(c.multiplier_up, 4) +
+                        '</span> برابر میانگین قیمت ' +
+                        (c.avg_price_mins ? '<span class="font-number">' + c.avg_price_mins + '</span> دقیقه اخیر' :
+                            'اخیر') +
                         ' (حداکثر ' + pct(c.max_percent_above) + ' بالاتر از بازار).</div>' +
-                        '<div>' + (c.reference === 'avg' ? 'میانگین فعلی' : 'قیمت لحظه‌ای (میانگین Binance دریافت نشد)') +
-                        ' <span class="font-number">' + fmt(c.reference_price) + '</span> USDT؛ سقف الان <strong class="font-number">' +
-                        fmt(c.max_price) + '</strong> USDT و با حاشیه اطمینان، پله‌ها تا <strong class="font-number">' +
-                        fmt(c.place_max_price) + '</strong> USDT ثبت می‌شوند. قیمت لحظه‌ای: <span class="font-number">' +
+                        '<div>' + (c.reference === 'avg' ? 'میانگین فعلی' :
+                            'قیمت لحظه‌ای (میانگین Binance دریافت نشد)') +
+                        ' <span class="font-number">' + fmt(c.reference_price) +
+                        '</span> USDT؛ سقف الان <strong class="font-number">' +
+                        fmt(c.max_price) +
+                        '</strong> USDT و با حاشیه اطمینان، پله‌ها تا <strong class="font-number">' +
+                        fmt(c.place_max_price) +
+                        '</strong> USDT ثبت می‌شوند. قیمت لحظه‌ای: <span class="font-number">' +
                         fmt(d.live_price) + '</span> USDT.</div>';
                 } else {
-                    html += '<i class="fas fa-info-circle me-1"></i>سقف قیمت Binance برای این ارز دریافت نشد؛ فقط پله‌هایی که ' +
+                    html +=
+                        '<i class="fas fa-info-circle me-1"></i>سقف قیمت Binance برای این ارز دریافت نشد؛ فقط پله‌هایی که ' +
                         'قیمت از تارگتشان گذشته (فروش Market) قابل اقدام‌اند.';
                 }
                 html += '</div>';
@@ -403,49 +422,98 @@
                     return;
                 }
 
-                html += '<div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0">' +
+                var placeable = 0,
+                    near = 0,
+                    far = 0,
+                    unknown = 0,
+                    minRise = null;
+                tiers.forEach(function(r) {
+                    var rise = parseFloat(r.rise_needed_percent);
+                    if (r.placeable_now) placeable++;
+                    else if (!isFinite(rise)) unknown++;
+                    else {
+                        if (rise <= NEAR_RISE_PERCENT) near++;
+                        else far++;
+                        if (minRise === null || rise < minRise) minRise = rise;
+                    }
+                });
+
+                function stat(label, value, cls) {
+                    return '<div class="col"><div class="border rounded p-2 h-100 text-center">' +
+                        '<div class="small text-muted mb-1">' + label + '</div>' +
+                        '<h5 class="mb-0 font-number ' + cls + '">' + value + '</h5></div></div>';
+                }
+
+                html += '<div class="row row-cols-2 row-cols-md-' + (unknown ? 6 : 5) + ' g-2 mb-3">' +
+                    stat('کل پله‌های در انتظار', tiers.length, '') +
+                    stat('قابل ثبت همین الان', placeable, 'text-success') +
+                    stat('نزدیک به ثبت (تا ' + NEAR_RISE_PERCENT + '٪)', near, 'text-warning') +
+                    stat('دور از ثبت', far, 'text-danger') +
+                    (unknown ? stat('نامشخص', unknown, 'text-muted') : '') +
+                    stat('افزایش لازم برای پله بعدی', minRise === null ? '—' : pct(minRise), '') +
+                    '</div>';
+
+                html +=
+                    '<div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0">' +
                     '<thead class="table-light"><tr><th>پله</th><th>کاربر / سفارش</th><th>تارگت</th><th>قیمت فروش</th>' +
                     '<th>مقدار</th><th>تا قابل ثبت شدن</th><th>در انتظار از / تلاش‌ها</th><th>عملیات</th></tr></thead><tbody>';
                 tiers.forEach(function(r) {
                     var target = r.target_type === 'percent' ?
-                        fmt(r.target_value, 4) + '٪ <small class="text-muted">(خرید ' + fmt(r.avg_buy_price) + ')</small>' :
+                        fmt(r.target_value, 4) + '٪ <small class="text-muted">(خرید ' + fmt(r
+                        .avg_buy_price) + ')</small>' :
                         fmt(r.target_value);
+                    var isNear = !r.placeable_now && r.rise_needed_percent !== null &&
+                        parseFloat(r.rise_needed_percent) <= NEAR_RISE_PERCENT;
                     var distance = r.placeable_now ?
                         '<span class="badge bg-label-success">قابل ثبت</span>' :
                         (r.rise_needed_percent !== null ?
-                            '<small>میانگین قیمت باید ' + pct(r.rise_needed_percent) + ' بالا برود</small>' :
+                            (isNear ? '<span class="badge bg-label-warning mb-1">نزدیک به ثبت</span><br>' : '') +
+                            '<small>میانگین قیمت باید ' + pct(r.rise_needed_percent) +
+                            ' بالا برود</small>' :
                             '<small class="text-muted">نامشخص</small>');
-                    html += '<tr class="' + (r.placeable_now ? 'table-success' : '') + '">' +
-                        '<td class="font-number">#' + r.sell_order_id + '<div><small class="text-muted">' + fmt(r.share_percent, 2) + '٪</small></div></td>' +
-                        '<td><small>' + esc(r.user_label || '—') + '</small><div><small class="text-muted font-number">سفارش #' +
+                    html += '<tr class="' + (r.placeable_now ? 'table-success' : (isNear ? 'table-warning' : '')) +
+                        '">' +
+                        '<td class="font-number">#' + r.sell_order_id + '<div><small class="text-muted">' +
+                        fmt(r.share_percent, 2) + '٪</small></div></td>' +
+                        '<td><small>' + esc(r.user_label || '—') +
+                        '</small><div><small class="text-muted font-number">سفارش #' +
                         r.bot_order_id + '</small></div></td>' +
                         '<td class="font-number">' + target + '</td>' +
-                        '<td class="font-number">' + fmt(r.target_price) + '<div><small class="text-muted">' + pct(r.above_live_percent) +
+                        '<td class="font-number">' + fmt(r.target_price) +
+                        '<div><small class="text-muted">' + pct(r.above_live_percent) +
                         ' نسبت به بازار</small></div></td>' +
                         '<td class="font-number">' + fmt(r.amount) + '</td>' +
                         '<td>' + distance + '</td>' +
-                        '<td><small>' + when(r.waiting_since) + '</small><div><small class="text-muted">' + r.placement_attempts +
+                        '<td><small>' + when(r.waiting_since) + '</small><div><small class="text-muted">' +
+                        r.placement_attempts +
                         ' تلاش</small>' + (r.last_placement_error ?
-                            ' <i class="fas fa-exclamation-circle text-danger" title="' + esc(r.last_placement_error).replace(/"/g, '&quot;') + '"></i>' :
+                            ' <i class="fas fa-exclamation-circle text-danger" title="' + esc(r
+                                .last_placement_error).replace(/"/g, '&quot;') + '"></i>' :
                             '') + '</div></td>' +
                         '<td class="text-nowrap"><button type="button" class="btn btn-sm btn-outline-primary js-place-tier" data-id="' +
-                        r.sell_order_id + '"' + (d.block_reason ? ' disabled' : '') + '>ثبت این پله</button></td>' +
+                        r.sell_order_id + '"' + (d.block_reason ? ' disabled' : '') + '>ثبت</button></td>' +
                         '</tr>';
                 });
                 html += '</tbody></table></div>';
+                html += '<div class="small text-muted mt-2">تعداد سطرها: <span class="font-number">' + tiers
+                    .length + '</span> پله</div>';
                 bodyEl.innerHTML = html;
 
                 bodyEl.querySelectorAll('.js-place-tier').forEach(function(btn) {
                     btn.addEventListener('click', function() {
-                        if (!confirm('پله #' + btn.dataset.id + ' همین الان در Binance ثبت شود؟ اگر قیمتش بالاتر از سقف باشد Binance آن را رد می‌کند و پله در انتظار می‌ماند.')) return;
+                        if (!confirm('پله #' + btn.dataset.id +
+                                ' همین الان در Binance ثبت شود؟ اگر قیمتش بالاتر از سقف باشد Binance آن را رد می‌کند و پله در انتظار می‌ماند.'
+                                )) return;
                         busy(btn, true);
-                        request('POST', placeTierUrl.replace('__ID__', btn.dataset.id)).then(function(res) {
-                            toast(res.ok ? res.message : (res.error || 'ثبت انجام نشد.'), !!res.ok);
-                            if (res.ok) {
-                                changed = true;
-                                load();
-                            }
-                        }).catch(function() {
+                        request('POST', placeTierUrl.replace('__ID__', btn.dataset.id)).then(
+                            function(res) {
+                                toast(res.ok ? res.message : (res.error || 'ثبت انجام نشد.'), !!
+                                    res.ok);
+                                if (res.ok) {
+                                    changed = true;
+                                    load();
+                                }
+                            }).catch(function() {
                             toast('خطا در ارتباط با سرور.', false);
                         }).finally(function() {
                             busy(btn, false);
@@ -455,10 +523,12 @@
             }
 
             function load() {
-                bodyEl.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+                bodyEl.innerHTML =
+                    '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
                 request('GET', active.detailsUrl).then(function(d) {
                     if (!d.ok) {
-                        bodyEl.innerHTML = '<div class="alert alert-danger mb-0">' + esc(d.error || 'خطا در دریافت جزئیات.') + '</div>';
+                        bodyEl.innerHTML = '<div class="alert alert-danger mb-0">' + esc(d.error ||
+                            'خطا در دریافت جزئیات.') + '</div>';
                         return;
                     }
                     renderDetails(d);
@@ -503,7 +573,8 @@
                 var visible = 0;
 
                 rows.forEach(function(tr) {
-                    var match = (!q || tr.dataset.search.indexOf(q) !== -1) && (!state || tr.dataset.state === state);
+                    var match = (!q || tr.dataset.search.indexOf(q) !== -1) && (!state || tr.dataset
+                        .state === state);
                     tr.classList.toggle('d-none', !match);
                     if (match) visible++;
                 });

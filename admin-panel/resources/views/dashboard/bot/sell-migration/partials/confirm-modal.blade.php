@@ -11,6 +11,7 @@
             </div>
             <div class="modal-body" id="sellMigrationBody"></div>
             <div class="modal-footer">
+                <span class="me-auto small text-muted" id="sellMigrationRowCount"></span>
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" id="sellMigrationClose">انصراف</button>
                 <button type="button" class="btn btn-primary" id="sellMigrationConfirm" disabled>
                     <i class="fas fa-check me-1"></i> تایید و ایجاد پله‌ها در Binance
@@ -31,6 +32,7 @@
         var titleEl = document.getElementById('sellMigrationTitle');
         var confirmBtn = document.getElementById('sellMigrationConfirm');
         var closeBtn = document.getElementById('sellMigrationClose');
+        var rowCountEl = document.getElementById('sellMigrationRowCount');
         var csrf = '{{ csrf_token() }}';
         var statusUrlTemplate = @json(route('admin.bot.sell-migration.status', ['migration' => '__ID__']));
         var confirmHtml = confirmBtn.innerHTML;
@@ -40,6 +42,7 @@
         var tooltips = [];
 
         function setBody(html) {
+            rowCountEl.innerHTML = '';
             tooltips.forEach(function(t) { t.dispose(); });
             bodyEl.innerHTML = html;
             tooltips = Array.prototype.map.call(bodyEl.querySelectorAll('[data-bs-toggle="tooltip"]'), function(el) {
@@ -251,6 +254,9 @@
                 'سقف قیمت رد کند، آن پله هم به‌جای ناموفق «در انتظار ثبت» می‌شود.</div>';
 
             setBody(html);
+            if (tiers.length) {
+                rowCountEl.innerHTML = 'تعداد سطرهای جدول: <span class="font-number">' + tiers.length + '</span> پله';
+            }
             confirmBtn.disabled = !d.can_start;
         }
 
