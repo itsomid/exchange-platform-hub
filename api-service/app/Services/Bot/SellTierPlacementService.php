@@ -5,6 +5,7 @@ namespace App\Services\Bot;
 use App\Events\Bot\BotSellOrderFilled;
 use App\Jobs\Bot\OpenSellOrdersJob;
 use App\Models\Bot\BotCurrencyCancellation;
+use App\Models\Bot\BotGlobalSettings;
 use App\Models\Bot\BotSellMigration;
 use App\Models\Bot\BotSellOrder;
 use App\Services\Bot\ReferenceExchange\ExchangeContract;
@@ -84,7 +85,7 @@ class SellTierPlacementService
         }
 
         $maxPrice = bcmul($refPrice, $up, self::SCALE);
-        $margin   = bcdiv(number_format((float) config('smart-bot.waiting.safety_margin_percent', 2), 4, '.', ''), '100', self::SCALE);
+        $margin   = bcdiv(number_format((float) BotGlobalSettings::current()->waiting_safety_margin_percent, 4, '.', ''), '100', self::SCALE);
         $mins     = $filters['avgPriceMins'] ?? null;
 
         return [
@@ -193,7 +194,7 @@ class SellTierPlacementService
         }
 
         $max     = is_numeric($filters['maxNumOrders'] ?? null) ? (int) $filters['maxNumOrders'] : self::DEFAULT_MAX_NUM_ORDERS;
-        $reserve = max(0, (int) config('smart-bot.waiting.order_slot_reserve', 10));
+        $reserve = max(0, (int) BotGlobalSettings::current()->waiting_order_slot_reserve);
         $open    = count($openOrders);
 
         return [

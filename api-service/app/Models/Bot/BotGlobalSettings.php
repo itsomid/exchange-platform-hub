@@ -18,6 +18,12 @@ class BotGlobalSettings extends Model
         'is_enabled',
         'cancel_sell_on_exchange_enabled',
         'waiting_sells_auto_place',
+        'waiting_safety_margin_percent',
+        'waiting_max_per_run',
+        'waiting_order_slot_reserve',
+        'waiting_rotation_enabled',
+        'waiting_rotation_max_per_run',
+        'waiting_rotation_min_gap_percent',
     ];
 
     protected function casts(): array
@@ -33,6 +39,12 @@ class BotGlobalSettings extends Model
             'is_enabled'                      => 'boolean',
             'cancel_sell_on_exchange_enabled' => 'boolean',
             'waiting_sells_auto_place'        => 'boolean',
+            'waiting_safety_margin_percent'    => 'decimal:2',
+            'waiting_max_per_run'              => 'integer',
+            'waiting_order_slot_reserve'       => 'integer',
+            'waiting_rotation_enabled'         => 'boolean',
+            'waiting_rotation_max_per_run'     => 'integer',
+            'waiting_rotation_min_gap_percent' => 'decimal:2',
         ];
     }
 
@@ -50,6 +62,12 @@ class BotGlobalSettings extends Model
             'is_enabled'                      => true,
             'cancel_sell_on_exchange_enabled' => true,
             'waiting_sells_auto_place'        => true,
+            'waiting_safety_margin_percent'    => 2,
+            'waiting_max_per_run'              => 200,
+            'waiting_order_slot_reserve'       => 10,
+            'waiting_rotation_enabled'         => true,
+            'waiting_rotation_max_per_run'     => 30,
+            'waiting_rotation_min_gap_percent' => 10,
         ]);
     }
 

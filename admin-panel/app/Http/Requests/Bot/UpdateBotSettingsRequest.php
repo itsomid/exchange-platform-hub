@@ -16,6 +16,7 @@ class UpdateBotSettingsRequest extends FormRequest
         $this->merge([
             'is_enabled'                      => $this->boolean('is_enabled'),
             'cancel_sell_on_exchange_enabled' => $this->boolean('cancel_sell_on_exchange_enabled'),
+            'waiting_rotation_enabled'        => $this->boolean('waiting_rotation_enabled'),
         ]);
     }
 
@@ -31,6 +32,13 @@ class UpdateBotSettingsRequest extends FormRequest
             'precheck_floor_mode'       => ['required', 'in:single,multi'],
             'is_enabled'                => ['boolean'],
             'cancel_sell_on_exchange_enabled' => ['boolean'],
+
+            'waiting_safety_margin_percent'    => ['required', 'numeric', 'min:0', 'max:50'],
+            'waiting_max_per_run'              => ['required', 'integer', 'min:1', 'max:5000'],
+            'waiting_order_slot_reserve'       => ['required', 'integer', 'min:0', 'max:200'],
+            'waiting_rotation_enabled'         => ['boolean'],
+            'waiting_rotation_max_per_run'     => ['required', 'integer', 'min:0', 'max:1000'],
+            'waiting_rotation_min_gap_percent' => ['required', 'numeric', 'min:0', 'max:1000'],
 
             'transfer_fee_tiers'             => ['required', 'array', 'min:1'],
             'transfer_fee_tiers.*.from'      => ['required', 'numeric', 'min:0'],
@@ -50,6 +58,12 @@ class UpdateBotSettingsRequest extends FormRequest
             'referral_fee_percent'      => 'سهم معرف از کارمزد عملکرد (%)',
             'is_enabled'                => 'وضعیت ربات',
             'cancel_sell_on_exchange_enabled' => 'فروش کوین‌ها روی صرافی مرجع هنگام لغو',
+            'waiting_safety_margin_percent'    => 'حاشیه اطمینان زیر سقف قیمت (%)',
+            'waiting_max_per_run'              => 'حداکثر ثبت سفارش در هر اجرا',
+            'waiting_order_slot_reserve'       => 'رزرو سفارش باز برای بقیه حساب',
+            'waiting_rotation_enabled'         => 'جابه‌جایی سفارش‌های دور',
+            'waiting_rotation_max_per_run'     => 'حداکثر جابه‌جایی در هر اجرا',
+            'waiting_rotation_min_gap_percent' => 'حداقل فاصله برای جابه‌جایی (%)',
         ];
     }
 }

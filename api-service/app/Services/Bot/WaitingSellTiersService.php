@@ -2,6 +2,7 @@
 
 namespace App\Services\Bot;
 
+use App\Models\Bot\BotGlobalSettings;
 use App\Models\Bot\BotSellOrder;
 use App\Models\Currency;
 use Illuminate\Support\Collection;
@@ -98,7 +99,9 @@ class WaitingSellTiersService
         // Unknown slots (non-Binance driver / API down): only Binance's answer limits placement.
         $free          = $slots['free'] ?? null;
         $farthestFirst = $slots !== null ? array_reverse($this->placedTiers($currency->id)) : [];
-        $rotationsLeft = config('smart-bot.waiting.rotation_enabled', true) ? $rotationBudget : 0;
+        $settings      = BotGlobalSettings::current();
+        $rotationsLeft = $settings->waiting_rotation_enabled ? $rotationBudget : 0;
+        $rotationGap   = number_format((float) $settings->waiting_rotation_min_gap_percent, 4, '.', '');
         $hasLive       = bccomp($livePrice, '0', self::SCALE) > 0;
         $priceIds      = [];
         $slotIds       = [];
@@ -130,7 +133,7 @@ class WaitingSellTiersService
 
             // Market sells need no slot; a limit sell needs one, rotated free if necessary.
             if (! $isHit && $free !== null && $free <= 0) {
-                $rotation = $rotationsLeft > 0 ? $this->rotateFor($target, $market, $farthestFirst, $openOrders) : null;
+                $rotation = $rotationsLeft > 0 ? $this->rotateFor($target, $market, $rotationGap, $farthestFirst, $openOrders) : null;
                 if ($rotation !== null) {
                     $rotationsLeft--;
                     $summary['results'][] = $rotation;
@@ -217,6 +220,7 @@ class WaitingSellTiersService
         $symbol    = strtoupper((string) $currency->symbol);
         $market    = $symbol.'USDT';
         $livePrice = $this->livePrice($currency);
+        $settings  = BotGlobalSettings::current();
         $ceiling   = $this->placement->ceiling($market, $livePrice);
         $slots     = $this->placement->orderSlots($market, $this->placement->openOrders($market));
         $waiting   = $this->waitingTiers($currency->id);
@@ -269,8 +273,8 @@ class WaitingSellTiersService
             'ceiling'      => $ceiling,
             'slots'        => $slots,
             'rotation'     => [
-                'enabled'         => (bool) config('smart-bot.waiting.rotation_enabled', true),
-                'min_gap_percent' => (float) config('smart-bot.waiting.rotation_min_gap_percent', 10),
+                'enabled'         => (bool) $settings->waiting_rotation_enabled,
+                'min_gap_percent' => (float) $settings->waiting_rotation_min_gap_percent,
             ],
             'groups'       => $this->groups($tiers, $livePrice),
             'milestones'   => $this->milestones($tiers, $livePrice),
@@ -298,17 +302,16 @@ class WaitingSellTiersService
     }
 
     /**
-     * Rotate out the farthest bot order that sits at least the configured gap
-     * above $target and has nothing executed. Consumes $farthestFirst.
+     * Rotate out the farthest bot order that sits at least $gapPercent above
+     * $target and has nothing executed. Consumes $farthestFirst.
      *
      * @param  list<array{tier:BotSellOrder, target:string}>  $farthestFirst
      * @param  array<string,string>|null  $openOrders  orderId => executedQty
      * @return array<string,mixed>|null null when no order qualifies
      */
-    private function rotateFor(string $target, string $market, array &$farthestFirst, ?array $openOrders): ?array
+    private function rotateFor(string $target, string $market, string $gapPercent, array &$farthestFirst, ?array $openOrders): ?array
     {
-        $gap    = number_format((float) config('smart-bot.waiting.rotation_min_gap_percent', 10), 4, '.', '');
-        $minFar = bcmul($target, bcadd('1', bcdiv($gap, '100', self::SCALE), self::SCALE), self::SCALE);
+        $minFar = bcmul($target, bcadd('1', bcdiv($gapPercent, '100', self::SCALE), self::SCALE), self::SCALE);
 
         while ($farthestFirst !== [] && bccomp($farthestFirst[0]['target'], $minFar, self::SCALE) > 0) {
             $far      = array_shift($farthestFirst);

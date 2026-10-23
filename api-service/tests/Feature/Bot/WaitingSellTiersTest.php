@@ -343,6 +343,29 @@ it('places waiting tiers only into the free open-order slots and marks the rest 
         ->and($run['currencies'][0]['slots'])->toMatchArray(['max' => 12, 'reserve' => 10, 'open' => 0, 'free' => 2]);
 });
 
+it('takes the slot reserve and rotation switch from the bot global settings', function () {
+    $settings = BotGlobalSettings::current();
+    $settings->waiting_order_slot_reserve = 11;
+    $settings->waiting_rotation_enabled = false;
+    $settings->save();
+
+    $execution = wtExecution(wtCurrency());
+    wtPlacedTier($execution, '400', '5000'); // 500
+    $a = wtWaitingTier($execution, '110'); // 210
+    $b = wtWaitingTier($execution, '120'); // 220
+    wtFakeBinance('130', [wtOpenOrder('5000')], maxNumOrders: 13); // 13 − 11 reserve − 1 open = 1 free slot
+    Cache::put('market:price:IOSTUSDT', '130');
+
+    $this->artisan('bot:place-waiting-sells')->assertSuccessful();
+
+    expect($this->fake->limitSells)->toHaveCount(1)
+        ->and($this->fake->cancels)->toBeEmpty()
+        ->and($a->fresh()->placement_status)->toBe(BotSellOrder::PLACEMENT_PLACED)
+        ->and($b->fresh()->waiting_reason)->toBe(BotSellOrder::WAITING_ORDER_LIMIT)
+        ->and(app(WaitingSellTiersService::class)->lastRun()['currencies'][0]['slots'])
+        ->toMatchArray(['max' => 13, 'reserve' => 11, 'open' => 1, 'free' => 1]);
+});
+
 it('rotates the farthest untouched bot order out to place a nearer waiting tier', function () {
     $execution = wtExecution(wtCurrency());
     $far  = wtPlacedTier($execution, '400', '5000'); // 500

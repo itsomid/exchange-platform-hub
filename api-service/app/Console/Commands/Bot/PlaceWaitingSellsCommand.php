@@ -26,15 +26,16 @@ class PlaceWaitingSellsCommand extends Command
     {
         $startedAt = now();
 
-        if (! $this->option('force') && ! BotGlobalSettings::current()->waiting_sells_auto_place) {
+        $settings = BotGlobalSettings::current();
+        if (! $this->option('force') && ! $settings->waiting_sells_auto_place) {
             $this->info('bot:place-waiting-sells disabled');
             $service->rememberLastRun(['at' => $startedAt->toIso8601String(), 'disabled' => true]);
 
             return self::SUCCESS;
         }
 
-        $budget    = max(1, (int) config('smart-bot.waiting.max_per_run', 200));
-        $rotations = max(0, (int) config('smart-bot.waiting.rotation_max_per_run', 30));
+        $budget    = max(1, (int) $settings->waiting_max_per_run);
+        $rotations = max(0, (int) $settings->waiting_rotation_max_per_run);
         $keys      = ['waiting', 'placed', 'completed', 'rejected', 'rotated', 'still_waiting', 'price_waiting', 'slot_waiting'];
         $totals    = ['currencies' => 0] + array_fill_keys($keys, 0);
         $coins     = [];

@@ -186,6 +186,47 @@ class BotWaitingSellsPageTest extends TestCase
         $this->assertFalse((bool) BotGlobalSettings::current()->waiting_sells_auto_place);
     }
 
+    public function test_settings_page_shows_waiting_tier_defaults(): void
+    {
+        $this->actingAs($this->admin, 'admin')
+            ->get(route('admin.bot.settings.index'))
+            ->assertOk()
+            ->assertSeeInOrder(['name="waiting_max_per_run"', 'value="200"'], false)
+            ->assertSeeInOrder(['name="waiting_order_slot_reserve"', 'value="10"'], false)
+            ->assertSeeInOrder(['name="waiting_rotation_max_per_run"', 'value="30"'], false)
+            ->assertSee('id="waiting_rotation_enabled"', false);
+    }
+
+    public function test_settings_page_saves_waiting_tier_settings(): void
+    {
+        $this->actingAs($this->admin, 'admin')
+            ->patch(route('admin.bot.settings.update'), [
+                'min_deposit_usdt'                 => 20,
+                'alpha_weight'                     => 0.15,
+                'default_sell_orders_count'        => 3,
+                'performance_fee_percent'          => 22,
+                'referral_fee_percent'             => 4,
+                'p2p_min_order_value'              => 5,
+                'precheck_floor_mode'              => 'multi',
+                'transfer_fee_tiers'               => [['from' => 20, 'to' => null, 'fee_type' => 'flat', 'fee_value' => 1]],
+                'waiting_safety_margin_percent'    => 3,
+                'waiting_max_per_run'              => 150,
+                'waiting_order_slot_reserve'       => 15,
+                'waiting_rotation_max_per_run'     => 20,
+                'waiting_rotation_min_gap_percent' => 12.5,
+            ])
+            ->assertRedirect(route('admin.bot.settings.index'))
+            ->assertSessionHasNoErrors();
+
+        $settings = BotGlobalSettings::current();
+        $this->assertSame('3.00', $settings->waiting_safety_margin_percent);
+        $this->assertSame(150, $settings->waiting_max_per_run);
+        $this->assertSame(15, $settings->waiting_order_slot_reserve);
+        $this->assertFalse($settings->waiting_rotation_enabled);
+        $this->assertSame(20, $settings->waiting_rotation_max_per_run);
+        $this->assertSame('12.50', $settings->waiting_rotation_min_gap_percent);
+    }
+
     public function test_place_actions_are_forwarded_to_api_service(): void
     {
         Http::fake(['*' => Http::response(['ok' => true, 'message' => 'done'])]);

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Internal;
 
 use App\Http\Controllers\Controller;
+use App\Models\Bot\BotGlobalSettings;
 use App\Models\Bot\BotSellOrder;
 use App\Models\Currency;
 use App\Services\Bot\WaitingSellTiersService;
@@ -41,10 +42,11 @@ class BotWaitingSellsController extends Controller
             return response()->json(['ok' => false, 'error' => 'ارز یافت نشد.'], 404);
         }
 
-        $summary = $this->service->placeCurrency(
+        $settings = BotGlobalSettings::current();
+        $summary  = $this->service->placeCurrency(
             $currency,
-            max(1, (int) config('smart-bot.waiting.max_per_run', 200)),
-            max(0, (int) config('smart-bot.waiting.rotation_max_per_run', 30)),
+            max(1, (int) $settings->waiting_max_per_run),
+            max(0, (int) $settings->waiting_rotation_max_per_run),
         );
         if ($summary['skipped'] !== null) {
             return response()->json(['ok' => false, 'error' => $summary['skipped']], 409);

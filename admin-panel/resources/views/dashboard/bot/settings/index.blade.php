@@ -224,6 +224,84 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                {{-- Waiting sell tiers --}}
+                                <div class="col-12 mt-3">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="mb-1">ثبت پله‌های فروش در انتظار (Binance)</h5>
+                                            <small class="text-muted">
+                                                پله‌هایی که به‌خاطر سقف قیمت Binance یا سقف تعداد سفارش باز هر نماد (MAX_NUM_ORDERS) ثبت نشده‌اند،
+                                                هر دقیقه بررسی و در صورت امکان ثبت می‌شوند.
+                                            </small>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-4 mb-3">
+                                                    <label for="waiting_safety_margin_percent" class="form-label">حاشیه اطمینان زیر سقف قیمت (%) <span class="text-danger">*</span></label>
+                                                    <input type="number" step="0.01" min="0" max="50"
+                                                        class="form-control @error('waiting_safety_margin_percent') is-invalid @enderror"
+                                                        id="waiting_safety_margin_percent" name="waiting_safety_margin_percent"
+                                                        value="{{ old('waiting_safety_margin_percent', $settings?->waiting_safety_margin_percent ?? 2) }}">
+                                                    <small class="form-text text-muted">پله فقط وقتی ثبت می‌شود که قیمتش حداقل این مقدار زیر سقف قیمت Binance باشد، چون میانگین قیمت تا رسیدن سفارش کمی جابه‌جا می‌شود.</small>
+                                                    @error('waiting_safety_margin_percent')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                                </div>
+
+                                                <div class="col-md-4 mb-3">
+                                                    <label for="waiting_max_per_run" class="form-label">حداکثر ثبت سفارش در هر اجرا <span class="text-danger">*</span></label>
+                                                    <input type="number" step="1" min="1" max="5000"
+                                                        class="form-control @error('waiting_max_per_run') is-invalid @enderror"
+                                                        id="waiting_max_per_run" name="waiting_max_per_run"
+                                                        value="{{ old('waiting_max_per_run', $settings?->waiting_max_per_run ?? 200) }}">
+                                                    <small class="form-text text-muted">تعداد سفارشی که هر اجرای خودکار یا دکمه «ثبت» روی Binance می‌فرستد.</small>
+                                                    @error('waiting_max_per_run')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                                </div>
+
+                                                <div class="col-md-4 mb-3">
+                                                    <label for="waiting_order_slot_reserve" class="form-label">رزرو سفارش باز برای بقیه حساب <span class="text-danger">*</span></label>
+                                                    <input type="number" step="1" min="0" max="200"
+                                                        class="form-control @error('waiting_order_slot_reserve') is-invalid @enderror"
+                                                        id="waiting_order_slot_reserve" name="waiting_order_slot_reserve"
+                                                        value="{{ old('waiting_order_slot_reserve', $settings?->waiting_order_slot_reserve ?? 10) }}">
+                                                    <small class="form-text text-muted">از سقف سفارش باز هر نماد (معمولاً ۲۰۰)، این تعداد برای سفارش‌های غیر ربات روی همان حساب Binance خالی می‌ماند.</small>
+                                                    @error('waiting_order_slot_reserve')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                                </div>
+
+                                                <div class="col-md-4 mb-3">
+                                                    <div class="form-check form-switch mt-md-4">
+                                                        <input class="form-check-input" type="checkbox" id="waiting_rotation_enabled"
+                                                            name="waiting_rotation_enabled" value="1"
+                                                            {{ old('waiting_rotation_enabled', $settings?->waiting_rotation_enabled ?? true) ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="waiting_rotation_enabled">جابه‌جایی سفارش‌های دور</label>
+                                                    </div>
+                                                    <small class="form-text text-muted d-block">
+                                                        وقتی سفارش باز خالی نمانده، دورترین سفارش ربات که هیچ بخشی از آن پر نشده لغو و به صف انتظار برمی‌گردد تا پله نزدیک‌تر جایش ثبت شود.
+                                                    </small>
+                                                </div>
+
+                                                <div class="col-md-4 mb-3">
+                                                    <label for="waiting_rotation_max_per_run" class="form-label">حداکثر جابه‌جایی در هر اجرا <span class="text-danger">*</span></label>
+                                                    <input type="number" step="1" min="0" max="1000"
+                                                        class="form-control @error('waiting_rotation_max_per_run') is-invalid @enderror"
+                                                        id="waiting_rotation_max_per_run" name="waiting_rotation_max_per_run"
+                                                        value="{{ old('waiting_rotation_max_per_run', $settings?->waiting_rotation_max_per_run ?? 30) }}">
+                                                    <small class="form-text text-muted">برای هر کوین در هر اجرا.</small>
+                                                    @error('waiting_rotation_max_per_run')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                                </div>
+
+                                                <div class="col-md-4 mb-3">
+                                                    <label for="waiting_rotation_min_gap_percent" class="form-label">حداقل فاصله برای جابه‌جایی (%) <span class="text-danger">*</span></label>
+                                                    <input type="number" step="0.01" min="0" max="1000"
+                                                        class="form-control @error('waiting_rotation_min_gap_percent') is-invalid @enderror"
+                                                        id="waiting_rotation_min_gap_percent" name="waiting_rotation_min_gap_percent"
+                                                        value="{{ old('waiting_rotation_min_gap_percent', $settings?->waiting_rotation_min_gap_percent ?? 10) }}">
+                                                    <small class="form-text text-muted">سفارش دور فقط وقتی جابه‌جا می‌شود که قیمتش حداقل این درصد بالاتر از پله در انتظار باشد.</small>
+                                                    @error('waiting_rotation_min_gap_percent')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="mt-3">
