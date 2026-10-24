@@ -27,10 +27,16 @@
                                 />
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label" for="search">کاربر</label>
-                                <input type="text" name="search" id="search" class="form-control"
-                                    placeholder="جستجوی کاربر بر اساس ایمیل، موبایل یا نام کاربری..."
-                                    value="{{ request('search') }}">
+                                <label class="form-label" for="user">کاربر</label>
+                                <x-user-selection-component input-name="user" multiple="0"
+                                    selected="{{ request()->filled('user') ? request()->input('user') : '' }}"
+                                    selected-label="{{ request()->filled('user')
+                                        ? '(#' .
+                                            request()->input('user') .
+                                            ') ' .
+                                            (\App\Models\User::find(request()->input('user'))?->email ??
+                                                'کاربر #' . request()->input('user'))
+                                        : '' }}"></x-user-selection-component>
                             </div>
                             <div class="col-md-4">
                                 <button type="submit" class="btn btn-secondary">

@@ -37,7 +37,7 @@ class BotOrderController extends Controller
      */
     public function index(Request $request): View
     {
-        $search = $request->get('search');
+        $userId = $request->filled('user') ? (int) $request->get('user') : null;
         $currencyId = $request->filled('currency_id') ? (int) $request->get('currency_id') : null;
 
         $sortable = [
@@ -78,13 +78,7 @@ class BotOrderController extends Controller
                         ->where('bot_buy_executions.currency_id', $currencyId);
                 });
             })
-            ->when($search, function ($q) use ($search) {
-                $q->where(function ($w) use ($search) {
-                    $w->where('users.email', 'like', "%{$search}%")
-                        ->orWhere('users.mobile', 'like', "%{$search}%")
-                        ->orWhere('users.username', 'like', "%{$search}%");
-                });
-            })
+            ->when($userId, fn ($q) => $q->where('users.id', $userId))
             ->groupBy('users.id', 'users.email', 'users.mobile', 'users.username')
             ->orderBy($sortable[$sort], $dir)
             ->when($sort !== 'last_order_at', fn ($q) => $q->orderByDesc('last_order_at'))
