@@ -41,13 +41,13 @@ class BotOrderController extends Controller
         $currencyId = $request->filled('currency_id') ? (int) $request->get('currency_id') : null;
 
         $sortable = [
-            'orders_count'    => 'orders_count',
-            'total_allocated' => 'total_allocated',
-            'locked_balance'  => 'locked_balance',
-            'free_balance'    => 'free_balance',
-            'profit_balance'  => 'profit_balance',
-            'auto_trade'      => 'auto_trade_enabled',
-            'last_order_at'   => 'last_order_at',
+            'orders_count'     => 'orders_count',
+            'invested_balance' => 'invested_balance',
+            'locked_balance'   => 'locked_balance',
+            'free_balance'     => 'free_balance',
+            'profit_balance'   => 'profit_balance',
+            'auto_trade'       => 'auto_trade_enabled',
+            'last_order_at'    => 'last_order_at',
         ];
         $sort = array_key_exists($request->get('sort'), $sortable)
             ? $request->get('sort')
@@ -64,7 +64,7 @@ class BotOrderController extends Controller
             ->leftJoin('bot_user_settings', 'bot_user_settings.user_id', '=', 'users.id')
             ->selectRaw('users.id as user_id, users.email, users.mobile, users.username')
             ->selectRaw('COUNT(bot_orders.id) as orders_count')
-            ->selectRaw('SUM(bot_orders.total_amount_usdt) as total_allocated')
+            ->selectRaw('COALESCE(MAX(bot_wallets.balance), 0) as invested_balance')
             ->selectRaw('MAX(bot_orders.created_at) as last_order_at')
             ->selectRaw('COALESCE(MAX(bot_wallets.locked_balance), 0) as locked_balance')
             ->selectRaw('COALESCE(MAX(bot_wallets.profit_balance), 0) as profit_balance')
@@ -218,6 +218,13 @@ class BotOrderController extends Controller
             ->where('bot_buy_executions.status', '!=', 'SKIPPED')
             ->sum('bot_buy_executions.allocated_usdt');
 
+        // Sum of every order's requested amount — the figure that used to be the
+        // "total allocation" column of the orders list. It differs from
+        // $grossAllocated whenever an order was not fully executed.
+        $ordersTotalAmount = (float) BotOrder::query()
+            ->where('user_id', $user->id)
+            ->sum('total_amount_usdt');
+
         // ── Wallet flows (from the bot_wallet_transfers ledger) ─────────────────
         $deposits = (float) BotWalletTransfer::where('user_id', $user->id)
             ->where('direction', BotWalletTransfer::DIRECTION_IN)
@@ -276,6 +283,7 @@ class BotOrderController extends Controller
             'user', 'settings', 'orders', 'orderPnl', 'currencies',
             'balance', 'locked', 'withdrawable', 'actualInvestment', 'realizedProfit',
             'totalPnl', 'freedUsdt', 'positivePnl', 'negativePnl', 'grossAllocated',
+            'ordersTotalAmount',
             'deposits', 'withdrawals', 'lockedPct', 'freePct',
             'tradeFees', 'transferFees', 'totalFees',
             'depositTransferFee', 'withdrawTransferFee', 'refExchangeFee',

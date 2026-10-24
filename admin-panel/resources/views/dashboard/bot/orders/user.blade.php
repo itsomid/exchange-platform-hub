@@ -195,6 +195,15 @@
                         <div class="col-6 col-md-3">
                             <div class="border rounded p-3 text-center h-100">
                                 <small class="text-muted d-block mb-1"><i
+                                        class="fas fa-file-invoice-dollar fa-xs me-1"></i>مجموع مبلغ سفارش‌ها</small>
+                                <div class="fw-bold fs-6 font-number">{{ formatNumberTrimZeros($ordersTotalAmount) }}</div>
+                                <small class="text-muted">USDT</small>
+                                <small class="text-muted d-block mt-1">جمع مبلغ کل سفارش‌های ثبت‌شده</small>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="border rounded p-3 text-center h-100">
+                                <small class="text-muted d-block mb-1"><i
                                         class="fas fa-unlock fa-xs me-1 text-success"></i>آزادشده (برگشتی) کل</small>
                                 <div class="fw-bold fs-6 font-number">{{ formatNumberTrimZeros($freedUsdt) }}</div>
                                 <small class="text-muted">USDT</small>

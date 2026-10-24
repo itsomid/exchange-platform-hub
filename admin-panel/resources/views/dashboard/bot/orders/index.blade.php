@@ -50,7 +50,7 @@
                                     <th>کاربر</th>
                                     @foreach ([
                                         'orders_count' => 'تعداد سفارش',
-                                        'total_allocated' => 'مجموع تخصیص (USDT)',
+                                        'invested_balance' => 'مقدار واقعی سرمایه‌گذاری (USDT)',
                                         'locked_balance' => 'مقدار قفل شده (USDT)',
                                         'free_balance' => 'موجودی آزاد (USDT)',
                                         'profit_balance' => 'سود کلی (USDT)',
@@ -103,7 +103,7 @@
                                         </td>
                                         <td><span class="badge bg-secondary">{{ $row->orders_count }}</span></td>
                                         <td class="font-number">
-                                            {{ formatNumberTrimZeros((float) $row->total_allocated, 4) }}</td>
+                                            {{ formatNumberTrimZeros((float) $row->invested_balance, 4) }}</td>
                                         <td class="font-number">{{ formatNumberTrimZeros($lockedBalance, 4) }}</td>
                                         <td class="font-number text-success">
                                             {{ formatNumberTrimZeros($freeBalance, 4) }}</td>
