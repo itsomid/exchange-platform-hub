@@ -20,7 +20,10 @@ use Illuminate\Support\Collection;
  *
  *   SIGNAL EDGE — a new opportunity appeared, so re-evaluate every eligible user:
  *     1. Activation   — an admin created/re-activated a signal (admin-panel sets
- *        bot_signals.activation_pending_at). Consumed and cleared here.
+ *        bot_signals.activation_pending_at). Consumed and cleared here only
+ *        while the global bot switch is enabled.
+ *        Re-enabling the global bot also marks all active signals, so users
+ *        with unchanged free balances get one fresh evaluation.
  *     2. Price entered — a signal was active but its live price sat outside
  *        [floor, ceiling] and has now moved inside. Detected by comparing the
  *        freshly computed in-range state against the stored price_in_range
@@ -44,6 +47,15 @@ class ScanBuyTriggersCommand extends Command
 
     public function handle(PriceFeed $priceFeed): int
     {
+        // Leave staged activations and price snapshots untouched while paused.
+        // Otherwise the jobs are blocked by the orchestrator but their signal
+        // edge has already been lost by the time the admin resumes trading.
+        if (! BotGlobalSettings::current()->is_enabled) {
+            $this->info('bot:scan-buy-triggers disabled=1 dispatched=0');
+
+            return self::SUCCESS;
+        }
+
         $signals = BotSignal::active()->get();
 
         $activationSignalIds = [];

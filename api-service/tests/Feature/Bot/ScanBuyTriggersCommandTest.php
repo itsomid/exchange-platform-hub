@@ -1,9 +1,12 @@
 <?php
 
 use App\Actions\Bot\BotBuyOrchestrator;
+use App\Jobs\Bot\BuyExecutionJob;
 use App\Jobs\Bot\SignalScanBuyJob;
 use App\Models\Bot\BotBuyAttempt;
+use App\Models\Bot\BotBuyExecution;
 use App\Models\Bot\BotGlobalSettings;
+use App\Models\Bot\BotOrder;
 use App\Models\Bot\BotSignal;
 use App\Models\Bot\BotUserSettings;
 use App\Models\Bot\BotWallet;
@@ -181,6 +184,104 @@ it('skips users whose free balance is below the cheapest buy floor', function ()
 
     $this->artisan('bot:scan-buy-triggers')->assertSuccessful();
 
+    Queue::assertNothingPushed();
+});
+
+it('does not dispatch or consume activation markers while globally disabled', function () {
+    BotGlobalSettings::current()->update(['is_enabled' => false]);
+    scanUser('10.00000000');
+    $signal = scanSignal(priceInRange: false);
+    $signal->update(['activation_pending_at' => now()]);
+    $pendingAt = $signal->fresh()->activation_pending_at;
+
+    $this->mock(PriceFeed::class)->shouldNotReceive('getLive');
+
+    $this->artisan('bot:scan-buy-triggers')->assertSuccessful();
+    $this->artisan('bot:scan-buy-triggers')->assertSuccessful();
+
+    Queue::assertNothingPushed();
+    expect($signal->fresh()->activation_pending_at)->not->toBeNull();
+    expect($signal->fresh()->activation_pending_at->equalTo($pendingAt))->toBeTrue();
+    expect($signal->fresh()->price_in_range)->toBeFalse();
+    expect(BotBuyAttempt::count())->toBe(0);
+});
+
+it('buys from all staged signals after re-enabling even when user balances have not changed', function () {
+    $settings = BotGlobalSettings::current();
+    // Equal weighting keeps both 5-USDT allocations above the 2.7 buy floor.
+    $settings->update(['is_enabled' => false, 'alpha_weight' => 1]);
+
+    // Each user has 10 free USDT, below the deposit minimum. Existing locked
+    // funds must not be allocated again when the global switch comes back on.
+    $users = collect([
+        scanUser('30.00000000', locked: '20.00000000'),
+        scanUser('40.00000000', locked: '30.00000000'),
+    ]);
+    foreach ($users as $user) {
+        recordScanAttempt($user, '10.00000000');
+    }
+
+    $this->mock(PriceFeed::class)->shouldReceive('getLive')->andReturn(1.5);
+    $signals = collect();
+    foreach ([1, 2] as $priority) {
+        $signal = scanSignal(priceInRange: true);
+        $signal->update([
+            'priority'               => $priority,
+            'max_allocation_percent' => 100,
+            'activation_pending_at'  => now(),
+        ]);
+        $signals->push($signal);
+
+        // The cron sees each activation while the admin is preparing signals.
+        $this->artisan('bot:scan-buy-triggers')->assertSuccessful();
+        Queue::assertNothingPushed();
+        expect($signal->fresh()->activation_pending_at)->not->toBeNull();
+    }
+
+    $settings->update(['is_enabled' => true]);
+    $this->artisan('bot:scan-buy-triggers')->assertSuccessful();
+
+    Queue::assertPushed(SignalScanBuyJob::class, 2);
+    Queue::assertPushedOn('bot-buy', SignalScanBuyJob::class);
+    expect(BotSignal::whereNotNull('activation_pending_at')->count())->toBe(0);
+
+    // Exercise the queued job and the real allocator, but never call an exchange.
+    foreach (Queue::pushed(SignalScanBuyJob::class) as $job) {
+        $job->handle(app(BotBuyOrchestrator::class));
+    }
+
+    Queue::assertPushed(BuyExecutionJob::class, 4);
+    foreach ($users as $user) {
+        $order = BotOrder::where('user_id', $user->id)->sole();
+        expect($order->triggered_by)->toBe(BotBuyOrchestrator::TRIGGER_SIGNAL_SCAN);
+        expect((string) $order->total_amount_usdt)->toBe('10.00000000');
+        expect(BotBuyExecution::where('bot_order_id', $order->id)->pluck('currency_id')->sort()->values()->all())
+            ->toBe($signals->pluck('currency_id')->sort()->values()->all());
+        $wallet = BotWallet::where('user_id', $user->id)->first();
+        expect((string) $wallet->locked_balance)->toBe((string) $wallet->balance);
+    }
+
+    Queue::fake();
+    $this->artisan('bot:scan-buy-triggers')->assertSuccessful();
+    Queue::assertNothingPushed();
+});
+
+it('consumes a global re-enable edge once for users with unchanged balances', function () {
+    $users = collect([scanUser('10.00000000'), scanUser('15.00000000')]);
+    $signal = scanSignal(priceInRange: true);
+    // The settings update marks active signals, even without a new activation.
+    $signal->update(['activation_pending_at' => now()]);
+    foreach ($users as $user) {
+        recordScanAttempt($user, (string) BotWallet::where('user_id', $user->id)->first()->balance);
+    }
+    scanStubPrice($signal->currency_id, 1.5);
+
+    $this->artisan('bot:scan-buy-triggers')->assertSuccessful();
+    Queue::assertPushed(SignalScanBuyJob::class, 2);
+    expect($signal->fresh()->activation_pending_at)->toBeNull();
+
+    Queue::fake();
+    $this->artisan('bot:scan-buy-triggers')->assertSuccessful();
     Queue::assertNothingPushed();
 });
 

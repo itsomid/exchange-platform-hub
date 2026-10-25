@@ -4,6 +4,8 @@ namespace Tests\Feature\Bot;
 
 use App\Models\Admin;
 use App\Models\Bot\BotGlobalSettings;
+use App\Models\Bot\BotSignal;
+use App\Models\Currency;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
@@ -104,6 +106,81 @@ class BotSettingsControllerTest extends TestCase
             'default_sell_orders_count' => 4,
             'performance_fee_percent'   => '18.00',
         ]);
+    }
+
+    private function signal(bool $active, bool $pending = false): BotSignal
+    {
+        return BotSignal::create([
+            'currency_id' => Currency::factory()->create()->id,
+            'priority' => 1,
+            'floor_price' => 1,
+            'ceiling_price' => 2,
+            'min_buy_amount_usdt' => 5,
+            'max_allocation_percent' => 100,
+            'sell_orders_count' => 3,
+            'sell_mode' => 'percent',
+            'sell_targets' => [['share' => 100, 'target' => 10]],
+            'is_active' => $active,
+            'activation_pending_at' => $pending ? now()->subHour() : null,
+        ]);
+    }
+
+    private function saveGlobalEnabled(bool $enabled): void
+    {
+        // Refresh to hydrate database defaults (notably is_active) so the real
+        // admin authentication/activation middleware can run normally.
+        $this->actingAs($this->admin->refresh(), 'admin')
+            ->patch(route('admin.bot.settings.update'), array_merge(
+                BotGlobalSettings::current()->toArray(),
+                [
+                    'is_enabled' => $enabled,
+                    'transfer_fee_tiers' => [['from' => 20, 'to' => null, 'fee_type' => 'flat', 'fee_value' => 1]],
+                ],
+            ))
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('admin.bot.settings.index'))
+            ->assertSessionHas('success');
+    }
+
+    public function test_reenabling_marks_all_active_signals_for_the_next_buy_scan(): void
+    {
+        BotGlobalSettings::current()->fill(['is_enabled' => false])->save();
+        $active = $this->signal(active: true);
+        $pending = $this->signal(active: true, pending: true);
+        $inactive = $this->signal(active: false);
+
+        $this->saveGlobalEnabled(true);
+
+        $this->assertTrue(BotGlobalSettings::current()->is_enabled);
+        $this->assertNotNull($active->fresh()->activation_pending_at);
+        $this->assertNotNull($pending->fresh()->activation_pending_at);
+        $this->assertNull($inactive->fresh()->activation_pending_at);
+    }
+
+    public function test_saving_enabled_settings_again_does_not_trigger_another_buy_scan(): void
+    {
+        BotGlobalSettings::current()->save();
+        $signal = $this->signal(active: true);
+
+        $this->saveGlobalEnabled(true);
+
+        $this->assertTrue(BotGlobalSettings::current()->is_enabled);
+        $this->assertNull($signal->fresh()->activation_pending_at);
+    }
+
+    public function test_disabling_and_saving_disabled_settings_preserves_pending_activations(): void
+    {
+        BotGlobalSettings::current()->save();
+        $signal = $this->signal(active: true, pending: true);
+        $pendingAt = $signal->fresh()->activation_pending_at;
+        $unmarked = $this->signal(active: true);
+
+        $this->saveGlobalEnabled(false);
+        $this->saveGlobalEnabled(false);
+
+        $this->assertFalse(BotGlobalSettings::current()->is_enabled);
+        $this->assertTrue($signal->fresh()->activation_pending_at->equalTo($pendingAt));
+        $this->assertNull($unmarked->fresh()->activation_pending_at);
     }
 
     public function test_update_settings_validates_required_fields(): void
