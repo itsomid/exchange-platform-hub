@@ -8,6 +8,7 @@ use App\Http\Controllers\V1\Stock\StockTradeController;
 use App\Http\Controllers\V1\Stock\StockController;
 use App\Http\Controllers\V1\Market\MarketController;
 use App\Http\Controllers\V1\Market\MarketOverviewController;
+use App\Http\Controllers\V1\Market\MarketSparklineController;
 use App\Http\Middleware\FinancialWithdrawalBlockMiddleware;
 use App\Http\Middleware\FinancialTradeBlockMiddleware;
 
@@ -75,6 +76,7 @@ Route::prefix('/markets')->group(function () {
     Route::get('/state/{marketId}', [MarketController::class, 'getState']);
     Route::get('/home', [\App\Http\Controllers\V1\Market\HomeMarketController::class, 'index'])->withoutMiddleware(['auth:sanctum', 'verified']);
     Route::get('/overview', MarketOverviewController::class)->withoutMiddleware(['auth:sanctum', 'verified']);
+    Route::get('/sparklines', MarketSparklineController::class)->name('markets.sparklines')->withoutMiddleware(['auth:sanctum', 'verified']);
 });
 
 // OTC
