@@ -27,10 +27,10 @@ return [
     |--------------------------------------------------------------------------
     | Shared secret sent as X-Internal-Token to the /api/internal/bot-admin/*
     | endpoints (order cancel / liquidation — also active in production).
-    | Must match BOT_INTERNAL_ADMIN_TOKEN on api-service. Falls back to the
+    | Must match INTERNAL_ADMIN_TOKEN on api-service. Falls back to the
     | test-lab token when not set.
     */
-    'internal_admin_token' => env('BOT_INTERNAL_ADMIN_TOKEN', env('BOT_INTERNAL_TEST_TOKEN', 'a1b2c3d4e5f6g7h')),
+    'internal_admin_token' => env('INTERNAL_ADMIN_TOKEN', env('BOT_INTERNAL_TEST_TOKEN', 'a1b2c3d4e5f6g7h')),
 
     /*
     |--------------------------------------------------------------------------

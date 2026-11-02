@@ -88,49 +88,66 @@
                 تنظیمات کلی
             </h5>
             <div class="row g-4">
-                <div class="col-lg-6">
-                    <form action="{{ route('admin.setting.spot-bot.bulk-interval') }}" method="POST">
+                <div class="col-lg-4">
+                    <form action="{{ route('admin.setting.spot-bot.bulk-interval') }}" method="POST"
+                        class="h-100 d-flex flex-column">
                         @csrf
                         <label for="price_interval_seconds" class="form-label">
                             <i class="fa-solid fa-clock me-1"></i>
                             تغییر دسته‌ای بازه زمانی (ثانیه)
                         </label>
                         <div class="input-group">
-                            <input type="number"
-                                class="form-control @error('price_interval_seconds') is-invalid @enderror"
+                            <input type="number" class="form-control @error('price_interval_seconds') is-invalid @enderror"
                                 id="price_interval_seconds" name="price_interval_seconds"
                                 value="{{ old('price_interval_seconds', 60) }}" min="1" required>
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn btn-primary text-nowrap">
                                 اعمال روی همه
                             </button>
                         </div>
                         @error('price_interval_seconds')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
-                        <small class="text-muted">این مقدار برای همه بازارهای پیکربندی‌شده ثبت می‌شود.</small>
                     </form>
                 </div>
-                <div class="col-lg-6">
-                    <label class="form-label">
-                        <i class="fa-solid fa-power-off me-1"></i>
-                        وضعیت دسته‌ای بازارها
-                    </label>
-                    <div class="d-flex flex-wrap gap-2">
-                        <form action="{{ route('admin.setting.spot-bot.bulk-disable') }}" method="POST"
-                            onsubmit="return confirm('آیا از غیرفعال کردن ربات همه بازارها اطمینان دارید؟');">
-                            @csrf
-                            <button type="submit" class="btn btn-danger">
-                                <i class="fa-solid fa-ban me-1"></i>
-                                غیرفعال کردن همه
+                <div class="col-lg-4">
+                    <div class="h-100 d-flex flex-column">
+                        <label class="form-label">
+                            <i class="fa-solid fa-power-off me-1"></i>
+                            وضعیت دسته‌ای بازارها
+                        </label>
+                        <div class="d-flex gap-2">
+                            <form action="{{ route('admin.setting.spot-bot.bulk-disable') }}" method="POST"
+                                class="flex-fill"
+                                onsubmit="return confirm('آیا از غیرفعال کردن ربات همه بازارها اطمینان دارید؟');">
+                                @csrf
+                                <button type="submit" class="btn btn-danger w-100">
+                                    <i class="fa-solid fa-ban me-1"></i>
+                                    غیرفعال کردن همه
+                                </button>
+                            </form>
+                            <button type="button" class="btn btn-success flex-fill" data-bs-toggle="modal"
+                                data-bs-target="#bulkActivateModal">
+                                <i class="fa-solid fa-check me-1"></i>
+                                فعال کردن کلی
                             </button>
-                        </form>
-                        <button type="button" class="btn btn-success" data-bs-toggle="modal"
-                            data-bs-target="#bulkActivateModal">
-                            <i class="fa-solid fa-check me-1"></i>
-                            فعال کردن کلی
-                        </button>
+                        </div>
                     </div>
-                    <small class="text-muted d-block mt-2">غیرفعال کردن، ربات همه بازارهای فعال را خاموش می‌کند. فعال کردن کلی فقط کوین‌های انتخاب‌شده را روشن می‌کند.</small>
+                </div>
+                <div class="col-lg-4">
+                    <form action="{{ route('admin.setting.spot-bot.cancel-inactive-orders') }}" method="POST"
+                        class="h-100 d-flex flex-column"
+                        onsubmit="return confirm('سفارش‌های باز ربات برای همه کوین‌های غیرفعال بسته شود؟');">
+                        @csrf
+                        <label class="form-label">
+                            <i class="fa-solid fa-rectangle-xmark me-1"></i>
+                            سفارش‌های باز ربات
+                        </label>
+                        <button type="submit" class="btn btn-outline-danger">
+                            <i class="fa-solid fa-rectangle-xmark me-1"></i>
+                            بستن سفارش‌های کوین‌های غیرفعال
+                        </button>
+
+                    </form>
                 </div>
             </div>
         </div>
@@ -143,19 +160,17 @@
                     <i class="fa-solid fa-robot me-2"></i>
                     تنظیمات ربات معامله‌گر اسپات
                 </h5>
-                <form method="GET" action="{{ route('admin.setting.spot-bot.index') }}" class="d-flex align-items-center gap-2">
+                <form method="GET" action="{{ route('admin.setting.spot-bot.index') }}"
+                    class="d-flex align-items-center gap-2">
                     <label for="sort" class="form-label mb-0 text-nowrap">مرتب‌سازی</label>
-                    <select name="sort" id="sort" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+                    <select name="sort" id="sort" class="form-select form-select-sm w-auto"
+                        onchange="this.form.submit()">
                         <option value="symbol" @selected($sort === 'symbol')>نماد</option>
                         <option value="popular" @selected($sort === 'popular')>محبوبیت کاربران</option>
                     </select>
                 </form>
             </div>
-            @if ($sort === 'popular')
-                <p class="text-muted small mb-3">
-                    بر اساس تعداد معاملات موفق OTC و سفارش‌های پر شده اسپات کاربران. سفارش ربات حساب نمی‌شود.
-                </p>
-            @endif
+
 
             @if ($currencies->total())
                 <div class="table-responsive text-nowrap">
@@ -211,7 +226,8 @@
                                     </td>
                                     @if ($sort === 'popular')
                                         <td>
-                                            <span class="badge bg-label-primary">{{ number_format($currency->user_trades_count) }}</span>
+                                            <span
+                                                class="badge bg-label-primary">{{ number_format($currency->user_trades_count) }}</span>
                                         </td>
                                     @endif
                                     <td>
@@ -256,8 +272,7 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <button type="button"
-                                            class="btn btn-sm btn-primary js-open-spot-bot-settings"
+                                        <button type="button" class="btn btn-sm btn-primary js-open-spot-bot-settings"
                                             data-url="{{ route('admin.setting.spot-bot.edit', $currency) }}"
                                             data-title="تنظیمات {{ $currency->name }}">
                                             <i class="fa-solid fa-edit me-1"></i>
@@ -306,22 +321,27 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <p class="text-muted small">کوین‌های تیک‌خورده فعال می‌شوند. کوین‌هایی که از قبل فعال هستند در لیست مشخص شده‌اند و دوباره ذخیره نمی‌شوند.</p>
+                        <p class="text-muted small">کوین‌های تیک‌خورده فعال می‌شوند. کوین‌هایی که از قبل فعال هستند در لیست
+                            مشخص شده‌اند و دوباره ذخیره نمی‌شوند.</p>
                         <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
-                            <input type="search" class="form-control" id="activateCoinSearch" placeholder="جستجوی نام یا نماد">
+                            <input type="search" class="form-control" id="activateCoinSearch"
+                                placeholder="جستجوی نام یا نماد">
                             <div class="form-check mb-0">
                                 <input class="form-check-input" type="checkbox" id="activateSelectVisible">
-                                <label class="form-check-label" for="activateSelectVisible">انتخاب موارد قابل مشاهده</label>
+                                <label class="form-check-label" for="activateSelectVisible">انتخاب موارد قابل
+                                    مشاهده</label>
                             </div>
                         </div>
                         <div id="activateCoinList" class="border rounded" style="max-height: 420px; overflow: auto;">
                             @foreach ($activationCurrencies as $currency)
                                 @php $isActive = $currency->spotBotSetting && $currency->spotBotSetting->is_active; @endphp
-                                <label class="d-flex align-items-center gap-3 border-bottom px-3 py-2 mb-0 activate-coin-item"
+                                <label
+                                    class="d-flex align-items-center gap-3 border-bottom px-3 py-2 mb-0 activate-coin-item"
                                     data-search="{{ strtolower($currency->name . ' ' . $currency->symbol) }}">
                                     <input class="form-check-input mt-0" type="checkbox" name="currency_ids[]"
                                         value="{{ $currency->id }}" @disabled($isActive)>
-                                    <img src="{{ $currency->coinLogo() }}" alt="" width="28" height="28" class="rounded">
+                                    <img src="{{ $currency->coinLogo() }}" alt="" width="28" height="28"
+                                        class="rounded">
                                     <span class="flex-grow-1">
                                         <span class="fw-medium">{{ $currency->name }}</span>
                                         <small class="text-muted d-block">{{ $currency->symbol }}</small>
@@ -390,7 +410,9 @@
                         duration: 5000,
                         gravity: 'top',
                         position: 'right',
-                        style: { background: '#EA5455' }
+                        style: {
+                            background: '#EA5455'
+                        }
                     }).showToast();
                 }
             });
@@ -415,13 +437,15 @@
                     initSpotBotUserSelect(settingBody);
                     bindSpotBotSettingForm(settingBody);
                 }).catch(function() {
-                    settingBody.innerHTML = '<div class="alert alert-danger mb-0">بارگذاری تنظیمات انجام نشد.</div>';
+                    settingBody.innerHTML =
+                        '<div class="alert alert-danger mb-0">بارگذاری تنظیمات انجام نشد.</div>';
                 });
             }
 
             function initSpotBotUserSelect(container) {
                 const select = container.querySelector('select.js-user-select');
-                if (!select || typeof $.fn.select2 !== 'function' || $(select).hasClass('select2-hidden-accessible')) {
+                if (!select || typeof $.fn.select2 !== 'function' || $(select).hasClass(
+                        'select2-hidden-accessible')) {
                     return;
                 }
 
@@ -435,7 +459,8 @@
                                 results: data.map(function(user) {
                                     return {
                                         id: user.id,
-                                        text: '(' + user.id + '#) ' + user.first_name + ' ' + user.last_name + ' | ' + user.email
+                                        text: '(' + user.id + '#) ' + user.first_name + ' ' +
+                                            user.last_name + ' | ' + user.email
                                     };
                                 })
                             };
@@ -458,13 +483,58 @@
                 function validateOrderSizes() {
                     const minValue = parseFloat(minOrderSize.value) || 0;
                     const maxValue = parseFloat(maxOrderSize.value) || 0;
-                    maxOrderSize.setCustomValidity(minValue > maxValue && maxValue > 0
-                        ? 'حداکثر اندازه سفارش باید بیشتر از حداقل باشد'
-                        : '');
+                    maxOrderSize.setCustomValidity(minValue > maxValue && maxValue > 0 ?
+                        'حداکثر اندازه سفارش باید بیشتر از حداقل باشد' :
+                        '');
                 }
 
                 minOrderSize.addEventListener('input', validateOrderSizes);
                 maxOrderSize.addEventListener('input', validateOrderSizes);
+
+                const cancelButton = container.querySelector('#spotBotCancelOrders');
+                if (cancelButton) {
+                    cancelButton.addEventListener('click', function() {
+                        if (!confirm('سفارش‌های باز ربات این کوین در اردربوک بسته شود؟')) {
+                            return;
+                        }
+
+                        cancelButton.disabled = true;
+                        fetch(cancelButton.dataset.url, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                    .content,
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            }
+                        }).then(async function(response) {
+                            const data = await response.json().catch(function() {
+                                return {};
+                            });
+                            Toastify({
+                                text: data.message || 'بستن سفارش‌ها انجام نشد.',
+                                duration: response.ok ? 3000 : 5000,
+                                gravity: 'top',
+                                position: 'right',
+                                style: {
+                                    background: response.ok ? '#28C76F' : '#EA5455'
+                                }
+                            }).showToast();
+                            cancelButton.disabled = false;
+                        }).catch(function() {
+                            Toastify({
+                                text: 'بستن سفارش‌ها انجام نشد.',
+                                duration: 5000,
+                                gravity: 'top',
+                                position: 'right',
+                                style: {
+                                    background: '#EA5455'
+                                }
+                            }).showToast();
+                            cancelButton.disabled = false;
+                        });
+                    });
+                }
 
                 form.addEventListener('submit', function(event) {
                     event.preventDefault();
@@ -487,12 +557,16 @@
                         },
                         body: new FormData(form)
                     }).then(async function(response) {
-                        const data = await response.json().catch(function() { return {}; });
+                        const data = await response.json().catch(function() {
+                            return {};
+                        });
                         if (!response.ok) {
-                            const messages = data.errors
-                                ? Object.values(data.errors).flat()
-                                : [data.message || 'ذخیره تنظیمات انجام نشد.'];
-                            errorBox.innerHTML = '<ul class="mb-0">' + messages.map(function(message) {
+                            const messages = data.errors ?
+                                Object.values(data.errors).flat() : [data.message ||
+                                    'ذخیره تنظیمات انجام نشد.'
+                                ];
+                            errorBox.innerHTML = '<ul class="mb-0">' + messages.map(function(
+                                message) {
                                 return '<li>' + message + '</li>';
                             }).join('') + '</ul>';
                             errorBox.classList.remove('d-none');

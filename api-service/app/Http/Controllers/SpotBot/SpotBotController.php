@@ -496,6 +496,13 @@ class SpotBotController extends Controller
             ], 400);
         }
 
+        if (!$setting->fake_user_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Fake user is not set for this currency'
+            ], 400);
+        }
+
         // Find the market for this currency (assuming USDT as quote currency)
         $market = Market::where('base_currency', $currency->symbol)
             ->where('quote_currency', 'USDT')

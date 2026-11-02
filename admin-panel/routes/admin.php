@@ -334,6 +334,8 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::post('/settings/bulk-interval', [SpotBotSettingController::class, 'bulkUpdateInterval'])->name('setting.spot-bot.bulk-interval')->can('setting.int.index');
         Route::post('/settings/bulk-disable', [SpotBotSettingController::class, 'bulkDisable'])->name('setting.spot-bot.bulk-disable')->can('setting.int.index');
         Route::post('/settings/bulk-activate', [SpotBotSettingController::class, 'bulkActivate'])->name('setting.spot-bot.bulk-activate')->can('setting.int.index');
+        Route::post('/settings/cancel-inactive-orders', [SpotBotSettingController::class, 'cancelInactiveOrders'])->name('setting.spot-bot.cancel-inactive-orders')->can('setting.int.index');
+        Route::post('/settings/{currency}/cancel-orders', [SpotBotSettingController::class, 'cancelOrders'])->name('setting.spot-bot.cancel-orders')->can('setting.int.index');
         Route::get('/settings/{currency}/edit', [SpotBotSettingController::class, 'edit'])->name('setting.spot-bot.edit')->can('setting.int.index');
         Route::put('/settings/{currency}', [SpotBotSettingController::class, 'update'])->name('setting.spot-bot.update')->can('setting.int.index');
     });

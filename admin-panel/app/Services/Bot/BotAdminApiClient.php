@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Http;
  *
  * Configured via config/smart-bot.php:
  *   - api_url              : api-service base URL
- *   - internal_admin_token : matches BOT_INTERNAL_ADMIN_TOKEN on api-service
+ *   - internal_admin_token : matches INTERNAL_ADMIN_TOKEN on api-service
  */
 class BotAdminApiClient
 {

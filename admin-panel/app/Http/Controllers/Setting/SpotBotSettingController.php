@@ -10,6 +10,7 @@ use App\Http\Requests\Setting\UpdateSpotBotSettingRequest;
 use App\Models\Currency;
 use App\Models\SpotBotSetting;
 use App\Models\User;
+use App\Services\Bot\SpotBotOrderApiClient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -161,6 +162,63 @@ class SpotBotSettingController extends Controller
             Toast::message('کوین جدیدی برای فعال‌سازی انتخاب نشده بود.')->warning()->notify();
         } else {
             Toast::message($activated . ' کوین فعال شد.')->success()->notify();
+        }
+
+        return back();
+    }
+
+    public function cancelOrders(Currency $currency, SpotBotOrderApiClient $client)
+    {
+        $result = $client->cancelForCurrency($currency->id);
+        $message = $result['ok']
+            ? 'سفارش‌های باز ربات '.$currency->symbol.' بسته شد. تعداد: '.$result['cancelled']
+            : $result['message'];
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => $result['ok'],
+                'message' => $message,
+            ], $result['ok'] ? 200 : 422);
+        }
+
+        $toast = Toast::message($message);
+        $result['ok'] ? $toast->success() : $toast->danger();
+        $toast->notify();
+
+        return back();
+    }
+
+    public function cancelInactiveOrders(SpotBotOrderApiClient $client)
+    {
+        $settings = SpotBotSetting::with('currency')->where('is_active', false)->get();
+
+        if ($settings->isEmpty()) {
+            Toast::message('کوین غیرفعالی برای بستن سفارش وجود ندارد.')->warning()->notify();
+
+            return back();
+        }
+
+        $cancelled = 0;
+        $failed = 0;
+        $firstError = null;
+
+        foreach ($settings as $setting) {
+            $result = $client->cancelForCurrency($setting->currency_id);
+            if ($result['ok']) {
+                $cancelled += $result['cancelled'];
+                continue;
+            }
+
+            $failed++;
+            $firstError ??= ($setting->currency->symbol ?? $setting->currency_id).': '.$result['message'];
+        }
+
+        if ($failed === 0) {
+            Toast::message('سفارش‌های باز ربات برای کوین‌های غیرفعال بسته شد. تعداد: '.$cancelled)->success()->notify();
+        } elseif ($cancelled === 0) {
+            Toast::message($firstError ?? 'بستن سفارش‌ها انجام نشد.')->danger()->notify();
+        } else {
+            Toast::message($cancelled.' سفارش بسته شد و '.$failed.' کوین خطا داشت.')->warning()->notify();
         }
 
         return back();

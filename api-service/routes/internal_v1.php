@@ -5,6 +5,7 @@ use App\Http\Controllers\Internal\BotCurrencyCancelController;
 use App\Http\Controllers\Internal\BotSellMigrationController;
 use App\Http\Controllers\Internal\BotWaitingSellsController;
 use App\Http\Controllers\Internal\BotTestController;
+use App\Http\Controllers\SpotBot\SpotBotController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -42,4 +43,12 @@ Route::prefix('bot-admin')->middleware('bot-admin-auth')->group(function () {
     Route::get('waiting-sells/currencies/{currency}',     [BotWaitingSellsController::class, 'details']);
     Route::post('waiting-sells/currencies/{currency}/place', [BotWaitingSellsController::class, 'placeCurrency']);
     Route::post('waiting-sells/{sellOrder}/place',        [BotWaitingSellsController::class, 'placeTier']);
+});
+
+/*
+| Spot market-maker bot. Admin panel closes leftover orderbook orders after a
+| coin is turned off. Same internal token as the other admin → api calls.
+*/
+Route::prefix('spot-bot')->middleware('bot-admin-auth')->group(function () {
+    Route::post('currencies/{currency_id}/cancel-orders', [SpotBotController::class, 'cancelOrders']);
 });
