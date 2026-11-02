@@ -10,7 +10,7 @@
                         <div class="content-left">
                             <span>کل ارزهای دیجیتال</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">{{ $currencies->count() }}</h4>
+                                <h4 class="mb-0 me-2">{{ $totalCurrencies }}</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-primary rounded p-2">
@@ -27,9 +27,7 @@
                         <div class="content-left">
                             <span>ربات‌های فعال</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">
-                                    {{ $currencies->filter(function ($currency) {return $currency->spotBotSetting && $currency->spotBotSetting->is_active;})->count() }}
-                                </h4>
+                                <h4 class="mb-0 me-2">{{ $activeBots }}</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-success rounded p-2">
@@ -46,9 +44,7 @@
                         <div class="content-left">
                             <span>ربات‌های غیرفعال</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">
-                                    {{ $currencies->filter(function ($currency) {return !$currency->spotBotSetting || !$currency->spotBotSetting->is_active;})->count() }}
-                                </h4>
+                                <h4 class="mb-0 me-2">{{ $inactiveBots }}</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-warning rounded p-2">
@@ -65,9 +61,7 @@
                         <div class="content-left">
                             <span>ربات‌های پیکربندی شده</span>
                             <div class="d-flex align-items-center my-1">
-                                <h4 class="mb-0 me-2">
-                                    {{ $currencies->filter(function ($currency) {return $currency->spotBotSetting;})->count() }}
-                                </h4>
+                                <h4 class="mb-0 me-2">{{ $configuredBots }}</h4>
                             </div>
                         </div>
                         <span class="badge bg-label-info rounded p-2">
@@ -87,6 +81,56 @@
         </div>
     @endif
 
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="mb-3">
+                <i class="fa-solid fa-sliders me-2"></i>
+                تنظیمات کلی
+            </h5>
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <form action="{{ route('admin.setting.spot-bot.bulk-interval') }}" method="POST">
+                        @csrf
+                        <label for="price_interval_seconds" class="form-label">
+                            <i class="fa-solid fa-clock me-1"></i>
+                            تغییر دسته‌ای بازه زمانی (ثانیه)
+                        </label>
+                        <div class="input-group">
+                            <input type="number"
+                                class="form-control @error('price_interval_seconds') is-invalid @enderror"
+                                id="price_interval_seconds" name="price_interval_seconds"
+                                value="{{ old('price_interval_seconds', 60) }}" min="1" required>
+                            <button type="submit" class="btn btn-primary">
+                                اعمال روی همه
+                            </button>
+                        </div>
+                        @error('price_interval_seconds')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                        <small class="text-muted">این مقدار برای همه بازارهای پیکربندی‌شده ثبت می‌شود.</small>
+                    </form>
+                </div>
+                <div class="col-lg-6">
+                    <form action="{{ route('admin.setting.spot-bot.bulk-disable') }}" method="POST"
+                        onsubmit="return confirm('آیا از غیرفعال کردن ربات همه بازارها اطمینان دارید؟');">
+                        @csrf
+                        <label class="form-label">
+                            <i class="fa-solid fa-power-off me-1"></i>
+                            غیرفعال کردن دسته‌ای بازارها
+                        </label>
+                        <div>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fa-solid fa-ban me-1"></i>
+                                غیرفعال کردن همه
+                            </button>
+                        </div>
+                        <small class="text-muted">ربات همه بازارهای فعال خاموش می‌شود. بقیه تنظیمات هر بازار حفظ می‌شود.</small>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card">
         <div class="card-body">
             <div class="card-title header-elements">
@@ -96,7 +140,7 @@
                 </h5>
             </div>
 
-            @if (count($currencies))
+            @if ($currencies->total())
                 <div class="table-responsive text-nowrap">
                     <table class="table">
                         <thead>
@@ -195,6 +239,11 @@
                         </tbody>
                     </table>
                 </div>
+                @if ($currencies->hasPages())
+                    <div class="mt-3">
+                        {{ $currencies->onEachSide(1)->links() }}
+                    </div>
+                @endif
             @else
                 <div class="text-center py-5">
                     <i class="fa-solid fa-robot fa-3x text-muted mb-3"></i>
