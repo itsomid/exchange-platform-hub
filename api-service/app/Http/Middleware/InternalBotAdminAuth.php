@@ -21,7 +21,7 @@ class InternalBotAdminAuth
         $configured = (string) config('smart-bot.internal_admin_token');
         if ($configured === '') {
             return response()->json([
-                'error' => 'BOT_INTERNAL_ADMIN_TOKEN is not configured on api-service.',
+                'error' => 'INTERNAL_ADMIN_TOKEN is not configured on api-service.',
             ], 503);
         }
 

@@ -31,5 +31,5 @@ return [
     | Unlike the test-lab token these endpoints DO work in production.
     | Falls back to BOT_INTERNAL_TEST_TOKEN when not set.
     */
-    'internal_admin_token' => env('BOT_INTERNAL_ADMIN_TOKEN', env('BOT_INTERNAL_TEST_TOKEN', '')),
+    'internal_admin_token' => env('INTERNAL_ADMIN_TOKEN', env('BOT_INTERNAL_TEST_TOKEN', '')),
 ];

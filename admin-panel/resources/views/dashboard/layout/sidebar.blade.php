@@ -409,12 +409,14 @@
         </li>
         @can('bot-management')
             <li class="menu-header small text-uppercase">
-                <span class="menu-header-text">ربات معاملاتی</span>
+                <span class="menu-header-text">ربات</span>
             </li>
+
             <li class="menu-item @if (request()->is('admin/auto-trade*')) active open @endif">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">
-                    <i class="menu-icon fa-regular fa-robot"></i>
-                    <div>ربات معاملاتی</div>
+                    <i class="menu-icon fa-regular fa-head-side-circuit"></i>
+
+                    <div>توسل سیستم</div>
                 </a>
                 <ul class="menu-sub">
                     <li class="menu-item @if (request()->is('admin/auto-trade/settings*')) active @endif">
@@ -472,6 +474,12 @@
                         </a>
                     </li>
                 </ul>
+            </li>
+            <li class="menu-item  @if (request()->is('admin/bot*')) active @endif">
+                <a href="{{ route('admin.setting.spot-bot.index') }}" class="menu-link">
+                    <i class="menu-icon fa-regular fa-robot fa-sm"></i>
+                    <div>بات اسپات</div>
+                </a>
             </li>
         @endcan
 
@@ -561,11 +569,6 @@
                         <li class="menu-item  @if (request()->is('admin/docker*')) active @endif">
                             <a href="{{ route('admin.docker.index') }}" class="menu-link">
                                 <div>مدیریت کانتینرهای داکر</div>
-                            </a>
-                        </li>
-                        <li class="menu-item  @if (request()->is('admin/bot*')) active @endif">
-                            <a href="{{ route('admin.setting.spot-bot.index') }}" class="menu-link">
-                                <div>مدیریت بات ها</div>
                             </a>
                         </li>
                     @endcan
