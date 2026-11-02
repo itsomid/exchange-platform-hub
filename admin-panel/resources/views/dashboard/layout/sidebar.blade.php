@@ -70,7 +70,6 @@
                 <a href="{{ route('admin.locked-balance.index') }}" class="menu-link">
                     <i class="menu-icon fa-regular fa-lock fa-lg"></i>
                     <div>دارایی مسدود شده</div>
-                    <span class="badge new-badge ms-auto">New</span>
                 </a>
             </li>
         @endcan
@@ -415,7 +414,6 @@
             <li class="menu-item @if (request()->is('admin/auto-trade*')) active open @endif">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">
                     <i class="menu-icon fa-regular fa-head-side-circuit"></i>
-
                     <div>توسل سیستم</div>
                 </a>
                 <ul class="menu-sub">
@@ -479,6 +477,7 @@
                 <a href="{{ route('admin.setting.spot-bot.index') }}" class="menu-link">
                     <i class="menu-icon fa-regular fa-robot fa-sm"></i>
                     <div>بات اسپات</div>
+                    <span class="badge new-badge ms-auto">New</span>
                 </a>
             </li>
         @endcan

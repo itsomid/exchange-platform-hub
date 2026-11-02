@@ -20,13 +20,15 @@ class SpotBotSettingController extends Controller
     {
         $sort = $request->query('sort') === 'popular' ? 'popular' : 'symbol';
 
-        $totalCurrencies = Currency::count();
-        $activeBots = SpotBotSetting::where('is_active', true)->count();
-        $configuredBots = SpotBotSetting::count();
+        $totalCurrencies = $this->withActiveMarket(Currency::query())->count();
+        $activeBots = SpotBotSetting::where('is_active', true)
+            ->whereIn('currency_id', $this->activeMarketCurrencyIds())
+            ->count();
+        $configuredBots = SpotBotSetting::whereIn('currency_id', $this->activeMarketCurrencyIds())->count();
         $inactiveBots = $totalCurrencies - $activeBots;
 
         $currencies = $this->orderCurrenciesByPreference(
-            Currency::with(['spotBotSetting.fakeUser']),
+            $this->withActiveMarket(Currency::with(['spotBotSetting.fakeUser'])),
             $sort
         );
 
@@ -37,7 +39,7 @@ class SpotBotSettingController extends Controller
         $currencies = $currencies->paginate(20)->withQueryString();
 
         $activationCurrencies = $this->orderCurrenciesByPreference(
-            Currency::with(['spotBotSetting:id,currency_id,is_active']),
+            $this->withActiveMarket(Currency::with(['spotBotSetting:id,currency_id,is_active'])),
             $sort
         )->get();
 
@@ -50,6 +52,21 @@ class SpotBotSettingController extends Controller
             'sort',
             'activationCurrencies',
         ));
+    }
+
+    private function withActiveMarket($query)
+    {
+        return $query->whereExists(function ($query) {
+            $query->selectRaw('1')
+                ->from('markets')
+                ->whereColumn('markets.base_currency', 'currencies.symbol')
+                ->where('markets.is_active', true);
+        });
+    }
+
+    private function activeMarketCurrencyIds()
+    {
+        return $this->withActiveMarket(Currency::query())->select('currencies.id');
     }
 
     private function orderCurrenciesByPreference($query, string $sort)
