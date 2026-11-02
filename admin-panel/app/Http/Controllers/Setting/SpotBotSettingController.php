@@ -24,26 +24,21 @@ class SpotBotSettingController extends Controller
         $configuredBots = SpotBotSetting::count();
         $inactiveBots = $totalCurrencies - $activeBots;
 
-        $currencies = Currency::with(['spotBotSetting.fakeUser']);
+        $currencies = $this->orderCurrenciesByPreference(
+            Currency::with(['spotBotSetting.fakeUser']),
+            $sort
+        );
 
         if ($sort === 'popular') {
-            $currencies->leftJoinSub($this->userTradeCounts(), 'user_trades', function ($join) {
-                $join->on('user_trades.symbol', '=', 'currencies.symbol');
-            })
-                ->select('currencies.*')
-                ->selectRaw('COALESCE(user_trades.trades_count, 0) as user_trades_count')
-                ->orderByRaw('COALESCE(user_trades.trades_count, 0) DESC')
-                ->orderBy('currencies.symbol');
-        } else {
-            $currencies->orderBy('symbol');
+            $currencies->selectRaw('COALESCE(user_trades.trades_count, 0) as user_trades_count');
         }
 
         $currencies = $currencies->paginate(20)->withQueryString();
 
-        $activationCurrencies = Currency::query()
-            ->with(['spotBotSetting:id,currency_id,is_active'])
-            ->orderBy('symbol')
-            ->get(['id', 'name', 'symbol', 'logo']);
+        $activationCurrencies = $this->orderCurrenciesByPreference(
+            Currency::with(['spotBotSetting:id,currency_id,is_active']),
+            $sort
+        )->get();
 
         return view('dashboard.setting.spot-bot.index', compact(
             'currencies',
@@ -54,6 +49,20 @@ class SpotBotSettingController extends Controller
             'sort',
             'activationCurrencies',
         ));
+    }
+
+    private function orderCurrenciesByPreference($query, string $sort)
+    {
+        if ($sort === 'popular') {
+            return $query->leftJoinSub($this->userTradeCounts(), 'user_trades', function ($join) {
+                $join->on('user_trades.symbol', '=', 'currencies.symbol');
+            })
+                ->select('currencies.*')
+                ->orderByRaw('COALESCE(user_trades.trades_count, 0) DESC')
+                ->orderBy('currencies.symbol');
+        }
+
+        return $query->orderBy('currencies.symbol');
     }
 
     private function userTradeCounts()
