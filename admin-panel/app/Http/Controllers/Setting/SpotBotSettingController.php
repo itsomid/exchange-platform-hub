@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Setting;
 
+use App\Enums\OTCOrderStatusEnum;
+use App\Enums\SpotOrderSourceEnum;
 use App\Functions\FlashMessages\Toast;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Setting\UpdateSpotBotSettingRequest;
@@ -9,19 +11,34 @@ use App\Models\Currency;
 use App\Models\SpotBotSetting;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SpotBotSettingController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $sort = $request->query('sort') === 'popular' ? 'popular' : 'symbol';
+
         $totalCurrencies = Currency::count();
         $activeBots = SpotBotSetting::where('is_active', true)->count();
         $configuredBots = SpotBotSetting::count();
         $inactiveBots = $totalCurrencies - $activeBots;
 
-        $currencies = Currency::with(['spotBotSetting.fakeUser'])
-            ->orderBy('symbol')
-            ->paginate(20);
+        $currencies = Currency::with(['spotBotSetting.fakeUser']);
+
+        if ($sort === 'popular') {
+            $currencies->leftJoinSub($this->userTradeCounts(), 'user_trades', function ($join) {
+                $join->on('user_trades.symbol', '=', 'currencies.symbol');
+            })
+                ->select('currencies.*')
+                ->selectRaw('COALESCE(user_trades.trades_count, 0) as user_trades_count')
+                ->orderByRaw('COALESCE(user_trades.trades_count, 0) DESC')
+                ->orderBy('currencies.symbol');
+        } else {
+            $currencies->orderBy('symbol');
+        }
+
+        $currencies = $currencies->paginate(20)->withQueryString();
 
         return view('dashboard.setting.spot-bot.index', compact(
             'currencies',
@@ -29,7 +46,30 @@ class SpotBotSettingController extends Controller
             'activeBots',
             'inactiveBots',
             'configuredBots',
+            'sort',
         ));
+    }
+
+    private function userTradeCounts()
+    {
+        $otc = DB::table('otc_orders')
+            ->join('markets', 'markets.id', '=', 'otc_orders.market_id')
+            ->where('otc_orders.status', OTCOrderStatusEnum::SUCCESS->value)
+            ->whereNull('otc_orders.deleted_at')
+            ->selectRaw('markets.base_currency as symbol, COUNT(*) as trades_count')
+            ->groupBy('markets.base_currency');
+
+        $spot = DB::table('spot_orders')
+            ->join('markets', 'markets.id', '=', 'spot_orders.market_id')
+            ->whereIn('spot_orders.source', [SpotOrderSourceEnum::USER->value, SpotOrderSourceEnum::API->value])
+            ->where('spot_orders.filled_quantity', '>', 0)
+            ->selectRaw('markets.base_currency as symbol, COUNT(*) as trades_count')
+            ->groupBy('markets.base_currency');
+
+        return DB::query()
+            ->fromSub($otc->unionAll($spot), 'combined')
+            ->selectRaw('symbol, SUM(trades_count) as trades_count')
+            ->groupBy('symbol');
     }
 
     public function bulkUpdateInterval(Request $request)

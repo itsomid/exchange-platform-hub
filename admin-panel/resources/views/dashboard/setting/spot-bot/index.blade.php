@@ -133,12 +133,24 @@
 
     <div class="card">
         <div class="card-body">
-            <div class="card-title header-elements">
+            <div class="card-title header-elements d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h5 class="m-0 me-2">
                     <i class="fa-solid fa-robot me-2"></i>
                     تنظیمات ربات معامله‌گر اسپات
                 </h5>
+                <form method="GET" action="{{ route('admin.setting.spot-bot.index') }}" class="d-flex align-items-center gap-2">
+                    <label for="sort" class="form-label mb-0 text-nowrap">مرتب‌سازی</label>
+                    <select name="sort" id="sort" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+                        <option value="symbol" @selected($sort === 'symbol')>نماد</option>
+                        <option value="popular" @selected($sort === 'popular')>محبوبیت کاربران</option>
+                    </select>
+                </form>
             </div>
+            @if ($sort === 'popular')
+                <p class="text-muted small mb-3">
+                    بر اساس تعداد معاملات موفق OTC و سفارش‌های پر شده اسپات کاربران. سفارش ربات حساب نمی‌شود.
+                </p>
+            @endif
 
             @if ($currencies->total())
                 <div class="table-responsive text-nowrap">
@@ -149,6 +161,12 @@
                                     <i class="fa-solid fa-coins me-1"></i>
                                     ارز دیجیتال
                                 </th>
+                                @if ($sort === 'popular')
+                                    <th>
+                                        <i class="fa-solid fa-chart-simple me-1"></i>
+                                        معاملات کاربران
+                                    </th>
+                                @endif
                                 <th>
                                     <i class="fa-solid fa-toggle-on me-1"></i>
                                     وضعیت ربات
@@ -186,6 +204,11 @@
                                             </div>
                                         </div>
                                     </td>
+                                    @if ($sort === 'popular')
+                                        <td>
+                                            <span class="badge bg-label-primary">{{ number_format($currency->user_trades_count) }}</span>
+                                        </td>
+                                    @endif
                                     <td>
                                         @if ($currency->spotBotSetting && $currency->spotBotSetting->is_active)
                                             <span class="badge bg-success">
