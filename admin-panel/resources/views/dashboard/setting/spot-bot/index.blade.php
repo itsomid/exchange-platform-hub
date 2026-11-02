@@ -111,21 +111,26 @@
                     </form>
                 </div>
                 <div class="col-lg-6">
-                    <form action="{{ route('admin.setting.spot-bot.bulk-disable') }}" method="POST"
-                        onsubmit="return confirm('آیا از غیرفعال کردن ربات همه بازارها اطمینان دارید؟');">
-                        @csrf
-                        <label class="form-label">
-                            <i class="fa-solid fa-power-off me-1"></i>
-                            غیرفعال کردن دسته‌ای بازارها
-                        </label>
-                        <div>
+                    <label class="form-label">
+                        <i class="fa-solid fa-power-off me-1"></i>
+                        وضعیت دسته‌ای بازارها
+                    </label>
+                    <div class="d-flex flex-wrap gap-2">
+                        <form action="{{ route('admin.setting.spot-bot.bulk-disable') }}" method="POST"
+                            onsubmit="return confirm('آیا از غیرفعال کردن ربات همه بازارها اطمینان دارید؟');">
+                            @csrf
                             <button type="submit" class="btn btn-danger">
                                 <i class="fa-solid fa-ban me-1"></i>
                                 غیرفعال کردن همه
                             </button>
-                        </div>
-                        <small class="text-muted">ربات همه بازارهای فعال خاموش می‌شود. بقیه تنظیمات هر بازار حفظ می‌شود.</small>
-                    </form>
+                        </form>
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal"
+                            data-bs-target="#bulkActivateModal">
+                            <i class="fa-solid fa-check me-1"></i>
+                            فعال کردن کلی
+                        </button>
+                    </div>
+                    <small class="text-muted d-block mt-2">غیرفعال کردن، ربات همه بازارهای فعال را خاموش می‌کند. فعال کردن کلی فقط کوین‌های انتخاب‌شده را روشن می‌کند.</small>
                 </div>
             </div>
         </div>
@@ -251,11 +256,13 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <a href="{{ route('admin.setting.spot-bot.edit', $currency) }}"
-                                            class="btn btn-sm btn-primary">
+                                        <button type="button"
+                                            class="btn btn-sm btn-primary js-open-spot-bot-settings"
+                                            data-url="{{ route('admin.setting.spot-bot.edit', $currency) }}"
+                                            data-title="تنظیمات {{ $currency->name }}">
                                             <i class="fa-solid fa-edit me-1"></i>
                                             تنظیمات
-                                        </a>
+                                        </button>
                                     </td>
                                 </tr>
                             @endforeach
@@ -276,4 +283,238 @@
             @endif
         </div>
     </div>
+
+    <div class="modal fade" id="spotBotSettingModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="spotBotSettingModalTitle">تنظیمات ربات</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="spotBotSettingModalBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="bulkActivateModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <form action="{{ route('admin.setting.spot-bot.bulk-activate') }}" method="POST" id="bulkActivateForm">
+                    @csrf
+                    <div class="modal-header">
+                        <h5 class="modal-title">فعال کردن کلی</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted small">کوین‌های تیک‌خورده فعال می‌شوند. کوین‌هایی که از قبل فعال هستند در لیست مشخص شده‌اند و دوباره ذخیره نمی‌شوند.</p>
+                        <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+                            <input type="search" class="form-control" id="activateCoinSearch" placeholder="جستجوی نام یا نماد">
+                            <div class="form-check mb-0">
+                                <input class="form-check-input" type="checkbox" id="activateSelectVisible">
+                                <label class="form-check-label" for="activateSelectVisible">انتخاب موارد قابل مشاهده</label>
+                            </div>
+                        </div>
+                        <div id="activateCoinList" class="border rounded" style="max-height: 420px; overflow: auto;">
+                            @foreach ($activationCurrencies as $currency)
+                                @php $isActive = $currency->spotBotSetting && $currency->spotBotSetting->is_active; @endphp
+                                <label class="d-flex align-items-center gap-3 border-bottom px-3 py-2 mb-0 activate-coin-item"
+                                    data-search="{{ strtolower($currency->name . ' ' . $currency->symbol) }}">
+                                    <input class="form-check-input mt-0" type="checkbox" name="currency_ids[]"
+                                        value="{{ $currency->id }}" @disabled($isActive)>
+                                    <img src="{{ $currency->coinLogo() }}" alt="" width="28" height="28" class="rounded">
+                                    <span class="flex-grow-1">
+                                        <span class="fw-medium">{{ $currency->name }}</span>
+                                        <small class="text-muted d-block">{{ $currency->symbol }}</small>
+                                    </span>
+                                    @if ($isActive)
+                                        <span class="badge bg-success">فعال</span>
+                                    @endif
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
+                        <button type="submit" class="btn btn-success">ذخیره</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endsection
+
+@section('vendor-style')
+    @vite(['resources/assets/vendor/libs/select2/select2.scss'])
+@endsection
+
+@section('vendor-script')
+    @vite(['resources/assets/vendor/libs/select2/select2.js'])
+@endsection
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const settingModalEl = document.getElementById('spotBotSettingModal');
+            const settingModal = new bootstrap.Modal(settingModalEl);
+            const settingBody = document.getElementById('spotBotSettingModalBody');
+            const settingTitle = document.getElementById('spotBotSettingModalTitle');
+
+            document.querySelectorAll('.js-open-spot-bot-settings').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    openSpotBotSettings(button);
+                });
+            });
+
+            settingModalEl.addEventListener('hidden.bs.modal', function() {
+                settingBody.innerHTML = '';
+            });
+
+            document.getElementById('activateCoinSearch').addEventListener('input', filterActivateCoins);
+            document.getElementById('activateSelectVisible').addEventListener('change', function() {
+                document.querySelectorAll('#activateCoinList .activate-coin-item').forEach(function(item) {
+                    if (item.classList.contains('d-none')) {
+                        return;
+                    }
+                    const checkbox = item.querySelector('input[type="checkbox"]');
+                    if (!checkbox.disabled) {
+                        checkbox.checked = document.getElementById('activateSelectVisible').checked;
+                    }
+                });
+            });
+
+            document.getElementById('bulkActivateForm').addEventListener('submit', function(event) {
+                if (!this.querySelector('input[name="currency_ids[]"]:checked')) {
+                    event.preventDefault();
+                    Toastify({
+                        text: 'حداقل یک کوین را انتخاب کنید.',
+                        duration: 5000,
+                        gravity: 'top',
+                        position: 'right',
+                        style: { background: '#EA5455' }
+                    }).showToast();
+                }
+            });
+
+            function openSpotBotSettings(button) {
+                settingTitle.textContent = button.dataset.title;
+                settingBody.innerHTML = '<div class="text-center py-5 text-muted">در حال بارگذاری...</div>';
+                settingModal.show();
+
+                fetch(button.dataset.url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'text/html'
+                    }
+                }).then(function(response) {
+                    if (!response.ok) {
+                        throw new Error('load failed');
+                    }
+                    return response.text();
+                }).then(function(html) {
+                    settingBody.innerHTML = html;
+                    initSpotBotUserSelect(settingBody);
+                    bindSpotBotSettingForm(settingBody);
+                }).catch(function() {
+                    settingBody.innerHTML = '<div class="alert alert-danger mb-0">بارگذاری تنظیمات انجام نشد.</div>';
+                });
+            }
+
+            function initSpotBotUserSelect(container) {
+                const select = container.querySelector('select.js-user-select');
+                if (!select || typeof $.fn.select2 !== 'function' || $(select).hasClass('select2-hidden-accessible')) {
+                    return;
+                }
+
+                $(select).select2({
+                    ajax: {
+                        url: select.getAttribute('src'),
+                        dataType: 'json',
+                        delay: 250,
+                        processResults: function(data) {
+                            return {
+                                results: data.map(function(user) {
+                                    return {
+                                        id: user.id,
+                                        text: '(' + user.id + '#) ' + user.first_name + ' ' + user.last_name + ' | ' + user.email
+                                    };
+                                })
+                            };
+                        },
+                        cache: true
+                    },
+                    dropdownParent: $('#spotBotSettingModal'),
+                    minimumInputLength: 2,
+                    placeholder: 'جهت انتخاب کاربر کلیک کنید',
+                    allowClear: true,
+                    width: '100%'
+                });
+            }
+
+            function bindSpotBotSettingForm(container) {
+                const form = container.querySelector('#spotBotSettingForm');
+                const minOrderSize = container.querySelector('#spot_bot_min_order_size');
+                const maxOrderSize = container.querySelector('#spot_bot_max_order_size');
+
+                function validateOrderSizes() {
+                    const minValue = parseFloat(minOrderSize.value) || 0;
+                    const maxValue = parseFloat(maxOrderSize.value) || 0;
+                    maxOrderSize.setCustomValidity(minValue > maxValue && maxValue > 0
+                        ? 'حداکثر اندازه سفارش باید بیشتر از حداقل باشد'
+                        : '');
+                }
+
+                minOrderSize.addEventListener('input', validateOrderSizes);
+                maxOrderSize.addEventListener('input', validateOrderSizes);
+
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    validateOrderSizes();
+                    if (!form.reportValidity()) {
+                        return;
+                    }
+
+                    const submitButton = form.querySelector('#spotBotSettingSubmit');
+                    const errorBox = form.querySelector('#spotBotSettingErrors');
+                    submitButton.disabled = true;
+                    errorBox.classList.add('d-none');
+                    errorBox.innerHTML = '';
+
+                    fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        },
+                        body: new FormData(form)
+                    }).then(async function(response) {
+                        const data = await response.json().catch(function() { return {}; });
+                        if (!response.ok) {
+                            const messages = data.errors
+                                ? Object.values(data.errors).flat()
+                                : [data.message || 'ذخیره تنظیمات انجام نشد.'];
+                            errorBox.innerHTML = '<ul class="mb-0">' + messages.map(function(message) {
+                                return '<li>' + message + '</li>';
+                            }).join('') + '</ul>';
+                            errorBox.classList.remove('d-none');
+                            submitButton.disabled = false;
+                            return;
+                        }
+                        window.location.reload();
+                    }).catch(function() {
+                        errorBox.textContent = 'ذخیره تنظیمات انجام نشد.';
+                        errorBox.classList.remove('d-none');
+                        submitButton.disabled = false;
+                    });
+                });
+            }
+
+            function filterActivateCoins() {
+                const query = document.getElementById('activateCoinSearch').value.trim().toLowerCase();
+                document.querySelectorAll('#activateCoinList .activate-coin-item').forEach(function(item) {
+                    const matches = !query || item.dataset.search.includes(query);
+                    item.classList.toggle('d-none', !matches);
+                });
+            }
+        });
+    </script>
+@endpush

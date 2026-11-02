@@ -40,6 +40,11 @@ class SpotBotSettingController extends Controller
 
         $currencies = $currencies->paginate(20)->withQueryString();
 
+        $activationCurrencies = Currency::query()
+            ->with(['spotBotSetting:id,currency_id,is_active'])
+            ->orderBy('symbol')
+            ->get(['id', 'name', 'symbol', 'logo']);
+
         return view('dashboard.setting.spot-bot.index', compact(
             'currencies',
             'totalCurrencies',
@@ -47,6 +52,7 @@ class SpotBotSettingController extends Controller
             'inactiveBots',
             'configuredBots',
             'sort',
+            'activationCurrencies',
         ));
     }
 
@@ -106,9 +112,59 @@ class SpotBotSettingController extends Controller
         return back();
     }
 
-    public function edit(Currency $currency)
+    public function bulkActivate(Request $request)
+    {
+        $data = $request->validate([
+            'currency_ids' => 'required|array|min:1',
+            'currency_ids.*' => 'integer|exists:currencies,id',
+        ], [
+            'currency_ids.required' => 'حداقل یک کوین را انتخاب کنید.',
+            'currency_ids.min' => 'حداقل یک کوین را انتخاب کنید.',
+        ]);
+
+        $activated = 0;
+
+        foreach (Currency::whereIn('id', $data['currency_ids'])->get() as $currency) {
+            $setting = SpotBotSetting::firstOrNew(['currency_id' => $currency->id]);
+
+            if ($setting->exists && $setting->is_active) {
+                continue;
+            }
+
+            if (! $setting->exists) {
+                $setting->fill([
+                    'price_interval_seconds' => 60,
+                    'order_margin' => 0.5,
+                    'buy_orders_count' => 5,
+                    'sell_orders_count' => 5,
+                    'market_crash_percentage' => 10,
+                    'min_order_size' => 10,
+                    'max_order_size' => 1000,
+                ]);
+            }
+
+            $setting->is_active = true;
+            $setting->save();
+            $activated++;
+        }
+
+        if ($activated === 0) {
+            Toast::message('کوین جدیدی برای فعال‌سازی انتخاب نشده بود.')->warning()->notify();
+        } else {
+            Toast::message($activated . ' کوین فعال شد.')->success()->notify();
+        }
+
+        return back();
+    }
+
+    public function edit(Request $request, Currency $currency)
     {
         $spotBotSetting = SpotBotSetting::with('fakeUser')->firstOrCreate(['currency_id' => $currency->id]);
+
+        if ($request->ajax()) {
+            return view('dashboard.setting.spot-bot._modal_form', compact('currency', 'spotBotSetting'));
+        }
+
         return view('dashboard.setting.spot-bot.edit', compact('currency', 'spotBotSetting'));
     }
 
@@ -124,6 +180,11 @@ class SpotBotSettingController extends Controller
             $data
         );
         Toast::message('تنظیمات با موفقیت ثبت شد.')->success()->notify();
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'تنظیمات با موفقیت ثبت شد.']);
+        }
+
         return redirect()->route('admin.setting.spot-bot.index');
     }
 }
