@@ -12,6 +12,7 @@ use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Events\UserNotification;
 use App\Jobs\BroadcastOrderBook;
+use App\Jobs\BuyOnRefExchangeForSpotTrade;
 use App\Jobs\SellOnRefExchangeForSpotTrade;
 use App\Helpers\Math;
 use App\Models\LockedBalanceDetail;
@@ -337,8 +338,8 @@ readonly class OrderMatchingEngine
         $this->updateWallets($takerOrder, $makerOrder, $tradeQuantity, $makerOrder->price, $makerCommissionAmount, $takerCommissionAmount);
 
         
-        // Dispatch ref exchange sell if user is selling to bot (bot is buying)
-        $this->dispatchRefExchangeSellIfBotBuying($takerOrder, $makerOrder, $spotTrade, $tradeQuantity);
+        // Hedge on the reference exchange when one side of the trade is the bot.
+        $this->dispatchRefExchangeHedgeIfBot($takerOrder, $makerOrder, $spotTrade, $tradeQuantity);
 
         if ($order->getRemindedQuantity() <= 0) {
             // $order->price = $order->getOriginal('price'); // REMOVE THIS for market orders
@@ -934,77 +935,100 @@ readonly class OrderMatchingEngine
     }
 
     /**
-     * Dispatch a job to sell on reference exchange if a bot is buying in this trade.
-     * This ensures that when a user sells to the bot, the equivalent coins are sold
-     * on the reference exchange to maintain balance consistency.
+     * Hedge a bot spot trade on the reference exchange.
      *
-     * @param SpotOrder $takerOrder
-     * @param SpotOrder $makerOrder
-     * @param SpotTrade $spotTrade
-     * @param string $tradeQuantity
-     * @return void
+     * Bot buys (user sold the coin) → market sell the matched quantity.
+     * Bot sells (user bought the coin) → market buy the matched quantity.
+     * A trade where both sides are bots keeps the existing sell hedge only.
      */
-    private function dispatchRefExchangeSellIfBotBuying(
+    private function dispatchRefExchangeHedgeIfBot(
         SpotOrder $takerOrder,
         SpotOrder $makerOrder,
         SpotTrade $spotTrade,
         string $tradeQuantity
     ): void {
-        // Check if ref exchange sell is enabled for this market
         $market = Market::find($spotTrade->market_id);
         if (!$market || !$market->ref_exchange_sell_enabled) {
             return;
         }
 
-        // Determine if bot is involved and is buying (user is selling to bot)
-        $botOrder = null;
+        $botBuyOrder = $this->botOrderOnSide($takerOrder, $makerOrder, SpotOrderSideEnum::BUY);
+        if ($botBuyOrder !== null) {
+            $this->queueRefExchangeHedge($market, $spotTrade, $tradeQuantity, 'sell', $botBuyOrder);
 
-        // Check if taker is bot and is buying
-        if ($takerOrder->source === SpotOrderSourceEnum::BOT && $takerOrder->side === SpotOrderSideEnum::BUY) {
-            $botOrder = $takerOrder;
-        }
-
-        // Check if maker is bot and is buying
-        if ($makerOrder->source === SpotOrderSourceEnum::BOT && $makerOrder->side === SpotOrderSideEnum::BUY) {
-            $botOrder = $makerOrder;
-        }
-
-        // If no bot is buying, do nothing
-        if ($botOrder === null) {
             return;
         }
 
-        // Truncate to the base currency's actual precision to eliminate floating-point noise
+        $botSellOrder = $this->botOrderOnSide($takerOrder, $makerOrder, SpotOrderSideEnum::SELL);
+        if ($botSellOrder !== null) {
+            $this->queueRefExchangeHedge($market, $spotTrade, $tradeQuantity, 'buy', $botSellOrder);
+        }
+    }
+
+    private function botOrderOnSide(SpotOrder $takerOrder, SpotOrder $makerOrder, SpotOrderSideEnum $side): ?SpotOrder
+    {
+        if ($takerOrder->source === SpotOrderSourceEnum::BOT && $takerOrder->side === $side) {
+            return $takerOrder;
+        }
+
+        if ($makerOrder->source === SpotOrderSourceEnum::BOT && $makerOrder->side === $side) {
+            return $makerOrder;
+        }
+
+        return null;
+    }
+
+    private function queueRefExchangeHedge(
+        Market $market,
+        SpotTrade $spotTrade,
+        string $tradeQuantity,
+        string $refSide,
+        SpotOrder $botOrder
+    ): void {
         $precision = $market->baseCurrency?->amount_precision ?? 8;
         $quantity = bcadd($tradeQuantity, '0', $precision);
 
-        // Skip if quantity is below the market's minimum trade amount
-        $minSellQuantity = $market->min_trade_amount ?? '0';
+        $minQuantity = $market->min_trade_amount ?? '0';
         if (Math::comp($quantity, '0') <= 0) {
-    
             return;
         }
 
-        if (Math::comp($minSellQuantity, '0') > 0 && Math::comp($quantity, $minSellQuantity) < 0) {
-            Log::channel('spot-ref-exchange')->warning('Ref exchange sell skipped: quantity below minimum', [
+        if (Math::comp($minQuantity, '0') > 0 && Math::comp($quantity, $minQuantity) < 0) {
+            Log::channel('spot-ref-exchange')->warning('Ref exchange hedge skipped: quantity below minimum', [
                 'spot_trade_id' => $spotTrade->id,
                 'market_id' => $spotTrade->market_id,
+                'side' => $refSide,
                 'quantity' => $quantity,
-                'min_sell_quantity' => $minSellQuantity,
+                'min_quantity' => $minQuantity,
             ]);
+
             return;
         }
 
-        // Dispatch the job to sell on reference exchange
-        Log::channel('spot-ref-exchange')->info('User selling to bot in spot trade, dispatching ref exchange sell job', [
+        $logMessage = $refSide === 'buy'
+            ? 'User buying from bot in spot trade, dispatching ref exchange buy job'
+            : 'User selling to bot in spot trade, dispatching ref exchange sell job';
+
+        Log::channel('spot-ref-exchange')->info($logMessage, [
             'spot_trade_id' => $spotTrade->id,
             'market_id' => $spotTrade->market_id,
             'quantity' => $quantity,
             'bot_order_id' => $botOrder->id,
             'bot_side' => $botOrder->side->value,
+            'ref_side' => $refSide,
         ]);
 
         $spotTrade->update(['ref_exchange_sell_status' => RefExchangeSellStatusEnum::PENDING]);
+
+        if ($refSide === 'buy') {
+            BuyOnRefExchangeForSpotTrade::dispatch(
+                $spotTrade->id,
+                $spotTrade->market_id,
+                $quantity
+            );
+
+            return;
+        }
 
         SellOnRefExchangeForSpotTrade::dispatch(
             $spotTrade->id,

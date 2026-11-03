@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\RefExchangeSellStatusEnum;
 use App\Enums\SpotOrderSideEnum;
+use App\Enums\SpotOrderSourceEnum;
 use App\Enums\SpotOrderStatusEnum;
 use App\Enums\SpotOrderTypeEnum;
 use App\Filters\Filterable;
@@ -54,6 +55,35 @@ class SpotTrade extends Model
     public function refExchangeTransaction(): MorphOne
     {
         return $this->morphOne(ExchangeTransaction::class, 'orderable');
+    }
+
+    /**
+     * Reference-exchange hedge for a bot trade.
+     * Bot bought the coin → sell it on the reference exchange.
+     * Bot sold the coin → buy it back on the reference exchange.
+     */
+    public function refExchangeHedgeSide(): string
+    {
+        foreach ([$this->makerOrder, $this->takerOrder] as $order) {
+            if ($order?->source === SpotOrderSourceEnum::BOT && $order->side === SpotOrderSideEnum::BUY) {
+                return 'sell';
+            }
+        }
+
+        foreach ([$this->makerOrder, $this->takerOrder] as $order) {
+            if ($order?->source === SpotOrderSourceEnum::BOT && $order->side === SpotOrderSideEnum::SELL) {
+                return 'buy';
+            }
+        }
+
+        return 'sell';
+    }
+
+    public function refExchangeDisplayName(?string $fallback = null): ?string
+    {
+        return $this->refExchangeTransaction?->exchange?->name
+            ?? $this->market?->activeExchangePrice?->exchange?->name
+            ?? $fallback;
     }
 
     public function getMakerSideAttribute()

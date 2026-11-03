@@ -4,6 +4,7 @@ namespace App\Http\Controllers\SpotTrade;
 
 use App\Enums\RefExchangeSellStatusEnum;
 use App\Http\Controllers\Controller;
+use App\Models\Exchange;
 use App\Models\SpotTrade;
 use App\Models\Market;
 use App\Services\Exchanges\ExchangeService;
@@ -15,10 +16,12 @@ class SpotTradeController extends Controller
     public function index()
     {
         $query = SpotTrade::filterBy(request()->all())->with([
-            'market',
+            'market.activeExchangePrice.exchange',
+            'market.baseCurrency',
             'makerOrder.user',
             'takerOrder.user',
-            'commission'
+            'commission',
+            'refExchangeTransaction.exchange',
         ]);
 
         // Handle sorting
@@ -54,7 +57,8 @@ class SpotTradeController extends Controller
 
         return view('dashboard.spot_trade.index', [
             'spotTrades' => $spotTrades,
-            'markets' => $markets
+            'markets' => $markets,
+            'activeRefExchange' => Exchange::query()->where('is_active', true)->first(),
         ]);
     }
 
@@ -140,16 +144,20 @@ class SpotTradeController extends Controller
 
     public function triggerRefExchangeSell(int $spotTradeId, ExchangeService $exchangeService)
     {
-        $spotTrade = SpotTrade::findOrFail($spotTradeId);
+        $spotTrade = SpotTrade::with(['makerOrder', 'takerOrder'])->findOrFail($spotTradeId);
+        $isBuy = $spotTrade->refExchangeHedgeSide() === 'buy';
+        $action = $isBuy ? 'خرید' : 'فروش';
 
         if ($spotTrade->ref_exchange_sell_status !== RefExchangeSellStatusEnum::PENDING) {
             return response()->json([
                 'success' => false,
-                'message' => 'این معامله در وضعیت مناسب برای فروش در صرافی مرجع نیست.',
+                'message' => "این معامله در وضعیت مناسب برای {$action} در صرافی مرجع نیست.",
             ], 400);
         }
 
-        $result = $exchangeService->triggerRefExchangeSellForSpotTrade($spotTradeId);
+        $result = $isBuy
+            ? $exchangeService->triggerRefExchangeBuyForSpotTrade($spotTradeId)
+            : $exchangeService->triggerRefExchangeSellForSpotTrade($spotTradeId);
 
         return response()->json([
             'success' => $result->isSuccess(),

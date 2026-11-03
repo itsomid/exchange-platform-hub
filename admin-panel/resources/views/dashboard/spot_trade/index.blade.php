@@ -309,6 +309,13 @@
                         </tr>
                     @else
                         @foreach ($spotTrades as $spotTrade)
+                            @php
+                                $hedgeSide = $spotTrade->refExchangeHedgeSide();
+                                $hedgeLabel = $hedgeSide === 'buy' ? 'خرید' : 'فروش';
+                                $refExchangeName = $spotTrade->refExchangeDisplayName($activeRefExchange?->name);
+                                $refTx = $spotTrade->refExchangeTransaction;
+                                $refFilledValue = $refTx?->response_data['filled_value'] ?? null;
+                            @endphp
                             <tr class="table-striped">
                                 <td>{{ $spotTrade->id }}</td>
                                 <td class="text-heading fw-medium">
@@ -357,8 +364,10 @@
                                         <br>
                                         <small
                                             class="badge bg-label-{{ $spotTrade->ref_exchange_sell_status->color() }} mt-1">
-                                            صرافی مرجع: {{ $spotTrade->ref_exchange_sell_status->label() }}
+                                            {{ $refExchangeName ?: 'صرافی مرجع' }}: {{ $spotTrade->ref_exchange_sell_status->label() }}
                                         </small>
+                                        <br>
+                                        <small class="text-muted">{{ $hedgeLabel }} مارکت</small>
                                     @endif
                                 </td>
                                 <td>
@@ -375,12 +384,14 @@
                                         </button>
                                     @endif
 
-                                    {{-- Trigger Reference Exchange Sell Button --}}
+                                    {{-- Manual reference-exchange hedge. Buy when the bot sold, otherwise sell. --}}
                                     @if ($spotTrade->ref_exchange_sell_status === \App\Enums\RefExchangeSellStatusEnum::PENDING)
                                         <button type="button"
                                             class="btn btn-icon btn-text-warning trigger-ref-exchange-sell"
-                                            data-trade-id="{{ $spotTrade->id }}" data-bs-toggle="tooltip"
-                                            title="تکمیل فروش در صرافی مرجع">
+                                            data-trade-id="{{ $spotTrade->id }}"
+                                            data-hedge-side="{{ $hedgeSide }}"
+                                            data-bs-toggle="tooltip"
+                                            title="تکمیل {{ $hedgeLabel }} در صرافی مرجع">
                                             <i class="fa-solid fa-arrow-right-arrow-left"></i>
                                         </button>
                                     @endif
@@ -389,8 +400,10 @@
                                     @if ($spotTrade->ref_exchange_sell_status === \App\Enums\RefExchangeSellStatusEnum::FAILED)
                                         <button type="button"
                                             class="btn btn-icon btn-text-danger reset-ref-exchange-sell"
-                                            data-trade-id="{{ $spotTrade->id }}" data-bs-toggle="tooltip"
-                                            title="ریست و تلاش مجدد">
+                                            data-trade-id="{{ $spotTrade->id }}"
+                                            data-hedge-side="{{ $hedgeSide }}"
+                                            data-bs-toggle="tooltip"
+                                            title="ریست و تلاش مجدد {{ $hedgeLabel }}">
                                             <i class="fa-solid fa-rotate-right fa-lg"></i>
                                         </button>
                                     @endif
@@ -507,6 +520,78 @@
                                                                 USDT</span>
                                                         </div>
                                                     </div>
+                                                    @if (
+                                                        $spotTrade->ref_exchange_sell_status &&
+                                                            $spotTrade->ref_exchange_sell_status !== \App\Enums\RefExchangeSellStatusEnum::NOT_REQUIRED)
+                                                        <div class="border rounded p-3 mb-2">
+                                                            <h6 class="mb-3">سفارش صرافی مرجع</h6>
+                                                            <div
+                                                                class="d-flex align-items-sm-center justify-content-between border-bottom py-3">
+                                                                <h6 class="m-0">صرافی</h6>
+                                                                <span>{{ $refExchangeName ?: '—' }}</span>
+                                                            </div>
+                                                            <div
+                                                                class="d-flex align-items-sm-center justify-content-between border-bottom py-3">
+                                                                <h6 class="m-0">نوع سفارش</h6>
+                                                                <span>{{ $hedgeLabel }} مارکت</span>
+                                                            </div>
+                                                            <div
+                                                                class="d-flex align-items-sm-center justify-content-between border-bottom py-3">
+                                                                <h6 class="m-0">وضعیت</h6>
+                                                                <span
+                                                                    class="badge bg-label-{{ $spotTrade->ref_exchange_sell_status->color() }}">
+                                                                    {{ $spotTrade->ref_exchange_sell_status->label() }}
+                                                                </span>
+                                                            </div>
+                                                            <div
+                                                                class="d-flex align-items-sm-center justify-content-between border-bottom py-3">
+                                                                <h6 class="m-0">مقدار مچ‌شده</h6>
+                                                                <span class="font-number" dir="ltr">
+                                                                    {{ formatNumberTrimZeros($spotTrade->quantity) }}
+                                                                    {{ $spotTrade->market->base_currency }}
+                                                                </span>
+                                                            </div>
+                                                            @if ($refTx)
+                                                                <div
+                                                                    class="d-flex align-items-sm-center justify-content-between border-bottom py-3">
+                                                                    <h6 class="m-0">شناسه سفارش صرافی</h6>
+                                                                    <span class="font-number" dir="ltr">{{ $refTx->order_id }}</span>
+                                                                </div>
+                                                                <div
+                                                                    class="d-flex align-items-sm-center justify-content-between border-bottom py-3">
+                                                                    <h6 class="m-0">سمت ثبت‌شده</h6>
+                                                                    <span>{{ $refTx->side === 'buy' ? 'خرید' : 'فروش' }}</span>
+                                                                </div>
+                                                                <div
+                                                                    class="d-flex align-items-sm-center justify-content-between border-bottom py-3">
+                                                                    <h6 class="m-0">مقدار پر شده</h6>
+                                                                    <span class="font-number" dir="ltr">
+                                                                        {{ formatNumberTrimZeros($refTx->filled_amount) }}
+                                                                        {{ $refTx->currency_symbol }}
+                                                                    </span>
+                                                                </div>
+                                                                @if ($refFilledValue !== null && $refFilledValue !== '')
+                                                                    <div
+                                                                        class="d-flex align-items-sm-center justify-content-between border-bottom py-3">
+                                                                        <h6 class="m-0">مبلغ پر شده</h6>
+                                                                        <span class="font-number" dir="ltr">
+                                                                            {{ formatNumberTrimZeros($refFilledValue) }}
+                                                                            {{ $spotTrade->market->quote_currency }}
+                                                                        </span>
+                                                                    </div>
+                                                                @endif
+                                                                <div
+                                                                    class="d-flex align-items-sm-center justify-content-between py-3">
+                                                                    <h6 class="m-0">کارمزد</h6>
+                                                                    <span class="font-number" dir="ltr">
+                                                                        {{ formatNumberTrimZeros($refTx->fee ?? 0) }}
+                                                                    </span>
+                                                                </div>
+                                                            @else
+                                                                <p class="text-muted mb-0 mt-3">سفارش هنوز در صرافی مرجع ثبت نشده است.</p>
+                                                            @endif
+                                                        </div>
+                                                    @endif
                                                 </div>
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-label-secondary"
@@ -634,10 +719,11 @@
             $(document).on('click', '.trigger-ref-exchange-sell', function() {
                 const button = $(this);
                 const tradeId = button.data('trade-id');
+                const actionLabel = button.data('hedge-side') === 'buy' ? 'خرید' : 'فروش';
 
                 Swal.fire({
-                    title: 'تکمیل فروش در صرافی مرجع',
-                    text: 'آیا از تکمیل فروش در صرافی مرجع اطمینان دارید؟',
+                    title: 'تکمیل ' + actionLabel + ' در صرافی مرجع',
+                    text: 'آیا از تکمیل ' + actionLabel + ' در صرافی مرجع اطمینان دارید؟',
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#696cff',
@@ -681,7 +767,7 @@
                                     Swal.fire({
                                         title: 'خطا!',
                                         text: response.message ||
-                                            'خطا در تکمیل فروش',
+                                            'خطا در تکمیل سفارش صرافی مرجع',
                                         icon: 'error',
                                         confirmButtonText: 'باشه',
                                         confirmButtonColor: '#696cff',
@@ -721,9 +807,10 @@
             $(document).on('click', '.reset-ref-exchange-sell', function() {
                 const button = $(this);
                 const tradeId = button.data('trade-id');
+                const actionLabel = button.data('hedge-side') === 'buy' ? 'خرید' : 'فروش';
 
                 Swal.fire({
-                    title: 'ریست وضعیت فروش',
+                    title: 'ریست وضعیت ' + actionLabel,
                     text: 'وضعیت به "در انتظار" تغییر می‌یابد و می‌توانید مجدداً تلاش کنید.',
                     icon: 'question',
                     showCancelButton: true,

@@ -537,14 +537,196 @@ class ExchangeService
         }
     }
 
-    private function refExchangeErrorMessage(BuyDTOResponse $response, Exchange $exchange): string
+    /**
+     * Manual market buy on the reference exchange for a spot trade where the user
+     * bought from the bot and the automatic buy did not complete.
+     */
+    public function triggerRefExchangeBuyForSpotTrade(int $spotTradeId): TriggerRefExchangeSellResponseDTO
     {
+        $spotTrade = SpotTrade::with(['market.activeExchangePrice.exchange'])->findOrFail($spotTradeId);
+
+        if ($spotTrade->ref_exchange_sell_status !== RefExchangeSellStatusEnum::PENDING) {
+            return resolve(TriggerRefExchangeSellResponseDTO::class)
+                ->setSuccess(false)
+                ->setMessage('این معامله در وضعیت مناسب برای خرید در صرافی مرجع نیست.');
+        }
+
+        $market = $spotTrade->market;
+        $exchange = $this->exchangeRepository->getActiveExchange();
+
+        if (!$exchange) {
+            return resolve(TriggerRefExchangeSellResponseDTO::class)
+                ->setSuccess(false)
+                ->setMessage('صرافی مرجع برای این بازار یافت نشد.');
+        }
+
+        try {
+            $asset = AssetFactory::make($exchange->slug);
+
+            $response = $asset->placeOrder(
+                resolve(BuyDTORequest::class)
+                    ->setSide('buy')
+                    ->setMarket($market->base_currency . $market->quote_currency)
+                    ->setMarketType('SPOT')
+                    ->setQuantity($spotTrade->quantity)
+                    ->setOrderType('market')
+                    ->setCurrency($market->base_currency)
+            );
+
+            if ($response->isDone()) {
+                $spotTrade->update([
+                    'ref_exchange_sell_status' => RefExchangeSellStatusEnum::COMPLETED,
+                ]);
+
+                $spotTrade->refExchangeTransaction()->create([
+                    'order_id' => $response->getOrderId(),
+                    'exchange_id' => $exchange->id,
+                    'market' => $response->getMarket(),
+                    'currency_symbol' => $response->getCurrencySymbol(),
+                    'amount' => $response->getAmount(),
+                    'fee' => $response->getDiscountFee(),
+                    'filled_amount' => $response->getFilledAmount(),
+                    'side' => 'buy',
+                    'response' => json_encode($response->getResponseBody()),
+                ]);
+
+                $systemUserId = config('bitexroom.user_id');
+                $feeCurrency = $response->getFeeCurrency() ?? $this->getFeeCurrencyForExchange($exchange->slug);
+
+                $feeWallet = Wallet::firstOrCreate(
+                    ['user_id' => $systemUserId, 'currency_symbol' => $feeCurrency],
+                    ['balance' => 0, 'available_balance' => 0]
+                );
+                $quoteCurrencyWallet = Wallet::firstOrCreate(
+                    ['user_id' => $systemUserId, 'currency_symbol' => $market->quote_currency],
+                    ['balance' => 0, 'available_balance' => 0]
+                );
+                $baseCurrencyWallet = Wallet::firstOrCreate(
+                    ['user_id' => $systemUserId, 'currency_symbol' => $market->base_currency],
+                    ['balance' => 0, 'available_balance' => 0]
+                );
+
+                $feeMarket = $this->marketRepository->getMarketBySymbol($feeCurrency, 'USDT');
+                $feePrice = $feeMarket ? $feeMarket->activeExchangePrice->price : 0;
+
+                if ((float)$response->getDiscountFee() > 0) {
+                    Transaction::create([
+                        'user_id' => $systemUserId,
+                        'wallet_id' => $feeWallet->id,
+                        'spot_trade_id' => $spotTrade->id,
+                        'amount' => -$response->getDiscountFee(),
+                        'balance' => $feeWallet->balance - $response->getDiscountFee(),
+                        'coin_price' => $feeCurrency === 'USDT' ? "1" : $feePrice,
+                        'exchange_id' => $exchange->id,
+                        'type' => TransactionTypeEnum::REF_EXCHANGE,
+                        'subtype' => TransactionSubTypeEnum::REF_EXCHANGE_BUY_FEE,
+                        'status' => TransactionStatusEnum::SUCCESS,
+                        'description' => sprintf(
+                            'کارمزد خرید اسپات %s به مقدار %s در صرافی مرجع (%s) - دستی توسط ادمین',
+                            $feeCurrency,
+                            formatNumberTrimZeros((float)$response->getDiscountFee()),
+                            $exchange->name
+                        ),
+                    ]);
+                }
+
+                $quoteAmount = $response->getFilledValue();
+                if ($feeCurrency === $market->quote_currency && (float)$response->getDiscountFee() > 0) {
+                    $quoteAmount = bcsub($quoteAmount, $response->getDiscountFee(), 8);
+                }
+
+                $quoteCoinPrice = "1";
+                if ($market->quote_currency !== 'USDT') {
+                    $quoteMarket = $this->marketRepository->getMarketBySymbol($market->quote_currency, 'USDT');
+                    $quoteCoinPrice = $quoteMarket ? $quoteMarket->activeExchangePrice->price : "0";
+                }
+
+                Transaction::create([
+                    'user_id' => $systemUserId,
+                    'wallet_id' => $quoteCurrencyWallet->id,
+                    'spot_trade_id' => $spotTrade->id,
+                    'amount' => -$quoteAmount,
+                    'balance' => $quoteCurrencyWallet->balance - (float)$quoteAmount,
+                    'coin_price' => $quoteCoinPrice,
+                    'exchange_id' => $exchange->id,
+                    'type' => TransactionTypeEnum::REF_EXCHANGE,
+                    'subtype' => TransactionSubTypeEnum::REF_EXCHANGE_BUY,
+                    'status' => TransactionStatusEnum::SUCCESS,
+                    'description' => sprintf(
+                        'استفاده %s به مقدار %s برای خرید اسپات دستی از صرافی مرجع (%s)',
+                        $market->quote_currency,
+                        formatNumberTrimZeros((float)$quoteAmount),
+                        $exchange->name
+                    ),
+                ]);
+                $quoteCurrencyWallet->decrement('balance', (float)$quoteAmount);
+
+                $receivedBase = $response->getFilledAmount();
+                if ($feeCurrency === $market->base_currency && (float)$response->getDiscountFee() > 0) {
+                    $receivedBase = bcsub($receivedBase, $response->getDiscountFee(), 8);
+                }
+
+                Transaction::create([
+                    'user_id' => $systemUserId,
+                    'wallet_id' => $baseCurrencyWallet->id,
+                    'spot_trade_id' => $spotTrade->id,
+                    'amount' => $receivedBase,
+                    'balance' => $baseCurrencyWallet->balance + (float)$receivedBase,
+                    'coin_price' => $market->activeExchangePrice->price ?? "0",
+                    'exchange_id' => $exchange->id,
+                    'type' => TransactionTypeEnum::REF_EXCHANGE,
+                    'subtype' => TransactionSubTypeEnum::REF_EXCHANGE_BUY,
+                    'status' => TransactionStatusEnum::SUCCESS,
+                    'description' => sprintf(
+                        'خرید اسپات دستی %s به مقدار %s از صرافی مرجع (%s)',
+                        $market->base_currency,
+                        formatNumberTrimZeros((float)$receivedBase),
+                        $exchange->name
+                    ),
+                ]);
+                $baseCurrencyWallet->increment('balance', (float)$receivedBase);
+
+                return resolve(TriggerRefExchangeSellResponseDTO::class)
+                    ->setSuccess(true)
+                    ->setMessage(sprintf(
+                        'خرید %s %s در صرافی %s با موفقیت انجام شد.',
+                        formatNumberTrimZeros((float)$spotTrade->quantity),
+                        $market->base_currency,
+                        $exchange->name
+                    ));
+            }
+
+            $errorMessage = $this->refExchangeErrorMessage($response, $exchange, 'buy');
+
+            $spotTrade->update([
+                'ref_exchange_sell_status' => RefExchangeSellStatusEnum::FAILED,
+            ]);
+
+            return resolve(TriggerRefExchangeSellResponseDTO::class)
+                ->setSuccess(false)
+                ->setMessage($errorMessage);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            $spotTrade->update([
+                'ref_exchange_sell_status' => RefExchangeSellStatusEnum::FAILED,
+            ]);
+
+            return resolve(TriggerRefExchangeSellResponseDTO::class)
+                ->setSuccess(false)
+                ->setMessage('خطا در ارتباط با صرافی مرجع: ' . $exception->getMessage());
+        }
+    }
+
+    private function refExchangeErrorMessage(BuyDTOResponse $response, Exchange $exchange, string $side = 'sell'): string
+    {
+        $action = $side === 'buy' ? 'خرید' : 'فروش';
         $message = match ($response->getSpotStatus()) {
             SpotStatusEnum::NotEnoughBalance => "موجودی کافی در صرافی مرجع ({$exchange->name}) وجود ندارد.",
             SpotStatusEnum::AmountTooSmall => "مقدار سفارش کمتر از حداقل مجاز صرافی مرجع ({$exchange->name}) است.",
             SpotStatusEnum::PriceDifferenceTooLarge => "اختلاف قیمت در صرافی مرجع ({$exchange->name}) بیش از حد مجاز است.",
             SpotStatusEnum::ConnectionLosses => "خطا در اتصال به صرافی مرجع ({$exchange->name}).",
-            default => "ثبت سفارش فروش در صرافی مرجع ({$exchange->name}) ناموفق بود.",
+            default => "ثبت سفارش {$action} در صرافی مرجع ({$exchange->name}) ناموفق بود.",
         };
 
         $detail = trim((string) $response->getErrorMessage());

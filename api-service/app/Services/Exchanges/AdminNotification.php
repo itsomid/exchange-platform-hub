@@ -25,10 +25,15 @@ class AdminNotification
         );
     }
 
-    public static function sendRefExchangeNotEnoughBalance(string $exchangeName, string $marketName, string $amount, string $orderType = 'sell'): void
-    {
-        Admin::query()->where('is_active', true)->role(['super_admin','tech_developers'])->get()->unique('id')->each(function ($admin) use ($exchangeName, $marketName, $amount, $orderType) {
-            $admin->notify(new \App\Notifications\RefExchangeNotEnoughBalance($exchangeName, $marketName, $amount, $orderType));
+    public static function sendRefExchangeNotEnoughBalance(
+        string $exchangeName,
+        string $marketName,
+        string $amount,
+        string $orderType = 'sell',
+        string $url = '/transactions',
+    ): void {
+        Admin::query()->where('is_active', true)->role(['super_admin','tech_developers'])->get()->unique('id')->each(function ($admin) use ($exchangeName, $marketName, $amount, $orderType, $url) {
+            $admin->notify(new \App\Notifications\RefExchangeNotEnoughBalance($exchangeName, $marketName, $amount, $orderType, $url));
         });
     }
 

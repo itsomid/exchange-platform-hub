@@ -22,7 +22,8 @@ class RefExchangeNotEnoughBalance extends Notification implements ShouldQueue
         private string $exchangeName,
         private string $marketName,
         private string $amount,
-        private string $orderType = 'sell'
+        private string $orderType = 'sell',
+        private string $url = '/transactions',
     ) {
         $this->onQueue('api-email');
         if ($this->marketName === 'USDT') {
@@ -58,6 +59,16 @@ class RefExchangeNotEnoughBalance extends Notification implements ShouldQueue
 
     private function getMessage(): string
     {
+        if ($this->orderType === 'buy') {
+            return sprintf(
+                'صرافی مرجع %s موجودی تتر کافی برای خرید %s %s (به ارزش تقریبی %s تتر) ندارد. موجودی تتر را تامین کنید و از لیست معاملات اسپات دکمه خرید در صرافی مرجع را بزنید.',
+                $this->exchangeName,
+                formatNumberTrimZeros($this->amount),
+                $this->marketName,
+                formatNumberTrimZeros($this->usdtValue)
+            );
+        }
+
         $orderTypeText = $this->orderType === 'sell' ? 'فروش' : 'خرید';
 
         if ($this->marketName === 'USDT') {
@@ -86,7 +97,7 @@ class RefExchangeNotEnoughBalance extends Notification implements ShouldQueue
     {
         return [
             'message' => $this->getMessage(),
-            'url' => '/transactions',
+            'url' => $this->url,
         ];
     }
 
