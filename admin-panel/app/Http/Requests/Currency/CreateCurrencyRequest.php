@@ -26,7 +26,7 @@ class CreateCurrencyRequest extends FormRequest
             'persian_name' => 'required',
             'symbol' => 'required|unique:currencies,symbol',
             'is_active' => 'boolean',
-            'logo' => 'image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+            'logo' => 'image:allow_svg|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
         ];
     }
 }

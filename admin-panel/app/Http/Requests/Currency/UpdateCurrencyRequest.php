@@ -29,7 +29,7 @@ class UpdateCurrencyRequest extends FormRequest
             'max_auto_withdraw_amount' => 'required',
             'price_precision' => 'required|integer',
             'amount_precision' => 'required|integer',
-            'logo' => 'image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+            'logo' => 'image:allow_svg|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
             'is_active' => 'boolean',
         ];
     }
