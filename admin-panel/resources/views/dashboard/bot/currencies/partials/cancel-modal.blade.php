@@ -103,6 +103,64 @@
         var USDT = ' <small class="text-muted">USDT</small>';
 
         // Without profit payout a tier in profit refunds only its principal (no performance fee).
+        function knownExchanges(d) {
+            return (d.reference_exchanges || []).filter(function(r) { return r && r.slug; });
+        }
+
+        // Name written on the cancel/sell switches: the exchange those open
+        // tiers actually sit on, when they all sit on the exchange the cancel
+        // request is sent to. Otherwise the request's own exchange.
+        function actionExchangeName(d) {
+            var rows = knownExchanges(d);
+            var cancel = d.cancel_exchange || {};
+            if (rows.length === 1 && cancel.slug && rows[0].slug === cancel.slug && rows[0].name) {
+                return rows[0].name;
+            }
+            if (cancel.name) return cancel.name;
+            if (rows.length === 1 && rows[0].name) return rows[0].name;
+            return 'صرافی مرجع';
+        }
+
+        function exchangeBanner(d) {
+            if (!Object.prototype.hasOwnProperty.call(d, 'reference_exchanges')) return '';
+            var rows = knownExchanges(d);
+            var cancel = d.cancel_exchange || {};
+            var cancelName = esc(cancel.name || 'صرافی مرجع');
+            if (!rows.length) {
+                return '<div class="alert alert-warning py-2 mb-3"><i class="fas fa-exchange-alt me-1"></i>' +
+                    'صرافی مرجع این پله‌ها در رکورد سفارش ثبت نشده است. درخواست لغو به <strong>' +
+                    cancelName + '</strong> فرستاده می‌شود.</div>';
+            }
+            if (rows.length === 1) {
+                var r = rows[0];
+                var name = esc(r.name);
+                var text = '<strong>' + fmt(r.placed || 0, 0) + '</strong> پله فروش ثبت‌شده روی <strong>' + name + '</strong>';
+                if ((r.waiting || 0) > 0) {
+                    text += ' و <strong>' + fmt(r.waiting, 0) + '</strong> پله که هنوز سفارشی در ' + name + ' ندارد';
+                }
+                var mismatch = !!(cancel.slug && r.slug !== cancel.slug && (parseInt(r.placed, 10) || 0) > 0);
+                var extra = mismatch
+                    ? 'درخواست لغو به <strong>' + cancelName + '</strong> می‌رود، نه به ' + name + '.'
+                    : 'با روشن کردن لغو، همین پله‌های ثبت‌شده در <strong>' + name + '</strong> لغو می‌شوند.';
+                return '<div class="alert ' + (mismatch ? 'alert-warning' : 'alert-info') + ' py-2 mb-3">' +
+                    '<i class="fas fa-exchange-alt me-1"></i>صرافی مرجع این سفارش‌ها: <strong>' + name + '</strong>' +
+                    '<div class="mt-1">' + text + '.</div><div class="mt-1">' + extra + '</div></div>';
+            }
+            var list = '<ul class="mb-0 mt-1">';
+            rows.forEach(function(r) {
+                list += '<li><strong>' + esc(r.name) + '</strong> — ' + fmt(r.placed || 0, 0) + ' پله ثبت‌شده';
+                if ((r.waiting || 0) > 0) {
+                    list += '، ' + fmt(r.waiting, 0) + ' پله در انتظار ثبت';
+                }
+                list += '</li>';
+            });
+            list += '</ul>';
+            return '<div class="alert alert-warning py-2 mb-3"><i class="fas fa-exchange-alt me-1"></i>' +
+                'پله‌های فروش باز این کاربران روی چند صرافی مرجع است:' + list +
+                '<div class="mt-1">درخواست لغو فقط به <strong>' + cancelName +
+                '</strong> فرستاده می‌شود. پله‌هایی که روی صرافی دیگری هستند با این عملیات در همان صرافی لغو نمی‌شوند.</div></div>';
+        }
+
         function estimate(row, payProfit) {
             var pnl = parseFloat(row.gross_pnl) || 0;
             return payProfit
@@ -120,6 +178,7 @@
         function renderPreview(d) {
             var t = d.totals || {};
             var sym = esc(d.currency.symbol);
+            var exName = esc(actionExchangeName(d));
             var blocked = false;
             var html = '';
 
@@ -137,8 +196,10 @@
             }
             if (!(parseFloat(d.live_price) > 0)) {
                 html += '<div class="alert alert-danger py-2 small"><i class="fas fa-exclamation-triangle me-1"></i>' +
-                    'قیمت لحظه‌ای ' + sym + ' در دسترس نیست؛ برآوردها ناقص است و بدون فروش در صرافی مرجع لغو اجرا نمی‌شود.</div>';
+                    'قیمت لحظه‌ای ' + sym + ' در دسترس نیست؛ برآوردها ناقص است و بدون فروش در ' + exName + ' لغو اجرا نمی‌شود.</div>';
             }
+
+            html += exchangeBanner(d);
 
             html += '<div class="row g-2 text-center mb-3">' +
                 stat('کاربران درگیر', fmt(t.users, 0)) +
@@ -155,14 +216,17 @@
             html += '<div class="small text-muted mb-3" id="ccFormulaHint"></div>';
 
             var users = d.users || [];
+            var showExchangeCol = users.some(function(u) { return (u.exchanges || []).length > 0; });
             if (users.length) {
                 html += '<div class="table-responsive mb-3" style="max-height:280px">' +
                     '<table class="table table-sm table-bordered align-middle mb-0"><thead class="table-light"><tr>' +
-                    '<th>کاربر</th><th>سفارش / پله</th><th>مقدار</th><th>اصل سرمایه</th><th>ارزش لحظه‌ای</th>' +
+                    '<th>کاربر</th>' + (showExchangeCol ? '<th>صرافی مرجع</th>' : '') +
+                    '<th>سفارش / پله</th><th>مقدار</th><th>اصل سرمایه</th><th>ارزش لحظه‌ای</th>' +
                     '<th>سود/زیان</th><th>کارمزد عملکرد</th><th>برگشتی برآوردی</th></tr></thead><tbody>';
                 users.forEach(function(u, i) {
                     html += '<tr>' +
                         '<td><small>' + esc(u.email || u.mobile || ('#' + u.user_id)) + '</small></td>' +
+                        (showExchangeCol ? '<td>' + esc((u.exchanges || []).join('، ') || '—') + '</td>' : '') +
                         '<td class="font-number">' + u.orders_count + ' / ' + u.tiers + '</td>' +
                         '<td class="font-number">' + fmt(u.amount) + '</td>' +
                         '<td class="font-number">' + fmt(u.principal, 4) + '</td>' +
@@ -188,20 +252,20 @@
                 '</div>';
 
             html += '<div class="border rounded p-3 mb-3" style="background:rgba(0,0,0,.015)">' +
-                '<h6 class="mb-3"><i class="fas fa-exchange-alt me-1"></i> تعیین تکلیف ' + sym + ' در صرافی مرجع</h6>' +
+                '<h6 class="mb-3"><i class="fas fa-exchange-alt me-1"></i> تعیین تکلیف ' + sym + ' در ' + exName + '</h6>' +
                 '<div class="form-check form-switch mb-2">' +
                 '<input class="form-check-input" type="checkbox" id="ccCancelOnExchange">' +
-                '<label class="form-check-label" for="ccCancelOnExchange">لغو همه پله‌های فروش ' + sym + ' در صرافی مرجع</label></div>' +
+                '<label class="form-check-label" for="ccCancelOnExchange">لغو همه پله‌های فروش ' + sym + ' در ' + exName + '</label></div>' +
                 '<div class="form-check form-switch mb-2">' +
                 '<input class="form-check-input" type="checkbox" id="ccSellOnExchange" disabled>' +
-                '<label class="form-check-label" for="ccSellOnExchange">فروش ' + sym + ' در صرافی مرجع بعد از لغو پله‌ها (یک سفارش Market برای کل مقدار)</label></div>' +
+                '<label class="form-check-label" for="ccSellOnExchange">فروش ' + sym + ' در ' + exName + ' بعد از لغو پله‌ها (یک سفارش Market برای کل مقدار)</label></div>' +
                 '<div class="small mt-2" id="ccModeHint"></div>' +
                 '</div>';
 
             html += '<div class="mb-3">' +
                 '<label class="form-label fw-semibold" for="ccReason">دلیل لغو <span class="text-danger">*</span></label>' +
                 '<textarea class="form-control" id="ccReason" rows="3" maxlength="2000" ' +
-                'placeholder="مثلاً: حذف ' + sym + ' از صرافی مرجع / توقف معاملات این ارز"></textarea>' +
+                'placeholder="مثلاً: حذف ' + sym + ' از ' + exName + ' / توقف معاملات این ارز"></textarea>' +
                 '<div class="form-text">این متن روی کارت اجرای خرید و توضیحات سیستمی هر سفارش درگیر ثبت می‌شود.</div></div>';
 
             html += '<div class="alert alert-warning py-2 small mb-0"><i class="fas fa-power-off me-1"></i>' +
@@ -221,16 +285,16 @@
                 sellSw.disabled = !cancelSw.checked;
                 if (sellSw.checked) {
                     hint.className = 'small mt-2 text-danger';
-                    hint.innerHTML = '<i class="fas fa-info-circle me-1"></i>ابتدا پله‌های فروش باز در صرافی مرجع لغو می‌شوند، سپس مجموع ' +
+                    hint.innerHTML = '<i class="fas fa-info-circle me-1"></i>ابتدا پله‌های فروش باز در ' + exName + ' لغو می‌شوند، سپس مجموع ' +
                         sym + ' آزادشده با یک سفارش Market فروخته می‌شود و همه کاربران با میانگین قیمت همان فروش تسویه می‌شوند.';
                 } else if (cancelSw.checked) {
                     hint.className = 'small mt-2 text-warning';
-                    hint.innerHTML = '<i class="fas fa-info-circle me-1"></i>پله‌های فروش در صرافی مرجع لغو می‌شوند اما ' + sym +
-                        ' در حساب صرافی مرجع باقی می‌ماند. تسویه کاربران با قیمت لحظه‌ای انجام می‌شود.';
+                    hint.innerHTML = '<i class="fas fa-info-circle me-1"></i>پله‌های فروش در ' + exName + ' لغو می‌شوند اما ' + sym +
+                        ' در حساب ' + exName + ' باقی می‌ماند. تسویه کاربران با قیمت لحظه‌ای انجام می‌شود.';
                 } else {
                     hint.className = 'small mt-2 text-muted';
-                    hint.innerHTML = '<i class="fas fa-info-circle me-1"></i>هیچ ارتباطی با صرافی مرجع برقرار نمی‌شود؛ پله‌ها فقط در سیستم لغو ' +
-                        'و کاربران با قیمت لحظه‌ای تسویه می‌شوند. سفارش‌های فروش در صرافی مرجع دست نمی‌خورند.';
+                    hint.innerHTML = '<i class="fas fa-info-circle me-1"></i>هیچ ارتباطی با ' + exName + ' برقرار نمی‌شود؛ پله‌ها فقط در سیستم لغو ' +
+                        'و کاربران با قیمت لحظه‌ای تسویه می‌شوند. سفارش‌های فروش در ' + exName + ' دست نمی‌خورند.';
                 }
             }
             cancelSw.addEventListener('change', syncSwitches);
@@ -272,7 +336,7 @@
                 formulaHint.innerHTML = '<i class="fas fa-calculator me-1"></i>' + (pay
                     ? 'برای هر کاربر: اگر ارز در سود باشد، اصل سرمایه + (سود − کارمزد عملکرد) برمی‌گردد؛ اگر در ضرر باشد، دقیقاً اصل سرمایه برمی‌گردد. '
                     : 'برای هر کاربر: چه ارز در سود باشد چه در ضرر، دقیقاً اصل سرمایه برمی‌گردد. ') +
-                    'کارمزد شبکه و کارمزد صرافی مرجع از کاربر کسر نمی‌شود.';
+                    'کارمزد شبکه و کارمزد ' + exName + ' از کاربر کسر نمی‌شود.';
             }
             profitSw.addEventListener('change', syncProfit);
             syncProfit();

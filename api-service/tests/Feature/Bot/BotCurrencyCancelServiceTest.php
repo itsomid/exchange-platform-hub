@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Bot\BotBuyExecution;
+use App\Models\Exchange;
 use App\Models\Bot\BotCurrencyCancellation;
 use App\Models\Bot\BotGlobalSettings;
 use App\Models\Bot\BotOrder;
@@ -124,6 +125,23 @@ function ccPosition(Currency $currency, string $amount, string $avg, ?BotOrder $
     ]);
 
     return ['user' => User::find($order->user_id), 'order' => $order, 'execution' => $execution, 'sell' => $sell];
+}
+
+function ccExchange(string $slug, string $name): void
+{
+    $row = Exchange::query()->where('slug', $slug)->first();
+    if ($row) {
+        $row->forceFill(['name' => $name])->save();
+
+        return;
+    }
+
+    Exchange::forceCreate([
+        'name'      => $name,
+        'slug'      => $slug,
+        'priority'  => 1,
+        'is_active' => false,
+    ]);
 }
 
 function ccStart(Currency $currency, bool $cancelOnExchange = false, bool $sellOnExchange = false): BotCurrencyCancellation
@@ -309,4 +327,52 @@ it('previews the per-user refund at the live price', function () {
     expect((float) $preview['totals']['refund'])->toBe(36.0); // 24 + 12
     expect($preview['totals']['profit_tiers'])->toBe(2);
     expect($preview['users'])->toHaveCount(2);
+    expect($preview['reference_exchanges'][0]['name'])->toBe('نامشخص');
+    expect($preview['cancel_exchange']['slug'])->toBe('fake');
+});
+
+it('names the reference exchange the open sell tiers sit on', function () {
+    $x = ccCurrency('XXX');
+    $placed = ccPosition($x, '10', '2');
+    $waiting = ccPosition($x, '5', '2');
+    $placed['sell']->update(['exchange' => BotSellOrder::EXCHANGE_BINANCE]);
+    $waiting['sell']->update([
+        'exchange'          => BotSellOrder::EXCHANGE_BINANCE,
+        'exchange_order_id' => null,
+        'placement_status'  => BotSellOrder::PLACEMENT_WAITING,
+    ]);
+    Cache::put('market:price:XXXUSDT', '2.5');
+    $this->fake->exchangeName = BotSellOrder::EXCHANGE_BINANCE;
+    ccExchange('binance', 'Binance');
+
+    $preview = app(BotCurrencyCancelService::class)->preview($x);
+
+    expect($preview['reference_exchanges'])->toHaveCount(1)
+        ->and($preview['reference_exchanges'][0])->toMatchArray([
+            'slug'        => 'binance',
+            'name'        => 'Binance',
+            'sell_orders' => 2,
+            'placed'      => 1,
+            'waiting'     => 1,
+        ])
+        ->and($preview['cancel_exchange'])->toBe(['slug' => 'binance', 'name' => 'Binance'])
+        ->and(collect($preview['users'])->pluck('exchanges')->all())->toBe([['Binance'], ['Binance']]);
+});
+
+it('lists each reference exchange when open tiers are split across exchanges', function () {
+    $x = ccCurrency('YYY');
+    $binance = ccPosition($x, '10', '2');
+    $coinex = ccPosition($x, '4', '2');
+    $binance['sell']->update(['exchange' => 'binance']);
+    $coinex['sell']->update(['exchange' => 'coinex']);
+    ccExchange('coinex', 'CoinEx');
+    ccExchange('binance', 'Binance');
+
+    $bySlug = collect(app(BotCurrencyCancelService::class)->preview($x)['reference_exchanges'])->keyBy('slug');
+
+    expect($bySlug->keys()->sort()->values()->all())->toBe(['binance', 'coinex'])
+        ->and($bySlug['binance']['name'])->toBe('Binance')
+        ->and($bySlug['binance']['placed'])->toBe(1)
+        ->and($bySlug['coinex']['name'])->toBe('CoinEx')
+        ->and($bySlug['coinex']['placed'])->toBe(1);
 });

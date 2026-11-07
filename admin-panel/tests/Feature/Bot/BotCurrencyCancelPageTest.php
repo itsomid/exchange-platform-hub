@@ -76,6 +76,8 @@ class BotCurrencyCancelPageTest extends TestCase
             ->get(route('admin.bot.currency.index'))
             ->assertOk()
             ->assertSee('ZZZ')
+            ->assertSee('reference_exchanges', false)
+            ->assertSee('صرافی مرجع این سفارش‌ها', false)
             ->assertSee(route('admin.bot.currency.cancel', $this->currency->id), false)
             ->assertSee(route('admin.bot.currency.excel-export'), false);
     }

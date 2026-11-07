@@ -11,6 +11,7 @@ use App\Models\Bot\BotSellMigration;
 use App\Models\Bot\BotSellOrder;
 use App\Models\Bot\BotSignal;
 use App\Models\Currency;
+use App\Models\Exchange;
 use App\Services\Bot\ReferenceExchange\ExchangeContract;
 use App\Services\Bot\ReferenceExchange\ExchangeOrderStatus;
 use App\Services\Bot\ReferenceExchange\ExchangePositionCloser;
@@ -53,9 +54,11 @@ class BotCurrencyCancelService
         $price   = $this->livePrice($currency);
         $sells   = $this->openSells($currency->id);
 
-        $users       = [];
-        $totals      = $this->emptyTotals();
-        $profitTiers = 0;
+        $users           = [];
+        $totals          = $this->emptyTotals();
+        $profitTiers     = 0;
+        $exchangeNames   = $this->exchangeNames();
+        $exchangeBuckets = [];
 
         foreach ($sells as $sell) {
             $execution = $sell->botBuyExecution;
@@ -63,30 +66,64 @@ class BotCurrencyCancelService
             $b         = $this->settlement->currencyCancelBreakdown($execution, $amount, $price, $perfPct);
             $user      = $execution->botOrder->user;
             $userId    = (int) $execution->botOrder->user_id;
+            $slug      = $this->exchangeSlug($sell->exchange);
+            $label     = $this->exchangeDisplayName($slug, $exchangeNames);
 
             $users[$userId] ??= [
-                'user_id'  => $userId,
-                'email'    => $user?->email,
-                'mobile'   => $user?->mobile,
-                'orders'   => [],
-                'tiers'    => 0,
+                'user_id'   => $userId,
+                'email'     => $user?->email,
+                'mobile'    => $user?->mobile,
+                'orders'    => [],
+                'tiers'     => 0,
+                'exchanges' => [],
             ] + $this->emptyTotals();
 
             $users[$userId]['orders'][$execution->bot_order_id] = true;
             $users[$userId]['tiers']++;
+            $users[$userId]['exchanges'][$slug ?? '_unknown'] = $label;
             $this->accumulate($users[$userId], $amount, $b);
             $this->accumulate($totals, $amount, $b);
             if (bccomp($b['gross_pnl'], '0', self::SCALE) > 0) {
                 $profitTiers++;
             }
+
+            $bucketKey = $slug ?? '_unknown';
+            $exchangeBuckets[$bucketKey] ??= [
+                'slug'        => $slug,
+                'name'        => $label,
+                'sell_orders' => 0,
+                'placed'      => 0,
+                'waiting'     => 0,
+            ];
+            $exchangeBuckets[$bucketKey]['sell_orders']++;
+            if ($sell->exchange_order_id) {
+                $exchangeBuckets[$bucketKey]['placed']++;
+            } else {
+                $exchangeBuckets[$bucketKey]['waiting']++;
+            }
         }
 
         $users = array_values(array_map(function (array $u) {
             $u['orders_count'] = count($u['orders']);
+            $u['exchanges']    = array_values($u['exchanges']);
             unset($u['orders']);
 
             return $u;
         }, $users));
+
+        $referenceExchanges = array_values($exchangeBuckets);
+        usort($referenceExchanges, function (array $a, array $b): int {
+            if ($a['slug'] === null) {
+                return 1;
+            }
+            if ($b['slug'] === null) {
+                return -1;
+            }
+
+            return $b['placed'] <=> $a['placed'] ?: strcmp($a['name'], $b['name']);
+        });
+
+        $cancelSlug = $this->exchangeSlug($this->exchange->name());
 
         return [
             'currency' => [
@@ -106,6 +143,11 @@ class BotCurrencyCancelService
                 'profit_tiers' => $profitTiers,
             ],
             'users' => $users,
+            'reference_exchanges' => $referenceExchanges,
+            'cancel_exchange'     => [
+                'slug' => $cancelSlug,
+                'name' => $this->exchangeDisplayName($cancelSlug, $exchangeNames),
+            ],
         ];
     }
 
@@ -510,6 +552,49 @@ class BotCurrencyCancelService
         foreach (['principal', 'cost_basis', 'current_value', 'gross_pnl', 'performance_fee', 'refund'] as $key) {
             $bucket[$key] = bcadd($bucket[$key], $b[$key], self::SCALE);
         }
+    }
+
+    /**
+     * @return array<string,string> slug => display name from the exchanges table
+     */
+    private function exchangeNames(): array
+    {
+        $names = [];
+        foreach (Exchange::query()->get(['slug', 'name']) as $row) {
+            $slug = $this->exchangeSlug($row->slug);
+            if ($slug !== null && $row->name) {
+                $names[$slug] = (string) $row->name;
+            }
+        }
+
+        return $names;
+    }
+
+    private function exchangeSlug(mixed $slug): ?string
+    {
+        $slug = strtolower(trim((string) $slug));
+
+        return $slug === '' ? null : $slug;
+    }
+
+    /**
+     * @param array<string,string> $names
+     */
+    private function exchangeDisplayName(?string $slug, array $names): string
+    {
+        if ($slug === null) {
+            return 'نامشخص';
+        }
+        if (! empty($names[$slug])) {
+            return $names[$slug];
+        }
+
+        return match ($slug) {
+            'binance' => 'Binance',
+            'coinex'  => 'CoinEx',
+            'mexc'    => 'MEXC',
+            default   => $slug,
+        };
     }
 
     private function num(mixed $v): string
