@@ -1,5 +1,23 @@
 @extends('dashboard.layout.master')
 @section('title', 'مدیریت کاربران')
+@section('vendor-style')
+    <style>
+        .staff-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            object-position: center;
+            display: inline-block;
+            vertical-align: middle;
+            background-color: rgba(115, 103, 240, 0.08);
+            box-shadow:
+                0 0 0 2px var(--bs-card-bg, #fff),
+                0 0 0 3.5px rgba(115, 103, 240, 0.38),
+                0 6px 14px rgba(67, 89, 113, 0.12);
+        }
+    </style>
+@endsection
 @section('content')
 
     <div class="row g-4 mb-4">
@@ -130,7 +148,7 @@
                         <tr>
                             <td>{{$admin->id}}</td>
                             <td>
-                                <img src="{{$admin->avatar()}}" class="img-fluid" width="50px">
+                                <img src="{{ $admin->avatar() }}" alt="" class="staff-avatar" width="40" height="40">
                             </td>
 
                             <td>
