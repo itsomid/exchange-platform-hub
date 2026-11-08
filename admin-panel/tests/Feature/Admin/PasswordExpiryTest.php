@@ -226,6 +226,7 @@ class PasswordExpiryTest extends TestCase
             ->assertOk()
             ->assertSee('name="current_password"', false)
             ->assertSee('passwordChecklist', false)
+            ->assertSee('id="passwordSummary"', false)
             ->assertSee('"key":"length"', false);
     }
 }

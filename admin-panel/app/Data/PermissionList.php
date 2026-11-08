@@ -62,6 +62,7 @@ class PermissionList
             ['all_notifications', 'مشاهده تمام اعلان های مدیریت'],
             ['support', 'پشتیبانی کاربر'],
             ['viewTelescope', 'لاراول تلسکوپ'],
+            ['viewPulse', 'مشاهده گزارش عملکرد API (لاراول پالس)'],
 
             ['accounting.login', 'ورود به پنل حسابداری'],
 

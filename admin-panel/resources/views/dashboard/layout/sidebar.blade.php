@@ -604,6 +604,14 @@
                 </ul>
             </li>
         @endcan
+        @can('viewPulse')
+            <li class="menu-item @if (request()->is('pulse*')) active @endif">
+                <a href="{{ url('pulse') }}" class="menu-link">
+                    <i class="menu-icon fa-regular fa-monitor-heart-rate fa-sm"></i>
+                    <div> عملکرد API (Pulse)</div>
+                </a>
+            </li>
+        @endcan
         @can('view-logs')
             @if (!app()->environment('production') && Route::has('telescope'))
                 <li class="menu-item @if (request()->route()->getName() == 'telescope') active @endif">

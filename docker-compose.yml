@@ -195,6 +195,51 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
+  # Laravel Pulse (records api-service performance; dashboard is served by admin-panel)
+  # Moves entries from the Redis ingest stream into the shared DB (pulse_* tables).
+  api-pulse-worker:
+    build:
+      context: ./dockerfiles
+      dockerfile: php.dockerfile
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - USER=${USER:-laraveluser}
+    container_name: api-pulse-worker
+    restart: unless-stopped
+    volumes:
+      - "./api-service:/var/www/html:delegated"
+      - "./env/api_service.env:/var/www/html/.env"
+    depends_on:
+      - database
+      - redis
+    working_dir: /var/www/html
+    entrypoint: [ "php", "/var/www/html/artisan", "pulse:work" ]
+    networks:
+      - laravel
+
+  # Reports CPU/memory/disk for the "Servers" card.
+  api-pulse-check:
+    build:
+      context: ./dockerfiles
+      dockerfile: php.dockerfile
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - USER=${USER:-laraveluser}
+    container_name: api-pulse-check
+    restart: unless-stopped
+    volumes:
+      - "./api-service:/var/www/html:delegated"
+      - "./env/api_service.env:/var/www/html/.env"
+    depends_on:
+      - database
+      - redis
+    working_dir: /var/www/html
+    entrypoint: [ "php", "/var/www/html/artisan", "pulse:check" ]
+    networks:
+      - laravel
+
   # Laravel Queue Workers
   exchange-listen:
     build:
