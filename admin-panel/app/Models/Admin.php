@@ -150,7 +150,7 @@ class Admin extends Authenticatable
     }
 
 
-    public const PASSWORD_GRACE_DAYS = 6;
+    public const PASSWORD_GRACE_DAYS = 3;
     public const PASSWORD_MAX_AGE_MONTHS = 3;
 
     /** True when the admin never changed the password or it is older than the allowed age. */
