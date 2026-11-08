@@ -17,6 +17,19 @@
         </div>
     </div>
 
+    <div class="admin-search-slot">
+        <button type="button"
+                class="admin-search-trigger"
+                id="admin-search-open"
+                aria-haspopup="dialog"
+                aria-controls="admin-search"
+                aria-expanded="false">
+            <i class="fa-regular fa-magnifying-glass" aria-hidden="true"></i>
+            <span>جستجو در پنل</span>
+            <kbd data-admin-search-trigger-shortcut>Ctrl K</kbd>
+        </button>
+    </div>
+
     <div class="navbar-nav-right admin-topbar__end" id="navbar-collapse">
         <ul class="navbar-nav admin-topbar__actions">
             @unless($panelLocked)
@@ -188,3 +201,4 @@
         </ul>
     </div>
 </nav>
+@include('dashboard.layout.search')
