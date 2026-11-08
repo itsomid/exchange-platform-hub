@@ -194,10 +194,18 @@ class RefExchangeAssetsWithdrawalController extends Controller
         $globalWithdrawalMinCount = (int) Setting::getSetting('exchange_withdrawal_period_buy', 1);
         $withdrawalType = Setting::getSetting('exchange_withdrawal_type', 'exchange_withdrawal_period_time');
 
+        // A deleted currency leaves pending rows whose relation is null.
+        $pendingWithdrawals = $pendingWithdrawals
+            ->filter(fn (OTCRefExchangeWithdrawal $pending) => $pending->currency !== null)
+            ->values();
+
         // Calculate timer data for each pending withdrawal currency
         $currencyTimerData = [];
         foreach ($pendingWithdrawals as $pending) {
             $currency = $pending->currency;
+            if ($currency === null) {
+                continue;
+            }
             $cacheKey = 'exchange_withdrawal_period_time_last_hit_' . $currency->id;
             $lastHit = Cache::get($cacheKey);
             

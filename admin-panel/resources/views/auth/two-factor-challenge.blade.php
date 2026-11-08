@@ -70,17 +70,22 @@
                         <div class="flex justify-center items-center flex-wrap gap-2">
                         </div>
                     </form>
-                    <div class="divider my-6">
-                        <div class="divider-text">or</div>
-                    </div>
+                    <form id="recoveryForm" class="d-none mt-4" autocomplete="off"
+                        action="{{ route('two-factor.login.store') }}" method="POST">
+                        @csrf
+                        <p class="mb-2">یکی از کدهای بازیابی خود را وارد کنید (هر کد فقط یک بار قابل استفاده است):</p>
+                        <input type="text" name="recovery_code" class="form-control text-center mb-3" dir="ltr"
+                            autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="xxxxxxxxxx-xxxxxxxxxx">
+                        @error('recovery_code')
+                            <small class="text-danger d-block mb-2">کد بازیابی وارد شده معتبر نیست</small>
+                        @enderror
+                        <button class="btn btn-primary w-100" type="submit">ورود با کد بازیابی</button>
+                    </form>
 
-                    <div class="d-flex justify-content-center">
-                        <a href="javascript:;" class="btn btn-icon btn-label-instagram me-3">
-                            <i class=" fa-brands fa-instagram-square fs-5"></i>
-                        </a>
-
-                        <a href="javascript:;" class="btn btn-icon btn-label-twitter">
-                            <i class="tf-icons fa-brands fa-twitter fs-5"></i>
+                    <div class="text-center mt-4">
+                        <a href="javascript:;" id="toggleRecovery" class="small"
+                            data-code-label="استفاده از کد بازیابی" data-app-label="استفاده از کد برنامه‌ی احراز هویت">
+                            استفاده از کد بازیابی
                         </a>
                     </div>
                 </div>
@@ -92,4 +97,21 @@
 @endsection
 @section('vendor-script')
     @vite(['resources/assets/vendor/libs/cleavejs/cleave.js', 'resources/assets/js/pages-auth-two-steps.js'])
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var link = document.getElementById('toggleRecovery');
+            var otpForm = document.getElementById('twoStepsForm');
+            var recoveryForm = document.getElementById('recoveryForm');
+            var showRecovery = function (on) {
+                otpForm.classList.toggle('d-none', on);
+                recoveryForm.classList.toggle('d-none', !on);
+                link.textContent = on ? link.dataset.appLabel : link.dataset.codeLabel;
+                if (on) recoveryForm.querySelector('input[name="recovery_code"]').focus();
+            };
+            link.addEventListener('click', function () { showRecovery(recoveryForm.classList.contains('d-none')); });
+            @if ($errors->has('recovery_code'))
+                showRecovery(true);
+            @endif
+        });
+    </script>
 @endsection

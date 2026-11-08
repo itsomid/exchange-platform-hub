@@ -1,16 +1,51 @@
 <!DOCTYPE html>
 @php
-    $configData['styleOpt'] = session('theme', 'light');
+    $themePreference = \App\Support\AdminTheme::preference();
     $configData['contentLayout'] = 'wide'; //'wide','compact'
     $container = $configData['contentLayout'] === 'compact' ? 'container-xxl' : 'container-fluid';
     $contentLayout = isset($container) ? ($container === 'container-xxl' ? 'layout-compact' : 'layout-wide') : '';
     $navbarType = 'layout-navbar-fixed'; // "layout-navbar-fixed" : "";
 @endphp
-<html lang="en" class="{{ $configData['styleOpt'] }}-style {{ $contentLayout }} {{ $navbarType }} layout-menu-fixed"
-    dir="rtl" data-theme="theme-default" data-assets-path="{{ asset('/assets') . '/' }}"
+<html lang="en"
+    @class([
+        'light-style' => $themePreference === \App\Support\AdminTheme::LIGHT,
+        'dark-style' => $themePreference === \App\Support\AdminTheme::DARK,
+        $contentLayout,
+        $navbarType,
+        'layout-menu-fixed',
+    ])
+    dir="rtl" data-theme="theme-default" data-theme-preference="{{ $themePreference }}"
+    data-assets-path="{{ asset('/assets') . '/' }}"
     data-template="vertical-menu-template-no-customizer-starter">
 
 <head>
+    <script>
+        (function () {
+            var preference = @json($themePreference);
+            var media = window.matchMedia('(prefers-color-scheme: dark)');
+
+            function resolved() {
+                if (preference === 'dark') return 'dark';
+                if (preference === 'light') return 'light';
+                return media.matches ? 'dark' : 'light';
+            }
+
+            function apply() {
+                var mode = resolved();
+                var root = document.documentElement;
+                root.classList.remove('light-style', 'dark-style');
+                root.classList.add(mode + '-style');
+                root.setAttribute('data-resolved-theme', mode);
+                root.style.colorScheme = mode;
+            }
+
+            apply();
+
+            if (preference === 'system' && media.addEventListener) {
+                media.addEventListener('change', apply);
+            }
+        })();
+    </script>
     <meta charset="utf-8" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport"
@@ -31,7 +66,10 @@
     <link rel="manifest" href="{{ asset('images/favicon/site.webmanifest') }}">
     <!-- core css -->
 
-    @vite(['resources/assets/scss/admin/app' . ($configData['styleOpt'] !== 'light' ? '-' . $configData['styleOpt'] : '') . '.scss'])
+    <x-admin-theme-style
+        light="resources/assets/scss/admin/app.scss"
+        dark="resources/assets/scss/admin/app-dark.scss"
+    />
     @vite(['resources/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.scss'])
     @yield('vendor-style')
 
