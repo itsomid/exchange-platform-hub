@@ -1,40 +1,21 @@
 @extends('dashboard.profile.layout.master')
 @section('profile-body')
-    <div class="container">
-        <div class="card">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-8">
-                        <form action="{{route('password.confirm')}}" method="POST">
-                            @csrf
-                            <div class="form-group">
-                                <label for="password text-end">جهت
-
-                                        @if(auth()->user()->two_factor_secret)
-                                            <span class="text-danger">غیرفعالسازی</span>
-                                        @else
-                                            <span class="text-success">فعالسازی</span>
-                                        @endif
-                                    پسورد خود را وارد کنید</label>
-                                <input
-                                    id="password"
-                                    name="password"
-                                    class="form-control mt-2"
-                                    type="password"
-                                    placeholder="پسورد خود را وارد کنید">
-                                @error('password')
-                                <small class="text-danger">{{$message}}</small>
-                                @enderror
-                            </div>
-                            <button class="btn btn-success my-3">فعالسازی</button>
-                        </form>
-                    </div>
+    <div class="card">
+        <div class="card-body">
+            <form action="{{ route('password.confirm') }}" method="POST" style="max-width: 440px">
+                @csrf
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="fa-regular fa-lock text-primary"></i>
+                    <h6 class="mb-0">تأیید رمز عبور</h6>
                 </div>
-            </div>
-
+                <label class="form-label" for="password">برای ادامه، رمز عبور خود را وارد کنید</label>
+                <input id="password" name="password" class="form-control" type="password" autofocus
+                       autocomplete="current-password" placeholder="رمز عبور">
+                @error('password')
+                <small class="text-danger">{{ $message }}</small>
+                @enderror
+                <button class="btn btn-primary w-100 mt-3">تأیید</button>
+            </form>
         </div>
     </div>
 @endsection
-
-
-
