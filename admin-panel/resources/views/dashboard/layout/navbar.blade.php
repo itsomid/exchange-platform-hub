@@ -1,177 +1,190 @@
+@php($themePreference = \App\Support\AdminTheme::preference())
+@php($pageTitle = trim($__env->yieldContent('title', 'پنل مدیریت')))
+@php($admin = auth()->user())
 <nav
-        class="layout-navbar {{$container}} navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme"
-        id="layout-navbar">
-    <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
-        <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)">
-            {{--            <i class="ti ti-menu-2 ti-sm"></i>--}}
+    class="layout-navbar {{ $container }} navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme admin-topbar"
+    id="layout-navbar">
+    <div class="admin-topbar__start">
+        <a class="admin-topbar__icon layout-menu-toggle d-xl-none" href="javascript:void(0)" aria-label="باز کردن منو">
             <i class="fa-solid fa-bars"></i>
-
         </a>
+        <div class="admin-topbar__title">
+            <span class="admin-topbar__mark" aria-hidden="true"></span>
+            <div class="admin-topbar__title-copy">
+                <span class="admin-topbar__kicker">بیتکس روم</span>
+                <p class="admin-topbar__heading" title="{{ $pageTitle }}">{{ $pageTitle }}</p>
+            </div>
+        </div>
     </div>
 
-    <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
-        <ul class="navbar-nav flex-row align-items-center ms-auto">
-
-            <!-- Style Switcher -->
-            <!-- Notification -->
+    <div class="navbar-nav-right admin-topbar__end" id="navbar-collapse">
+        <ul class="navbar-nav admin-topbar__actions">
             @unless($panelLocked)
-            <li class="nav-item dropdown-notifications navbar-dropdown dropdown me-3 me-xl-2">
-                <a class="nav-link btn btn-text-secondary btn-icon rounded-pill dropdown-toggle hide-arrow"
-                   href="javascript:void(0);" data-bs-toggle="dropdown" data-bs-auto-close="outside"
-                   aria-expanded="false">
-              <span class="">
-                <i class="fa-regular fa-bell fa-xl"></i>
-                  <span class="badge rounded-pill bg-danger text-white badge-notifications">{{$unreadCount}}</span>
-
-              </span>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end p-0">
-                    <li class="dropdown-menu-header border-bottom">
-                        <div class="dropdown-header d-flex align-items-center py-3">
-                            <h6 class="mb-0 me-auto">اعلان‌ها</h6>
-                            <div class="d-flex align-items-center h6 mb-0">
-                                <span class="badge bg-label-primary me-2">{{$unreadCount}} جدید </span>
-                                <a href="{{route('admin.admin.notifications.mark-all-read')}}"
-                                   class="btn btn-text-secondary rounded-pill btn-icon dropdown-notifications-all"
-                                   data-bs-toggle="tooltip" data-bs-placement="top" title="تغییر همه به خوانده شده">
-                                    <i class="fa-regular fa-envelope-open text-heading"></i>
-                                </a>
+                <li class="nav-item dropdown-notifications navbar-dropdown dropdown">
+                    <a class="admin-topbar__icon nav-link dropdown-toggle hide-arrow"
+                       href="javascript:void(0);"
+                       data-bs-toggle="dropdown"
+                       data-bs-auto-close="outside"
+                       aria-expanded="false"
+                       aria-label="اعلان‌ها">
+                        <i class="fa-regular fa-bell"></i>
+                        @if($unreadCount > 0)
+                            <span class="admin-topbar__count">{{ $unreadCount > 99 ? '99+' : $unreadCount }}</span>
+                        @endif
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end admin-topbar__menu admin-topbar__menu--notes">
+                        <li class="admin-topbar__note-head">
+                            <div class="admin-topbar__note-head-copy">
+                                <strong>اعلان‌ها</strong>
+                                @if($unreadCount > 0)
+                                    <span>{{ $unreadCount }} خوانده‌نشده</span>
+                                @else
+                                    <span>مورد جدیدی نیست</span>
+                                @endif
                             </div>
-                        </div>
-                    </li>
-                    <li class="dropdown-notifications-list scrollable-container">
-                        <ul class="list-group list-group-flush">
-                            @forelse($notifications as $notification)
-                                <li class="list-group-item list-group-item-action dropdown-notifications-item">
-                                    <div class="d-flex">
-                                        <div class="flex-grow-1">
-                                            <h6 class="small mb-1"><span
-                                                        class="badge bg-label-primary">{{ \App\Enums\NotificationTypeEnum::getLabel($notification->type) }}</span>
-                                            </h6>
-                                            <small
-                                                    class="mb-1 d-block text-body">{{ $notification->data['message'] }}</small>
-                                            <small
-                                                    class="text-muted">{{\App\Helpers\DateFormatter::ago($notification->created_at)}}</small>
+                            @if($unreadCount > 0)
+                                <a href="{{ route('admin.admin.notifications.mark-all-read') }}"
+                                   class="admin-topbar__icon admin-topbar__icon--ghost dropdown-notifications-all"
+                                   title="تغییر همه به خوانده شده">
+                                    <i class="fa-regular fa-envelope-open"></i>
+                                </a>
+                            @endif
+                        </li>
+                        <li class="dropdown-notifications-list scrollable-container">
+                            <ul class="admin-topbar__notes">
+                                @forelse($notifications as $notification)
+                                    <li class="dropdown-notifications-item admin-topbar__note">
+                                        <div class="admin-topbar__note-body">
+                                            <div class="admin-topbar__note-top">
+                                                <span class="admin-topbar__note-type">{{ \App\Enums\NotificationTypeEnum::getLabel($notification->type) }}</span>
+                                                <time class="admin-topbar__note-time">{{ \App\Helpers\DateFormatter::ago($notification->created_at) }}</time>
+                                            </div>
+                                            <p class="admin-topbar__note-text">{{ $notification->data['message'] ?? '' }}</p>
                                         </div>
-                                        <div class="flex-shrink-0 dropdown-notifications-actions">
-                                            <a href="javascript:void(0)" class="dropdown-notifications-read">
-                                                @if ($notification->read_at == null)
-                                                    <span class="badge badge-dot"></span>
+                                        <div class="dropdown-notifications-actions admin-topbar__note-actions">
+                                            <a href="javascript:void(0)" class="dropdown-notifications-read" title="خوانده شد">
+                                                @if($notification->read_at == null)
+                                                    <span class="admin-topbar__dot"></span>
                                                 @endif
                                             </a>
-                                            <a href="javascript:void(0)" class="dropdown-notifications-archive">
-                                                <span class="fa-regular fa-x"></span>
+                                            <a href="javascript:void(0)" class="dropdown-notifications-archive" title="بستن">
+                                                <i class="fa-regular fa-xmark"></i>
                                             </a>
                                         </div>
-                                    </div>
-                                </li>
-                            @empty
-
-                                <div class="my-4 mx-auto">پیام تازه ای وجود ندارد</div>
-
-                            @endforelse
-
-                        </ul>
-                    </li>
-                    <li class="border-top">
-                        <div class="d-grid p-4">
-                            <a class="btn btn-primary btn-sm d-flex"
-                               href="{{route('admin.admin.notifications.index')}}">
-                                <small class="align-middle">مشاهده تمام اعلان ها</small>
+                                    </li>
+                                @empty
+                                    <li class="admin-topbar__empty">
+                                        <i class="fa-regular fa-bell-slash"></i>
+                                        <span>پیام تازه‌ای وجود ندارد</span>
+                                    </li>
+                                @endforelse
+                            </ul>
+                        </li>
+                        <li class="admin-topbar__note-foot">
+                            <a class="admin-topbar__menu-link" href="{{ route('admin.admin.notifications.index') }}">
+                                <i class="fa-regular fa-list"></i>
+                                <span>مشاهده تمام اعلان‌ها</span>
                             </a>
-                        </div>
-                    </li>
-                </ul>
-            </li>
+                        </li>
+                    </ul>
+                </li>
             @endunless
-            <!--/ Notification -->
-            <li class="nav-item dropdown-style-switcher dropdown me-2 me-xl-0">
-                <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
-                    <i @class(['fa-light', 'fa-xl' ,'fa-moon-stars' => session('theme') === 'dark','fa-sun-bright' => session('theme','light') === 'light'])></i>
+
+            <li class="nav-item dropdown-style-switcher dropdown">
+                <a class="admin-topbar__icon nav-link dropdown-toggle hide-arrow"
+                   href="javascript:void(0);"
+                   data-bs-toggle="dropdown"
+                   aria-label="تغییر پوسته">
+                    <i @class([
+                        'fa-regular',
+                        'fa-sun' => $themePreference === \App\Support\AdminTheme::LIGHT,
+                        'fa-moon' => $themePreference === \App\Support\AdminTheme::DARK,
+                        'fa-desktop' => $themePreference === \App\Support\AdminTheme::SYSTEM,
+                    ])></i>
                 </a>
-                <ul class="dropdown-menu dropdown-menu-end dropdown-styles">
+                <ul class="dropdown-menu dropdown-menu-end dropdown-styles admin-topbar__menu admin-topbar__menu--theme">
                     <li>
-                        <form action="{{route('admin.set-theme')}}" method="POST">
+                        <form action="{{ route('admin.set-theme') }}" method="POST">
                             @csrf
                             <input type="hidden" name="theme" value="light">
-                            <button type="submit" class="dropdown-item">
-                                <span class="align-middle"> <i
-                                            class="fa-regular fa-brightness-low  me-2"></i>روشن</span>
+                            <button type="submit" @class(['dropdown-item', 'admin-topbar__menu-link', 'is-active' => $themePreference === \App\Support\AdminTheme::LIGHT]) data-theme="light">
+                                <i class="fa-regular fa-sun"></i>
+                                <span>روشن</span>
                             </button>
                         </form>
                     </li>
                     <li>
-                        <form action="{{route('admin.set-theme')}}" method="POST">
+                        <form action="{{ route('admin.set-theme') }}" method="POST">
                             @csrf
                             <input type="hidden" name="theme" value="dark">
-                            <button type="submit" class="dropdown-item" data-theme="dark">
-                                <span class="align-middle">
-                                    <i class="fa-regular fa-moon-stars fa-lg me-2"></i>
-                                    تاریک</span>
+                            <button type="submit" @class(['dropdown-item', 'admin-topbar__menu-link', 'is-active' => $themePreference === \App\Support\AdminTheme::DARK]) data-theme="dark">
+                                <i class="fa-regular fa-moon"></i>
+                                <span>تاریک</span>
                             </button>
                         </form>
+                    </li>
+                    <li>
+                        <form action="{{ route('admin.set-theme') }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="theme" value="system">
+                            <button type="submit" @class(['dropdown-item', 'admin-topbar__menu-link', 'is-active' => $themePreference === \App\Support\AdminTheme::SYSTEM]) data-theme="system">
+                                <i class="fa-regular fa-desktop"></i>
+                                <span>سیستم</span>
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </li>
 
-                    </li>
-                    <li>
-                        <a class="dropdown-item" href="javascript:void(0);" data-theme="system">
-                            <span class="align-middle"><i class="fa-light fa-desktop fa-lg me-2"></i>سیستم</span>
-                        </a>
-                    </li>
-                </ul>
-            </li>
-            <!--/ Style Switcher -->
-            <!-- User -->
             <li class="nav-item navbar-dropdown dropdown-user dropdown">
-                <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
-                    <div class="avatar avatar-online">
-                        <img src="{{auth()->user()->avatar()}}" alt data-admin-avatar class="h-auto rounded-circle"/>
-                    </div>
+                <a class="admin-topbar__user nav-link dropdown-toggle hide-arrow"
+                   href="javascript:void(0);"
+                   data-bs-toggle="dropdown"
+                   aria-label="حساب کاربری">
+                    <span class="admin-topbar__avatar-wrap">
+                        <img src="{{ $admin->avatar() }}" alt="" data-admin-avatar>
+                    </span>
+                    <span class="admin-topbar__user-meta">
+                        <span class="admin-topbar__user-name">{{ $admin->fullname() }}</span>
+                        <span class="admin-topbar__user-sub">{{ $admin->mobile }}</span>
+                    </span>
+                    <i class="fa-regular fa-chevron-down admin-topbar__chevron"></i>
                 </a>
-                <ul class="dropdown-menu dropdown-menu-end">
+                <ul class="dropdown-menu dropdown-menu-end admin-topbar__menu admin-topbar__menu--user">
+                    <li class="admin-topbar__menu-head">
+                        <span class="admin-topbar__avatar-wrap">
+                            <img src="{{ $admin->avatar() }}" alt="" data-admin-avatar>
+                        </span>
+                        <span class="admin-topbar__user-meta">
+                            <span class="admin-topbar__user-name">{{ $admin->fullname() }}</span>
+                            <span class="admin-topbar__user-sub">{{ $admin->mobile }}</span>
+                        </span>
+                    </li>
                     <li>
-                        <a class="dropdown-item" href="#">
-                            <div class="d-flex">
-                                <div class="flex-shrink-0 me-3">
-                                    <div class="avatar avatar-online">
-                                        <img src="{{auth()->user()->avatar()}}" alt data-admin-avatar class="h-auto rounded-circle"/>
-                                    </div>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <span class="fw-semibold d-block">{{auth()->user()->fullname()}}</span>
-                                    <small class="text-muted">{{auth()->user()->mobile}}</small>
-                                </div>
-                            </div>
+                        <a class="dropdown-item admin-topbar__menu-link" href="{{ route('admin.profile.edit') }}">
+                            <i class="fa-regular fa-user"></i>
+                            <span>پروفایل</span>
                         </a>
                     </li>
                     <li>
-                        <div class="dropdown-divider"></div>
-                    </li>
-                    <li>
-                        <a class="dropdown-item d-flex justify-content-between" href="{{route('admin.profile.edit')}}">
-                            <span class="align-middle">پروفایل</span>
-                            <i class="ti ti-user-check me-2 ti-sm"></i>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item d-flex justify-content-between" href="javascript:void(0);"
+                        <a class="dropdown-item admin-topbar__menu-link" href="javascript:void(0);"
                            data-bs-toggle="modal" data-bs-target="#changeAvatarModal">
-                            <span class="align-middle">تغییر آواتار</span>
-                            <i class="fa-regular fa-camera me-2"></i>
+                            <i class="fa-regular fa-camera"></i>
+                            <span>تغییر آواتار</span>
                         </a>
                     </li>
+                    <li class="admin-topbar__menu-sep" aria-hidden="true"></li>
                     <li>
-                        <a class="dropdown-item p-0">
-                            <form action="{{route('logout')}}" method="post" class="w-100">@csrf
-                                <button type="submit" class="btn d-flex w-100 justify-content-between text-danger">
-                                    <span class="align-middle">خروج از سیستم</span>
-                                    <i class="ti ti-logout me-2 ti-sm"></i>
-                                </button>
-                            </form>
-                        </a>
+                        <form action="{{ route('logout') }}" method="post" class="admin-topbar__menu-form">
+                            @csrf
+                            <button type="submit" class="dropdown-item admin-topbar__menu-link is-danger">
+                                <i class="fa-regular fa-arrow-right-from-bracket"></i>
+                                <span>خروج از سیستم</span>
+                            </button>
+                        </form>
                     </li>
                 </ul>
             </li>
-            <!--/ User -->
         </ul>
     </div>
 </nav>

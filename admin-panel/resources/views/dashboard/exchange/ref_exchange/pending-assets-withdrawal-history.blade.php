@@ -54,6 +54,7 @@
                     @if($pendingWithdrawals->count() > 0)
                         <div class="row g-3" style="max-height: 220px; overflow-y: auto;">
                             @foreach($pendingWithdrawals as $withdraw)
+                                @continue(!$withdraw->currency)
                                 @php
                                     $timerData = $currencyTimerData[$withdraw->currency->id] ?? null;
                                     $isReady = $timerData['is_ready'] ?? false;
@@ -168,6 +169,7 @@
                             </thead>
                             <tbody>
                                 @foreach($pendingWithdrawals as $index => $withdraw)
+                                    @continue(!$withdraw->currency)
                                     <tr class="aggregation-row" data-currency="{{ $withdraw->currency->symbol }}" data-total="{{ $withdraw->total_withdraw_amount }}" data-default-aggregation-percent="{{ $withdraw->currency->ref_exchange_withdrawal_aggregation_percent }}">
                                         <td>
                                             <div class="form-check">
@@ -300,6 +302,7 @@
                     </thead>
                     <tbody class="table-border-bottom-0">
                     @foreach($withdrawals as $withdraw)
+                        @continue(!$withdraw->currency || !$withdraw->transaction)
 
                         <tr>
                             <td>{{$withdraw->id}}</td>

@@ -19,6 +19,7 @@
     data-template="vertical-menu-template-no-customizer-starter">
 
 <head>
+    <meta charset="utf-8" />
     <script>
         (function () {
             var preference = @json($themePreference);
@@ -46,7 +47,6 @@
             }
         })();
     </script>
-    <meta charset="utf-8" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
@@ -70,6 +70,7 @@
         light="resources/assets/scss/admin/app.scss"
         dark="resources/assets/scss/admin/app-dark.scss"
     />
+    <link rel="stylesheet" href="{{ asset('css/admin-topbar.css') }}?v={{ filemtime(public_path('css/admin-topbar.css')) }}">
     @vite(['resources/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.scss'])
     @yield('vendor-style')
 

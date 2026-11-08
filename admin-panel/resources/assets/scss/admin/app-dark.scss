@@ -14,3 +14,223 @@
 
 @import "@majidh1/jalalidatepicker/dist/jalalidatepicker.min.css";
 @import "toastify-js/src/toastify.css";
+
+@import "components/topbar";
+
+// Bright theme accents (cyan primary, green, orange) fail contrast with white text.
+$on-bright: #1c2230;
+
+.btn-primary,
+.btn-success,
+.btn-info,
+.btn-warning,
+.page-item.active .page-link {
+    color: $on-bright;
+
+    &:hover,
+    &:focus,
+    &:active,
+    &.active,
+    &:disabled,
+    &.disabled {
+        color: $on-bright !important;
+    }
+}
+
+.badge.bg-label-secondary,
+.btn-label-secondary {
+    color: #d0d2dc !important;
+}
+
+.bg-label-danger {
+    color: #ffb0b3 !important;
+}
+
+.bg-label-success {
+    color: #5ee09a !important;
+}
+
+.badge.bg-success,
+.badge.bg-warning,
+.badge.bg-info,
+.badge.bg-primary {
+    color: $on-bright !important;
+}
+
+.dark-style {
+    --sticky-column-bg: #2f3349;
+    --sticky-column-hover-bg: #3a3f58;
+}
+
+.dark-style .text-black {
+    color: #cfcde4 !important;
+}
+
+$table-status-colors: (
+    'success': #28c76f,
+    'danger': #ea5455,
+    'warning': #ff9f43,
+    'info': #00cfe8,
+    'primary': #7367f0,
+    'secondary': #a8aaae,
+);
+
+@each $name, $color in $table-status-colors {
+    .dark-style .table-#{$name} {
+        --bs-table-bg: color-mix(in srgb, #{$color} 16%, #2f3349);
+        --bs-table-color: #d7d5ea;
+        --bs-table-hover-bg: color-mix(in srgb, #{$color} 28%, #2f3349);
+        --bs-table-hover-color: #d7d5ea;
+        --bs-table-striped-bg: color-mix(in srgb, #{$color} 20%, #2f3349);
+        --bs-table-striped-color: #d7d5ea;
+        --bs-table-active-bg: color-mix(in srgb, #{$color} 28%, #2f3349);
+        --bs-table-active-color: #d7d5ea;
+        color: #d7d5ea;
+        border-color: color-mix(in srgb, #{$color} 32%, #44485e);
+
+        .btn,
+        .btn-icon {
+            color: #d7d5ea;
+        }
+    }
+}
+
+// Sticky action columns are forced to white in page styles.
+.dark-style .sticky-column,
+.dark-style .table thead .sticky-column,
+.dark-style .table tbody tr .sticky-column {
+    background-color: #2f3349 !important;
+    color: inherit;
+}
+
+.dark-style .table tbody tr:hover .sticky-column {
+    background-color: #3a3f58 !important;
+}
+
+.dark-style .table tbody tr.table-success .sticky-column,
+.dark-style .table tbody tr.table-danger .sticky-column,
+.dark-style .table tbody tr.table-warning .sticky-column,
+.dark-style .table tbody tr.table-info .sticky-column,
+.dark-style .table tbody tr.table-primary .sticky-column,
+.dark-style .table tbody tr.table-secondary .sticky-column {
+    background-color: var(--bs-table-bg) !important;
+    color: var(--bs-table-color);
+}
+
+.dark-style .table tbody tr.table-success:hover .sticky-column,
+.dark-style .table tbody tr.table-danger:hover .sticky-column,
+.dark-style .table tbody tr.table-warning:hover .sticky-column,
+.dark-style .table tbody tr.table-info:hover .sticky-column,
+.dark-style .table tbody tr.table-primary:hover .sticky-column,
+.dark-style .table tbody tr.table-secondary:hover .sticky-column {
+    background-color: var(--bs-table-hover-bg) !important;
+}
+
+.dark-style .table tbody tr.market-unsupported > td,
+.dark-style .table tbody tr.market-unsupported .sticky-column {
+    background-color: color-mix(in srgb, #ea5455 16%, #2f3349) !important;
+}
+
+.dark-style .table tbody tr.market-unsupported:hover > td,
+.dark-style .table tbody tr.market-unsupported:hover .sticky-column {
+    background-color: color-mix(in srgb, #ea5455 26%, #2f3349) !important;
+}
+
+.dark-style .table tbody tr.market-support-unknown > td,
+.dark-style .table tbody tr.market-support-unknown .sticky-column {
+    background-color: color-mix(in srgb, #ff9f43 16%, #2f3349) !important;
+}
+
+.dark-style .table tbody tr.market-support-unknown:hover > td,
+.dark-style .table tbody tr.market-support-unknown:hover .sticky-column {
+    background-color: color-mix(in srgb, #ff9f43 26%, #2f3349) !important;
+}
+
+.dark-style #signalsTable tbody tr.signal-row-dragging td {
+    background: #2f3349 !important;
+}
+
+.dark-style .ref-support-card.is-ok {
+    background: linear-gradient(to left, rgba(40, 199, 111, 0.22), #2f3349 58%);
+}
+
+.dark-style .ref-support-card.is-bad {
+    background: linear-gradient(to left, rgba(234, 84, 85, 0.22), #2f3349 58%);
+}
+
+.dark-style .ref-support-card.is-warn {
+    background: linear-gradient(to left, rgba(255, 159, 67, 0.24), #2f3349 58%);
+}
+
+jdp-container {
+    background: #2f3349;
+    color: #cfcde4;
+    box-shadow: 0 0.25rem 1.125rem rgba(19, 17, 32, 0.45);
+
+    .jdp-icon-minus,
+    .jdp-icon-plus {
+        border-color: #44485e;
+    }
+
+    .jdp-months,
+    .jdp-years {
+        fill: #cfcde4;
+        color: #cfcde4;
+    }
+
+    .jdp-month,
+    .jdp-month input,
+    .jdp-month select,
+    .jdp-year,
+    .jdp-year input,
+    .jdp-year select,
+    .jdp-time,
+    .jdp-time input,
+    .jdp-time select {
+        background: transparent;
+        color: #cfcde4;
+    }
+
+    .jdp-day,
+    .jdp-day-name {
+        color: #cfcde4;
+    }
+
+    .jdp-day-name {
+        background-color: rgba(225, 222, 245, 0.08);
+    }
+
+    .jdp-day.holly-day,
+    .jdp-day.last-week,
+    .jdp-day-name.holly-day,
+    .jdp-day-name.last-week {
+        color: #ff6b70;
+    }
+
+    .jdp-day.today,
+    .jdp-day-name.today {
+        border-color: rgba(225, 222, 245, 0.35);
+    }
+
+    .jdp-day:not(.disabled-day):hover {
+        background: rgba(225, 222, 245, 0.12);
+    }
+
+    .jdp-day.selected,
+    .jdp-day-name.selected {
+        background-color: #00cfe8 !important;
+        color: #1c2230 !important;
+    }
+
+    .jdp-time-container .jdp-time select {
+        background: rgba(225, 222, 245, 0.06);
+        color: #cfcde4;
+    }
+
+    .jdp-btn-today,
+    .jdp-btn-empty,
+    .jdp-btn-close {
+        background: #00cfe8;
+        color: #1c2230;
+    }
+}
