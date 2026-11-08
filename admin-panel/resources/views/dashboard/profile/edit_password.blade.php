@@ -56,6 +56,9 @@
                     <h6>شرایط رمز عبور:</h6>
 
                     <ul class="list-unstyled mb-0" id="passwordChecklist"></ul>
+                    <div id="passwordSummary" class="alert alert-secondary py-2 px-3 small mt-3 mb-0" role="status">
+                        گذرواژه جدید را وارد کنید.
+                    </div>
                 </div>
 
                 <div class="col-12 text-right  mt-4">
@@ -143,15 +146,25 @@
                 });
 
                 const strong = touched && missing.length === 0;
-
-                summary.className = 'alert py-2 px-3 small ' + (!touched ? 'alert-secondary' : (strong ?
-                    'alert-success' : 'alert-warning'));
-                summary.textContent = !touched ?
-                    'گذرواژه جدید را وارد کنید.' :
-                    (strong ? 'گذرواژه شما همه شرایط را دارد.' : 'گذرواژه هنوز ضعیف است. موارد کم: ' + missing.join(
-                        '، '));
-
                 const confirmed = confirmation.value.length > 0 && confirmation.value === value;
+                const differs = value !== current.value;
+
+                if (summary) {
+                    if (!touched) {
+                        summary.className = 'alert alert-secondary py-2 px-3 small mt-3 mb-0';
+                        summary.textContent = 'گذرواژه جدید را وارد کنید.';
+                    } else if (strong && !differs) {
+                        summary.className = 'alert alert-warning py-2 px-3 small mt-3 mb-0';
+                        summary.textContent = 'گذرواژه جدید باید با گذرواژه فعلی متفاوت باشد.';
+                    } else if (strong) {
+                        summary.className = 'alert alert-success py-2 px-3 small mt-3 mb-0';
+                        summary.textContent = 'گذرواژه شما همه شرایط را دارد.';
+                    } else {
+                        summary.className = 'alert alert-warning py-2 px-3 small mt-3 mb-0';
+                        summary.textContent = 'گذرواژه هنوز ضعیف است. موارد کم: ' + missing.join('، ');
+                    }
+                }
+
                 if (confirmation.value.length === 0) {
                     confirmHint.textContent = '';
                 } else {
@@ -160,11 +173,6 @@
                         'تکرار گذرواژه با گذرواژه جدید یکسان نیست.';
                 }
 
-                const differs = value !== current.value;
-                if (strong && !differs) {
-                    summary.className = 'alert alert-warning py-2 px-3 small';
-                    summary.textContent = 'گذرواژه جدید باید با گذرواژه فعلی متفاوت باشد.';
-                }
                 submit.disabled = !(strong && confirmed && current.value.length > 0 && differs);
             }
 
