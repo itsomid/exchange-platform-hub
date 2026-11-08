@@ -500,6 +500,7 @@ Route::middleware(['admin.2fa', 'admin.password'])->group(function () {
         Route::post('/waiting-sells/auto-place', [BotWaitingSellsController::class, 'toggleAutoPlace'])->name('waiting-sells.auto-place');
         Route::get('/waiting-sells/currencies/{currency}', [BotOrderController::class, 'waitingSellsDetails'])->name('waiting-sells.details');
         Route::post('/waiting-sells/currencies/{currency}/place', [BotOrderController::class, 'waitingSellsPlaceCurrency'])->name('waiting-sells.place-currency');
+        Route::post('/waiting-sells/currencies/{currency}/trim', [BotOrderController::class, 'waitingSellsTrimCurrency'])->name('waiting-sells.trim-currency');
         Route::post('/waiting-sells/tiers/{sellOrder}/place', [BotOrderController::class, 'waitingSellsPlaceTier'])->name('waiting-sells.place-tier');
 
         // Wallet Transfers (deposits/withdrawals between main wallet and bot wallet)

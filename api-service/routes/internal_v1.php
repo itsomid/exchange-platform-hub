@@ -42,6 +42,7 @@ Route::prefix('bot-admin')->middleware('bot-admin-auth')->group(function () {
     Route::get('waiting-sells/last-run',                  [BotWaitingSellsController::class, 'lastRun']);
     Route::get('waiting-sells/currencies/{currency}',     [BotWaitingSellsController::class, 'details']);
     Route::post('waiting-sells/currencies/{currency}/place', [BotWaitingSellsController::class, 'placeCurrency']);
+    Route::post('waiting-sells/currencies/{currency}/trim', [BotWaitingSellsController::class, 'trimCurrency']);
     Route::post('waiting-sells/{sellOrder}/place',        [BotWaitingSellsController::class, 'placeTier']);
 });
 

@@ -98,6 +98,11 @@ class BotAdminApiClient
         return $this->http()->post("/waiting-sells/currencies/{$currencyId}/place");
     }
 
+    public function waitingSellsTrimCurrency(int $currencyId): Response
+    {
+        return $this->http()->post("/waiting-sells/currencies/{$currencyId}/trim");
+    }
+
     public function waitingSellsPlaceTier(int $sellOrderId): Response
     {
         return $this->http()->post("/waiting-sells/{$sellOrderId}/place");

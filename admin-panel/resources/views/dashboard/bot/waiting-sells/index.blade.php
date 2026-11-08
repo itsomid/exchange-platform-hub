@@ -259,6 +259,13 @@
                                             data-place-url="{{ route('admin.bot.waiting-sells.place-currency', $row->currency->id) }}">
                                             <i class="fa-light fa-paper-plane me-1"></i> بررسی و ثبت الان
                                         </button>
+                                        @if (! $row->slots || $row->slots['open'] > $row->slots['max'] - $row->slots['reserve'])
+                                            <button type="button" class="btn btn-sm btn-outline-danger js-waiting-trim-currency"
+                                                data-symbol="{{ $row->symbol }}"
+                                                data-trim-url="{{ route('admin.bot.waiting-sells.trim-currency', $row->currency->id) }}">
+                                                <i class="fa-light fa-scissors me-1"></i> آزادسازی رزرو
+                                            </button>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -486,6 +493,26 @@
             document.querySelectorAll('.js-waiting-place-currency').forEach(function(btn) {
                 btn.addEventListener('click', function() {
                     placeCurrency(btn.dataset.placeUrl, btn.dataset.symbol, btn);
+                });
+            });
+
+            /* ── Free the reserve (per coin) ── */
+            document.querySelectorAll('.js-waiting-trim-currency').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    if (!confirm('دورترین سفارش‌های فروش ربات روی ' + btn.dataset.symbol +
+                            ' در Binance لغو و به حالت در انتظار برگردانده شوند تا جاهای رزرو برای خرید خالی شود؟'
+                        )) return;
+                    busy(btn, true);
+                    request('POST', btn.dataset.trimUrl).then(function(d) {
+                        toast(d.ok ? d.message : (d.error || 'آزادسازی انجام نشد.'), !!d.ok);
+                        if (d.ok) setTimeout(function() {
+                            window.location.reload();
+                        }, 1500);
+                    }).catch(function() {
+                        toast('خطا در ارتباط با سرور.', false);
+                    }).finally(function() {
+                        busy(btn, false);
+                    });
                 });
             });
 

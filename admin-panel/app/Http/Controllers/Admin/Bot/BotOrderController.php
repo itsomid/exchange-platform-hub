@@ -475,6 +475,11 @@ class BotOrderController extends Controller
         return $this->forwardBotApi(fn () => $this->botApi->waitingSellsPlaceCurrency($currency->id), 'waiting_sells');
     }
 
+    public function waitingSellsTrimCurrency(Currency $currency): JsonResponse
+    {
+        return $this->forwardBotApi(fn () => $this->botApi->waitingSellsTrimCurrency($currency->id), 'waiting_sells');
+    }
+
     public function waitingSellsPlaceTier(BotSellOrder $sellOrder): JsonResponse
     {
         return $this->forwardBotApi(fn () => $this->botApi->waitingSellsPlaceTier($sellOrder->id), 'waiting_sells');

@@ -68,6 +68,49 @@ class BotWaitingSellsController extends Controller
         ]);
     }
 
+    /**
+     * Admin "free the reserve": cancel the coin's farthest bot limit sells
+     * until it is back at `max − reserve` open orders.
+     */
+    public function trimCurrency(Request $request, int $currencyId): JsonResponse
+    {
+        $currency = Currency::find($currencyId);
+        if (! $currency) {
+            return response()->json(['ok' => false, 'error' => 'ارز یافت نشد.'], 404);
+        }
+
+        $summary = $this->service->trimToReserve($currency);
+        if ($summary['skipped'] !== null) {
+            return response()->json(['ok' => false, 'error' => $summary['skipped']], 409);
+        }
+        if ($summary['slots'] === null) {
+            return response()->json(['ok' => false, 'error' => 'سفارش‌های باز از Binance دریافت نشد.'], 502);
+        }
+
+        Log::channel('smart-bot')->info('bot.waiting.admin_trim_currency', [
+            'currency' => $summary['symbol'],
+            'admin_id' => $request->header('X-Admin-Id'),
+        ] + array_intersect_key($summary, array_flip(['excess', 'rotated', 'freed'])));
+
+        $s = $summary['slots'];
+        if ($summary['excess'] === 0) {
+            $message = sprintf('%s: %d سفارش باز از %d؛ رزرو %d جای خالی برقرار است و چیزی لغو نشد.', $summary['symbol'], $s['open'], $s['max'], $s['reserve']);
+        } else {
+            $message = sprintf(
+                '%s: %d سفارش اضافه بر سقف %d بود؛ %d جا آزاد شد (%d سفارش دور لغو و به حالت در انتظار برگشت).',
+                $summary['symbol'], $summary['excess'], $s['max'] - $s['reserve'], $summary['freed'], $summary['rotated'],
+            );
+        }
+        $ok = $summary['freed'] >= $summary['excess'];
+
+        return response()->json([
+            'ok'      => $ok,
+            'message' => $message,
+            'error'   => $ok ? null : $message.' بقیه سفارش‌ها بخشی‌پرشده یا متعلق به ربات نیستند یا لغو آن‌ها ناموفق بود.',
+            'summary' => $summary,
+        ], $ok ? 200 : 422);
+    }
+
     public function placeTier(Request $request, int $sellOrderId): JsonResponse
     {
         $tier = BotSellOrder::with('botBuyExecution.currency')->find($sellOrderId);

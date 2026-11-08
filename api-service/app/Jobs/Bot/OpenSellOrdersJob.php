@@ -130,6 +130,11 @@ class OpenSellOrdersJob implements ShouldQueue
         $placement  = app()->make(SellTierPlacementService::class, ['exchange' => $exchange]);
         $ceiling    = $placement->ceilingFor($market);
         $slotsError = null;
+        // Keep `reserve` slots free for the account's market buys (Binance counts
+        // them against MAX_NUM_ORDERS too); the rest of the tiers wait and
+        // bot:place-waiting-sells rotates nearer ones in. Unknown → Binance decides.
+        $slots = $placement->orderSlots($market, $placement->openOrders($market, fresh: true));
+        $free  = $slots['free'] ?? null;
 
         foreach ($result['final_targets'] as $index => $target) {
             $type     = $target['type'] ?? $defaultMode;
@@ -144,6 +149,12 @@ class OpenSellOrdersJob implements ShouldQueue
                     'price %s above Binance ceiling %s', $price, $ceiling['place_max_price'],
                 ), BotSellOrder::WAITING_PRICE_CEILING);
                 continue;
+            }
+            if ($slotsError === null && $free !== null && $free <= 0) {
+                $slotsError = sprintf(
+                    'MAX_NUM_ORDERS: no free Binance open-order slot (open %d of %d, reserve %d)',
+                    $slots['open'], $slots['max'], $slots['reserve'],
+                );
             }
             // The symbol's open-order limit is used up: no point asking again for this buy.
             if ($slotsError !== null) {
@@ -201,6 +212,10 @@ class OpenSellOrdersJob implements ShouldQueue
             }
 
             $placedIds[] = $res->exchangeOrderId;
+            if ($free !== null) {
+                $free--;
+                $slots['open']++;
+            }
 
             BotSellOrder::create([
                 'bot_buy_execution_id' => $execution->id,

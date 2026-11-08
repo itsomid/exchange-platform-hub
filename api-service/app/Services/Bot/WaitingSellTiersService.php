@@ -207,6 +207,69 @@ class WaitingSellTiersService
     }
 
     /**
+     * Give back the slot reserve when the coin holds more open orders than
+     * `max − reserve`: the farthest untouched bot limit sells are canceled
+     * and return to WAITING (order_limit), so market buys are never refused
+     * for MAX_NUM_ORDERS. Partly filled orders are never canceled.
+     *
+     * @return array{currency_id:int, symbol:string, excess:int, rotated:int, freed:int, slots:?array, skipped:?string, results:list<array<string,mixed>>}
+     */
+    public function trimToReserve(Currency $currency): array
+    {
+        $symbol  = strtoupper((string) $currency->symbol);
+        $market  = $symbol.'USDT';
+        $summary = [
+            'currency_id' => $currency->id,
+            'symbol'      => $symbol,
+            'excess'      => 0,
+            'rotated'     => 0,
+            'freed'       => 0,
+            'slots'       => null,
+            'skipped'     => $this->blockReason($currency->id),
+            'results'     => [],
+        ];
+        if ($summary['skipped'] !== null) {
+            return $summary;
+        }
+
+        $openOrders = $this->placement->openOrders($market, fresh: true);
+        $slots      = $this->placement->orderSlots($market, $openOrders);
+        $summary['slots'] = $slots;
+        if ($slots === null) {
+            return $summary;
+        }
+
+        $summary['excess'] = max(0, $slots['open'] + $slots['reserve'] - $slots['max']);
+
+        foreach (array_reverse($this->placedTiers($currency->id)) as $far) {
+            if ($summary['freed'] >= $summary['excess']) {
+                break;
+            }
+            $executed = $openOrders[(string) $far['tier']->exchange_order_id] ?? null;
+            if ($executed === null || bccomp($executed, '0', self::SCALE) > 0) {
+                continue;
+            }
+
+            $result = $this->placement->rotateOut($far['tier'], $market) + ['action' => 'trim', 'target_price' => $far['target']];
+            $summary['results'][] = $result;
+            if ($result['outcome'] === 'failed') {
+                Log::channel('smart-bot')->critical('bot.waiting.trim_failed', ['market' => $market] + $result);
+                break;
+            }
+            if (in_array($result['outcome'], ['rotated', 'filled'], true)) {
+                $summary['freed']++;
+                $summary['rotated'] += $result['outcome'] === 'rotated' ? 1 : 0;
+            }
+        }
+
+        if ($summary['freed'] > 0) {
+            Log::channel('smart-bot')->info('bot.waiting.trimmed', array_intersect_key($summary, array_flip(['symbol', 'excess', 'rotated', 'freed'])));
+        }
+
+        return $summary;
+    }
+
+    /**
      * One coin's waiting tiers with, for each, the price at which it is
      * expected to reach Binance: the reference price its target needs to fit
      * under the ceiling, and the price at which enough lower bot tiers have
