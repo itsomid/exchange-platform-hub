@@ -63,6 +63,7 @@
 
                 <!-- Content wrapper -->
                 <div class="content-wrapper">
+                    @include('dashboard.layout.security_banner')
                     <!-- Content -->
                     <div class="{{ $container }} flex-grow-1 container-p-y" id="app">
                         @if (session()->has('success'))
@@ -102,6 +103,7 @@
         <div class="drag-target"></div>
     </div>
     <!-- / Layout wrapper -->
+    @include('dashboard.layout.avatar_modal')
     <!-- Core JS -->
     <script src="{{ asset('js/jquery-3.7.1.min.js') }}"></script>
     @include('dashboard.layout.sections.scripts')

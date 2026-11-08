@@ -10,17 +10,11 @@
     </div>
 
     <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
-        @if(!auth()->user()->two_factor_secret && app()->environment() == 'production')
-            <div class="navbar-nav align-items-center">
-                <a class="nav-link style-switcher-toggle hide-arrow" href="{{route('admin.profile.2fa.edit')}}">
-                    ❗⛔ برای استفاده از پنل لطفا نسبت به فعالسازی تایید دو مرحله ای اقدام کنید ⛔❗
-                </a>
-            </div>
-        @endif
         <ul class="navbar-nav flex-row align-items-center ms-auto">
 
             <!-- Style Switcher -->
             <!-- Notification -->
+            @unless($panelLocked)
             <li class="nav-item dropdown-notifications navbar-dropdown dropdown me-3 me-xl-2">
                 <a class="nav-link btn btn-text-secondary btn-icon rounded-pill dropdown-toggle hide-arrow"
                    href="javascript:void(0);" data-bs-toggle="dropdown" data-bs-auto-close="outside"
@@ -89,6 +83,7 @@
                     </li>
                 </ul>
             </li>
+            @endunless
             <!--/ Notification -->
             <li class="nav-item dropdown-style-switcher dropdown me-2 me-xl-0">
                 <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
@@ -129,7 +124,7 @@
             <li class="nav-item navbar-dropdown dropdown-user dropdown">
                 <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
                     <div class="avatar avatar-online">
-                        <img src="{{auth()->user()->avatar()}}" alt class="h-auto rounded-circle"/>
+                        <img src="{{auth()->user()->avatar()}}" alt data-admin-avatar class="h-auto rounded-circle"/>
                     </div>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
@@ -138,7 +133,7 @@
                             <div class="d-flex">
                                 <div class="flex-shrink-0 me-3">
                                     <div class="avatar avatar-online">
-                                        <img src="{{auth()->user()->avatar()}}" alt class="h-auto rounded-circle"/>
+                                        <img src="{{auth()->user()->avatar()}}" alt data-admin-avatar class="h-auto rounded-circle"/>
                                     </div>
                                 </div>
                                 <div class="flex-grow-1">
@@ -155,6 +150,13 @@
                         <a class="dropdown-item d-flex justify-content-between" href="{{route('admin.profile.edit')}}">
                             <span class="align-middle">پروفایل</span>
                             <i class="ti ti-user-check me-2 ti-sm"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item d-flex justify-content-between" href="javascript:void(0);"
+                           data-bs-toggle="modal" data-bs-target="#changeAvatarModal">
+                            <span class="align-middle">تغییر آواتار</span>
+                            <i class="fa-regular fa-camera me-2"></i>
                         </a>
                     </li>
                     <li>

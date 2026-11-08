@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\AdminSecurityController;
 use App\Http\Controllers\Admin\FinancialDashboardController;
 use App\Http\Controllers\Admin\HomeController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\ProfileAvatarController;
 use App\Http\Controllers\Admin\ReferralCodeController;
 use App\Http\Controllers\Admin\SelectsApiController;
 use App\Http\Controllers\Admin\SessionController;
@@ -62,49 +63,57 @@ use App\Http\Controllers\Admin\Bot\BotWalletTransferController;
 
 use Illuminate\Support\Facades\Route;
 
-// Routes accessible without 2FA
-Route::get('/users_select', [SelectsApiController::class, 'users'])->name('users.select.index');
-Route::get('/admins_select', [SelectsApiController::class, 'admins'])->name('admins.select.index');
+// Routes accessible without 2FA / password renewal: the theme switch, the profile pages (incl. 2FA setup)
+// and the way back from an impersonated admin session. Fortify's own 2FA / password
+// confirmation / logout routes live outside this file and are not gated either.
 Route::post('/set-theme', [ThemeController::class, 'setTheme'])->name('set-theme');
+Route::get('/admins/back_to_admin_panel', [AdminController::class, 'back_to_admin_panel'])->name('admin.back_to_admin_panel');
 
-// Profile and 2FA setup routes (accessible without 2FA)
 Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
 Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+Route::patch('/profile/avatar', [ProfileAvatarController::class, 'update'])->name('profile.avatar.update');
+Route::get('/profile/avatar/coins', [ProfileAvatarController::class, 'coins'])->name('profile.avatar.coins');
+Route::get('/profile/avatar/preview', [ProfileAvatarController::class, 'preview'])->middleware('throttle:120,1,avatar-preview')->name('profile.avatar.preview');
+Route::post('/profile/avatar/generate', [ProfileAvatarController::class, 'generate'])->middleware('throttle:10,1,avatar-generate')->name('profile.avatar.generate');
+Route::post('/profile/avatar/upload', [ProfileAvatarController::class, 'upload'])->middleware('throttle:10,1,avatar-upload')->name('profile.avatar.upload');
 Route::get('/profile/password', [ProfileController::class, 'passwordEdit'])->name('profile.password.edit');
 Route::patch('/profile/update-password', [ProfileController::class, 'passwordUpdate'])->name('profile.password.update');
 Route::get('/profile/2fa', [ProfileController::class, 'twoFAEdit'])->name('profile.2fa.edit');
 
-// Dashboard page accessible without 2FA
-Route::get('/', [HomeController::class, 'index'])->name('dashboard');
+// Everything else requires 2FA to be active (production) and the password not to be overdue for renewal
+Route::middleware(['admin.2fa', 'admin.password'])->group(function () {
+    Route::get('/users_select', [SelectsApiController::class, 'users'])->name('users.select.index');
+    Route::get('/admins_select', [SelectsApiController::class, 'admins'])->name('admins.select.index');
 
-// Dashboard AJAX endpoints
-Route::prefix('dashboard/ajax')->name('dashboard.ajax.')->group(function () {
-    Route::get('/kpi-stats', [HomeController::class, 'getKPIStats'])->name('kpi-stats');
-    Route::get('/financial-summary', [HomeController::class, 'getFinancialSummary'])->name('financial-summary');
-    Route::get('/deposit-withdraw-charts', [HomeController::class, 'getDepositWithdrawCharts'])->name('deposit-withdraw-charts');
-    Route::get('/trading-stats', [HomeController::class, 'getTradingStats'])->name('trading-stats');
-    Route::get('/recent-activities', [HomeController::class, 'getRecentActivities'])->name('recent-activities');
-    Route::get('/top-trading-pairs', [HomeController::class, 'getTopTradingPairs'])->name('top-trading-pairs');
-});
+    // Dashboard
+    Route::get('/', [HomeController::class, 'index'])->name('dashboard');
 
-// Financial Dashboard
-Route::get('/financial-dashboard', [FinancialDashboardController::class, 'index'])->name('financial-dashboard');
+    // Dashboard AJAX endpoints
+    Route::prefix('dashboard/ajax')->name('dashboard.ajax.')->group(function () {
+        Route::get('/kpi-stats', [HomeController::class, 'getKPIStats'])->name('kpi-stats');
+        Route::get('/financial-summary', [HomeController::class, 'getFinancialSummary'])->name('financial-summary');
+        Route::get('/deposit-withdraw-charts', [HomeController::class, 'getDepositWithdrawCharts'])->name('deposit-withdraw-charts');
+        Route::get('/trading-stats', [HomeController::class, 'getTradingStats'])->name('trading-stats');
+        Route::get('/recent-activities', [HomeController::class, 'getRecentActivities'])->name('recent-activities');
+        Route::get('/top-trading-pairs', [HomeController::class, 'getTopTradingPairs'])->name('top-trading-pairs');
+    });
 
-// Financial Dashboard AJAX endpoints
-Route::prefix('financial-dashboard/ajax')->name('financial-dashboard.ajax.')->group(function () {
-    Route::get('/trade-stats', [FinancialDashboardController::class, 'getTradeStats'])->name('trade-stats');
-    Route::get('/revenue-stats', [FinancialDashboardController::class, 'getRevenueStats'])->name('revenue-stats');
-    Route::get('/asset-stats', [FinancialDashboardController::class, 'getAssetStats'])->name('asset-stats');
-    Route::get('/liability-stats', [FinancialDashboardController::class, 'getLiabilityStats'])->name('liability-stats');
-    Route::get('/cash-flow-stats', [FinancialDashboardController::class, 'getCashFlowStats'])->name('cash-flow-stats');
-    Route::get('/expense-stats', [FinancialDashboardController::class, 'getExpenseStats'])->name('expense-stats');
-    Route::get('/profit-loss-stats', [FinancialDashboardController::class, 'getProfitLossStats'])->name('profit-loss-stats');
-    Route::get('/stock-purchase-stats', [FinancialDashboardController::class, 'getStockPurchaseStats'])->name('stock-purchase-stats');
-    Route::get('/stock-purchase-export', [FinancialDashboardController::class, 'exportStockPurchases'])->name('stock-purchase-export');
-});
+    // Financial Dashboard
+    Route::get('/financial-dashboard', [FinancialDashboardController::class, 'index'])->name('financial-dashboard');
 
-// All other admin routes require 2FA
-Route::middleware(['admin.2fa'])->group(function () {
+    // Financial Dashboard AJAX endpoints
+    Route::prefix('financial-dashboard/ajax')->name('financial-dashboard.ajax.')->group(function () {
+        Route::get('/trade-stats', [FinancialDashboardController::class, 'getTradeStats'])->name('trade-stats');
+        Route::get('/revenue-stats', [FinancialDashboardController::class, 'getRevenueStats'])->name('revenue-stats');
+        Route::get('/asset-stats', [FinancialDashboardController::class, 'getAssetStats'])->name('asset-stats');
+        Route::get('/liability-stats', [FinancialDashboardController::class, 'getLiabilityStats'])->name('liability-stats');
+        Route::get('/cash-flow-stats', [FinancialDashboardController::class, 'getCashFlowStats'])->name('cash-flow-stats');
+        Route::get('/expense-stats', [FinancialDashboardController::class, 'getExpenseStats'])->name('expense-stats');
+        Route::get('/profit-loss-stats', [FinancialDashboardController::class, 'getProfitLossStats'])->name('profit-loss-stats');
+        Route::get('/stock-purchase-stats', [FinancialDashboardController::class, 'getStockPurchaseStats'])->name('stock-purchase-stats');
+        Route::get('/stock-purchase-export', [FinancialDashboardController::class, 'exportStockPurchases'])->name('stock-purchase-export');
+    });
+
     Route::get('/accounting/sso', [AccountingSsoController::class, 'login'])
         ->name('accounting.sso')
         ->can('accounting.login');
@@ -122,8 +131,6 @@ Route::middleware(['admin.2fa'])->group(function () {
         Route::patch('/{admin}/2fa', [AdminSecurityController::class, 'twoFAEdit'])->name('admin.2fa.edit')->can('admin.edit');
 
         Route::get('/{admin}/login_as_admin', [AdminController::class, 'login_as_admin'])->name('admin.login_as_admin')->can('admin.login-as-admin');
-        Route::get('/back_to_admin_panel', [AdminController::class, 'back_to_admin_panel'])->name('admin.back_to_admin_panel');
-
         Route::get('/{admin}/session', [SessionController::class, 'index'])->name('session.index')->can('session.index');
 
         Route::delete('/{admin}/sessions/{session}', [SessionController::class, 'destroy'])->name('session.destroy')->can('session.destroy');

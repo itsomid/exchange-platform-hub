@@ -116,16 +116,29 @@ class Currency extends Model
 
     public function coinLogo(): string
     {
-        if (!$this->logo) {
+        return self::logoUrl($this->logo);
+    }
+
+    public static function logoUrl(?string $logo): string
+    {
+        if (!$logo) {
             return asset('images/coins/default.png');
         }
 
-        $logoPath = storage_path("app/public/coins/{$this->logo}");
+        $logoPath = storage_path("app/public/coins/{$logo}");
         if (file_exists($logoPath)) {
-            return asset("storage/coins/{$this->logo}");
+            return asset("storage/coins/{$logo}");
         }
 
-        return asset("images/coins/{$this->logo}");
+        return asset("images/coins/{$logo}");
+    }
+
+    /** True when the logo file physically exists (uploaded or bundled). */
+    public static function logoExists(?string $logo): bool
+    {
+        $logo = $logo ? basename($logo) : null;
+
+        return $logo && (is_file(storage_path("app/public/coins/{$logo}")) || is_file(public_path("images/coins/{$logo}")));
     }
 
     public function interTransferStatus()

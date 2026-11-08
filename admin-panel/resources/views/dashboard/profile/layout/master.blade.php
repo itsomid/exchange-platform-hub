@@ -9,11 +9,21 @@
                 <div class="card-body">
                     <div class="user-avatar-section">
                         <div class="d-flex align-items-center flex-column">
-                            <img class="img-fluid rounded mb-3 pt-1 mt-4"
-                                 src="{{auth()->user()->avatar()}}"
-                                 height="100"
-                                 width="100"
-                                 alt="User avatar"/>
+                            <div class="position-relative mb-3 pt-1 mt-4">
+                                <img class="img-fluid rounded"
+                                     src="{{auth()->user()->avatar()}}"
+                                     data-admin-avatar
+                                     height="100"
+                                     width="100"
+                                     alt="User avatar"/>
+                                <button type="button"
+                                        class="btn btn-icon btn-sm btn-primary rounded-circle position-absolute bottom-0 end-0 shadow"
+                                        style="width:28px;height:28px;margin-bottom:-6px;margin-inline-end:-6px;"
+                                        data-bs-toggle="modal" data-bs-target="#changeAvatarModal"
+                                        title="تغییر آواتار" aria-label="تغییر آواتار">
+                                    <i class="fa-regular fa-camera"></i>
+                                </button>
+                            </div>
                             <div class="user-info text-center">
                                 <h4 class="mb-2">{{auth()->user()->fullname()}}</h4>
                             </div>
