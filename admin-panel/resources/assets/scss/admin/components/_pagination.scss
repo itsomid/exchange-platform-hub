@@ -1,0 +1,7 @@
+// A nowrap row of page links is wider than a phone column and
+// stretches the layout, so the whole page scrolls sideways.
+.pagination {
+  flex-wrap: wrap;
+  row-gap: 0.375rem;
+  max-width: 100%;
+}

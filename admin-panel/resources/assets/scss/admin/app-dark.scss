@@ -16,6 +16,7 @@
 @import "toastify-js/src/toastify.css";
 
 @import "components/topbar";
+@import "components/pagination";
 
 // Bright theme accents (cyan primary, green, orange) fail contrast with white text.
 $on-bright: #1c2230;
