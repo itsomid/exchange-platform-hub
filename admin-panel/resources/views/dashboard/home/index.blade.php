@@ -345,9 +345,8 @@
 
 @section('vendor-style')
     @vite(['resources/assets/vendor/libs/apex-charts/apex-charts.scss'])
-    @if (session('theme', 'light') === 'dark')
-        @vite(['resources/assets/vendor/libs/dashboard/dashboard-modern-dark.scss'])
-    @else
-        @vite(['resources/assets/vendor/libs/dashboard/dashboard-modern.scss'])
-    @endif
+    <x-admin-theme-style
+        light="resources/assets/vendor/libs/dashboard/dashboard-modern.scss"
+        dark="resources/assets/vendor/libs/dashboard/dashboard-modern-dark.scss"
+    />
 @endsection

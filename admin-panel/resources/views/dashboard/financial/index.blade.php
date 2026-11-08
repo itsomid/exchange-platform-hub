@@ -1265,7 +1265,5 @@
 
 @section('vendor-style')
     @vite(['resources/assets/vendor/libs/apex-charts/apex-charts.scss', 'resources/assets/vendor/libs/dashboard/financial-dashboard.scss'])
-    @if (session('theme', 'light') === 'dark')
-        @vite(['resources/assets/vendor/libs/dashboard/financial-dashboard-dark.scss'])
-    @endif
+    <x-admin-theme-style dark="resources/assets/vendor/libs/dashboard/financial-dashboard-dark.scss" />
 @endsection

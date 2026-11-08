@@ -16,43 +16,23 @@
         .sticky-column {
             position: sticky;
             left: 0;
-            background-color: #fff !important;
+            background-color: var(--sticky-column-bg, #fff) !important;
             z-index: 1;
             box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1) !important;
         }
 
         .table thead .sticky-column {
             z-index: 3 !important;
-            background-color: #fff !important;
+            background-color: var(--sticky-column-bg, #fff) !important;
         }
 
         .table tbody tr .sticky-column {
-            background-color: #fff !important;
+            background-color: var(--bs-table-bg, var(--sticky-column-bg, #fff)) !important;
+            color: var(--bs-table-color, inherit);
         }
 
         .table tbody tr:hover .sticky-column {
-            background-color: #f8f9fa !important;
-        }
-
-        /* Support for colored rows */
-        .table tbody tr.table-success .sticky-column {
-            background-color: #d1e7dd !important;
-        }
-
-        .table tbody tr.table-danger .sticky-column {
-            background-color: #f8d7da !important;
-        }
-
-        .table tbody tr.table-warning .sticky-column {
-            background-color: #fff3cd !important;
-        }
-
-        .table tbody tr.table-info .sticky-column {
-            background-color: #cff4fc !important;
-        }
-
-        .table tbody tr.table-primary .sticky-column {
-            background-color: #cfe2ff !important;
+            background-color: var(--bs-table-hover-bg, var(--sticky-column-hover-bg, #f8f9fa)) !important;
         }
     </style>
 @endsection
@@ -146,14 +126,14 @@
         </div>
         <div class="col-sm-12 col-lg-4 col-xxl-3">
             <div class="card">
-                <div class="card-body bg-success">
+                <div class="card-body bg-label-success">
                     <div class="d-flex align-items-start justify-content-between">
                         <div class="content-left">
-                            <span class="text-white">کاربران با بیشترین معامله امروز</span>
+                            <span class="d-block text-heading">کاربران با بیشترین معامله امروز</span>
                             <div class="d-flex align-items-baseline my-1">
-                                <small class="text-white mx-2">حجم معاملات امروز:</small>
-                                <h4 class="mb-0 me-2 text-primary">{{ formatNumber($totalTodayOrdersValue, 2) }}</h4>
-                                <small class="text-primary">USDT</small>
+                                <small class="text-heading mx-2">حجم معاملات امروز:</small>
+                                <h4 class="mb-0 me-2">{{ formatNumber($totalTodayOrdersValue, 2) }}</h4>
+                                <small class="text-heading">USDT</small>
                             </div>
                         </div>
 
@@ -188,7 +168,7 @@
                                     </li>
                                 @endforeach
                             @else
-                                بدون معامله
+                                <li class="text-heading">بدون معامله</li>
                             @endif
 
                         </ul>
@@ -414,7 +394,7 @@
                                 $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
                             @endphp
                             <a href="{{ route('admin.otc_orders.index', array_merge($currentParams, ['sortById' => $newSortDirection])) }}"
-                                class="text-black">
+                                class="text-heading">
                                 ID
                                 @if ($currentSortDirection === 'asc')
                                     <span><i class="fa-solid fa-arrow-up"></i></span>
@@ -433,7 +413,7 @@
                                 $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
                             @endphp
                             <a href="{{ route('admin.otc_orders.index', array_merge($currentParams, ['sortByQuantity' => $newSortDirection])) }}"
-                                class="text-black">
+                                class="text-heading">
                                 مقدار
                                 @if ($currentSortDirection === 'asc')
                                     <span><i class="fa-solid fa-arrow-up"></i></span>
@@ -450,7 +430,7 @@
                                 $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
                             @endphp
                             <a href="{{ route('admin.otc_orders.index', array_merge($currentParams, ['sortByTotalValue' => $newSortDirection])) }}"
-                                class="text-black">
+                                class="text-heading">
                                 مبلغ کل
                                 @if ($currentSortDirection === 'asc')
                                     <span><i class="fa-solid fa-arrow-up"></i></span>
@@ -468,7 +448,7 @@
                                 $newSortDirection = $currentSortDirection === 'asc' ? 'desc' : 'asc';
                             @endphp
                             <a href="{{ route('admin.otc_orders.index', array_merge($currentParams, ['sortByCreatedAt' => $newSortDirection])) }}"
-                                class="text-black">
+                                class="text-heading">
                                 تاریخ و زمان
                                 @if ($currentSortDirection === 'asc')
                                     <span><i class="fa-solid fa-arrow-up"></i></span>
