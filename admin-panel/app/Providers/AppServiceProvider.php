@@ -35,6 +35,23 @@ class AppServiceProvider extends ServiceProvider
         //
         Paginator::defaultView('dashboard.layout.vendor.vuexy_pagination');
 
+        View::composer(
+            ['dashboard.layout.sidebar', 'dashboard.layout.navbar', 'dashboard.layout.security_banner'],
+            function ($view) {
+                $admin = Auth::guard('admin')->user();
+                $requiresTwoFactor = (bool) $admin?->mustSetUpTwoFactor();
+                $passwordDeadline = $admin?->passwordChangeDeadline();
+                $passwordOverdue = (bool) $passwordDeadline?->isPast();
+
+                $view->with([
+                    'requiresTwoFactor' => $requiresTwoFactor,
+                    'passwordDeadline' => $passwordDeadline,
+                    'passwordOverdue' => $passwordOverdue,
+                    // Panel is locked down to the profile pages
+                    'panelLocked' => $requiresTwoFactor || $passwordOverdue,
+                ]);
+            }
+        );
         View::composer('dashboard.layout.sidebar', function ($view) {
             $admin = Auth::guard('admin')->user();
             $unreadCount = $admin ? $admin->unreadNotifications->count() : 0;

@@ -27,8 +27,37 @@ class AdminFactory extends Factory
             'last_name' => $this->getRandomLastName(),
             'password' => Hash::make('11111111'),
             'gender' => $gender,
+            // Admins must have 2FA active to use the panel, so the default factory admin does.
+            'two_factor_secret' => encrypt('JBSWY3DPEHPK3PXP'),
+            'two_factor_recovery_codes' => encrypt(json_encode(['recovery-code-1'])),
+            'two_factor_confirmed_at' => now(),
+            // Same for the password: a factory admin has just changed it.
+            'password_changed_at' => now(),
         ];
 
+    }
+
+    /** Password older than the allowed age; the grace period starts on the first request. */
+    public function withExpiredPassword(): static
+    {
+        return $this->state(fn () => [
+            'password_changed_at' => now()->subMonths(6)->subDay(),
+        ]);
+    }
+
+    /** Never changed the password (e.g. created by another admin). */
+    public function withoutPasswordChange(): static
+    {
+        return $this->state(fn () => ['password_changed_at' => null]);
+    }
+
+    public function withoutTwoFactor(): static
+    {
+        return $this->state(fn () => [
+            'two_factor_secret' => null,
+            'two_factor_recovery_codes' => null,
+            'two_factor_confirmed_at' => null,
+        ]);
     }
 
     private function getRandomMaleFirstName(): string

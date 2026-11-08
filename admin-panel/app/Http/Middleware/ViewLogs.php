@@ -16,7 +16,7 @@ class ViewLogs
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::check() && Auth::user()->hasPermissionTo('view-logs')) {
+        if (Auth::check() && ! Auth::user()->mustSetUpTwoFactor() && ! Auth::user()->passwordChangeOverdue() && Auth::user()->hasPermissionTo('view-logs')) {
             return $next($request);
         }
 

@@ -73,5 +73,6 @@ class Kernel extends HttpKernel
         'checkJWT' => JwtAuthenticator::class,
         'view-logs' => ViewLogs::class,
         'admin.2fa' => AdminTwoFactorAuth::class,
+        'admin.password' => \App\Http\Middleware\AdminPasswordExpiry::class,
     ];
 }

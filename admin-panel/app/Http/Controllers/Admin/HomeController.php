@@ -31,16 +31,7 @@ class HomeController extends Controller
 
     public function index()
     {
-        $admin = auth()->guard('admin')->user();
-        if (empty($admin->two_factor_secret) && app()->environment() == 'production') {
-            $is2FAEnabled = false;
-        } else {
-            $is2FAEnabled = true;
-        }
-
-        return view('dashboard.home.index', [
-            'is2FAEnabled' => $is2FAEnabled
-        ]);
+        return view('dashboard.home.index');
     }
 
     // AJAX Endpoints

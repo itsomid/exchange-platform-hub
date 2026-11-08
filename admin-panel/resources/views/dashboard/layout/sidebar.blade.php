@@ -14,6 +14,29 @@
     <div class="menu-inner-shadow"></div>
 
     <ul class="menu-inner py-1">
+        @if ($panelLocked)
+            <li class="menu-header small text-uppercase">
+                <span class="menu-header-text">حساب کاربری</span>
+            </li>
+            <li class="menu-item @if (request()->routeIs('admin.profile.edit', 'admin.profile.update')) active @endif">
+                <a href="{{ route('admin.profile.edit') }}" class="menu-link">
+                    <i class="menu-icon fa-light fa-user-alt fa-sm"></i>
+                    <div>اطلاعات کاربری</div>
+                </a>
+            </li>
+            <li class="menu-item @if (request()->routeIs('admin.profile.password.*')) active @endif">
+                <a href="{{ route('admin.profile.password.edit') }}" class="menu-link">
+                    <i class="menu-icon fa-regular fa-lock-alt fa-sm"></i>
+                    <div>ویرایش گذرواژه</div>
+                </a>
+            </li>
+            <li class="menu-item @if (request()->routeIs('admin.profile.2fa.edit')) active @endif">
+                <a href="{{ route('admin.profile.2fa.edit') }}" class="menu-link">
+                    <i class="menu-icon fa-brands fa-google fa-sm"></i>
+                    <div>احراز هویت دو مرحله ای</div>
+                </a>
+            </li>
+        @else
         <li class="menu-item @if (request()->is('admin')) active @endif">
             <a href="{{ route('admin.dashboard') }}" class="menu-link">
                 {{-- <i class=" tf-icons ti ti-users"></i> --}}
@@ -599,6 +622,6 @@
             </li>
         @endcan
 
-
+        @endif
     </ul>
 </aside>
