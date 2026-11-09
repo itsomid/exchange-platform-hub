@@ -111,7 +111,7 @@ class BotReportController extends Controller
             ->paginate(50)
             ->withQueryString();
 
-        $currencies = Currency::orderBy('symbol')->get(['id', 'symbol']);
+        $currencies = Currency::orderBy('symbol')->get(['id', 'name', 'symbol', 'logo']);
 
         return view('dashboard.bot.reports.index', compact(
             'kpi', 'perCoin', 'settlements', 'currencies', 'currencyId', 'settings', 'defaultWeek'

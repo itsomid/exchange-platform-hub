@@ -50,16 +50,13 @@
                                 placeholder="جهت درج تاریخ کلیک کنید">
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label small">ارز</label>
-                            <select name="currency_id" class="form-select">
-                                <option value="">همه ارزها</option>
-                                @foreach ($currencies as $c)
-                                    <option value="{{ $c->id }}"
-                                        {{ (int) $currencyId === $c->id ? 'selected' : '' }}>
-                                        {{ $c->symbol }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <label class="form-label small" for="currency_id">ارز</label>
+                            <x-currency-select
+                                name="currency_id"
+                                :currencies="$currencies"
+                                :selected="$currencyId ?? ''"
+                                placeholder="همه ارزها"
+                            />
                         </div>
                         <div class="col-md-3">
                             <button type="submit" class="btn btn-secondary">
@@ -604,6 +601,7 @@
 @endsection
 
 @section('vendor-script')
+    @parent
     @vite(['resources/assets/js/jalalidatepicker.js'])
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -619,6 +617,7 @@
 @endsection
 
 @section('vendor-style')
+    @parent
     <style>
         .popover-kpi-hint {
             direction: rtl;
