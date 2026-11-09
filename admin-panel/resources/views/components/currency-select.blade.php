@@ -7,6 +7,7 @@
     'selected'    => '',
     'required'    => false,
     'placeholder' => 'انتخاب کنید...',
+    'allowClear'  => false,
     'error'       => null,
 ])
 
@@ -20,9 +21,10 @@
     id="{{ $selectId }}"
     class="currency-select form-select {{ $hasError ? 'is-invalid' : '' }}"
     data-placeholder="{{ $placeholder }}"
+    data-allow-clear="{{ $allowClear ? 'true' : 'false' }}"
     {{ $required ? 'required' : '' }}
 >
-    <option value=""></option>
+    <option value="">{{ $allowClear ? $placeholder : '' }}</option>
     @foreach ($currencies as $currency)
         <option
             value="{{ $currency->id }}"
@@ -67,6 +69,7 @@
                 templateResult: currencyOption,
                 templateSelection: currencyOption,
                 placeholder: $el.data('placeholder'),
+                allowClear: $el.attr('data-allow-clear') === 'true',
             });
         });
     });

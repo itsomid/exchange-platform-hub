@@ -23,7 +23,7 @@ class BotReportController extends Controller
 {
     public function index(Request $request): View
     {
-        [$from, $to, $currencyId, $fromInput, $toInput, $defaultWeek] = $this->filters($request);
+        [$from, $to, $currencyId, $fromInput, $toInput] = $this->filters($request);
 
         $settings = BotGlobalSettings::current();
         $currencies = Currency::orderBy('symbol')->get(['id', 'name', 'persian_name', 'symbol', 'logo']);
@@ -59,8 +59,8 @@ class BotReportController extends Controller
         // currency, so a coin filter cannot narrow it.
         $kpi['transfer_fee'] = $currencyId ? null : (string) BotWalletTransfer::query()
             ->where('status', TransactionStatusEnum::SUCCESS)
-            ->where('created_at', '>=', $from)
-            ->where('created_at', '<=', $to)
+            ->when($from, fn ($q) => $q->where('created_at', '>=', $from))
+            ->when($to, fn ($q) => $q->where('created_at', '<=', $to))
             ->sum('fee');
 
         // What the platform actually keeps. Exchange and network fees are excluded:
@@ -90,7 +90,7 @@ class BotReportController extends Controller
             ->withQueryString();
 
         return view('dashboard.bot.reports.index', compact(
-            'kpi', 'perCoin', 'settlements', 'currencies', 'currencyId', 'settings', 'defaultWeek'
+            'kpi', 'perCoin', 'settlements', 'currencies', 'currencyId', 'settings'
         ))->with([
             'from' => $fromInput,
             'to' => $toInput,
@@ -102,8 +102,8 @@ class BotReportController extends Controller
         [$from, $to, $currencyId] = $this->filters($request);
 
         $query = BotOrder::query()->with('user')->orderBy('id')
-            ->where('created_at', '>=', $from)
-            ->where('created_at', '<=', $to)
+            ->when($from, fn ($q) => $q->where('created_at', '>=', $from))
+            ->when($to, fn ($q) => $q->where('created_at', '<=', $to))
             ->when($currencyId, fn ($q) => $q->whereHas('buyExecutions', fn ($e) => $e->where('currency_id', $currencyId)));
 
         $headings = ['ID', 'UUID', 'کاربر', 'مبلغ کل (USDT)', 'آلفا', 'وضعیت', 'منشأ', 'تاریخ ایجاد', 'تاریخ تکمیل'];
@@ -204,34 +204,23 @@ class BotReportController extends Controller
     }
 
     /**
-     * The page always has a bounded range. An empty request is the last seven
-     * days, so the aggregates never scan the whole history.
+     * Empty dates mean the whole history. A filled Jalali day covers that
+     * calendar day from start to end.
      *
-     * @return array{0: Carbon, 1: Carbon, 2: ?int, 3: string, 4: string, 5: bool}
+     * @return array{0: ?Carbon, 1: ?Carbon, 2: ?int, 3: string, 4: string}
      */
     private function filters(Request $request): array
     {
-        $defaultFrom = now()->subDays(6)->startOfDay();
-        $defaultTo = now()->endOfDay();
-
-        $from = $this->parseJalaliDay($request->get('from'), true) ?? $defaultFrom;
-        $to = $this->parseJalaliDay($request->get('to'), false) ?? $defaultTo;
-
-        if ($from->greaterThan($to)) {
-            $from = $defaultFrom;
-            $to = $defaultTo;
-        }
-
+        $from = $this->parseJalaliDay($request->get('from'), true);
+        $to = $this->parseJalaliDay($request->get('to'), false);
         $currencyId = $request->filled('currency_id') ? (int) $request->get('currency_id') : null;
-        $defaultWeek = $from->equalTo($defaultFrom) && $to->equalTo($defaultTo);
 
         return [
             $from,
             $to,
             $currencyId,
-            Jalalian::fromCarbon($from)->format('Y/m/d'),
-            Jalalian::fromCarbon($to)->format('Y/m/d'),
-            $defaultWeek,
+            $from ? Jalalian::fromCarbon($from)->format('Y/m/d') : '',
+            $to ? Jalalian::fromCarbon($to)->format('Y/m/d') : '',
         ];
     }
 
@@ -250,27 +239,27 @@ class BotReportController extends Controller
         return $startOfDay ? $parsed->startOfDay() : $parsed->endOfDay();
     }
 
-    private function settlementQuery(Carbon $from, Carbon $to, ?int $currencyId)
+    private function settlementQuery(?Carbon $from, ?Carbon $to, ?int $currencyId)
     {
         return BotTradeSettlement::query()
-            ->where('settled_at', '>=', $from)
-            ->where('settled_at', '<=', $to)
+            ->when($from, fn ($q) => $q->where('settled_at', '>=', $from))
+            ->when($to, fn ($q) => $q->where('settled_at', '<=', $to))
             ->when($currencyId, fn ($q) => $q->whereHas('buyExecution', fn ($e) => $e->where('currency_id', $currencyId)));
     }
 
-    private function executionQuery(Carbon $from, Carbon $to, ?int $currencyId)
+    private function executionQuery(?Carbon $from, ?Carbon $to, ?int $currencyId)
     {
         return BotBuyExecution::query()
-            ->where('bot_buy_executions.created_at', '>=', $from)
-            ->where('bot_buy_executions.created_at', '<=', $to)
+            ->when($from, fn ($q) => $q->where('bot_buy_executions.created_at', '>=', $from))
+            ->when($to, fn ($q) => $q->where('bot_buy_executions.created_at', '<=', $to))
             ->when($currencyId, fn ($q) => $q->where('bot_buy_executions.currency_id', $currencyId));
     }
 
-    private function executionAggregates(Carbon $from, Carbon $to, ?int $currencyId): Collection
+    private function executionAggregates(?Carbon $from, ?Carbon $to, ?int $currencyId): Collection
     {
         return DB::table('bot_buy_executions')
-            ->where('created_at', '>=', $from)
-            ->where('created_at', '<=', $to)
+            ->when($from, fn ($q) => $q->where('created_at', '>=', $from))
+            ->when($to, fn ($q) => $q->where('created_at', '<=', $to))
             ->when($currencyId, fn ($q) => $q->where('currency_id', $currencyId))
             ->select('currency_id')
             ->selectRaw("COALESCE(SUM(CASE WHEN status IN ('BOUGHT','CLOSED') THEN allocated_usdt ELSE 0 END),0) as bought_volume")
@@ -283,12 +272,12 @@ class BotReportController extends Controller
             ->get();
     }
 
-    private function settlementAggregates(Carbon $from, Carbon $to, ?int $currencyId): Collection
+    private function settlementAggregates(?Carbon $from, ?Carbon $to, ?int $currencyId): Collection
     {
         return DB::table('bot_trade_settlements')
             ->join('bot_buy_executions', 'bot_buy_executions.id', '=', 'bot_trade_settlements.bot_buy_execution_id')
-            ->where('bot_trade_settlements.settled_at', '>=', $from)
-            ->where('bot_trade_settlements.settled_at', '<=', $to)
+            ->when($from, fn ($q) => $q->where('bot_trade_settlements.settled_at', '>=', $from))
+            ->when($to, fn ($q) => $q->where('bot_trade_settlements.settled_at', '<=', $to))
             ->when($currencyId, fn ($q) => $q->where('bot_buy_executions.currency_id', $currencyId))
             ->select('bot_buy_executions.currency_id')
             ->selectRaw('COALESCE(SUM(bot_trade_settlements.gross_revenue),0) as gross_revenue')
@@ -308,12 +297,12 @@ class BotReportController extends Controller
             ->get();
     }
 
-    private function activeUsers(Carbon $from, Carbon $to, ?int $currencyId): int
+    private function activeUsers(?Carbon $from, ?Carbon $to, ?int $currencyId): int
     {
         return (int) DB::table('bot_buy_executions')
             ->join('bot_orders', 'bot_orders.id', '=', 'bot_buy_executions.bot_order_id')
-            ->where('bot_buy_executions.created_at', '>=', $from)
-            ->where('bot_buy_executions.created_at', '<=', $to)
+            ->when($from, fn ($q) => $q->where('bot_buy_executions.created_at', '>=', $from))
+            ->when($to, fn ($q) => $q->where('bot_buy_executions.created_at', '<=', $to))
             ->when($currencyId, fn ($q) => $q->where('bot_buy_executions.currency_id', $currencyId))
             ->distinct()
             ->count('bot_orders.user_id');

@@ -56,6 +56,7 @@
                                 :currencies="$currencies"
                                 :selected="$currencyId ?? ''"
                                 placeholder="همه ارزها"
+                                :allow-clear="true"
                             />
                         </div>
                         <div class="col-md-3">
@@ -66,12 +67,6 @@
                                 class="btn btn-outline-secondary ms-1">پاک‌کردن</a>
                         </div>
                     </form>
-                    @if ($defaultWeek)
-                        <p class="text-muted small mb-0 mt-3">
-                            <i class="fas fa-circle-info me-1"></i>
-                            بازه گزارش الان روی یک هفته اخیر تنظیم شده است.
-                        </p>
-                    @endif
                 </div>
             </div>
         </div>
