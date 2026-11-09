@@ -49,12 +49,12 @@ class BotTradeSettlement extends Model
 
     public function buyExecution(): BelongsTo
     {
-        return $this->belongsTo(BotBuyExecution::class);
+        return $this->belongsTo(BotBuyExecution::class, 'bot_buy_execution_id');
     }
 
     public function sellOrder(): BelongsTo
     {
-        return $this->belongsTo(BotSellOrder::class);
+        return $this->belongsTo(BotSellOrder::class, 'bot_sell_order_id');
     }
 
     public function referralUser(): BelongsTo
