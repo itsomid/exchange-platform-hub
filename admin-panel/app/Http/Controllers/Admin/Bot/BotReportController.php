@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers\Admin\Bot;
 
-use App\Enums\TransactionSubTypeEnum;
+use App\Enums\TransactionStatusEnum;
 use App\Helpers\DateFormatter;
 use App\Http\Controllers\Controller;
 use App\Models\Bot\BotBuyExecution;
 use App\Models\Bot\BotGlobalSettings;
 use App\Models\Bot\BotOrder;
 use App\Models\Bot\BotTradeSettlement;
+use App\Models\Bot\BotWalletTransfer;
 use App\Models\Currency;
-use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Morilog\Jalali\Jalalian;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -24,64 +26,42 @@ class BotReportController extends Controller
         [$from, $to, $currencyId, $fromInput, $toInput, $defaultWeek] = $this->filters($request);
 
         $settings = BotGlobalSettings::current();
+        $currencies = Currency::orderBy('symbol')->get(['id', 'name', 'persian_name', 'symbol', 'logo']);
 
-        // Winning/losing splits are needed to explain the headline numbers: the
-        // performance fee is charged per profitable settlement, while net_pnl is a
-        // net of winners and losers, so the two totals move independently.
-        $totals = $this->settlementQuery($from, $to, $currencyId)
-            ->selectRaw('COALESCE(SUM(gross_revenue),0) as gross_revenue')
-            ->selectRaw('COALESCE(SUM(cost_basis),0) as cost_basis')
-            ->selectRaw('COALESCE(SUM(net_pnl),0) as net_pnl')
-            ->selectRaw('COALESCE(SUM(performance_fee),0) as performance_fee')
-            ->selectRaw('COALESCE(SUM(referral_fee),0) as referral_fee')
-            ->selectRaw('COALESCE(SUM(cancel_fee),0) as cancel_fee')
-            ->selectRaw('COALESCE(SUM(exchange_fee),0) as exchange_fee')
-            ->selectRaw('COALESCE(SUM(network_fee),0) as network_fee')
-            ->selectRaw('COALESCE(SUM(CASE WHEN net_pnl > 0 THEN net_pnl ELSE 0 END),0) as winning_pnl')
-            ->selectRaw('COALESCE(SUM(CASE WHEN net_pnl < 0 THEN net_pnl ELSE 0 END),0) as losing_pnl')
-            ->selectRaw('COALESCE(SUM(CASE WHEN net_pnl > 0 THEN 1 ELSE 0 END),0) as winning_count')
-            ->selectRaw('COALESCE(SUM(CASE WHEN net_pnl < 0 THEN 1 ELSE 0 END),0) as losing_count')
-            ->selectRaw('COUNT(*) as settlement_count')
-            ->first();
+        // One grouped pass per table. Headline totals are the sum of those groups,
+        // so the page does not scan executions once for KPIs, again per coin, and
+        // again for the user count's sibling aggregate.
+        $execRows = $this->executionAggregates($from, $to, $currencyId);
+        $pnlRows = $this->settlementAggregates($from, $to, $currencyId);
 
         $kpi = [
-            'gross_revenue'    => (string) $totals->gross_revenue,
-            'cost_basis'       => (string) $totals->cost_basis,
-            'net_pnl'          => (string) $totals->net_pnl,
-            'performance_fee'  => (string) $totals->performance_fee,
-            'referral_fee'     => (string) $totals->referral_fee,
-            'cancel_fee'       => (string) $totals->cancel_fee,
-            'exchange_fee'     => (string) $totals->exchange_fee,
-            'network_fee'      => (string) $totals->network_fee,
-            'winning_pnl'      => (string) $totals->winning_pnl,
-            'losing_pnl'       => (string) $totals->losing_pnl,
-            'winning_count'    => (int) $totals->winning_count,
-            'losing_count'     => (int) $totals->losing_count,
-            'settlement_count' => (int) $totals->settlement_count,
+            'gross_revenue'    => $this->sumMoney($pnlRows, 'gross_revenue'),
+            'cost_basis'       => $this->sumMoney($pnlRows, 'cost_basis'),
+            'net_pnl'          => $this->sumMoney($pnlRows, 'net_pnl'),
+            'performance_fee'  => $this->sumMoney($pnlRows, 'performance_fee'),
+            'referral_fee'     => $this->sumMoney($pnlRows, 'referral_fee'),
+            'cancel_fee'       => $this->sumMoney($pnlRows, 'cancel_fee'),
+            'exchange_fee'     => $this->sumMoney($pnlRows, 'exchange_fee'),
+            'network_fee'      => $this->sumMoney($pnlRows, 'network_fee'),
+            'winning_pnl'      => $this->sumMoney($pnlRows, 'winning_pnl'),
+            'losing_pnl'       => $this->sumMoney($pnlRows, 'losing_pnl'),
+            'winning_count'    => $this->sumInt($pnlRows, 'winning_count'),
+            'losing_count'     => $this->sumInt($pnlRows, 'losing_count'),
+            'settlement_count' => $this->sumInt($pnlRows, 'settlement_count'),
+            'bought_volume'    => $this->sumMoney($execRows, 'bought_volume'),
+            'bought_count'     => $this->sumInt($execRows, 'bought_count'),
+            'skipped_count'    => $this->sumInt($execRows, 'skipped_count'),
+            'failed_count'     => $this->sumInt($execRows, 'failed_count'),
+            'collapsed_count'  => $this->sumInt($execRows, 'collapsed_count'),
         ];
 
-        $execTotals = $this->executionQuery($from, $to, $currencyId)
-            ->selectRaw("COALESCE(SUM(CASE WHEN status IN ('BOUGHT','CLOSED') THEN allocated_usdt ELSE 0 END),0) as bought_volume")
-            ->selectRaw("COALESCE(SUM(CASE WHEN status IN ('BOUGHT','CLOSED') THEN 1 ELSE 0 END),0) as bought_count")
-            ->selectRaw("COALESCE(SUM(CASE WHEN status = 'SKIPPED' THEN 1 ELSE 0 END),0) as skipped_count")
-            ->selectRaw("COALESCE(SUM(CASE WHEN status = 'FAILED' THEN 1 ELSE 0 END),0) as failed_count")
-            ->selectRaw('COALESCE(SUM(CASE WHEN effective_sell_orders_count IS NOT NULL AND original_sell_orders_count IS NOT NULL AND effective_sell_orders_count < original_sell_orders_count THEN 1 ELSE 0 END),0) as collapsed_count')
-            ->first();
-
-        $kpi['bought_volume']   = (string) $execTotals->bought_volume;
-        $kpi['bought_count']    = (int) $execTotals->bought_count;
-        $kpi['skipped_count']   = (int) $execTotals->skipped_count;
-        $kpi['failed_count']    = (int) $execTotals->failed_count;
-        $kpi['collapsed_count'] = (int) $execTotals->collapsed_count;
-
-        // Wallet transfer fees are ledgered per transaction and carry no currency of
-        // their own, so a coin filter cannot narrow them. Expose null in that case
-        // rather than a page-wide total that looks like it belongs to the coin.
-        $kpi['transfer_fee'] = $currencyId ? null : (string) Transaction::query()
-            ->where('subtype', TransactionSubTypeEnum::BOT_TRANSFER_FEE)
+        // The fee lives on the small transfer table. The ledger copy has no
+        // currency, so a coin filter cannot narrow it.
+        $kpi['transfer_fee'] = $currencyId ? null : (string) BotWalletTransfer::query()
+            ->where('status', TransactionStatusEnum::SUCCESS)
             ->where('created_at', '>=', $from)
             ->where('created_at', '<=', $to)
-            ->sum('amount');
+            ->sum('fee');
 
         // What the platform actually keeps. Exchange and network fees are excluded:
         // they are passed straight through to the reference exchange and the chain.
@@ -96,22 +76,18 @@ class BotReportController extends Controller
             8,
         );
 
-        $execBase = $this->executionQuery($from, $to, $currencyId);
-
-        $kpi['active_users'] = (clone $execBase)
-            ->join('bot_orders', 'bot_orders.id', '=', 'bot_buy_executions.bot_order_id')
-            ->distinct('bot_orders.user_id')
-            ->count('bot_orders.user_id');
-
-        $perCoin = $this->perCoinBreakdown($from, $to, $currencyId);
+        $kpi['active_users'] = $this->activeUsers($from, $to, $currencyId);
+        $perCoin = $this->presentCoinRows($execRows, $pnlRows, $currencies);
 
         $settlements = $this->settlementQuery($from, $to, $currencyId)
-            ->with(['buyExecution.currency', 'sellOrder', 'user'])
+            ->with([
+                'buyExecution:id,currency_id',
+                'buyExecution.currency:id,symbol,name',
+                'user:id,email,mobile',
+            ])
             ->orderByDesc('settled_at')
             ->paginate(50)
             ->withQueryString();
-
-        $currencies = Currency::orderBy('symbol')->get(['id', 'name', 'symbol', 'logo']);
 
         return view('dashboard.bot.reports.index', compact(
             'kpi', 'perCoin', 'settlements', 'currencies', 'currencyId', 'settings', 'defaultWeek'
@@ -290,46 +266,80 @@ class BotReportController extends Controller
             ->when($currencyId, fn ($q) => $q->where('bot_buy_executions.currency_id', $currencyId));
     }
 
-    /**
-     * Per-currency breakdown merging buy-execution aggregates (volume, skipped,
-     * collapsed) with realized PnL/fees from settlements.
-     */
-    private function perCoinBreakdown(Carbon $from, Carbon $to, ?int $currencyId)
+    private function executionAggregates(Carbon $from, Carbon $to, ?int $currencyId): Collection
     {
-        $execAgg = $this->executionQuery($from, $to, $currencyId)
-            ->select('bot_buy_executions.currency_id')
-            ->selectRaw("SUM(CASE WHEN status IN ('BOUGHT','CLOSED') THEN allocated_usdt ELSE 0 END) as bought_volume")
-            ->selectRaw("SUM(CASE WHEN status IN ('BOUGHT','CLOSED') THEN filled_amount ELSE 0 END) as bought_amount")
-            ->selectRaw("SUM(CASE WHEN status = 'SKIPPED' THEN 1 ELSE 0 END) as skipped_count")
-            ->selectRaw('SUM(CASE WHEN effective_sell_orders_count IS NOT NULL AND original_sell_orders_count IS NOT NULL AND effective_sell_orders_count < original_sell_orders_count THEN 1 ELSE 0 END) as collapsed_count')
-            ->groupBy('bot_buy_executions.currency_id')
-            ->with('currency:id,symbol,logo')
-            ->get()
-            ->keyBy('currency_id');
+        return DB::table('bot_buy_executions')
+            ->where('created_at', '>=', $from)
+            ->where('created_at', '<=', $to)
+            ->when($currencyId, fn ($q) => $q->where('currency_id', $currencyId))
+            ->select('currency_id')
+            ->selectRaw("COALESCE(SUM(CASE WHEN status IN ('BOUGHT','CLOSED') THEN allocated_usdt ELSE 0 END),0) as bought_volume")
+            ->selectRaw("COALESCE(SUM(CASE WHEN status IN ('BOUGHT','CLOSED') THEN filled_amount ELSE 0 END),0) as bought_amount")
+            ->selectRaw("COALESCE(SUM(CASE WHEN status IN ('BOUGHT','CLOSED') THEN 1 ELSE 0 END),0) as bought_count")
+            ->selectRaw("COALESCE(SUM(CASE WHEN status = 'SKIPPED' THEN 1 ELSE 0 END),0) as skipped_count")
+            ->selectRaw("COALESCE(SUM(CASE WHEN status = 'FAILED' THEN 1 ELSE 0 END),0) as failed_count")
+            ->selectRaw('COALESCE(SUM(CASE WHEN effective_sell_orders_count IS NOT NULL AND original_sell_orders_count IS NOT NULL AND effective_sell_orders_count < original_sell_orders_count THEN 1 ELSE 0 END),0) as collapsed_count')
+            ->groupBy('currency_id')
+            ->get();
+    }
 
-        $pnlAgg = BotTradeSettlement::query()
-            ->select('bot_buy_executions.currency_id')
-            ->selectRaw('SUM(bot_trade_settlements.net_pnl) as net_pnl')
-            ->selectRaw('SUM(bot_trade_settlements.performance_fee) as performance_fee')
-            ->selectRaw('SUM(bot_trade_settlements.cancel_fee) as cancel_fee')
+    private function settlementAggregates(Carbon $from, Carbon $to, ?int $currencyId): Collection
+    {
+        return DB::table('bot_trade_settlements')
             ->join('bot_buy_executions', 'bot_buy_executions.id', '=', 'bot_trade_settlements.bot_buy_execution_id')
             ->where('bot_trade_settlements.settled_at', '>=', $from)
             ->where('bot_trade_settlements.settled_at', '<=', $to)
             ->when($currencyId, fn ($q) => $q->where('bot_buy_executions.currency_id', $currencyId))
+            ->select('bot_buy_executions.currency_id')
+            ->selectRaw('COALESCE(SUM(bot_trade_settlements.gross_revenue),0) as gross_revenue')
+            ->selectRaw('COALESCE(SUM(bot_trade_settlements.cost_basis),0) as cost_basis')
+            ->selectRaw('COALESCE(SUM(bot_trade_settlements.net_pnl),0) as net_pnl')
+            ->selectRaw('COALESCE(SUM(bot_trade_settlements.performance_fee),0) as performance_fee')
+            ->selectRaw('COALESCE(SUM(bot_trade_settlements.referral_fee),0) as referral_fee')
+            ->selectRaw('COALESCE(SUM(bot_trade_settlements.cancel_fee),0) as cancel_fee')
+            ->selectRaw('COALESCE(SUM(bot_trade_settlements.exchange_fee),0) as exchange_fee')
+            ->selectRaw('COALESCE(SUM(bot_trade_settlements.network_fee),0) as network_fee')
+            ->selectRaw('COALESCE(SUM(CASE WHEN bot_trade_settlements.net_pnl > 0 THEN bot_trade_settlements.net_pnl ELSE 0 END),0) as winning_pnl')
+            ->selectRaw('COALESCE(SUM(CASE WHEN bot_trade_settlements.net_pnl < 0 THEN bot_trade_settlements.net_pnl ELSE 0 END),0) as losing_pnl')
+            ->selectRaw('COALESCE(SUM(CASE WHEN bot_trade_settlements.net_pnl > 0 THEN 1 ELSE 0 END),0) as winning_count')
+            ->selectRaw('COALESCE(SUM(CASE WHEN bot_trade_settlements.net_pnl < 0 THEN 1 ELSE 0 END),0) as losing_count')
+            ->selectRaw('COUNT(*) as settlement_count')
             ->groupBy('bot_buy_executions.currency_id')
-            ->get()
-            ->keyBy('currency_id');
+            ->get();
+    }
 
-        $currencyIds = $execAgg->keys()->merge($pnlAgg->keys())->unique();
+    private function activeUsers(Carbon $from, Carbon $to, ?int $currencyId): int
+    {
+        return (int) DB::table('bot_buy_executions')
+            ->join('bot_orders', 'bot_orders.id', '=', 'bot_buy_executions.bot_order_id')
+            ->where('bot_buy_executions.created_at', '>=', $from)
+            ->where('bot_buy_executions.created_at', '<=', $to)
+            ->when($currencyId, fn ($q) => $q->where('bot_buy_executions.currency_id', $currencyId))
+            ->distinct()
+            ->count('bot_orders.user_id');
+    }
 
-        return $currencyIds->map(function ($cid) use ($execAgg, $pnlAgg) {
-            $exec = $execAgg->get($cid);
-            $pnl  = $pnlAgg->get($cid);
+    /**
+     * Names come from the currencies table. A grouped execution row has no
+     * currency relation, and a coin can have settlements without a buy in the
+     * same window.
+     */
+    private function presentCoinRows(Collection $execRows, Collection $pnlRows, Collection $currencies): Collection
+    {
+        $byId = $currencies->keyBy(fn (Currency $currency) => (int) $currency->id);
+        $execByCoin = $execRows->keyBy(fn ($row) => (int) $row->currency_id);
+        $pnlByCoin = $pnlRows->keyBy(fn ($row) => (int) $row->currency_id);
+
+        return $execByCoin->keys()->merge($pnlByCoin->keys())->unique()->map(function ($cid) use ($execByCoin, $pnlByCoin, $byId) {
+            $exec = $execByCoin->get($cid);
+            $pnl = $pnlByCoin->get($cid);
+            $currency = $byId->get((int) $cid);
 
             return [
-                'currency_id'     => $cid,
-                'symbol'          => $exec?->currency?->symbol,
-                'logo'            => $exec?->currency?->coinLogo(),
+                'currency_id'     => (int) $cid,
+                'symbol'          => $currency?->symbol,
+                'name'            => $currency?->persian_name ?: $currency?->name,
+                'logo'            => $currency?->coinLogo(),
                 'bought_volume'   => (string) ($exec->bought_volume ?? '0'),
                 'bought_amount'   => (string) ($exec->bought_amount ?? '0'),
                 'skipped_count'   => (int) ($exec->skipped_count ?? 0),
@@ -338,7 +348,20 @@ class BotReportController extends Controller
                 'performance_fee' => (string) ($pnl->performance_fee ?? '0'),
                 'cancel_fee'      => (string) ($pnl->cancel_fee ?? '0'),
             ];
-        })->sortByDesc('bought_volume')->values();
+        })->sortByDesc(fn (array $row) => (float) $row['bought_volume'])->values();
+    }
+
+    private function sumMoney(Collection $rows, string $column): string
+    {
+        return $rows->reduce(
+            fn (string $carry, object $row) => bcadd($carry, (string) ($row->{$column} ?? '0'), 8),
+            '0',
+        );
+    }
+
+    private function sumInt(Collection $rows, string $column): int
+    {
+        return (int) $rows->sum(fn (object $row) => (int) ($row->{$column} ?? 0));
     }
 
     private function streamCsv(string $prefix, array $headings, callable $rows): StreamedResponse

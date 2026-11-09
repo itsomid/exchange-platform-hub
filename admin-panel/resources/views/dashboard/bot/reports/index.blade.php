@@ -503,8 +503,10 @@
                                                 <img src="{{ $row['logo'] }}" alt="" width="20"
                                                     height="20" class="rounded-circle me-1">
                                             @endif
-                                            <strong>{{ $row['symbol'] ?? '—' }}</strong>
-
+                                            <strong>{{ $row['symbol'] ?: '—' }}</strong>
+                                            @if ($row['name'])
+                                                <span class="text-muted small">{{ $row['name'] }}</span>
+                                            @endif
                                         </td>
                                         <td>{{ formatNumberTrimZeros($row['bought_volume']) }}</td>
                                         <td>{{ formatNumberTrimZeros($row['bought_amount']) }}</td>
