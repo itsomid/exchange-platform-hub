@@ -10,15 +10,17 @@ use Tests\TestCase;
 
 class BotReportDateRangeTest extends TestCase
 {
-    public function test_empty_request_is_not_limited_to_a_week(): void
+    public function test_empty_request_covers_the_last_two_weeks(): void
     {
         [$from, $to, $currencyId, $fromInput, $toInput] = $this->filters(Request::create('/admin/auto-trade/reports', 'GET'));
 
-        $this->assertNull($from);
-        $this->assertNull($to);
         $this->assertNull($currencyId);
-        $this->assertSame('', $fromInput);
-        $this->assertSame('', $toInput);
+        $this->assertSame(now()->subDays(13)->toDateString(), $from->toDateString());
+        $this->assertSame('00:00:00', $from->format('H:i:s'));
+        $this->assertSame(now()->toDateString(), $to->toDateString());
+        $this->assertSame('23:59:59', $to->format('H:i:s'));
+        $this->assertSame(Jalalian::fromCarbon($from)->format('Y/m/d'), $fromInput);
+        $this->assertSame(Jalalian::fromCarbon($to)->format('Y/m/d'), $toInput);
     }
 
     public function test_jalali_dates_bound_the_whole_selected_days(): void

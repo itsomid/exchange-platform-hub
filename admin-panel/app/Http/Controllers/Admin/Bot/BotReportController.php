@@ -204,8 +204,8 @@ class BotReportController extends Controller
     }
 
     /**
-     * Empty dates mean the whole history. A filled Jalali day covers that
-     * calendar day from start to end.
+     * With no dates chosen, the report covers the last two weeks. A filled
+     * Jalali day covers that calendar day from start to end.
      *
      * @return array{0: ?Carbon, 1: ?Carbon, 2: ?int, 3: string, 4: string}
      */
@@ -213,6 +213,12 @@ class BotReportController extends Controller
     {
         $from = $this->parseJalaliDay($request->get('from'), true);
         $to = $this->parseJalaliDay($request->get('to'), false);
+
+        if ($from === null && $to === null) {
+            $from = now()->subDays(13)->startOfDay();
+            $to = now()->endOfDay();
+        }
+
         $currencyId = $request->filled('currency_id') ? (int) $request->get('currency_id') : null;
 
         return [
