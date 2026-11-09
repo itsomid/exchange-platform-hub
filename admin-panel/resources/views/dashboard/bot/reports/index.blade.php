@@ -38,12 +38,16 @@
                 <div class="card-body">
                     <form method="GET" class="row g-2 align-items-end">
                         <div class="col-md-3">
-                            <label class="form-label small">از تاریخ</label>
-                            <input type="date" name="from" class="form-control" value="{{ $from }}">
+                            <label class="form-label small" for="from">از تاریخ</label>
+                            <input type="text" name="from" id="from" class="form-control" data-jdp
+                                data-jdp-only-date value="{{ $from }}" autocomplete="off"
+                                placeholder="جهت درج تاریخ کلیک کنید">
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label small">تا تاریخ</label>
-                            <input type="date" name="to" class="form-control" value="{{ $to }}">
+                            <label class="form-label small" for="to">تا تاریخ</label>
+                            <input type="text" name="to" id="to" class="form-control" data-jdp
+                                data-jdp-only-date value="{{ $to }}" autocomplete="off"
+                                placeholder="جهت درج تاریخ کلیک کنید">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label small">ارز</label>
@@ -65,6 +69,12 @@
                                 class="btn btn-outline-secondary ms-1">پاک‌کردن</a>
                         </div>
                     </form>
+                    @if ($defaultWeek)
+                        <p class="text-muted small mb-0 mt-3">
+                            <i class="fas fa-circle-info me-1"></i>
+                            بازه گزارش الان روی یک هفته اخیر تنظیم شده است.
+                        </p>
+                    @endif
                 </div>
             </div>
         </div>
@@ -594,6 +604,7 @@
 @endsection
 
 @section('vendor-script')
+    @vite(['resources/assets/js/jalalidatepicker.js'])
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof bootstrap === 'undefined') return;

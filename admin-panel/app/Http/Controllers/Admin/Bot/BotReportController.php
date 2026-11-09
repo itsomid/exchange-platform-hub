@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Bot;
 
 use App\Enums\TransactionSubTypeEnum;
+use App\Helpers\DateFormatter;
 use App\Http\Controllers\Controller;
 use App\Models\Bot\BotBuyExecution;
 use App\Models\Bot\BotGlobalSettings;
@@ -11,14 +12,16 @@ use App\Models\Bot\BotTradeSettlement;
 use App\Models\Currency;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\View\View;
+use Morilog\Jalali\Jalalian;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class BotReportController extends Controller
 {
     public function index(Request $request): View
     {
-        [$from, $to, $currencyId] = $this->filters($request);
+        [$from, $to, $currencyId, $fromInput, $toInput, $defaultWeek] = $this->filters($request);
 
         $settings = BotGlobalSettings::current();
 
@@ -76,8 +79,8 @@ class BotReportController extends Controller
         // rather than a page-wide total that looks like it belongs to the coin.
         $kpi['transfer_fee'] = $currencyId ? null : (string) Transaction::query()
             ->where('subtype', TransactionSubTypeEnum::BOT_TRANSFER_FEE)
-            ->when($from, fn ($q) => $q->whereDate('created_at', '>=', $from))
-            ->when($to, fn ($q) => $q->whereDate('created_at', '<=', $to))
+            ->where('created_at', '>=', $from)
+            ->where('created_at', '<=', $to)
             ->sum('amount');
 
         // What the platform actually keeps. Exchange and network fees are excluded:
@@ -111,8 +114,11 @@ class BotReportController extends Controller
         $currencies = Currency::orderBy('symbol')->get(['id', 'symbol']);
 
         return view('dashboard.bot.reports.index', compact(
-            'kpi', 'perCoin', 'settlements', 'currencies', 'from', 'to', 'currencyId', 'settings'
-        ));
+            'kpi', 'perCoin', 'settlements', 'currencies', 'currencyId', 'settings', 'defaultWeek'
+        ))->with([
+            'from' => $fromInput,
+            'to' => $toInput,
+        ]);
     }
 
     public function exportOrders(Request $request): StreamedResponse
@@ -120,8 +126,8 @@ class BotReportController extends Controller
         [$from, $to, $currencyId] = $this->filters($request);
 
         $query = BotOrder::query()->with('user')->orderBy('id')
-            ->when($from, fn ($q) => $q->whereDate('created_at', '>=', $from))
-            ->when($to, fn ($q) => $q->whereDate('created_at', '<=', $to))
+            ->where('created_at', '>=', $from)
+            ->where('created_at', '<=', $to)
             ->when($currencyId, fn ($q) => $q->whereHas('buyExecutions', fn ($e) => $e->where('currency_id', $currencyId)));
 
         $headings = ['ID', 'UUID', 'کاربر', 'مبلغ کل (USDT)', 'آلفا', 'وضعیت', 'منشأ', 'تاریخ ایجاد', 'تاریخ تکمیل'];
@@ -222,30 +228,65 @@ class BotReportController extends Controller
     }
 
     /**
-     * @return array{0:?string,1:?string,2:?int}
+     * The page always has a bounded range. An empty request is the last seven
+     * days, so the aggregates never scan the whole history.
+     *
+     * @return array{0: Carbon, 1: Carbon, 2: ?int, 3: string, 4: string, 5: bool}
      */
     private function filters(Request $request): array
     {
-        $from = $request->filled('from') ? $request->get('from') : null;
-        $to   = $request->filled('to') ? $request->get('to') : null;
-        $currencyId = $request->filled('currency_id') ? (int) $request->get('currency_id') : null;
+        $defaultFrom = now()->subDays(6)->startOfDay();
+        $defaultTo = now()->endOfDay();
 
-        return [$from, $to, $currencyId];
+        $from = $this->parseJalaliDay($request->get('from'), true) ?? $defaultFrom;
+        $to = $this->parseJalaliDay($request->get('to'), false) ?? $defaultTo;
+
+        if ($from->greaterThan($to)) {
+            $from = $defaultFrom;
+            $to = $defaultTo;
+        }
+
+        $currencyId = $request->filled('currency_id') ? (int) $request->get('currency_id') : null;
+        $defaultWeek = $from->equalTo($defaultFrom) && $to->equalTo($defaultTo);
+
+        return [
+            $from,
+            $to,
+            $currencyId,
+            Jalalian::fromCarbon($from)->format('Y/m/d'),
+            Jalalian::fromCarbon($to)->format('Y/m/d'),
+            $defaultWeek,
+        ];
     }
 
-    private function settlementQuery(?string $from, ?string $to, ?int $currencyId)
+    private function parseJalaliDay(mixed $value, bool $startOfDay): ?Carbon
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        try {
+            $parsed = Carbon::parse(DateFormatter::convertPersianToCarbonDate(trim($value)));
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return $startOfDay ? $parsed->startOfDay() : $parsed->endOfDay();
+    }
+
+    private function settlementQuery(Carbon $from, Carbon $to, ?int $currencyId)
     {
         return BotTradeSettlement::query()
-            ->when($from, fn ($q) => $q->whereDate('settled_at', '>=', $from))
-            ->when($to, fn ($q) => $q->whereDate('settled_at', '<=', $to))
+            ->where('settled_at', '>=', $from)
+            ->where('settled_at', '<=', $to)
             ->when($currencyId, fn ($q) => $q->whereHas('buyExecution', fn ($e) => $e->where('currency_id', $currencyId)));
     }
 
-    private function executionQuery(?string $from, ?string $to, ?int $currencyId)
+    private function executionQuery(Carbon $from, Carbon $to, ?int $currencyId)
     {
         return BotBuyExecution::query()
-            ->when($from, fn ($q) => $q->whereDate('bot_buy_executions.created_at', '>=', $from))
-            ->when($to, fn ($q) => $q->whereDate('bot_buy_executions.created_at', '<=', $to))
+            ->where('bot_buy_executions.created_at', '>=', $from)
+            ->where('bot_buy_executions.created_at', '<=', $to)
             ->when($currencyId, fn ($q) => $q->where('bot_buy_executions.currency_id', $currencyId));
     }
 
@@ -253,7 +294,7 @@ class BotReportController extends Controller
      * Per-currency breakdown merging buy-execution aggregates (volume, skipped,
      * collapsed) with realized PnL/fees from settlements.
      */
-    private function perCoinBreakdown(?string $from, ?string $to, ?int $currencyId)
+    private function perCoinBreakdown(Carbon $from, Carbon $to, ?int $currencyId)
     {
         $execAgg = $this->executionQuery($from, $to, $currencyId)
             ->select('bot_buy_executions.currency_id')
@@ -272,8 +313,8 @@ class BotReportController extends Controller
             ->selectRaw('SUM(bot_trade_settlements.performance_fee) as performance_fee')
             ->selectRaw('SUM(bot_trade_settlements.cancel_fee) as cancel_fee')
             ->join('bot_buy_executions', 'bot_buy_executions.id', '=', 'bot_trade_settlements.bot_buy_execution_id')
-            ->when($from, fn ($q) => $q->whereDate('bot_trade_settlements.settled_at', '>=', $from))
-            ->when($to, fn ($q) => $q->whereDate('bot_trade_settlements.settled_at', '<=', $to))
+            ->where('bot_trade_settlements.settled_at', '>=', $from)
+            ->where('bot_trade_settlements.settled_at', '<=', $to)
             ->when($currencyId, fn ($q) => $q->where('bot_buy_executions.currency_id', $currencyId))
             ->groupBy('bot_buy_executions.currency_id')
             ->get()
