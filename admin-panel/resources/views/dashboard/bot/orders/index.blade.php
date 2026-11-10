@@ -19,12 +19,8 @@
                         <div class="row g-2 align-items-end">
                             <div class="col-md-3">
                                 <label class="form-label" for="currency_id">کوین</label>
-                                <x-currency-select
-                                    name="currency_id"
-                                    :currencies="$currencies"
-                                    :selected="old('currency_id', request('currency_id'))"
-                                    placeholder="همه کوین‌ها..."
-                                />
+                                <x-currency-select name="currency_id" :currencies="$currencies" :selected="old('currency_id', request('currency_id'))"
+                                    placeholder="همه کوین‌ها..." />
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label" for="user">کاربر</label>
@@ -34,8 +30,7 @@
                                         ? '(#' .
                                             request()->input('user') .
                                             ') ' .
-                                            (\App\Models\User::find(request()->input('user'))?->email ??
-                                                'کاربر #' . request()->input('user'))
+                                            (\App\Models\User::find(request()->input('user'))?->email ?? 'کاربر #' . request()->input('user'))
                                         : '' }}"></x-user-selection-component>
                             </div>
                             <div class="col-md-4">
@@ -48,6 +43,18 @@
                         </div>
                     </form>
 
+                    <div class="border rounded p-3 mb-4 d-flex align-items-center">
+                        <span class="badge bg-label-success rounded p-2 me-3">
+                            <i class="fas fa-wallet fa-lg"></i>
+                        </span>
+                        <div>
+                            <div class="text-muted small">مجموع موجودی آزاد کاربران (USDT)</div>
+                            <div class="h4 mb-0 fw-bold text-success font-number" dir="ltr">
+                                {{ formatNumberTrimZeros($totalFreeBalance, 4) }}
+                            </div>
+                        </div>
+                    </div>
+
                     {{-- Table --}}
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
@@ -55,14 +62,14 @@
                                 <tr>
                                     <th>کاربر</th>
                                     @foreach ([
-                                        'orders_count' => 'تعداد سفارش',
-                                        'invested_balance' => 'مقدار واقعی سرمایه‌گذاری (USDT)',
-                                        'locked_balance' => 'مقدار قفل شده (USDT)',
-                                        'free_balance' => 'موجودی آزاد (USDT)',
-                                        'profit_balance' => 'سود کلی (USDT)',
-                                        'auto_trade' => 'وضعیت ربات',
-                                        'last_order_at' => 'آخرین سفارش',
-                                    ] as $column => $label)
+            'orders_count' => 'تعداد سفارش',
+            'invested_balance' => 'مقدار واقعی سرمایه‌گذاری (USDT)',
+            'locked_balance' => 'مقدار قفل شده (USDT)',
+            'free_balance' => 'موجودی آزاد (USDT)',
+            'profit_balance' => 'سود کلی (USDT)',
+            'auto_trade' => 'وضعیت ربات',
+            'last_order_at' => 'آخرین سفارش',
+        ] as $column => $label)
                                         @php
                                             $isActive = $sort === $column;
                                             $nextDir = $isActive && $dir === 'desc' ? 'asc' : 'desc';
@@ -75,7 +82,8 @@
                                             );
                                         @endphp
                                         <th>
-                                            <a href="{{ $href }}" class="text-body text-nowrap text-decoration-none">
+                                            <a href="{{ $href }}"
+                                                class="text-body text-nowrap text-decoration-none">
                                                 {{ $label }}
                                                 @if ($isActive)
                                                     <i

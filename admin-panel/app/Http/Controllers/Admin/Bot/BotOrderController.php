@@ -20,6 +20,7 @@ use App\Services\Bot\BotAdminApiClient;
 use App\Services\Bot\BotAutoTradeToggleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
@@ -58,6 +59,9 @@ class BotOrderController extends Controller
             ->orderBy('symbol')
             ->get(['id', 'name', 'symbol', 'logo']);
 
+        // Same figure as the free-balance column: unlocked bot-wallet USDT, floored at zero.
+        $freeBalanceSql = 'CASE WHEN (COALESCE(MAX(bot_wallets.balance), 0) - COALESCE(MAX(bot_wallets.locked_balance), 0)) > 0 THEN (COALESCE(MAX(bot_wallets.balance), 0) - COALESCE(MAX(bot_wallets.locked_balance), 0)) ELSE 0 END';
+
         $rows = BotOrder::query()
             ->join('users', 'users.id', '=', 'bot_orders.user_id')
             ->leftJoin('bot_wallets', 'bot_wallets.user_id', '=', 'users.id')
@@ -68,7 +72,7 @@ class BotOrderController extends Controller
             ->selectRaw('MAX(bot_orders.created_at) as last_order_at')
             ->selectRaw('COALESCE(MAX(bot_wallets.locked_balance), 0) as locked_balance')
             ->selectRaw('COALESCE(MAX(bot_wallets.profit_balance), 0) as profit_balance')
-            ->selectRaw('CASE WHEN (COALESCE(MAX(bot_wallets.balance), 0) - COALESCE(MAX(bot_wallets.locked_balance), 0)) > 0 THEN (COALESCE(MAX(bot_wallets.balance), 0) - COALESCE(MAX(bot_wallets.locked_balance), 0)) ELSE 0 END as free_balance')
+            ->selectRaw($freeBalanceSql . ' as free_balance')
             ->selectRaw('COALESCE(MAX(bot_user_settings.auto_trade_enabled), 0) as auto_trade_enabled')
             ->when($currencyId, function ($q) use ($currencyId) {
                 $q->whereIn('users.id', function ($sub) use ($currencyId) {
@@ -85,7 +89,22 @@ class BotOrderController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('dashboard.bot.orders.index', compact('rows', 'sort', 'dir', 'currencies'));
+        // Grand total of the free-balance column: every user with a bot order,
+        // one wallet per user, independent of the current page and search filters.
+        $totalFreeBalance = DB::query()
+            ->fromSub(
+                BotOrder::query()
+                    ->join('users', 'users.id', '=', 'bot_orders.user_id')
+                    ->leftJoin('bot_wallets', 'bot_wallets.user_id', '=', 'users.id')
+                    ->groupBy('users.id')
+                    ->selectRaw('users.id as user_id')
+                    ->selectRaw($freeBalanceSql . ' as free_balance'),
+                'user_free_balances'
+            )
+            ->selectRaw('COALESCE(SUM(free_balance), 0) as total')
+            ->value('total');
+
+        return view('dashboard.bot.orders.index', compact('rows', 'sort', 'dir', 'currencies', 'totalFreeBalance'));
     }
 
     /**
