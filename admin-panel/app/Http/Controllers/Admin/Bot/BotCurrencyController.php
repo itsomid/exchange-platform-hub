@@ -12,6 +12,7 @@ use App\Models\Bot\BotTradeSettlement;
 use App\Models\Currency;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -33,7 +34,7 @@ class BotCurrencyController extends Controller
 
     public function exportExcel(): BinaryFileResponse
     {
-        $filename = 'bot_currencies_' . now()->format('Y-m-d_His') . '.xlsx';
+        $filename = 'bot_currencies_'.now()->format('Y-m-d_His').'.xlsx';
 
         return Excel::download(new BotCurrencyExport($this->buildCurrencyRows()), $filename);
     }
@@ -48,43 +49,12 @@ class BotCurrencyController extends Controller
 
     private function buildCurrencyRows(): Collection
     {
-        $buys = BotBuyExecution::query()
-            ->join('bot_orders', 'bot_orders.id', '=', 'bot_buy_executions.bot_order_id')
-            ->whereIn('bot_buy_executions.status', ['BOUGHT', 'CLOSED'])
-            ->groupBy('bot_buy_executions.currency_id')
-            ->selectRaw('bot_buy_executions.currency_id')
-            ->selectRaw('COUNT(DISTINCT bot_orders.user_id) as users_count')
-            ->selectRaw('COUNT(DISTINCT bot_buy_executions.bot_order_id) as orders_count')
-            ->selectRaw('SUM(bot_buy_executions.allocated_usdt) as total_allocated')
-            ->selectRaw('SUM(bot_buy_executions.filled_amount) as total_bought')
-            ->selectRaw('SUM(bot_buy_executions.filled_amount * bot_buy_executions.avg_buy_price) as total_cost')
-            ->selectRaw('SUM(bot_buy_executions.buy_ref_exchange_fee) as buy_fee')
-            ->get()
-            ->keyBy('currency_id');
-
-        $sells = BotSellOrder::query()
-            ->join('bot_buy_executions', 'bot_buy_executions.id', '=', 'bot_sell_orders.bot_buy_execution_id')
-            ->join('bot_orders', 'bot_orders.id', '=', 'bot_buy_executions.bot_order_id')
-            ->groupBy('bot_buy_executions.currency_id')
-            ->selectRaw('bot_buy_executions.currency_id')
-            ->selectRaw("SUM(CASE WHEN bot_sell_orders.status = 'OPEN' THEN 1 ELSE 0 END) as open_tiers")
-            ->selectRaw("SUM(CASE WHEN bot_sell_orders.status = 'FILLED' THEN 1 ELSE 0 END) as filled_tiers")
-            ->selectRaw("SUM(CASE WHEN bot_sell_orders.status = 'CANCELED' THEN 1 ELSE 0 END) as canceled_tiers")
-            ->selectRaw("SUM(CASE WHEN bot_sell_orders.status = 'OPEN' THEN bot_sell_orders.amount_to_sell ELSE 0 END) as open_amount")
-            ->selectRaw("SUM(CASE WHEN bot_sell_orders.status = 'OPEN' THEN bot_sell_orders.amount_to_sell * bot_buy_executions.avg_buy_price ELSE 0 END) as open_cost")
-            ->selectRaw("COUNT(DISTINCT CASE WHEN bot_sell_orders.status = 'OPEN' THEN bot_orders.user_id END) as open_users")
-            ->selectRaw("COUNT(DISTINCT CASE WHEN bot_sell_orders.status = 'OPEN' THEN bot_orders.id END) as open_orders")
-            ->get()
-            ->keyBy('currency_id');
-
-        $realized = BotTradeSettlement::query()
-            ->join('bot_buy_executions', 'bot_buy_executions.id', '=', 'bot_trade_settlements.bot_buy_execution_id')
-            ->groupBy('bot_buy_executions.currency_id')
-            ->selectRaw('bot_buy_executions.currency_id')
-            ->selectRaw('SUM(bot_trade_settlements.net_pnl) as realized_pnl')
-            ->selectRaw('SUM(bot_trade_settlements.performance_fee) as performance_fee')
-            ->get()
-            ->keyBy('currency_id');
+        // Aggregate each table on its own index first, then join the grouped
+        // rows. Joining every sell tier to bot_buy_executions reads that
+        // table's JSON snapshot once per tier and is what timed the page out.
+        $buys = $this->buyAggregates();
+        $sells = $this->sellAggregates();
+        $realized = $this->realizedAggregates();
 
         $inFlight = BotBuyExecution::query()
             ->whereIn('status', ['PENDING', 'BUYING'])
@@ -147,6 +117,92 @@ class BotCurrencyController extends Controller
                 fn ($a, $b) => $b->total_allocated <=> $a->total_allocated,
             ])
             ->values();
+    }
+
+    private function buyAggregates(): Collection
+    {
+        $money = BotBuyExecution::query()
+            ->whereIn('status', ['BOUGHT', 'CLOSED'])
+            ->groupBy('currency_id')
+            ->selectRaw('currency_id')
+            ->selectRaw('SUM(allocated_usdt) as total_allocated')
+            ->selectRaw('SUM(filled_amount) as total_bought')
+            ->selectRaw('SUM(filled_amount * avg_buy_price) as total_cost')
+            ->selectRaw('SUM(buy_ref_exchange_fee) as buy_fee')
+            ->get()
+            ->keyBy('currency_id');
+
+        $perOrder = BotBuyExecution::query()
+            ->whereIn('status', ['BOUGHT', 'CLOSED'])
+            ->groupBy('currency_id', 'bot_order_id')
+            ->select('currency_id', 'bot_order_id');
+
+        $counts = DB::query()
+            ->fromSub($perOrder, 'bought')
+            ->join('bot_orders', 'bot_orders.id', '=', 'bought.bot_order_id')
+            ->groupBy('bought.currency_id')
+            ->selectRaw('bought.currency_id')
+            ->selectRaw('COUNT(DISTINCT bot_orders.user_id) as users_count')
+            ->selectRaw('COUNT(DISTINCT bought.bot_order_id) as orders_count')
+            ->get()
+            ->keyBy('currency_id');
+
+        return $money->map(function ($row) use ($counts) {
+            $count = $counts->get($row->currency_id);
+            $row->users_count = (int) ($count->users_count ?? 0);
+            $row->orders_count = (int) ($count->orders_count ?? 0);
+
+            return $row;
+        });
+    }
+
+    private function sellAggregates(): Collection
+    {
+        $perExecution = BotSellOrder::query()
+            ->groupBy('bot_buy_execution_id')
+            ->select('bot_buy_execution_id')
+            ->selectRaw("SUM(CASE WHEN status = 'OPEN' THEN 1 ELSE 0 END) as open_tiers")
+            ->selectRaw("SUM(CASE WHEN status = 'FILLED' THEN 1 ELSE 0 END) as filled_tiers")
+            ->selectRaw("SUM(CASE WHEN status = 'CANCELED' THEN 1 ELSE 0 END) as canceled_tiers")
+            ->selectRaw("SUM(CASE WHEN status = 'OPEN' THEN amount_to_sell ELSE 0 END) as open_amount");
+
+        return DB::query()
+            ->fromSub($perExecution, 'sells')
+            ->join('bot_buy_executions', 'bot_buy_executions.id', '=', 'sells.bot_buy_execution_id')
+            ->leftJoin('bot_orders', function ($join) {
+                $join->on('bot_orders.id', '=', 'bot_buy_executions.bot_order_id')
+                    ->where('sells.open_tiers', '>', 0);
+            })
+            ->groupBy('bot_buy_executions.currency_id')
+            ->selectRaw('bot_buy_executions.currency_id')
+            ->selectRaw('SUM(sells.open_tiers) as open_tiers')
+            ->selectRaw('SUM(sells.filled_tiers) as filled_tiers')
+            ->selectRaw('SUM(sells.canceled_tiers) as canceled_tiers')
+            ->selectRaw('SUM(sells.open_amount) as open_amount')
+            ->selectRaw('SUM(sells.open_amount * bot_buy_executions.avg_buy_price) as open_cost')
+            ->selectRaw('COUNT(DISTINCT bot_orders.user_id) as open_users')
+            ->selectRaw('COUNT(DISTINCT bot_orders.id) as open_orders')
+            ->get()
+            ->keyBy('currency_id');
+    }
+
+    private function realizedAggregates(): Collection
+    {
+        $perExecution = BotTradeSettlement::query()
+            ->groupBy('bot_buy_execution_id')
+            ->select('bot_buy_execution_id')
+            ->selectRaw('SUM(net_pnl) as realized_pnl')
+            ->selectRaw('SUM(performance_fee) as performance_fee');
+
+        return DB::query()
+            ->fromSub($perExecution, 'settled')
+            ->join('bot_buy_executions', 'bot_buy_executions.id', '=', 'settled.bot_buy_execution_id')
+            ->groupBy('bot_buy_executions.currency_id')
+            ->selectRaw('bot_buy_executions.currency_id')
+            ->selectRaw('SUM(settled.realized_pnl) as realized_pnl')
+            ->selectRaw('SUM(settled.performance_fee) as performance_fee')
+            ->get()
+            ->keyBy('currency_id');
     }
 
     private function recentCancellations(): Collection

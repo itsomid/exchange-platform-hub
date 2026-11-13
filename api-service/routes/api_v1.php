@@ -9,6 +9,7 @@ use App\Http\Controllers\V1\Stock\StockController;
 use App\Http\Controllers\V1\Market\MarketController;
 use App\Http\Controllers\V1\Market\MarketOverviewController;
 use App\Http\Controllers\V1\Market\MarketSparklineController;
+use App\Http\Controllers\V1\Market\HeroMarketController;
 use App\Http\Middleware\FinancialWithdrawalBlockMiddleware;
 use App\Http\Middleware\FinancialTradeBlockMiddleware;
 
@@ -75,6 +76,7 @@ Route::prefix('/markets')->group(function () {
     Route::get('/top-traded', [MarketController::class, 'topTraded'])->withoutMiddleware(['auth:sanctum', 'verified']);
     Route::get('/state/{marketId}', [MarketController::class, 'getState']);
     Route::get('/home', [\App\Http\Controllers\V1\Market\HomeMarketController::class, 'index'])->withoutMiddleware(['auth:sanctum', 'verified']);
+    Route::get('/hero', HeroMarketController::class)->name('markets.hero')->withoutMiddleware(['auth:sanctum', 'verified']);
     Route::get('/overview', MarketOverviewController::class)->withoutMiddleware(['auth:sanctum', 'verified']);
     Route::get('/sparklines', MarketSparklineController::class)->name('markets.sparklines')->withoutMiddleware(['auth:sanctum', 'verified']);
 });
