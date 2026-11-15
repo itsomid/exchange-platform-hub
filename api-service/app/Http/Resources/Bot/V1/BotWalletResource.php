@@ -16,6 +16,11 @@ class BotWalletResource extends JsonResource
         $allocationUsedPercent = Math::comp($balance, '0') === 1
             ? Math::mul(Math::div($locked, $balance), '100')
             : '0.00000000';
+        // locked can exceed balance when a correction took back profit that was
+        // already reinvested; the user still has at most 100% in use.
+        if (Math::comp($allocationUsedPercent, '100') === 1) {
+            $allocationUsedPercent = '100.00000000';
+        }
 
         return [
             'balance'                => $balance,

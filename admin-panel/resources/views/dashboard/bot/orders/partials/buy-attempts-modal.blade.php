@@ -184,7 +184,7 @@
                 '<div class="small mb-2">' + esc(a.reason_message) + '</div>' +
 
                 '<div class="row g-2 mb-2">' +
-                chip('موجودی آزاد در آن لحظه', fmt(a.free_balance)) +
+                chip('موجودی آزاد در آن لحظه', fmt(Math.max(0, Number(a.free_balance) || 0))) +
                 chip('حداقل لازم', a.gate_amount === null ? '—' : fmt(a.gate_amount), gateNote) +
                 chip('قفل‌شده در آن لحظه', fmt(a.locked_balance)) +
                 chip('مبلغ تخصیص‌یافته', fmt(a.total_allocated)) +

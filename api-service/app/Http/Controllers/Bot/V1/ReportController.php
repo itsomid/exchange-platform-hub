@@ -85,6 +85,10 @@ class ReportController extends Controller
                 '100',
                 2
             );
+            // Same cap as BotWalletResource: locked can exceed balance after a correction.
+            if (bccomp($allocationUsedPercent, '100', 2) === 1) {
+                $allocationUsedPercent = '100.00';
+            }
         }
 
         return response()->json([

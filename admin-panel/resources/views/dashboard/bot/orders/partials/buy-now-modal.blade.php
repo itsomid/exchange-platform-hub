@@ -147,7 +147,7 @@
             return '<div class="row g-2 mb-3">' +
                 statCard('موجودی کیف پول ربات', fmt(w.balance), '') +
                 statCard('قفل‌شده در معامله', fmt(w.locked_balance), 'border-warning') +
-                statCard('آزاد و قابل تخصیص', fmt(w.free_balance), 'border-success') +
+                statCard('آزاد و قابل تخصیص', fmt(Math.max(0, Number(w.free_balance) || 0)), 'border-success') +
                 statCard(gateLabel, fmt(g.amount), 'border-info') +
                 '</div>';
         }

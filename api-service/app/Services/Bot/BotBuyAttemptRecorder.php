@@ -111,7 +111,10 @@ class BotBuyAttemptRecorder
             return 'اجرای خرید با خطای سیستمی متوقف شد: '.$exception->getMessage();
         }
 
-        $free = formatNumberTrimZeros((string) ($describe['wallet']['free_balance'] ?? '0'));
+        // Free balance is negative while open positions hold more than the
+        // wallet (e.g. after a duplicate-profit correction); show it as 0.
+        $freeRaw = (string) ($describe['wallet']['free_balance'] ?? '0');
+        $free    = formatNumberTrimZeros(bccomp($freeRaw, '0', 8) < 0 ? '0' : $freeRaw);
         $gate = formatNumberTrimZeros((string) ($describe['gate']['amount'] ?? '0'));
 
         if ($order !== null) {

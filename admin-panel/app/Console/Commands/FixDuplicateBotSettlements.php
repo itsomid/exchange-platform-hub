@@ -17,8 +17,12 @@ use Illuminate\Support\Facades\Storage;
  *   - its fee transactions (network fee on the user; exchange and
  *     performance fee on the Bitexroom account),
  *   - the performance fee it credited to the Bitexroom USDT wallet,
- *   - with --adjust-wallet, the net P/L it added to the user's bot wallet
- *     (balance -= net_pnl, profit_balance -= positive net_pnl).
+ *   - the positive P/L it added to the bot wallet's profit_balance (a
+ *     statistic shown in the admin panel — always corrected),
+ *   - with --adjust-wallet, the net P/L it added to the bot wallet balance.
+ *
+ * Fee transactions already exported to accounting (journal_entry_number set)
+ * are never deleted: the user is skipped and reported instead.
  *
  * The first settlement of every tier (lowest id) is kept. Each user is fixed
  * in its own DB transaction. Without --execute everything is rolled back, so
@@ -28,7 +32,7 @@ class FixDuplicateBotSettlements extends Command
 {
     protected $signature = 'bot:fix-duplicate-settlements
         {--user=* : User id(s) to fix (required)}
-        {--adjust-wallet : Also take the duplicated P/L back from the user\'s bot wallet}
+        {--adjust-wallet : Also take the duplicated net P/L back from the bot wallet balance}
         {--execute : Commit the changes (default: dry-run that is rolled back)}';
 
     protected $description = 'Delete duplicate settlements of a bot sell tier and undo their wallet / fee effects';
@@ -145,6 +149,14 @@ class FixDuplicateBotSettlements extends Command
         [$txnIds, $missing] = $this->matchFeeTransactions($duplicates, $userId, $exchangeUserId);
         $allTxnIds = array_merge(...array_values($txnIds));
 
+        $exported = $allTxnIds === [] ? 0 : DB::table('transactions')
+            ->whereIn('id', $allTxnIds)
+            ->whereNotNull('journal_entry_number')
+            ->count();
+        if ($exported > 0) {
+            throw new \RuntimeException("{$exported} of its duplicate fee transactions are already in accounting (journal_entry_number set); they need reversal entries, not deletion");
+        }
+
         $report['backup_data'] = [
             'settlements'  => $duplicates->all(),
             'transactions' => $allTxnIds === [] ? [] : DB::table('transactions')->whereIn('id', $allTxnIds)->orderBy('id')->get()->all(),
@@ -171,26 +183,25 @@ class FixDuplicateBotSettlements extends Command
             $report['exchange_wallet'] = [$this->num($exchangeWallet->balance), $exchangeAfter];
         }
 
-        if ($adjust) {
-            $botWallet = DB::table('bot_wallets')->where('user_id', $userId)->lockForUpdate()->first();
-            if (! $botWallet) {
-                throw new \RuntimeException('bot wallet not found');
-            }
-            $balanceAfter = bcsub($this->num($botWallet->balance), $netTotal, self::SCALE);
-            $profitAfter  = bcsub($this->num($botWallet->profit_balance), $posTotal, self::SCALE);
-            DB::table('bot_wallets')->where('id', $botWallet->id)->update([
-                'balance'        => $balanceAfter,
-                'profit_balance' => $profitAfter,
-                'updated_at'     => now(),
-            ]);
-
-            $report['bot_wallet'] = [
-                'balance'        => [$this->num($botWallet->balance), $balanceAfter],
-                'profit_balance' => [$this->num($botWallet->profit_balance), $profitAfter],
-                'locked_balance' => $this->num($botWallet->locked_balance),
-                'free_after'     => bcsub($balanceAfter, $this->num($botWallet->locked_balance), self::SCALE),
-            ];
+        $botWallet = DB::table('bot_wallets')->where('user_id', $userId)->lockForUpdate()->first();
+        if (! $botWallet) {
+            throw new \RuntimeException('bot wallet not found');
         }
+        $balanceBefore = $this->num($botWallet->balance);
+        $balanceAfter  = $adjust ? bcsub($balanceBefore, $netTotal, self::SCALE) : $balanceBefore;
+        $profitAfter   = bcsub($this->num($botWallet->profit_balance), $posTotal, self::SCALE);
+        DB::table('bot_wallets')->where('id', $botWallet->id)->update([
+            'balance'        => $balanceAfter,
+            'profit_balance' => $profitAfter,
+            'updated_at'     => now(),
+        ]);
+
+        $report['bot_wallet'] = [
+            'balance'        => [$balanceBefore, $balanceAfter],
+            'profit_balance' => [$this->num($botWallet->profit_balance), $profitAfter],
+            'locked_balance' => $this->num($botWallet->locked_balance),
+            'free_after'     => bcsub($balanceAfter, $this->num($botWallet->locked_balance), self::SCALE),
+        ];
 
         $left = DB::table('bot_trade_settlements')
             ->where('user_id', $userId)
@@ -322,18 +333,16 @@ class FixDuplicateBotSettlements extends Command
         if (isset($r['exchange_wallet'])) {
             $rows[] = ['Bitexroom USDT wallet', "{$r['exchange_wallet'][0]} → {$r['exchange_wallet'][1]}"];
         }
-        if ($adjust) {
-            $w      = $r['bot_wallet'];
-            $rows[] = ['Bot wallet balance', "{$w['balance'][0]} → {$w['balance'][1]}"];
-            $rows[] = ['Bot wallet profit_balance', "{$w['profit_balance'][0]} → {$w['profit_balance'][1]}"];
-            $rows[] = ['Bot wallet locked_balance (unchanged)', $w['locked_balance']];
-            $rows[] = ['Bot wallet free balance after', $w['free_after']];
-        } else {
-            $rows[] = ['Bot wallet', 'NOT adjusted (no --adjust-wallet)'];
-        }
+        $w      = $r['bot_wallet'];
+        $rows[] = ['Bot wallet profit_balance', "{$w['profit_balance'][0]} → {$w['profit_balance'][1]}"];
+        $rows[] = ['Bot wallet balance', $adjust
+            ? "{$w['balance'][0]} → {$w['balance'][1]}"
+            : "{$w['balance'][0]} (NOT adjusted — no --adjust-wallet)"];
+        $rows[] = ['Bot wallet locked_balance (unchanged)', $w['locked_balance']];
+        $rows[] = ['Bot wallet free balance after', $w['free_after']];
         $this->table(['', ''], $rows);
 
-        if ($adjust && bccomp($r['bot_wallet']['free_after'], '0', self::SCALE) < 0) {
+        if (bccomp($r['bot_wallet']['free_after'], '0', self::SCALE) < 0) {
             $this->warn('  Free balance is negative: open positions hold more than the user\'s real balance. '
                 .'Transfers out and new buys stay blocked until enough positions close.');
         }
