@@ -502,12 +502,28 @@
                                                             'CANCELED' => 'bg-danger',
                                                             default => 'bg-secondary',
                                                         };
-                                                        $targetPrice = $execution->avg_buy_price
-                                                            ? (float) $execution->avg_buy_price +
-                                                                ((float) $sell->target_value / 100) *
-                                                                    (float) $execution->avg_buy_price
-                                                            : null;
+                                                        $targetPrice = \App\Services\Bot\BotSettlementQuote::targetPrice(
+                                                            (string) $sell->target_type,
+                                                            (string) $sell->target_value,
+                                                            $execution->avg_buy_price !== null
+                                                                ? (string) $execution->avg_buy_price
+                                                                : null,
+                                                        );
                                                         $hasSettlement = $sell->settlement !== null;
+                                                        // Cancel books gross_revenue against amount_to_sell and
+                                                        // does not store the fill price. Only reconstruct it there.
+                                                        $quote = null;
+                                                        if ($hasSettlement && $sell->status === 'CANCELED') {
+                                                            $quote = \App\Services\Bot\BotSettlementQuote::fromAmounts(
+                                                                (string) $sell->settlement->gross_revenue,
+                                                                (string) $sell->amount_to_sell,
+                                                                $execution->avg_buy_price !== null
+                                                                    ? (string) $execution->avg_buy_price
+                                                                    : null,
+                                                                (string) $sell->target_type,
+                                                                (string) $sell->target_value,
+                                                            );
+                                                        }
                                                         $distancePct = null;
                                                         $distanceAmount = null;
                                                         if (
@@ -553,7 +569,42 @@
                                                                 <span class="badge bg-success"><i
                                                                         class="fas fa-check me-1"></i>تکمیل شد</span>
                                                             @elseif ($sell->status === 'CANCELED')
-                                                                <span class="text-muted">—</span>
+                                                                @if ($quote)
+                                                                    <div class="d-inline-flex flex-column align-items-center gap-1">
+                                                                        <div>
+                                                                            <span class="font-number fw-semibold" title="قیمتی که سود/زیان این تسویه با آن حساب شده">{{ formatNumberTrimZeros($quote['fill_price']) }}</span>
+                                                                            <small class="text-muted d-block" style="font-size:.65rem">قیمت تسویه</small>
+                                                                        </div>
+                                                                        @if ($quote['distance_amount'] !== null)
+                                                                            @php $gap = (float) $quote['distance_amount']; @endphp
+                                                                            @if ($gap > 0)
+                                                                                <div class="d-inline-flex align-items-center gap-2 px-2 py-1 rounded"
+                                                                                    style="background:rgba(255,159,67,.08); border:1px solid rgba(255,159,67,.28)">
+                                                                                    <span class="font-number fw-bold text-warning" style="font-size:.88rem; line-height:1.2; white-space:nowrap">
+                                                                                        {{ formatNumberTrimZeros($gap, 8) }}
+                                                                                        <small class="fw-normal text-muted" style="font-size:.7rem">USDT</small>
+                                                                                    </span>
+                                                                                    <span class="badge rounded-pill bg-warning text-dark font-number" style="font-size:.68rem">{{ formatNumberTrimZeros((float) $quote['distance_pct'], 2) }}٪</span>
+                                                                                    <span class="small fw-semibold text-warning" style="font-size:.72rem; white-space:nowrap">تا هدف</span>
+                                                                                </div>
+                                                                            @elseif ($gap < 0)
+                                                                                <div class="d-inline-flex align-items-center gap-2 px-2 py-1 rounded"
+                                                                                    style="background:rgba(40,199,111,.08); border:1px solid rgba(40,199,111,.28)">
+                                                                                    <span class="font-number fw-bold text-success" style="font-size:.88rem; line-height:1.2; white-space:nowrap">
+                                                                                        {{ formatNumberTrimZeros(abs($gap), 8) }}
+                                                                                        <small class="fw-normal text-muted" style="font-size:.7rem">USDT</small>
+                                                                                    </span>
+                                                                                    <span class="badge rounded-pill bg-success font-number" style="font-size:.68rem">{{ formatNumberTrimZeros(abs((float) $quote['distance_pct']), 2) }}٪</span>
+                                                                                    <span class="small fw-semibold text-success" style="font-size:.72rem; white-space:nowrap">بالاتر از هدف</span>
+                                                                                </div>
+                                                                            @else
+                                                                                <span class="badge bg-success">روی هدف</span>
+                                                                            @endif
+                                                                        @endif
+                                                                    </div>
+                                                                @else
+                                                                    <span class="text-muted">—</span>
+                                                                @endif
                                                             @elseif ($distancePct !== null)
                                                                 @if ($distancePct > 0)
                                                                     <div class="d-inline-flex align-items-center gap-2 px-2 py-1 rounded"
@@ -677,6 +728,9 @@
                                                                             title="bot_trade_settlements.id">#{{ $sell->settlement->id }}</code>
                                                                     </small>
                                                                 </div>
+                                                                @if ($quote)
+                                                                    @include('dashboard.bot.orders.partials.settlement-quote', ['quote' => $quote])
+                                                                @endif
                                                                 <div class="row g-2 text-center">
                                                                     <div class="col-6 col-md-3">
                                                                         <div class="p-2 rounded border bg-white">
@@ -924,9 +978,8 @@
                                 </div>
                             </div>
                             <div class="col-md-3">
-                                <div class="p-2 border rounded text-center"><small class="text-muted d-block">کارمزد
-                                        عملکرد
-                                        (۲۲٪)</small><strong
+                                <div class="p-2 border rounded text-center">                                        <small class="text-muted d-block">کارمزد
+                                        عملکرد</small><strong
                                         class="text-warning">{{ formatNumberTrimZeros($sumPerf) }}</strong>
                                 </div>
                             </div>
@@ -963,6 +1016,8 @@
                                         <th>زمان</th>
                                         <th>کوین</th>
                                         <th>وضعیت sell</th>
+                                        <th>قیمت تسویه</th>
+                                        <th>فاصله تا هدف</th>
                                         <th>gross_revenue</th>
                                         <th>cost_basis</th>
                                         <th>network_fee</th>
@@ -1019,6 +1074,37 @@
                                                     )
                                                 @else
                                                     <span class="badge {{ $stBadge }}">{{ $st ?? '—' }}</span>
+                                                @endif
+                                            </td>
+                                            @php
+                                                $rowQuote = null;
+                                                if ($st === 'CANCELED' && $s->sellOrder && $s->buyExecution) {
+                                                    $rowQuote = \App\Services\Bot\BotSettlementQuote::fromAmounts(
+                                                        (string) $s->gross_revenue,
+                                                        (string) $s->sellOrder->amount_to_sell,
+                                                        $s->buyExecution->avg_buy_price !== null
+                                                            ? (string) $s->buyExecution->avg_buy_price
+                                                            : null,
+                                                        (string) $s->sellOrder->target_type,
+                                                        (string) $s->sellOrder->target_value,
+                                                    );
+                                                }
+                                            @endphp
+                                            <td class="font-number">
+                                                {{ $rowQuote ? formatNumberTrimZeros($rowQuote['fill_price']) : '—' }}
+                                            </td>
+                                            <td class="font-number">
+                                                @if ($rowQuote && $rowQuote['distance_amount'] !== null)
+                                                    @php $rowGap = (float) $rowQuote['distance_amount']; @endphp
+                                                    <span class="{{ $rowGap > 0 ? 'text-warning' : 'text-success' }}">
+                                                        {{ formatNumberTrimZeros(abs($rowGap)) }}
+                                                    </span>
+                                                    <small class="text-muted d-block">
+                                                        {{ formatNumberTrimZeros(abs((float) $rowQuote['distance_pct']), 2) }}٪
+                                                        {{ $rowGap > 0 ? 'پایین‌تر' : ($rowGap < 0 ? 'بالاتر' : 'روی هدف') }}
+                                                    </small>
+                                                @else
+                                                    —
                                                 @endif
                                             </td>
                                             <td>{{ formatNumberTrimZeros($s->gross_revenue) }}</td>
