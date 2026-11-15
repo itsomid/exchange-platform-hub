@@ -4,6 +4,7 @@ namespace App\Listeners\Bot;
 
 use App\Actions\Bot\BotBuyOrchestrator;
 use App\Events\Bot\BotSellOrderFilled;
+use App\Exceptions\Bot\SellOrderNotOpenException;
 use App\Models\Bot\BotSellOrder;
 use App\Services\Bot\SettlementService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -32,6 +33,15 @@ class HandleBotSellOrderFilled implements ShouldQueue
                 $event->networkFee,
                 $event->exchangeFee,
             );
+        } catch (SellOrderNotOpenException $e) {
+            // Another path (a cancel, or a duplicate fill event) settled this
+            // tier first — nothing left to settle or reinvest.
+            Log::info('bot.settlement.skipped_not_open', [
+                'sell_order_id' => $e->sellOrderId,
+                'status'        => $e->status,
+            ]);
+
+            return;
         } catch (\Throwable $e) {
             Log::error('bot.settlement.failed', [
                 'sell_order_id' => $event->sellOrder->id,

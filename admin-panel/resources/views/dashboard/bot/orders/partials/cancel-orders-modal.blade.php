@@ -335,8 +335,28 @@
             confirmBtn.disabled = blocked || (activeMode === 'single' && !orders.length);
         }
 
+        // Set once a cancel request ended without a definite answer (timeout /
+        // network error / 5xx). Until the page is reloaded no new cancel can be
+        // sent, so an admin retry cannot start a second run next to the first.
+        var cancelOutcomeUnknown = false;
+        var outcomeUnknownMessage =
+            'پاسخ نهایی سرور برای درخواست لغو دریافت نشد؛ ممکن است عملیات لغو هنوز در حال اجرا باشد. ' +
+            'دوباره تلاش نکنید — چند دقیقه صبر کنید و صفحه را بارگذاری مجدد کنید تا نتیجه را ببینید.';
+
+        function markCancelOutcomeUnknown() {
+            cancelOutcomeUnknown = true;
+            toast(outcomeUnknownMessage, false);
+            renderError(outcomeUnknownMessage);
+        }
+
         document.querySelectorAll('.js-bot-cancel').forEach(function(btn) {
             btn.addEventListener('click', function() {
+                if (cancelOutcomeUnknown) {
+                    titleEl.textContent = btn.dataset.title || 'لغو سفارش';
+                    renderError(outcomeUnknownMessage);
+                    modal.show();
+                    return;
+                }
                 activeCancelUrl = btn.dataset.cancelUrl;
                 activeMode = btn.dataset.mode || 'single';
                 titleEl.textContent = btn.dataset.title || 'لغو سفارش';
@@ -374,6 +394,12 @@
 
             post(activeCancelUrl)
                 .then(function(res) {
+                    // 5xx (e.g. a 504 gateway timeout) does not mean the cancel
+                    // stopped — the api-service may still be running it.
+                    if (res.status >= 500) {
+                        markCancelOutcomeUnknown();
+                        return;
+                    }
                     if (!res.ok || res.data.ok === false) {
                         toast(res.data.error || 'خطا در لغو سفارش.', false);
                         renderError(res.data.error || 'خطا در لغو سفارش.');
@@ -387,8 +413,7 @@
                 })
                 .catch(function(err) {
                     console.error('[bot-cancel] confirm network/parse error', err);
-                    toast('ارتباط با سرور برقرار نشد: ' +
-                        (err && err.message ? err.message : String(err)), false);
+                    markCancelOutcomeUnknown();
                 })
                 .finally(function() {
                     confirmBtn.innerHTML = '<i class="fas fa-ban me-1"></i> تایید و لغو';

@@ -14,6 +14,7 @@ use App\Services\Bot\BotBuyAttemptRecorder;
 use App\Services\Bot\BotOrderCancelService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -37,6 +38,9 @@ use Illuminate\Support\Facades\Log;
 class BotAdminController extends Controller
 {
     private const SCALE = 8;
+
+    /** Longer than the slowest cancel-all seen (~3 min); a crashed run frees it after this. */
+    private const CANCEL_LOCK_SECONDS = 900;
 
     public function __construct(
         private readonly BotOrderCancelService $cancelService,
@@ -118,6 +122,11 @@ class BotAdminController extends Controller
             return response()->json(['ok' => false, 'error' => 'سفارش یافت نشد.'], 404);
         }
 
+        return $this->withCancelLock($order->user_id, fn () => $this->runCancel($order->refresh()));
+    }
+
+    private function runCancel(BotOrder $order): JsonResponse
+    {
         if ($order->status === 'CANCELED') {
             return response()->json(['ok' => false, 'error' => 'این سفارش قبلاً لغو شده است.'], 422);
         }
@@ -234,6 +243,34 @@ class BotAdminController extends Controller
             return response()->json(['ok' => false, 'error' => 'کاربر یافت نشد.'], 404);
         }
 
+        return $this->withCancelLock($userId, fn () => $this->runCancelAll($request, $userId));
+    }
+
+    /**
+     * One admin cancel at a time per user. A retry after a gateway timeout
+     * used to start a second cancel-all next to the still-running first one,
+     * and both settled (and market-sold) the same tiers.
+     */
+    private function withCancelLock(int $userId, \Closure $callback): JsonResponse
+    {
+        $lock = Cache::lock("bot:admin-cancel:user:{$userId}", self::CANCEL_LOCK_SECONDS);
+
+        if (! $lock->get()) {
+            return response()->json([
+                'ok'    => false,
+                'error' => 'یک عملیات لغو برای این کاربر هنوز در حال اجراست. چند دقیقه صبر کنید و صفحه را دوباره بارگذاری کنید.',
+            ], 409);
+        }
+
+        try {
+            return $callback();
+        } finally {
+            $lock->release();
+        }
+    }
+
+    private function runCancelAll(Request $request, int $userId): JsonResponse
+    {
         $orders = $this->cancelableOrders($userId);
 
         if ($blocked = $this->denyIfInFlight($orders->all())) {
