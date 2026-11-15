@@ -5,6 +5,7 @@ namespace App\Services\Bot;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionSubTypeEnum;
 use App\Enums\TransactionTypeEnum;
+use App\Exceptions\Bot\SellOrderNotOpenException;
 use App\Models\Bot\BotBuyExecution;
 use App\Models\Bot\BotGlobalSettings;
 use App\Models\Bot\BotSellOrder;
@@ -29,6 +30,42 @@ use Illuminate\Support\Facades\DB;
 class SettlementService
 {
     private const SCALE = 8;
+
+    /**
+     * Persist the price that gross_revenue was multiplied from.
+     * Rows settled before the column existed stay null and are reconstructed.
+     */
+    private function storedFillPrice(string $fillPrice): string
+    {
+        $price = trim($fillPrice);
+        if ($price === '' || ! is_numeric($price)) {
+            return '0';
+        }
+        if (stripos($price, 'e') !== false) {
+            $price = number_format((float) $price, self::SCALE, '.', '');
+        }
+
+        return bcadd($price, '0', self::SCALE);
+    }
+
+    /**
+     * Lock the tier row and refuse to settle it unless it is still OPEN.
+     *
+     * Must be a locking read: under REPEATABLE READ a plain refresh() returns
+     * the transaction's snapshot, in which a tier already settled by a
+     * concurrent transaction can still look OPEN — that is how parallel admin
+     * cancel-all runs settled the same tier two or three times.
+     */
+    private function lockOpenSellOrder(BotSellOrder $sellOrder): void
+    {
+        $locked = BotSellOrder::whereKey($sellOrder->id)->lockForUpdate()->firstOrFail();
+
+        if ($locked->status !== BotSellOrder::STATUS_OPEN) {
+            throw new SellOrderNotOpenException($sellOrder->id, (string) $locked->status);
+        }
+
+        $sellOrder->setRawAttributes($locked->getAttributes(), true);
+    }
 
     /**
      * Allocate this execution's buy-side exchange fee to the settled amount
@@ -93,7 +130,7 @@ class SettlementService
         string $sellRefExchangeFee = '0',
     ): BotTradeSettlement {
         return DB::transaction(function () use ($sellOrder, $filledAmount, $fillPrice, $networkFee, $sellRefExchangeFee) {
-            $sellOrder->refresh();
+            $this->lockOpenSellOrder($sellOrder);
             $execution = $sellOrder->botBuyExecution()->lockForUpdate()->firstOrFail();
             $userId    = $execution->botOrder->user_id;
 
@@ -122,6 +159,7 @@ class SettlementService
                 'bot_buy_execution_id' => $execution->id,
                 'bot_sell_order_id'    => $sellOrder->id,
                 'gross_revenue'        => $grossRevenue,
+                'fill_price'           => $this->storedFillPrice($fillPrice),
                 'cost_basis'           => $costBasis,
                 'network_fee'          => $networkFee,
                 'exchange_fee'         => $effectiveExchangeFee,
@@ -156,7 +194,7 @@ class SettlementService
         string $cancelReason = BotSellOrder::CANCEL_USER,
     ): BotTradeSettlement {
         return DB::transaction(function () use ($sellOrder, $cancelFee, $cancelReason) {
-            $sellOrder->refresh();
+            $this->lockOpenSellOrder($sellOrder);
             $execution = $sellOrder->botBuyExecution()->lockForUpdate()->firstOrFail();
             $userId    = $execution->botOrder->user_id;
 
@@ -219,7 +257,7 @@ class SettlementService
         string $cancelReason,
     ): BotTradeSettlement {
         return DB::transaction(function () use ($sellOrder, $filledAmount, $fillPrice, $networkFee, $sellRefExchangeFee, $perfFeePercent, $cancelReason) {
-            $sellOrder->refresh();
+            $this->lockOpenSellOrder($sellOrder);
             $execution = $sellOrder->botBuyExecution()->lockForUpdate()->firstOrFail();
             $userId    = $execution->botOrder->user_id;
 
@@ -245,6 +283,7 @@ class SettlementService
                 'bot_buy_execution_id' => $execution->id,
                 'bot_sell_order_id'    => $sellOrder->id,
                 'gross_revenue'        => $grossRevenue,
+                'fill_price'           => $this->storedFillPrice($fillPrice),
                 'cost_basis'           => $costBasis,
                 'network_fee'          => $networkFee,
                 'exchange_fee'         => $effectiveExchangeFee,

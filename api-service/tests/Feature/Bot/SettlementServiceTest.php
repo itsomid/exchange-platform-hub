@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\TransactionSubTypeEnum;
+use App\Exceptions\Bot\SellOrderNotOpenException;
 use App\Models\Bot\BotBuyExecution;
 use App\Models\Bot\BotOrder;
 use App\Models\Bot\BotSellOrder;
@@ -93,6 +94,7 @@ it('settles a profitable fill — performance fee applied, profit_balance increa
     $settlement = $svc->settleFill($sell, '10', '120');
 
     expect((float) $settlement->gross_revenue)->toBe(1200.0);
+    expect((string) $settlement->fill_price)->toBe('120.00000000');
     expect((float) $settlement->cost_basis)->toBe(1000.0);
     expect((float) $settlement->performance_fee)->toBe(44.0);
     expect((float) $settlement->net_pnl)->toBe(156.0);
@@ -179,4 +181,26 @@ it('settles a cancel with cancel_fee and returns principal minus fee', function 
 
     expect($sell->fresh()->status)->toBe(BotSellOrder::STATUS_CANCELED);
     expect($sell->fresh()->cancel_reason)->toBe(BotSellOrder::CANCEL_USER);
+});
+
+it('refuses to settle a tier another run already settled, even from a stale OPEN copy', function () {
+    // Mirrors the parallel admin cancel-all race: the caller still holds the
+    // tier as OPEN, but a concurrent run has already settled it.
+    $sell = makeOpenSellOrder('10', '100', '1000', '1000');
+    BotSellOrder::whereKey($sell->id)->update(['status' => BotSellOrder::STATUS_CANCELED]);
+    expect($sell->status)->toBe(BotSellOrder::STATUS_OPEN);
+
+    $svc = app(SettlementService::class);
+
+    expect(fn () => $svc->settleCancelMarketSell($sell, '10', '120', '0', '0', '50', BotSellOrder::CANCEL_ADMIN))
+        ->toThrow(SellOrderNotOpenException::class);
+    expect(fn () => $svc->settleFill($sell, '10', '120'))
+        ->toThrow(SellOrderNotOpenException::class);
+    expect(fn () => $svc->settleCancel($sell, '1'))
+        ->toThrow(SellOrderNotOpenException::class);
+
+    expect(BotTradeSettlement::count())->toBe(0);
+    $wallet = BotWallet::first();
+    expect((float) $wallet->balance)->toBe(1000.0);
+    expect((float) $wallet->locked_balance)->toBe(1000.0);
 });

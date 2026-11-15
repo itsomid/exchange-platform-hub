@@ -16,6 +16,7 @@ class BotTradeSettlement extends Model
         'bot_buy_execution_id',
         'bot_sell_order_id',
         'gross_revenue',
+        'fill_price',
         'cost_basis',
         'network_fee',
         'exchange_fee',
@@ -31,6 +32,7 @@ class BotTradeSettlement extends Model
     {
         return [
             'gross_revenue'   => 'decimal:8',
+            'fill_price'      => 'decimal:8',
             'cost_basis'      => 'decimal:8',
             'network_fee'     => 'decimal:8',
             'exchange_fee'    => 'decimal:8',

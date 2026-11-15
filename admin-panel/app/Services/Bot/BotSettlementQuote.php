@@ -3,13 +3,11 @@
 namespace App\Services\Bot;
 
 /**
- * Reconstructs the price a settlement was booked at.
+ * Sell price and distance to target for a settlement.
  *
- * bot_trade_settlements stores gross_revenue = amount * fill_price, truncated
- * to 8 decimals, and does not store the price itself. Dividing gross revenue
- * by the sell amount and rounding back to 8 decimals recovers that price.
- * Cancel always books amount_to_sell; do not use this for a partial fill
- * whose filled amount differs from amount_to_sell.
+ * New rows store fill_price. Older rows leave it null, so the price is
+ * recovered from gross_revenue / amount_to_sell. That recovery is only valid
+ * when the settled amount is amount_to_sell, which is how cancels are booked.
  */
 final class BotSettlementQuote
 {
@@ -52,20 +50,26 @@ final class BotSettlementQuote
         ?string $avgBuyPrice,
         ?string $targetType,
         ?string $targetValue,
+        ?string $knownFillPrice = null,
     ): ?array {
-        $gross = self::num($grossRevenue);
-        $amount = self::num($amountToSell);
-        if (
-            $gross === null || $amount === null
-            || bccomp($gross, '0', self::SCALE) <= 0
-            || bccomp($amount, '0', self::SCALE) <= 0
-        ) {
-            return null;
-        }
+        $stored = self::num($knownFillPrice);
+        if ($stored !== null && bccomp($stored, '0', self::SCALE) > 0) {
+            $fill = self::round($stored, self::SCALE);
+        } else {
+            $gross = self::num($grossRevenue);
+            $amount = self::num($amountToSell);
+            if (
+                $gross === null || $amount === null
+                || bccomp($gross, '0', self::SCALE) <= 0
+                || bccomp($amount, '0', self::SCALE) <= 0
+            ) {
+                return null;
+            }
 
-        $fill = self::round(bcdiv($gross, $amount, 16), self::SCALE);
-        if (bccomp($fill, '0', self::SCALE) <= 0) {
-            return null;
+            $fill = self::round(bcdiv($gross, $amount, 16), self::SCALE);
+            if (bccomp($fill, '0', self::SCALE) <= 0) {
+                return null;
+            }
         }
 
         $avg = self::num($avgBuyPrice);

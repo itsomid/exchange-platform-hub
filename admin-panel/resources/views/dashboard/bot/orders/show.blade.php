@@ -510,8 +510,6 @@
                                                                 : null,
                                                         );
                                                         $hasSettlement = $sell->settlement !== null;
-                                                        // Cancel books gross_revenue against amount_to_sell and
-                                                        // does not store the fill price. Only reconstruct it there.
                                                         $quote = null;
                                                         if ($hasSettlement && $sell->status === 'CANCELED') {
                                                             $quote = \App\Services\Bot\BotSettlementQuote::fromAmounts(
@@ -522,6 +520,9 @@
                                                                     : null,
                                                                 (string) $sell->target_type,
                                                                 (string) $sell->target_value,
+                                                                $sell->settlement->fill_price !== null
+                                                                    ? (string) $sell->settlement->fill_price
+                                                                    : null,
                                                             );
                                                         }
                                                         $distancePct = null;
@@ -1087,6 +1088,7 @@
                                                             : null,
                                                         (string) $s->sellOrder->target_type,
                                                         (string) $s->sellOrder->target_value,
+                                                        $s->fill_price !== null ? (string) $s->fill_price : null,
                                                     );
                                                 }
                                             @endphp
