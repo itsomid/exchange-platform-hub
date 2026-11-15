@@ -779,6 +779,11 @@ class BotSellMigrationService
                     'sold_amount'       => $this->num($res->filledAmount),
                     'exchange_fee'      => $this->num($res->exchangeFee),
                 ];
+                // exchangeFee is reported in quote (USDT) terms.
+                $this->settlement->recordAggregatedSellFee(
+                    $this->num($res->exchangeFee),
+                    "Exchange fee USDT paid for bot sell migration #{$migrationId} close market sell",
+                );
             } elseif ($res) {
                 $close['sell_error'] = trim(($res->errorCode ?? '').' '.($res->errorMessage ?? '')) ?: 'market sell not filled';
             }

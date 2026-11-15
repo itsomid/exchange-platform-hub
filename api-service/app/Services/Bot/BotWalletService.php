@@ -41,10 +41,16 @@ class BotWalletService
         $netAmount = Math::sub($grossAmount, $fee);
 
         DB::transaction(function () use ($user, $grossAmount, $fee, $netAmount) {
+            // Lock order bot → main → exchange wallet, same as settlement (bot →
+            // exchange), so a transfer racing a settlement can neither lose the
+            // other's bot-wallet update nor deadlock against it.
+            $this->getOrCreateBotWallet($user);
+            $botWallet = $this->getBotWalletWithLock($user);
+
             $userWallet = $this->getUserUsdtWallet($user);
             $this->assertSufficientMainBalance($userWallet, $grossAmount);
 
-            $exchangeWallet = $this->walletRepository->getExchangeWallet('USDT');
+            $exchangeWallet = $this->walletRepository->getExchangeWalletWithLock('USDT');
 
             $userBalanceBefore = $userWallet->balance;
             $exchangeBalanceBefore = $exchangeWallet->balance;
@@ -55,7 +61,6 @@ class BotWalletService
             $exchangeWallet->increment('balance', $fee);
 
             // Credit bot wallet net of transfer fee (principal_balance/profit_balance are D1 placeholders)
-            $botWallet = $this->getOrCreateBotWallet($user);
             $botWallet->update([
                 'balance' => Math::add((string) $botWallet->balance, $netAmount),
             ]);
@@ -76,7 +81,7 @@ class BotWalletService
                 'user_id'    => $user->id,
                 'wallet_id'  => $userWallet->id,
                 'bot_wallet_transfer_id' => $transfer->id,
-                'amount'     => -$grossAmount,
+                'amount'     => Math::sub('0', $grossAmount),
                 'balance'    => $userBalanceBefore,
                 'coin_price' => '1',
                 'type'       => TransactionTypeEnum::BOT,
@@ -119,7 +124,7 @@ class BotWalletService
             $this->assertSufficientBotBalance($botWallet, $grossAmount);
 
             $userWallet = $this->getUserUsdtWallet($user);
-            $exchangeWallet = $this->walletRepository->getExchangeWallet('USDT');
+            $exchangeWallet = $this->walletRepository->getExchangeWalletWithLock('USDT');
 
             $userBalanceBefore = $userWallet->balance;
             $exchangeBalanceBefore = $exchangeWallet->balance;
@@ -203,8 +208,11 @@ class BotWalletService
 
     private function getUserUsdtWallet(User $user): Wallet
     {
+        // Locked: the balance check and the "balance before" snapshot must
+        // not race another spend from the same main wallet.
         return Wallet::where('user_id', $user->id)
             ->where('currency_symbol', self::USDT)
+            ->lockForUpdate()
             ->firstOrFail();
     }
 

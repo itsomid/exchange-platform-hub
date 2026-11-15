@@ -315,6 +315,11 @@ class BotCurrencyCancelService
                     'sell_exchange_fee'          => $this->num($result->exchangeFee),
                     'sell_exchange_fee_currency' => $result->feeCurrency,
                 ];
+                // exchangeFee is reported in quote (USDT) terms.
+                $this->settlement->recordAggregatedSellFee(
+                    $this->num($result->exchangeFee),
+                    "Exchange fee USDT paid for bot coin cancellation #{$cancellation->id} market sell",
+                );
             } elseif ($result) {
                 $sellData['sell_error'] = trim(($result->errorCode ?? '').' '.($result->errorMessage ?? '')) ?: 'market sell not filled';
             }

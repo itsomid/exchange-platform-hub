@@ -44,12 +44,14 @@ class ReportController extends Controller
         $from   = $request->validated('from');
         $to     = $request->validated('to');
 
-        $deposit = (string) Transaction::query()
+        // BOT_TRANSFER_IN rows debit the main wallet (negative amount); report
+        // the deposit as a positive figure like the withdrawal.
+        $deposit = bcmul((string) Transaction::query()
             ->where('user_id', $userId)
             ->where('subtype', TransactionSubTypeEnum::BOT_TRANSFER_IN)
             ->when($from, fn ($q) => $q->whereDate('created_at', '>=', $from))
             ->when($to, fn ($q) => $q->whereDate('created_at', '<=', $to))
-            ->sum('amount');
+            ->sum('amount'), '-1', 8);
 
         $withdrawal = (string) Transaction::query()
             ->where('user_id', $userId)
