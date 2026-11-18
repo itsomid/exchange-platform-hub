@@ -140,6 +140,7 @@ class AdminSearchCatalog
             self::page('roles', 'نقش‌ها', 'مدیریت سیستم', 'admin.role.index', 'fa-regular fa-user-group', 'role نقش', 14, 'roles.permissions'),
             self::page('permissions', 'مجوزها', 'مدیریت سیستم', 'admin.permission.index', 'fa-light fa-key', 'permission مجوز دسترسی', 14, 'roles.permissions'),
             self::page('internal-settings', 'تنظیمات داخلی', 'مدیریت سیستم', 'admin.internal.setting.index', 'fa-regular fa-cog', 'setting تنظیمات داخلی', 16, 'setting.int.index'),
+            self::page('security-settings', 'تنظیمات امنیتی', 'مدیریت سیستم', 'admin.security-settings.index', 'fa-regular fa-shield-halved', 'security تنظیمات امنیتی نشست توکن', 14, 'setting.int.index'),
             self::page('docker', 'کانتینرهای داکر', 'مدیریت سیستم', 'admin.docker.index', 'fa-regular fa-cog', 'docker داکر کانتینر', 6, 'setting.int.index'),
             [
                 'id' => 'telescope',

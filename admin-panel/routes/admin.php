@@ -46,6 +46,7 @@ use App\Http\Controllers\Withdrawal\WithdrawalController;
 use App\Http\Controllers\Withdrawal\WithdrawalReportController;
 use App\Http\Controllers\Stock\StockController;
 use App\Http\Controllers\Stock\StockContractController;
+use App\Http\Controllers\Setting\SecuritySettingsController;
 use App\Http\Controllers\Setting\SpotBotSettingController;
 use App\Http\Controllers\ApiSystem\ApiSystemController;
 use App\Http\Controllers\ApiSystem\ApiSystemTokenController;
@@ -323,6 +324,9 @@ Route::middleware(['admin.2fa', 'admin.password'])->group(function () {
 
     Route::get('/external-settings', [ExternalSettingController::class, 'index'])->name('external-setting.index')->can('setting.ext.index');
     Route::post('/external-settings/update-ref-address', [ExternalSettingController::class, 'updateRefAddress'])->name('setting.ext.update-ref-address')->can('setting.ext.index');
+
+    Route::get('/security-settings', [SecuritySettingsController::class, 'index'])->name('security-settings.index')->can('setting.int.index');
+    Route::post('/security-settings/revoke-idle-sessions', [SecuritySettingsController::class, 'revokeIdleSessions'])->name('security-settings.revoke-idle-sessions')->can('setting.int.index');
 
     Route::get('/docker', [DockerController::class, 'index'])->name('docker.index')->can('setting.int.index');
     Route::post('/docker/restart-exchange-listen', [DockerController::class, 'restartExchangeListen'])->name('docker.restart-exchange-listen')->can('setting.int.index');

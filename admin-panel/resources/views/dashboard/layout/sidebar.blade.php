@@ -576,7 +576,7 @@
 
                 </li>
             @endcan
-            <li class="menu-item @if (request()->is('admin/internal-settings*') || request()->is('admin/docker*')) active open @endif">
+            <li class="menu-item @if (request()->is('admin/internal-settings*') || request()->is('admin/security-settings*') || request()->is('admin/docker*')) active open @endif">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">
                     <i class="menu-icon fa-regular fa-cog fa-sm"></i>
                     <div> پیکربندی سیستم</div>
@@ -586,6 +586,11 @@
                         <li class="menu-item  @if (request()->is('admin/internal-settings*')) active @endif">
                             <a href="{{ route('admin.internal.setting.index') }}" class="menu-link">
                                 <div>تنظیمات داخلی</div>
+                            </a>
+                        </li>
+                        <li class="menu-item  @if (request()->is('admin/security-settings*')) active @endif">
+                            <a href="{{ route('admin.security-settings.index') }}" class="menu-link">
+                                <div>تنظیمات امنیتی</div>
                             </a>
                         </li>
                         <li class="menu-item  @if (request()->is('admin/docker*')) active @endif">
