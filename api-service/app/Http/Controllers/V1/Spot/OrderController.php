@@ -59,11 +59,7 @@ class OrderController extends Controller
                     throw new \RuntimeException('Failed to create spot order');
                 }
 
-                if ($type === SpotOrderTypeEnum::MARKET) {
-                    $orderMatchingEngine->market($spotOrder);
-                } elseif ($type === SpotOrderTypeEnum::LIMIT) {
-                    $orderMatchingEngine->limit($spotOrder);
-                }
+                $orderMatchingEngine->match($spotOrder);
 
                 return response([
                     'message' => __('spot.order_created'),

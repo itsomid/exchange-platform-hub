@@ -28,6 +28,7 @@ use App\Repositories\Interfaces\WalletRepositoryInterface;
 use App\Services\SpotBot\InMemoryOrderBookService;
 use App\Services\SpotBot\InMemoryOrderPersistenceService;
 use App\Services\SpotBot\DTO\InMemoryBotOrderDTO;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -63,6 +64,28 @@ readonly class OrderMatchingEngine
                 //Log::channel('spot-order-matching')->error('Order matching failed: ' . $e->getMessage(), ['exception' => $e]);
             }
         }
+    }
+
+    /**
+     * Entry point for matching one order (user API and spot bot).
+     *
+     * Matching for a market runs one caller at a time, inside a DB transaction, on a
+     * freshly locked copy of the order. So a caller never fills an order from a stale
+     * filled_quantity, never re-processes an order another caller already closed, and
+     * a failure part way through leaves no half-written trade behind.
+     */
+    public function match(SpotOrder $order): void
+    {
+        Cache::lock("spot-match:{$order->market_id}", 30)->block(10, function () use ($order) {
+            DB::transaction(function () use ($order) {
+                $order = SpotOrder::query()->lockForUpdate()->find($order->id);
+                if ($order === null || $order->status !== SpotOrderStatusEnum::OPEN) {
+                    return;
+                }
+
+                $order->type === SpotOrderTypeEnum::MARKET ? $this->market($order) : $this->limit($order);
+            });
+        });
     }
 
     public function market(SpotOrder $order): void
@@ -252,11 +275,6 @@ readonly class OrderMatchingEngine
 
             // Convert to SpotOrder model (if bot order, will be persisted to DB)
             $oppositeOrder = $this->ensureSpotOrderModel($oppositeOrderData);
-
-            // If matching with a market order, set its price to the limit order's price
-            if ($oppositeOrder->price === null) {
-                $oppositeOrder->price = $order->price;
-            }
 
             $this->completeOrder($order, $oppositeOrder);
             $this->broadcastOrderBook($order->market_id);
@@ -818,8 +836,12 @@ readonly class OrderMatchingEngine
     }
 
     /**
-     * Get opposite orders for limit order matching (includes market orders)
-     * 
+     * Get opposite limit orders that cross the given limit order's price.
+     *
+     * An open market order is never resting liquidity: it is only filled by its own
+     * market() call. Matching against it would price it at this limit's price,
+     * however far from the market that is.
+     *
      * @param SpotOrder $order
      * @param SpotOrderSideEnum $oppositeType
      * @param string $sortType
@@ -827,23 +849,13 @@ readonly class OrderMatchingEngine
      */
     private function getOppositeOrdersForLimit(SpotOrder $order, SpotOrderSideEnum $oppositeType, string $sortType): array
     {
-        // Get database orders (including market orders with price check)
         $dbOrders = SpotOrder::query()
             ->where('side', $oppositeType)
+            ->where('type', SpotOrderTypeEnum::LIMIT)
             ->where('market_id', $order->market_id)
             ->where('status', SpotOrderStatusEnum::OPEN)
             ->where('user_id', '!=', $order->user_id)
-            ->where(function ($query) use ($order) {
-                $query->whereNull('price') // Market order
-                    ->orWhere(function ($q) use ($order) {
-                        if ($order->side === SpotOrderSideEnum::BUY) {
-                            $q->where('price', '<=', $order->price);
-                        } else {
-                            $q->where('price', '>=', $order->price);
-                        }
-                    });
-            })
-            ->orderByRaw('price IS NULL DESC') // Prioritize market orders (NULL price first)
+            ->where('price', $order->side === SpotOrderSideEnum::BUY ? '<=' : '>=', $order->price)
             ->orderBy('price', $sortType === 'ASC' ? 'asc' : 'desc')
             ->lockForUpdate()
             ->get();
@@ -883,15 +895,10 @@ readonly class OrderMatchingEngine
             ];
         }
 
-        // Sort: market orders (null price) first, then by price
+        // Sort by price
         usort($allOrders, function ($a, $b) use ($sortType) {
             $priceA = is_array($a) ? $a['price'] : $a->price;
             $priceB = is_array($b) ? $b['price'] : $b->price;
-
-            // Market orders (null) should come first
-            if ($priceA === null && $priceB !== null) return -1;
-            if ($priceA !== null && $priceB === null) return 1;
-            if ($priceA === null && $priceB === null) return 0;
 
             $comp = Math::comp($priceA, $priceB);
             return $sortType === 'ASC' ? $comp : -$comp;

@@ -1090,11 +1090,7 @@ class SpotBotController extends Controller
                     $initialFilledQuantity = $order->filled_quantity;
 
                     // Try to match this order with bot orders
-                    if ($order->type === SpotOrderTypeEnum::LIMIT) {
-                        $orderMatchingEngine->limit($order);
-                    } elseif ($order->type === SpotOrderTypeEnum::MARKET) {
-                        $orderMatchingEngine->market($order);
-                    }
+                    $orderMatchingEngine->match($order);
 
                     // Check if order was matched (status changed or filled_quantity increased)
                     $order->refresh();
